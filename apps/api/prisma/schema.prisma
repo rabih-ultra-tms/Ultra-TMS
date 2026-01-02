@@ -1,0 +1,55 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id            String   @id @default(cuid())
+  name          String   @db.VarChar(255)
+  slug          String   @unique @db.VarChar(255)
+  settings      Json     @default("{}")
+  external_id   String?  @db.VarChar(255)
+  source_system String?  @db.VarChar(100)
+  custom_fields Json     @default("{}")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  users         User[]
+
+  @@index([slug])
+  @@index([external_id])
+  @@index([source_system])
+}
+
+model User {
+  id            String   @id @default(cuid())
+  tenantId      String
+  email         String   @db.VarChar(255)
+  passwordHash  String   @db.VarChar(255)
+  firstName     String?  @db.VarChar(100)
+  lastName      String?  @db.VarChar(100)
+  phone         String?  @db.VarChar(20)
+  role          String   @default("user") @db.VarChar(50)
+  status        String   @default("active") @db.VarChar(50)
+  external_id   String?  @db.VarChar(255)
+  source_system String?  @db.VarChar(100)
+  custom_fields Json     @default("{}")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, email])
+  @@index([email])
+  @@index([tenantId])
+  @@index([external_id])
+  @@index([source_system])
+}
+
