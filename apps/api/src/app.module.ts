@@ -1,5 +1,11 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { PrismaService } from './prisma.service';
+
+// Core infrastructure modules
+import { RedisModule } from './modules/redis/redis.module';
+import { EmailModule } from './modules/email/email.module';
+import { StorageModule } from './modules/storage/storage.module';
 
 // Feature modules - Phase 1 (Services 1-6 with schema)
 import { AuthModule } from './modules/auth/auth.module';
@@ -20,6 +26,15 @@ import { DocumentsModule } from './modules/documents/documents.module';
 
 @Module({
   imports: [
+    // Configuration module - loads .env
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
+    // Infrastructure
+    RedisModule,
+    EmailModule,
+    StorageModule,
     // Core services (01-06)
     AuthModule,
     CrmModule,

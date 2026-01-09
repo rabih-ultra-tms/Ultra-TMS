@@ -23,6 +23,15 @@ export class RolesController {
     return this.rolesService.findAll(tenantId);
   }
 
+  /**
+   * GET /api/v1/roles/permissions
+   * Get all available permissions (must be before :id route)
+   */
+  @Get('permissions')
+  async getPermissions() {
+    return this.rolesService.getAvailablePermissions();
+  }
+
   @Get(':id')
   async findOne(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.rolesService.findOne(tenantId, id);

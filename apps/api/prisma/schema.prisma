@@ -120,6 +120,10 @@ model User {
   lockedUntil         DateTime?
   roleId              String?
 
+  // MFA (Multi-Factor Authentication) - Phase B
+  mfaEnabled Boolean @default(false)
+  mfaSecret  String? @db.VarChar(255)
+
   // Migration support
   externalId   String? @db.VarChar(255)
   sourceSystem String? @db.VarChar(100)

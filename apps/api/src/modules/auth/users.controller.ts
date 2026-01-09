@@ -63,4 +63,55 @@ export class UsersController {
   ) {
     return this.usersService.delete(tenantId, id, userId);
   }
+
+  /**
+   * POST /api/v1/users/:id/invite
+   * Send invitation email to user
+   */
+  @Post(':id/invite')
+  async inviteUser(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() inviter: any,
+    @Param('id') id: string,
+  ) {
+    return this.usersService.inviteUser(tenantId, id, inviter);
+  }
+
+  /**
+   * POST /api/v1/users/:id/activate
+   * Activate a user account
+   */
+  @Post(':id/activate')
+  async activateUser(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ) {
+    return this.usersService.activateUser(tenantId, id, userId);
+  }
+
+  /**
+   * POST /api/v1/users/:id/deactivate
+   * Deactivate a user account
+   */
+  @Post(':id/deactivate')
+  async deactivateUser(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ) {
+    return this.usersService.deactivateUser(tenantId, id, userId);
+  }
+
+  /**
+   * POST /api/v1/users/:id/reset-password
+   * Admin reset user password (sends reset email)
+   */
+  @Post(':id/reset-password')
+  async resetUserPassword(
+    @CurrentTenant() tenantId: string,
+    @Param('id') id: string,
+  ) {
+    return this.usersService.resetUserPassword(tenantId, id);
+  }
 }

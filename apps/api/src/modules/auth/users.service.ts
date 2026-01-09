@@ -1,11 +1,16 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
+import { EmailService } from '../email/email.service';
 import { CreateUserDto, UpdateUserDto } from './dto';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private emailService: EmailService,
+  ) {}
 
   async findAll(tenantId: string, options?: { page?: number; limit?: number; status?: string; search?: string }) {
     const { page = 1, limit = 20, status, search } = options || {};
@@ -152,6 +157,127 @@ export class UsersService {
         },
       });
     }
+  }
+
+  /**
+   * Send invitation email to user
+   */
+  async inviteUser(tenantId: string, userId: string, inviter: any) {
+    const user = await this.prisma.user.findFirst({
+      where: { id: userId, tenantId, deletedAt: null },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.status !== 'INVITED') {
+      throw new BadRequestException('User must be in INVITED status to send invitation');
+    }
+
+    // Generate invitation token
+    const invitationToken = crypto.randomBytes(32).toString('hex');
+
+    // Send invitation email
+    await this.emailService.sendInvitation(
+      user.email,
+      user.firstName,
+      invitationToken,
+      `${inviter.firstName} ${inviter.lastName}`,
+    );
+
+    return {
+      data: { success: true },
+      message: 'Invitation sent successfully',
+    };
+  }
+
+  /**
+   * Activate a user account
+   */
+  async activateUser(tenantId: string, userId: string, updatedById: string) {
+    const user = await this.prisma.user.findFirst({
+      where: { id: userId, tenantId, deletedAt: null },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.status === 'ACTIVE') {
+      throw new BadRequestException('User is already active');
+    }
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        status: 'ACTIVE',
+        updatedById,
+        updatedAt: new Date(),
+      },
+      include: { role: true },
+    });
+
+    return {
+      data: this.sanitizeUser(updatedUser),
+      message: 'User activated successfully',
+    };
+  }
+
+  /**
+   * Deactivate a user account
+   */
+  async deactivateUser(tenantId: string, userId: string, updatedById: string) {
+    const user = await this.prisma.user.findFirst({
+      where: { id: userId, tenantId, deletedAt: null },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.status === 'INACTIVE') {
+      throw new BadRequestException('User is already inactive');
+    }
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        status: 'INACTIVE',
+        updatedById,
+        updatedAt: new Date(),
+      },
+      include: { role: true },
+    });
+
+    return {
+      data: this.sanitizeUser(updatedUser),
+      message: 'User deactivated successfully',
+    };
+  }
+
+  /**
+   * Admin reset user password (sends reset email)
+   */
+  async resetUserPassword(tenantId: string, userId: string) {
+    const user = await this.prisma.user.findFirst({
+      where: { id: userId, tenantId, deletedAt: null },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+
+    // Send password reset email
+    await this.emailService.sendPasswordReset(user.email, user.firstName, resetToken);
+
+    return {
+      data: { success: true },
+      message: 'Password reset email sent successfully',
+    };
   }
 
   private sanitizeUser(user: any) {
