@@ -1,12 +1,14 @@
 import { Module } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
 
-// Feature modules - Phase 1 (Services 1-5 with schema)
+// Feature modules - Phase 1 (Services 1-6 with schema)
 import { AuthModule } from './modules/auth/auth.module';
 import { CrmModule } from './modules/crm/crm.module';
 import { SalesModule } from './modules/sales/sales.module';
 import { TmsModule } from './modules/tms/tms.module';
 import { CarrierModule } from './modules/carrier/carrier.module';
+import { AccountingModule } from './modules/accounting/accounting.module';
+import { LoadBoardModule } from './modules/load-board/load-board.module';
 
 // Support services - commented out until schemas are added
 // import { AnalyticsModule } from './modules/analytics/analytics.module';
@@ -16,12 +18,14 @@ import { CarrierModule } from './modules/carrier/carrier.module';
 
 @Module({
   imports: [
-    // Core services (01-05)
+    // Core services (01-06)
     AuthModule,
     CrmModule,
     SalesModule,
     TmsModule,
     CarrierModule,
+    AccountingModule,
+    LoadBoardModule,
     // Support services - enable after adding schemas:
     // AnalyticsModule,
     // DocumentsModule,

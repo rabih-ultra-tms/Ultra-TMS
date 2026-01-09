@@ -70,6 +70,20 @@ model Tenant {
   carrierPerformanceHistory CarrierPerformanceHistory[]
   fmcsaComplianceLogs       FmcsaComplianceLog[]
 
+  // Accounting Relations
+  chartOfAccounts   ChartOfAccount[]
+  invoices          Invoice[]
+  settlements       Settlement[]
+  paymentsReceived  PaymentReceived[]
+  paymentsMade      PaymentMade[]
+  journalEntries    JournalEntry[]
+  quickbooksSyncLog QuickbooksSyncLog[]
+
+  // Load Board Relations
+  loadPostings      LoadPosting[]
+  loadBids          LoadBid[]
+  loadTenders       LoadTender[]
+
   @@index([slug])
   @@index([status])
   @@index([externalId, sourceSystem])
@@ -269,6 +283,10 @@ model Company {
 
   // TMS Core Relations
   orders Order[] @relation("OrderCustomer")
+
+  // Accounting Relations
+  invoices         Invoice[]
+  paymentsReceived PaymentReceived[]
 
   @@unique([tenantId, name])
   @@index([tenantId])
@@ -854,6 +872,10 @@ model Order {
   items           OrderItem[]
   statusHistory   StatusHistory[]
 
+  // Accounting Relations
+  invoices         Invoice[]
+  invoiceLineItems InvoiceLineItem[]
+
   @@unique([tenantId, orderNumber])
   @@index([tenantId])
   @@index([customerId])
@@ -925,6 +947,16 @@ model Load {
   stops         Stop[]
   checkCalls    CheckCall[]
   statusHistory StatusHistory[]
+
+  // Accounting Relations
+  invoices             Invoice[]
+  invoiceLineItems     InvoiceLineItem[]
+  settlementLineItems  SettlementLineItem[]
+
+  // Load Board Relations
+  postings LoadPosting[]
+  bids     LoadBid[]
+  tenders  LoadTender[]
 
   @@unique([tenantId, loadNumber])
   @@index([tenantId])
@@ -1197,6 +1229,16 @@ model Carrier {
   complianceLogs        FmcsaComplianceLog[]
   loads                 Load[]
 
+  // Accounting Relations
+  settlements  Settlement[]
+  paymentsMade PaymentMade[]
+
+  // Load Board Relations
+  loadViews        CarrierLoadView[]
+  loadBids         LoadBid[]
+  tendersAccepted  LoadTender[]
+  tenderRecipients TenderRecipient[]
+
   @@unique([tenantId, mcNumber])
   @@unique([tenantId, dotNumber])
   @@index([tenantId])
@@ -1429,4 +1471,728 @@ model FmcsaComplianceLog {
   @@index([checkedAt])
   @@index([dotNumber])
   @@index([mcNumber])
+}
+
+// ============================================================================
+// ACCOUNTING SERVICE (Service 06)
+// ============================================================================
+
+model ChartOfAccount {
+  id              String  @id @default(cuid())
+  tenantId        String
+  accountNumber   String  @db.VarChar(20)
+  accountName     String  @db.VarChar(255)
+  accountType     String  @db.VarChar(50) // ASSET, LIABILITY, EQUITY, REVENUE, EXPENSE
+  accountSubType  String? @db.VarChar(50) // BANK, AR, AP, REVENUE, EXPENSE, etc.
+  parentAccountId String?
+  description     String? @db.Text
+  normalBalance   String  @db.VarChar(10) // DEBIT, CREDIT
+  isActive        Boolean @default(true)
+  isSystemAccount Boolean @default(false)
+  balance         Decimal @default(0) @db.Decimal(14, 2)
+
+  // QuickBooks sync
+  quickbooksId String? @db.VarChar(50)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+
+  // Audit
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  tenant        Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  parentAccount ChartOfAccount? @relation("AccountHierarchy", fields: [parentAccountId], references: [id], onDelete: SetNull)
+  childAccounts ChartOfAccount[] @relation("AccountHierarchy")
+
+  // Invoice relations
+  invoiceRevenueAccounts Invoice[] @relation("InvoiceRevenueAccount")
+  invoiceArAccounts      Invoice[] @relation("InvoiceArAccount")
+
+  // Invoice line relations
+  invoiceLineAccounts InvoiceLineItem[] @relation("InvoiceLineRevenueAccount")
+
+  // Settlement relations
+  settlementExpenseAccounts Settlement[] @relation("SettlementExpenseAccount")
+  settlementApAccounts      Settlement[] @relation("SettlementApAccount")
+
+  // Settlement line relations
+  settlementLineAccounts SettlementLineItem[] @relation("SettlementLineExpenseAccount")
+
+  // Payment relations
+  paymentsReceivedBank PaymentReceived[] @relation("PaymentReceivedBankAccount")
+  paymentsMadeBank     PaymentMade[]     @relation("PaymentMadeBankAccount")
+
+  // Journal entry lines
+  journalEntryLines JournalEntryLine[]
+
+  @@unique([tenantId, accountNumber])
+  @@index([tenantId])
+  @@index([accountType])
+  @@index([isActive])
+  @@index([parentAccountId])
+}
+
+model Invoice {
+  id             String    @id @default(cuid())
+  tenantId       String
+  invoiceNumber  String    @db.VarChar(50)
+  companyId      String
+  orderId        String?
+  loadId         String?
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  quickbooksId String? @db.VarChar(50)
+
+  // Dates
+  invoiceDate DateTime
+  dueDate     DateTime
+  sentAt      DateTime?
+
+  // Amounts
+  subtotal        Decimal @db.Decimal(12, 2)
+  taxAmount       Decimal @default(0) @db.Decimal(12, 2)
+  totalAmount     Decimal @db.Decimal(12, 2)
+  amountPaid      Decimal @default(0) @db.Decimal(12, 2)
+  balanceDue      Decimal @db.Decimal(12, 2)
+  currency        String  @default("USD") @db.VarChar(3)
+
+  // Status
+  status String @default("DRAFT") @db.VarChar(50) // DRAFT, SENT, VIEWED, PARTIAL, PAID, OVERDUE, VOID
+
+  // Terms
+  paymentTerms String? @db.VarChar(50)
+
+  // Notes
+  notes         String? @db.Text
+  internalNotes String? @db.Text
+
+  // Aging
+  daysOutstanding Int?
+  agingBucket     String? @db.VarChar(20) // CURRENT, 1-30, 31-60, 61-90, 90+
+
+  // Collection
+  lastReminderDate DateTime?
+  reminderCount    Int       @default(0)
+  collectionStatus String?   @db.VarChar(50)
+
+  // GL Accounts
+  revenueAccountId String?
+  arAccountId      String?
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  createdById String?
+  updatedById String?
+  voidedAt    DateTime?
+  voidedById  String?
+  voidReason  String?   @db.Text
+
+  // Custom fields
+  customFields Json @default("{}")
+
+  // Relations
+  tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  company        Company         @relation(fields: [companyId], references: [id])
+  order          Order?          @relation(fields: [orderId], references: [id])
+  load           Load?           @relation(fields: [loadId], references: [id])
+  revenueAccount ChartOfAccount? @relation("InvoiceRevenueAccount", fields: [revenueAccountId], references: [id])
+  arAccount      ChartOfAccount? @relation("InvoiceArAccount", fields: [arAccountId], references: [id])
+  lineItems      InvoiceLineItem[]
+  applications   PaymentApplication[]
+
+  @@unique([tenantId, invoiceNumber])
+  @@index([tenantId])
+  @@index([companyId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([invoiceDate])
+  @@index([orderId])
+  @@index([loadId])
+}
+
+model InvoiceLineItem {
+  id        String @id @default(cuid())
+  invoiceId String
+  loadId    String?
+  orderId   String?
+
+  // Line details
+  lineNumber  Int
+  description String @db.VarChar(500)
+  itemType    String? @db.VarChar(50) // FREIGHT, ACCESSORIAL, ADJUSTMENT
+
+  // Amounts
+  quantity  Decimal @default(1) @db.Decimal(10, 2)
+  unitPrice Decimal @db.Decimal(12, 2)
+  amount    Decimal @db.Decimal(12, 2)
+
+  // GL
+  revenueAccountId String?
+
+  // Audit
+  createdAt DateTime @default(now())
+
+  // Relations
+  invoice        Invoice         @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  load           Load?           @relation(fields: [loadId], references: [id])
+  order          Order?          @relation(fields: [orderId], references: [id])
+  revenueAccount ChartOfAccount? @relation("InvoiceLineRevenueAccount", fields: [revenueAccountId], references: [id])
+
+  @@unique([invoiceId, lineNumber])
+  @@index([invoiceId])
+  @@index([loadId])
+  @@index([orderId])
+}
+
+model Settlement {
+  id               String  @id @default(cuid())
+  tenantId         String
+  settlementNumber String  @db.VarChar(50)
+  carrierId        String
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  quickbooksId String? @db.VarChar(50)
+
+  // Dates
+  settlementDate DateTime
+  dueDate        DateTime
+
+  // Payment method
+  paymentType       String?  @db.VarChar(50) // QUICK_PAY, NET30, FACTORING
+  quickPayFeePercent Decimal? @db.Decimal(5, 2)
+  quickPayFeeAmount  Decimal? @db.Decimal(12, 2)
+
+  // Amounts
+  grossAmount     Decimal @db.Decimal(12, 2)
+  deductionsTotal Decimal @default(0) @db.Decimal(12, 2)
+  quickPayFee     Decimal @default(0) @db.Decimal(12, 2)
+  netAmount       Decimal @db.Decimal(12, 2)
+  amountPaid      Decimal @default(0) @db.Decimal(12, 2)
+  balanceDue      Decimal @db.Decimal(12, 2)
+  currency        String  @default("USD") @db.VarChar(3)
+
+  // Status
+  status String @default("DRAFT") @db.VarChar(50) // DRAFT, PENDING, APPROVED, PARTIAL, PAID, VOID
+
+  // Payment destination
+  paymentMethod       String?  @db.VarChar(50) // CHECK, ACH, WIRE
+  payToName           String?  @db.VarChar(255)
+  payToFactoring      Boolean  @default(false)
+  factoringCompanyId  String?
+  factoringAccount    String?  @db.VarChar(100)
+
+  // GL Accounts
+  expenseAccountId String?
+  apAccountId      String?
+
+  // Approval
+  approvedById String?
+  approvedAt   DateTime?
+
+  // Notes
+  notes         String? @db.Text
+  internalNotes String? @db.Text
+
+  // Audit
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById String?
+  updatedById String?
+
+  // Custom fields
+  customFields Json @default("{}")
+
+  // Relations
+  tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  carrier        Carrier         @relation(fields: [carrierId], references: [id])
+  expenseAccount ChartOfAccount? @relation("SettlementExpenseAccount", fields: [expenseAccountId], references: [id])
+  apAccount      ChartOfAccount? @relation("SettlementApAccount", fields: [apAccountId], references: [id])
+  lineItems      SettlementLineItem[]
+
+  @@unique([tenantId, settlementNumber])
+  @@index([tenantId])
+  @@index([carrierId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([settlementDate])
+}
+
+model SettlementLineItem {
+  id           String  @id @default(cuid())
+  settlementId String
+  loadId       String?
+
+  // Line details
+  lineNumber  Int
+  description String  @db.VarChar(500)
+  itemType    String? @db.VarChar(50) // FREIGHT, ACCESSORIAL, DEDUCTION, ADVANCE
+
+  // Amounts
+  quantity Decimal @default(1) @db.Decimal(10, 2)
+  unitRate Decimal @db.Decimal(12, 2)
+  amount   Decimal @db.Decimal(12, 2)
+
+  // GL
+  expenseAccountId String?
+
+  // Audit
+  createdAt DateTime @default(now())
+
+  // Relations
+  settlement     Settlement      @relation(fields: [settlementId], references: [id], onDelete: Cascade)
+  load           Load?           @relation(fields: [loadId], references: [id])
+  expenseAccount ChartOfAccount? @relation("SettlementLineExpenseAccount", fields: [expenseAccountId], references: [id])
+
+  @@unique([settlementId, lineNumber])
+  @@index([settlementId])
+  @@index([loadId])
+}
+
+model PaymentReceived {
+  id            String @id @default(cuid())
+  tenantId      String
+  paymentNumber String @db.VarChar(50)
+  companyId     String
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  quickbooksId String? @db.VarChar(50)
+
+  // Payment details
+  paymentDate   DateTime
+  paymentMethod String   @db.VarChar(50) // CHECK, ACH, WIRE, CREDIT_CARD, CASH
+
+  // Amount
+  amount          Decimal @db.Decimal(12, 2)
+  unappliedAmount Decimal @default(0) @db.Decimal(12, 2)
+  currency        String  @default("USD") @db.VarChar(3)
+
+  // Reference
+  referenceNumber String? @db.VarChar(100)
+
+  // Bank
+  bankAccountId String?
+  depositDate   DateTime?
+
+  // Status
+  status String @default("RECEIVED") @db.VarChar(50) // RECEIVED, APPLIED, PARTIAL, BOUNCED, REFUNDED
+
+  // Notes
+  notes String? @db.Text
+
+  // Audit
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById String?
+
+  // Relations
+  tenant       Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  company      Company         @relation(fields: [companyId], references: [id])
+  bankAccount  ChartOfAccount? @relation("PaymentReceivedBankAccount", fields: [bankAccountId], references: [id])
+  applications PaymentApplication[]
+
+  @@unique([tenantId, paymentNumber])
+  @@index([tenantId])
+  @@index([companyId])
+  @@index([paymentDate])
+  @@index([status])
+}
+
+model PaymentApplication {
+  id        String @id @default(cuid())
+  paymentId String
+  invoiceId String
+  amount    Decimal @db.Decimal(12, 2)
+
+  createdAt   DateTime @default(now())
+  createdById String?
+
+  // Relations
+  payment PaymentReceived @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  invoice Invoice         @relation(fields: [invoiceId], references: [id])
+
+  @@index([paymentId])
+  @@index([invoiceId])
+}
+
+model PaymentMade {
+  id            String @id @default(cuid())
+  tenantId      String
+  paymentNumber String @db.VarChar(50)
+  carrierId     String
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  quickbooksId String? @db.VarChar(50)
+
+  // Payment details
+  paymentDate   DateTime
+  paymentMethod String   @db.VarChar(50) // CHECK, ACH, WIRE
+
+  // Amount
+  amount   Decimal @db.Decimal(12, 2)
+  currency String  @default("USD") @db.VarChar(3)
+
+  // Reference
+  referenceNumber String? @db.VarChar(100)
+
+  // Bank
+  bankAccountId String?
+
+  // Status
+  status String @default("PENDING") @db.VarChar(50) // PENDING, SENT, CLEARED, VOID
+
+  // ACH/Wire details
+  achBatchId     String? @db.VarChar(100)
+  achTraceNumber String? @db.VarChar(100)
+
+  // Notes
+  notes String? @db.Text
+
+  // Audit
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById String?
+
+  // Relations
+  tenant      Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  carrier     Carrier         @relation(fields: [carrierId], references: [id])
+  bankAccount ChartOfAccount? @relation("PaymentMadeBankAccount", fields: [bankAccountId], references: [id])
+
+  @@unique([tenantId, paymentNumber])
+  @@index([tenantId])
+  @@index([carrierId])
+  @@index([paymentDate])
+  @@index([status])
+}
+
+model JournalEntry {
+  id          String @id @default(cuid())
+  tenantId    String
+  entryNumber String @db.VarChar(50)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  quickbooksId String? @db.VarChar(50)
+
+  // Details
+  entryDate   DateTime
+  description String?  @db.Text
+
+  // Reference
+  referenceType String? @db.VarChar(50) // INVOICE, SETTLEMENT, PAYMENT, MANUAL
+  referenceId   String?
+
+  // Status
+  status String @default("DRAFT") @db.VarChar(50) // DRAFT, POSTED, VOID
+
+  // Amounts (must balance)
+  totalDebit  Decimal @db.Decimal(14, 2)
+  totalCredit Decimal @db.Decimal(14, 2)
+
+  // Posting
+  postedById String?
+  postedAt   DateTime?
+
+  // Audit
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById String?
+
+  // Relations
+  tenant Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  lines  JournalEntryLine[]
+
+  @@unique([tenantId, entryNumber])
+  @@index([tenantId])
+  @@index([entryDate])
+  @@index([referenceType, referenceId])
+  @@index([status])
+}
+
+model JournalEntryLine {
+  id             String @id @default(cuid())
+  journalEntryId String
+  lineNumber     Int
+  accountId      String
+
+  description  String? @db.VarChar(255)
+  debitAmount  Decimal @default(0) @db.Decimal(14, 2)
+  creditAmount Decimal @default(0) @db.Decimal(14, 2)
+
+  // Dimensions (for reporting)
+  customerId String?
+  carrierId  String?
+  loadId     String?
+
+  createdAt DateTime @default(now())
+
+  // Relations
+  journalEntry JournalEntry   @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  account      ChartOfAccount @relation(fields: [accountId], references: [id])
+
+  @@unique([journalEntryId, lineNumber])
+  @@index([journalEntryId])
+  @@index([accountId])
+}
+
+model QuickbooksSyncLog {
+  id          String @id @default(cuid())
+  tenantId    String
+  entityType  String @db.VarChar(50)
+  entityId    String
+  quickbooksId String? @db.VarChar(50)
+
+  syncDirection String @db.VarChar(20) // TO_QB, FROM_QB
+  syncStatus    String @db.VarChar(20) // SUCCESS, FAILED, PENDING
+
+  payloadSent     Json?
+  payloadReceived Json?
+  errorMessage    String? @db.Text
+
+  syncedAt DateTime @default(now())
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([entityType, entityId])
+  @@index([syncStatus])
+}
+
+// ==============================================
+// LOAD BOARD MODULE
+// ==============================================
+
+model LoadPosting {
+  id        String  @id @default(cuid())
+  tenantId  String
+  loadId    String
+  
+  // Posting details
+  postingType String @db.VarChar(50) // INTERNAL, EXTERNAL, BOTH
+  visibility  String @default("ALL_CARRIERS") @db.VarChar(50) // ALL_CARRIERS, PREFERRED_ONLY, SPECIFIC_CARRIERS
+  
+  // Status
+  status String @default("ACTIVE") @db.VarChar(50) // ACTIVE, BOOKED, EXPIRED, CANCELLED
+  
+  // Rate visibility
+  showRate  Boolean  @default(false)
+  rateType  String?  @db.VarChar(50) // ALL_IN, PER_MILE
+  postedRate Decimal? @db.Decimal(12, 2)
+  rateMin    Decimal? @db.Decimal(12, 2)
+  rateMax    Decimal? @db.Decimal(12, 2)
+  
+  // Origin (denormalized for search)
+  originCity  String? @db.VarChar(100)
+  originState String? @db.VarChar(50)
+  originZip   String? @db.VarChar(20)
+  originLat   Decimal? @db.Decimal(10, 7)
+  originLng   Decimal? @db.Decimal(10, 7)
+  
+  // Destination
+  destCity  String? @db.VarChar(100)
+  destState String? @db.VarChar(50)
+  destZip   String? @db.VarChar(20)
+  destLat   Decimal? @db.Decimal(10, 7)
+  destLng   Decimal? @db.Decimal(10, 7)
+  
+  // Load details (denormalized)
+  equipmentType String?  @db.VarChar(50)
+  totalMiles    Decimal? @db.Decimal(10, 2)
+  weightLbs     Decimal? @db.Decimal(10, 2)
+  pickupDate    DateTime?
+  deliveryDate  DateTime?
+  
+  // External postings
+  datPostingId       String? @db.VarChar(100)
+  truckstopPostingId String? @db.VarChar(100)
+  
+  // Timing
+  postedAt        DateTime  @default(now())
+  expiresAt       DateTime?
+  autoRefresh     Boolean   @default(true)
+  refreshInterval Int       @default(4) // hours
+  lastRefreshedAt DateTime?
+  
+  // Metrics
+  viewCount    Int @default(0)
+  inquiryCount Int @default(0)
+  
+  // Specific carriers (for SPECIFIC_CARRIERS visibility)
+  carrierIds String[] // Array of carrier IDs
+  
+  // Audit
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  tenant  Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  load    Load             @relation(fields: [loadId], references: [id], onDelete: Cascade)
+  views   CarrierLoadView[]
+  bids    LoadBid[]
+  
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([loadId])
+  @@index([originState, originCity])
+  @@index([destState, destCity])
+  @@index([pickupDate])
+  @@index([equipmentType])
+  @@index([status])
+}
+
+model CarrierLoadView {
+  id         String   @id @default(cuid())
+  postingId  String
+  carrierId  String
+  
+  viewedAt DateTime @default(now())
+  source   String?  @db.VarChar(50) // INTERNAL, DAT, TRUCKSTOP, EMAIL
+  
+  // Relations
+  posting LoadPosting @relation(fields: [postingId], references: [id], onDelete: Cascade)
+  carrier Carrier     @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+  
+  @@unique([postingId, carrierId])
+  @@index([postingId])
+  @@index([carrierId])
+}
+
+model LoadBid {
+  id         String  @id @default(cuid())
+  tenantId   String
+  postingId  String
+  loadId     String
+  carrierId  String
+  
+  // Bid details
+  bidAmount  Decimal @db.Decimal(12, 2)
+  rateType   String? @db.VarChar(50) // ALL_IN, PER_MILE
+  notes      String? @db.Text
+  
+  // Equipment offered
+  truckNumber String? @db.VarChar(50)
+  driverName  String? @db.VarChar(255)
+  driverPhone String? @db.VarChar(50)
+  
+  // Status
+  status String @default("PENDING") @db.VarChar(50) // PENDING, ACCEPTED, REJECTED, COUNTERED, EXPIRED, WITHDRAWN
+  
+  // Counter offer
+  counterAmount Decimal?  @db.Decimal(12, 2)
+  counterNotes  String?   @db.Text
+  counterAt     DateTime?
+  
+  // Resolution
+  acceptedAt      DateTime?
+  rejectedAt      DateTime?
+  rejectionReason String?   @db.Text
+  
+  // Timing
+  submittedAt DateTime  @default(now())
+  expiresAt   DateTime?
+  
+  // Source
+  source String? @db.VarChar(50) // INTERNAL, CARRIER_PORTAL, DAT, TRUCKSTOP
+  
+  // Audit
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  tenant  Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  posting LoadPosting @relation(fields: [postingId], references: [id], onDelete: Cascade)
+  load    Load        @relation(fields: [loadId], references: [id], onDelete: Cascade)
+  carrier Carrier     @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+  
+  @@index([tenantId])
+  @@index([postingId])
+  @@index([carrierId])
+  @@index([tenantId, status])
+  @@index([status])
+}
+
+model LoadTender {
+  id         String  @id @default(cuid())
+  tenantId   String
+  loadId     String
+  
+  // Tender settings
+  tenderType String  @db.VarChar(50) // BROADCAST, WATERFALL, SPECIFIC
+  tenderRate Decimal @db.Decimal(12, 2)
+  
+  // Status
+  status String @default("ACTIVE") @db.VarChar(50) // ACTIVE, ACCEPTED, EXPIRED, CANCELLED
+  
+  // Timing
+  createdAt DateTime  @default(now())
+  expiresAt DateTime?
+  
+  // Waterfall settings
+  waterfallTimeoutMinutes Int @default(30)
+  currentPosition         Int @default(0)
+  
+  // Result
+  acceptedByCarrierId String?
+  acceptedAt          DateTime?
+  
+  // Audit
+  createdById String?
+  
+  // Relations
+  tenant            Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  load              Load              @relation(fields: [loadId], references: [id], onDelete: Cascade)
+  acceptedByCarrier Carrier?          @relation(fields: [acceptedByCarrierId], references: [id], onDelete: SetNull)
+  recipients        TenderRecipient[]
+  
+  @@index([tenantId])
+  @@index([loadId])
+  @@index([tenantId, status])
+  @@index([status])
+}
+
+model TenderRecipient {
+  id         String @id @default(cuid())
+  tenderId   String
+  carrierId  String
+  
+  // Waterfall position (1 = first to offer)
+  position Int
+  
+  // Status
+  status String @default("PENDING") @db.VarChar(50) // PENDING, OFFERED, ACCEPTED, DECLINED, EXPIRED, SKIPPED
+  
+  // Timing
+  offeredAt   DateTime?
+  respondedAt DateTime?
+  expiresAt   DateTime?
+  
+  // Response
+  declineReason String? @db.Text
+  
+  // Notification
+  notificationSent   Boolean @default(false)
+  notificationMethod String? @db.VarChar(50) // EMAIL, SMS, APP
+  
+  // Relations
+  tender  LoadTender @relation(fields: [tenderId], references: [id], onDelete: Cascade)
+  carrier Carrier    @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+  
+  @@unique([tenderId, position])
+  @@index([tenderId])
+  @@index([carrierId])
+  @@index([status])
 }
