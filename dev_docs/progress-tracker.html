@@ -179,21 +179,21 @@
     <div class="container">
         <header>
             <h1>🚛 Ultra-TMS Development Progress</h1>
-            <p class="subtitle">162-Week Development Roadmap • Last Updated: <span id="lastUpdated">January 9, 2026 (10 Modules Complete - 322 Endpoints)</span></p>
+            <p class="subtitle">162-Week Development Roadmap • Last Updated: <span id="lastUpdated">January 9, 2026 (11 Modules Complete - 387 Endpoints)</span></p>
         </header>
 
         <!-- Dashboard Stats -->
         <section class="dashboard">
             <div class="stat-card">
                 <div class="label">Overall Progress</div>
-                <div class="value" style="color: var(--primary);">26.3%</div>
-                <div class="progress-bar"><div class="progress-fill primary" style="width: 26.3%;"></div></div>
-                <div class="sub">10 of 38 services complete</div>
+                <div class="value" style="color: var(--primary);">28.9%</div>
+                <div class="progress-bar"><div class="progress-fill primary" style="width: 28.9%;"></div></div>
+                <div class="sub">11 of 38 services complete</div>
             </div>
             <div class="stat-card">
                 <div class="label">Current Phase</div>
                 <div class="value">A</div>
-                <div class="sub">Foundation (37% of 27 services)</div>
+                <div class="sub">Foundation (41% of 27 services)</div>
             </div>
             <div class="stat-card">
                 <div class="label">Database Tables</div>
@@ -202,8 +202,8 @@
             </div>
             <div class="stat-card">
                 <div class="label">API Endpoints</div>
-                <div class="value">352</div>
-                <div class="sub">of ~985 planned (35.7%)</div>
+                <div class="value">387</div>
+                <div class="sub">of ~985 planned (39.3%)</div>
             </div>
             <div class="stat-card">
                 <div class="label">UI Screens</div>
@@ -212,8 +212,8 @@
             </div>
             <div class="stat-card">
                 <div class="label">Next Milestone</div>
-                <div class="value">M1</div>
-                <div class="sub">Auth & Admin (Week 8)</div>
+                <div class="value">M2</div>
+                <div class="sub">CRM + HubSpot (Week 16)</div>
             </div>
         </section>
 
@@ -228,10 +228,10 @@
                     </div>
                     <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1rem;">Weeks 1-78 • Internal MVP</p>
                     <div style="display: flex; justify-content: space-between; font-size: 0.875rem; margin-bottom: 0.5rem;">
-                        <span>10 of 27 services</span>
-                        <span>37%</span>
+                        <span>11 of 27 services</span>
+                        <span>41%</span>
                     </div>
-                    <div class="progress-bar"><div class="progress-fill primary" style="width: 37%;"></div></div>
+                    <div class="progress-bar"><div class="progress-fill primary" style="width: 41%;"></div></div>
                 </div>
                 <div class="phase-card">
                     <div class="phase-header">
@@ -311,9 +311,9 @@
                         <td>CRM + HubSpot</td>
                         <td>9-16</td>
                         <td>5 / 5</td>
-                        <td>0 / 35</td>
+                        <td>35 / 35</td>
                         <td>0 / 10</td>
-                        <td><span class="status"><span class="status-dot active"></span> Schema Complete</span></td>
+                        <td><span class="status"><span class="status-dot complete"></span> API Complete</span></td>
                     </tr>
                     <tr>
                         <td>Sales</td>
@@ -524,15 +524,15 @@
             <h2>🎯 Phase A Milestones</h2>
             <div class="timeline">
                 <div class="milestone">
-                    <div class="milestone-marker active">M1</div>
+                    <div class="milestone-marker complete">M1</div>
                     <div class="milestone-content">
                         <div class="milestone-title">Auth & Admin</div>
                         <div class="milestone-desc">User management, RBAC, multi-tenant foundation</div>
                     </div>
-                    <div class="milestone-week">Week 8</div>
+                    <div class="milestone-week">Week 8 ✓</div>
                 </div>
                 <div class="milestone">
-                    <div class="milestone-marker pending">M2</div>
+                    <div class="milestone-marker active">M2</div>
                     <div class="milestone-content">
                         <div class="milestone-title">CRM + HubSpot Integration</div>
                         <div class="milestone-desc">Companies, contacts, opportunities, bi-directional sync</div>
@@ -681,6 +681,25 @@
         <section>
             <h2>📝 Change Log</h2>
             <div class="changelog">
+                <div class="log-entry">
+                    <div class="log-date">January 9, 2026 - CRM API Complete</div>
+                    <ul class="log-items">
+                        <li>✅ Completed Service 02: CRM + HubSpot API (35 endpoints)
+                            <ul style="list-style: circle; padding-left: 1.5rem;">
+                                <li>Companies: 12 endpoints (CRUD + nested resources + sync + assign + tier)</li>
+                                <li>Contacts: 8 endpoints (CRUD + activities + sync + set-primary)</li>
+                                <li>Opportunities: 10 endpoints (CRUD + pipeline + stage + convert + owner)</li>
+                                <li>Activities: 10 endpoints (CRUD + upcoming + my-tasks + overdue + complete + reschedule)</li>
+                                <li>HubSpot: 7 endpoints (webhook, bulk sync, status, field mapping)</li>
+                            </ul>
+                        </li>
+                        <li>Created HubSpot sync service (stubbed for future integration)</li>
+                        <li>Added opportunity stage workflow with auto-probability</li>
+                        <li>Added convert-to-customer functionality for won opportunities</li>
+                        <li>🎯 Phase A Progress: 11 of 27 services complete (41%)</li>
+                        <li>📊 Total API Endpoints: 387 of 985 planned (39.3%)</li>
+                    </ul>
+                </div>
                 <div class="log-entry">
                     <div class="log-date">January 9, 2026 - Communication Service Complete</div>
                     <ul class="log-items">
