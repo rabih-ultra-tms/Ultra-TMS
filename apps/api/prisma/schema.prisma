@@ -85,11 +85,17 @@ model Tenant {
   loadTenders       LoadTender[]
 
   // Commission Relations
-  commissionPlans              CommissionPlan[]
-  userCommissionAssignments    UserCommissionAssignment[]
-  customerCommissionOverrides  CustomerCommissionOverride[]
-  commissionEntries            CommissionEntry[]
-  commissionPayouts            CommissionPayout[]
+  commissionPlans             CommissionPlan[]
+  userCommissionAssignments   UserCommissionAssignment[]
+  customerCommissionOverrides CustomerCommissionOverride[]
+  commissionEntries           CommissionEntry[]
+  commissionPayouts           CommissionPayout[]
+
+  // Documents Relations
+  documents           Document[]
+  documentTemplates   DocumentTemplate[]
+  generatedDocuments  GeneratedDocument[]
+  documentFolders     DocumentFolder[]
 
   @@index([slug])
   @@index([status])
@@ -149,11 +155,19 @@ model User {
   salesOrders Order[] @relation("OrderSalesRep")
 
   // Commission Relations
-  commissionAssignments        UserCommissionAssignment[]
-  customerCommissionOverrides  CustomerCommissionOverride[]
-  commissionEntries            CommissionEntry[]
-  commissionPayouts            CommissionPayout[]
-  approvedPayouts              CommissionPayout[]       @relation("PayoutApprover")
+  commissionAssignments       UserCommissionAssignment[]
+  customerCommissionOverrides CustomerCommissionOverride[]
+  commissionEntries           CommissionEntry[]
+  commissionPayouts           CommissionPayout[]
+  approvedPayouts             CommissionPayout[]           @relation("PayoutApprover")
+
+  // Documents Relations
+  uploadedDocuments    Document[]            @relation
+  createdTemplates     DocumentTemplate[]
+  generatedDocuments   GeneratedDocument[]
+  documentShares       DocumentShare[]
+  createdFolders       DocumentFolder[]
+  addedFolderDocuments FolderDocument[]
 
   @@unique([tenantId, email])
   @@index([email])
@@ -304,6 +318,9 @@ model Company {
 
   // Commission Relations
   commissionOverrides CustomerCommissionOverride[]
+
+  // Documents Relations
+  documents Document[]
 
   @@unique([tenantId, name])
   @@index([tenantId])
@@ -896,6 +913,9 @@ model Order {
   // Commission Relations
   commissionEntries CommissionEntry[]
 
+  // Documents Relations
+  documents Document[]
+
   @@unique([tenantId, orderNumber])
   @@index([tenantId])
   @@index([customerId])
@@ -980,6 +1000,9 @@ model Load {
 
   // Commission Relations
   commissionEntries CommissionEntry[]
+
+  // Documents Relations
+  documents Document[]
 
   @@unique([tenantId, loadNumber])
   @@index([tenantId])
@@ -1261,6 +1284,9 @@ model Carrier {
   loadBids         LoadBid[]
   tendersAccepted  LoadTender[]
   tenderRecipients TenderRecipient[]
+
+  // Documents Relations
+  carrierDocuments Document[]
 
   @@unique([tenantId, mcNumber])
   @@unique([tenantId, dotNumber])
@@ -2477,4 +2503,280 @@ model CommissionPayout {
   @@index([tenantId])
   @@index([userId])
   @@index([tenantId, periodStart])
+}
+
+// ============================================
+// DOCUMENTS MODULE
+// ============================================
+
+model Document {
+  id String @id @default(uuid())
+
+  // Tenant
+  tenantId String
+
+  // Migration support
+  externalId   String? @db.VarChar(100)
+  sourceSystem String? @db.VarChar(50)
+
+  // Document info
+  name         String  @db.VarChar(255)
+  description  String? @db.Text
+  documentType String  @db.VarChar(50) // BOL, POD, RATE_CONFIRM, INVOICE, INSURANCE, CONTRACT, W9, CARRIER_AGREEMENT, OTHER
+
+  // File details
+  fileName      String @db.VarChar(255)
+  filePath      String @db.VarChar(500)
+  fileSize      Int
+  mimeType      String @db.VarChar(100)
+  fileExtension String? @db.VarChar(20)
+
+  // Storage
+  storageProvider String  @default("S3") @db.VarChar(50) // S3, MINIO, LOCAL
+  bucketName      String? @db.VarChar(100)
+
+  // Entity association (polymorphic)
+  entityType String? @db.VarChar(50) // LOAD, ORDER, CARRIER, COMPANY, USER
+  entityId   String?
+
+  // Additional associations
+  loadId    String?
+  orderId   String?
+  carrierId String?
+  companyId String?
+
+  // Status
+  status String @default("ACTIVE") @db.VarChar(50) // ACTIVE, ARCHIVED, DELETED, PROCESSING, FAILED
+
+  // OCR Processing
+  ocrProcessed   Boolean   @default(false)
+  ocrText        String?   @db.Text
+  ocrProcessedAt DateTime?
+
+  // Metadata
+  metadata Json     @default("{}")
+  tags     String[] @db.VarChar(100)
+
+  // Versioning
+  version           Int      @default(1)
+  parentDocumentId  String?
+  isLatestVersion   Boolean  @default(true)
+
+  // Security
+  isPublic         Boolean   @default(false)
+  accessToken      String?   @db.VarChar(100)
+  accessExpiresAt  DateTime?
+
+  // Retention
+  retentionDate DateTime? @db.Date
+
+  // Audit
+  uploadedBy String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  // Relations
+  tenant           Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  load             Load?                 @relation(fields: [loadId], references: [id], onDelete: SetNull)
+  order            Order?                @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  carrier          Carrier?              @relation(fields: [carrierId], references: [id], onDelete: SetNull)
+  company          Company?              @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  uploader         User?                 @relation(fields: [uploadedBy], references: [id], onDelete: SetNull)
+  parentDocument   Document?             @relation("DocumentVersions", fields: [parentDocumentId], references: [id], onDelete: SetNull)
+  childDocuments   Document[]            @relation("DocumentVersions")
+  shares           DocumentShare[]
+  folderDocuments  FolderDocument[]
+  generatedDocuments GeneratedDocument[]
+
+  @@index([tenantId])
+  @@index([tenantId, documentType])
+  @@index([entityType, entityId])
+  @@index([loadId])
+  @@index([carrierId])
+  @@index([companyId])
+}
+
+model DocumentTemplate {
+  id String @id @default(uuid())
+
+  // Tenant
+  tenantId String
+
+  // Template details
+  name         String  @db.VarChar(255)
+  description  String? @db.Text
+  templateType String  @db.VarChar(50) // RATE_CONFIRM, BOL, INVOICE, CARRIER_PACKET, QUOTE, STATEMENT
+
+  // Template content
+  templateFormat  String  @db.VarChar(50) // HTML, PDF, DOCX
+  templateContent String? @db.Text // HTML/Handlebars template
+  templateFilePath String? @db.VarChar(500)
+
+  // Settings
+  paperSize   String @default("LETTER") @db.VarChar(20) // LETTER, A4, LEGAL
+  orientation String @default("PORTRAIT") @db.VarChar(20) // PORTRAIT, LANDSCAPE
+  margins     Json   @default("{\"top\": 1, \"bottom\": 1, \"left\": 1, \"right\": 1}")
+
+  // Branding
+  includeLogo   Boolean @default(true)
+  logoPosition  String  @default("TOP_LEFT") @db.VarChar(20)
+  headerContent String? @db.Text
+  footerContent String? @db.Text
+
+  // Status
+  status    String  @default("ACTIVE") @db.VarChar(50)
+  isDefault Boolean @default(false)
+
+  // Language
+  language String @default("en") @db.VarChar(10)
+
+  // Audit
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+
+  // Relations
+  tenant              Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  creator             User?               @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+  generatedDocuments  GeneratedDocument[]
+
+  @@unique([tenantId, name, templateType])
+  @@index([tenantId])
+  @@index([tenantId, templateType])
+}
+
+model GeneratedDocument {
+  id String @id @default(uuid())
+
+  // Tenant
+  tenantId String
+
+  // Generation details
+  templateId String
+  documentId String?
+
+  // Source data
+  entityType String @db.VarChar(50)
+  entityId   String
+
+  // Generation data
+  dataSnapshot Json // Data used for generation
+
+  // Status
+  status       String  @default("PENDING") @db.VarChar(50) // PENDING, GENERATING, COMPLETED, FAILED
+  errorMessage String? @db.Text
+
+  // Timing
+  requestedAt  DateTime  @default(now())
+  completedAt  DateTime?
+  requestedBy  String?
+
+  // Relations
+  tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  template  DocumentTemplate  @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  document  Document?         @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  requester User?             @relation(fields: [requestedBy], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([entityType, entityId])
+  @@index([status])
+}
+
+model DocumentShare {
+  id String @id @default(uuid())
+
+  // Document
+  documentId String
+
+  // Share type
+  shareType String @db.VarChar(50) // LINK, EMAIL, PORTAL
+
+  // Access
+  accessToken    String  @unique @db.VarChar(100)
+  accessPassword String? @db.VarChar(255) // Optional password (hashed)
+
+  // Restrictions
+  expiresAt      DateTime?
+  maxViews       Int?
+  maxDownloads   Int?
+  allowDownload  Boolean   @default(true)
+
+  // Tracking
+  viewCount       Int       @default(0)
+  downloadCount   Int       @default(0)
+  lastAccessedAt  DateTime?
+
+  // Recipient (for email shares)
+  recipientEmail String? @db.VarChar(255)
+  recipientName  String? @db.VarChar(255)
+
+  // Status
+  status String @default("ACTIVE") @db.VarChar(50) // ACTIVE, EXPIRED, REVOKED
+
+  // Audit
+  createdAt DateTime @default(now())
+  createdBy String?
+
+  // Relations
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  creator  User?    @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+
+  @@index([documentId])
+  @@index([accessToken])
+}
+
+model DocumentFolder {
+  id String @id @default(uuid())
+
+  // Tenant
+  tenantId String
+
+  // Folder info
+  name        String  @db.VarChar(255)
+  description String? @db.Text
+
+  // Hierarchy
+  parentFolderId String? 
+  path           String? @db.VarChar(1000) // /root/subfolder/...
+
+  // Association
+  entityType String? @db.VarChar(50)
+  entityId   String?
+
+  // Settings
+  isSystem Boolean @default(false)
+
+  // Audit
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+
+  // Relations
+  tenant          Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  parentFolder    DocumentFolder?  @relation("FolderHierarchy", fields: [parentFolderId], references: [id], onDelete: Cascade)
+  childFolders    DocumentFolder[] @relation("FolderHierarchy")
+  creator         User?            @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+  folderDocuments FolderDocument[]
+
+  @@unique([tenantId, parentFolderId, name])
+  @@index([tenantId])
+  @@index([parentFolderId])
+  @@index([entityType, entityId])
+}
+
+model FolderDocument {
+  folderId   String
+  documentId String
+
+  // Audit
+  addedAt DateTime @default(now())
+  addedBy String?
+
+  // Relations
+  folder   DocumentFolder @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  document Document       @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  adder    User?          @relation(fields: [addedBy], references: [id], onDelete: SetNull)
+
+  @@id([folderId, documentId])
 }

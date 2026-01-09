@@ -10,6 +10,7 @@ import { CarrierModule } from './modules/carrier/carrier.module';
 import { AccountingModule } from './modules/accounting/accounting.module';
 import { LoadBoardModule } from './modules/load-board/load-board.module';
 import { CommissionModule } from './modules/commission/commission.module';
+import { DocumentsModule } from './modules/documents/documents.module';
 
 // Support services - commented out until schemas are added
 // import { AnalyticsModule } from './modules/analytics/analytics.module';
@@ -28,6 +29,7 @@ import { CommissionModule } from './modules/commission/commission.module';
     AccountingModule,
     LoadBoardModule,
     CommissionModule,
+    DocumentsModule,
     // Support services - enable after adding schemas:
     // AnalyticsModule,
     // DocumentsModule,
