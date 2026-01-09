@@ -42,13 +42,10 @@ export class DocumentFoldersService {
   }
 
   async findAll(tenantId: string, parentFolderId?: string) {
-    const where: Record<string, any> = { tenantId };
-
-    if (parentFolderId) {
-      where.parentFolderId = parentFolderId;
-    } else {
-      where.parentFolderId = null;
-    }
+    const where: { tenantId: string; parentFolderId: string | null } = {
+      tenantId,
+      parentFolderId: parentFolderId ?? null,
+    };
 
     return this.prisma.documentFolder.findMany({
       where,
