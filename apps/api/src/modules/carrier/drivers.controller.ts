@@ -3,93 +3,78 @@ import {
   Get,
   Post,
   Put,
-  Patch,
   Delete,
   Body,
   Param,
   Query,
   UseGuards,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/guards';
-import { CurrentTenant } from '../../common/decorators';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { DriversService } from './drivers.service';
-import {
-  CreateDriverDto,
-  UpdateDriverDto,
-  UpdateDriverLocationDto,
-  DriverListQueryDto,
-} from './dto/driver.dto';
+import { CreateDriverDto, UpdateDriverDto } from './dto';
 
+@Controller('carriers/:carrierId/drivers')
 @UseGuards(JwtAuthGuard)
-@Controller('drivers')
 export class DriversController {
   constructor(private readonly driversService: DriversService) {}
+
+  @Post()
+  async create(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() user: { id: string },
+    @Param('carrierId') carrierId: string,
+    @Body() dto: CreateDriverDto,
+  ) {
+    return this.driversService.create(tenantId, carrierId, user.id, dto);
+  }
 
   @Get()
   async findAll(
     @CurrentTenant() tenantId: string,
-    @Query() query: DriverListQueryDto
+    @Param('carrierId') carrierId: string,
+    @Query('status') status?: string,
   ) {
-    return this.driversService.findAll(tenantId, query);
+    return this.driversService.findAllForCarrier(tenantId, carrierId, { status });
+  }
+
+  @Get('expiring-credentials')
+  async getExpiringCredentials(
+    @CurrentTenant() tenantId: string,
+    @Query('days') days?: string,
+  ) {
+    return this.driversService.getExpiringCredentials(
+      tenantId,
+      days ? parseInt(days, 10) : 30,
+    );
   }
 
   @Get(':id')
-  async findOne(@CurrentTenant() tenantId: string, @Param('id') id: string) {
-    return this.driversService.findOne(tenantId, id);
-  }
-
-  @Get(':id/location')
-  async getLocation(
-    @CurrentTenant() tenantId: string,
-    @Param('id') id: string
-  ) {
-    return this.driversService.getLocation(tenantId, id);
-  }
-
-  @Patch(':id/location')
-  async updateLocation(
+  async findOne(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
-    @Body() dto: UpdateDriverLocationDto
   ) {
-    return this.driversService.updateLocation(tenantId, id, dto);
+    return this.driversService.findOne(tenantId, id);
   }
 
   @Put(':id')
   async update(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
-    @Body() dto: UpdateDriverDto
+    @Body() dto: UpdateDriverDto,
   ) {
     return this.driversService.update(tenantId, id, dto);
   }
 
   @Delete(':id')
-  async delete(@CurrentTenant() tenantId: string, @Param('id') id: string) {
+  @HttpCode(HttpStatus.OK)
+  async delete(
+    @CurrentTenant() tenantId: string,
+    @Param('id') id: string,
+  ) {
     return this.driversService.delete(tenantId, id);
-  }
-}
-
-@UseGuards(JwtAuthGuard)
-@Controller('carriers/:carrierId/drivers')
-export class CarrierDriversController {
-  constructor(private readonly driversService: DriversService) {}
-
-  @Get()
-  async findByCarrier(
-    @CurrentTenant() tenantId: string,
-    @Param('carrierId') carrierId: string,
-    @Query() query: DriverListQueryDto
-  ) {
-    return this.driversService.findByCarrier(tenantId, carrierId, query);
-  }
-
-  @Post()
-  async create(
-    @CurrentTenant() tenantId: string,
-    @Param('carrierId') carrierId: string,
-    @Body() dto: CreateDriverDto
-  ) {
-    return this.driversService.create(tenantId, carrierId, dto);
   }
 }

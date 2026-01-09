@@ -1,5 +1,7 @@
+/* eslint-disable no-undef */
 'use client';
 
+import React from 'react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
@@ -96,12 +98,12 @@ export default function DocumentsPage() {
       if (searchTerm) params.append('search', searchTerm);
       if (documentType) params.append('documentType', documentType);
 
-      const response = await apiClient.get(`/documents?${params}`);
-      setDocuments(response.data.data);
+      const response = await apiClient.get<{ data: Document[]; total: number; totalPages: number }>(`/documents?${params}`);
+      setDocuments(response.data);
       setPagination((prev) => ({
         ...prev,
-        total: response.data.total,
-        totalPages: response.data.totalPages,
+        total: response.total,
+        totalPages: response.totalPages,
       }));
     } catch (error) {
       console.error('Error fetching documents:', error);
@@ -151,8 +153,8 @@ export default function DocumentsPage() {
 
   async function handleDownload(doc: Document) {
     try {
-      const response = await apiClient.get(`/documents/${doc.id}/download`);
-      window.open(response.data.url, '_blank');
+      const response = await apiClient.get<{ url: string }>(`/documents/${doc.id}/download`);
+      window.open(response.url, '_blank');
     } catch (error) {
       console.error('Error downloading document:', error);
     }

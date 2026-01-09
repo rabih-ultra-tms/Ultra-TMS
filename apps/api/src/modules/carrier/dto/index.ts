@@ -1,6 +1,3 @@
-// Carrier DTOs
-export * from './carrier.dto';
-export * from './contact.dto';
-export * from './driver.dto';
-export * from './insurance.dto';
-export * from './document.dto';
+export * from './create-carrier.dto';
+export * from './create-driver.dto';
+export * from './create-insurance.dto';

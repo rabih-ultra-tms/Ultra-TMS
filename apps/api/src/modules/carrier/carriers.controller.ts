@@ -4,138 +4,118 @@ import {
   Post,
   Put,
   Delete,
-  Patch,
   Body,
   Param,
   Query,
   UseGuards,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/guards';
-import { CurrentTenant, CurrentUser } from '../../common/decorators';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { CarriersService } from './carriers.service';
-import {
-  CreateCarrierDto,
-  UpdateCarrierDto,
-  UpdateCarrierStatusDto,
-  UpdateCarrierTierDto,
-  CarrierSearchDto,
-  CarrierListQueryDto,
-  LookupMcDto,
-  LookupDotDto,
-} from './dto/carrier.dto';
+import { CreateCarrierDto, UpdateCarrierDto } from './dto';
 
-@UseGuards(JwtAuthGuard)
 @Controller('carriers')
+@UseGuards(JwtAuthGuard)
 export class CarriersController {
   constructor(private readonly carriersService: CarriersService) {}
-
-  @Get()
-  async findAll(
-    @CurrentTenant() tenantId: string,
-    @Query() query: CarrierListQueryDto
-  ) {
-    return this.carriersService.findAll(tenantId, query);
-  }
-
-  @Get('search')
-  async search(
-    @CurrentTenant() tenantId: string,
-    @Query() query: CarrierSearchDto
-  ) {
-    return this.carriersService.search(tenantId, query);
-  }
-
-  @Post('lookup-mc')
-  async lookupMc(
-    @CurrentTenant() tenantId: string,
-    @Body() dto: LookupMcDto
-  ) {
-    return this.carriersService.lookupMc(tenantId, dto.mcNumber);
-  }
-
-  @Post('lookup-dot')
-  async lookupDot(
-    @CurrentTenant() tenantId: string,
-    @Body() dto: LookupDotDto
-  ) {
-    return this.carriersService.lookupDot(tenantId, dto.dotNumber);
-  }
-
-  @Get(':id')
-  async findOne(@CurrentTenant() tenantId: string, @Param('id') id: string) {
-    return this.carriersService.findOne(tenantId, id);
-  }
 
   @Post()
   async create(
     @CurrentTenant() tenantId: string,
-    @CurrentUser('userId') userId: string,
-    @Body() dto: CreateCarrierDto
+    @CurrentUser() user: { id: string },
+    @Body() dto: CreateCarrierDto,
   ) {
-    return this.carriersService.create(tenantId, userId, dto);
+    return this.carriersService.create(tenantId, user.id, dto);
   }
 
-  @Put(':id')
-  async update(
+  @Get()
+  async findAll(
     @CurrentTenant() tenantId: string,
-    @CurrentUser('userId') userId: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('status') status?: string,
+    @Query('search') search?: string,
+    @Query('carrierType') carrierType?: string,
+  ) {
+    return this.carriersService.findAll(tenantId, {
+      page: page ? parseInt(page, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+      status,
+      search,
+      carrierType,
+    });
+  }
+
+  @Get('expiring-insurance')
+  async getExpiringInsurance(
+    @CurrentTenant() tenantId: string,
+    @Query('days') days?: string,
+  ) {
+    return this.carriersService.getExpiringInsurance(
+      tenantId,
+      days ? parseInt(days, 10) : 30,
+    );
+  }
+
+  @Get(':id')
+  async findOne(
+    @CurrentTenant() tenantId: string,
     @Param('id') id: string,
-    @Body() dto: UpdateCarrierDto
   ) {
-    return this.carriersService.update(tenantId, id, userId, dto);
-  }
-
-  @Delete(':id')
-  async delete(
-    @CurrentTenant() tenantId: string,
-    @CurrentUser('userId') userId: string,
-    @Param('id') id: string
-  ) {
-    return this.carriersService.delete(tenantId, id, userId);
-  }
-
-  @Get(':id/compliance')
-  async getCompliance(
-    @CurrentTenant() tenantId: string,
-    @Param('id') id: string
-  ) {
-    return this.carriersService.getCompliance(tenantId, id);
-  }
-
-  @Post(':id/verify-fmcsa')
-  async verifyFmcsa(
-    @CurrentTenant() tenantId: string,
-    @CurrentUser('userId') userId: string,
-    @Param('id') id: string
-  ) {
-    return this.carriersService.verifyFmcsa(tenantId, id, userId);
+    return this.carriersService.findOne(tenantId, id);
   }
 
   @Get(':id/performance')
   async getPerformance(
     @CurrentTenant() tenantId: string,
-    @Param('id') id: string
+    @Param('id') id: string,
+    @Query('days') days?: string,
   ) {
-    return this.carriersService.getPerformance(tenantId, id);
+    return this.carriersService.getCarrierPerformance(
+      tenantId,
+      id,
+      days ? parseInt(days, 10) : 90,
+    );
   }
 
-  @Patch(':id/status')
-  async updateStatus(
+  @Put(':id')
+  async update(
     @CurrentTenant() tenantId: string,
-    @CurrentUser('userId') userId: string,
     @Param('id') id: string,
-    @Body() dto: UpdateCarrierStatusDto
+    @Body() dto: UpdateCarrierDto,
   ) {
-    return this.carriersService.updateStatus(tenantId, id, userId, dto);
+    return this.carriersService.update(tenantId, id, dto);
   }
 
-  @Patch(':id/tier')
-  async updateTier(
+  @Post(':id/approve')
+  @HttpCode(HttpStatus.OK)
+  async approve(
     @CurrentTenant() tenantId: string,
-    @CurrentUser('userId') userId: string,
+    @CurrentUser() user: { id: string },
     @Param('id') id: string,
-    @Body() dto: UpdateCarrierTierDto
   ) {
-    return this.carriersService.updateTier(tenantId, id, userId, dto);
+    return this.carriersService.approve(tenantId, id, user.id);
+  }
+
+  @Post(':id/deactivate')
+  @HttpCode(HttpStatus.OK)
+  async deactivate(
+    @CurrentTenant() tenantId: string,
+    @Param('id') id: string,
+    @Body() body: { reason?: string },
+  ) {
+    return this.carriersService.deactivate(tenantId, id, body.reason);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  async delete(
+    @CurrentTenant() tenantId: string,
+    @Param('id') id: string,
+  ) {
+    return this.carriersService.delete(tenantId, id);
   }
 }

@@ -1,5 +1,7 @@
+/* eslint-disable no-undef, @typescript-eslint/no-unused-vars */
 'use client';
 
+import React from 'react';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -8,7 +10,6 @@ import {
   ArrowLeftIcon,
   ArrowDownTrayIcon,
   ShareIcon,
-  TrashIcon,
   PencilIcon,
   ClockIcon,
   UserIcon,
@@ -124,13 +125,13 @@ export default function DocumentDetailPage() {
     setLoading(true);
     try {
       const [docResponse, sharesResponse, versionsResponse] = await Promise.all([
-        apiClient.get(`/documents/${documentId}`),
-        apiClient.get(`/documents/${documentId}/shares`).catch(() => ({ data: [] })),
-        apiClient.get(`/documents/${documentId}/versions`).catch(() => ({ data: [] })),
+        apiClient.get<DocumentDetail>(`/documents/${documentId}`),
+        apiClient.get<DocumentShare[]>(`/documents/${documentId}/shares`).catch(() => []),
+        apiClient.get<DocumentDetail[]>(`/documents/${documentId}/versions`).catch(() => []),
       ]);
-      setDocument(docResponse.data);
-      setShares(sharesResponse.data);
-      setVersions(versionsResponse.data);
+      setDocument(docResponse);
+      setShares(sharesResponse);
+      setVersions(versionsResponse);
     } catch (error) {
       console.error('Error fetching document:', error);
     } finally {
@@ -140,8 +141,8 @@ export default function DocumentDetailPage() {
 
   async function handleDownload() {
     try {
-      const response = await apiClient.get(`/documents/${documentId}/download`);
-      window.open(response.data.url, '_blank');
+      const response = await apiClient.get<{ url: string }>(`/documents/${documentId}/download`);
+      window.open(response.url, '_blank');
     } catch (error) {
       console.error('Error downloading document:', error);
     }
@@ -149,8 +150,8 @@ export default function DocumentDetailPage() {
 
   async function handlePreview() {
     try {
-      const response = await apiClient.get(`/documents/${documentId}/preview`);
-      window.open(response.data.url, '_blank');
+      const response = await apiClient.get<{ url: string }>(`/documents/${documentId}/preview`);
+      window.open(response.url, '_blank');
     } catch (error) {
       console.error('Error previewing document:', error);
     }

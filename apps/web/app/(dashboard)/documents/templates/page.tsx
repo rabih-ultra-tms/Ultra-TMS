@@ -1,5 +1,7 @@
+/* eslint-disable no-undef, @typescript-eslint/no-unused-vars */
 'use client';
 
+import React from 'react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
@@ -79,8 +81,8 @@ export default function TemplatesPage() {
       const params = new URLSearchParams();
       if (filterType) params.append('templateType', filterType);
 
-      const response = await apiClient.get(`/documents/templates?${params}`);
-      setTemplates(response.data);
+      const response = await apiClient.get<Template[]>(`/documents/templates?${params}`);
+      setTemplates(response);
     } catch (error) {
       console.error('Error fetching templates:', error);
     } finally {
@@ -141,7 +143,7 @@ export default function TemplatesPage() {
     }
   }
 
-  async function handleSetDefault(id: string, type: string) {
+  async function handleSetDefault(id: string, _type: string) {
     try {
       await apiClient.put(`/documents/templates/${id}`, { isDefault: true });
       fetchTemplates();

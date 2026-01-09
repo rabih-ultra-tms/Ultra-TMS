@@ -1,5 +1,7 @@
+/* eslint-disable no-undef, @typescript-eslint/no-unused-vars */
 'use client';
 
+import React from 'react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
@@ -11,7 +13,6 @@ import {
   PencilIcon,
   TrashIcon,
   ArrowLeftIcon,
-  PlusIcon,
 } from '@heroicons/react/24/outline';
 import { apiClient } from '@/lib/api';
 
@@ -83,13 +84,13 @@ export default function FoldersPage() {
         params.append('parentFolderId', parentFolderId || currentFolder?.id || '');
       }
 
-      const response = await apiClient.get(`/documents/folders?${params}`);
-      setFolders(response.data);
+      const response = await apiClient.get<Folder[]>(`/documents/folders?${params}`);
+      setFolders(response);
 
       // If we're in a folder, also fetch its documents
       if (currentFolder) {
-        const folderResponse = await apiClient.get(`/documents/folders/${currentFolder.id}`);
-        setDocuments(folderResponse.data.documents || []);
+        const folderResponse = await apiClient.get<Folder & { documents?: FolderDocument[] }>(`/documents/folders/${currentFolder.id}`);
+        setDocuments(folderResponse.documents || []);
       } else {
         setDocuments([]);
       }

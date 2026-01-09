@@ -1,85 +1,109 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
-import {
-  CreateCarrierDto,
-  UpdateCarrierDto,
-  UpdateCarrierStatusDto,
-  UpdateCarrierTierDto,
-  CarrierSearchDto,
-  CarrierListQueryDto,
-  CarrierStatus,
-} from './dto/carrier.dto';
+import { CreateCarrierDto, UpdateCarrierDto } from './dto';
 
 @Injectable()
 export class CarriersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) {}
 
-  async findAll(tenantId: string, query: CarrierListQueryDto) {
-    const {
-      page = 1,
-      limit = 20,
-      status,
-      tier,
-      search,
-      equipmentTypes,
-      serviceStates,
-      includeContacts,
-    } = query;
+  async create(tenantId: string, userId: string, dto: CreateCarrierDto) {
+    // Check for duplicate MC number
+    if (dto.mcNumber) {
+      const existing = await this.prisma.carrier.findFirst({
+        where: { tenantId, mcNumber: dto.mcNumber },
+      });
+      if (existing) {
+        throw new BadRequestException('Carrier with this MC number already exists');
+      }
+    }
+
+    const carrier = await this.prisma.carrier.create({
+      data: {
+        tenantId,
+        legalName: dto.name,
+        dbaName: dto.dbaName,
+        mcNumber: dto.mcNumber,
+        dotNumber: dto.dotNumber,
+        scacCode: dto.scacCode,
+        taxId: dto.taxId,
+        companyType: dto.carrierType || 'CARRIER',
+        status: 'PENDING',
+        addressLine1: dto.addressLine1,
+        addressLine2: dto.addressLine2,
+        city: dto.city,
+        state: dto.state,
+        postalCode: dto.postalCode,
+        country: dto.country || 'USA',
+        primaryContactName: dto.contactName,
+        primaryContactPhone: dto.contactPhone,
+        primaryContactEmail: dto.contactEmail,
+        dispatchPhone: dto.dispatchPhone,
+        dispatchEmail: dto.dispatchEmail,
+        factoringCompany: dto.factoringCompany,
+        paymentTerms: dto.paymentTerms,
+        w9OnFile: dto.w9OnFile ? true : false,
+        quickPayFeePercent: dto.quickpayPercent,
+        internalNotes: dto.notes,
+        equipmentTypes: dto.equipmentTypes || [],
+        serviceStates: dto.serviceAreas || [],
+        safetyScore: dto.safetyRating,
+        customFields: dto.customFields || {},
+        createdById: userId,
+      },
+    });
+
+    return carrier;
+  }
+
+  async findAll(tenantId: string, options: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    search?: string;
+    carrierType?: string;
+  }) {
+    const { page = 1, limit = 20, status, search, carrierType } = options;
     const skip = (page - 1) * limit;
 
-    const where: Record<string, unknown> = {
-      tenantId,
-      deletedAt: null,
-    };
-
+    const where: any = { tenantId };
+    
     if (status) {
       where.status = status;
     }
-
-    if (tier) {
-      where.qualificationTier = tier;
+    if (carrierType) {
+      where.companyType = carrierType;
     }
-
     if (search) {
       where.OR = [
         { legalName: { contains: search, mode: 'insensitive' } },
         { dbaName: { contains: search, mode: 'insensitive' } },
         { mcNumber: { contains: search, mode: 'insensitive' } },
         { dotNumber: { contains: search, mode: 'insensitive' } },
-        { scacCode: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } },
+        { primaryContactName: { contains: search, mode: 'insensitive' } },
       ];
     }
 
-    if (equipmentTypes && equipmentTypes.length > 0) {
-      where.equipmentTypes = { hasSome: equipmentTypes };
-    }
-
-    if (serviceStates && serviceStates.length > 0) {
-      where.serviceStates = { hasSome: serviceStates };
-    }
-
-    const [data, total] = await Promise.all([
+    const [carriers, total] = await Promise.all([
       this.prisma.carrier.findMany({
         where,
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { legalName: 'asc' },
         include: {
-          contacts: includeContacts
-            ? { where: { isActive: true }, orderBy: { isPrimary: 'desc' } }
-            : false,
+          insuranceCertificates: {
+            where: { status: 'ACTIVE' },
+            select: { id: true, insuranceType: true, expirationDate: true },
+          },
+          _count: {
+            select: { drivers: true, loads: true },
+          },
         },
       }),
       this.prisma.carrier.count({ where }),
     ]);
 
     return {
-      data,
+      data: carriers,
       total,
       page,
       limit,
@@ -89,451 +113,274 @@ export class CarriersService {
 
   async findOne(tenantId: string, id: string) {
     const carrier = await this.prisma.carrier.findFirst({
-      where: { id, tenantId, deletedAt: null },
+      where: { id, tenantId },
       include: {
-        contacts: { where: { isActive: true }, orderBy: { isPrimary: 'desc' } },
+        drivers: { where: { status: 'ACTIVE' } },
         insuranceCertificates: { orderBy: { expirationDate: 'asc' } },
-        documents: { orderBy: { createdAt: 'desc' } },
-        drivers: { where: { deletedAt: null } },
+        loads: {
+          take: 10,
+          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true,
+            loadNumber: true,
+            status: true,
+            carrierRate: true,
+            createdAt: true,
+          },
+        },
       },
     });
 
     if (!carrier) {
-      throw new NotFoundException(`Carrier with ID ${id} not found`);
+      throw new NotFoundException('Carrier not found');
     }
 
     return carrier;
   }
 
-  async create(tenantId: string, userId: string, dto: CreateCarrierDto) {
-    // Check for duplicate MC/DOT numbers
-    const existing = await this.prisma.carrier.findFirst({
+  async update(tenantId: string, id: string, dto: UpdateCarrierDto) {
+    const carrier = await this.prisma.carrier.findFirst({
+      where: { id, tenantId },
+    });
+
+    if (!carrier) {
+      throw new NotFoundException('Carrier not found');
+    }
+
+    if (dto.mcNumber && dto.mcNumber !== carrier.mcNumber) {
+      const existing = await this.prisma.carrier.findFirst({
+        where: { tenantId, mcNumber: dto.mcNumber, id: { not: id } },
+      });
+      if (existing) {
+        throw new BadRequestException('Carrier with this MC number already exists');
+      }
+    }
+
+    const updated = await this.prisma.carrier.update({
+      where: { id },
+      data: {
+        legalName: dto.name,
+        dbaName: dto.dbaName,
+        mcNumber: dto.mcNumber,
+        dotNumber: dto.dotNumber,
+        scacCode: dto.scacCode,
+        taxId: dto.taxId,
+        companyType: dto.carrierType,
+        status: dto.status,
+        addressLine1: dto.addressLine1,
+        addressLine2: dto.addressLine2,
+        city: dto.city,
+        state: dto.state,
+        postalCode: dto.postalCode,
+        country: dto.country,
+        primaryContactName: dto.contactName,
+        primaryContactPhone: dto.contactPhone,
+        primaryContactEmail: dto.contactEmail,
+        dispatchPhone: dto.dispatchPhone,
+        dispatchEmail: dto.dispatchEmail,
+        factoringCompany: dto.factoringCompany,
+        paymentTerms: dto.paymentTerms,
+        w9OnFile: dto.w9OnFile ? true : undefined,
+        quickPayFeePercent: dto.quickpayPercent,
+        internalNotes: dto.notes,
+        equipmentTypes: dto.equipmentTypes,
+        serviceStates: dto.serviceAreas,
+        safetyScore: dto.safetyRating,
+        customFields: dto.customFields,
+        updatedAt: new Date(),
+      },
+    });
+
+    return updated;
+  }
+
+  async approve(tenantId: string, id: string, _userId: string) {
+    const carrier = await this.prisma.carrier.findFirst({
+      where: { id, tenantId },
+      include: { insuranceCertificates: { where: { status: 'ACTIVE' } } },
+    });
+
+    if (!carrier) {
+      throw new NotFoundException('Carrier not found');
+    }
+
+    if (carrier.status !== 'PENDING') {
+      throw new BadRequestException('Only pending carriers can be approved');
+    }
+
+    const hasAutoLiability = carrier.insuranceCertificates.some(
+      (i) => i.insuranceType === 'AUTO_LIABILITY'
+    );
+    if (!hasAutoLiability) {
+      throw new BadRequestException('Carrier must have active auto liability insurance');
+    }
+
+    const updated = await this.prisma.carrier.update({
+      where: { id },
+      data: {
+        status: 'ACTIVE',
+        qualificationDate: new Date(),
+      },
+    });
+
+    return updated;
+  }
+
+  async deactivate(tenantId: string, id: string, reason?: string) {
+    const carrier = await this.prisma.carrier.findFirst({
+      where: { id, tenantId },
+    });
+
+    if (!carrier) {
+      throw new NotFoundException('Carrier not found');
+    }
+
+    const activeLoads = await this.prisma.load.count({
       where: {
-        tenantId,
-        OR: [{ mcNumber: dto.mcNumber }, { dotNumber: dto.dotNumber }],
-        deletedAt: null,
+        carrierId: id,
+        status: { notIn: ['COMPLETED', 'CANCELLED'] },
       },
     });
 
-    if (existing) {
-      throw new BadRequestException(
-        `Carrier with MC# ${dto.mcNumber} or DOT# ${dto.dotNumber} already exists`
-      );
-    }
-
-    const { preferredLanes, customFields, ...carrierData } = dto;
-
-    const carrier = await this.prisma.carrier.create({
-      data: {
-        ...carrierData,
-        tenantId,
-        preferredLanes: preferredLanes
-          ? JSON.parse(JSON.stringify(preferredLanes))
-          : [],
-        customFields: customFields
-          ? JSON.parse(JSON.stringify(customFields))
-          : {},
-        status: CarrierStatus.PENDING,
-        createdBy: userId,
-      },
-      include: {
-        contacts: true,
-      },
-    });
-
-    return carrier;
-  }
-
-  async update(
-    tenantId: string,
-    id: string,
-    userId: string,
-    dto: UpdateCarrierDto
-  ) {
-    const carrier = await this.findOne(tenantId, id);
-
-    const { preferredLanes, customFields, ...updateData } = dto;
-
-    const updatePayload: Record<string, unknown> = {
-      ...updateData,
-      updatedBy: userId,
-    };
-
-    if (preferredLanes) {
-      updatePayload.preferredLanes = JSON.parse(JSON.stringify(preferredLanes));
-    }
-
-    if (customFields) {
-      const merged = {
-        ...(carrier.customFields as Record<string, unknown>),
-        ...customFields,
-      };
-      updatePayload.customFields = JSON.parse(JSON.stringify(merged));
+    if (activeLoads > 0) {
+      throw new BadRequestException(`Cannot deactivate carrier with ${activeLoads} active loads`);
     }
 
     const updated = await this.prisma.carrier.update({
-      where: { id: carrier.id },
-      data: updatePayload,
-      include: {
-        contacts: { where: { isActive: true } },
+      where: { id },
+      data: {
+        status: 'INACTIVE',
+        internalNotes: reason
+          ? `${carrier.internalNotes || ''}\nDeactivation reason: ${reason}`
+          : carrier.internalNotes,
+        updatedAt: new Date(),
       },
     });
 
     return updated;
   }
 
-  async updateStatus(
-    tenantId: string,
-    id: string,
-    userId: string,
-    dto: UpdateCarrierStatusDto
-  ) {
-    const carrier = await this.findOne(tenantId, id);
+  async delete(tenantId: string, id: string) {
+    const carrier = await this.prisma.carrier.findFirst({
+      where: { id, tenantId },
+    });
 
-    const updateData: Record<string, unknown> = {
-      status: dto.status,
-      updatedBy: userId,
-    };
-
-    if (dto.status === CarrierStatus.ACTIVE) {
-      updateData.activatedAt = new Date();
-    } else if (dto.status === CarrierStatus.SUSPENDED) {
-      updateData.suspendedAt = new Date();
-    } else if (dto.status === CarrierStatus.BLACKLISTED) {
-      updateData.blacklistReason = dto.reason;
+    if (!carrier) {
+      throw new NotFoundException('Carrier not found');
     }
 
-    const updated = await this.prisma.carrier.update({
-      where: { id: carrier.id },
-      data: updateData,
+    const loadCount = await this.prisma.load.count({
+      where: { carrierId: id },
     });
 
-    return updated;
-  }
+    if (loadCount > 0) {
+      throw new BadRequestException('Cannot delete carrier with load history');
+    }
 
-  async updateTier(
-    tenantId: string,
-    id: string,
-    userId: string,
-    dto: UpdateCarrierTierDto
-  ) {
-    const carrier = await this.findOne(tenantId, id);
-
-    const updated = await this.prisma.carrier.update({
-      where: { id: carrier.id },
-      data: {
-        qualificationTier: dto.tier,
-        updatedBy: userId,
-      },
-    });
-
-    return updated;
-  }
-
-  async delete(tenantId: string, id: string, userId: string) {
-    const carrier = await this.findOne(tenantId, id);
-
-    await this.prisma.carrier.update({
-      where: { id: carrier.id },
-      data: {
-        deletedAt: new Date(),
-        updatedBy: userId,
-      },
-    });
+    await this.prisma.carrier.delete({ where: { id } });
 
     return { success: true, message: 'Carrier deleted successfully' };
   }
 
-  async getCompliance(tenantId: string, id: string) {
-    const carrier = await this.findOne(tenantId, id);
+  async getCarrierPerformance(tenantId: string, id: string, days: number = 90) {
+    const carrier = await this.prisma.carrier.findFirst({
+      where: { id, tenantId },
+    });
 
-    const [insurances, documents, fmcsaLogs] = await Promise.all([
-      this.prisma.insuranceCertificate.findMany({
-        where: { carrierId: id },
-        orderBy: { expirationDate: 'asc' },
-      }),
-      this.prisma.carrierDocument.findMany({
-        where: { carrierId: id },
-        orderBy: { createdAt: 'desc' },
-      }),
-      this.prisma.fmcsaComplianceLog.findMany({
-        where: { carrierId: id },
-        orderBy: { checkedAt: 'desc' },
-        take: 10,
-      }),
-    ]);
+    if (!carrier) {
+      throw new NotFoundException('Carrier not found');
+    }
 
-    // Calculate compliance issues
-    const now = new Date();
-    const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
 
-    const expiredInsurance = insurances.filter(
-      (ins) => new Date(ins.expirationDate) < now
-    );
-    const expiringInsurance = insurances.filter(
-      (ins) =>
-        new Date(ins.expirationDate) >= now &&
-        new Date(ins.expirationDate) <= thirtyDaysFromNow
-    );
-    const pendingDocuments = documents.filter(
-      (doc) => doc.reviewStatus === 'PENDING'
-    );
-
-    return {
-      carrier: {
-        id: carrier.id,
-        legalName: carrier.legalName,
-        mcNumber: carrier.mcNumber,
-        dotNumber: carrier.dotNumber,
-        status: carrier.status,
-        fmcsaAuthorityStatus: carrier.fmcsaAuthorityStatus,
-        fmcsaSafetyRating: carrier.fmcsaSafetyRating,
-        fmcsaOutOfService: carrier.fmcsaOutOfService,
-        fmcsaLastChecked: carrier.fmcsaLastChecked,
-        complianceScore: carrier.complianceScore,
-        safetyScore: carrier.safetyScore,
-      },
-      insurance: {
-        all: insurances,
-        expired: expiredInsurance,
-        expiringSoon: expiringInsurance,
-      },
-      documents: {
-        all: documents,
-        pending: pendingDocuments,
-      },
-      fmcsaHistory: fmcsaLogs,
-      issues: {
-        hasExpiredInsurance: expiredInsurance.length > 0,
-        hasExpiringInsurance: expiringInsurance.length > 0,
-        hasPendingDocuments: pendingDocuments.length > 0,
-        isOutOfService: carrier.fmcsaOutOfService,
-      },
-    };
-  }
-
-  async verifyFmcsa(tenantId: string, id: string, userId: string) {
-    const carrier = await this.findOne(tenantId, id);
-
-    // In production, this would call the actual FMCSA API
-    // For now, we simulate the response
-    const fmcsaData = {
-      authorityStatus: 'AUTHORIZED',
-      safetyRating: 'SATISFACTORY',
-      operatingStatus: 'ACTIVE',
-      outOfService: false,
-      legalName: carrier.legalName,
-      address: carrier.address,
-      city: carrier.city,
-      state: carrier.state,
-      zipCode: carrier.zipCode,
-    };
-
-    // Log the FMCSA check
-    await this.prisma.fmcsaComplianceLog.create({
-      data: {
-        tenantId,
+    const loads = await this.prisma.load.findMany({
+      where: {
         carrierId: id,
-        checkType: 'MANUAL',
-        mcNumber: carrier.mcNumber,
-        dotNumber: carrier.dotNumber,
-        authorityStatus: fmcsaData.authorityStatus,
-        safetyRating: fmcsaData.safetyRating,
-        operatingStatus: fmcsaData.operatingStatus,
-        outOfService: fmcsaData.outOfService,
-        rawResponse: fmcsaData,
-        success: true,
-        checkedBy: userId,
+        createdAt: { gte: cutoffDate },
       },
-    });
-
-    // Update carrier with FMCSA data
-    const updated = await this.prisma.carrier.update({
-      where: { id: carrier.id },
-      data: {
-        fmcsaAuthorityStatus: fmcsaData.authorityStatus,
-        fmcsaSafetyRating: fmcsaData.safetyRating,
-        fmcsaOperatingStatus: fmcsaData.operatingStatus,
-        fmcsaOutOfService: fmcsaData.outOfService,
-        fmcsaLastChecked: new Date(),
-        fmcsaData: fmcsaData,
-        updatedBy: userId,
-      },
-    });
-
-    return {
-      carrier: updated,
-      fmcsaData,
-      checkedAt: new Date(),
-    };
-  }
-
-  async getPerformance(tenantId: string, id: string) {
-    const carrier = await this.findOne(tenantId, id);
-
-    const history = await this.prisma.carrierPerformanceHistory.findMany({
-      where: { carrierId: id },
-      orderBy: { periodStart: 'desc' },
-      take: 12, // Last 12 periods
-    });
-
-    return {
-      carrier: {
-        id: carrier.id,
-        legalName: carrier.legalName,
-        qualificationTier: carrier.qualificationTier,
-        totalLoadsCompleted: carrier.totalLoadsCompleted,
-        onTimePickupRate: carrier.onTimePickupRate,
-        onTimeDeliveryRate: carrier.onTimeDeliveryRate,
-        claimsRate: carrier.claimsRate,
-        avgRating: carrier.avgRating,
-      },
-      history,
-    };
-  }
-
-  async search(tenantId: string, dto: CarrierSearchDto) {
-    const {
-      page = 1,
-      limit = 20,
-      equipmentTypes,
-      serviceStates,
-      originState,
-      destinationState,
-      tiers,
-      minRating,
-      minLoads,
-    } = dto;
-    const skip = (page - 1) * limit;
-
-    const where: Record<string, unknown> = {
-      tenantId,
-      status: CarrierStatus.ACTIVE,
-      deletedAt: null,
-    };
-
-    if (equipmentTypes && equipmentTypes.length > 0) {
-      where.equipmentTypes = { hasSome: equipmentTypes };
-    }
-
-    if (serviceStates && serviceStates.length > 0) {
-      where.serviceStates = { hasSome: serviceStates };
-    }
-
-    if (originState) {
-      where.serviceStates = {
-        ...(where.serviceStates as Record<string, unknown>),
-        has: originState,
-      };
-    }
-
-    if (tiers && tiers.length > 0) {
-      where.qualificationTier = { in: tiers };
-    }
-
-    if (minRating) {
-      where.avgRating = { gte: minRating };
-    }
-
-    if (minLoads) {
-      where.totalLoadsCompleted = { gte: minLoads };
-    }
-
-    const [data, total] = await Promise.all([
-      this.prisma.carrier.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: [{ qualificationTier: 'asc' }, { avgRating: 'desc' }],
-        select: {
-          id: true,
-          legalName: true,
-          dbaName: true,
-          mcNumber: true,
-          dotNumber: true,
-          city: true,
-          state: true,
-          phone: true,
-          dispatchPhone: true,
-          equipmentTypes: true,
-          serviceStates: true,
-          qualificationTier: true,
-          totalLoadsCompleted: true,
-          onTimeDeliveryRate: true,
-          avgRating: true,
-          preferredLanguage: true,
+      include: {
+        order: {
+          include: {
+            stops: true,
+          },
         },
-      }),
-      this.prisma.carrier.count({ where }),
-    ]);
-
-    return {
-      data,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    };
-  }
-
-  async lookupMc(tenantId: string, mcNumber: string) {
-    // Check if carrier already exists
-    const existing = await this.prisma.carrier.findFirst({
-      where: { tenantId, mcNumber, deletedAt: null },
+      },
     });
 
-    if (existing) {
-      return {
-        exists: true,
-        carrier: existing,
-      };
+    const totalLoads = loads.length;
+    const completedLoads = loads.filter((l) => l.status === 'COMPLETED').length;
+    const cancelledLoads = loads.filter((l) => l.status === 'CANCELLED').length;
+    const totalRevenue = loads.reduce(
+      (sum, l) => sum + (l.carrierRate?.toNumber() || 0),
+      0
+    );
+
+    let onTimeDeliveries = 0;
+    let deliveriesWithData = 0;
+
+    for (const load of loads) {
+      if (load.status !== 'COMPLETED' || !load.order?.stops) continue;
+
+      const lastStop = load.order.stops.find((s) => s.stopType === 'DELIVERY');
+      if (lastStop?.appointmentTimeEnd && lastStop?.arrivedAt) {
+        deliveriesWithData++;
+        if (new Date(lastStop.arrivedAt) <= new Date(lastStop.appointmentTimeEnd)) {
+          onTimeDeliveries++;
+        }
+      }
     }
 
-    // In production, call FMCSA API to lookup MC number
-    // For now, return simulated data
     return {
-      exists: false,
-      fmcsaData: {
-        mcNumber,
-        dotNumber: '1234567',
-        legalName: 'Sample Carrier LLC',
-        address: '123 Main St',
-        city: 'Chicago',
-        state: 'IL',
-        zipCode: '60601',
-        authorityStatus: 'AUTHORIZED',
-        safetyRating: 'SATISFACTORY',
+      carrierId: id,
+      carrierName: carrier.legalName,
+      period: `Last ${days} days`,
+      metrics: {
+        totalLoads,
+        completedLoads,
+        cancelledLoads,
+        completionRate:
+          totalLoads > 0
+            ? ((completedLoads / totalLoads) * 100).toFixed(1)
+            : 0,
+        cancellationRate:
+          totalLoads > 0
+            ? ((cancelledLoads / totalLoads) * 100).toFixed(1)
+            : 0,
+        onTimeRate:
+          deliveriesWithData > 0
+            ? ((onTimeDeliveries / deliveriesWithData) * 100).toFixed(1)
+            : 'N/A',
+        totalRevenue,
+        averageLoadValue:
+          totalLoads > 0 ? (totalRevenue / totalLoads).toFixed(2) : 0,
       },
     };
   }
 
-  async lookupDot(tenantId: string, dotNumber: string) {
-    // Check if carrier already exists
-    const existing = await this.prisma.carrier.findFirst({
-      where: { tenantId, dotNumber, deletedAt: null },
+  async getExpiringInsurance(tenantId: string, days: number = 30) {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() + days);
+
+    const expiring = await this.prisma.insuranceCertificate.findMany({
+      where: {
+        tenantId,
+        status: 'ACTIVE',
+        expirationDate: { lte: cutoffDate },
+      },
+      include: {
+        carrier: {
+          select: {
+            id: true,
+            legalName: true,
+            mcNumber: true,
+            primaryContactEmail: true,
+          },
+        },
+      },
+      orderBy: { expirationDate: 'asc' },
     });
 
-    if (existing) {
-      return {
-        exists: true,
-        carrier: existing,
-      };
-    }
-
-    // In production, call FMCSA API to lookup DOT number
-    return {
-      exists: false,
-      fmcsaData: {
-        dotNumber,
-        mcNumber: 'MC123456',
-        legalName: 'Sample Carrier LLC',
-        address: '123 Main St',
-        city: 'Chicago',
-        state: 'IL',
-        zipCode: '60601',
-        authorityStatus: 'AUTHORIZED',
-        safetyRating: 'SATISFACTORY',
-      },
-    };
+    return expiring;
   }
 }

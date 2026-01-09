@@ -1,228 +1,126 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
-import {
-  CreateDriverDto,
-  UpdateDriverDto,
-  UpdateDriverLocationDto,
-  DriverListQueryDto,
-} from './dto/driver.dto';
+import { CreateDriverDto, UpdateDriverDto } from './dto';
 
 @Injectable()
 export class DriversService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) {}
 
-  async findAll(tenantId: string, query: DriverListQueryDto) {
-    const {
-      page = 1,
-      limit = 20,
-      status,
-      availability,
-      search,
-      expiringSoon,
-    } = query;
-    const skip = (page - 1) * limit;
-
-    const where: Record<string, unknown> = {
-      tenantId,
-      deletedAt: null,
-    };
-
-    if (status) {
-      where.status = status;
-    }
-
-    if (availability) {
-      where.availability = availability;
-    }
-
-    if (search) {
-      where.OR = [
-        { firstName: { contains: search, mode: 'insensitive' } },
-        { lastName: { contains: search, mode: 'insensitive' } },
-        { cdlNumber: { contains: search, mode: 'insensitive' } },
-        { phone: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } },
-      ];
-    }
-
-    if (expiringSoon) {
-      const thirtyDaysFromNow = new Date();
-      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-      where.OR = [
-        { cdlExpiration: { lte: thirtyDaysFromNow } },
-        { medicalCardExpiration: { lte: thirtyDaysFromNow } },
-      ];
-    }
-
-    const [data, total] = await Promise.all([
-      this.prisma.driver.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          carrier: {
-            select: { id: true, legalName: true, mcNumber: true },
-          },
-        },
-      }),
-      this.prisma.driver.count({ where }),
-    ]);
-
-    return {
-      data,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    };
-  }
-
-  async findByCarrier(
-    tenantId: string,
-    carrierId: string,
-    query: DriverListQueryDto
-  ) {
-    // Verify carrier exists
+  async create(tenantId: string, carrierId: string, _userId: string, dto: CreateDriverDto) {
     const carrier = await this.prisma.carrier.findFirst({
-      where: { id: carrierId, tenantId, deletedAt: null },
+      where: { id: carrierId, tenantId },
     });
 
     if (!carrier) {
-      throw new NotFoundException(`Carrier with ID ${carrierId} not found`);
+      throw new NotFoundException('Carrier not found');
     }
 
-    const { page = 1, limit = 20, status, availability, search } = query;
-    const skip = (page - 1) * limit;
-
-    const where: Record<string, unknown> = {
-      carrierId,
-      tenantId,
-      deletedAt: null,
-    };
-
-    if (status) {
-      where.status = status;
-    }
-
-    if (availability) {
-      where.availability = availability;
-    }
-
-    if (search) {
-      where.OR = [
-        { firstName: { contains: search, mode: 'insensitive' } },
-        { lastName: { contains: search, mode: 'insensitive' } },
-        { cdlNumber: { contains: search, mode: 'insensitive' } },
-      ];
-    }
-
-    const [data, total] = await Promise.all([
-      this.prisma.driver.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-      }),
-      this.prisma.driver.count({ where }),
-    ]);
-
-    return {
-      data,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    };
-  }
-
-  async findOne(tenantId: string, id: string) {
-    const driver = await this.prisma.driver.findFirst({
-      where: { id, tenantId, deletedAt: null },
-      include: {
-        carrier: {
-          select: {
-            id: true,
-            legalName: true,
-            mcNumber: true,
-            dotNumber: true,
-          },
+    if (dto.licenseNumber) {
+      const existing = await this.prisma.driver.findFirst({
+        where: {
+          tenantId,
+          cdlNumber: dto.licenseNumber,
+          cdlState: dto.licenseState,
         },
-      },
-    });
-
-    if (!driver) {
-      throw new NotFoundException(`Driver with ID ${id} not found`);
-    }
-
-    return driver;
-  }
-
-  async create(tenantId: string, carrierId: string, dto: CreateDriverDto) {
-    // Verify carrier exists
-    const carrier = await this.prisma.carrier.findFirst({
-      where: { id: carrierId, tenantId, deletedAt: null },
-    });
-
-    if (!carrier) {
-      throw new NotFoundException(`Carrier with ID ${carrierId} not found`);
+      });
+      if (existing) {
+        throw new BadRequestException('Driver with this CDL already exists');
+      }
     }
 
     const driver = await this.prisma.driver.create({
       data: {
-        ...dto,
         tenantId,
         carrierId,
-        cdlExpiration: new Date(dto.cdlExpiration),
-        medicalCardExpiration: dto.medicalCardExpiration
-          ? new Date(dto.medicalCardExpiration)
-          : undefined,
-      },
-      include: {
-        carrier: { select: { id: true, legalName: true } },
+        firstName: dto.firstName,
+        lastName: dto.lastName,
+        status: 'ACTIVE',
+        cdlNumber: dto.licenseNumber,
+        cdlState: dto.licenseState,
+        cdlClass: dto.licenseClass,
+        cdlExpiration: dto.licenseExpiry ? new Date(dto.licenseExpiry) : null,
+        phone: dto.phone,
+        email: dto.email,
+        endorsements: dto.hazmatEndorsement ? ['H'] : [],
       },
     });
+
+    return driver;
+  }
+
+  async findAllForCarrier(tenantId: string, carrierId: string, options: { status?: string }) {
+    const { status } = options;
+
+    const carrier = await this.prisma.carrier.findFirst({
+      where: { id: carrierId, tenantId },
+    });
+
+    if (!carrier) {
+      throw new NotFoundException('Carrier not found');
+    }
+
+    const where: any = { tenantId, carrierId };
+    if (status) where.status = status;
+
+    const drivers = await this.prisma.driver.findMany({
+      where,
+      orderBy: { lastName: 'asc' },
+    });
+
+    return drivers;
+  }
+
+  async findOne(tenantId: string, id: string) {
+    const driver = await this.prisma.driver.findFirst({
+      where: { id, tenantId },
+      include: {
+        carrier: { select: { id: true, legalName: true, mcNumber: true } },
+      },
+    });
+
+    if (!driver) {
+      throw new NotFoundException('Driver not found');
+    }
 
     return driver;
   }
 
   async update(tenantId: string, id: string, dto: UpdateDriverDto) {
-    const driver = await this.findOne(tenantId, id);
-
-    const { cdlExpiration, medicalCardExpiration, ...updateData } = dto;
-
-    const updated = await this.prisma.driver.update({
-      where: { id: driver.id },
-      data: {
-        ...updateData,
-        ...(cdlExpiration && { cdlExpiration: new Date(cdlExpiration) }),
-        ...(medicalCardExpiration && {
-          medicalCardExpiration: new Date(medicalCardExpiration),
-        }),
-      },
-      include: {
-        carrier: { select: { id: true, legalName: true } },
-      },
+    const driver = await this.prisma.driver.findFirst({
+      where: { id, tenantId },
     });
 
-    return updated;
-  }
+    if (!driver) {
+      throw new NotFoundException('Driver not found');
+    }
 
-  async updateLocation(
-    tenantId: string,
-    id: string,
-    dto: UpdateDriverLocationDto
-  ) {
-    const driver = await this.findOne(tenantId, id);
+    if (dto.licenseNumber && dto.licenseState) {
+      const existing = await this.prisma.driver.findFirst({
+        where: {
+          tenantId,
+          cdlNumber: dto.licenseNumber,
+          cdlState: dto.licenseState,
+          id: { not: id },
+        },
+      });
+      if (existing) {
+        throw new BadRequestException('Driver with this CDL already exists');
+      }
+    }
 
     const updated = await this.prisma.driver.update({
-      where: { id: driver.id },
+      where: { id },
       data: {
-        lastLocationLat: dto.latitude,
-        lastLocationLng: dto.longitude,
-        lastLocationCity: dto.city,
-        lastLocationState: dto.state,
-        lastLocationTime: new Date(),
+        firstName: dto.firstName,
+        lastName: dto.lastName,
+        status: dto.status,
+        cdlNumber: dto.licenseNumber,
+        cdlState: dto.licenseState,
+        cdlClass: dto.licenseClass,
+        cdlExpiration: dto.licenseExpiry ? new Date(dto.licenseExpiry) : undefined,
+        phone: dto.phone,
+        email: dto.email,
+        updatedAt: new Date(),
       },
     });
 
@@ -230,33 +128,38 @@ export class DriversService {
   }
 
   async delete(tenantId: string, id: string) {
-    const driver = await this.findOne(tenantId, id);
-
-    await this.prisma.driver.update({
-      where: { id: driver.id },
-      data: {
-        deletedAt: new Date(),
-      },
+    const driver = await this.prisma.driver.findFirst({
+      where: { id, tenantId },
     });
+
+    if (!driver) {
+      throw new NotFoundException('Driver not found');
+    }
+
+    await this.prisma.driver.delete({ where: { id } });
 
     return { success: true, message: 'Driver deleted successfully' };
   }
 
-  async getLocation(tenantId: string, id: string) {
-    const driver = await this.findOne(tenantId, id);
+  async getExpiringCredentials(tenantId: string, days: number = 30) {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() + days);
 
-    return {
-      driverId: driver.id,
-      driverName: `${driver.firstName} ${driver.lastName}`,
-      latitude: driver.lastLocationLat,
-      longitude: driver.lastLocationLng,
-      city: driver.lastLocationCity,
-      state: driver.lastLocationState,
-      lastUpdated: driver.lastLocationTime,
-      hosStatus: driver.hosStatus,
-      hosDriveRemaining: driver.hosDriveRemaining,
-      hosShiftRemaining: driver.hosShiftRemaining,
-      hosCycleRemaining: driver.hosCycleRemaining,
-    };
+    const expiring = await this.prisma.driver.findMany({
+      where: {
+        tenantId,
+        status: 'ACTIVE',
+        cdlExpiration: { lte: cutoffDate },
+      },
+      include: {
+        carrier: { select: { id: true, legalName: true } },
+      },
+      orderBy: { cdlExpiration: 'asc' },
+    });
+
+    return expiring.map((driver) => ({
+      ...driver,
+      expiringCredentials: [{ type: 'CDL', date: driver.cdlExpiration }],
+    }));
   }
 }
