@@ -17,10 +17,10 @@ import { AccountingModule } from './modules/accounting/accounting.module';
 import { LoadBoardModule } from './modules/load-board/load-board.module';
 import { CommissionModule } from './modules/commission/commission.module';
 import { DocumentsModule } from './modules/documents/documents.module';
+import { CommunicationModule } from './modules/communication/communication.module';
 
 // Support services - commented out until schemas are added
 // import { AnalyticsModule } from './modules/analytics/analytics.module';
-// import { DocumentsModule } from './modules/documents/documents.module';
 // import { IntegrationHubModule } from './modules/integration-hub/integration-hub.module';
 // import { WorkflowModule } from './modules/workflow/workflow.module';
 
@@ -45,9 +45,9 @@ import { DocumentsModule } from './modules/documents/documents.module';
     LoadBoardModule,
     CommissionModule,
     DocumentsModule,
+    CommunicationModule,
     // Support services - enable after adding schemas:
     // AnalyticsModule,
-    // DocumentsModule,
     // IntegrationHubModule,
     // WorkflowModule,
   ],
