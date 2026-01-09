@@ -137,4 +137,124 @@ export class ActivitiesService {
       },
     });
   }
+
+  async getMyTasks(tenantId: string, userId: string, options?: { page?: number; limit?: number; includeCompleted?: boolean }) {
+    const { page = 1, limit = 20, includeCompleted = false } = options || {};
+    const skip = (page - 1) * limit;
+
+    const where: any = {
+      tenantId,
+      ownerId: userId,
+      activityType: 'TASK',
+    };
+    if (!includeCompleted) {
+      where.completedAt = null;
+    }
+
+    const [data, total] = await Promise.all([
+      this.prisma.activity.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: [{ dueDate: 'asc' }, { priority: 'desc' }],
+        include: {
+          company: { select: { id: true, name: true } },
+          contact: { select: { id: true, firstName: true, lastName: true } },
+          opportunity: { select: { id: true, name: true } },
+        },
+      }),
+      this.prisma.activity.count({ where }),
+    ]);
+
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
+  }
+
+  async getOverdueTasks(tenantId: string, userId: string) {
+    const now = new Date();
+
+    return this.prisma.activity.findMany({
+      where: {
+        tenantId,
+        ownerId: userId,
+        activityType: 'TASK',
+        completedAt: null,
+        dueDate: { lt: now },
+      },
+      orderBy: { dueDate: 'asc' },
+      include: {
+        company: { select: { id: true, name: true } },
+        contact: { select: { id: true, firstName: true, lastName: true } },
+        opportunity: { select: { id: true, name: true } },
+      },
+    });
+  }
+
+  async markComplete(tenantId: string, id: string, userId: string) {
+    await this.findOne(tenantId, id);
+
+    return this.prisma.activity.update({
+      where: { id },
+      data: {
+        completedAt: new Date(),
+        status: 'COMPLETED',
+        updatedById: userId,
+      },
+      include: {
+        company: { select: { id: true, name: true } },
+        contact: { select: { id: true, firstName: true, lastName: true } },
+      },
+    });
+  }
+
+  async reopenTask(tenantId: string, id: string, userId: string) {
+    await this.findOne(tenantId, id);
+
+    return this.prisma.activity.update({
+      where: { id },
+      data: {
+        completedAt: null,
+        status: 'PENDING',
+        updatedById: userId,
+      },
+    });
+  }
+
+  async reschedule(tenantId: string, id: string, userId: string, newDueDate: string) {
+    await this.findOne(tenantId, id);
+
+    return this.prisma.activity.update({
+      where: { id },
+      data: {
+        dueDate: new Date(newDueDate),
+        updatedById: userId,
+      },
+      include: {
+        company: { select: { id: true, name: true } },
+        contact: { select: { id: true, firstName: true, lastName: true } },
+      },
+    });
+  }
+
+  async getStats(tenantId: string, userId?: string) {
+    const where: any = { tenantId };
+    if (userId) where.ownerId = userId;
+
+    const now = new Date();
+
+    const [total, tasks, completed, overdue] = await Promise.all([
+      this.prisma.activity.count({ where }),
+      this.prisma.activity.count({ where: { ...where, activityType: 'TASK' } }),
+      this.prisma.activity.count({ where: { ...where, completedAt: { not: null } } }),
+      this.prisma.activity.count({
+        where: {
+          ...where,
+          activityType: 'TASK',
+          completedAt: null,
+          dueDate: { lt: now },
+        },
+      }),
+    ]);
+
+    return { total, tasks, completed, overdue };
+  }
 }

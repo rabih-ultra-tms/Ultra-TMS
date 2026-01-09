@@ -4,6 +4,7 @@ import {
   Post,
   Put,
   Delete,
+  Patch,
   Body,
   Param,
   Query,
@@ -72,5 +73,44 @@ export class OpportunitiesController {
     @Param('id') id: string,
   ) {
     return this.opportunitiesService.delete(tenantId, id, userId);
+  }
+
+  @Patch(':id/stage')
+  async updateStage(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+    @Body() dto: { stage: string; reason?: string },
+  ) {
+    return this.opportunitiesService.updateStage(tenantId, id, userId, dto.stage, dto.reason);
+  }
+
+  @Post(':id/convert')
+  async convertToCustomer(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ) {
+    return this.opportunitiesService.convertToCustomer(tenantId, id, userId);
+  }
+
+  @Get(':id/activities')
+  async getActivities(
+    @CurrentTenant() tenantId: string,
+    @Param('id') id: string,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
+    return this.opportunitiesService.getActivities(tenantId, id, { page, limit });
+  }
+
+  @Patch(':id/owner')
+  async updateOwner(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+    @Body() dto: { ownerId: string },
+  ) {
+    return this.opportunitiesService.updateOwner(tenantId, id, userId, dto.ownerId);
   }
 }

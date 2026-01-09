@@ -119,4 +119,91 @@ export class CompaniesService {
 
     return { success: true };
   }
+
+  async getCompanyOrders(tenantId: string, companyId: string, options?: { page?: number; limit?: number }) {
+    const { page = 1, limit = 20 } = options || {};
+    const skip = (page - 1) * limit;
+
+    await this.findOne(tenantId, companyId);
+
+    const [data, total] = await Promise.all([
+      this.prisma.order.findMany({
+        where: { tenantId, customerId: companyId },
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          loads: { select: { id: true, status: true } },
+        },
+      }),
+      this.prisma.order.count({ where: { tenantId, customerId: companyId } }),
+    ]);
+
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
+  }
+
+  async syncToHubspot(tenantId: string, id: string, userId: string) {
+    const company = await this.findOne(tenantId, id);
+
+    // Stub for HubSpot sync - will be implemented when HubSpot integration is ready
+    await this.prisma.hubspotSyncLog.create({
+      data: {
+        tenantId,
+        entityType: 'COMPANY',
+        entityId: id,
+        hubspotId: company.hubspotId || 'pending',
+        syncDirection: 'TO_HUBSPOT',
+        syncStatus: 'PENDING',
+        payloadSent: { name: company.name, email: company.email },
+      },
+    });
+
+    return { success: true, message: 'Sync queued', companyId: id };
+  }
+
+  async assignReps(tenantId: string, id: string, userId: string, dto: { salesRepId?: string; opsRepId?: string }) {
+    await this.findOne(tenantId, id);
+
+    return this.prisma.company.update({
+      where: { id },
+      data: {
+        assignedUserId: dto.salesRepId,
+        updatedById: userId,
+      },
+    });
+  }
+
+  async updateTier(tenantId: string, id: string, userId: string, tier: string) {
+    const company = await this.findOne(tenantId, id);
+    const oldTier = company.tier;
+
+    const updated = await this.prisma.company.update({
+      where: { id },
+      data: { tier, updatedById: userId },
+    });
+
+    // Could emit tier change event here for analytics
+
+    return { ...updated, previousTier: oldTier };
+  }
+
+  async getStats(tenantId: string) {
+    const [total, customers, prospects, bySegment] = await Promise.all([
+      this.prisma.company.count({ where: { tenantId, deletedAt: null } }),
+      this.prisma.company.count({ where: { tenantId, deletedAt: null, companyType: 'CUSTOMER' } }),
+      this.prisma.company.count({ where: { tenantId, deletedAt: null, companyType: 'PROSPECT' } }),
+      this.prisma.company.groupBy({
+        by: ['segment'],
+        where: { tenantId, deletedAt: null },
+        _count: true,
+      }),
+    ]);
+
+    return {
+      total,
+      customers,
+      prospects,
+      bySegment: bySegment.reduce((acc, s) => ({ ...acc, [s.segment || 'UNKNOWN']: s._count }), {}),
+    };
+  }
 }

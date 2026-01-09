@@ -4,6 +4,7 @@ import {
   Post,
   Put,
   Delete,
+  Patch,
   Body,
   Param,
   Query,
@@ -80,5 +81,56 @@ export class ActivitiesController {
   @Delete(':id')
   async delete(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.activitiesService.delete(tenantId, id);
+  }
+
+  @Get('tasks/my')
+  async getMyTasks(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser('id') userId: string,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('includeCompleted') includeCompleted?: string,
+  ) {
+    return this.activitiesService.getMyTasks(tenantId, userId, {
+      page,
+      limit,
+      includeCompleted: includeCompleted === 'true',
+    });
+  }
+
+  @Get('tasks/overdue')
+  async getOverdueTasks(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.activitiesService.getOverdueTasks(tenantId, userId);
+  }
+
+  @Patch(':id/complete')
+  async markComplete(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ) {
+    return this.activitiesService.markComplete(tenantId, id, userId);
+  }
+
+  @Patch(':id/reopen')
+  async reopenTask(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ) {
+    return this.activitiesService.reopenTask(tenantId, id, userId);
+  }
+
+  @Patch(':id/reschedule')
+  async reschedule(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+    @Body() dto: { dueDate: string },
+  ) {
+    return this.activitiesService.reschedule(tenantId, id, userId, dto.dueDate);
   }
 }

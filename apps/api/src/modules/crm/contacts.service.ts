@@ -96,4 +96,51 @@ export class ContactsService {
 
     return { success: true };
   }
+
+  async syncToHubspot(tenantId: string, id: string, userId: string) {
+    const contact = await this.findOne(tenantId, id);
+
+    // Stub for HubSpot sync - will be implemented when HubSpot integration is ready
+    await this.prisma.hubspotSyncLog.create({
+      data: {
+        tenantId,
+        entityType: 'CONTACT',
+        entityId: id,
+        hubspotId: contact.hubspotId || 'pending',
+        syncDirection: 'TO_HUBSPOT',
+        syncStatus: 'PENDING',
+        payloadSent: { firstName: contact.firstName, lastName: contact.lastName, email: contact.email },
+      },
+    });
+
+    return { success: true, message: 'Sync queued', contactId: id };
+  }
+
+  async setPrimary(tenantId: string, id: string, userId: string) {
+    const contact = await this.findOne(tenantId, id);
+
+    if (!contact.companyId) {
+      return { success: false, message: 'Contact must be associated with a company' };
+    }
+
+    // Clear primary flag from all contacts in the same company
+    await this.prisma.contact.updateMany({
+      where: { tenantId, companyId: contact.companyId, isPrimary: true },
+      data: { isPrimary: false, updatedById: userId },
+    });
+
+    // Set this contact as primary
+    return this.prisma.contact.update({
+      where: { id },
+      data: { isPrimary: true, updatedById: userId },
+      include: { company: { select: { id: true, name: true } } },
+    });
+  }
+
+  async findByEmail(tenantId: string, email: string) {
+    return this.prisma.contact.findFirst({
+      where: { tenantId, email, deletedAt: null },
+      include: { company: { select: { id: true, name: true } } },
+    });
+  }
 }
