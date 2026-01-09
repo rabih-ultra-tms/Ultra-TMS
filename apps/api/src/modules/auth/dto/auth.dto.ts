@@ -3,24 +3,24 @@ import { IsEmail, IsNotEmpty, MinLength } from 'class-validator';
 export class ForgotPasswordDto {
   @IsEmail()
   @IsNotEmpty()
-  email: string;
+  email!: string;
 }
 
 export class ResetPasswordDto {
   @IsNotEmpty()
-  token: string;
+  token!: string;
 
   @IsNotEmpty()
   @MinLength(8)
-  password: string;
+  password!: string;
 }
 
 export class VerifyEmailDto {
   @IsNotEmpty()
-  token: string;
+  token!: string;
 }
 
 export class RefreshTokenDto {
   @IsNotEmpty()
-  refreshToken: string;
+  refreshToken!: string;
 }

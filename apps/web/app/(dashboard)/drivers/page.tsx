@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Pagination from '@/components/ui/Pagination';
 
 interface Driver {
   id: string;
@@ -31,8 +32,12 @@ export default function DriversListPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [availabilityFilter, setAvailabilityFilter] = useState('');
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 20,
+    total: 80, // Mock total for now
+    totalPages: 4,
+  });
 
   useEffect(() => {
     // Mock data
@@ -143,9 +148,38 @@ export default function DriversListPage() {
         hosDriveRemaining: null,
       },
     ]);
-    setTotalPages(2);
+    setPagination((prev) => ({ ...prev, totalPages: 4, total: 80 }));
     setLoading(false);
-  }, [search, statusFilter, availabilityFilter, page]);
+    // Reset to first page when filters change
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  }, [search, statusFilter, availabilityFilter]);
+
+  // Derived filtered list and pagination counters
+  const filteredDrivers = drivers.filter((d) => {
+    const matchesSearch =
+      !search ||
+      `${d.firstName} ${d.lastName}`.toLowerCase().includes(search.toLowerCase()) ||
+      (d.email || '').toLowerCase().includes(search.toLowerCase()) ||
+      d.phone.toLowerCase().includes(search.toLowerCase()) ||
+      d.cdlNumber.toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = !statusFilter || d.status === statusFilter;
+    const matchesAvailability = !availabilityFilter || d.availability === availabilityFilter;
+    return matchesSearch && matchesStatus && matchesAvailability;
+  });
+
+  const total = filteredDrivers.length;
+  const startIndex = (pagination.page - 1) * pagination.limit;
+  const endIndex = startIndex + pagination.limit;
+  const pageDrivers = filteredDrivers.slice(startIndex, endIndex);
+
+  // Keep pagination totals in sync
+  useEffect(() => {
+    setPagination((prev) => ({
+      ...prev,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / prev.limit)),
+    }));
+  }, [total, pagination.limit]);
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
@@ -191,45 +225,47 @@ export default function DriversListPage() {
   };
 
   if (loading) {
-    return <div className="p-8">Loading drivers...</div>;
+    return <div className="flex items-center justify-center h-64">
+      <div className="text-slate-500 text-sm">Loading drivers...</div>
+    </div>;
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div>
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center pb-3 mb-4 border-b border-slate-200">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Drivers</h1>
-          <p className="text-gray-600">View all drivers across your carrier network</p>
+          <h1 className="text-xl font-semibold text-slate-900">Drivers</h1>
+          <p className="mt-0.5 text-sm text-slate-600">View all drivers across your carrier network</p>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-500">Total Drivers</div>
-          <div className="text-2xl font-bold text-gray-900">89</div>
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mb-4">
+        <div className="bg-white rounded-md border border-slate-200 p-4">
+          <div className="text-xs font-medium text-slate-500">Total Drivers</div>
+          <div className="text-xl font-semibold text-slate-900">89</div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-500">Available</div>
-          <div className="text-2xl font-bold text-green-600">32</div>
+        <div className="bg-white rounded-md border border-slate-200 p-4">
+          <div className="text-xs font-medium text-slate-500">Available</div>
+          <div className="text-xl font-semibold text-green-600">32</div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-500">En Route</div>
-          <div className="text-2xl font-bold text-blue-600">45</div>
+        <div className="bg-white rounded-md border border-slate-200 p-4">
+          <div className="text-xs font-medium text-slate-500">En Route</div>
+          <div className="text-xl font-semibold text-blue-600">45</div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-500">CDL Expiring</div>
-          <div className="text-2xl font-bold text-yellow-600">5</div>
+        <div className="bg-white rounded-md border border-slate-200 p-4">
+          <div className="text-xs font-medium text-slate-500">CDL Expiring</div>
+          <div className="text-xl font-semibold text-yellow-600">5</div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-500">Medical Expiring</div>
-          <div className="text-2xl font-bold text-orange-600">3</div>
+        <div className="bg-white rounded-md border border-slate-200 p-4">
+          <div className="text-xs font-medium text-slate-500">Medical Expiring</div>
+          <div className="text-xl font-semibold text-orange-600">3</div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow p-4">
+      <div className="bg-white rounded-md border border-slate-200 p-3 mb-4">
         <div className="flex flex-wrap gap-4">
           <div className="flex-1 min-w-64">
             <input
@@ -237,13 +273,13 @@ export default function DriversListPage() {
               placeholder="Search by name, CDL#, phone..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-blue-500 text-sm"
             />
           </div>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg"
+            className="px-3 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-blue-500 text-sm"
           >
             <option value="">All Statuses</option>
             <option value="ACTIVE">Active</option>
@@ -253,7 +289,7 @@ export default function DriversListPage() {
           <select
             value={availabilityFilter}
             onChange={(e) => setAvailabilityFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg"
+            className="px-3 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-blue-500 text-sm"
           >
             <option value="">All Availability</option>
             <option value="AVAILABLE">Available</option>
@@ -264,41 +300,41 @@ export default function DriversListPage() {
       </div>
 
       {/* Drivers Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      <div className="bg-white rounded-md border border-slate-200 overflow-hidden">
+        <table className="min-w-full divide-y divide-slate-200">
+          <thead className="bg-slate-100">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Driver
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Carrier
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                 CDL Info
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Location
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                 HOS
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {drivers.map((driver) => (
-              <tr key={driver.id} className="hover:bg-gray-50">
+          <tbody className="bg-white divide-y divide-slate-200">
+            {pageDrivers.map((driver) => (
+              <tr key={driver.id} className="hover:bg-slate-50">
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">
+                  <div className="text-sm font-medium text-slate-900">
                     {driver.firstName} {driver.lastName}
                   </div>
-                  <div className="text-sm text-gray-500">{driver.phone}</div>
+                  <div className="text-sm text-slate-500">{driver.phone}</div>
                   {driver.assignedTruckNumber && (
                     <div className="text-xs text-blue-600">🚛 {driver.assignedTruckNumber}</div>
                   )}
@@ -351,7 +387,7 @@ export default function DriversListPage() {
                     {driver.hosStatus?.replace('_', ' ') || 'N/A'}
                   </span>
                   {driver.hosDriveRemaining !== null && (
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs text-slate-500 mt-1">
                       Drive: {formatHosTime(driver.hosDriveRemaining)}
                     </div>
                   )}
@@ -368,30 +404,22 @@ export default function DriversListPage() {
             ))}
           </tbody>
         </table>
+        {filteredDrivers.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-500">No drivers match the filters</p>
+          </div>
+        )}
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-between items-center">
-        <div className="text-sm text-gray-700">
-          Showing page {page} of {totalPages}
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setPage(Math.max(1, page - 1))}
-            disabled={page === 1}
-            className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50"
-          >
-            Previous
-          </button>
-          <button
-            onClick={() => setPage(Math.min(totalPages, page + 1))}
-            disabled={page === totalPages}
-            className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
-      </div>
+      <Pagination
+        currentPage={pagination.page}
+        totalPages={pagination.totalPages}
+        totalItems={pagination.total}
+        itemsPerPage={pagination.limit}
+        onPageChange={(page) => setPagination((prev) => ({ ...prev, page }))}
+        itemName="drivers"
+      />
     </div>
   );
 }

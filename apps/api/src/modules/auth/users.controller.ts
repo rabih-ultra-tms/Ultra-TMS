@@ -23,12 +23,17 @@ export class UsersController {
   @Get()
   async findAll(
     @CurrentTenant() tenantId: string,
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
     @Query('status') status?: string,
     @Query('search') search?: string,
   ) {
-    return this.usersService.findAll(tenantId, { page, limit, status, search });
+    return this.usersService.findAll(tenantId, { 
+      page: page ? parseInt(page, 10) : undefined, 
+      limit: limit ? parseInt(limit, 10) : undefined, 
+      status, 
+      search 
+    });
   }
 
   @Get(':id')

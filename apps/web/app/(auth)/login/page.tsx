@@ -5,8 +5,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
 import {
   Form,
   FormControl,
@@ -40,7 +40,7 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      const response = await fetch("http://localhost:4000/api/v1/auth/login", {
+      const response = await fetch("http://localhost:3001/api/v1/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -56,11 +56,11 @@ export default function LoginPage() {
       const result = await response.json();
       
       // Store tokens
-      localStorage.setItem("accessToken", result.accessToken);
-      localStorage.setItem("refreshToken", result.refreshToken);
+      localStorage.setItem("accessToken", result.data.accessToken);
+      localStorage.setItem("refreshToken", result.data.refreshToken);
       
       // Redirect to dashboard
-      window.location.href = "/";
+      window.location.href = "/dashboard";
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -138,7 +138,7 @@ export default function LoginPage() {
       </Form>
 
       <div className="mt-6 text-center text-sm">
-        <span className="text-gray-600">Don't have an account? </span>
+        <span className="text-gray-600">Don&apos;t have an account? </span>
         <Link href="/register" className="text-primary hover:underline">
           Register
         </Link>

@@ -153,7 +153,7 @@ export default function WebhooksPage() {
             className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${
               activeTab === 'endpoints'
                 ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                : 'border-transparent text-slate-500 hover:text-gray-700'
             }`}
           >
             Inbound Endpoints ({mockEndpoints.length})
@@ -163,7 +163,7 @@ export default function WebhooksPage() {
             className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${
               activeTab === 'subscriptions'
                 ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                : 'border-transparent text-slate-500 hover:text-gray-700'
             }`}
           >
             Outbound Subscriptions ({mockSubscriptions.length})
@@ -174,8 +174,8 @@ export default function WebhooksPage() {
       {/* Inbound Endpoints */}
       {activeTab === 'endpoints' && (
         <div className="space-y-4">
-          <Card className="p-4 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-            <p className="text-sm text-blue-800 dark:text-blue-300">
+          <Card className="p-4 bg-blue-50 bg-blue-50 border-blue-200">
+            <p className="text-sm text-blue-800 text-blue-700">
               <BoltIcon className="h-4 w-4 inline mr-2" />
               Inbound webhooks receive data from external services. Configure these endpoints to receive real-time updates.
             </p>
@@ -186,7 +186,7 @@ export default function WebhooksPage() {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <code className="text-sm bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                    <code className="text-sm bg-slate-100 px-2 py-1 rounded">
                       {endpoint.endpointPath}
                     </code>
                     <Badge variant={statusColors[endpoint.status]}>{endpoint.status}</Badge>
@@ -197,7 +197,7 @@ export default function WebhooksPage() {
                       type="text"
                       value={endpoint.fullUrl}
                       readOnly
-                      className="flex-1 text-sm px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded border-0"
+                      className="flex-1 text-sm px-3 py-1 bg-slate-100 rounded border-0"
                     />
                     <Button 
                       variant="ghost" 
@@ -214,7 +214,7 @@ export default function WebhooksPage() {
 
                   <div className="flex flex-wrap gap-2 mb-3">
                     {endpoint.eventTypes.map(event => (
-                      <span key={event} className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                      <span key={event} className="text-xs bg-slate-100 px-2 py-1 rounded">
                         {event}
                       </span>
                     ))}
@@ -285,11 +285,11 @@ export default function WebhooksPage() {
                     </div>
                   )}
                   
-                  <p className="text-sm text-gray-500 mb-2">{subscription.url}</p>
+                  <p className="text-sm text-slate-500 mb-2">{subscription.url}</p>
 
                   <div className="flex flex-wrap gap-2 mb-3">
                     {subscription.eventTypes.map(event => (
-                      <span key={event} className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                      <span key={event} className="text-xs bg-slate-100 px-2 py-1 rounded">
                         {event}
                       </span>
                     ))}

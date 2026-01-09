@@ -132,7 +132,7 @@ const statusColors: Record<string, 'green' | 'red' | 'yellow' | 'gray'> = {
 };
 
 const methodColors: Record<string, string> = {
-  GET: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+  GET: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 text-blue-700',
   POST: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
   PUT: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
   PATCH: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
@@ -213,13 +213,13 @@ export default function ApiLogsPage() {
               placeholder="Search by path or correlation ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
+              className="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg bg-white"
             />
           </div>
           <select
             value={selectedIntegration}
             onChange={(e) => setSelectedIntegration(e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
+            className="px-3 py-2 border border-slate-300 rounded-lg bg-white"
           >
             <option value="">All Integrations</option>
             {[...new Map(integrations.map(i => [i.id, i])).values()].map(i => (
@@ -229,7 +229,7 @@ export default function ApiLogsPage() {
           <select
             value={selectedDirection}
             onChange={(e) => setSelectedDirection(e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
+            className="px-3 py-2 border border-slate-300 rounded-lg bg-white"
           >
             <option value="">All Directions</option>
             <option value="OUTBOUND">Outbound</option>
@@ -238,7 +238,7 @@ export default function ApiLogsPage() {
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
+            className="px-3 py-2 border border-slate-300 rounded-lg bg-white"
           >
             <option value="">All Statuses</option>
             <option value="SUCCESS">Success</option>
@@ -277,7 +277,7 @@ export default function ApiLogsPage() {
                 </Badge>
 
                 {/* Path */}
-                <code className="text-sm text-gray-600 dark:text-gray-400">{log.path}</code>
+                <code className="text-sm text-slate-600">{log.path}</code>
 
                 {/* Integration */}
                 <span className="text-sm text-gray-500">{log.integrationName}</span>
@@ -325,7 +325,7 @@ export default function ApiLogsPage() {
 
                 <div>
                   <span className="text-sm text-gray-500">Full URL:</span>
-                  <code className="block text-sm bg-gray-100 dark:bg-gray-800 p-2 rounded mt-1 overflow-x-auto">
+                  <code className="block text-sm bg-slate-100 p-2 rounded mt-1 overflow-x-auto">
                     {log.url}
                   </code>
                 </div>

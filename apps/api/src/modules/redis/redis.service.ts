@@ -5,12 +5,12 @@ import Redis from 'ioredis';
 @Injectable()
 export class RedisService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(RedisService.name);
-  private client: Redis;
+  private client!: Redis;
 
   constructor(private configService: ConfigService) {}
 
   async onModuleInit() {
-    const redisUrl = this.configService.get<string>('REDIS_URL');
+    const redisUrl = this.configService.get<string>('REDIS_URL') || 'redis://localhost:6379';
     
     this.client = new Redis(redisUrl, {
       retryStrategy: (times) => {
@@ -96,7 +96,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     const pattern = `session:${userId}:*`;
     const keys = await this.client.keys(pattern);
     
-    return keys.map((key) => key.split(':')[2]); // Extract sessionId
+    return keys.map((key) => key.split(':')[2]).filter((id): id is string => id !== undefined); // Extract sessionId
   }
 
   /**

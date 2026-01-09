@@ -127,11 +127,11 @@ const mockReports = [
 function getCategoryColor(category: string): string {
   switch (category) {
     case 'FINANCIAL': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-    case 'OPERATIONAL': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+    case 'OPERATIONAL': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 text-blue-700';
     case 'CARRIER': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
     case 'CUSTOMER': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
     case 'SALES': return 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200';
-    default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200';
+    default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800';
   }
 }
 
@@ -185,7 +185,7 @@ export default function ReportsPage() {
             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
               selectedCategory === category.id
                 ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                : 'bg-slate-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
             {category.name} ({category.count})
@@ -217,24 +217,24 @@ export default function ReportsPage() {
       <Card>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 dark:bg-gray-800">
+            <thead className="bg-slate-100">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                   Report
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                   Category
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
                   Schedule
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                   Last Run
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
                   Format
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -248,7 +248,7 @@ export default function ReportsPage() {
                         <DocumentChartBarIcon className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">{report.name}</p>
+                        <p className="text-sm font-medium text-slate-900">{report.name}</p>
                         <p className="text-xs text-gray-500">{report.reportNumber}</p>
                       </div>
                     </div>
@@ -263,7 +263,7 @@ export default function ReportsPage() {
                       <div className="flex flex-col items-center">
                         <Badge variant="success" size="sm">Scheduled</Badge>
                         {report.nextRun && (
-                          <span className="text-xs text-gray-500 mt-1">
+                          <span className="text-xs text-slate-500 mt-1">
                             Next: {report.nextRun}
                           </span>
                         )}

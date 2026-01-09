@@ -25,6 +25,7 @@ export class TenantService {
   /**
    * Update tenant information
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async updateTenant(tenantId: string, data: any) {
     const tenant = await this.prisma.tenant.findUnique({
       where: { id: tenantId },
@@ -78,6 +79,7 @@ export class TenantService {
   /**
    * Update tenant settings
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async updateSettings(tenantId: string, settings: any, features?: any) {
     const tenant = await this.prisma.tenant.findUnique({
       where: { id: tenantId },
@@ -87,6 +89,7 @@ export class TenantService {
       throw new NotFoundException('Tenant not found');
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData: any = {
       updatedAt: new Date(),
     };

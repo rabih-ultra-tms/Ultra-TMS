@@ -172,13 +172,13 @@ export default function FoldersPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+          <div className="flex items-center gap-2 text-sm text-slate-600 mb-2">
             <Link href="/documents" className="hover:text-gray-900">Documents</Link>
             <span>/</span>
             <span>Folders</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Document Folders</h1>
-          <p className="text-gray-600 mt-1">Organize your documents into folders</p>
+          <p className="text-slate-600 mt-1">Organize your documents into folders</p>
         </div>
         <button
           onClick={openCreateModal}
@@ -195,7 +195,7 @@ export default function FoldersPage() {
           <button
             onClick={() => navigateToBreadcrumb(-1)}
             className={`flex items-center gap-1 ${
-              breadcrumbs.length === 0 ? 'text-gray-900 font-medium' : 'text-blue-600 hover:underline'
+              breadcrumbs.length === 0 ? 'text-slate-900 font-medium' : 'text-blue-600 hover:underline'
             }`}
           >
             <FolderIcon className="h-4 w-4" />
@@ -208,7 +208,7 @@ export default function FoldersPage() {
                 onClick={() => navigateToBreadcrumb(index)}
                 className={`${
                   index === breadcrumbs.length - 1
-                    ? 'text-gray-900 font-medium'
+                    ? 'text-slate-900 font-medium'
                     : 'text-blue-600 hover:underline'
                 }`}
               >
@@ -223,7 +223,7 @@ export default function FoldersPage() {
       {currentFolder && (
         <button
           onClick={navigateUp}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+          className="flex items-center gap-2 text-slate-600 hover:text-slate-900 mb-4"
         >
           <ArrowLeftIcon className="h-4 w-4" />
           Back to {breadcrumbs.length > 1 ? breadcrumbs[breadcrumbs.length - 2]?.name ?? 'Root' : 'Root'}
@@ -237,10 +237,10 @@ export default function FoldersPage() {
         ) : folders.length === 0 && documents.length === 0 ? (
           <div className="p-12 text-center">
             <FolderOpenIcon className="h-12 w-12 mx-auto text-gray-300 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <h3 className="text-lg font-medium text-slate-900 mb-2">
               {currentFolder ? 'This folder is empty' : 'No folders yet'}
             </h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-slate-600 mb-4">
               {currentFolder
                 ? 'Add subfolders or documents to organize your files.'
                 : 'Create folders to organize your documents.'}
@@ -349,7 +349,7 @@ export default function FoldersPage() {
                 />
               </div>
               {currentFolder && (
-                <div className="text-sm text-gray-500 bg-gray-50 p-3 rounded-lg">
+                <div className="text-sm text-slate-500 bg-gray-50 p-3 rounded-lg">
                   Will be created in: <strong>{currentFolder.name}</strong>
                 </div>
               )}

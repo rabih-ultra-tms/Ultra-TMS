@@ -163,7 +163,7 @@ export default function AnalyticsPage() {
                 <ChartBarIcon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <h3 className="font-medium text-gray-900 dark:text-white">KPI Overview</h3>
+                <h3 className="font-medium text-slate-900">KPI Overview</h3>
                 <p className="text-sm text-gray-500">50+ active metrics</p>
               </div>
             </div>
@@ -176,7 +176,7 @@ export default function AnalyticsPage() {
                 <TableCellsIcon className="h-6 w-6 text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <h3 className="font-medium text-gray-900 dark:text-white">Dashboards</h3>
+                <h3 className="font-medium text-slate-900">Dashboards</h3>
                 <p className="text-sm text-gray-500">8 custom dashboards</p>
               </div>
             </div>
@@ -189,7 +189,7 @@ export default function AnalyticsPage() {
                 <DocumentChartBarIcon className="h-6 w-6 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
-                <h3 className="font-medium text-gray-900 dark:text-white">Reports</h3>
+                <h3 className="font-medium text-slate-900">Reports</h3>
                 <p className="text-sm text-gray-500">25 report templates</p>
               </div>
             </div>
@@ -202,7 +202,7 @@ export default function AnalyticsPage() {
                 <BellAlertIcon className="h-6 w-6 text-red-600 dark:text-red-400" />
               </div>
               <div>
-                <h3 className="font-medium text-gray-900 dark:text-white">Alerts</h3>
+                <h3 className="font-medium text-slate-900">Alerts</h3>
                 <p className="text-sm text-gray-500">3 active alerts</p>
               </div>
             </div>
@@ -213,7 +213,7 @@ export default function AnalyticsPage() {
       {/* KPI Grid */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Key Performance Indicators</h2>
+          <h2 className="text-lg font-semibold text-slate-900">Key Performance Indicators</h2>
           <Link href="/analytics/kpis" className="text-sm text-blue-600 hover:text-blue-700">
             View all KPIs →
           </Link>
@@ -228,14 +228,14 @@ export default function AnalyticsPage() {
               <Card key={kpi.id} className="p-4">
                 <div className="flex items-start justify-between mb-2">
                   <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{kpi.name}</p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                    <p className="text-sm text-slate-500">{kpi.name}</p>
+                    <p className="text-2xl font-bold text-slate-900 mt-1">
                       {formatValue(kpi.value, kpi.unit)}
                     </p>
                   </div>
                   <Badge variant={getStatusColor(kpi.status)}>{kpi.status}</Badge>
                 </div>
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-200">
                   <div className="flex items-center gap-1">
                     {isPositive && <ArrowTrendingUpIcon className="h-4 w-4 text-green-500" />}
                     {isNegative && <ArrowTrendingDownIcon className="h-4 w-4 text-red-500" />}
@@ -243,7 +243,7 @@ export default function AnalyticsPage() {
                     <span className={`text-sm font-medium ${isPositive ? 'text-green-600' : isNegative ? 'text-red-600' : 'text-gray-500'}`}>
                       {isPositive ? '+' : ''}{changePercent.toFixed(1)}%
                     </span>
-                    <span className="text-xs text-gray-500 ml-1">vs prior</span>
+                    <span className="text-xs text-slate-500 ml-1">vs prior</span>
                   </div>
                   <div className="text-xs text-gray-500">
                     Target: {formatValue(kpi.target, kpi.unit)}
@@ -259,20 +259,20 @@ export default function AnalyticsPage() {
         {/* Active Alerts */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Active Alerts</h2>
+            <h2 className="text-lg font-semibold text-slate-900">Active Alerts</h2>
             <Link href="/analytics/alerts" className="text-sm text-blue-600 hover:text-blue-700">
               View all →
             </Link>
           </div>
           <div className="space-y-3">
             {mockAlerts.map((alert) => (
-              <div key={alert.id} className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <div key={alert.id} className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
                 <div className={`p-1.5 rounded-full ${alert.type === 'CRITICAL' ? 'bg-red-100' : 'bg-yellow-100'}`}>
                   <BellAlertIcon className={`h-4 w-4 ${alert.type === 'CRITICAL' ? 'text-red-600' : 'text-yellow-600'}`} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">{alert.kpiName}</p>
-                  <p className="text-xs text-gray-500 truncate">{alert.message}</p>
+                  <p className="text-sm font-medium text-slate-900">{alert.kpiName}</p>
+                  <p className="text-xs text-slate-500 truncate">{alert.message}</p>
                 </div>
                 <div className="flex flex-col items-end">
                   <Badge variant={alert.type === 'CRITICAL' ? 'error' : 'warning'} size="sm">
@@ -288,18 +288,18 @@ export default function AnalyticsPage() {
         {/* Quick Reports */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Reports</h2>
+            <h2 className="text-lg font-semibold text-slate-900">Recent Reports</h2>
             <Link href="/analytics/reports" className="text-sm text-blue-600 hover:text-blue-700">
               View all →
             </Link>
           </div>
           <div className="space-y-3">
             {quickReports.map((report) => (
-              <div key={report.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
+              <div key={report.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-gray-100 cursor-pointer">
                 <div className="flex items-center gap-3">
                   <DocumentChartBarIcon className="h-5 w-5 text-gray-400" />
                   <div>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">{report.name}</p>
+                    <p className="text-sm font-medium text-slate-900">{report.name}</p>
                     <p className="text-xs text-gray-500">Last run: {report.lastRun}</p>
                   </div>
                 </div>

@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
 import { Switch } from "@/components/ui/switch";
 import {
   Form,
@@ -83,14 +83,15 @@ export default function TenantSettingsPage() {
 
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async () => {
     try {
       setIsLoading(true);
       const [tenantResponse, settingsResponse] = await Promise.all([
-        apiClient.get<Tenant>("/auth/tenant"),
-        apiClient.get<TenantSettings>("/auth/tenant/settings"),
+        apiClient.get<Tenant>("/tenant"),
+        apiClient.get<TenantSettings>("/tenant/settings"),
       ]);
 
       tenantForm.reset({
@@ -112,7 +113,7 @@ export default function TenantSettingsPage() {
     setIsSavingTenant(true);
 
     try {
-      await apiClient.put("/auth/tenant", data);
+      await apiClient.put("/tenant", data);
       alert("Company information updated successfully");
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to update company information");
@@ -125,7 +126,7 @@ export default function TenantSettingsPage() {
     setIsSavingSettings(true);
 
     try {
-      await apiClient.put("/auth/tenant/settings", data);
+      await apiClient.put("/tenant/settings", data);
       alert("Settings updated successfully");
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to update settings");
@@ -171,7 +172,7 @@ export default function TenantSettingsPage() {
               className={`${
                 activeTab === "company"
                   ? "border-primary text-primary"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  : "border-transparent text-slate-500 hover:text-gray-700 hover:border-gray-300"
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
             >
               Company Information
@@ -181,7 +182,7 @@ export default function TenantSettingsPage() {
               className={`${
                 activeTab === "settings"
                   ? "border-primary text-primary"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  : "border-transparent text-slate-500 hover:text-gray-700 hover:border-gray-300"
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
             >
               System Settings
@@ -269,7 +270,7 @@ export default function TenantSettingsPage() {
           <Form {...settingsForm}>
             <form onSubmit={settingsForm.handleSubmit(onSubmitSettings)} className="space-y-6">
               <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-4">
+                <h2 className="text-lg font-medium text-slate-900 mb-4">
                   Regional Settings
                 </h2>
                 <div className="grid grid-cols-2 gap-6">
@@ -360,7 +361,7 @@ export default function TenantSettingsPage() {
               </div>
 
               <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-4">
+                <h2 className="text-lg font-medium text-slate-900 mb-4">
                   Feature Toggles
                 </h2>
                 <div className="space-y-4">
@@ -451,7 +452,7 @@ export default function TenantSettingsPage() {
               </div>
 
               <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-4">
+                <h2 className="text-lg font-medium text-slate-900 mb-4">
                   Notifications
                 </h2>
                 <div className="space-y-4">

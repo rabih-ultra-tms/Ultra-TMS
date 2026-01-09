@@ -1,5 +1,6 @@
 import {
   Controller,
+  Get,
   Put,
   Post,
   Body,
@@ -11,8 +12,8 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from './guards';
 import { ProfileService } from './profile.service';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { IStorageService } from '../storage/storage.interface';
+import { CurrentUser } from './decorators/current-user.decorator';
+import type { IStorageService } from '../storage/storage.interface';
 import { STORAGE_SERVICE } from '../storage/storage.module';
 
 @Controller('profile')
@@ -24,13 +25,22 @@ export class ProfileController {
   ) {}
 
   /**
+   * GET /api/v1/profile
+   * Get current user profile
+   */
+  @Get()
+  async getProfile(@CurrentUser('id') userId: string) {
+    return this.profileService.getProfile(userId);
+  }
+
+  /**
    * PUT /api/v1/profile
    * Update own profile
    */
   @Put()
   async updateProfile(
     @CurrentUser('id') userId: string,
-    @Body() data: any,
+    @Body() data: { firstName?: string; lastName?: string; phone?: string; title?: string },
   ) {
     return this.profileService.updateProfile(userId, data);
   }
@@ -56,7 +66,8 @@ export class ProfileController {
   @UseInterceptors(FileInterceptor('file'))
   async uploadAvatar(
     @CurrentUser('id') userId: string,
-    @UploadedFile() file: Express.Multer.File,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    @UploadedFile() file: any,
   ) {
     if (!file) {
       throw new Error('No file uploaded');

@@ -210,24 +210,24 @@ export default function ExecutionsPage({ params }: { params: { id: string } }) {
       {/* Executions Table */}
       <Card className="overflow-hidden">
         <table className="w-full">
-          <thead className="bg-gray-50 dark:bg-gray-800">
+          <thead className="bg-slate-100">
             <tr>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Status</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Execution ID</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Trigger</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Progress</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Started</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Duration</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Actions</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">Status</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">Execution ID</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">Trigger</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">Progress</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">Started</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">Duration</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+          <tbody className="divide-y divide-slate-200">
             {filteredExecutions.map(exec => {
               const StatusIcon = statusIcons[exec.status] || ClockIcon;
               const progressPercent = (exec.currentStepIndex / exec.totalSteps) * 100;
               
               return (
-                <tr key={exec.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                <tr key={exec.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3">
                     <Badge variant={statusColors[exec.status]}>
                       <StatusIcon className={`h-3 w-3 mr-1 ${exec.status === 'RUNNING' ? 'animate-spin' : ''}`} />

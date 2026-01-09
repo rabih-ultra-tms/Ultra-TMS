@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,7 +9,6 @@ import Link from "next/link";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ChevronRightIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import {
   Form,
   FormControl,
@@ -217,6 +216,7 @@ const SERVICE_CATEGORIES = [
           { key: "communication.email", label: "Send Email", description: "Send email messages" },
           { key: "communication.sms", label: "Send SMS", description: "Send text messages" },
           { key: "communication.chat", label: "Use Chat", description: "Internal chat messaging" },
+          { key: "communication.templates", label: "Email Templates", description: "Manage email templates" },
         ],
       },
     ],
@@ -278,7 +278,7 @@ export default function RoleEditorPage({ params }: { params: Promise<{ id: strin
   const [isLoading, setIsLoading] = useState(!isNew);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [expandedCategories, setExpandedCategories] = useState<string[]>(SERVICE_CATEGORIES.map((c) => c.name));
+  const [expandedCategories, setExpandedCategories] = useState<string[]>(SERVICE_CATEGORIES.map(c => c.name));
   const [expandedServices, setExpandedServices] = useState<string[]>([]);
 
   const form = useForm<RoleFormValues>({
@@ -291,27 +291,19 @@ export default function RoleEditorPage({ params }: { params: Promise<{ id: strin
   });
 
   const toggleCategory = (categoryName: string) => {
-    setExpandedCategories((prev) =>
+    setExpandedCategories(prev =>
       prev.includes(categoryName)
-        ? prev.filter((name) => name !== categoryName)
+        ? prev.filter(name => name !== categoryName)
         : [...prev, categoryName]
     );
   };
 
   const toggleService = (serviceName: string) => {
-    setExpandedServices((prev) =>
+    setExpandedServices(prev =>
       prev.includes(serviceName)
-        ? prev.filter((name) => name !== serviceName)
+        ? prev.filter(name => name !== serviceName)
         : [...prev, serviceName]
     );
-  };
-
-  const getSelectionState = (keys: string[]) => {
-    const selected = form.watch("permissions");
-    const selectedCount = keys.filter((k) => selected.includes(k)).length;
-    if (selectedCount === 0) return { checked: false as const, selectedCount };
-    if (selectedCount === keys.length) return { checked: true as const, selectedCount };
-    return { checked: "indeterminate" as const, selectedCount };
   };
 
   useEffect(() => {
@@ -386,8 +378,8 @@ export default function RoleEditorPage({ params }: { params: Promise<{ id: strin
     }
   };
 
-  const selectAllInCategory = (services: typeof SERVICE_CATEGORIES[0]["services"]) => {
-    const allPermissions = services.flatMap((s) => s.permissions.map((p) => p.key));
+  const selectAllInCategory = (services: typeof SERVICE_CATEGORIES[0]['services']) => {
+    const allPermissions = services.flatMap(s => s.permissions.map(p => p.key));
     const current = form.getValues("permissions");
     const allSelected = allPermissions.every((p) => current.includes(p));
 
@@ -407,8 +399,8 @@ export default function RoleEditorPage({ params }: { params: Promise<{ id: strin
   if (isLoading) {
     return (
       <div className="p-6">
-        <div className="flex items-center justify-center h-48 rounded-lg bg-white border border-slate-200">
-          <div className="text-sm text-slate-500">Loading role...</div>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-slate-500">Loading role...</div>
         </div>
       </div>
     );
@@ -417,7 +409,7 @@ export default function RoleEditorPage({ params }: { params: Promise<{ id: strin
   if (error) {
     return (
       <div className="p-6">
-        <div className="rounded-md bg-red-50 border border-red-200 p-4">
+        <div className="rounded-md bg-red-50 p-4">
           <div className="text-sm text-red-800">{error}</div>
         </div>
       </div>
@@ -427,8 +419,10 @@ export default function RoleEditorPage({ params }: { params: Promise<{ id: strin
   if (!isNew && role?.isSystem) {
     return (
       <div className="p-6">
-        <div className="rounded-md bg-yellow-50 border border-yellow-200 p-4">
-          <div className="text-sm text-yellow-800">This is a system role and cannot be edited.</div>
+        <div className="rounded-md bg-yellow-50 p-4">
+          <div className="text-sm text-yellow-800">
+            This is a system role and cannot be edited.
+          </div>
         </div>
         <div className="mt-4">
           <Link href="/admin/roles">
@@ -439,200 +433,269 @@ export default function RoleEditorPage({ params }: { params: Promise<{ id: strin
     );
   }
 
-  const content = (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">{isNew ? "Create Role" : `Edit Role: ${role?.name}`}</h1>
-          <p className="text-sm text-gray-600 mt-1">Configure permissions in a compact tree view.</p>
+  return (
+    <div className="min-h-screen bg-slate-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-6">
+          <Link href="/admin/roles">
+            <Button variant="ghost" size="sm" className="mb-3 text-slate-600 hover:text-slate-900 hover:bg-slate-100">
+              ← Back to Roles
+            </Button>
+          </Link>
+          <h1 className="text-3xl font-bold text-slate-900">
+            {isNew ? "Create New Role" : `Edit Role: ${role?.name}`}
+          </h1>
+          <p className="mt-2 text-slate-600">
+            Configure role permissions by selecting services and specific actions
+          </p>
         </div>
-      </div>
 
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div className="bg-white border border-slate-200 rounded-lg p-4 space-y-3">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-medium text-gray-700">Role Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Operations Manager" className="h-9" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-medium text-gray-700">Description</FormLabel>
-                    <FormControl>
-                      <textarea
-                        {...field}
-                        rows={2}
-                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                        placeholder="Short summary"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
-
-          <div className="bg-white border border-slate-200 rounded-lg p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-sm font-semibold text-gray-900">Permissions</h2>
-                <p className="text-xs text-gray-600">Select categories, services, or individual permissions.</p>
-              </div>
-              <div className="text-xs text-gray-500">{form.watch("permissions").length} selected</div>
-            </div>
-
-            <div className="space-y-2 max-h-[50vh] overflow-y-auto">
-              {SERVICE_CATEGORIES.map((category) => {
-                const categoryKeys = category.services.flatMap((s) => s.permissions.map((p) => p.key));
-                const categoryState = getSelectionState(categoryKeys);
-
-                return (
-                  <div key={category.name} className="border border-slate-200 rounded-md">
-                    <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 border-b border-slate-200">
-                      <button
-                        type="button"
-                        onClick={() => toggleCategory(category.name)}
-                        className="p-1 text-slate-600 hover:text-slate-900"
-                        aria-label="Toggle category"
-                      >
-                        <ChevronRightIcon
-                          className={`h-4 w-4 transition-transform ${expandedCategories.includes(category.name) ? "rotate-90" : ""}`}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Basic Info Card */}
+            <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-5">
+              <h2 className="text-base font-semibold text-slate-900 mb-4">Basic Information</h2>
+              
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium text-slate-700">Role Name</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="e.g., Operations Manager" 
+                          {...field}
+                          className="border-slate-300 focus:border-blue-500 focus:ring-blue-500"
                         />
-                      </button>
-                      <Checkbox
-                        checked={categoryState.checked}
-                        onCheckedChange={() => selectAllInCategory(category.services)}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 text-sm font-medium text-slate-900">
-                          {category.name}
-                          <span className="text-[11px] text-slate-500">{categoryState.selectedCount} / {categoryKeys.length}</span>
-                        </div>
-                        <p className="text-xs text-slate-500 truncate">{category.description}</p>
-                      </div>
-                    </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                    {expandedCategories.includes(category.name) && (
-                      <div className="divide-y divide-slate-200">
-                        {category.services.map((service) => {
-                          const serviceKeys = service.permissions.map((p) => p.key);
-                          const serviceState = getSelectionState(serviceKeys);
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium text-slate-700">Description</FormLabel>
+                      <FormControl>
+                        <textarea
+                          {...field}
+                          rows={2}
+                          className="flex w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm ring-offset-background placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:border-blue-500"
+                          placeholder="Describe the role's responsibilities and access level..."
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
 
-                          return (
-                            <div key={service.name} className="px-3 py-2">
-                              <div className="flex items-center gap-2">
+            {/* Permissions Card */}
+            <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-5">
+              <div className="mb-4">
+                <h2 className="text-base font-semibold text-slate-900 mb-1">Service Permissions</h2>
+                <p className="text-sm text-slate-600">
+                  Select permissions organized by service modules. Click service names to expand.
+                </p>
+              </div>
+
+              <FormField
+                control={form.control}
+                name="permissions"
+                render={() => (
+                  <FormItem>
+                    <div className="space-y-4">
+                      {SERVICE_CATEGORIES.map((category) => {
+                        const selectedPermissions = form.watch("permissions");
+                        const allCategoryPermissions = category.services.flatMap(s => s.permissions.map(p => p.key));
+                        const allCategorySelected = allCategoryPermissions.every((p) =>
+                          selectedPermissions.includes(p)
+                        );
+                        const isCategoryExpanded = expandedCategories.includes(category.name);
+
+                        return (
+                          <div key={category.name} className="border border-slate-200 rounded-lg overflow-hidden">
+                            {/* Category Header */}
+                            <div className="bg-slate-50 border-b border-slate-200">
+                              <div className="flex items-center justify-between p-3">
                                 <button
                                   type="button"
-                                  onClick={() => toggleService(service.name)}
-                                  className="p-1 text-slate-600 hover:text-slate-900"
-                                  aria-label="Toggle service"
+                                  onClick={() => toggleCategory(category.name)}
+                                  className="flex items-center gap-2 flex-1 text-left"
                                 >
-                                  <ChevronRightIcon
-                                    className={`h-4 w-4 transition-transform ${expandedServices.includes(service.name) ? "rotate-90" : ""}`}
-                                  />
-                                </button>
-                                <Checkbox
-                                  checked={serviceState.checked}
-                                  onCheckedChange={() => selectAllInService(serviceKeys)}
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 text-sm font-medium text-slate-900">
-                                    {service.icon} {service.name}
-                                    <span className="text-[11px] text-slate-500">{serviceState.selectedCount} / {serviceKeys.length}</span>
+                                  <svg
+                                    className={`w-4 h-4 text-slate-500 transition-transform ${
+                                      isCategoryExpanded ? 'rotate-90' : ''
+                                    }`}
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                  >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                  </svg>
+                                  <div className="flex-1">
+                                    <h3 className="text-sm font-semibold text-slate-900">
+                                      {category.name}
+                                    </h3>
+                                    <p className="text-xs text-slate-600">{category.description}</p>
                                   </div>
-                                  <p className="text-xs text-slate-500 truncate">{service.description}</p>
-                                </div>
+                                </button>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => selectAllInCategory(category.services)}
+                                  className="text-xs font-medium text-blue-600 border-blue-300 hover:bg-blue-50 px-3 py-1 h-7"
+                                >
+                                  {allCategorySelected ? "Clear All" : "Select All"}
+                                </Button>
                               </div>
-
-                              {expandedServices.includes(service.name) && (
-                                <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-1 pl-8">
-                                  {service.permissions.map((permission) => {
-                                    const isChecked = form.watch("permissions").includes(permission.key);
-                                    return (
-                                      <label
-                                        key={permission.key}
-                                        className={`flex items-start gap-2 rounded-md border px-2 py-1 text-xs cursor-pointer ${isChecked ? "bg-blue-50 border-blue-200" : "border-slate-200 hover:bg-slate-50"}`}
-                                      >
-                                        <Checkbox
-                                          checked={isChecked}
-                                          onCheckedChange={() => togglePermission(permission.key)}
-                                          className="mt-0.5"
-                                        />
-                                        <div className="leading-tight">
-                                          <div className="font-medium text-slate-900">{permission.label}</div>
-                                          <p className="text-[11px] text-slate-500">{permission.description}</p>
-                                        </div>
-                                      </label>
-                                    );
-                                  })}
-                                </div>
-                              )}
                             </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+
+                            {/* Services in Category */}
+                            {isCategoryExpanded && (
+                              <div className="divide-y divide-slate-100">
+                                {category.services.map((service) => {
+                                  const servicePermissionKeys = service.permissions.map(p => p.key);
+                                  const allServiceSelected = servicePermissionKeys.every((p) =>
+                                    selectedPermissions.includes(p)
+                                  );
+                                  const someServiceSelected = servicePermissionKeys.some((p) =>
+                                    selectedPermissions.includes(p)
+                                  );
+                                  const isServiceExpanded = expandedServices.includes(service.name);
+
+                                  return (
+                                    <div key={service.name} className="bg-white">
+                                      {/* Service Header */}
+                                      <div className="flex items-center justify-between p-3 hover:bg-slate-50">
+                                        <button
+                                          type="button"
+                                          onClick={() => toggleService(service.name)}
+                                          className="flex items-center gap-2 flex-1 text-left"
+                                        >
+                                          <svg
+                                            className={`w-3 h-3 text-slate-400 transition-transform ${
+                                              isServiceExpanded ? 'rotate-90' : ''
+                                            }`}
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                          >
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                          </svg>
+                                          <span className="text-lg" title={service.name}>
+                                            {service.icon}
+                                          </span>
+                                          <div className="flex-1">
+                                            <div className="flex items-center gap-2">
+                                              <span className="text-sm font-medium text-slate-900">
+                                                {service.name}
+                                              </span>
+                                              {someServiceSelected && (
+                                                <span className="px-1.5 py-0.5 text-xs font-medium rounded bg-blue-100 text-blue-700">
+                                                  {servicePermissionKeys.filter(p => selectedPermissions.includes(p)).length}
+                                                </span>
+                                              )}
+                                            </div>
+                                            <p className="text-xs text-slate-600">{service.description}</p>
+                                          </div>
+                                        </button>
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => selectAllInService(servicePermissionKeys)}
+                                          className="text-xs font-medium text-blue-600 hover:bg-blue-50 px-2 py-1 h-6"
+                                        >
+                                          {allServiceSelected ? "Clear" : "All"}
+                                        </Button>
+                                      </div>
+
+                                      {/* Permissions Grid */}
+                                      {isServiceExpanded && (
+                                        <div className="px-3 pb-3 pt-1">
+                                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                                            {service.permissions.map((permission) => {
+                                              const isChecked = selectedPermissions.includes(permission.key);
+                                              
+                                              return (
+                                                <div
+                                                  key={permission.key}
+                                                  className={`flex items-start space-x-2 p-2 rounded border transition-all cursor-pointer ${
+                                                    isChecked
+                                                      ? 'bg-blue-50 border-blue-300'
+                                                      : 'bg-white border-slate-200 hover:border-slate-300'
+                                                  }`}
+                                                  onClick={() => togglePermission(permission.key)}
+                                                  title={permission.description}
+                                                >
+                                                  <Checkbox
+                                                    checked={isChecked}
+                                                    onCheckedChange={() => togglePermission(permission.key)}
+                                                    className="mt-0.5"
+                                                  />
+                                                  <div className="flex-1 min-w-0">
+                                                    <label className="text-xs font-medium text-slate-900 cursor-pointer block leading-tight">
+                                                      {permission.label}
+                                                    </label>
+                                                    <p className="text-xs text-slate-500 leading-tight">
+                                                      {permission.description}
+                                                    </p>
+                                                  </div>
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-          </div>
 
-          <div className="flex items-center justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              className="text-gray-700"
-              onClick={() => router.push("/admin/roles")}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSaving} className="bg-blue-600 text-white">
-              {isSaving ? "Saving..." : isNew ? "Create Role" : "Save"}
-            </Button>
-          </div>
-        </form>
-      </Form>
-    </div>
-  );
-
-  if (!isNew) {
-    return (
-      <div className="min-h-screen bg-slate-50 p-6">
-        <div className="max-w-6xl mx-auto">{content}</div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-start justify-center p-4">
-      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
-        <div className="absolute right-3 top-3">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="p-2 rounded-full hover:bg-slate-100 text-slate-600"
-            aria-label="Close"
-          >
-            <XMarkIcon className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="p-5">{content}</div>
+            {/* Action Buttons */}
+            <div className="flex items-center justify-between bg-white rounded-lg shadow-sm border border-slate-200 p-4">
+              <div className="text-sm text-slate-600">
+                <span className="font-medium text-slate-900">{form.watch("permissions").length}</span> permissions selected
+              </div>
+              <div className="flex gap-3">
+                <Link href="/admin/roles">
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    className="border-slate-300 text-slate-700 hover:bg-slate-50"
+                  >
+                    Cancel
+                  </Button>
+                </Link>
+                <Button 
+                  type="submit" 
+                  disabled={isSaving}
+                  className="bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  {isSaving ? "Saving..." : isNew ? "Create Role" : "Save Changes"}
+                </Button>
+              </div>
+            </div>
+          </form>
+        </Form>
       </div>
     </div>
   );

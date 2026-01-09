@@ -131,10 +131,10 @@ export default function CarrierOnboardingPage() {
     <div className="p-6 max-w-4xl mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <Link href="/carriers" className="text-gray-500 hover:text-gray-700">
+        <Link href="/carriers" className="text-slate-500 hover:text-gray-700">
           ← Back to Carriers
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900 mt-2">New Carrier Onboarding</h1>
+        <h1 className="text-2xl font-bold text-slate-900 mt-2">New Carrier Onboarding</h1>
         <p className="text-gray-600">Complete the wizard to add a new carrier to your network</p>
       </div>
 
@@ -454,7 +454,7 @@ export default function CarrierOnboardingPage() {
                     className={`px-2 py-1 rounded text-xs ${
                       formData.serviceStates.includes(state)
                         ? 'bg-blue-100 text-blue-700'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        : 'bg-slate-100 text-slate-600 hover:bg-gray-200'
                     }`}
                   >
                     {state}
@@ -472,7 +472,7 @@ export default function CarrierOnboardingPage() {
             
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
               <div className="text-4xl mb-2">📄</div>
-              <p className="text-gray-600 mb-2">Drag and drop insurance certificates here</p>
+              <p className="text-slate-600 mb-2">Drag and drop insurance certificates here</p>
               <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                 Browse Files
               </button>
@@ -518,7 +518,7 @@ export default function CarrierOnboardingPage() {
             
             <div className="grid grid-cols-2 gap-6">
               <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-gray-900 mb-3">Company Info</h3>
+                <h3 className="font-semibold text-slate-900 mb-3">Company Info</h3>
                 <dl className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <dt className="text-gray-500">MC Number:</dt>
@@ -540,7 +540,7 @@ export default function CarrierOnboardingPage() {
               </div>
 
               <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-gray-900 mb-3">Primary Contact</h3>
+                <h3 className="font-semibold text-slate-900 mb-3">Primary Contact</h3>
                 <dl className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <dt className="text-gray-500">Name:</dt>
@@ -558,7 +558,7 @@ export default function CarrierOnboardingPage() {
               </div>
 
               <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-gray-900 mb-3">Equipment</h3>
+                <h3 className="font-semibold text-slate-900 mb-3">Equipment</h3>
                 <div className="flex flex-wrap gap-1 mb-2">
                   {formData.equipmentTypes.map((type) => (
                     <span key={type} className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">
@@ -572,7 +572,7 @@ export default function CarrierOnboardingPage() {
               </div>
 
               <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-gray-900 mb-3">Service Area</h3>
+                <h3 className="font-semibold text-slate-900 mb-3">Service Area</h3>
                 <div className="flex flex-wrap gap-1">
                   {formData.serviceStates.map((state) => (
                     <span key={state} className="px-2 py-0.5 bg-gray-200 text-gray-700 rounded text-xs">

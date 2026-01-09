@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
 import {
   Form,
   FormControl,
@@ -71,20 +71,22 @@ export default function ProfilePage() {
 
   useEffect(() => {
     loadProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadProfile = async () => {
     try {
       setIsLoading(true);
-      const response = await apiClient.get<Profile>("/auth/profile");
-      setProfile(response);
+      const response = await apiClient.get<{ data: Profile }>("/profile");
+      const profileData = response.data;
+      setProfile(profileData);
 
       profileForm.reset({
-        firstName: response.firstName,
-        lastName: response.lastName,
-        email: response.email,
-        phone: response.phone || "",
-        title: response.title || "",
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        email: profileData.email,
+        phone: profileData.phone || "",
+        title: profileData.title || "",
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load profile");
@@ -97,7 +99,7 @@ export default function ProfilePage() {
     setIsSavingProfile(true);
 
     try {
-      await apiClient.put("/auth/profile", data);
+      await apiClient.put("/profile", data);
       alert("Profile updated successfully");
       await loadProfile();
     } catch (err) {
@@ -111,7 +113,7 @@ export default function ProfilePage() {
     setIsSavingPassword(true);
 
     try {
-      await apiClient.put("/auth/profile/password", {
+      await apiClient.put("/profile/password", {
         currentPassword: data.currentPassword,
         newPassword: data.newPassword,
       });
@@ -132,7 +134,7 @@ export default function ProfilePage() {
     formData.append("avatar", file);
 
     try {
-      await fetch("http://localhost:4000/api/v1/auth/profile/avatar", {
+      await fetch("http://localhost:3001/api/v1/profile/avatar", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
@@ -141,7 +143,7 @@ export default function ProfilePage() {
       });
       alert("Avatar uploaded successfully");
       await loadProfile();
-    } catch (err) {
+    } catch {
       alert("Failed to upload avatar");
     }
   };
@@ -183,7 +185,7 @@ export default function ProfilePage() {
               className={`${
                 activeTab === "profile"
                   ? "border-primary text-primary"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  : "border-transparent text-slate-500 hover:text-gray-700 hover:border-gray-300"
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
             >
               Profile Information
@@ -193,7 +195,7 @@ export default function ProfilePage() {
               className={`${
                 activeTab === "password"
                   ? "border-primary text-primary"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  : "border-transparent text-slate-500 hover:text-gray-700 hover:border-gray-300"
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
             >
               Change Password
@@ -203,7 +205,7 @@ export default function ProfilePage() {
               className={`${
                 activeTab === "avatar"
                   ? "border-primary text-primary"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  : "border-transparent text-slate-500 hover:text-gray-700 hover:border-gray-300"
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
             >
               Avatar
@@ -305,7 +307,7 @@ export default function ProfilePage() {
 
           <div>
             <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">
+              <h2 className="text-lg font-medium text-slate-900 mb-4">
                 Account Details
               </h2>
               <div className="space-y-3">
@@ -389,12 +391,13 @@ export default function ProfilePage() {
       {activeTab === "avatar" && (
         <div className="max-w-2xl">
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">
+            <h2 className="text-lg font-medium text-slate-900 mb-4">
               Profile Picture
             </h2>
             <div className="flex items-center space-x-6">
               <div className="flex-shrink-0">
                 {profile.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={profile.avatarUrl}
                     alt="Profile"
@@ -402,7 +405,7 @@ export default function ProfilePage() {
                   />
                 ) : (
                   <div className="h-24 w-24 rounded-full bg-gray-300 flex items-center justify-center">
-                    <span className="text-2xl text-gray-600 font-medium">
+                    <span className="text-2xl text-slate-600 font-medium">
                       {profile.firstName[0]}
                       {profile.lastName[0]}
                     </span>
@@ -410,18 +413,18 @@ export default function ProfilePage() {
                 )}
               </div>
               <div className="flex-1">
-                <label htmlFor="avatar-upload" className="cursor-pointer">
-                  <Button type="button" asChild>
-                    <span>Upload new picture</span>
+                <label htmlFor="avatar-upload">
+                  <Button type="button" onClick={() => document.getElementById('avatar-upload')?.click()}>
+                    Upload new picture
                   </Button>
-                  <input
-                    id="avatar-upload"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleAvatarUpload}
-                    className="hidden"
-                  />
                 </label>
+                <input
+                  id="avatar-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarUpload}
+                  className="hidden"
+                />
                 <p className="mt-2 text-sm text-gray-500">
                   JPG, PNG or GIF. Max size 2MB.
                 </p>

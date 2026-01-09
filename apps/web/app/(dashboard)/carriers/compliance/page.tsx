@@ -342,7 +342,7 @@ export default function ComplianceMonitorPage() {
           className={`py-3 px-4 font-medium text-sm ${
             activeTab === 'alerts'
               ? 'border-b-2 border-blue-500 text-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
+              : 'text-slate-500 hover:text-gray-700'
           }`}
         >
           Active Alerts ({filteredAlerts.length})
@@ -352,7 +352,7 @@ export default function ComplianceMonitorPage() {
           className={`py-3 px-4 font-medium text-sm ${
             activeTab === 'carriers'
               ? 'border-b-2 border-blue-500 text-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
+              : 'text-slate-500 hover:text-gray-700'
           }`}
         >
           Carrier Compliance ({carriers.length})
@@ -362,7 +362,7 @@ export default function ComplianceMonitorPage() {
           className={`py-3 px-4 font-medium text-sm ${
             activeTab === 'documents'
               ? 'border-b-2 border-blue-500 text-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
+              : 'text-slate-500 hover:text-gray-700'
           }`}
         >
           Document Queue ({documents.length})
@@ -424,7 +424,7 @@ export default function ComplianceMonitorPage() {
                       >
                         {alert.carrierName}
                       </Link>
-                      <p className="text-sm text-gray-600 mt-1">{alert.description}</p>
+                      <p className="text-sm text-slate-600 mt-1">{alert.description}</p>
                       <div className="text-xs text-gray-400 mt-2">
                         Created: {new Date(alert.createdAt).toLocaleString()}
                         {alert.assignedTo && ` • Assigned to: ${alert.assignedTo}`}
@@ -450,16 +450,16 @@ export default function ComplianceMonitorPage() {
       {activeTab === 'carriers' && (
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-slate-100">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Carrier</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">MC/DOT</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">FMCSA Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Safety Rating</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Insurance</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Documents</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Overall</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Alerts</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Carrier</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">MC/DOT</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">FMCSA Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Safety Rating</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Insurance</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Documents</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Overall</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Alerts</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -546,13 +546,13 @@ export default function ComplianceMonitorPage() {
       {activeTab === 'documents' && (
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-slate-100">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Carrier</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Document Type</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Uploaded</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Carrier</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Document Type</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Uploaded</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">

@@ -145,17 +145,17 @@ export default function CarrierSearchPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <Link href="/carriers" className="text-gray-500 hover:text-gray-700">
+          <Link href="/carriers" className="text-slate-500 hover:text-gray-700">
             ← Back to Carriers
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900 mt-2">Search Carriers</h1>
+          <h1 className="text-2xl font-bold text-slate-900 mt-2">Search Carriers</h1>
           <p className="text-gray-600">Find carriers for your loads based on equipment and lanes</p>
         </div>
       </div>
 
       {/* Search Filters */}
       <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Search Criteria</h3>
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">Search Criteria</h3>
 
         {/* Equipment Types */}
         <div className="mb-6">
@@ -294,7 +294,7 @@ export default function CarrierSearchPage() {
                         </span>
                       )}
                     </div>
-                    <div className="text-sm text-gray-600 mb-2">
+                    <div className="text-sm text-slate-600 mb-2">
                       {carrier.mcNumber} • DOT: {carrier.dotNumber} • {carrier.city}, {carrier.state}
                     </div>
                     <div className="flex flex-wrap gap-1 mb-2">
@@ -306,14 +306,14 @@ export default function CarrierSearchPage() {
                     </div>
                     <div className="flex flex-wrap gap-1">
                       {carrier.serviceStates.map((state) => (
-                        <span key={state} className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
+                        <span key={state} className="px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-xs">
                           {state}
                         </span>
                       ))}
                     </div>
                   </div>
                   <div className="text-right ml-4">
-                    <div className="text-sm text-gray-600 mb-1">
+                    <div className="text-sm text-slate-600 mb-1">
                       {carrier.totalLoadsCompleted} loads • {carrier.onTimeDeliveryRate}% OTD
                     </div>
                     <div className="text-lg font-semibold text-yellow-600 mb-2">
@@ -344,7 +344,7 @@ export default function CarrierSearchPage() {
       {searched && carriers.length === 0 && (
         <div className="bg-white rounded-lg shadow p-8 text-center">
           <div className="text-4xl mb-2">🔍</div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No Carriers Found</h3>
+          <h3 className="text-lg font-semibold text-slate-900 mb-2">No Carriers Found</h3>
           <p className="text-gray-600">Try adjusting your search criteria to find more carriers.</p>
         </div>
       )}

@@ -6,8 +6,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
 import {
   Form,
   FormControl,
@@ -56,7 +56,7 @@ export default function CreateUserPage() {
   const loadRoles = async () => {
     try {
       setIsLoading(true);
-      const response = await apiClient.get<{ data: Role[] }>("/auth/roles");
+      const response = await apiClient.get<{ data: Role[] }>("/roles");
       setRoles(response.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load roles");
@@ -69,7 +69,7 @@ export default function CreateUserPage() {
     setIsSaving(true);
 
     try {
-      await apiClient.post("/auth/users", data);
+      await apiClient.post("/users", data);
       router.push("/admin/users");
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to create user");
@@ -115,7 +115,7 @@ export default function CreateUserPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-6">
+            <h2 className="text-lg font-medium text-slate-900 mb-6">
               User Information
             </h2>
 
@@ -254,7 +254,7 @@ export default function CreateUserPage() {
 
         <div>
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">
+            <h2 className="text-lg font-medium text-slate-900 mb-4">
               What happens next?
             </h2>
             <div className="space-y-3 text-sm text-gray-700">
@@ -264,7 +264,7 @@ export default function CreateUserPage() {
                 </div>
                 <div>
                   <p className="font-medium">User account created</p>
-                  <p className="text-gray-600 text-xs mt-1">
+                  <p className="text-slate-600 text-xs mt-1">
                     The user account will be created with PENDING status
                   </p>
                 </div>
@@ -275,7 +275,7 @@ export default function CreateUserPage() {
                 </div>
                 <div>
                   <p className="font-medium">Invitation email sent</p>
-                  <p className="text-gray-600 text-xs mt-1">
+                  <p className="text-slate-600 text-xs mt-1">
                     An invitation email will be sent with activation link
                   </p>
                 </div>
@@ -286,7 +286,7 @@ export default function CreateUserPage() {
                 </div>
                 <div>
                   <p className="font-medium">User activation</p>
-                  <p className="text-gray-600 text-xs mt-1">
+                  <p className="text-slate-600 text-xs mt-1">
                     User clicks link to set password and activate account
                   </p>
                 </div>

@@ -13,11 +13,11 @@ export default function PageHeader({ title, subtitle, description, children, act
   const displayActions = children || actions;
   
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 mb-4 border-b border-slate-200">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{title}</h1>
+        <h1 className="text-xl font-semibold text-slate-900">{title}</h1>
         {displaySubtitle && (
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{displaySubtitle}</p>
+          <p className="mt-0.5 text-sm text-slate-600">{displaySubtitle}</p>
         )}
       </div>
       {displayActions && (

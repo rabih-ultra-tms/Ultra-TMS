@@ -7,8 +7,39 @@ export class ProfileService {
   constructor(private prisma: PrismaService) {}
 
   /**
+   * Get user's own profile
+   */
+  async getProfile(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { 
+        role: true,
+        tenant: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          }
+        }
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { passwordHash: _passwordHash, ...sanitized } = user;
+
+    return {
+      data: sanitized,
+    };
+  }
+
+  /**
    * Update user's own profile
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async updateProfile(userId: string, data: any) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -31,7 +62,8 @@ export class ProfileService {
       include: { role: true },
     });
 
-    const { passwordHash, ...sanitized } = updated;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { passwordHash: _passwordHash, ...sanitized } = updated;
 
     return {
       data: sanitized,

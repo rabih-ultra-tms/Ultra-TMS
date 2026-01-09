@@ -175,7 +175,7 @@ export default function DashboardsPage() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-gray-900 dark:text-white">{dashboard.name}</h3>
+                    <h3 className="font-semibold text-slate-900">{dashboard.name}</h3>
                     {dashboard.isDefault && (
                       <StarIcon className="h-4 w-4 text-yellow-500 fill-yellow-500" />
                     )}
@@ -224,7 +224,7 @@ export default function DashboardsPage() {
               </div>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="mt-4 pt-4 border-t border-slate-200">
               <p className="text-xs text-gray-400">Last viewed: {dashboard.lastViewed}</p>
             </div>
           </Card>

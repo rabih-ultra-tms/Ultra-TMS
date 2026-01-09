@@ -71,11 +71,11 @@ function getStatusColor(status: string): 'success' | 'warning' | 'error' | 'defa
 function getCategoryColor(category: string): string {
   switch (category) {
     case 'FINANCIAL': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-    case 'OPERATIONAL': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+    case 'OPERATIONAL': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 text-blue-700';
     case 'CARRIER': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
     case 'CUSTOMER': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
     case 'SALES': return 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200';
-    default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200';
+    default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800';
   }
 }
 
@@ -117,7 +117,7 @@ export default function KpisPage() {
             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
               selectedCategory === category.id
                 ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                : 'bg-slate-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
             {category.name} ({category.count})
@@ -139,27 +139,27 @@ export default function KpisPage() {
       <Card>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 dark:bg-gray-800">
+            <thead className="bg-slate-100">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                   KPI
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                   Category
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
                   Current Value
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
                   Target
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
                   Change
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -169,11 +169,11 @@ export default function KpisPage() {
                 <tr key={kpi.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                      <div className="p-2 bg-gray-100 rounded-lg">
                         <ChartBarIcon className="h-5 w-5 text-gray-500" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">{kpi.name}</p>
+                        <p className="text-sm font-medium text-slate-900">{kpi.name}</p>
                         <p className="text-xs text-gray-500">{kpi.code}</p>
                       </div>
                     </div>
@@ -184,7 +184,7 @@ export default function KpisPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                    <span className="text-sm font-semibold text-slate-900">
                       {formatValue(kpi.value, kpi.unit)}
                     </span>
                   </td>

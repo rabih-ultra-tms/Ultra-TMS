@@ -23,12 +23,15 @@ import { ProfileController } from './profile.controller';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET'),
-        signOptions: {
-          expiresIn: configService.get<string>('JWT_ACCESS_EXPIRATION', '15m'),
-        },
-      }),
+      useFactory: (configService: ConfigService) => {
+        const expiresIn = configService.get<string>('JWT_ACCESS_EXPIRATION', '15m');
+        return {
+          secret: configService.get<string>('JWT_SECRET') || 'default-secret',
+          signOptions: {
+            expiresIn: expiresIn as any, // ConfigService returns string, but JWT expects string | number
+          },
+        };
+      },
     }),
   ],
   controllers: [AuthController, UsersController, RolesController, TenantController, ProfileController],

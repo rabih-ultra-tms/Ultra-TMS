@@ -6,8 +6,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
 import {
   Form,
   FormControl,
@@ -56,14 +56,15 @@ export default function UserDetailPage({
 
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id]);
 
   const loadData = async () => {
     try {
       setIsLoading(true);
       const [userResponse, rolesResponse] = await Promise.all([
-        apiClient.get<User>(`/auth/users/${params.id}`),
-        apiClient.get<{ data: Role[] }>("/auth/roles"),
+        apiClient.get<User>(`/users/${params.id}`),
+        apiClient.get<{ data: Role[] }>("/roles"),
       ]);
 
       setUser(userResponse);
@@ -88,7 +89,7 @@ export default function UserDetailPage({
     setIsSaving(true);
 
     try {
-      await apiClient.put(`/auth/users/${params.id}`, data);
+      await apiClient.put(`/users/${params.id}`, data);
       router.push("/admin/users");
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to update user");
@@ -101,7 +102,7 @@ export default function UserDetailPage({
     if (!confirm("Send password reset email to this user?")) return;
 
     try {
-      await apiClient.post(`/auth/users/${params.id}/reset-password`);
+      await apiClient.post(`/users/${params.id}/reset-password`);
       alert("Password reset email sent");
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to reset password");
@@ -112,7 +113,7 @@ export default function UserDetailPage({
     if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) return;
 
     try {
-      await apiClient.delete(`/auth/users/${params.id}`);
+      await apiClient.delete(`/users/${params.id}`);
       router.push("/admin/users");
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to delete user");
@@ -158,7 +159,7 @@ export default function UserDetailPage({
             <Button variant="outline" onClick={handleResetPassword}>
               Reset Password
             </Button>
-            <Button variant="destructive" onClick={handleDelete}>
+            <Button variant="danger" onClick={handleDelete}>
               Delete User
             </Button>
           </div>

@@ -60,7 +60,7 @@ export class AuthService {
     }
 
     // Find user
-    const user = await this.prisma.user.findUnique({
+    const user = await this.prisma.user.findFirst({
       where: { email },
       include: { role: true },
     });
@@ -141,7 +141,7 @@ export class AuthService {
       const tokens = await this.generateTokenPair(user, payload.userAgent, payload.ipAddress, payload.jti);
 
       return tokens;
-    } catch (error) {
+    } catch {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
   }
@@ -166,7 +166,7 @@ export class AuthService {
   async forgotPassword(forgotPasswordDto: ForgotPasswordDto): Promise<void> {
     const { email } = forgotPasswordDto;
 
-    const user = await this.prisma.user.findUnique({
+    const user = await this.prisma.user.findFirst({
       where: { email },
     });
 
@@ -200,7 +200,7 @@ export class AuthService {
    * Reset password with token
    */
   async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<void> {
-    const { token, password } = resetPasswordDto;
+    const { token, newPassword } = resetPasswordDto;
     const tokenHash = this.hashToken(token);
 
     // Find valid token in database
@@ -228,7 +228,7 @@ export class AuthService {
     }
 
     // Hash new password
-    const passwordHash = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(newPassword, 10);
 
     // Update password and mark token as used
     await this.prisma.$transaction([
@@ -285,10 +285,24 @@ export class AuthService {
   /**
    * Get current authenticated user profile
    */
-  async getMe(userId: string): Promise<any> {
+  async getMe(userId: string): Promise<{
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    status: string;
+    tenant: { id: string; name: string } | null;
+    role: { id: string; name: string; permissions: unknown } | null;
+  }> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: {
+        tenant: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
         role: {
           select: {
             id: true,
@@ -303,7 +317,8 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
 
-    // Remove sensitive fields
+    // Remove sensitive fields (passwordHash not included in response)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash, ...userWithoutPassword } = user;
 
     return userWithoutPassword;
@@ -313,7 +328,7 @@ export class AuthService {
    * Generate access and refresh token pair
    */
   private async generateTokenPair(
-    user: any,
+    user: { id: string; email: string; tenantId: string | null; roleId: string | null },
     userAgent?: string,
     ipAddress?: string,
     existingSessionId?: string,
@@ -339,13 +354,19 @@ export class AuthService {
       ipAddress,
     };
 
-    const accessToken = this.jwtService.sign(accessTokenPayload, {
-      expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRATION', '15m'),
-    });
+    const accessToken = this.jwtService.sign(
+      Object.assign({}, accessTokenPayload),
+      {
+        expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRATION', '15m'),
+      } as any // eslint-disable-line @typescript-eslint/no-explicit-any
+    );
 
-    const refreshToken = this.jwtService.sign(refreshTokenPayload, {
-      expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRATION', '7d'),
-    });
+    const refreshToken = this.jwtService.sign(
+      Object.assign({}, refreshTokenPayload),
+      {
+        expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRATION', '7d'),
+      } as any // eslint-disable-line @typescript-eslint/no-explicit-any
+    );
 
     // Store refresh token hash in Redis
     const refreshTokenHash = this.hashToken(refreshToken);

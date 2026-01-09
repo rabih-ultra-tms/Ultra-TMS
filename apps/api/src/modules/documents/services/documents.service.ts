@@ -36,7 +36,9 @@ export class DocumentsService {
     tenantId: string,
     documentType?: string,
     entityType?: string,
-    entityId?: string
+    entityId?: string,
+    page?: number,
+    limit?: number
   ) {
     const where: Record<string, any> = { tenantId, deletedAt: null };
 
@@ -52,7 +54,16 @@ export class DocumentsService {
       where.entityId = entityId;
     }
 
-    return this.prisma.document.findMany({
+    // Default pagination
+    const currentPage = page || 1;
+    const itemsPerPage = limit || 20;
+    const skip = (currentPage - 1) * itemsPerPage;
+
+    // Get total count for pagination
+    const total = await this.prisma.document.count({ where });
+
+    // Get paginated results
+    const data = await this.prisma.document.findMany({
       where,
       include: {
         load: true,
@@ -69,7 +80,19 @@ export class DocumentsService {
         },
       },
       orderBy: { createdAt: 'desc' },
+      skip,
+      take: itemsPerPage,
     });
+
+    return {
+      data,
+      pagination: {
+        page: currentPage,
+        limit: itemsPerPage,
+        total,
+        totalPages: Math.ceil(total / itemsPerPage),
+      },
+    };
   }
 
   async findOne(tenantId: string, id: string) {

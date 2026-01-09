@@ -20,7 +20,12 @@ export class RolesController {
 
   @Get()
   async findAll(@CurrentTenant() tenantId: string) {
-    return this.rolesService.findAll(tenantId);
+    console.log('📥 Roles controller: findAll called for tenantId:', tenantId);
+    const roles = await this.rolesService.findAll(tenantId);
+    console.log('📤 Roles controller: returning', roles.length, 'roles');
+    const response = { data: roles };
+    console.log('📤 Response structure:', JSON.stringify(response, null, 2).substring(0, 500));
+    return response;
   }
 
   /**
@@ -34,12 +39,14 @@ export class RolesController {
 
   @Get(':id')
   async findOne(@CurrentTenant() tenantId: string, @Param('id') id: string) {
-    return this.rolesService.findOne(tenantId, id);
+    const role = await this.rolesService.findOne(tenantId, id);
+    return { data: role };
   }
 
   @Post()
   async create(@CurrentTenant() tenantId: string, @Body() dto: CreateRoleDto) {
-    return this.rolesService.create(tenantId, dto);
+    const role = await this.rolesService.create(tenantId, dto);
+    return { data: role };
   }
 
   @Put(':id')
@@ -48,11 +55,13 @@ export class RolesController {
     @Param('id') id: string,
     @Body() dto: UpdateRoleDto,
   ) {
-    return this.rolesService.update(tenantId, id, dto);
+    const role = await this.rolesService.update(tenantId, id, dto);
+    return { data: role };
   }
 
   @Delete(':id')
   async delete(@CurrentTenant() tenantId: string, @Param('id') id: string) {
-    return this.rolesService.delete(tenantId, id);
+    const result = await this.rolesService.delete(tenantId, id);
+    return { data: result };
   }
 }

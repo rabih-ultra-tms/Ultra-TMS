@@ -33,13 +33,17 @@ export class DocumentsController {
     @Request() req: any,
     @Query('documentType') documentType?: string,
     @Query('entityType') entityType?: string,
-    @Query('entityId') entityId?: string
+    @Query('entityId') entityId?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string
   ) {
     return this.documentsService.findAll(
       req.user.tenantId,
       documentType,
       entityType,
-      entityId
+      entityId,
+      page ? parseInt(page) : undefined,
+      limit ? parseInt(limit) : undefined
     );
   }
 

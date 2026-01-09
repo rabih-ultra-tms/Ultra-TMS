@@ -98,7 +98,7 @@ const mockTransformationDetail = {
 
 const typeColors: Record<string, string> = {
   direct: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-  lookup: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+  lookup: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 text-blue-700',
   transform: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
   computed: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
 };
@@ -217,7 +217,7 @@ export default function TransformationsPage() {
 
                 <div className="border dark:border-gray-700 rounded-lg overflow-hidden">
                   <table className="w-full text-sm">
-                    <thead className="bg-gray-50 dark:bg-gray-800">
+                    <thead className="bg-slate-100">
                       <tr>
                         <th className="px-3 py-2 text-left font-medium">Source</th>
                         <th className="px-3 py-2 text-center w-12">→</th>
@@ -229,7 +229,7 @@ export default function TransformationsPage() {
                       {mockTransformationDetail.mappings.map(mapping => (
                         <tr key={mapping.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                           <td className="px-3 py-2">
-                            <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded">
+                            <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">
                               {mapping.source}
                             </code>
                           </td>
@@ -237,7 +237,7 @@ export default function TransformationsPage() {
                             <ArrowRightIcon className="h-4 w-4 text-gray-400 mx-auto" />
                           </td>
                           <td className="px-3 py-2">
-                            <code className="text-xs bg-blue-100 dark:bg-blue-900/30 px-1 py-0.5 rounded text-blue-700 dark:text-blue-300">
+                            <code className="text-xs bg-blue-100 dark:bg-blue-900/30 px-1 py-0.5 rounded text-blue-700 text-blue-700">
                               {mapping.target}
                             </code>
                           </td>
@@ -283,7 +283,7 @@ export default function TransformationsPage() {
             <Card className="p-12 text-center">
               <ArrowsRightLeftIcon className="h-12 w-12 mx-auto text-gray-400 mb-4" />
               <h3 className="text-lg font-semibold mb-2">Select a Transformation</h3>
-              <p className="text-gray-500 mb-4">
+              <p className="text-slate-500 mb-4">
                 Choose a transformation from the list to view and edit its field mappings.
               </p>
               <Button>

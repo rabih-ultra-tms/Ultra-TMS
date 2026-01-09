@@ -1,10 +1,12 @@
 /* eslint-disable no-undef */
 // API Client for Ultra-TMS
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_PREFIX = process.env.NEXT_PUBLIC_API_PREFIX || '/api/v1';
 
 interface ApiClientOptions {
   baseUrl?: string;
   defaultHeaders?: Record<string, string>;
+  apiPrefix?: string;
 }
 
 interface RequestOptions extends RequestInit {
@@ -14,17 +16,45 @@ interface RequestOptions extends RequestInit {
 class ApiClient {
   private baseUrl: string;
   private defaultHeaders: Record<string, string>;
+  private apiPrefix: string;
 
   constructor(options: ApiClientOptions = {}) {
     this.baseUrl = options.baseUrl || API_BASE_URL;
+    this.apiPrefix = this.normalizePrefix(options.apiPrefix ?? API_PREFIX);
     this.defaultHeaders = {
       'Content-Type': 'application/json',
       ...options.defaultHeaders,
     };
   }
 
+  private getAuthHeaders(): Record<string, string> {
+    if (typeof window === 'undefined') return {};
+    const token = localStorage.getItem('accessToken');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }
+
+  private normalizePrefix(prefix?: string): string {
+    if (!prefix) return '';
+    return `/${prefix.replace(/^\/+|\/+$/g, '')}`;
+  }
+
   private buildUrl(endpoint: string, params?: Record<string, string | number | boolean | undefined>): string {
-    const url = new URL(endpoint, this.baseUrl);
+    const isAbsolute = /^https?:\/\//i.test(endpoint);
+    const cleanedEndpoint = endpoint.replace(/^\/+/, '');
+    const prefixWithoutSlash = this.apiPrefix.replace(/^\/+/, '');
+    const alreadyPrefixed = prefixWithoutSlash
+      ? cleanedEndpoint === prefixWithoutSlash || cleanedEndpoint.startsWith(`${prefixWithoutSlash}/`)
+      : false;
+
+    const path = isAbsolute
+      ? endpoint
+      : alreadyPrefixed
+        ? `/${cleanedEndpoint}`
+        : `${this.apiPrefix}/${cleanedEndpoint}`;
+
+    const url = isAbsolute
+      ? new URL(path)
+      : new URL(path, `${this.baseUrl.replace(/\/+$/, '')}/`);
     
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
@@ -58,9 +88,11 @@ class ApiClient {
     
     const response = await fetch(url, {
       ...fetchOptions,
+      credentials: 'include',
       method: 'GET',
       headers: {
         ...this.defaultHeaders,
+        ...this.getAuthHeaders(),
         ...fetchOptions.headers,
       },
     });
@@ -74,9 +106,11 @@ class ApiClient {
     
     const response = await fetch(url, {
       ...fetchOptions,
+      credentials: 'include',
       method: 'POST',
       headers: {
         ...this.defaultHeaders,
+        ...this.getAuthHeaders(),
         ...fetchOptions.headers,
       },
       body: data ? JSON.stringify(data) : undefined,
@@ -91,9 +125,11 @@ class ApiClient {
     
     const response = await fetch(url, {
       ...fetchOptions,
+      credentials: 'include',
       method: 'PUT',
       headers: {
         ...this.defaultHeaders,
+        ...this.getAuthHeaders(),
         ...fetchOptions.headers,
       },
       body: data ? JSON.stringify(data) : undefined,
@@ -108,9 +144,11 @@ class ApiClient {
     
     const response = await fetch(url, {
       ...fetchOptions,
+      credentials: 'include',
       method: 'PATCH',
       headers: {
         ...this.defaultHeaders,
+        ...this.getAuthHeaders(),
         ...fetchOptions.headers,
       },
       body: data ? JSON.stringify(data) : undefined,
@@ -125,9 +163,11 @@ class ApiClient {
     
     const response = await fetch(url, {
       ...fetchOptions,
+      credentials: 'include',
       method: 'DELETE',
       headers: {
         ...this.defaultHeaders,
+        ...this.getAuthHeaders(),
         ...fetchOptions.headers,
       },
     });
@@ -144,6 +184,7 @@ class ApiClient {
     
     const response = await fetch(url, {
       ...fetchOptions,
+      credentials: 'include',
       method: 'POST',
       headers,
       body: formData,

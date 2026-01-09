@@ -450,7 +450,7 @@ export default function DriverDetailPage() {
             <h2 className="text-lg font-semibold">Load History</h2>
           </div>
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-slate-100">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Load #</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Route</th>

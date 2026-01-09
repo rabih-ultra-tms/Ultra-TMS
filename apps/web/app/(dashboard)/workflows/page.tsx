@@ -179,7 +179,7 @@ export default function WorkflowsPage() {
               <CubeTransparentIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Workflows</p>
+              <p className="text-sm text-slate-500">Total Workflows</p>
               <p className="text-2xl font-semibold">{stats.total}</p>
             </div>
           </div>
@@ -190,7 +190,7 @@ export default function WorkflowsPage() {
               <PlayIcon className="h-5 w-5 text-green-600 dark:text-green-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Active</p>
+              <p className="text-sm text-slate-500">Active</p>
               <p className="text-2xl font-semibold">{stats.active}</p>
             </div>
           </div>
@@ -201,7 +201,7 @@ export default function WorkflowsPage() {
               <ChartBarIcon className="h-5 w-5 text-purple-600 dark:text-purple-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Executions</p>
+              <p className="text-sm text-slate-500">Total Executions</p>
               <p className="text-2xl font-semibold">{stats.totalExecutions.toLocaleString()}</p>
             </div>
           </div>
@@ -212,7 +212,7 @@ export default function WorkflowsPage() {
               <CheckCircleIcon className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Avg Success Rate</p>
+              <p className="text-sm text-slate-500">Avg Success Rate</p>
               <p className="text-2xl font-semibold">{stats.avgSuccessRate.toFixed(1)}%</p>
             </div>
           </div>
@@ -228,13 +228,13 @@ export default function WorkflowsPage() {
               placeholder="Search workflows..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white"
             />
           </div>
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
+            className="px-3 py-2 border border-slate-300 rounded-lg bg-white"
           >
             <option value="">All Categories</option>
             {categories.map(cat => (
@@ -244,7 +244,7 @@ export default function WorkflowsPage() {
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
+            className="px-3 py-2 border border-slate-300 rounded-lg bg-white"
           >
             <option value="">All Statuses</option>
             {statuses.map(status => (
@@ -260,7 +260,7 @@ export default function WorkflowsPage() {
           <Card key={workflow.id} className="p-4 hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between">
               <div className="flex items-start gap-4 flex-1">
-                <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded-lg text-2xl">
+                <div className="p-3 bg-slate-100 rounded-lg text-2xl">
                   {triggerIcons[workflow.triggerType]}
                 </div>
                 <div className="flex-1">
@@ -274,7 +274,7 @@ export default function WorkflowsPage() {
                     </Badge>
                     <span className="text-xs text-gray-500">v{workflow.version}</span>
                   </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                  <p className="text-sm text-slate-600 mb-3">
                     {workflow.description}
                   </p>
                   <div className="flex flex-wrap gap-4 text-sm text-gray-500">
@@ -338,7 +338,7 @@ export default function WorkflowsPage() {
         <Card className="p-12 text-center">
           <CubeTransparentIcon className="h-12 w-12 mx-auto text-gray-400 mb-4" />
           <h3 className="text-lg font-medium mb-2">No workflows found</h3>
-          <p className="text-gray-500 mb-4">
+          <p className="text-slate-500 mb-4">
             {searchTerm || selectedCategory || selectedStatus
               ? 'Try adjusting your search filters'
               : 'Get started by creating your first workflow'}

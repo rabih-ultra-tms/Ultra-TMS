@@ -5,8 +5,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
 import {
   Form,
   FormControl,
@@ -47,7 +47,8 @@ export default function RegisterPage() {
     },
   });
 
-  const onSubmit = async (data: RegisterFormValues) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const onSubmit = async (_data: RegisterFormValues) => {
     setIsLoading(true);
     setError(null);
     setSuccess(false);

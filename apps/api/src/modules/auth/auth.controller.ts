@@ -8,7 +8,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { Request } from 'express';
+import type { Request } from 'express';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards';
 import { CurrentUser } from './decorators/current-user.decorator';
@@ -64,10 +64,9 @@ export class AuthController {
   @Post('logout')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async logout(@CurrentUser() user: any, @Body('sessionId') sessionId?: string) {
-    // If sessionId not provided, extract from JWT payload
+  async logout(@CurrentUser() user: { sub: string }) {
     // For now, we'll revoke all sessions (simplified)
-    await this.authService.logoutAll(user.id);
+    await this.authService.logoutAll(user.sub);
 
     return {
       data: { success: true },
@@ -82,8 +81,8 @@ export class AuthController {
   @Post('logout-all')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async logoutAll(@CurrentUser() user: any) {
-    await this.authService.logoutAll(user.id);
+  async logoutAll(@CurrentUser() user: { sub: string }) {
+    await this.authService.logoutAll(user.sub);
 
     return {
       data: { success: true },
@@ -142,8 +141,8 @@ export class AuthController {
    */
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  async getMe(@CurrentUser() user: any) {
-    const userData = await this.authService.getMe(user.id);
+  async getMe(@CurrentUser() user: { sub: string }) {
+    const userData = await this.authService.getMe(user.sub);
 
     return {
       data: userData,

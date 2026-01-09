@@ -207,7 +207,7 @@ export default function ApprovalsPage() {
           <select
             value={selectedPriority}
             onChange={(e) => setSelectedPriority(e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
+            className="px-3 py-2 border border-slate-300 rounded-lg bg-white"
           >
             <option value="">All Priorities</option>
             <option value="HIGH">High</option>
@@ -217,7 +217,7 @@ export default function ApprovalsPage() {
           <select
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
+            className="px-3 py-2 border border-slate-300 rounded-lg bg-white"
           >
             <option value="">All Types</option>
             <option value="LOAD">Loads</option>
@@ -243,9 +243,9 @@ export default function ApprovalsPage() {
                 </div>
                 
                 <h3 className="text-lg font-medium mb-1">{approval.entityName}</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-3">{approval.description}</p>
+                <p className="text-slate-600 mb-3">{approval.description}</p>
                 
-                <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-4">
+                <div className="flex flex-wrap gap-4 text-sm text-slate-500 mb-4">
                   <span className="flex items-center gap-1">
                     <ClockIcon className="h-4 w-4" />
                     Requested {new Date(approval.requestedAt).toLocaleDateString()}
@@ -266,12 +266,12 @@ export default function ApprovalsPage() {
                 </div>
 
                 {/* Context */}
-                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+                <div className="bg-slate-50 rounded-lg p-3">
                   <p className="text-sm font-medium mb-2">Context</p>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                     {Object.entries(approval.context).map(([key, value]) => (
                       <div key={key}>
-                        <span className="text-gray-500 capitalize">{key.replace(/([A-Z])/g, ' $1')}: </span>
+                        <span className="text-slate-500 capitalize">{key.replace(/([A-Z])/g, ' $1')}: </span>
                         <span className="font-medium">
                           {typeof value === 'number' && key.toLowerCase().includes('value') 
                             ? `$${value.toLocaleString()}`

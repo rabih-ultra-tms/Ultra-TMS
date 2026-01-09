@@ -10,7 +10,7 @@ export class EmailService {
 
   constructor(private configService: ConfigService) {
     const apiKey = this.configService.get<string>('SENDGRID_API_KEY');
-    this.fromEmail = this.configService.get<string>('SENDGRID_FROM_EMAIL');
+    this.fromEmail = this.configService.get<string>('SENDGRID_FROM_EMAIL') || 'noreply@ultra-tms.local';
     this.fromName = this.configService.get<string>('SENDGRID_FROM_NAME', 'Ultra-TMS');
 
     if (apiKey && apiKey !== 'your_sendgrid_api_key_here') {

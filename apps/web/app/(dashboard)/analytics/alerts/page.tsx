@@ -149,7 +149,7 @@ export default function AlertsPage() {
               <BellAlertIcon className="h-6 w-6 text-red-600 dark:text-red-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{activeCount}</p>
+              <p className="text-2xl font-bold text-slate-900">{activeCount}</p>
               <p className="text-sm text-gray-500">Active Alerts</p>
             </div>
           </div>
@@ -160,7 +160,7 @@ export default function AlertsPage() {
               <ExclamationTriangleIcon className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{criticalCount}</p>
+              <p className="text-2xl font-bold text-slate-900">{criticalCount}</p>
               <p className="text-sm text-gray-500">Critical</p>
             </div>
           </div>
@@ -171,7 +171,7 @@ export default function AlertsPage() {
               <CheckCircleIcon className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <p className="text-2xl font-bold text-slate-900">
                 {mockAlerts.filter((a) => a.isAcknowledged).length}
               </p>
               <p className="text-sm text-gray-500">Acknowledged Today</p>
@@ -223,12 +223,12 @@ export default function AlertsPage() {
               {getAlertIcon(alert.alertType, alert.isAcknowledged)}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-medium text-gray-900 dark:text-white">{alert.kpiName}</h3>
+                  <h3 className="font-medium text-slate-900">{alert.kpiName}</h3>
                   <Badge variant={getAlertBadgeVariant(alert.alertType, alert.isAcknowledged)}>
                     {alert.isAcknowledged ? 'ACKNOWLEDGED' : alert.alertType}
                   </Badge>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{alert.message}</p>
+                <p className="text-sm text-slate-600 mb-2">{alert.message}</p>
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
                   <span>Current: <strong>{alert.currentValue}</strong></span>
                   <span>Threshold: <strong>{alert.thresholdValue}</strong></span>
@@ -241,7 +241,7 @@ export default function AlertsPage() {
                   )}
                 </div>
                 {alert.resolutionNotes && (
-                  <p className="text-sm text-gray-500 mt-2 italic">
+                  <p className="text-sm text-slate-500 mt-2 italic">
                     Resolution: {alert.resolutionNotes}
                   </p>
                 )}
@@ -270,7 +270,7 @@ export default function AlertsPage() {
         {filteredAlerts.length === 0 && (
           <Card className="p-8 text-center">
             <CheckCircleIcon className="h-12 w-12 mx-auto text-green-500 mb-4" />
-            <h3 className="font-medium text-gray-900 dark:text-white mb-2">No alerts found</h3>
+            <h3 className="font-medium text-slate-900 mb-2">No alerts found</h3>
             <p className="text-sm text-gray-500">
               {filterType === 'ACTIVE' 
                 ? 'All alerts have been acknowledged. Great job!' 

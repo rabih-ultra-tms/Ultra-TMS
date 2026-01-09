@@ -265,7 +265,7 @@ export default function SyncJobsPage() {
                           {job.status}
                         </Badge>
                       </div>
-                      <p className="text-sm text-gray-500 mt-1">
+                      <p className="text-sm text-slate-500 mt-1">
                         Job ID: {job.id}
                         {job.startedAt && ` • Started ${job.startedAt.toLocaleString()}`}
                         {job.scheduledFor && ` • Scheduled for ${job.scheduledFor.toLocaleString()}`}
@@ -300,7 +300,7 @@ export default function SyncJobsPage() {
                       <span className="text-gray-500">Progress</span>
                       <span>{job.recordsProcessed.toLocaleString()} / {job.totalRecords.toLocaleString()} records</span>
                     </div>
-                    <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                       <div 
                         className={`h-full transition-all ${
                           job.status === 'FAILED' ? 'bg-red-500' : 'bg-blue-500'
@@ -308,7 +308,7 @@ export default function SyncJobsPage() {
                         style={{ width: `${job.progress}%` }}
                       />
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">{job.progress}% complete</p>
+                    <p className="text-xs text-slate-500 mt-1">{job.progress}% complete</p>
                   </div>
                 )}
 

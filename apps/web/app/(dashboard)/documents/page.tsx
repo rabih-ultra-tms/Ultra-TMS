@@ -16,6 +16,7 @@ import {
   EyeIcon,
   DocumentDuplicateIcon,
 } from '@heroicons/react/24/outline';
+import Pagination from '@/components/ui/Pagination';
 import { apiClient } from '@/lib/api';
 
 interface Document {
@@ -98,12 +99,12 @@ export default function DocumentsPage() {
       if (searchTerm) params.append('search', searchTerm);
       if (documentType) params.append('documentType', documentType);
 
-      const response = await apiClient.get<{ data: Document[]; total: number; totalPages: number }>(`/documents?${params}`);
+      const response = await apiClient.get<{ data: Document[]; pagination: { total: number; totalPages: number } }>(`/documents?${params}`);
       setDocuments(response.data);
       setPagination((prev) => ({
         ...prev,
-        total: response.total,
-        totalPages: response.totalPages,
+        total: response.pagination.total,
+        totalPages: response.pagination.totalPages,
       }));
     } catch (error) {
       console.error('Error fetching documents:', error);
@@ -161,41 +162,41 @@ export default function DocumentsPage() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Documents</h1>
-          <p className="text-gray-600 mt-1">Manage all your documents in one place</p>
+          <h1 className="text-xl font-semibold text-slate-900">Documents</h1>
+          <p className="mt-0.5 text-sm text-slate-600">Manage all your documents in one place</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <Link
             href="/documents/templates"
-            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50"
+            className="inline-flex items-center px-3 py-1.5 border border-slate-300 rounded-md text-slate-700 bg-white hover:bg-slate-50 text-sm"
           >
-            <DocumentDuplicateIcon className="h-5 w-5 mr-2" />
+            <DocumentDuplicateIcon className="h-4 w-4 mr-1.5" />
             Templates
           </Link>
           <Link
             href="/documents/folders"
-            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50"
+            className="inline-flex items-center px-3 py-1.5 border border-slate-300 rounded-md text-slate-700 bg-white hover:bg-slate-50 text-sm"
           >
-            <FolderIcon className="h-5 w-5 mr-2" />
+            <FolderIcon className="h-4 w-4 mr-1.5" />
             Folders
           </Link>
           <button
             onClick={() => setShowUploadModal(true)}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
           >
-            <ArrowUpTrayIcon className="h-5 w-5 mr-2" />
+            <ArrowUpTrayIcon className="h-4 w-4 mr-1.5" />
             Upload
           </button>
         </div>
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-lg shadow mb-6">
-        <div className="p-4 border-b">
+      <div className="bg-white rounded-md border border-slate-200 mb-4">
+        <div className="p-3 border-b border-slate-200">
           <form onSubmit={handleSearch} className="flex items-center gap-4">
             <div className="flex-1 relative">
               <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -204,22 +205,22 @@ export default function DocumentsPage() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search documents..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-3 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm"
               />
             </div>
             <button
               type="button"
               onClick={() => setShowFilters(!showFilters)}
-              className={`inline-flex items-center px-4 py-2 border rounded-lg ${
-                showFilters ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-gray-300 text-gray-700'
+              className={`inline-flex items-center px-3 py-1.5 border rounded-md text-sm ${
+                showFilters ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-slate-300 text-slate-700'
               }`}
             >
-              <FunnelIcon className="h-5 w-5 mr-2" />
+              <FunnelIcon className="h-4 w-4 mr-2" />
               Filters
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900"
+              className="px-3 py-1.5 bg-slate-800 text-white rounded-md hover:bg-slate-900 text-sm"
             >
               Search
             </button>
@@ -228,11 +229,11 @@ export default function DocumentsPage() {
           {showFilters && (
             <div className="mt-4 pt-4 border-t grid grid-cols-4 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Document Type</label>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Document Type</label>
                 <select
                   value={documentType}
                   onChange={(e) => setDocumentType(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-3 py-1.5 border border-slate-300 rounded-md text-sm"
                 >
                   {documentTypes.map((type) => (
                     <option key={type.value} value={type.value}>
@@ -264,29 +265,29 @@ export default function DocumentsPage() {
         {/* Documents Table */}
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-slate-100">
               <tr>
                 <th className="px-4 py-3 text-left">
                   <input
                     type="checkbox"
                     checked={selectedDocs.size === documents.length && documents.length > 0}
                     onChange={selectAllDocs}
-                    className="rounded border-gray-300"
+                    className="rounded border-slate-300"
                   />
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Name</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Type</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Associated With</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Size</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Uploaded</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Status</th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">Actions</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">Name</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">Type</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">Associated With</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">Size</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">Uploaded</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">Status</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-slate-600 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-slate-200">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-gray-500">
+                  <td colSpan={8} className="px-4 py-12 text-center text-slate-500 text-sm">
                     Loading documents...
                   </td>
                 </tr>
@@ -391,33 +392,14 @@ export default function DocumentsPage() {
         </div>
 
         {/* Pagination */}
-        {pagination.totalPages > 1 && (
-          <div className="p-4 border-t flex items-center justify-between">
-            <p className="text-sm text-gray-600">
-              Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
-              {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} documents
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
-                disabled={pagination.page === 1}
-                className="px-3 py-1 border rounded disabled:opacity-50"
-              >
-                Previous
-              </button>
-              <span className="px-3 py-1">
-                Page {pagination.page} of {pagination.totalPages}
-              </span>
-              <button
-                onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
-                disabled={pagination.page === pagination.totalPages}
-                className="px-3 py-1 border rounded disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        )}
+        <Pagination
+          currentPage={pagination.page}
+          totalPages={pagination.totalPages}
+          totalItems={pagination.total}
+          itemsPerPage={pagination.limit}
+          onPageChange={(page) => setPagination((prev) => ({ ...prev, page }))}
+          itemName="documents"
+        />
       </div>
 
       {/* Upload Modal - Simplified for now */}
@@ -425,7 +407,7 @@ export default function DocumentsPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 p-6">
             <h2 className="text-xl font-bold mb-4">Upload Document</h2>
-            <p className="text-gray-600 mb-4">
+            <p className="text-slate-600 mb-4">
               Document upload functionality will be implemented with file storage integration.
             </p>
             <div className="flex justify-end">

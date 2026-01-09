@@ -5,8 +5,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
 import {
   Form,
   FormControl,
@@ -86,7 +86,7 @@ export default function ForgotPasswordPage() {
             Check your email
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            If an account exists with that email, we've sent password reset
+            If an account exists with that email, we&apos;ve sent password reset
             instructions to{" "}
             <span className="font-medium">{form.getValues("email")}</span>.
           </p>
@@ -110,7 +110,7 @@ export default function ForgotPasswordPage() {
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Forgot password?</h2>
         <p className="mt-2 text-sm text-gray-600">
-          Enter your email address and we'll send you instructions to reset
+          Enter your email address and we&apos;ll send you instructions to reset
           your password.
         </p>
       </div>

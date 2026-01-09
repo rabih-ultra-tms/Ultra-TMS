@@ -201,7 +201,7 @@ export default function IntegrationHealthPage() {
 
               {/* Metrics Grid */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                <div className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="text-center p-3 bg-slate-50 rounded-lg">
                   <SignalIcon className="h-5 w-5 mx-auto mb-1 text-gray-500" />
                   <p className="text-xs text-gray-500">Uptime</p>
                   <p className={`text-lg font-semibold ${
@@ -211,7 +211,7 @@ export default function IntegrationHealthPage() {
                     {integration.uptime}%
                   </p>
                 </div>
-                <div className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="text-center p-3 bg-slate-50 rounded-lg">
                   <ChartBarIcon className="h-5 w-5 mx-auto mb-1 text-gray-500" />
                   <p className="text-xs text-gray-500">Success Rate</p>
                   <p className={`text-lg font-semibold ${
@@ -221,7 +221,7 @@ export default function IntegrationHealthPage() {
                     {integration.successRate}%
                   </p>
                 </div>
-                <div className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="text-center p-3 bg-slate-50 rounded-lg">
                   <ClockIcon className="h-5 w-5 mx-auto mb-1 text-gray-500" />
                   <p className="text-xs text-gray-500">Avg Response</p>
                   <p className={`text-lg font-semibold ${
@@ -232,7 +232,7 @@ export default function IntegrationHealthPage() {
                     {integration.avgResponseTime || '-'}ms
                   </p>
                 </div>
-                <div className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="text-center p-3 bg-slate-50 rounded-lg">
                   <BoltIcon className="h-5 w-5 mx-auto mb-1 text-gray-500" />
                   <p className="text-xs text-gray-500">24h Requests</p>
                   <p className="text-lg font-semibold">
@@ -249,7 +249,7 @@ export default function IntegrationHealthPage() {
                     {integration.rateLimitUsage}/{integration.rateLimitMax} requests
                   </span>
                 </div>
-                <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                   <div 
                     className={`h-full transition-all ${
                       rateLimitPercent > 80 ? 'bg-red-500' :

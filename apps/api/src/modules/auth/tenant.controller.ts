@@ -30,6 +30,7 @@ export class TenantController {
   @Put()
   async updateTenant(
     @CurrentTenant() tenantId: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     @Body() data: any,
   ) {
     return this.tenantService.updateTenant(tenantId, data);
@@ -51,7 +52,9 @@ export class TenantController {
   @Put('settings')
   async updateSettings(
     @CurrentTenant() tenantId: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     @Body('settings') settings: any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     @Body('features') features?: any,
   ) {
     return this.tenantService.updateSettings(tenantId, settings, features);

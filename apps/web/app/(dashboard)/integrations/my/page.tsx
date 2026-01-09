@@ -203,7 +203,7 @@ export default function MyIntegrationsPage() {
           <select
             value={selectedEnvironment}
             onChange={(e) => setSelectedEnvironment(e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
+            className="px-3 py-2 border border-slate-300 rounded-lg bg-white"
           >
             <option value="">All Environments</option>
             <option value="PRODUCTION">Production</option>
@@ -237,7 +237,7 @@ export default function MyIntegrationsPage() {
                       </Badge>
                       <Badge variant="gray">{integration.environment}</Badge>
                     </div>
-                    <p className="text-sm text-gray-500 mb-3">
+                    <p className="text-sm text-slate-500 mb-3">
                       {integration.providerName}
                     </p>
 
@@ -312,7 +312,7 @@ export default function MyIntegrationsPage() {
         <Card className="p-12 text-center">
           <PuzzlePieceIcon className="h-12 w-12 mx-auto text-gray-400 mb-4" />
           <h3 className="text-lg font-medium mb-2">No integrations found</h3>
-          <p className="text-gray-500 mb-4">
+          <p className="text-slate-500 mb-4">
             Connect your first integration to get started
           </p>
           <Link href="/integrations">

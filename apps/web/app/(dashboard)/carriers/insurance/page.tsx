@@ -236,7 +236,7 @@ export default function InsuranceDashboardPage() {
           className={`py-3 px-4 font-medium text-sm ${
             activeTab === 'expiring'
               ? 'border-b-2 border-blue-500 text-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
+              : 'text-slate-500 hover:text-gray-700'
           }`}
         >
           Expiring Soon ({stats.expiring30})
@@ -246,7 +246,7 @@ export default function InsuranceDashboardPage() {
           className={`py-3 px-4 font-medium text-sm ${
             activeTab === 'expired'
               ? 'border-b-2 border-blue-500 text-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
+              : 'text-slate-500 hover:text-gray-700'
           }`}
         >
           Expired ({stats.expired})
@@ -256,7 +256,7 @@ export default function InsuranceDashboardPage() {
           className={`py-3 px-4 font-medium text-sm ${
             activeTab === 'pending'
               ? 'border-b-2 border-blue-500 text-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
+              : 'text-slate-500 hover:text-gray-700'
           }`}
         >
           Pending Verification ({stats.pending})
@@ -294,27 +294,27 @@ export default function InsuranceDashboardPage() {
       {/* Certificates Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+          <thead className="bg-slate-100">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Carrier
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Type
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Provider / Policy
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Coverage
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Expiration
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -339,7 +339,7 @@ export default function InsuranceDashboardPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">{cert.provider}</div>
-                    <div className="text-xs text-gray-500 font-mono">{cert.policyNumber}</div>
+                    <div className="text-xs text-slate-500 font-mono">{cert.policyNumber}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="text-sm font-medium text-gray-900">
@@ -376,7 +376,7 @@ export default function InsuranceDashboardPage() {
                       {cert.status === 'PENDING' && (
                         <button className="text-green-600 hover:text-green-800">Verify</button>
                       )}
-                      <button className="text-gray-600 hover:text-gray-800">Request</button>
+                      <button className="text-slate-600 hover:text-gray-800">Request</button>
                     </div>
                   </td>
                 </tr>

@@ -148,13 +148,13 @@ export default function WorkflowTemplatesPage() {
               placeholder="Search templates..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
+              className="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg bg-white"
             />
           </div>
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
+            className="px-3 py-2 border border-slate-300 rounded-lg bg-white"
           >
             <option value="">All Categories</option>
             {categories.map(cat => (
@@ -190,16 +190,16 @@ export default function WorkflowTemplatesPage() {
             </div>
 
             <h3 className="text-lg font-semibold mb-2">{template.name}</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+            <p className="text-sm text-slate-600 mb-4 line-clamp-2">
               {template.description}
             </p>
 
             {/* Steps Preview */}
             <div className="mb-4">
-              <p className="text-xs text-gray-500 mb-2">Steps preview:</p>
+              <p className="text-xs text-slate-500 mb-2">Steps preview:</p>
               <div className="flex flex-wrap gap-1">
                 {template.previewSteps.slice(0, 4).map((step, i) => (
-                  <span key={i} className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                  <span key={i} className="text-xs bg-slate-100 px-2 py-1 rounded">
                     {step}
                   </span>
                 ))}
@@ -220,7 +220,7 @@ export default function WorkflowTemplatesPage() {
             </div>
 
             {/* Stats */}
-            <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+            <div className="flex items-center justify-between text-sm text-slate-500 mb-4">
               <span>{template.stepsCount} steps</span>
               <span>{template.usageCount} uses</span>
             </div>
@@ -247,7 +247,7 @@ export default function WorkflowTemplatesPage() {
         <Card className="p-12 text-center">
           <DocumentDuplicateIcon className="h-12 w-12 mx-auto text-gray-400 mb-4" />
           <h3 className="text-lg font-medium mb-2">No templates found</h3>
-          <p className="text-gray-500 mb-4">
+          <p className="text-slate-500 mb-4">
             Try adjusting your search or filters
           </p>
           <Button onClick={() => { setSearchTerm(''); setSelectedCategory(''); setShowPopularOnly(false); }}>

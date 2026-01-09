@@ -103,7 +103,7 @@ export default function DashboardBuilderPage() {
       <Card className="p-4">
         <div className="flex items-center gap-4">
           <div className="flex-1 max-w-md">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Dashboard Name
             </label>
             <Input
@@ -130,7 +130,7 @@ export default function DashboardBuilderPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <Card className="w-full max-w-2xl p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Add Widget</h2>
+              <h2 className="text-lg font-semibold text-slate-900">Add Widget</h2>
               <Button variant="ghost" size="sm" onClick={() => setShowWidgetPicker(false)}>
                 ×
               </Button>
@@ -140,10 +140,10 @@ export default function DashboardBuilderPage() {
                 <button
                   key={type.id}
                   onClick={() => handleAddWidget(type.id)}
-                  className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-left"
+                  className="p-4 border border-slate-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-left"
                 >
                   <type.icon className="h-8 w-8 text-blue-600 mb-2" />
-                  <h3 className="font-medium text-gray-900 dark:text-white">{type.name}</h3>
+                  <h3 className="font-medium text-slate-900">{type.name}</h3>
                   <p className="text-xs text-gray-500">{type.description}</p>
                 </button>
               ))}
@@ -158,10 +158,10 @@ export default function DashboardBuilderPage() {
           {widgets.map((widget) => (
             <div
               key={widget.id}
-              className={`col-span-${widget.w} row-span-${widget.h} bg-gray-50 dark:bg-gray-800 border-2 rounded-lg p-4 cursor-pointer transition-all ${
+              className={`col-span-${widget.w} row-span-${widget.h} bg-slate-50 border-2 rounded-lg p-4 cursor-pointer transition-all ${
                 selectedWidget === widget.id
                   ? 'border-blue-500 ring-2 ring-blue-200'
-                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                  : 'border-slate-200 hover:border-gray-300'
               }`}
               style={{
                 gridColumn: `span ${widget.w}`,
@@ -175,7 +175,7 @@ export default function DashboardBuilderPage() {
                     <Squares2X2Icon className="h-4 w-4 text-gray-400" />
                     <span className="text-xs font-medium text-gray-500">{widget.type.replace('_', ' ')}</span>
                   </div>
-                  <h3 className="font-medium text-gray-900 dark:text-white">{widget.title}</h3>
+                  <h3 className="font-medium text-slate-900">{widget.title}</h3>
                 </div>
                 {selectedWidget === widget.id && (
                   <div className="flex items-center gap-1">
@@ -206,8 +206,8 @@ export default function DashboardBuilderPage() {
         {widgets.length === 0 && (
           <div className="flex flex-col items-center justify-center h-96 text-center">
             <Squares2X2Icon className="h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="font-medium text-gray-900 dark:text-white mb-2">No widgets yet</h3>
-            <p className="text-sm text-gray-500 mb-4">Start building your dashboard by adding widgets</p>
+            <h3 className="font-medium text-slate-900 mb-2">No widgets yet</h3>
+            <p className="text-sm text-slate-500 mb-4">Start building your dashboard by adding widgets</p>
             <Button variant="primary" onClick={() => setShowWidgetPicker(true)}>
               <PlusIcon className="h-4 w-4 mr-1" />
               Add Your First Widget

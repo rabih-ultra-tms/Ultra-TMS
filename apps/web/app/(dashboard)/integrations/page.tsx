@@ -156,14 +156,14 @@ const categoryIcons: Record<string, React.ComponentType<{ className?: string }>>
 };
 
 const categoryColors: Record<string, string> = {
-  LOAD_BOARD: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+  LOAD_BOARD: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 text-blue-700',
   ACCOUNTING: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
   ELD: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
   CRM: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
   COMMUNICATION: 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300',
   PAYMENT: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
   RATING: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300',
-  DOCUMENT: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300',
+  DOCUMENT: 'bg-gray-100 text-gray-800 dark:bg-gray-800',
 };
 
 export default function IntegrationsMarketplacePage() {
@@ -203,7 +203,7 @@ export default function IntegrationsMarketplacePage() {
           className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
             !selectedCategory 
               ? 'bg-blue-600 text-white' 
-              : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
+              : 'bg-slate-100 hover:bg-gray-200'
           }`}
         >
           All
@@ -217,7 +217,7 @@ export default function IntegrationsMarketplacePage() {
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${
                 selectedCategory === cat 
                   ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
+                  : 'bg-slate-100 hover:bg-gray-200'
               }`}
             >
               <Icon className="h-4 w-4" />
@@ -237,7 +237,7 @@ export default function IntegrationsMarketplacePage() {
               placeholder="Search integrations..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
+              className="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg bg-white"
             />
           </div>
           <Button 
@@ -275,22 +275,22 @@ export default function IntegrationsMarketplacePage() {
               </div>
             </div>
 
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            <p className="text-sm text-slate-600 mb-4">
               {provider.description}
             </p>
 
             {/* Features */}
             <div className="flex flex-wrap gap-2 mb-4">
-              <span className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+              <span className="text-xs bg-slate-100 px-2 py-1 rounded">
                 {provider.authType.replace(/_/g, ' ')}
               </span>
               {provider.supportsWebhooks && (
-                <span className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                <span className="text-xs bg-slate-100 px-2 py-1 rounded">
                   Webhooks
                 </span>
               )}
               {provider.supportsRealtime && (
-                <span className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                <span className="text-xs bg-slate-100 px-2 py-1 rounded">
                   Realtime
                 </span>
               )}
@@ -328,7 +328,7 @@ export default function IntegrationsMarketplacePage() {
         <Card className="p-12 text-center">
           <PuzzlePieceIcon className="h-12 w-12 mx-auto text-gray-400 mb-4" />
           <h3 className="text-lg font-medium mb-2">No integrations found</h3>
-          <p className="text-gray-500 mb-4">
+          <p className="text-slate-500 mb-4">
             Try adjusting your search or filters
           </p>
           <Button onClick={() => { setSearchTerm(''); setSelectedCategory(''); setShowConnectedOnly(false); }}>

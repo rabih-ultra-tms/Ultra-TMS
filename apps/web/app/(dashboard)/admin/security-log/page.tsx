@@ -106,7 +106,7 @@ export default function SecurityLogPage() {
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">
+          <h2 className="text-lg font-medium text-slate-900 mb-4">
             Active Sessions
           </h2>
           
@@ -191,7 +191,7 @@ export default function SecurityLogPage() {
       </div>
 
       <div className="mt-6 bg-white rounded-lg shadow p-6">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">
+        <h2 className="text-lg font-medium text-slate-900 mb-4">
           Security Recommendations
         </h2>
         <ul className="space-y-3 text-sm text-gray-700">

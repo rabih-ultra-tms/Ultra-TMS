@@ -7,12 +7,15 @@ export class RolesService {
   constructor(private prisma: PrismaService) {}
 
   async findAll(tenantId: string) {
-    return this.prisma.role.findMany({
+    console.log('🔍 Finding roles for tenantId:', tenantId);
+    const roles = await this.prisma.role.findMany({
       where: {
         OR: [{ tenantId }, { tenantId: null, isSystem: true }],
       },
       orderBy: [{ isSystem: 'desc' }, { name: 'asc' }],
     });
+    console.log('✅ Found roles:', roles.length, roles.map(r => r.name));
+    return roles;
   }
 
   async findOne(tenantId: string, id: string) {
