@@ -9,6 +9,7 @@ import { TmsModule } from './modules/tms/tms.module';
 import { CarrierModule } from './modules/carrier/carrier.module';
 import { AccountingModule } from './modules/accounting/accounting.module';
 import { LoadBoardModule } from './modules/load-board/load-board.module';
+import { CommissionModule } from './modules/commission/commission.module';
 
 // Support services - commented out until schemas are added
 // import { AnalyticsModule } from './modules/analytics/analytics.module';
@@ -26,6 +27,7 @@ import { LoadBoardModule } from './modules/load-board/load-board.module';
     CarrierModule,
     AccountingModule,
     LoadBoardModule,
+    CommissionModule,
     // Support services - enable after adding schemas:
     // AnalyticsModule,
     // DocumentsModule,
@@ -36,4 +38,3 @@ import { LoadBoardModule } from './modules/load-board/load-board.module';
   exports: [PrismaService],
 })
 export class AppModule {}
-

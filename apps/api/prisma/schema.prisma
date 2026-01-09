@@ -84,6 +84,13 @@ model Tenant {
   loadBids          LoadBid[]
   loadTenders       LoadTender[]
 
+  // Commission Relations
+  commissionPlans              CommissionPlan[]
+  userCommissionAssignments    UserCommissionAssignment[]
+  customerCommissionOverrides  CustomerCommissionOverride[]
+  commissionEntries            CommissionEntry[]
+  commissionPayouts            CommissionPayout[]
+
   @@index([slug])
   @@index([status])
   @@index([externalId, sourceSystem])
@@ -140,6 +147,13 @@ model User {
 
   // TMS Core Relations
   salesOrders Order[] @relation("OrderSalesRep")
+
+  // Commission Relations
+  commissionAssignments        UserCommissionAssignment[]
+  customerCommissionOverrides  CustomerCommissionOverride[]
+  commissionEntries            CommissionEntry[]
+  commissionPayouts            CommissionPayout[]
+  approvedPayouts              CommissionPayout[]       @relation("PayoutApprover")
 
   @@unique([tenantId, email])
   @@index([email])
@@ -287,6 +301,9 @@ model Company {
   // Accounting Relations
   invoices         Invoice[]
   paymentsReceived PaymentReceived[]
+
+  // Commission Relations
+  commissionOverrides CustomerCommissionOverride[]
 
   @@unique([tenantId, name])
   @@index([tenantId])
@@ -876,6 +893,9 @@ model Order {
   invoices         Invoice[]
   invoiceLineItems InvoiceLineItem[]
 
+  // Commission Relations
+  commissionEntries CommissionEntry[]
+
   @@unique([tenantId, orderNumber])
   @@index([tenantId])
   @@index([customerId])
@@ -957,6 +977,9 @@ model Load {
   postings LoadPosting[]
   bids     LoadBid[]
   tenders  LoadTender[]
+
+  // Commission Relations
+  commissionEntries CommissionEntry[]
 
   @@unique([tenantId, loadNumber])
   @@index([tenantId])
@@ -2195,4 +2218,263 @@ model TenderRecipient {
   @@index([tenderId])
   @@index([carrierId])
   @@index([status])
+}
+
+// ==============================================
+// COMMISSION MODULE
+// ==============================================
+
+model CommissionPlan {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Plan details
+  name        String  @db.VarChar(255)
+  description String? @db.Text
+
+  // Type
+  planType String @db.VarChar(50) // FLAT_FEE, PERCENT_REVENUE, PERCENT_MARGIN, TIERED, CUSTOM
+
+  // Status
+  status    String  @default("ACTIVE") @db.VarChar(50) // ACTIVE, INACTIVE
+  isDefault Boolean @default(false)
+
+  // Validity
+  effectiveDate DateTime @db.Date
+  endDate       DateTime? @db.Date
+
+  // Base rates
+  flatAmount  Decimal? @db.Decimal(10, 2)
+  percentRate Decimal? @db.Decimal(5, 2)
+
+  // Basis
+  calculationBasis String? @db.VarChar(50) // GROSS_REVENUE, NET_MARGIN, LINEHAUL
+
+  // Conditions
+  minimumMarginPercent Decimal? @db.Decimal(5, 2)
+
+  // Custom rules
+  rules Json @default("{}")
+
+  // Audit
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+
+  // Relations
+  tenant      Tenant                        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tiers       CommissionPlanTier[]
+  assignments UserCommissionAssignment[]
+  entries     CommissionEntry[]
+
+  @@unique([tenantId, name, effectiveDate])
+  @@index([tenantId])
+  @@index([tenantId, status])
+}
+
+model CommissionPlanTier {
+  id     String @id @default(cuid())
+  planId String
+
+  // Tier definition
+  tierNumber Int
+  tierName   String? @db.VarChar(100)
+
+  // Thresholds
+  thresholdType String  @db.VarChar(50) // REVENUE, LOAD_COUNT, MARGIN
+  thresholdMin  Decimal @db.Decimal(14, 2)
+  thresholdMax  Decimal? @db.Decimal(14, 2)
+
+  // Rate
+  rateType   String  @db.VarChar(50) // FLAT, PERCENT
+  rateAmount Decimal @db.Decimal(10, 2)
+
+  // Period
+  periodType String? @db.VarChar(50) // MONTHLY, QUARTERLY, ANNUAL
+
+  createdAt DateTime @default(now())
+
+  // Relations
+  plan CommissionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, tierNumber])
+  @@index([planId])
+}
+
+model UserCommissionAssignment {
+  id       String @id @default(cuid())
+  tenantId String
+  userId   String
+  planId   String
+
+  // Override rates
+  overrideRate Decimal? @db.Decimal(5, 2)
+  overrideFlat Decimal? @db.Decimal(10, 2)
+
+  // Validity
+  effectiveDate DateTime  @db.Date
+  endDate       DateTime? @db.Date
+
+  // Draw
+  drawAmount       Decimal @default(0) @db.Decimal(10, 2)
+  drawRecoverable  Boolean @default(true)
+
+  // Status
+  status String @default("ACTIVE") @db.VarChar(50)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  tenant Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan   CommissionPlan @relation(fields: [planId], references: [id], onDelete: Restrict)
+
+  @@unique([tenantId, userId, effectiveDate])
+  @@index([tenantId])
+  @@index([userId])
+  @@index([planId])
+}
+
+model CustomerCommissionOverride {
+  id        String @id @default(cuid())
+  tenantId  String
+  companyId String
+  userId    String
+
+  // Override rate
+  rateType         String  @db.VarChar(50) // FLAT, PERCENT
+  rateAmount       Decimal @db.Decimal(10, 2)
+  calculationBasis String? @db.VarChar(50) // GROSS_REVENUE, NET_MARGIN
+
+  // Validity
+  effectiveDate DateTime  @db.Date
+  endDate       DateTime? @db.Date
+
+  // Notes
+  notes String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, companyId, userId, effectiveDate])
+  @@index([tenantId])
+  @@index([companyId])
+  @@index([userId])
+}
+
+model CommissionEntry {
+  id       String  @id @default(cuid())
+  tenantId String
+  userId   String
+  loadId   String?
+  orderId  String?
+
+  // Entry type
+  entryType String @db.VarChar(50) // LOAD_COMMISSION, BONUS, ADJUSTMENT, DRAW, DRAW_RECOVERY
+
+  // Calculation details
+  planId            String?
+  calculationBasis  String?  @db.VarChar(50)
+  basisAmount       Decimal? @db.Decimal(12, 2)
+  rateApplied       Decimal? @db.Decimal(5, 2)
+
+  // Commission
+  commissionAmount Decimal @db.Decimal(12, 2)
+
+  // Split info
+  isSplit        Boolean @default(false)
+  splitPercent   Decimal @default(100) @db.Decimal(5, 2)
+  parentEntryId  String?
+
+  // Status
+  status String @default("PENDING") @db.VarChar(50) // PENDING, APPROVED, PAID, REVERSED
+
+  // Period
+  commissionPeriod DateTime @db.Date
+
+  // Notes
+  notes String? @db.Text
+
+  // Reversal
+  reversedAt     DateTime?
+  reversedBy     String?
+  reversalReason String?   @db.Text
+
+  // Payout
+  payoutId String?
+  paidAt   DateTime?
+
+  // Audit
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+
+  // Relations
+  tenant      Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user        User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+  load        Load?            @relation(fields: [loadId], references: [id], onDelete: SetNull)
+  order       Order?           @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  plan        CommissionPlan?  @relation(fields: [planId], references: [id], onDelete: SetNull)
+  parentEntry CommissionEntry? @relation("EntrySplits", fields: [parentEntryId], references: [id], onDelete: SetNull)
+  splitEntries CommissionEntry[] @relation("EntrySplits")
+  payout      CommissionPayout? @relation(fields: [payoutId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([loadId])
+  @@index([tenantId, commissionPeriod])
+  @@index([tenantId, status])
+}
+
+model CommissionPayout {
+  id            String @id @default(cuid())
+  tenantId      String
+  payoutNumber  String @db.VarChar(50)
+  payoutDate    DateTime @db.Date
+  periodStart   DateTime @db.Date
+  periodEnd     DateTime @db.Date
+  userId        String
+
+  // Amounts
+  grossCommission Decimal @db.Decimal(12, 2)
+  drawRecovery    Decimal @default(0) @db.Decimal(12, 2)
+  adjustments     Decimal @default(0) @db.Decimal(12, 2)
+  netPayout       Decimal @db.Decimal(12, 2)
+
+  // Status
+  status String @default("PENDING") @db.VarChar(50) // PENDING, APPROVED, PROCESSING, PAID, VOID
+
+  // Approval
+  approvedBy String?
+  approvedAt DateTime?
+
+  // Payment
+  paymentMethod    String? @db.VarChar(50) // CHECK, ACH, PAYROLL
+  paymentReference String? @db.VarChar(100)
+  paidAt           DateTime?
+
+  // Notes
+  notes String? @db.Text
+
+  // Audit
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+
+  // Relations
+  tenant       Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user         User              @relation(fields: [userId], references: [id], onDelete: Restrict)
+  approver     User?             @relation("PayoutApprover", fields: [approvedBy], references: [id], onDelete: SetNull)
+  entries      CommissionEntry[]
+
+  @@unique([tenantId, payoutNumber])
+  @@index([tenantId])
+  @@index([userId])
+  @@index([tenantId, periodStart])
 }
