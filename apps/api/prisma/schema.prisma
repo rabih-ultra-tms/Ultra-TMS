@@ -183,21 +183,31 @@ model Tenant {
   changeHistory ChangeHistory[]
 
   // Cache Relations
-  cacheConfigs CacheConfig[]
-  rateLimits   RateLimit[]
+  cacheConfigs            CacheConfig[]
+  rateLimits              RateLimit[]
+  cacheStats              CacheStats[]
+  cacheInvalidationRules  CacheInvalidationRule[]
+  distributedLocks        DistributedLock[]
 
   // Scheduler Relations
   scheduledJobs ScheduledJob[]
 
   // Help Desk Relations
-  supportTickets SupportTicket[]
-  ticketReplies  TicketReply[]
-  kbArticles     KBArticle[]
+  supportTickets   SupportTicket[]
+  ticketReplies    TicketReply[]
+  kbArticles       KBArticle[]
+  supportTeams     SupportTeam[]
+  slaPolicies      SlaPolicy[]
+  escalationRules  EscalationRule[]
+  cannedResponses  CannedResponse[]
 
   // Feedback Relations
-  npsSurveys      NPSSurvey[]
-  npsResponses    NPSResponse[]
-  featureRequests FeatureRequest[]
+  npsSurveys             NPSSurvey[]
+  npsResponses           NPSResponse[]
+  featureRequests        FeatureRequest[]
+  surveys                Survey[]
+  surveyResponses        SurveyResponse[]
+  feedbackWidgets        FeedbackWidget[]
 
   // Credit Service Relations
   creditApplications   CreditApplication[]
@@ -9065,6 +9075,118 @@ model CacheConfig {
   @@index([externalId, sourceSystem])
 }
 
+model CacheStats {
+  id       String  @id @default(cuid())
+  tenantId String?
+
+  // Period
+  statDate DateTime @db.Date
+  statHour Int // 0-23
+
+  // Metrics
+  cacheType   String @db.VarChar(50)
+  hits        Int    @default(0)
+  misses      Int    @default(0)
+  sets        Int    @default(0)
+  deletes     Int    @default(0)
+  expirations Int    @default(0)
+
+  // Size
+  keysCount   Int?
+  memoryBytes BigInt?
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, statDate, statHour, cacheType])
+  @@index([tenantId])
+  @@index([statDate, statHour])
+  @@index([externalId, sourceSystem])
+}
+
+model CacheInvalidationRule {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Trigger
+  triggerEvent String @db.VarChar(100) // order.updated, carrier.approved
+
+  // Cache to invalidate
+  cachePattern      String @db.VarChar(200) // Pattern with wildcards
+  invalidationType  String @db.VarChar(20) // DELETE, REFRESH
+
+  // Status
+  isEnabled Boolean @default(true)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([triggerEvent])
+  @@index([isEnabled])
+  @@index([externalId, sourceSystem])
+}
+
+model DistributedLock {
+  id       String @id @default(cuid())
+  tenantId String?
+
+  // Lock details
+  lockKey  String @db.VarChar(200)
+  holderId String @db.VarChar(100)
+
+  // Timing
+  acquiredAt DateTime
+  expiresAt  DateTime
+  releasedAt DateTime?
+
+  // Context
+  purpose String? @db.Text
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([lockKey, acquiredAt])
+  @@index([externalId, sourceSystem])
+}
+
 model RateLimit {
   id       String  @id @default(cuid())
   tenantId String?
@@ -9256,6 +9378,212 @@ model KBArticle {
   @@index([externalId, sourceSystem])
 }
 
+model SupportTeam {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Team details
+  name        String  @db.VarChar(100)
+  description String? @db.Text
+  email       String? @db.VarChar(255) // Team email address
+
+  // Settings
+  autoAssign       Boolean @default(false) // Auto-assign to team members
+  assignmentMethod String  @default("ROUND_ROBIN") @db.VarChar(20) // ROUND_ROBIN, LOAD_BALANCED
+
+  // Manager
+  managerId String?
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant  Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  members SupportTeamMember[]
+
+  @@index([tenantId])
+  @@index([isActive])
+  @@index([externalId, sourceSystem])
+}
+
+model SupportTeamMember {
+  id     String @id @default(cuid())
+  teamId String
+  userId String
+
+  // Role
+  role String @default("MEMBER") @db.VarChar(20) // LEAD, MEMBER
+
+  // Capacity
+  maxOpenTickets      Int     @default(20)
+  currentTicketCount  Int     @default(0)
+
+  // Status
+  isAvailable Boolean @default(true)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  team SupportTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@index([teamId])
+  @@index([userId])
+  @@index([isAvailable])
+  @@index([externalId, sourceSystem])
+}
+
+model SlaPolicy {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Policy details
+  name        String  @db.VarChar(100)
+  description String? @db.Text
+
+  // Conditions (when to apply)
+  conditions Json // {priority: ['URGENT'], category: ['TECHNICAL']}
+
+  // Targets (in minutes)
+  firstResponseTarget Int // Time to first response
+  resolutionTarget    Int // Time to resolution
+
+  // Business hours
+  useBusinessHours Boolean @default(true)
+
+  // Priority
+  priority Int @default(0) // Higher = check first
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([isActive])
+  @@index([priority])
+  @@index([externalId, sourceSystem])
+}
+
+model EscalationRule {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Rule details
+  name        String  @db.VarChar(100)
+  description String? @db.Text
+
+  // Trigger
+  triggerType    String @db.VarChar(30) // SLA_BREACH, NO_RESPONSE, CUSTOMER_REPLY
+  triggerMinutes Int? // Minutes after trigger
+
+  // Conditions
+  conditions Json? // {priority: ['URGENT']}
+
+  // Actions
+  actionType   String @db.VarChar(30) // NOTIFY, REASSIGN, CHANGE_PRIORITY
+  actionConfig Json // {notify_users: [], reassign_to: 'team_id'}
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([isActive])
+  @@index([triggerType])
+  @@index([externalId, sourceSystem])
+}
+
+model CannedResponse {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Template details
+  title    String  @db.VarChar(200)
+  content  String  @db.Text
+  category String? @db.VarChar(100)
+
+  // Usage
+  useCount Int @default(0)
+
+  // Visibility
+  isPublic Boolean @default(false) // Available to all agents
+  ownerId  String? // Creator, can be NULL for public templates
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([isActive])
+  @@index([category])
+  @@index([ownerId])
+  @@index([externalId, sourceSystem])
+}
+
 // ==============================================
 // FEEDBACK (Service 27) - Core Models
 // ==============================================
@@ -9383,12 +9711,223 @@ model FeatureRequest {
   updatedById String?
 
   // Relations
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant   Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  votes    FeatureRequestVote[]
+  comments FeatureRequestComment[]
 
   @@index([tenantId])
   @@index([status])
   @@index([voteCount])
   @@index([createdAt])
+  @@index([externalId, sourceSystem])
+}
+
+model FeatureRequestVote {
+  id        String @id @default(cuid())
+  requestId String
+
+  // Voter
+  userId     String?
+  voterEmail String? @db.VarChar(255)
+
+  // Vote (could extend to weighted voting)
+  voteWeight Int @default(1)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  request FeatureRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@unique([requestId, userId])
+  @@index([requestId])
+  @@index([userId])
+  @@index([externalId, sourceSystem])
+}
+
+model FeatureRequestComment {
+  id        String @id @default(cuid())
+  requestId String
+
+  // Author
+  authorType   String  @db.VarChar(20) // USER, ADMIN
+  authorUserId String?
+  authorName   String  @db.VarChar(200)
+
+  // Content
+  content    String  @db.Text
+  isOfficial Boolean @default(false) // Official response
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  request FeatureRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+  @@index([authorUserId])
+  @@index([createdAt])
+  @@index([externalId, sourceSystem])
+}
+
+model Survey {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Survey details
+  title       String  @db.VarChar(300)
+  description String? @db.Text
+
+  // Configuration
+  surveyType String @db.VarChar(30) // CSAT, CUSTOM, EXIT, ONBOARDING
+  questions  Json // Array of question objects
+
+  // Settings
+  anonymous            Boolean @default(false)
+  requireAllQuestions  Boolean @default(false)
+  showProgress         Boolean @default(true)
+  thankYouMessage      String? @db.Text
+  redirectUrl          String? @db.VarChar(500)
+
+  // Targeting
+  triggerEvent  String? @db.VarChar(100)
+  targetSegment Json?
+
+  // Status
+  status String @default("DRAFT") @db.VarChar(20)
+
+  // Timing
+  startDate DateTime?
+  endDate   DateTime?
+
+  // Metrics
+  sentCount     Int @default(0)
+  responseCount Int @default(0)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant    Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  responses SurveyResponse[]
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([surveyType])
+  @@index([externalId, sourceSystem])
+}
+
+model SurveyResponse {
+  id       String @id @default(cuid())
+  surveyId String
+  tenantId String
+
+  // Respondent
+  userId          String?
+  respondentEmail String? @db.VarChar(255)
+
+  // Responses
+  answers Json // {question_id: answer}
+
+  // Completion
+  completionPercentage   Int  @default(100)
+  timeToCompleteSeconds  Int?
+
+  // Context
+  responseChannel String? @db.VarChar(30)
+  userAgent       String? @db.Text
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  survey Survey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([surveyId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([externalId, sourceSystem])
+}
+
+model FeedbackWidget {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Widget details
+  name        String  @db.VarChar(200)
+  description String? @db.Text
+
+  // Placement
+  placement String @db.VarChar(50) // BOTTOM_RIGHT, MODAL, INLINE
+  pages     Json? // Array of page patterns
+
+  // Configuration
+  widgetType   String @db.VarChar(30) // RATING, TEXT, EMOJI
+  config       Json // Widget-specific config
+  triggerRules Json? // Conditions to show widget
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Metrics
+  impressionCount Int @default(0)
+  responseCount   Int @default(0)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([isActive])
   @@index([externalId, sourceSystem])
 }
 

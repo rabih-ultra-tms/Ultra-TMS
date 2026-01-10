@@ -3,23 +3,93 @@ import { faker } from '@faker-js/faker';
 
 export async function seedCache(prisma: any, tenantIds: string[]): Promise<void> {
   let total = 0;
+  let tenantIndex = 0;
 
   for (const tenantId of tenantIds) {
-    // Cache Entries (20 per tenant = 100 total)
-    for (let i = 0; i < 20; i++) {
-      await prisma.cacheEntry.create({
+    // Cache Configs (5 per tenant = 25 total)
+    const cacheTypes = ['ENTITY', 'QUERY', 'SESSION', 'CONFIG'];
+    for (let i = 0; i < 5; i++) {
+      await prisma.cacheConfig.create({
         data: {
           tenantId,
-          key: `cache:${faker.string.alphanumeric(16)}`,
-          value: JSON.stringify({ data: faker.lorem.paragraph() }),
-          expiresAt: faker.date.future(),
-          externalId: `SEED-CACHE-${total + i + 1}`,
+          cacheType: faker.helpers.arrayElement(cacheTypes),
+          key: `config:${faker.string.alphanumeric(16)}`,
+          ttlSeconds: faker.number.int({ min: 60, max: 3600 }),
+          tags: [faker.lorem.word(), faker.lorem.word()],
+          externalId: `SEED-CACHE-CONFIG-${total + i + 1}`,
           sourceSystem: 'FAKER_SEED',
         },
       });
-      total++;
     }
+    total += 5;
+
+    // Cache Stats (4 hours x 4 cache types = 16 per tenant = 80 total)
+    // Use different dates for each tenant to avoid unique constraint violations
+    const baseDate = new Date();
+    baseDate.setDate(baseDate.getDate() - tenantIndex);
+    
+    const cacheTypesForStats = ['ENTITY', 'QUERY', 'SESSION', 'CONFIG'];
+    const hours = [0, 6, 12, 18];
+    for (const hour of hours) {
+      for (const cacheType of cacheTypesForStats) {
+        await prisma.cacheStats.create({
+          data: {
+            tenantId,
+            statDate: baseDate,
+            statHour: hour,
+            cacheType,
+            hits: faker.number.int({ min: 100, max: 10000 }),
+            misses: faker.number.int({ min: 10, max: 1000 }),
+            sets: faker.number.int({ min: 50, max: 500 }),
+            deletes: faker.number.int({ min: 0, max: 100 }),
+            expirations: faker.number.int({ min: 0, max: 500 }),
+            keysCount: faker.number.int({ min: 100, max: 10000 }),
+            memoryBytes: BigInt(faker.number.int({ min: 1000000, max: 100000000 })),
+            externalId: `SEED-CACHE-STATS-${total + 1}`,
+            sourceSystem: 'FAKER_SEED',
+          },
+        });
+        total++;
+      }
+    }
+    
+    tenantIndex++;
+
+    // Cache Invalidation Rules (5 per tenant = 25 total)
+    const triggerEvents = ['order.updated', 'carrier.approved', 'load.dispatched', 'company.created', 'user.updated'];
+    const invalidationTypes = ['DELETE', 'REFRESH'];
+    for (let i = 0; i < 5; i++) {
+      await prisma.cacheInvalidationRule.create({
+        data: {
+          tenantId,
+          triggerEvent: triggerEvents[i],
+          cachePattern: `${faker.helpers.arrayElement(['user', 'load', 'order', 'company', 'carrier'])}:*`,
+          invalidationType: faker.helpers.arrayElement(invalidationTypes),
+          isEnabled: faker.datatype.boolean(0.8),
+          externalId: `SEED-CACHE-RULE-${total + i + 1}`,
+          sourceSystem: 'FAKER_SEED',
+        },
+      });
+    }
+    total += 5;
+
+    // Distributed Locks (3 per tenant = 15 total)
+    for (let i = 0; i < 3; i++) {
+      await prisma.distributedLock.create({
+        data: {
+          tenantId,
+          lockKey: `lock:${faker.string.alphanumeric(16)}`,
+          holderId: faker.string.uuid(),
+          acquiredAt: faker.date.recent(),
+          expiresAt: faker.date.soon(),
+          purpose: `Lock for ${faker.lorem.words(3)}`,
+          externalId: `SEED-LOCK-${total + i + 1}`,
+          sourceSystem: 'FAKER_SEED',
+        },
+      });
+    }
+    total += 3;
   }
 
-  console.log(`   ✓ Created ${total} cache records`);
+  console.log(`   ✓ Created ${total} cache records (configs, stats, rules, locks)`);
 }
