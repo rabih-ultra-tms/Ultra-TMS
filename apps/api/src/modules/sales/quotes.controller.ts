@@ -8,10 +8,12 @@ import {
   Param,
   Query,
   UseGuards,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards';
 import { QuotesService } from './quotes.service';
-import { CreateQuoteDto, UpdateQuoteDto } from './dto';
+import { CreateQuoteDto, UpdateQuoteDto, QuickQuoteDto, CalculateRateDto } from './dto';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
@@ -73,5 +75,64 @@ export class QuotesController {
     @Param('id') id: string,
   ) {
     return this.quotesService.convertToOrder(tenantId, id, userId);
+  }
+
+  @Post(':id/duplicate')
+  async duplicate(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ) {
+    return this.quotesService.duplicate(tenantId, id, userId);
+  }
+
+  @Post(':id/new-version')
+  async createNewVersion(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ) {
+    return this.quotesService.createNewVersion(tenantId, id, userId);
+  }
+
+  @Post(':id/send')
+  async send(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ) {
+    return this.quotesService.send(tenantId, id, userId);
+  }
+
+  @Get(':id/pdf')
+  async generatePdf(
+    @CurrentTenant() tenantId: string,
+    @Param('id') id: string,
+    @Res() res: Response,
+  ) {
+    const pdfBuffer = await this.quotesService.generatePdf(tenantId, id);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=quote-${id}.pdf`,
+      'Content-Length': pdfBuffer.length,
+    });
+    res.send(pdfBuffer);
+  }
+
+  @Post('quick')
+  async quickQuote(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser('id') userId: string,
+    @Body() dto: QuickQuoteDto,
+  ) {
+    return this.quotesService.quickQuote(tenantId, userId, dto);
+  }
+
+  @Post('calculate-rate')
+  async calculateRate(
+    @CurrentTenant() tenantId: string,
+    @Body() dto: CalculateRateDto,
+  ) {
+    return this.quotesService.calculateRate(tenantId, dto);
   }
 }

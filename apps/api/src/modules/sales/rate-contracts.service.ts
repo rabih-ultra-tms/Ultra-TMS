@@ -1,10 +1,19 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
-import { CreateRateContractDto, UpdateRateContractDto, LaneRateDto } from './dto';
+import { 
+  CreateRateContractDto, 
+  UpdateRateContractDto, 
+  CreateLaneRateDto, 
+  UpdateLaneRateDto 
+} from './dto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class RateContractsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private eventEmitter: EventEmitter2,
+  ) {}
 
   async findAll(tenantId: string, options?: {
     page?: number;
@@ -62,7 +71,7 @@ export class RateContractsService {
       throw new BadRequestException(`Contract number ${dto.contractNumber} already exists`);
     }
 
-    return this.prisma.rateContract.create({
+    const contract = await this.prisma.rateContract.create({
       data: {
         tenantId,
         contractNumber: dto.contractNumber,
@@ -89,6 +98,11 @@ export class RateContractsService {
         company: { select: { id: true, name: true } },
       },
     });
+
+    // Emit contract created event
+    this.eventEmitter.emit('contract.created', { contract, tenantId, userId });
+
+    return contract;
   }
 
   async update(tenantId: string, id: string, userId: string, dto: UpdateRateContractDto) {
@@ -161,48 +175,6 @@ export class RateContractsService {
       where: { id },
       data: { status: 'TERMINATED', updatedById: userId },
     });
-  }
-
-  // Lane Rate Management
-  async addLaneRate(tenantId: string, contractId: string, dto: LaneRateDto) {
-    await this.findOne(tenantId, contractId);
-
-    return this.prisma.contractLaneRate.create({
-      data: {
-        contractId,
-        ...this.mapLaneRateDto(dto),
-      },
-    });
-  }
-
-  async updateLaneRate(tenantId: string, contractId: string, laneRateId: string, dto: LaneRateDto) {
-    await this.findOne(tenantId, contractId);
-
-    const laneRate = await this.prisma.contractLaneRate.findFirst({
-      where: { id: laneRateId, contractId },
-    });
-    if (!laneRate) {
-      throw new NotFoundException(`Lane rate with ID ${laneRateId} not found`);
-    }
-
-    return this.prisma.contractLaneRate.update({
-      where: { id: laneRateId },
-      data: this.mapLaneRateDto(dto),
-    });
-  }
-
-  async deleteLaneRate(tenantId: string, contractId: string, laneRateId: string) {
-    await this.findOne(tenantId, contractId);
-
-    const laneRate = await this.prisma.contractLaneRate.findFirst({
-      where: { id: laneRateId, contractId },
-    });
-    if (!laneRate) {
-      throw new NotFoundException(`Lane rate with ID ${laneRateId} not found`);
-    }
-
-    await this.prisma.contractLaneRate.delete({ where: { id: laneRateId } });
-    return { success: true };
   }
 
   // Rate Lookup
@@ -301,8 +273,207 @@ export class RateContractsService {
     });
   }
 
+  // Lane Rate Management
+  async getLaneRates(tenantId: string, contractId: string) {
+    await this.findOne(tenantId, contractId);
+
+    return this.prisma.contractLaneRate.findMany({
+      where: { contractId },
+      orderBy: [{ originState: 'asc' }, { destinationState: 'asc' }],
+    });
+  }
+
+  async addLaneRate(tenantId: string, contractId: string, userId: string, dto: CreateLaneRateDto) {
+    await this.findOne(tenantId, contractId);
+
+    return this.prisma.contractLaneRate.create({
+      data: {
+        contractId,
+        ...this.mapLaneRateDto(dto as any),
+      },
+    });
+  }
+
+  async updateLaneRate(
+    tenantId: string,
+    contractId: string,
+    laneId: string,
+    userId: string,
+    dto: UpdateLaneRateDto,
+  ) {
+    await this.findOne(tenantId, contractId);
+
+    const lane = await this.prisma.contractLaneRate.findFirst({
+      where: { id: laneId, contractId },
+    });
+
+    if (!lane) {
+      throw new NotFoundException('Lane rate not found');
+    }
+
+    return this.prisma.contractLaneRate.update({
+      where: { id: laneId },
+      data: this.mapLaneRateDto(dto as any),
+    });
+  }
+
+  async deleteLaneRate(tenantId: string, contractId: string, laneId: string, userId: string) {
+    await this.findOne(tenantId, contractId);
+
+    const lane = await this.prisma.contractLaneRate.findFirst({
+      where: { id: laneId, contractId },
+    });
+
+    if (!lane) {
+      throw new NotFoundException('Lane rate not found');
+    }
+
+    await this.prisma.contractLaneRate.delete({
+      where: { id: laneId },
+    });
+
+    return { success: true };
+  }
+
+  async renewContract(tenantId: string, id: string, userId: string) {
+    const contract = await this.findOne(tenantId, id);
+
+    const newEffectiveDate = new Date(contract.expirationDate);
+    newEffectiveDate.setDate(newEffectiveDate.getDate() + 1);
+
+    const newExpirationDate = new Date(newEffectiveDate);
+    newExpirationDate.setFullYear(newExpirationDate.getFullYear() + 1);
+
+    // Create new contract with updated dates
+    const newContract = await this.prisma.rateContract.create({
+      data: {
+        tenantId,
+        contractNumber: `${contract.contractNumber}-R`,
+        name: `${contract.name} (Renewed)`,
+        companyId: contract.companyId,
+        effectiveDate: newEffectiveDate,
+        expirationDate: newExpirationDate,
+        paymentTerms: contract.paymentTerms,
+        autoRenew: contract.autoRenew,
+        renewalNoticeDays: contract.renewalNoticeDays,
+        defaultFuelSurchargeType: contract.defaultFuelSurchargeType,
+        defaultFuelSurchargePercent: contract.defaultFuelSurchargePercent,
+        minimumMarginPercent: contract.minimumMarginPercent,
+        notes: `Renewed from contract ${contract.contractNumber}`,
+        status: 'DRAFT',
+        createdById: userId,
+      },
+      include: {
+        company: { select: { id: true, name: true } },
+      },
+    });
+
+    // Copy lane rates
+    const lanesToCopy = await this.prisma.contractLaneRate.findMany({
+      where: { contractId: id },
+    });
+
+    if (lanesToCopy.length > 0) {
+      await this.prisma.contractLaneRate.createMany({
+        data: lanesToCopy.map((lane) => ({
+          contractId: newContract.id,
+          originCity: lane.originCity,
+          originState: lane.originState,
+          originZip: lane.originZip,
+          originZone: lane.originZone,
+          originRadiusMiles: lane.originRadiusMiles,
+          destinationCity: lane.destinationCity,
+          destinationState: lane.destinationState,
+          destinationZip: lane.destinationZip,
+          destinationZone: lane.destinationZone,
+          destinationRadiusMiles: lane.destinationRadiusMiles,
+          serviceType: lane.serviceType,
+          equipmentType: lane.equipmentType,
+          rateType: lane.rateType,
+          rateAmount: lane.rateAmount,
+          minimumCharge: lane.minimumCharge,
+          fuelIncluded: lane.fuelIncluded,
+          fuelSurchargeType: lane.fuelSurchargeType,
+          fuelSurchargePercent: lane.fuelSurchargePercent,
+          volumeMin: lane.volumeMin,
+          volumeMax: lane.volumeMax,
+          notes: lane.notes,
+        })),
+      });
+    }
+
+    return newContract;
+  }
+
+  async findRate(
+    tenantId: string,
+    originState: string,
+    originCity: string,
+    destState: string,
+    destCity: string,
+    companyId?: string,
+    serviceType?: string,
+  ) {
+    const where: any = {
+      tenantId,
+      status: 'ACTIVE',
+      effectiveDate: { lte: new Date() },
+      expirationDate: { gte: new Date() },
+      deletedAt: null,
+    };
+
+    if (companyId) {
+      where.companyId = companyId;
+    }
+
+    const contracts = await this.prisma.rateContract.findMany({
+      where,
+      include: {
+        laneRates: {
+          where: {
+            OR: [
+              {
+                originState,
+                originCity,
+                destinationState: destState,
+                destinationCity: destCity,
+                ...(serviceType && { serviceType }),
+              },
+              {
+                originState,
+                destinationState: destState,
+                ...(serviceType && { serviceType }),
+              },
+              {
+                originState,
+                destinationState: destState,
+              },
+            ],
+          },
+          orderBy: { rateAmount: 'asc' },
+          take: 1,
+        },
+      },
+    });
+
+    const contractWithRate = contracts.find((c) => c.laneRates.length > 0);
+
+    if (!contractWithRate) {
+      return null;
+    }
+
+    return {
+      contract: {
+        id: contractWithRate.id,
+        contractNumber: contractWithRate.contractNumber,
+        name: contractWithRate.name,
+      },
+      laneRate: contractWithRate.laneRates[0],
+    };
+  }
+
   // Helper to map DTO to database fields
-  private mapLaneRateDto(dto: LaneRateDto) {
+  private mapLaneRateDto(dto: any) {
     return {
       originCity: dto.originCity,
       originState: dto.originState,

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { PrismaService } from './prisma.service';
 
 // Core infrastructure modules
@@ -31,6 +32,8 @@ import { CommunicationModule } from './modules/communication/communication.modul
       isGlobal: true,
       envFilePath: '.env',
     }),
+    // Event system for inter-module communication
+    EventEmitterModule.forRoot(),
     // Infrastructure
     RedisModule,
     EmailModule,

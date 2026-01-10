@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, no-undef */
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { faker } from '@faker-js/faker';
+import { seedComprehensiveData } from './seed-data';
 
 const prisma = new PrismaClient() as any;
 
@@ -410,10 +412,12 @@ async function main() {
     },
   ];
 
+  const createdUsers = [adminUser];
+  
   for (const userData of testUsers) {
     const userPasswordHash = await bcrypt.hash(userData.password, 10);
     
-    await prisma.user.upsert({
+    const user = await prisma.user.upsert({
       where: {
         tenantId_email: {
           tenantId: tenant.id,
@@ -439,8 +443,12 @@ async function main() {
       },
     });
     
+    createdUsers.push(user);
     console.log(`✅ Created user: ${userData.email} (password: ${userData.password})`);
   }
+
+  // Seed comprehensive demo data
+  await seedComprehensiveData(tenant.id, createdUsers);
 
   console.log('🎉 Seeding completed successfully!');
   console.log('\n📋 Test User Credentials:');
