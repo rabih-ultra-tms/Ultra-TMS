@@ -199,6 +199,130 @@ model Tenant {
   npsResponses    NPSResponse[]
   featureRequests FeatureRequest[]
 
+  // Credit Service Relations
+  creditApplications   CreditApplication[]
+  creditLimits         CreditLimit[]
+  creditHolds          CreditHold[]
+  collectionActivities CollectionActivity[]
+  paymentPlans         PaymentPlan[]
+
+  // Claims Service Relations
+  claims             Claim[]
+  claimItems         ClaimItem[]
+  claimDocuments     ClaimDocument[]
+  claimNotes         ClaimNote[]
+  claimTimeline      ClaimTimeline[]
+  claimAdjustments   ClaimAdjustment[]
+  subrogationRecords SubrogationRecord[]
+  claimContacts      ClaimContact[]
+
+  // EDI Service Relations
+  ediTradingPartners     EdiTradingPartner[]
+  ediMessages            EdiMessage[]
+  ediTransactionMappings EdiTransactionMapping[]
+  ediControlNumbers      EdiControlNumber[]
+  ediBatches             EdiBatch[]
+  ediBatchMessages       EdiBatchMessage[]
+  ediCommunicationLogs   EdiCommunicationLog[]
+  ediEventTriggers       EdiEventTrigger[]
+  ediCodeLists           EdiCodeList[]
+  ediAcknowledgments     EdiAcknowledgment[]
+  ediErrors              EdiError[]
+
+  // Safety Service Relations
+  fmcsaCarrierRecords      FmcsaCarrierRecord[]
+  csaScores                CsaScore[]
+  carrierInsurances        CarrierInsurance[]
+  driverQualificationFiles DriverQualificationFile[]
+  safetyIncidents          SafetyIncident[]
+  safetyInspections        SafetyInspection[]
+  safetyAlerts             SafetyAlert[]
+  authorityChanges         AuthorityChange[]
+  carrierWatchlists        CarrierWatchlist[]
+  safetyAuditTrails        SafetyAuditTrail[]
+
+  // Rate Intelligence Service Relations
+  rateQueries         RateQuery[]
+  rateHistories       RateHistory[]
+  rateAlerts          RateAlert[]
+  rateAlertHistories  RateAlertHistory[]
+  laneAnalytics       LaneAnalytics[]
+  rateProviderConfigs RateProviderConfig[]
+
+  // Load Board External Service Relations
+  loadBoardProviders         LoadBoardProvider[]
+  loadBoardAccounts          LoadBoardAccount[]
+  loadPosts                  LoadPost[]
+  postLeads                  PostLead[]
+  capacitySearches           CapacitySearch[]
+  capacityResults            CapacityResult[]
+  postingRules               PostingRule[]
+  postingSchedules           PostingSchedule[]
+  rateDataRecords            RateData[]
+  boardMetrics               BoardMetric[]
+  portalSavedPaymentMethods  PortalSavedPaymentMethod[]
+  portalBrandings            PortalBranding[]
+  portalNotifications        PortalNotification[]
+  carrierSavedLoads          CarrierSavedLoad[]
+  carrierPortalNotifications CarrierPortalNotification[]
+  contractTemplates          ContractTemplate[]
+  contractClauses            ContractClause[]
+  contractRateTables         ContractRateTable[]
+  contractRateLanes          ContractRateLane[]
+  contractAmendments         ContractAmendment[]
+  contractMetrics            ContractMetric[]
+  agentContacts              AgentContact[]
+  agentLeads                 AgentLead[]
+  agentPayouts               AgentPayout[]
+  agentDrawBalances          AgentDrawBalance[]
+  agentPortalUsers           AgentPortalUser[]
+  factoringVerifications     FactoringVerification[]
+  factoredPayments           FactoredPayment[]
+  locations                  Location[]
+  employmentHistories        EmploymentHistory[]
+  timeOffBalances            TimeOffBalance[]
+  timeEntries                TimeEntry[]
+  onboardingChecklists       OnboardingChecklist[]
+  onboardingTasks            OnboardingTask[]
+  kpisnapshots               KPISnapshot[]
+  dashboardWidgets           DashboardWidget[]
+  reportTemplates            ReportTemplate[]
+  reportExecutions           ReportExecution[]
+  savedAnalyticsViews        SavedAnalyticsView[]
+  kpialerts                  KPIAlert[]
+  analyticsCaches            AnalyticsCache[]
+  workflowSteps              WorkflowStep[]
+  stepExecutions             StepExecution[]
+  workflowTemplates          WorkflowTemplate[]
+  scheduledWorkflowRuns      ScheduledWorkflowRun[]
+  integrationProviderConfigs IntegrationProviderConfig[]
+  webhookSubscriptions       WebhookSubscription[]
+  apirequestLogs             APIRequestLog[]
+  transformationTemplates    TransformationTemplate[]
+  syncJobs                   SyncJob[]
+  circuitBreakerStateRecords CircuitBreakerStateRecord[]
+  searchIndexes              SearchIndex[]
+  searchSuggestions          SearchSuggestion[]
+  searchSynonyms             SearchSynonym[]
+  searchIndexQueues          SearchIndexQueue[]
+  accessLogs                 AccessLog[]
+  loginAudits                LoginAudit[]
+  apiauditLogs               APIAuditLog[]
+  complianceCheckpoints      ComplianceCheckpoint[]
+  auditAlerts                AuditAlert[]
+  auditAlertIncidents        AuditAlertIncident[]
+  auditRetentionPolicies     AuditRetentionPolicy[]
+  tenantConfigs              TenantConfig[]
+  userPreferences            UserPreference[]
+  featureFlagOverrides       FeatureFlagOverride[]
+  configTemplates            ConfigTemplate[]
+  configHistories            ConfigHistory[]
+  businessHours              BusinessHours[]
+  holidays                   Holiday[]
+  numberSequences            NumberSequence[]
+  scheduledTasks             ScheduledTask[]
+  reminders                  Reminder[]
+
   @@index([slug])
   @@index([status])
   @@index([externalId, sourceSystem])
@@ -279,6 +403,14 @@ model User {
   notificationPreference NotificationPreference?
   inAppNotifications     InAppNotification[]
   employee               Employee?
+  agentPortalUsers       AgentPortalUser[]
+  savedAnalyticsViews    SavedAnalyticsView[]
+  accessLogs             AccessLog[]
+  loginAudits            LoginAudit[]
+  apiauditLogs           APIAuditLog[]
+  userPreferences        UserPreference[]
+  featureFlagOverrides   FeatureFlagOverride[]
+  reminders              Reminder[]
 
   @@unique([tenantId, email])
   @@index([email])
@@ -461,6 +593,18 @@ model Company {
   portalPayments           PortalPayment[]
   contractsAsCustomer      Contract[]                @relation("CustomerContracts")
   agentCustomerAssignments AgentCustomerAssignment[] @relation("AgentCustomerAssignments")
+
+  // Credit Service Relations
+  creditApplications   CreditApplication[]
+  creditLimits         CreditLimit[]
+  creditHolds          CreditHold[]
+  collectionActivities CollectionActivity[]
+  paymentPlans         PaymentPlan[]
+
+  // Claims Service Relations
+  claims         Claim[]
+  portalBranding PortalBranding?
+  agentLeads     AgentLead[]
 
   @@unique([tenantId, name])
   @@index([tenantId])
@@ -1113,6 +1257,12 @@ model Order {
   documents        Document[]
   agentCommissions AgentCommission[]
 
+  // Claims Service Relations
+  claims Claim[]
+
+  // Load Board External Relations
+  loadPosts LoadPost[]
+
   @@unique([tenantId, orderNumber])
   @@index([tenantId])
   @@index([customerId])
@@ -1205,6 +1355,16 @@ model Load {
   carrierInvoiceSubmissions CarrierInvoiceSubmission[]
   carrierQuickPayRequests   CarrierQuickPayRequest[]
   agentCommissions          AgentCommission[]
+
+  // Claims Service Relations
+  claims Claim[]
+
+  // Safety Service Relations
+  safetyIncidents SafetyIncident[]
+
+  // Load Board External Relations
+  loadPosts         LoadPost[]
+  carrierSavedLoads CarrierSavedLoad[]
 
   @@unique([tenantId, loadNumber])
   @@index([tenantId])
@@ -1533,6 +1693,23 @@ model Carrier {
   noaRecords         NOARecord[]
   factoringStatus    CarrierFactoringStatus?
 
+  // Claims Service Relations
+  claims Claim[]
+
+  // Safety Service Relations
+  fmcsaRecord       FmcsaCarrierRecord?
+  csaScores         CsaScore[]
+  carrierInsurances CarrierInsurance[]
+  safetyIncidents   SafetyIncident[]
+  safetyInspections SafetyInspection[]
+  safetyAlerts      SafetyAlert[]
+  authorityChanges  AuthorityChange[]
+  watchlistEntries  CarrierWatchlist[]
+  safetyAuditTrail  SafetyAuditTrail[]
+
+  // Load Board External Relations
+  postLeads PostLead[]
+
   @@unique([tenantId, mcNumber])
   @@unique([tenantId, dotNumber])
   @@index([tenantId])
@@ -1632,6 +1809,11 @@ model Driver {
   // Relations
   tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   carrier Carrier @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+
+  // Safety Service Relations
+  qualificationFiles DriverQualificationFile[]
+  safetyIncidents    SafetyIncident[]
+  safetyInspections  SafetyInspection[]
 
   @@unique([tenantId, carrierId, cdlNumber])
   @@index([tenantId])
@@ -1954,6 +2136,9 @@ model Invoice {
   lineItems      InvoiceLineItem[]
   applications   PaymentApplication[]
 
+  // Credit Service Relations
+  collectionActivities CollectionActivity[]
+
   @@unique([tenantId, invoiceNumber])
   @@index([tenantId])
   @@index([companyId])
@@ -2080,6 +2265,7 @@ model Settlement {
   apAccount                 ChartOfAccount?            @relation("SettlementApAccount", fields: [apAccountId], references: [id])
   lineItems                 SettlementLineItem[]
   carrierInvoiceSubmissions CarrierInvoiceSubmission[]
+  factoredPayments          FactoredPayment[]
 
   @@unique([tenantId, settlementNumber])
   @@index([tenantId])
@@ -3077,6 +3263,11 @@ model Document {
   shares             DocumentShare[]
   folderDocuments    FolderDocument[]
   generatedDocuments GeneratedDocument[]
+
+  // Claims Service Relations
+  claimDocuments         ClaimDocument[]
+  contractAmendments     ContractAmendment[]
+  factoringVerifications FactoringVerification[]
 
   @@index([tenantId])
   @@index([tenantId, documentType])
@@ -4213,12 +4404,14 @@ model PortalUser {
   updatedById String?
 
   // Relations
-  tenant        Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  company       Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  sessions      PortalSession[]
-  quoteRequests QuoteRequest[]
-  activityLogs  PortalActivityLog[]
-  payments      PortalPayment[]
+  tenant                    Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  company                   Company                    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  sessions                  PortalSession[]
+  quoteRequests             QuoteRequest[]
+  activityLogs              PortalActivityLog[]
+  payments                  PortalPayment[]
+  portalSavedPaymentMethods PortalSavedPaymentMethod[]
+  portalNotifications       PortalNotification[]
 
   @@unique([tenantId, email])
   @@index([tenantId])
@@ -4426,6 +4619,157 @@ model PortalPayment {
   @@index([externalId, sourceSystem])
 }
 
+model PortalSavedPaymentMethod {
+  id           String @id @default(cuid())
+  tenantId     String
+  portalUserId String
+
+  // Payment method details
+  paymentMethodType String  @db.VarChar(50) // CREDIT_CARD, ACH, WIRE
+  lastFourDigits    String? @db.VarChar(4)
+  cardBrand         String? @db.VarChar(50) // VISA, MASTERCARD, AMEX, DISCOVER
+  expirationMonth   Int?
+  expirationYear    Int?
+
+  // Billing info
+  billingName    String? @db.VarChar(255)
+  billingAddress String? @db.VarChar(255)
+  billingCity    String? @db.VarChar(100)
+  billingState   String? @db.VarChar(2)
+  billingZip     String? @db.VarChar(10)
+
+  // Status
+  isDefault Boolean @default(false)
+  isActive  Boolean @default(true)
+
+  // External reference (Stripe, etc)
+  externalToken String? @db.VarChar(255)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant     Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  portalUser PortalUser @relation(fields: [portalUserId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([portalUserId])
+  @@index([isDefault])
+  @@index([externalId, sourceSystem])
+}
+
+model PortalBranding {
+  id        String @id @default(cuid())
+  tenantId  String
+  companyId String @unique
+
+  // Visual branding
+  logoUrl        String? @db.VarChar(500)
+  faviconUrl     String? @db.VarChar(500)
+  primaryColor   String? @db.VarChar(7) // Hex color
+  secondaryColor String? @db.VarChar(7)
+  accentColor    String? @db.VarChar(7)
+
+  // Custom styling
+  customCss String? @db.Text
+  customJs  String? @db.Text
+
+  // Custom content
+  headerHtml     String? @db.Text
+  footerHtml     String? @db.Text
+  welcomeMessage String? @db.Text
+
+  // Domain
+  customDomain String? @db.VarChar(255)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([customDomain])
+  @@index([externalId, sourceSystem])
+}
+
+enum PortalNotificationType {
+  QUOTE_READY
+  LOAD_UPDATE
+  INVOICE_AVAILABLE
+  PAYMENT_RECEIVED
+  DOCUMENT_UPLOADED
+  MESSAGE_RECEIVED
+  SHIPMENT_DELAYED
+  DELIVERY_CONFIRMED
+  GENERAL
+}
+
+model PortalNotification {
+  id           String @id @default(cuid())
+  tenantId     String
+  portalUserId String
+
+  // Notification details
+  notificationType PortalNotificationType
+  title            String                 @db.VarChar(255)
+  message          String                 @db.Text
+
+  // Status
+  isRead Boolean   @default(false)
+  readAt DateTime?
+
+  // Action
+  actionUrl String? @db.VarChar(500)
+
+  // Related entity
+  relatedEntityType String? @db.VarChar(50) // QUOTE, LOAD, ORDER, INVOICE, DOCUMENT
+  relatedEntityId   String? @db.VarChar(255)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant     Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  portalUser PortalUser @relation(fields: [portalUserId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([portalUserId])
+  @@index([isRead])
+  @@index([notificationType])
+  @@index([createdAt])
+  @@index([relatedEntityType, relatedEntityId])
+  @@index([externalId, sourceSystem])
+}
+
 // ==============================================
 // CARRIER PORTAL (Service 13) - Core Models
 // ==============================================
@@ -4470,13 +4814,15 @@ model CarrierPortalUser {
   updatedById String?
 
   // Relations
-  tenant             Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  carrier            Carrier                    @relation(fields: [carrierId], references: [id], onDelete: Cascade)
-  sessions           CarrierPortalSession[]
-  documents          CarrierPortalDocument[]
-  invoiceSubmissions CarrierInvoiceSubmission[]
-  quickPayRequests   CarrierQuickPayRequest[]
-  activityLogs       CarrierPortalActivityLog[]
+  tenant                     Tenant                      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  carrier                    Carrier                     @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+  sessions                   CarrierPortalSession[]
+  documents                  CarrierPortalDocument[]
+  invoiceSubmissions         CarrierInvoiceSubmission[]
+  quickPayRequests           CarrierQuickPayRequest[]
+  activityLogs               CarrierPortalActivityLog[]
+  carrierSavedLoads          CarrierSavedLoad[]
+  carrierPortalNotifications CarrierPortalNotification[]
 
   @@unique([tenantId, email])
   @@index([tenantId])
@@ -4716,6 +5062,102 @@ model CarrierPortalActivityLog {
   @@index([externalId, sourceSystem])
 }
 
+model CarrierSavedLoad {
+  id                  String  @id @default(cuid())
+  tenantId            String
+  carrierPortalUserId String
+  loadId              String?
+  postingId           String? // Reference to external load board posting
+
+  // Saved details
+  notes        String?   @db.Text
+  reminderDate DateTime? @db.Date
+
+  // Metadata
+  savedFrom String? @db.VarChar(100) // INTERNAL_BOARD, DAT, TRUCKSTOP, etc.
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   CarrierPortalUser @relation(fields: [carrierPortalUserId], references: [id], onDelete: Cascade)
+  load   Load?             @relation(fields: [loadId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([carrierPortalUserId])
+  @@index([loadId])
+  @@index([reminderDate])
+  @@index([externalId, sourceSystem])
+}
+
+enum CarrierPortalNotificationType {
+  LOAD_ASSIGNED
+  LOAD_CANCELLED
+  DOCUMENT_REQUEST
+  PAYMENT_PROCESSED
+  INVOICE_APPROVED
+  INVOICE_REJECTED
+  QUICK_PAY_APPROVED
+  QUICK_PAY_REJECTED
+  GENERAL
+}
+
+model CarrierPortalNotification {
+  id                  String @id @default(cuid())
+  tenantId            String
+  carrierPortalUserId String
+
+  // Notification details
+  notificationType CarrierPortalNotificationType
+  title            String                        @db.VarChar(255)
+  message          String                        @db.Text
+
+  // Status
+  isRead Boolean   @default(false)
+  readAt DateTime?
+
+  // Action
+  actionUrl String? @db.VarChar(500)
+
+  // Related entity
+  relatedEntityType String? @db.VarChar(50)
+  relatedEntityId   String? @db.VarChar(255)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   CarrierPortalUser @relation(fields: [carrierPortalUserId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([carrierPortalUserId])
+  @@index([isRead])
+  @@index([notificationType])
+  @@index([createdAt])
+  @@index([relatedEntityType, relatedEntityId])
+  @@index([externalId, sourceSystem])
+}
+
 // ==============================================
 // CONTRACTS (Service 14) - Core Models
 // ==============================================
@@ -4783,6 +5225,9 @@ model Contract {
   fuelSurchargeTables FuelSurchargeTable[]
   slas                ContractSLA[]
   volumeCommitments   VolumeCommitment[]
+  contractRateTables  ContractRateTable[]
+  contractAmendments  ContractAmendment[]
+  contractMetrics     ContractMetric[]
 
   @@index([tenantId])
   @@index([contractNumber])
@@ -4828,9 +5273,10 @@ model FuelSurchargeTable {
   updatedById String?
 
   // Relations
-  tenant   Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  contract Contract?           @relation(fields: [contractId], references: [id], onDelete: SetNull)
-  tiers    FuelSurchargeTier[]
+  tenant            Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  contract          Contract?           @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  tiers             FuelSurchargeTier[]
+  contractRateLanes ContractRateLane[]
 
   @@index([tenantId])
   @@index([contractId])
@@ -4965,6 +5411,277 @@ model VolumeCommitment {
   @@index([externalId, sourceSystem])
 }
 
+enum ContractClauseType {
+  PAYMENT_TERMS
+  LIABILITY
+  INSURANCE
+  TERMINATION
+  DISPUTE_RESOLUTION
+  CONFIDENTIALITY
+  COMPLIANCE
+  FORCE_MAJEURE
+  CUSTOM
+}
+
+model ContractTemplate {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Template details
+  templateName    String       @db.VarChar(255)
+  contractType    ContractType
+  templateContent String       @db.Text
+  defaultTerms    String?      @db.Text
+
+  // Status
+  isActive Boolean @default(true)
+  version  Int     @default(1)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([contractType])
+  @@index([isActive])
+  @@index([externalId, sourceSystem])
+}
+
+model ContractClause {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Clause details
+  clauseName String             @db.VarChar(255)
+  clauseText String             @db.Text
+  clauseType ContractClauseType
+
+  // Settings
+  isRequired   Boolean @default(false)
+  displayOrder Int     @default(0)
+  isActive     Boolean @default(true)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([clauseType])
+  @@index([isActive])
+  @@index([displayOrder])
+  @@index([externalId, sourceSystem])
+}
+
+model ContractRateTable {
+  id         String @id @default(cuid())
+  tenantId   String
+  contractId String
+
+  // Table details
+  tableName      String    @db.VarChar(255)
+  effectiveDate  DateTime  @db.Date
+  expirationDate DateTime? @db.Date
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant    Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  contract  Contract           @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  rateLanes ContractRateLane[]
+
+  @@index([tenantId])
+  @@index([contractId])
+  @@index([effectiveDate])
+  @@index([isActive])
+  @@index([externalId, sourceSystem])
+}
+
+model ContractRateLane {
+  id          String @id @default(cuid())
+  tenantId    String
+  rateTableId String
+
+  // Lane details
+  originCity  String  @db.VarChar(100)
+  originState String  @db.VarChar(2)
+  originZip   String? @db.VarChar(10)
+  destCity    String  @db.VarChar(100)
+  destState   String  @db.VarChar(2)
+  destZip     String? @db.VarChar(10)
+
+  // Equipment
+  equipmentType String @db.VarChar(50)
+
+  // Rate
+  rateType   RateType
+  rateAmount Decimal  @db.Decimal(10, 2)
+  currency   String   @default("USD") @db.VarChar(3)
+
+  // Fuel surcharge
+  fuelSurchargeTableId String?
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant             Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  rateTable          ContractRateTable   @relation(fields: [rateTableId], references: [id], onDelete: Cascade)
+  fuelSurchargeTable FuelSurchargeTable? @relation(fields: [fuelSurchargeTableId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([rateTableId])
+  @@index([originState])
+  @@index([destState])
+  @@index([equipmentType])
+  @@index([externalId, sourceSystem])
+}
+
+model ContractAmendment {
+  id         String @id @default(cuid())
+  tenantId   String
+  contractId String
+
+  // Amendment details
+  amendmentNumber Int      @default(1)
+  effectiveDate   DateTime @db.Date
+  description     String   @db.Text
+
+  // Changes
+  changedFields  Json @default("[]") // Array of changed field names
+  previousValues Json @default("{}") // Object with previous values
+  newValues      Json @default("{}") // Object with new values
+
+  // Approval
+  changedBy  String?
+  approvedBy String?
+  approvedAt DateTime?
+
+  // Document
+  documentId String?
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  contract Contract  @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  document Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([contractId])
+  @@index([effectiveDate])
+  @@index([amendmentNumber])
+  @@index([externalId, sourceSystem])
+}
+
+enum MetricType {
+  ON_TIME_DELIVERY
+  LOAD_VOLUME
+  REVENUE
+  COST_PER_MILE
+  CLAIMS_RATIO
+  CUSTOM
+}
+
+model ContractMetric {
+  id         String @id @default(cuid())
+  tenantId   String
+  contractId String
+
+  // Metric details
+  metricType MetricType
+  metricName String?    @db.VarChar(255) // For custom metrics
+
+  // Period
+  periodStart DateTime @db.Date
+  periodEnd   DateTime @db.Date
+
+  // Values
+  targetValue Decimal  @db.Decimal(15, 2)
+  actualValue Decimal? @db.Decimal(15, 2)
+  unit        String?  @db.VarChar(50) // loads, dollars, percentage, etc.
+
+  // Status
+  isMet    Boolean?
+  variance Decimal? @db.Decimal(15, 2)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([contractId])
+  @@index([metricType])
+  @@index([periodStart])
+  @@index([periodEnd])
+  @@index([externalId, sourceSystem])
+}
+
 // ==============================================
 // AGENT (Service 15) - Core Models
 // ==============================================
@@ -5008,6 +5725,11 @@ model Agent {
   customerAssignments AgentCustomerAssignment[]
   commissions         AgentCommission[]
   contracts           Contract[]
+  agentContacts       AgentContact[]
+  agentLeads          AgentLead[]
+  agentPayouts        AgentPayout[]
+  agentDrawBalance    AgentDrawBalance?
+  agentPortalUsers    AgentPortalUser[]
 
   @@index([tenantId])
   @@index([agentCode])
@@ -5169,6 +5891,207 @@ model AgentCommission {
   @@index([externalId, sourceSystem])
 }
 
+model AgentContact {
+  id       String @id @default(cuid())
+  tenantId String
+  agentId  String
+
+  // Contact details
+  contactName String  @db.VarChar(255)
+  title       String? @db.VarChar(100)
+  phone       String? @db.VarChar(20)
+  email       String? @db.VarChar(255)
+  isPrimary   Boolean @default(false)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  agent  Agent  @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([agentId])
+  @@index([isPrimary])
+  @@index([externalId, sourceSystem])
+}
+
+model AgentLead {
+  id       String @id @default(cuid())
+  tenantId String
+  agentId  String
+
+  // Lead details
+  leadCompanyName String  @db.VarChar(255)
+  contactName     String? @db.VarChar(255)
+  contactEmail    String? @db.VarChar(255)
+  contactPhone    String? @db.VarChar(20)
+
+  // Status
+  status             LeadStatus @default(SUBMITTED)
+  qualificationNotes String?    @db.Text
+
+  // Conversion
+  convertedToCustomerId String?
+  convertedAt           DateTime?
+
+  // Dates
+  submittedDate   DateTime  @default(now()) @db.Date
+  lastContactedAt DateTime?
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  agent             Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  convertedCustomer Company? @relation(fields: [convertedToCustomerId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([agentId])
+  @@index([status])
+  @@index([convertedToCustomerId])
+  @@index([submittedDate])
+  @@index([externalId, sourceSystem])
+}
+
+enum PaymentMethod {
+  ACH
+  CHECK
+  WIRE
+  CREDIT_CARD
+}
+
+model AgentPayout {
+  id       String @id @default(cuid())
+  tenantId String
+  agentId  String
+
+  // Payout details
+  payoutNumber String   @unique @db.VarChar(50)
+  periodStart  DateTime @db.Date
+  periodEnd    DateTime @db.Date
+
+  // Amounts
+  grossCommission Decimal @db.Decimal(12, 2)
+  deductions      Decimal @default(0) @db.Decimal(12, 2)
+  netPayout       Decimal @db.Decimal(12, 2)
+
+  // Payment
+  paymentDate   DateTime?      @db.Date
+  paymentMethod PaymentMethod?
+
+  // Status
+  status String @default("PENDING") @db.VarChar(50) // PENDING, APPROVED, PAID, CANCELLED
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  agent  Agent  @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([agentId])
+  @@index([payoutNumber])
+  @@index([periodStart])
+  @@index([status])
+  @@index([externalId, sourceSystem])
+}
+
+model AgentDrawBalance {
+  id       String @id @default(cuid())
+  tenantId String
+  agentId  String @unique
+
+  // Balance tracking
+  currentBalance         Decimal   @default(0) @db.Decimal(12, 2)
+  totalDrawn             Decimal   @default(0) @db.Decimal(12, 2)
+  totalEarned            Decimal   @default(0) @db.Decimal(12, 2)
+  lastReconciliationDate DateTime? @db.Date
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  agent  Agent  @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([externalId, sourceSystem])
+}
+
+model AgentPortalUser {
+  id       String @id @default(cuid())
+  tenantId String
+  agentId  String
+  userId   String
+
+  // Permissions
+  role               String  @db.VarChar(50) // ADMIN, USER, VIEW_ONLY
+  canViewCommissions Boolean @default(true)
+  canSubmitLeads     Boolean @default(true)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  agent  Agent  @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([agentId, userId])
+  @@index([tenantId])
+  @@index([agentId])
+  @@index([userId])
+  @@index([externalId, sourceSystem])
+}
+
 // ==============================================
 // FACTORING (Service 16) - Core Models
 // ==============================================
@@ -5211,9 +6134,10 @@ model FactoringCompany {
   updatedById String?
 
   // Relations
-  tenant          Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  noaRecords      NOARecord[]
-  carrierStatuses CarrierFactoringStatus[]
+  tenant           Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  noaRecords       NOARecord[]
+  carrierStatuses  CarrierFactoringStatus[]
+  factoredPayments FactoredPayment[]
 
   @@index([tenantId])
   @@index([companyCode])
@@ -5262,9 +6186,10 @@ model NOARecord {
   updatedById String?
 
   // Relations
-  tenant           Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  carrier          Carrier          @relation(fields: [carrierId], references: [id], onDelete: Cascade)
-  factoringCompany FactoringCompany @relation(fields: [factoringCompanyId], references: [id], onDelete: Cascade)
+  tenant                 Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  carrier                Carrier                 @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+  factoringCompany       FactoringCompany        @relation(fields: [factoringCompanyId], references: [id], onDelete: Cascade)
+  factoringVerifications FactoringVerification[]
 
   @@index([tenantId])
   @@index([carrierId])
@@ -5318,6 +6243,96 @@ model CarrierFactoringStatus {
   @@index([externalId, sourceSystem])
 }
 
+enum VerificationMethod {
+  PHONE_CALL
+  EMAIL
+  FAX
+  ONLINE_PORTAL
+  MAIL
+}
+
+model FactoringVerification {
+  id          String @id @default(cuid())
+  tenantId    String
+  noaRecordId String
+
+  // Verification details
+  verificationDate   DateTime           @db.Date
+  verificationMethod VerificationMethod
+  contactedPerson    String?            @db.VarChar(255)
+  verificationStatus VerificationStatus
+
+  // Documentation
+  verificationDocumentId String?
+  notes                  String? @db.Text
+
+  // Next verification
+  nextVerificationDate DateTime? @db.Date
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant               Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  noaRecord            NOARecord @relation(fields: [noaRecordId], references: [id], onDelete: Cascade)
+  verificationDocument Document? @relation(fields: [verificationDocumentId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([noaRecordId])
+  @@index([verificationDate])
+  @@index([verificationStatus])
+  @@index([nextVerificationDate])
+  @@index([externalId, sourceSystem])
+}
+
+model FactoredPayment {
+  id                 String @id @default(cuid())
+  tenantId           String
+  settlementId       String
+  factoringCompanyId String
+
+  // Payment details
+  paymentAmount    Decimal       @db.Decimal(12, 2)
+  paymentDate      DateTime      @db.Date
+  paymentMethod    PaymentMethod
+  verificationCode String?       @db.VarChar(100)
+
+  // Notes
+  notes String? @db.Text
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant           Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  settlement       Settlement       @relation(fields: [settlementId], references: [id], onDelete: Cascade)
+  factoringCompany FactoringCompany @relation(fields: [factoringCompanyId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([settlementId])
+  @@index([factoringCompanyId])
+  @@index([paymentDate])
+  @@index([externalId, sourceSystem])
+}
+
 // ==============================================
 // HR (Service 17) - Core Models
 // ==============================================
@@ -5366,13 +6381,19 @@ model Employee {
   updatedById String?
 
   // Relations
-  tenant          Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  user            User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
-  department      Department?      @relation(fields: [departmentId], references: [id], onDelete: SetNull)
-  position        Position?        @relation(fields: [positionId], references: [id], onDelete: SetNull)
-  manager         Employee?        @relation("EmployeeManager", fields: [managerId], references: [id], onDelete: SetNull)
-  directReports   Employee[]       @relation("EmployeeManager")
-  timeOffRequests TimeOffRequest[]
+  tenant              Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user                User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
+  department          Department?         @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  position            Position?           @relation(fields: [positionId], references: [id], onDelete: SetNull)
+  manager             Employee?           @relation("EmployeeManager", fields: [managerId], references: [id], onDelete: SetNull)
+  directReports       Employee[]          @relation("EmployeeManager")
+  timeOffRequests     TimeOffRequest[]
+  location            Location?           @relation(fields: [locationId], references: [id])
+  locationId          String?
+  employmentHistories EmploymentHistory[]
+  timeOffBalances     TimeOffBalance[]
+  timeEntries         TimeEntry[]
+  onboardingTasks     OnboardingTask[]
 
   @@unique([tenantId, employeeNumber])
   @@index([tenantId])
@@ -5411,10 +6432,11 @@ model Department {
   updatedById String?
 
   // Relations
-  tenant           Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  parentDepartment Department?  @relation("DepartmentHierarchy", fields: [parentDepartmentId], references: [id], onDelete: SetNull)
-  childDepartments Department[] @relation("DepartmentHierarchy")
-  employees        Employee[]
+  tenant              Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  parentDepartment    Department?         @relation("DepartmentHierarchy", fields: [parentDepartmentId], references: [id], onDelete: SetNull)
+  childDepartments    Department[]        @relation("DepartmentHierarchy")
+  employees           Employee[]
+  employmentHistories EmploymentHistory[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -5452,8 +6474,10 @@ model Position {
   updatedById String?
 
   // Relations
-  tenant    Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  employees Employee[]
+  tenant               Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employees            Employee[]
+  employmentHistories  EmploymentHistory[]
+  onboardingChecklists OnboardingChecklist[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -5508,6 +6532,261 @@ model TimeOffRequest {
   @@index([externalId, sourceSystem])
 }
 
+model Location {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Location details
+  locationCode String @unique @db.VarChar(50)
+  name         String @db.VarChar(255)
+
+  // Address
+  address String? @db.VarChar(255)
+  city    String? @db.VarChar(100)
+  state   String? @db.VarChar(2)
+  zip     String? @db.VarChar(10)
+  country String? @default("US") @db.VarChar(2)
+
+  // Contact
+  phone String? @db.VarChar(20)
+
+  // Settings
+  isHeadquarters Boolean @default(false)
+  timezone       String? @db.VarChar(50)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant        Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employees     Employee[]
+  timeEntries   TimeEntry[]
+  businessHours BusinessHours[]
+
+  @@index([tenantId])
+  @@index([locationCode])
+  @@index([isHeadquarters])
+  @@index([externalId, sourceSystem])
+}
+
+enum ChangeReason {
+  PROMOTION
+  TRANSFER
+  SALARY_ADJUSTMENT
+  DEMOTION
+  DEPARTMENT_RESTRUCTURE
+  OTHER
+}
+
+model EmploymentHistory {
+  id         String @id @default(cuid())
+  tenantId   String
+  employeeId String
+
+  // Position details
+  positionId   String
+  departmentId String
+  startDate    DateTime  @db.Date
+  endDate      DateTime? @db.Date
+
+  // Change tracking
+  changeReason ChangeReason?
+  salaryAtTime Decimal?      @db.Decimal(12, 2)
+
+  // Notes
+  notes String? @db.Text
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant     Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee   Employee   @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  position   Position   @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([positionId])
+  @@index([departmentId])
+  @@index([startDate])
+  @@index([endDate])
+  @@index([externalId, sourceSystem])
+}
+
+model TimeOffBalance {
+  id         String @id @default(cuid())
+  tenantId   String
+  employeeId String
+
+  // Balance details
+  timeOffType  TimeOffType
+  year         Int
+  balanceHours Decimal     @db.Decimal(8, 2)
+  accrualRate  Decimal?    @db.Decimal(8, 2) // Hours per month
+  maxBalance   Decimal?    @db.Decimal(8, 2)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, timeOffType, year])
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([year])
+  @@index([externalId, sourceSystem])
+}
+
+model TimeEntry {
+  id         String  @id @default(cuid())
+  tenantId   String
+  employeeId String
+  locationId String?
+
+  // Time details
+  clockIn       DateTime  @db.Timestamp()
+  clockOut      DateTime? @db.Timestamp()
+  durationHours Decimal?  @db.Decimal(8, 2)
+
+  // Approval
+  approvedBy String?
+  approvedAt DateTime?
+
+  // Notes
+  notes String? @db.Text
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  location Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([locationId])
+  @@index([clockIn])
+  @@index([externalId, sourceSystem])
+}
+
+model OnboardingChecklist {
+  id         String  @id @default(cuid())
+  tenantId   String
+  positionId String?
+
+  // Checklist details
+  checklistName String  @db.VarChar(255)
+  description   String? @db.Text
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant   Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  position Position?        @relation(fields: [positionId], references: [id], onDelete: SetNull)
+  tasks    OnboardingTask[]
+
+  @@index([tenantId])
+  @@index([positionId])
+  @@index([isActive])
+  @@index([externalId, sourceSystem])
+}
+
+model OnboardingTask {
+  id          String  @id @default(cuid())
+  tenantId    String
+  checklistId String
+  employeeId  String?
+
+  // Task details
+  taskName    String  @db.VarChar(255)
+  description String? @db.Text
+
+  // Timing
+  dueDaysFromStart Int       @default(7)
+  dueDate          DateTime? @db.Date
+  completedDate    DateTime? @db.Date
+
+  // Assignment
+  assignedTo String?
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant    Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  checklist OnboardingChecklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+  employee  Employee?           @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([checklistId])
+  @@index([employeeId])
+  @@index([dueDate])
+  @@index([completedDate])
+  @@index([externalId, sourceSystem])
+}
+
 // ==============================================
 // ANALYTICS (Service 18) - Core Models
 // ==============================================
@@ -5551,7 +6830,10 @@ model KPIDefinition {
   updatedById String?
 
   // Relations
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant           Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  kpisnapshots     KPISnapshot[]
+  dashboardWidgets DashboardWidget[]
+  kpialerts        KPIAlert[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -5591,7 +6873,8 @@ model Dashboard {
   updatedById String?
 
   // Relations
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant           Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  dashboardWidgets DashboardWidget[]
 
   @@index([tenantId])
   @@index([ownerId])
@@ -5639,13 +6922,302 @@ model Report {
   updatedById String?
 
   // Relations
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant           Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  reportExecutions ReportExecution[]
 
   @@index([tenantId])
   @@index([reportType])
   @@index([ownerId])
   @@index([status])
   @@index([externalId, sourceSystem])
+}
+
+enum TrendDirection {
+  UP
+  DOWN
+  FLAT
+}
+
+model KPISnapshot {
+  id              String @id @default(cuid())
+  tenantId        String
+  kpiDefinitionId String
+
+  // Snapshot data
+  snapshotDate    DateTime        @db.Date
+  value           Decimal         @db.Decimal(15, 2)
+  comparisonValue Decimal?        @db.Decimal(15, 2) // Previous period value
+  trendDirection  TrendDirection?
+
+  // Metadata
+  metadata Json @default("{}")
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant        Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  kpiDefinition KPIDefinition @relation(fields: [kpiDefinitionId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([kpiDefinitionId])
+  @@index([snapshotDate])
+  @@index([externalId, sourceSystem])
+}
+
+model DashboardWidget {
+  id              String  @id @default(cuid())
+  tenantId        String
+  dashboardId     String
+  kpiDefinitionId String?
+
+  // Widget settings
+  widgetType String  @db.VarChar(50) // CHART, TABLE, METRIC, GAUGE, LIST
+  title      String? @db.VarChar(255)
+
+  // Layout
+  position Int @default(0)
+  width    Int @default(12)
+  height   Int @default(4)
+
+  // Configuration
+  configuration   Json @default("{}")
+  refreshInterval Int? // Seconds
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  dashboard     Dashboard      @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+  kpiDefinition KPIDefinition? @relation(fields: [kpiDefinitionId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([dashboardId])
+  @@index([kpiDefinitionId])
+  @@index([position])
+  @@index([externalId, sourceSystem])
+}
+
+model ReportTemplate {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Template details
+  templateName String  @db.VarChar(255)
+  reportType   String  @db.VarChar(100)
+  description  String? @db.Text
+
+  // Query
+  queryTemplate String @db.Text
+
+  // Parameters
+  parameterDefinitions Json @default("[]")
+
+  // Schedule
+  scheduleConfig Json? @default("{}")
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant     Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  executions ReportExecution[]
+
+  @@index([tenantId])
+  @@index([reportType])
+  @@index([isActive])
+  @@index([externalId, sourceSystem])
+}
+
+enum ExecutionStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model ReportExecution {
+  id         String  @id @default(cuid())
+  tenantId   String
+  reportId   String?
+  templateId String?
+
+  // Execution details
+  executedAt     DateTime        @default(now())
+  parametersUsed Json            @default("{}")
+  status         ExecutionStatus @default(PENDING)
+
+  // Output
+  outputFileUrl   String? @db.VarChar(500)
+  executionTimeMs Int?
+  rowCount        Int?
+
+  // Error
+  errorMessage String? @db.Text
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant   Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  report   Report?         @relation(fields: [reportId], references: [id], onDelete: SetNull)
+  template ReportTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([reportId])
+  @@index([templateId])
+  @@index([executedAt])
+  @@index([status])
+  @@index([externalId, sourceSystem])
+}
+
+model SavedAnalyticsView {
+  id       String @id @default(cuid())
+  tenantId String
+  userId   String
+
+  // View details
+  viewName   String @db.VarChar(255)
+  entityType String @db.VarChar(100) // LOAD, ORDER, INVOICE, etc.
+
+  // Configuration
+  filters   Json @default("[]")
+  columns   Json @default("[]")
+  sortOrder Json @default("[]")
+
+  // Sharing
+  isPublic Boolean @default(false)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([entityType])
+  @@index([isPublic])
+  @@index([externalId, sourceSystem])
+}
+
+model KPIAlert {
+  id              String @id @default(cuid())
+  tenantId        String
+  kpiDefinitionId String
+
+  // Alert config
+  alertName      String         @db.VarChar(255)
+  alertCondition AlertCondition
+  thresholdValue Decimal        @db.Decimal(15, 2)
+
+  // Notification
+  notifyUsers Json @default("[]") // Array of user IDs
+
+  // Status
+  isActive        Boolean   @default(true)
+  lastTriggeredAt DateTime?
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant        Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  kpiDefinition KPIDefinition @relation(fields: [kpiDefinitionId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([kpiDefinitionId])
+  @@index([isActive])
+  @@index([lastTriggeredAt])
+  @@index([externalId, sourceSystem])
+}
+
+model AnalyticsCache {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Cache key
+  cacheKey  String @unique @db.VarChar(255)
+  queryHash String @db.VarChar(64)
+
+  // Cached data
+  resultData Json @default("{}")
+
+  // Cache management
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  hitCount  Int      @default(0)
+
+  // Audit
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([queryHash])
+  @@index([expiresAt])
+  @@index([hitCount])
 }
 
 // ==============================================
@@ -5684,8 +7256,10 @@ model Workflow {
   updatedById String?
 
   // Relations
-  tenant     Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  executions WorkflowExecution[]
+  tenant                Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  executions            WorkflowExecution[]
+  workflowSteps         WorkflowStep[]
+  scheduledWorkflowRuns ScheduledWorkflowRun[]
 
   @@index([tenantId])
   @@index([triggerType])
@@ -5725,8 +7299,9 @@ model WorkflowExecution {
   updatedById String?
 
   // Relations
-  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  workflow       Workflow        @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  stepExecutions StepExecution[]
 
   @@index([tenantId])
   @@index([workflowId])
@@ -5788,6 +7363,169 @@ model ApprovalRequest {
   @@index([externalId, sourceSystem])
 }
 
+model WorkflowStep {
+  id         String @id @default(cuid())
+  tenantId   String
+  workflowId String
+
+  // Step details
+  stepNumber Int
+  stepName   String   @db.VarChar(255)
+  stepType   StepType
+
+  // Action configuration
+  actionConfig Json @default("{}")
+
+  // Logic
+  conditionLogic String? @db.Text
+
+  // Timing
+  timeoutSeconds Int?  @default(3600)
+  retryConfig    Json? @default("{}")
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant     Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  workflow   Workflow        @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  executions StepExecution[]
+
+  @@unique([workflowId, stepNumber])
+  @@index([tenantId])
+  @@index([workflowId])
+  @@index([stepType])
+  @@index([externalId, sourceSystem])
+}
+
+model StepExecution {
+  id                  String @id @default(cuid())
+  tenantId            String
+  workflowExecutionId String
+  workflowStepId      String
+
+  // Execution details
+  startedAt   DateTime        @default(now())
+  completedAt DateTime?
+  status      ExecutionStatus @default(PENDING)
+
+  // Data
+  inputData  Json  @default("{}")
+  outputData Json? @default("{}")
+
+  // Error
+  errorMessage String? @db.Text
+  retryCount   Int     @default(0)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant            Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  workflowExecution WorkflowExecution @relation(fields: [workflowExecutionId], references: [id], onDelete: Cascade)
+  workflowStep      WorkflowStep      @relation(fields: [workflowStepId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([workflowExecutionId])
+  @@index([workflowStepId])
+  @@index([status])
+  @@index([startedAt])
+  @@index([externalId, sourceSystem])
+}
+
+model WorkflowTemplate {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Template details
+  templateName String  @db.VarChar(255)
+  category     String? @db.VarChar(100)
+  description  String? @db.Text
+
+  // Configuration
+  triggerConfig Json @default("{}")
+  stepsJson     Json @default("[]")
+
+  // Status
+  isSystem Boolean @default(false)
+  isActive Boolean @default(true)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([category])
+  @@index([isActive])
+  @@index([isSystem])
+  @@index([externalId, sourceSystem])
+}
+
+model ScheduledWorkflowRun {
+  id         String @id @default(cuid())
+  tenantId   String
+  workflowId String
+
+  // Schedule
+  scheduleExpression String    @db.VarChar(255) // Cron expression
+  lastRunAt          DateTime?
+  nextRunAt          DateTime? @db.Timestamp()
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([workflowId])
+  @@index([nextRunAt])
+  @@index([isActive])
+  @@index([externalId, sourceSystem])
+}
+
 // ==============================================
 // INTEGRATION HUB (Service 20) - Core Models
 // ==============================================
@@ -5832,8 +7570,11 @@ model Integration {
   updatedById String?
 
   // Relations
-  tenant            Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  webhookDeliveries WebhookDelivery[]
+  tenant                    Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  webhookDeliveries         WebhookDelivery[]
+  apirequestLogs            APIRequestLog[]
+  syncJobs                  SyncJob[]
+  circuitBreakerStateRecord CircuitBreakerStateRecord?
 
   @@index([tenantId])
   @@index([category])
@@ -5873,8 +7614,9 @@ model WebhookEndpoint {
   updatedById String?
 
   // Relations
-  tenant     Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  deliveries WebhookDelivery[]
+  tenant               Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  deliveries           WebhookDelivery[]
+  webhookSubscriptions WebhookSubscription[]
 
   @@index([tenantId])
   @@index([status])
@@ -5932,6 +7674,227 @@ model WebhookDelivery {
   @@index([status])
   @@index([event])
   @@index([createdAt])
+  @@index([externalId, sourceSystem])
+}
+
+model IntegrationProviderConfig {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Provider details
+  providerName     String  @db.VarChar(255)
+  category         String  @db.VarChar(100) // CRM, ACCOUNTING, COMMUNICATION, LOAD_BOARD, etc.
+  authType         String  @db.VarChar(50) // OAUTH2, API_KEY, BASIC, JWT
+  baseUrl          String? @db.VarChar(500)
+  documentationUrl String? @db.VarChar(500)
+  logoUrl          String? @db.VarChar(500)
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([category])
+  @@index([isActive])
+  @@index([externalId, sourceSystem])
+}
+
+model WebhookSubscription {
+  id                String @id @default(cuid())
+  tenantId          String
+  webhookEndpointId String
+
+  // Subscription details
+  eventType        String @db.VarChar(100)
+  filterConditions Json   @default("{}")
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant   Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  endpoint WebhookEndpoint @relation(fields: [webhookEndpointId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([webhookEndpointId])
+  @@index([eventType])
+  @@index([isActive])
+  @@index([externalId, sourceSystem])
+}
+
+model APIRequestLog {
+  id            String @id @default(cuid())
+  tenantId      String
+  integrationId String
+
+  // Request details
+  endpoint       String @db.VarChar(500)
+  method         String @db.VarChar(10) // GET, POST, PUT, PATCH, DELETE
+  requestHeaders Json   @default("{}")
+  requestBody    Json?  @default("{}")
+
+  // Response
+  responseStatus Int
+  responseBody   Json? @default("{}")
+  durationMs     Int
+
+  // Timestamp
+  timestamp DateTime @default(now())
+
+  // Relations
+  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  integration Integration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([integrationId])
+  @@index([timestamp])
+  @@index([endpoint])
+}
+
+model TransformationTemplate {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Template details
+  templateName String @db.VarChar(255)
+  sourceFormat String @db.VarChar(100)
+  targetFormat String @db.VarChar(100)
+
+  // Transformation
+  transformationLogic String @db.Text // JSONata, jq, or custom script
+  testCases           Json   @default("[]")
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([sourceFormat])
+  @@index([targetFormat])
+  @@index([externalId, sourceSystem])
+}
+
+enum SyncDirection {
+  INBOUND
+  OUTBOUND
+  BIDIRECTIONAL
+}
+
+model SyncJob {
+  id            String @id @default(cuid())
+  tenantId      String
+  integrationId String
+
+  // Job details
+  jobType   String        @db.VarChar(100)
+  direction SyncDirection
+  schedule  String?       @db.VarChar(255) // Cron expression
+
+  // Status
+  lastSyncAt       DateTime?
+  recordsProcessed Int?            @default(0)
+  recordsFailed    Int?            @default(0)
+  status           ExecutionStatus @default(PENDING)
+
+  // Error
+  lastError String? @db.Text
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  integration Integration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([integrationId])
+  @@index([lastSyncAt])
+  @@index([status])
+  @@index([externalId, sourceSystem])
+}
+
+enum CircuitState {
+  CLOSED
+  OPEN
+  HALF_OPEN
+}
+
+model CircuitBreakerStateRecord {
+  id            String @id @default(cuid())
+  tenantId      String
+  integrationId String @unique
+
+  // State
+  state            CircuitState @default(CLOSED)
+  failureCount     Int          @default(0)
+  lastFailureAt    DateTime?
+  nextRetryAt      DateTime?
+  halfOpenAttempts Int          @default(0)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  integration Integration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([nextRetryAt])
   @@index([externalId, sourceSystem])
 }
 
@@ -6011,6 +7974,157 @@ model SearchHistory {
   @@index([entityType])
   @@index([searchTerm])
   @@index([createdAt])
+  @@index([externalId, sourceSystem])
+}
+
+model SearchIndex {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Index details
+  entityType    String @db.VarChar(100)
+  indexName     String @db.VarChar(255)
+  fieldsIndexed Json   @default("[]") // Array of field names
+
+  // Status
+  lastUpdated   DateTime @default(now())
+  documentCount Int      @default(0)
+  status        String   @default("ACTIVE") @db.VarChar(50)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, entityType])
+  @@index([tenantId])
+  @@index([entityType])
+  @@index([status])
+  @@index([externalId, sourceSystem])
+}
+
+model SearchSuggestion {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Suggestion details
+  entityType     String   @db.VarChar(100)
+  suggestionText String   @db.VarChar(255)
+  frequency      Int      @default(1)
+  lastUsed       DateTime @default(now())
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([entityType])
+  @@index([suggestionText])
+  @@index([frequency])
+  @@index([isActive])
+  @@index([externalId, sourceSystem])
+}
+
+model SearchSynonym {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Synonym details
+  term          String  @db.VarChar(255)
+  synonymsArray Json    @default("[]") // Array of synonyms
+  entityType    String? @db.VarChar(100)
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([term])
+  @@index([entityType])
+  @@index([isActive])
+  @@index([externalId, sourceSystem])
+}
+
+enum IndexOperation {
+  CREATE
+  UPDATE
+  DELETE
+  REINDEX
+}
+
+model SearchIndexQueue {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Queue item details
+  entityType String         @db.VarChar(100)
+  entityId   String         @db.VarChar(255)
+  operation  IndexOperation
+  priority   Int            @default(5) // 1-10, higher = more urgent
+
+  // Processing
+  processedAt DateTime?
+  retryCount  Int       @default(0)
+  lastError   String?   @db.Text
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([entityType, entityId])
+  @@index([operation])
+  @@index([priority])
+  @@index([processedAt])
   @@index([externalId, sourceSystem])
 }
 
@@ -6102,6 +8216,265 @@ model ChangeHistory {
   @@index([externalId, sourceSystem])
 }
 
+enum LoginMethod {
+  PASSWORD
+  SSO
+  OAUTH
+  MFA
+  API_KEY
+}
+
+model AccessLog {
+  id       String  @id @default(cuid())
+  tenantId String?
+  userId   String?
+
+  // Access details
+  resourceType String @db.VarChar(50)
+  resourceId   String @db.VarChar(255)
+  action       String @db.VarChar(100)
+
+  // Decision
+  granted      Boolean
+  denialReason String? @db.Text
+
+  // Context
+  ipAddress String?  @db.VarChar(45)
+  userAgent String?  @db.Text
+  timestamp DateTime @default(now())
+
+  // Relations
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([resourceType, resourceId])
+  @@index([timestamp])
+  @@index([granted])
+}
+
+model LoginAudit {
+  id       String  @id @default(cuid())
+  tenantId String?
+  userId   String?
+
+  // Login details
+  email         String      @db.VarChar(255)
+  loginMethod   LoginMethod
+  success       Boolean
+  failureReason String?     @db.Text
+
+  // Context
+  ipAddress String?  @db.VarChar(45)
+  userAgent String?  @db.Text
+  mfaUsed   Boolean  @default(false)
+  sessionId String?  @db.VarChar(255)
+  timestamp DateTime @default(now())
+
+  // Relations
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([email])
+  @@index([timestamp])
+  @@index([success])
+}
+
+model APIAuditLog {
+  id       String  @id @default(cuid())
+  tenantId String?
+  userId   String?
+  apiKeyId String?
+
+  // API call details
+  endpoint       String @db.VarChar(500)
+  method         String @db.VarChar(10)
+  requestParams  Json?  @default("{}")
+  responseStatus Int
+  responseTimeMs Int
+
+  // Context
+  ipAddress String?  @db.VarChar(45)
+  timestamp DateTime @default(now())
+
+  // Relations
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([apiKeyId])
+  @@index([endpoint])
+  @@index([timestamp])
+}
+
+enum ComplianceStatus {
+  COMPLIANT
+  NON_COMPLIANT
+  PENDING_VERIFICATION
+  EXPIRED
+}
+
+model ComplianceCheckpoint {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Checkpoint details
+  checkpointName String @db.VarChar(255)
+  entityType     String @db.VarChar(50)
+  entityId       String @db.VarChar(255)
+  requirement    String @db.Text
+
+  // Verification
+  status     ComplianceStatus @default(PENDING_VERIFICATION)
+  verifiedBy String?
+  verifiedAt DateTime?
+  expiryDate DateTime?        @db.Date
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([entityType, entityId])
+  @@index([status])
+  @@index([expiryDate])
+  @@index([externalId, sourceSystem])
+}
+
+enum AuditSeverityLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model AuditAlert {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Alert details
+  alertName         String             @db.VarChar(255)
+  triggerConditions Json               @default("{}")
+  severity          AuditSeverityLevel
+
+  // Notification
+  notifyUsers Json @default("[]")
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant    Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  incidents AuditAlertIncident[]
+
+  @@index([tenantId])
+  @@index([severity])
+  @@index([isActive])
+  @@index([externalId, sourceSystem])
+}
+
+model AuditAlertIncident {
+  id           String @id @default(cuid())
+  tenantId     String
+  auditAlertId String
+
+  // Incident details
+  triggeredAt DateTime           @default(now())
+  triggerData Json               @default("{}")
+  severity    AuditSeverityLevel
+
+  // Resolution
+  acknowledgedBy String?
+  acknowledgedAt DateTime?
+  resolvedAt     DateTime?
+  notes          String?   @db.Text
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant     Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  auditAlert AuditAlert @relation(fields: [auditAlertId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([auditAlertId])
+  @@index([triggeredAt])
+  @@index([severity])
+  @@index([resolvedAt])
+  @@index([externalId, sourceSystem])
+}
+
+model AuditRetentionPolicy {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Policy details
+  entityType       String @db.VarChar(100)
+  retentionDays    Int
+  archiveAfterDays Int?
+  deleteAfterDays  Int?
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, entityType])
+  @@index([tenantId])
+  @@index([entityType])
+  @@index([isActive])
+  @@index([externalId, sourceSystem])
+}
+
 // ==============================================
 // CONFIG (Service 23) - Core Models
 // ==============================================
@@ -6161,15 +8534,297 @@ model FeatureFlag {
   customFields Json    @default("{}")
 
   // Audit
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  deletedAt            DateTime?
+  createdById          String?
+  updatedById          String?
+  featureFlagOverrides FeatureFlagOverride[]
+
+  @@index([key])
+  @@index([status])
+  @@index([enabled])
+  @@index([externalId, sourceSystem])
+}
+
+enum DataType {
+  STRING
+  NUMBER
+  BOOLEAN
+  JSON
+  DATE
+}
+
+model TenantConfig {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Config details
+  configKey   String   @db.VarChar(255)
+  configValue Json
+  dataType    DataType @default(STRING)
+  isEncrypted Boolean  @default(false)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
   createdById String?
   updatedById String?
 
-  @@index([key])
-  @@index([status])
-  @@index([enabled])
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, configKey])
+  @@index([tenantId])
+  @@index([configKey])
+  @@index([externalId, sourceSystem])
+}
+
+model UserPreference {
+  id       String @id @default(cuid())
+  tenantId String
+  userId   String
+
+  // Preference details
+  preferenceKey   String   @db.VarChar(255)
+  preferenceValue Json
+  dataType        DataType @default(STRING)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, preferenceKey])
+  @@index([tenantId])
+  @@index([userId])
+  @@index([preferenceKey])
+  @@index([externalId, sourceSystem])
+}
+
+model FeatureFlagOverride {
+  id            String  @id @default(cuid())
+  featureFlagId String
+  tenantId      String?
+  userId        String?
+
+  // Override
+  overrideValue Boolean
+  expiresAt     DateTime? @db.Timestamp()
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  featureFlag FeatureFlag @relation(fields: [featureFlagId], references: [id], onDelete: Cascade)
+  tenant      Tenant?     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user        User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([featureFlagId])
+  @@index([tenantId])
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([externalId, sourceSystem])
+}
+
+model ConfigTemplate {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Template details
+  templateName  String  @db.VarChar(255)
+  templateType  String  @db.VarChar(100)
+  configSchema  Json    @default("{}")
+  defaultValues Json    @default("{}")
+  isSystem      Boolean @default(false)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([templateType])
+  @@index([isSystem])
+  @@index([externalId, sourceSystem])
+}
+
+model ConfigHistory {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Change details
+  configKey    String   @db.VarChar(255)
+  oldValue     Json?
+  newValue     Json
+  changedBy    String?
+  changeReason String?  @db.Text
+  changedAt    DateTime @default(now())
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([configKey])
+  @@index([changedAt])
+  @@index([changedBy])
+  @@index([externalId, sourceSystem])
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+model BusinessHours {
+  id         String  @id @default(cuid())
+  tenantId   String
+  locationId String?
+
+  // Business hours
+  dayOfWeek DayOfWeek
+  openTime  String    @db.VarChar(5) // HH:MM format
+  closeTime String    @db.VarChar(5)
+  isClosed  Boolean   @default(false)
+  timezone  String    @db.VarChar(50)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  location Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([locationId])
+  @@index([dayOfWeek])
+  @@index([externalId, sourceSystem])
+}
+
+model Holiday {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Holiday details
+  holidayName String   @db.VarChar(255)
+  holidayDate DateTime @db.Date
+  isRecurring Boolean  @default(false)
+  countryCode String?  @db.VarChar(2)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([holidayDate])
+  @@index([countryCode])
+  @@index([externalId, sourceSystem])
+}
+
+enum ResetFrequency {
+  NEVER
+  DAILY
+  MONTHLY
+  YEARLY
+}
+
+model NumberSequence {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Sequence details
+  sequenceName   String         @db.VarChar(255)
+  prefix         String?        @db.VarChar(20)
+  currentNumber  Int            @default(1)
+  increment      Int            @default(1)
+  padding        Int            @default(4) // Zero-padding length
+  resetFrequency ResetFrequency @default(NEVER)
+  lastResetAt    DateTime?      @db.Date
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, sequenceName])
+  @@index([tenantId])
+  @@index([sequenceName])
   @@index([externalId, sourceSystem])
 }
 
@@ -6272,6 +8927,102 @@ model JobExecution {
   @@index([jobId])
   @@index([status])
   @@index([startedAt])
+  @@index([externalId, sourceSystem])
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model ScheduledTask {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Task details
+  taskName     String   @db.VarChar(255)
+  taskType     String   @db.VarChar(100)
+  scheduledFor DateTime @db.Timestamp()
+
+  // Entity reference
+  entityType String? @db.VarChar(50)
+  entityId   String? @db.VarChar(255)
+
+  // Task data
+  taskData Json @default("{}")
+
+  // Status
+  status      TaskStatus @default(PENDING)
+  completedAt DateTime?
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([taskType])
+  @@index([scheduledFor])
+  @@index([status])
+  @@index([entityType, entityId])
+  @@index([externalId, sourceSystem])
+}
+
+model Reminder {
+  id       String @id @default(cuid())
+  tenantId String
+  userId   String
+
+  // Reminder details
+  reminderType String   @db.VarChar(100)
+  title        String   @db.VarChar(255)
+  message      String?  @db.Text
+  remindAt     DateTime @db.Timestamp()
+
+  // Entity reference
+  entityType String? @db.VarChar(50)
+  entityId   String? @db.VarChar(255)
+
+  // Status
+  status       ReminderStatus @default(PENDING)
+  snoozedUntil DateTime?      @db.Timestamp()
+  sentAt       DateTime?
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([reminderType])
+  @@index([remindAt])
+  @@index([status])
+  @@index([entityType, entityId])
   @@index([externalId, sourceSystem])
 }
 
@@ -6638,5 +9389,2665 @@ model FeatureRequest {
   @@index([status])
   @@index([voteCount])
   @@index([createdAt])
+  @@index([externalId, sourceSystem])
+}
+
+// ==============================================
+// CREDIT SERVICE (Service 16) - Enums
+// ==============================================
+
+enum CreditApplicationStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  CONDITIONAL_APPROVAL
+  DENIED
+  EXPIRED
+}
+
+enum CreditLimitStatus {
+  ACTIVE
+  SUSPENDED
+  EXPIRED
+  EXCEEDED
+}
+
+enum CreditHoldReason {
+  PAYMENT_OVERDUE
+  CREDIT_LIMIT_EXCEEDED
+  FRAUD_SUSPECTED
+  INSUFFICIENT_INSURANCE
+  CARRIER_OOS
+  MANUAL_HOLD
+}
+
+enum CollectionActivityType {
+  CALL
+  EMAIL
+  LETTER
+  LEGAL_NOTICE
+  COLLECTIONS_AGENCY
+}
+
+enum PaymentPlanStatus {
+  ACTIVE
+  COMPLETED
+  DEFAULTED
+  CANCELLED
+}
+
+// ==============================================
+// CLAIMS SERVICE (Service 09) - Enums
+// ==============================================
+
+enum ClaimType {
+  CARGO_DAMAGE
+  CARGO_LOSS
+  SHORTAGE
+  LATE_DELIVERY
+  OVERCHARGE
+  OTHER
+}
+
+enum ClaimStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_INVESTIGATION
+  PENDING_DOCUMENTATION
+  APPROVED
+  DENIED
+  SETTLED
+  CLOSED
+}
+
+enum ClaimDisposition {
+  CARRIER_LIABILITY
+  SHIPPER_LIABILITY
+  RECEIVER_LIABILITY
+  SHARED_LIABILITY
+  NO_LIABILITY
+}
+
+enum SubrogationStatus {
+  PENDING
+  IN_PROGRESS
+  RECOVERED
+  UNRECOVERABLE
+  CLOSED
+}
+
+// ==============================================
+// EDI SERVICE (Service 28) - Enums
+// ==============================================
+
+enum EdiTransactionType {
+  EDI_204 // Load Tender
+  EDI_214 // Shipment Status
+  EDI_210 // Freight Invoice
+  EDI_211 // Bill of Lading
+  EDI_990 // Load Tender Response
+  EDI_997 // Functional Acknowledgment
+  EDI_315 // Status Details
+  EDI_322 // Terminal Operations
+}
+
+enum EdiDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum EdiMessageStatus {
+  PENDING
+  QUEUED
+  SENT
+  DELIVERED
+  ACKNOWLEDGED
+  ERROR
+  REJECTED
+}
+
+enum EdiCommunicationProtocol {
+  FTP
+  SFTP
+  FTPS
+  AS2
+  HTTPS
+  VAN
+}
+
+enum EdiValidationStatus {
+  VALID
+  WARNING
+  ERROR
+}
+
+// ==============================================
+// SAFETY SERVICE (Service 29) - Enums
+// ==============================================
+
+enum SaferDataStatus {
+  ACTIVE
+  INACTIVE
+  OUT_OF_SERVICE
+}
+
+enum CSABasicType {
+  UNSAFE_DRIVING
+  HOS_COMPLIANCE
+  DRIVER_FITNESS
+  CONTROLLED_SUBSTANCES
+  VEHICLE_MAINTENANCE
+  HAZMAT_COMPLIANCE
+  CRASH_INDICATOR
+}
+
+enum InsuranceType {
+  AUTO_LIABILITY
+  CARGO
+  GENERAL_LIABILITY
+  WORKERS_COMP
+  UMBRELLA
+  BOND
+}
+
+enum DQFDocumentType {
+  APPLICATION
+  MVR
+  PSP
+  MEDICAL_CARD
+  DRUG_TEST
+  ROAD_TEST
+  CLEARINGHOUSE
+  EMPLOYMENT_VERIFICATION
+}
+
+enum SafetyIncidentType {
+  ACCIDENT
+  CITATION
+  INSPECTION_VIOLATION
+  DOT_AUDIT_FINDING
+  INSURANCE_CLAIM
+}
+
+enum SafetyAlertType {
+  INSURANCE_EXPIRING
+  AUTHORITY_EXPIRING
+  CSA_THRESHOLD_EXCEEDED
+  OUT_OF_SERVICE
+  VIOLATION_PATTERN
+}
+
+// ==============================================
+// RATE INTELLIGENCE SERVICE (Service 35) - Enums
+// ==============================================
+
+enum RateProvider {
+  DAT
+  TRUCKSTOP
+  INTERNAL
+}
+
+enum AlertCondition {
+  RATE_INCREASE
+  RATE_DECREASE
+  RATE_THRESHOLD
+}
+
+// ==============================================
+// LOAD BOARD EXTERNAL SERVICE (Service 32) - Enums
+// ==============================================
+
+enum LoadBoardProviderType {
+  DAT
+  TRUCKSTOP
+  SYLECTUS
+  TRUCKER_TOOLS
+  LOAD_BOARD
+}
+
+enum LoadPostStatus {
+  DRAFT
+  POSTED
+  RESPONDED
+  COVERED
+  EXPIRED
+  CANCELLED
+}
+
+enum PostLeadStatus {
+  NEW
+  CONTACTED
+  QUOTED
+  ACCEPTED
+  DECLINED
+}
+
+enum PostingFrequency {
+  IMMEDIATE
+  HOURLY
+  DAILY
+  MANUAL
+}
+
+// ==============================================
+// CREDIT SERVICE (Service 16) - Models
+// ==============================================
+
+model CreditApplication {
+  id         String  @id @default(cuid())
+  tenantId   String
+  companyId  String
+  customerId String?
+
+  // Application info
+  applicationNumber String                  @unique @db.VarChar(50)
+  status            CreditApplicationStatus @default(PENDING)
+  requestedLimit    Decimal                 @db.Decimal(12, 2)
+  approvedLimit     Decimal?                @db.Decimal(12, 2)
+
+  // Business info
+  businessName    String   @db.VarChar(255)
+  dbaName         String?  @db.VarChar(255)
+  federalTaxId    String?  @db.VarChar(20)
+  dunsNumber      String?  @db.VarChar(20)
+  yearsInBusiness Int?
+  businessType    String?  @db.VarChar(100)
+  annualRevenue   Decimal? @db.Decimal(15, 2)
+
+  // References
+  bankName          String? @db.VarChar(255)
+  bankAccountNumber String? @db.VarChar(100)
+  bankContactName   String? @db.VarChar(255)
+  bankContactPhone  String? @db.VarChar(20)
+
+  // Trade references (JSON array)
+  tradeReferences Json?
+
+  // Ownership
+  ownerName    String? @db.VarChar(255)
+  ownerSSN     String? @db.VarChar(20)
+  ownerAddress String? @db.Text
+
+  // Credit check
+  creditScore     Int?
+  creditCheckDate DateTime?
+  creditReportUrl String?   @db.VarChar(500)
+
+  // Decision
+  reviewedById String?
+  reviewedAt   DateTime?
+  denialReason String?   @db.Text
+  conditions   String?   @db.Text
+
+  // Dates
+  approvedAt DateTime?
+  expiresAt  DateTime?
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([companyId])
+  @@index([status])
+  @@index([applicationNumber])
+  @@index([createdAt])
+  @@index([externalId, sourceSystem])
+}
+
+model CreditLimit {
+  id         String  @id @default(cuid())
+  tenantId   String
+  companyId  String
+  customerId String?
+
+  // Limit details
+  creditLimit     Decimal           @db.Decimal(12, 2)
+  availableCredit Decimal           @db.Decimal(12, 2)
+  usedCredit      Decimal           @default(0) @db.Decimal(12, 2)
+  status          CreditLimitStatus @default(ACTIVE)
+
+  // Payment terms
+  paymentTerms    String? @db.VarChar(100) // NET_30, NET_60, etc.
+  gracePeriodDays Int     @default(0)
+
+  // Limits
+  singleLoadLimit Decimal? @db.Decimal(12, 2)
+  monthlyLimit    Decimal? @db.Decimal(12, 2)
+
+  // Review
+  lastReviewDate      DateTime?
+  nextReviewDate      DateTime?
+  reviewFrequencyDays Int       @default(90)
+
+  // Approval
+  approvedById String?
+  approvedAt   DateTime?
+  expiresAt    DateTime?
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, companyId])
+  @@index([tenantId])
+  @@index([companyId])
+  @@index([status])
+  @@index([externalId, sourceSystem])
+}
+
+model CreditHold {
+  id         String  @id @default(cuid())
+  tenantId   String
+  companyId  String
+  customerId String?
+
+  // Hold details
+  reason      CreditHoldReason
+  description String?          @db.Text
+  amountHeld  Decimal?         @db.Decimal(12, 2)
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Resolution
+  resolvedById    String?
+  resolvedAt      DateTime?
+  resolutionNotes String?   @db.Text
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([companyId])
+  @@index([reason])
+  @@index([isActive])
+  @@index([createdAt])
+  @@index([externalId, sourceSystem])
+}
+
+model CollectionActivity {
+  id         String  @id @default(cuid())
+  tenantId   String
+  companyId  String
+  customerId String?
+  invoiceId  String?
+
+  // Activity details
+  activityType CollectionActivityType
+  subject      String?                @db.VarChar(500)
+  description  String?                @db.Text
+  outcome      String?                @db.Text
+
+  // Contact info
+  contactedName  String? @db.VarChar(255)
+  contactedTitle String? @db.VarChar(100)
+  contactedPhone String? @db.VarChar(20)
+  contactedEmail String? @db.VarChar(255)
+
+  // Follow-up
+  followUpDate  DateTime?
+  followUpNotes String?   @db.Text
+
+  // Results
+  promisedPaymentDate DateTime?
+  promisedAmount      Decimal?  @db.Decimal(12, 2)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  company Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  invoice Invoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([companyId])
+  @@index([invoiceId])
+  @@index([activityType])
+  @@index([followUpDate])
+  @@index([createdAt])
+  @@index([externalId, sourceSystem])
+}
+
+model PaymentPlan {
+  id         String  @id @default(cuid())
+  tenantId   String
+  companyId  String
+  customerId String?
+
+  // Plan details
+  planNumber        String            @unique @db.VarChar(50)
+  totalAmount       Decimal           @db.Decimal(12, 2)
+  amountPaid        Decimal           @default(0) @db.Decimal(12, 2)
+  remainingBalance  Decimal           @db.Decimal(12, 2)
+  installmentAmount Decimal           @db.Decimal(12, 2)
+  installmentCount  Int
+  installmentsPaid  Int               @default(0)
+  status            PaymentPlanStatus @default(ACTIVE)
+
+  // Schedule
+  firstPaymentDate DateTime  @db.Date
+  frequency        String    @db.VarChar(50) // WEEKLY, BIWEEKLY, MONTHLY
+  nextPaymentDate  DateTime? @db.Date
+
+  // Terms
+  interestRate Decimal? @db.Decimal(5, 2)
+  lateFeePct   Decimal? @db.Decimal(5, 2)
+  lateFeeFixed Decimal? @db.Decimal(10, 2)
+
+  // Invoices included (JSON array of invoice IDs)
+  invoiceIds Json?
+
+  // Approval
+  approvedById String?
+  approvedAt   DateTime?
+
+  // Completion
+  completedAt        DateTime?
+  defaultedAt        DateTime?
+  cancelledAt        DateTime?
+  cancellationReason String?   @db.Text
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([companyId])
+  @@index([status])
+  @@index([planNumber])
+  @@index([nextPaymentDate])
+  @@index([externalId, sourceSystem])
+}
+
+// ==============================================
+// CLAIMS SERVICE (Service 09) - Models
+// ==============================================
+
+model Claim {
+  id        String  @id @default(cuid())
+  tenantId  String
+  loadId    String?
+  orderId   String?
+  carrierId String?
+  companyId String?
+
+  // Claim info
+  claimNumber String            @unique @db.VarChar(50)
+  claimType   ClaimType
+  status      ClaimStatus       @default(DRAFT)
+  disposition ClaimDisposition?
+
+  // Amounts
+  claimedAmount  Decimal  @db.Decimal(12, 2)
+  approvedAmount Decimal? @db.Decimal(12, 2)
+  paidAmount     Decimal  @default(0) @db.Decimal(12, 2)
+
+  // Incident details
+  incidentDate     DateTime @db.Date
+  incidentLocation String?  @db.VarChar(500)
+  description      String   @db.Text
+
+  // Claimant
+  claimantName    String  @db.VarChar(255)
+  claimantCompany String? @db.VarChar(255)
+  claimantEmail   String? @db.VarChar(255)
+  claimantPhone   String? @db.VarChar(20)
+
+  // Dates
+  filedDate    DateTime  @default(now()) @db.Date
+  receivedDate DateTime? @db.Date
+  dueDate      DateTime? @db.Date
+  closedDate   DateTime? @db.Date
+
+  // Assignment
+  assignedToId String?
+
+  // Investigation
+  investigationNotes String? @db.Text
+  rootCause          String? @db.Text
+  preventionNotes    String? @db.Text
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant             Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  load               Load?               @relation(fields: [loadId], references: [id], onDelete: SetNull)
+  order              Order?              @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  carrier            Carrier?            @relation(fields: [carrierId], references: [id], onDelete: SetNull)
+  company            Company?            @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  items              ClaimItem[]
+  documents          ClaimDocument[]
+  notes              ClaimNote[]
+  timeline           ClaimTimeline[]
+  adjustments        ClaimAdjustment[]
+  subrogationRecords SubrogationRecord[]
+  contacts           ClaimContact[]
+
+  @@index([tenantId])
+  @@index([loadId])
+  @@index([orderId])
+  @@index([carrierId])
+  @@index([companyId])
+  @@index([claimNumber])
+  @@index([status])
+  @@index([claimType])
+  @@index([incidentDate])
+  @@index([externalId, sourceSystem])
+}
+
+model ClaimItem {
+  id       String @id @default(cuid())
+  tenantId String
+  claimId  String
+
+  // Item details
+  description String  @db.VarChar(500)
+  quantity    Int
+  unitPrice   Decimal @db.Decimal(10, 2)
+  totalValue  Decimal @db.Decimal(12, 2)
+
+  // Damage
+  damageType   String? @db.VarChar(100)
+  damageExtent String? @db.VarChar(100)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  claim  Claim  @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([claimId])
+  @@index([externalId, sourceSystem])
+}
+
+model ClaimDocument {
+  id         String @id @default(cuid())
+  tenantId   String
+  claimId    String
+  documentId String
+
+  // Document classification
+  documentType String  @db.VarChar(100) // PROOF_OF_DELIVERY, INVOICE, PHOTOS, POLICE_REPORT, etc.
+  description  String? @db.VarChar(500)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  claim    Claim    @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([claimId])
+  @@index([documentId])
+  @@index([externalId, sourceSystem])
+}
+
+model ClaimNote {
+  id       String @id @default(cuid())
+  tenantId String
+  claimId  String
+
+  // Note details
+  note       String  @db.Text
+  noteType   String? @db.VarChar(50) // INTERNAL, EXTERNAL, INVESTIGATION
+  isInternal Boolean @default(false)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  claim  Claim  @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([claimId])
+  @@index([createdAt])
+  @@index([externalId, sourceSystem])
+}
+
+model ClaimTimeline {
+  id       String @id @default(cuid())
+  tenantId String
+  claimId  String
+
+  // Event details
+  eventType   String  @db.VarChar(100) // STATUS_CHANGE, DOCUMENT_ADDED, NOTE_ADDED, PAYMENT_MADE, etc.
+  eventData   Json?
+  description String? @db.VarChar(500)
+  oldValue    String? @db.VarChar(500)
+  newValue    String? @db.VarChar(500)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  claim  Claim  @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([claimId])
+  @@index([eventType])
+  @@index([createdAt])
+  @@index([externalId, sourceSystem])
+}
+
+model ClaimAdjustment {
+  id       String @id @default(cuid())
+  tenantId String
+  claimId  String
+
+  // Adjustment details
+  adjustmentType String  @db.VarChar(100) // DEDUCTIBLE, DEPRECIATION, SALVAGE, OTHER
+  amount         Decimal @db.Decimal(12, 2)
+  reason         String  @db.Text
+
+  // Approval
+  approvedById String?
+  approvedAt   DateTime?
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  claim  Claim  @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([claimId])
+  @@index([adjustmentType])
+  @@index([externalId, sourceSystem])
+}
+
+model SubrogationRecord {
+  id       String @id @default(cuid())
+  tenantId String
+  claimId  String
+
+  // Subrogation details
+  targetParty     String            @db.VarChar(255)
+  targetPartyType String            @db.VarChar(100) // CARRIER, SHIPPER, RECEIVER, THIRD_PARTY
+  amountSought    Decimal           @db.Decimal(12, 2)
+  amountRecovered Decimal           @default(0) @db.Decimal(12, 2)
+  status          SubrogationStatus @default(PENDING)
+
+  // Legal
+  attorneyName String?   @db.VarChar(255)
+  attorneyFirm String?   @db.VarChar(255)
+  caseNumber   String?   @db.VarChar(100)
+  filingDate   DateTime? @db.Date
+
+  // Resolution
+  settlementDate   DateTime? @db.Date
+  settlementAmount Decimal?  @db.Decimal(12, 2)
+  closedDate       DateTime? @db.Date
+  closureReason    String?   @db.Text
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  claim  Claim  @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([claimId])
+  @@index([status])
+  @@index([targetPartyType])
+  @@index([externalId, sourceSystem])
+}
+
+model ClaimContact {
+  id       String @id @default(cuid())
+  tenantId String
+  claimId  String
+
+  // Contact details
+  contactType String  @db.VarChar(100) // CLAIMANT, WITNESS, INSURANCE_ADJUSTER, ATTORNEY, etc.
+  name        String  @db.VarChar(255)
+  company     String? @db.VarChar(255)
+  title       String? @db.VarChar(100)
+  email       String? @db.VarChar(255)
+  phone       String? @db.VarChar(20)
+  address     String? @db.Text
+  notes       String? @db.Text
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  claim  Claim  @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([claimId])
+  @@index([contactType])
+  @@index([externalId, sourceSystem])
+}
+
+// ==============================================
+// EDI SERVICE (Service 28) - Models
+// ==============================================
+
+model EdiTradingPartner {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Partner info
+  partnerName String  @db.VarChar(255)
+  partnerType String  @db.VarChar(50) // CUSTOMER, CARRIER, BROKER, 3PL
+  isActive    Boolean @default(true)
+
+  // EDI identifiers
+  isaId String  @unique @db.VarChar(15) // ISA sender/receiver ID
+  gsId  String? @db.VarChar(15) // GS application sender/receiver ID
+  duns  String? @db.VarChar(9)
+  scac  String? @db.VarChar(4)
+
+  // Communication
+  protocol        EdiCommunicationProtocol
+  ftpHost         String?                  @db.VarChar(255)
+  ftpPort         Int?
+  ftpUsername     String?                  @db.VarChar(100)
+  ftpPassword     String?                  @db.VarChar(500) // encrypted
+  ftpInboundPath  String?                  @db.VarChar(500)
+  ftpOutboundPath String?                  @db.VarChar(500)
+  as2Url          String?                  @db.VarChar(500)
+  as2Identifier   String?                  @db.VarChar(255)
+  vanMailbox      String?                  @db.VarChar(100)
+
+  // Settings
+  sendFunctionalAck    Boolean @default(true)
+  requireFunctionalAck Boolean @default(true)
+  testMode             Boolean @default(false)
+
+  // Mappings (JSON for custom field mappings)
+  fieldMappings Json?
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant              Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  messages            EdiMessage[]
+  transactionMappings EdiTransactionMapping[]
+  communicationLogs   EdiCommunicationLog[]
+
+  @@index([tenantId])
+  @@index([isaId])
+  @@index([partnerType])
+  @@index([isActive])
+  @@index([externalId, sourceSystem])
+}
+
+model EdiMessage {
+  id               String @id @default(cuid())
+  tenantId         String
+  tradingPartnerId String
+
+  // Message identification
+  messageId       String             @unique @db.VarChar(100)
+  transactionType EdiTransactionType
+  direction       EdiDirection
+  status          EdiMessageStatus   @default(PENDING)
+
+  // Control numbers
+  isaControlNumber String @db.VarChar(9)
+  gsControlNumber  String @db.VarChar(9)
+  stControlNumber  String @db.VarChar(9)
+
+  // Related entity
+  entityType String? @db.VarChar(50) // LOAD, ORDER, INVOICE, etc.
+  entityId   String?
+
+  // Content
+  rawContent    String @db.Text // Original EDI content
+  parsedContent Json? // Parsed JSON structure
+
+  // Processing
+  processedAt      DateTime?
+  validationStatus EdiValidationStatus?
+  validationErrors Json?
+  retryCount       Int                  @default(0)
+  lastRetryAt      DateTime?
+
+  // Acknowledgment
+  functionalAckId String?
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant          Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tradingPartner  EdiTradingPartner   @relation(fields: [tradingPartnerId], references: [id], onDelete: Cascade)
+  batches         EdiBatchMessage[]
+  acknowledgments EdiAcknowledgment[]
+  errors          EdiError[]
+
+  @@index([tenantId])
+  @@index([tradingPartnerId])
+  @@index([transactionType])
+  @@index([direction])
+  @@index([status])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@index([externalId, sourceSystem])
+}
+
+model EdiTransactionMapping {
+  id               String @id @default(cuid())
+  tenantId         String
+  tradingPartnerId String
+
+  // Transaction type
+  transactionType EdiTransactionType
+
+  // Mapping configuration (JSON)
+  fieldMappings  Json // Maps EDI segment/element to internal field
+  defaultValues  Json?
+  transformRules Json?
+
+  // Validation rules
+  validationRules Json?
+  isActive        Boolean @default(true)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant         Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tradingPartner EdiTradingPartner @relation(fields: [tradingPartnerId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, tradingPartnerId, transactionType])
+  @@index([tenantId])
+  @@index([tradingPartnerId])
+  @@index([transactionType])
+  @@index([isActive])
+  @@index([externalId, sourceSystem])
+}
+
+model EdiControlNumber {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Control number type
+  controlType String @db.VarChar(10) // ISA, GS, ST
+
+  // Current value
+  currentNumber Int @default(0)
+
+  // Configuration
+  prefix   String? @db.VarChar(10)
+  suffix   String? @db.VarChar(10)
+  minValue Int     @default(1)
+  maxValue Int     @default(999999999)
+
+  // Scoping (optional - for partner-specific numbering)
+  tradingPartnerId String?
+  transactionType  EdiTransactionType?
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, controlType, tradingPartnerId, transactionType])
+  @@index([tenantId])
+  @@index([controlType])
+  @@index([externalId, sourceSystem])
+}
+
+model EdiBatch {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Batch info
+  batchNumber    String @unique @db.VarChar(50)
+  batchType      String @db.VarChar(50) // OUTBOUND, INBOUND
+  messageCount   Int    @default(0)
+  processedCount Int    @default(0)
+  errorCount     Int    @default(0)
+
+  // Processing
+  startedAt   DateTime?
+  completedAt DateTime?
+  status      String    @db.VarChar(50) // PENDING, PROCESSING, COMPLETED, FAILED
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant   Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  messages EdiBatchMessage[]
+
+  @@index([tenantId])
+  @@index([batchNumber])
+  @@index([status])
+  @@index([createdAt])
+  @@index([externalId, sourceSystem])
+}
+
+model EdiBatchMessage {
+  id        String @id @default(cuid())
+  tenantId  String
+  batchId   String
+  messageId String
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant  Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  batch   EdiBatch   @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  message EdiMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([batchId, messageId])
+  @@index([tenantId])
+  @@index([batchId])
+  @@index([messageId])
+  @@index([externalId, sourceSystem])
+}
+
+model EdiCommunicationLog {
+  id               String @id @default(cuid())
+  tenantId         String
+  tradingPartnerId String
+
+  // Communication details
+  direction EdiDirection
+  protocol  EdiCommunicationProtocol
+  action    String                   @db.VarChar(50) // SEND, RECEIVE, CONNECT, DISCONNECT
+  status    String                   @db.VarChar(50) // SUCCESS, FAILED
+
+  // Content
+  fileName     String? @db.VarChar(500)
+  fileSize     Int?
+  messageCount Int?
+
+  // Result
+  responseCode String? @db.VarChar(50)
+  errorMessage String? @db.Text
+
+  // Timing
+  startedAt   DateTime
+  completedAt DateTime?
+  durationMs  Int?
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant         Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tradingPartner EdiTradingPartner @relation(fields: [tradingPartnerId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([tradingPartnerId])
+  @@index([direction])
+  @@index([status])
+  @@index([startedAt])
+  @@index([externalId, sourceSystem])
+}
+
+model EdiEventTrigger {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Trigger config
+  triggerName     String             @db.VarChar(255)
+  eventType       String             @db.VarChar(100) // LOAD_STATUS_CHANGE, LOAD_ASSIGNED, etc.
+  transactionType EdiTransactionType
+  isActive        Boolean            @default(true)
+
+  // Conditions (JSON)
+  conditions Json? // When to trigger
+
+  // Target partners (JSON array of partner IDs)
+  targetPartners Json?
+
+  // Template/mapping
+  messageTemplate String? @db.Text
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([eventType])
+  @@index([transactionType])
+  @@index([isActive])
+  @@index([externalId, sourceSystem])
+}
+
+model EdiCodeList {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Code list info
+  listName     String  @db.VarChar(100) // EQUIPMENT_TYPE, STATUS_CODE, etc.
+  ediCode      String  @db.VarChar(50)
+  internalCode String  @db.VarChar(50)
+  description  String? @db.VarChar(500)
+  isActive     Boolean @default(true)
+
+  // Context (optional - for partner-specific codes)
+  tradingPartnerId String?
+  transactionType  EdiTransactionType?
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, listName, ediCode, tradingPartnerId])
+  @@index([tenantId])
+  @@index([listName])
+  @@index([ediCode])
+  @@index([internalCode])
+  @@index([isActive])
+  @@index([externalId, sourceSystem])
+}
+
+model EdiAcknowledgment {
+  id                String @id @default(cuid())
+  tenantId          String
+  originalMessageId String
+
+  // Acknowledgment details (997)
+  ackControlNumber String   @db.VarChar(9)
+  ackStatus        String   @db.VarChar(50) // ACCEPTED, ACCEPTED_WITH_ERRORS, REJECTED
+  errorCodes       Json?
+  receivedAt       DateTime
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant          Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  originalMessage EdiMessage @relation(fields: [originalMessageId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, ackControlNumber])
+  @@index([tenantId])
+  @@index([originalMessageId])
+  @@index([ackStatus])
+  @@index([receivedAt])
+  @@index([externalId, sourceSystem])
+}
+
+model EdiError {
+  id        String @id @default(cuid())
+  tenantId  String
+  messageId String
+
+  // Error details
+  errorType    String  @db.VarChar(100) // VALIDATION, PARSING, MAPPING, COMMUNICATION
+  errorCode    String? @db.VarChar(50)
+  errorMessage String  @db.Text
+  segment      String? @db.VarChar(10)
+  elementPath  String? @db.VarChar(255)
+  severity     String  @db.VarChar(20) // ERROR, WARNING
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant  Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  message EdiMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([messageId])
+  @@index([errorType])
+  @@index([severity])
+  @@index([createdAt])
+  @@index([externalId, sourceSystem])
+}
+
+// ==============================================
+// SAFETY SERVICE (Service 29) - Models
+// ==============================================
+
+model FmcsaCarrierRecord {
+  id        String @id @default(cuid())
+  tenantId  String
+  carrierId String @unique
+
+  // FMCSA identifiers
+  dotNumber String? @db.VarChar(20)
+  mcNumber  String? @db.VarChar(20)
+  legalName String? @db.VarChar(255)
+  dbaName   String? @db.VarChar(255)
+
+  // Operating status
+  operatingStatus  SaferDataStatus?
+  outOfServiceDate DateTime?
+
+  // Authority
+  commonAuthority   Boolean @default(false)
+  contractAuthority Boolean @default(false)
+  brokerAuthority   Boolean @default(false)
+
+  // Physical address
+  physicalAddress String? @db.Text
+  physicalCity    String? @db.VarChar(100)
+  physicalState   String? @db.VarChar(2)
+  physicalZip     String? @db.VarChar(10)
+
+  // Mailing address
+  mailingAddress String? @db.Text
+  mailingCity    String? @db.VarChar(100)
+  mailingState   String? @db.VarChar(2)
+  mailingZip     String? @db.VarChar(10)
+
+  // Phone
+  phone String? @db.VarChar(20)
+
+  // Fleet data
+  powerUnitCount Int?
+  driverCount    Int?
+
+  // SAFER data
+  saferDataJson Json?
+  lastSyncedAt  DateTime?
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant    Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  carrier   Carrier    @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+  csaScores CsaScore[]
+
+  @@index([tenantId])
+  @@index([carrierId])
+  @@index([dotNumber])
+  @@index([mcNumber])
+  @@index([operatingStatus])
+  @@index([externalId, sourceSystem])
+}
+
+model CsaScore {
+  id            String  @id @default(cuid())
+  tenantId      String
+  carrierId     String
+  fmcsaRecordId String?
+
+  // BASIC category
+  basicType CSABasicType
+
+  // Score data
+  score            Decimal? @db.Decimal(5, 2)
+  percentile       Int?
+  threshold        Int?
+  isAboveThreshold Boolean  @default(false)
+  isAlert          Boolean  @default(false)
+
+  // Inspection data
+  inspectionCount   Int @default(0)
+  violationCount    Int @default(0)
+  oosViolationCount Int @default(0)
+
+  // Effective period
+  measurementPeriod String?  @db.VarChar(50) // 12_MONTHS, 24_MONTHS
+  asOfDate          DateTime @db.Date
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant      Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  carrier     Carrier             @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+  fmcsaRecord FmcsaCarrierRecord? @relation(fields: [fmcsaRecordId], references: [id], onDelete: SetNull)
+
+  @@unique([tenantId, carrierId, basicType, asOfDate])
+  @@index([tenantId])
+  @@index([carrierId])
+  @@index([basicType])
+  @@index([isAlert])
+  @@index([asOfDate])
+  @@index([externalId, sourceSystem])
+}
+
+model CarrierInsurance {
+  id        String @id @default(cuid())
+  tenantId  String
+  carrierId String
+
+  // Insurance type
+  insuranceType InsuranceType
+
+  // Coverage details
+  policyNumber   String  @db.VarChar(100)
+  carrierName    String  @db.VarChar(255)
+  coverageAmount Decimal @db.Decimal(15, 2)
+
+  // Dates
+  effectiveDate  DateTime @db.Date
+  expirationDate DateTime @db.Date
+  isExpired      Boolean  @default(false)
+
+  // Agent/contact
+  agentName  String? @db.VarChar(255)
+  agentPhone String? @db.VarChar(20)
+  agentEmail String? @db.VarChar(255)
+
+  // Certificate
+  certificateUrl String? @db.VarChar(500)
+
+  // Verification
+  isVerified   Boolean   @default(false)
+  verifiedAt   DateTime?
+  verifiedById String?
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  carrier Carrier @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([carrierId])
+  @@index([insuranceType])
+  @@index([expirationDate])
+  @@index([isExpired])
+  @@index([externalId, sourceSystem])
+}
+
+model DriverQualificationFile {
+  id       String @id @default(cuid())
+  tenantId String
+  driverId String
+
+  // Document type
+  documentType DQFDocumentType
+
+  // Document details
+  documentNumber String? @db.VarChar(100)
+  documentUrl    String? @db.VarChar(500)
+
+  // Dates
+  issueDate      DateTime? @db.Date
+  expirationDate DateTime? @db.Date
+  isExpired      Boolean   @default(false)
+
+  // Verification
+  isVerified   Boolean   @default(false)
+  verifiedAt   DateTime?
+  verifiedById String?
+
+  // Clearinghouse query (for FMCSA drug & alcohol)
+  clearinghouseStatus String?   @db.VarChar(50)
+  lastQueryDate       DateTime?
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  driver Driver @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([driverId])
+  @@index([documentType])
+  @@index([expirationDate])
+  @@index([isExpired])
+  @@index([externalId, sourceSystem])
+}
+
+model SafetyIncident {
+  id        String  @id @default(cuid())
+  tenantId  String
+  carrierId String?
+  driverId  String?
+  loadId    String?
+
+  // Incident details
+  incidentType SafetyIncidentType
+  incidentDate DateTime           @db.Date
+  location     String?            @db.VarChar(500)
+  description  String             @db.Text
+
+  // Severity
+  severity        String? @db.VarChar(50) // MINOR, MAJOR, CRITICAL
+  injuriesCount   Int     @default(0)
+  fatalitiesCount Int     @default(0)
+
+  // Out of service
+  wasOutOfService Boolean @default(false)
+  oosReason       String? @db.Text
+
+  // Citations/violations
+  citationNumber String?  @db.VarChar(100)
+  violationCodes Json? // Array of violation codes
+  fineAmount     Decimal? @db.Decimal(10, 2)
+
+  // Investigation
+  investigationNotes String? @db.Text
+  reportUrl          String? @db.VarChar(500)
+
+  // CSA impact
+  csaPoints Decimal? @db.Decimal(5, 2)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  carrier Carrier? @relation(fields: [carrierId], references: [id], onDelete: SetNull)
+  driver  Driver?  @relation(fields: [driverId], references: [id], onDelete: SetNull)
+  load    Load?    @relation(fields: [loadId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([carrierId])
+  @@index([driverId])
+  @@index([loadId])
+  @@index([incidentType])
+  @@index([incidentDate])
+  @@index([severity])
+  @@index([externalId, sourceSystem])
+}
+
+model SafetyInspection {
+  id        String  @id @default(cuid())
+  tenantId  String
+  carrierId String?
+  driverId  String?
+
+  // Inspection details
+  inspectionNumber   String   @db.VarChar(100)
+  inspectionDate     DateTime @db.Date
+  inspectionLevel    Int? // 1-6
+  inspectionState    String?  @db.VarChar(2)
+  inspectionLocation String?  @db.VarChar(500)
+
+  // Results
+  totalViolations Int     @default(0)
+  oosViolations   Int     @default(0)
+  wasOutOfService Boolean @default(false)
+
+  // Violations (JSON array)
+  violations Json?
+
+  // BASIC categories affected (JSON array)
+  basicsAffected Json?
+
+  // Report
+  reportNumber String? @db.VarChar(100)
+  reportUrl    String? @db.VarChar(500)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  carrier Carrier? @relation(fields: [carrierId], references: [id], onDelete: SetNull)
+  driver  Driver?  @relation(fields: [driverId], references: [id], onDelete: SetNull)
+
+  @@unique([tenantId, inspectionNumber])
+  @@index([tenantId])
+  @@index([carrierId])
+  @@index([driverId])
+  @@index([inspectionDate])
+  @@index([wasOutOfService])
+  @@index([externalId, sourceSystem])
+}
+
+model SafetyAlert {
+  id        String  @id @default(cuid())
+  tenantId  String
+  carrierId String?
+
+  // Alert details
+  alertType    SafetyAlertType
+  alertMessage String          @db.Text
+  severity     String          @db.VarChar(50) // LOW, MEDIUM, HIGH, CRITICAL
+
+  // Related data
+  relatedEntityType String? @db.VarChar(50) // INSURANCE, CSA_SCORE, INSPECTION, etc.
+  relatedEntityId   String?
+
+  // Status
+  isActive         Boolean   @default(true)
+  acknowledgedAt   DateTime?
+  acknowledgedById String?
+  resolvedAt       DateTime?
+  resolvedById     String?
+  resolutionNotes  String?   @db.Text
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  carrier Carrier? @relation(fields: [carrierId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([carrierId])
+  @@index([alertType])
+  @@index([severity])
+  @@index([isActive])
+  @@index([createdAt])
+  @@index([externalId, sourceSystem])
+}
+
+model AuthorityChange {
+  id        String @id @default(cuid())
+  tenantId  String
+  carrierId String
+
+  // Change details
+  changeType  String   @db.VarChar(100) // AUTHORITY_GRANTED, AUTHORITY_REVOKED, STATUS_CHANGE, etc.
+  changeDate  DateTime @db.Date
+  oldValue    String?  @db.Text
+  newValue    String?  @db.Text
+  description String?  @db.Text
+
+  // Source
+  sourceAgency String? @db.VarChar(100) // FMCSA, STATE_DOT, etc.
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  carrier Carrier @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([carrierId])
+  @@index([changeType])
+  @@index([changeDate])
+  @@index([externalId, sourceSystem])
+}
+
+model CarrierWatchlist {
+  id        String @id @default(cuid())
+  tenantId  String
+  carrierId String
+
+  // Watchlist details
+  reason    String @db.Text
+  riskLevel String @db.VarChar(50) // LOW, MEDIUM, HIGH, CRITICAL
+
+  // Restrictions
+  isRestricted Boolean @default(false)
+  restrictions String? @db.Text
+
+  // Review
+  nextReviewDate      DateTime? @db.Date
+  reviewFrequencyDays Int?
+
+  // Status
+  isActive        Boolean   @default(true)
+  resolvedAt      DateTime?
+  resolvedById    String?
+  resolutionNotes String?   @db.Text
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  carrier Carrier @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([carrierId])
+  @@index([riskLevel])
+  @@index([isActive])
+  @@index([nextReviewDate])
+  @@index([externalId, sourceSystem])
+}
+
+model SafetyAuditTrail {
+  id        String  @id @default(cuid())
+  tenantId  String
+  carrierId String?
+
+  // Audit event
+  eventType        String @db.VarChar(100) // COMPLIANCE_CHECK, INSURANCE_VERIFIED, etc.
+  eventDescription String @db.Text
+  eventData        Json?
+
+  // Source
+  performedById String?
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  carrier Carrier? @relation(fields: [carrierId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([carrierId])
+  @@index([eventType])
+  @@index([createdAt])
+  @@index([externalId, sourceSystem])
+}
+
+// ==============================================
+// RATE INTELLIGENCE SERVICE (Service 35) - Models
+// ==============================================
+
+model RateQuery {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Query parameters
+  originCity    String  @db.VarChar(100)
+  originState   String  @db.VarChar(2)
+  originZip     String? @db.VarChar(10)
+  destCity      String  @db.VarChar(100)
+  destState     String  @db.VarChar(2)
+  destZip       String? @db.VarChar(10)
+  equipmentType String  @db.VarChar(50)
+
+  // Provider results
+  provider   RateProvider
+  lowRate    Decimal?     @db.Decimal(10, 2)
+  highRate   Decimal?     @db.Decimal(10, 2)
+  avgRate    Decimal?     @db.Decimal(10, 2)
+  confidence String?      @db.VarChar(50) // HIGH, MEDIUM, LOW
+
+  // Market data
+  loadVolume  Int?
+  truckVolume Int?
+  marketTrend String? @db.VarChar(50) // UP, DOWN, FLAT
+
+  // Cached data
+  queryHash   String   @db.VarChar(64) // MD5 of query params for deduplication
+  cachedUntil DateTime
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, queryHash])
+  @@index([tenantId])
+  @@index([originState])
+  @@index([destState])
+  @@index([equipmentType])
+  @@index([provider])
+  @@index([cachedUntil])
+  @@index([createdAt])
+  @@index([externalId, sourceSystem])
+}
+
+model RateHistory {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Lane identification
+  originCity    String @db.VarChar(100)
+  originState   String @db.VarChar(2)
+  destCity      String @db.VarChar(100)
+  destState     String @db.VarChar(2)
+  equipmentType String @db.VarChar(50)
+
+  // Rate data
+  provider RateProvider
+  avgRate  Decimal      @db.Decimal(10, 2)
+  lowRate  Decimal      @db.Decimal(10, 2)
+  highRate Decimal      @db.Decimal(10, 2)
+
+  // Market conditions
+  loadVolume       Int?
+  truckVolume      Int?
+  loadToTruckRatio Decimal? @db.Decimal(5, 2)
+
+  // Time period
+  weekStartDate DateTime @db.Date
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, originState, destState, equipmentType, weekStartDate, provider])
+  @@index([tenantId])
+  @@index([originState])
+  @@index([destState])
+  @@index([equipmentType])
+  @@index([weekStartDate])
+  @@index([provider])
+  @@index([externalId, sourceSystem])
+}
+
+model RateAlert {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Lane identification
+  laneDescription String  @db.VarChar(500)
+  originCity      String? @db.VarChar(100)
+  originState     String  @db.VarChar(2)
+  destCity        String? @db.VarChar(100)
+  destState       String  @db.VarChar(2)
+  equipmentType   String  @db.VarChar(50)
+
+  // Alert conditions
+  condition        AlertCondition
+  thresholdValue   Decimal        @db.Decimal(10, 2)
+  comparisonPeriod String         @db.VarChar(50) // DAILY, WEEKLY, MONTHLY
+
+  // Notification
+  notifyUserIds Json? // Array of user IDs to notify
+  notifyEmails  Json? // Array of email addresses
+
+  // Status
+  isActive        Boolean   @default(true)
+  lastTriggeredAt DateTime?
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant  Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  history RateAlertHistory[]
+
+  @@index([tenantId])
+  @@index([originState])
+  @@index([destState])
+  @@index([equipmentType])
+  @@index([isActive])
+  @@index([externalId, sourceSystem])
+}
+
+model RateAlertHistory {
+  id       String @id @default(cuid())
+  tenantId String
+  alertId  String
+
+  // Trigger details
+  triggeredAt   DateTime
+  oldRate       Decimal  @db.Decimal(10, 2)
+  newRate       Decimal  @db.Decimal(10, 2)
+  changePercent Decimal  @db.Decimal(5, 2)
+
+  // Notification sent
+  notificationSent Boolean @default(false)
+  notifiedUserIds  Json?
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  alert  RateAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([alertId])
+  @@index([triggeredAt])
+  @@index([externalId, sourceSystem])
+}
+
+model LaneAnalytics {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Lane identification
+  originState   String @db.VarChar(2)
+  destState     String @db.VarChar(2)
+  equipmentType String @db.VarChar(50)
+
+  // Performance metrics
+  totalLoads     Int     @default(0)
+  avgRate        Decimal @db.Decimal(10, 2)
+  avgMargin      Decimal @db.Decimal(5, 2)
+  avgTransitDays Decimal @db.Decimal(4, 1)
+  onTimePercent  Decimal @db.Decimal(5, 2)
+
+  // Provider comparison
+  datAvgRate       Decimal? @db.Decimal(10, 2)
+  truckstopAvgRate Decimal? @db.Decimal(10, 2)
+
+  // Market position
+  vsMarketPercent Decimal? @db.Decimal(5, 2) // How our rate compares to market avg
+
+  // Time period
+  periodType  String   @db.VarChar(20) // WEEK, MONTH, QUARTER, YEAR
+  periodStart DateTime @db.Date
+  periodEnd   DateTime @db.Date
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, originState, destState, equipmentType, periodType, periodStart])
+  @@index([tenantId])
+  @@index([originState])
+  @@index([destState])
+  @@index([equipmentType])
+  @@index([periodType])
+  @@index([periodStart])
+  @@index([externalId, sourceSystem])
+}
+
+model RateProviderConfig {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Provider details
+  provider RateProvider
+
+  // API credentials (encrypted)
+  apiKey      String? @db.VarChar(500)
+  apiSecret   String? @db.VarChar(500)
+  apiEndpoint String? @db.VarChar(500)
+  username    String? @db.VarChar(255)
+  password    String? @db.VarChar(500)
+
+  // Configuration
+  isActive          Boolean @default(true)
+  rateLimitPerHour  Int?
+  cacheDurationMins Int     @default(60)
+
+  // Usage tracking
+  queriesThisMonth Int       @default(0)
+  lastQueryAt      DateTime?
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, provider])
+  @@index([tenantId])
+  @@index([provider])
+  @@index([isActive])
+  @@index([externalId, sourceSystem])
+}
+
+// ==============================================
+// LOAD BOARD EXTERNAL SERVICE (Service 32) - Models
+// ==============================================
+
+model LoadBoardProvider {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Provider details
+  providerType LoadBoardProviderType @unique
+
+  // API credentials (encrypted)
+  apiKey      String? @db.VarChar(500)
+  apiSecret   String? @db.VarChar(500)
+  apiEndpoint String? @db.VarChar(500)
+  username    String? @db.VarChar(255)
+  password    String? @db.VarChar(500)
+
+  // Configuration
+  isActive     Boolean @default(true)
+  autoPost     Boolean @default(false)
+  postingRules Json? // Conditions for auto-posting
+
+  // Rate limits
+  postsPerDay    Int?
+  postsThisMonth Int  @default(0)
+
+  // Usage tracking
+  lastPostAt DateTime?
+  totalPosts Int       @default(0)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant   Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  accounts LoadBoardAccount[]
+
+  @@index([tenantId])
+  @@index([providerType])
+  @@index([isActive])
+  @@index([externalId, sourceSystem])
+}
+
+model LoadBoardAccount {
+  id         String @id @default(cuid())
+  tenantId   String
+  providerId String
+
+  // Account details
+  accountName   String  @db.VarChar(255)
+  accountNumber String? @db.VarChar(100)
+
+  // Credentials (per-account, if different from provider)
+  accountUsername String? @db.VarChar(255)
+  accountPassword String? @db.VarChar(500)
+  accountApiKey   String? @db.VarChar(500)
+
+  // Status
+  isActive       Boolean   @default(true)
+  isVerified     Boolean   @default(false)
+  lastVerifiedAt DateTime?
+
+  // Usage
+  postsThisMonth Int @default(0)
+  totalPosts     Int @default(0)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant   Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  provider LoadBoardProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  posts    LoadPost[]
+
+  @@index([tenantId])
+  @@index([providerId])
+  @@index([isActive])
+  @@index([externalId, sourceSystem])
+}
+
+model LoadPost {
+  id        String  @id @default(cuid())
+  tenantId  String
+  accountId String
+  loadId    String?
+  orderId   String?
+
+  // Post details
+  postNumber     String         @unique @db.VarChar(50)
+  externalPostId String?        @db.VarChar(100) // ID from load board
+  status         LoadPostStatus @default(DRAFT)
+
+  // Load details
+  originCity    String    @db.VarChar(100)
+  originState   String    @db.VarChar(2)
+  originZip     String?   @db.VarChar(10)
+  destCity      String    @db.VarChar(100)
+  destState     String    @db.VarChar(2)
+  destZip       String?   @db.VarChar(10)
+  pickupDate    DateTime  @db.Date
+  deliveryDate  DateTime? @db.Date
+  equipmentType String    @db.VarChar(50)
+  length        Int?
+  weight        Int?
+  commodity     String?   @db.VarChar(255)
+
+  // Rates
+  postedRate Decimal @db.Decimal(10, 2)
+  currency   String  @default("USD") @db.VarChar(3)
+
+  // Contact info
+  contactName  String? @db.VarChar(255)
+  contactPhone String? @db.VarChar(20)
+  contactEmail String? @db.VarChar(255)
+
+  // Dates
+  postedAt  DateTime?
+  expiresAt DateTime?
+  removedAt DateTime?
+
+  // Performance
+  views     Int @default(0)
+  clicks    Int @default(0)
+  leadCount Int @default(0)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant   Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  account  LoadBoardAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  load     Load?            @relation(fields: [loadId], references: [id], onDelete: SetNull)
+  order    Order?           @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  leads    PostLead[]
+  rateData RateData[]
+
+  @@index([tenantId])
+  @@index([accountId])
+  @@index([loadId])
+  @@index([orderId])
+  @@index([postNumber])
+  @@index([status])
+  @@index([originState])
+  @@index([destState])
+  @@index([pickupDate])
+  @@index([postedAt])
+  @@index([externalId, sourceSystem])
+}
+
+model PostLead {
+  id        String  @id @default(cuid())
+  tenantId  String
+  postId    String
+  carrierId String?
+
+  // Lead details
+  carrierName  String  @db.VarChar(255)
+  carrierMC    String? @db.VarChar(20)
+  carrierDOT   String? @db.VarChar(20)
+  contactName  String  @db.VarChar(255)
+  contactPhone String  @db.VarChar(20)
+  contactEmail String? @db.VarChar(255)
+
+  // Quote/response
+  quotedRate    Decimal?  @db.Decimal(10, 2)
+  availableDate DateTime? @db.Date
+  equipmentInfo String?   @db.Text
+  notes         String?   @db.Text
+
+  // Status
+  status PostLeadStatus @default(NEW)
+
+  // Follow-up
+  contactedAt     DateTime?
+  lastContactedAt DateTime?
+  nextFollowUpAt  DateTime?
+
+  // Outcome
+  acceptedAt     DateTime?
+  declinedAt     DateTime?
+  declinedReason String?   @db.Text
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  post    LoadPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  carrier Carrier? @relation(fields: [carrierId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([postId])
+  @@index([carrierId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([nextFollowUpAt])
+  @@index([externalId, sourceSystem])
+}
+
+model CapacitySearch {
+  id        String  @id @default(cuid())
+  tenantId  String
+  accountId String?
+
+  // Search parameters
+  searchNumber  String   @unique @db.VarChar(50)
+  originCity    String?  @db.VarChar(100)
+  originState   String   @db.VarChar(2)
+  originRadius  Int? // miles
+  destCity      String?  @db.VarChar(100)
+  destState     String   @db.VarChar(2)
+  destRadius    Int? // miles
+  equipmentType String   @db.VarChar(50)
+  availableDate DateTime @db.Date
+
+  // Optional filters
+  minLength Int?
+  minWeight Int?
+  maxAge    String? @db.VarChar(50) // e.g., "24h", "7d"
+
+  // Results
+  resultCount Int @default(0)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant  Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  results CapacityResult[]
+
+  @@index([tenantId])
+  @@index([searchNumber])
+  @@index([originState])
+  @@index([destState])
+  @@index([equipmentType])
+  @@index([availableDate])
+  @@index([createdAt])
+  @@index([externalId, sourceSystem])
+}
+
+model CapacityResult {
+  id       String @id @default(cuid())
+  tenantId String
+  searchId String
+
+  // Carrier/truck details
+  carrierName  String  @db.VarChar(255)
+  carrierMC    String? @db.VarChar(20)
+  carrierDOT   String? @db.VarChar(20)
+  contactName  String? @db.VarChar(255)
+  contactPhone String? @db.VarChar(20)
+
+  // Truck details
+  truckLocation String   @db.VarChar(500)
+  truckCity     String?  @db.VarChar(100)
+  truckState    String?  @db.VarChar(2)
+  truckZip      String?  @db.VarChar(10)
+  equipmentType String   @db.VarChar(50)
+  availableDate DateTime @db.Date
+  length        Int?
+  comments      String?  @db.Text
+
+  // Contact status
+  contacted   Boolean   @default(false)
+  contactedAt DateTime?
+  interested  Boolean?
+  notes       String?   @db.Text
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  search CapacitySearch @relation(fields: [searchId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([searchId])
+  @@index([truckState])
+  @@index([equipmentType])
+  @@index([availableDate])
+  @@index([contacted])
+  @@index([externalId, sourceSystem])
+}
+
+model PostingRule {
+  id        String  @id @default(cuid())
+  tenantId  String
+  accountId String?
+
+  // Rule details
+  ruleName String  @db.VarChar(255)
+  isActive Boolean @default(true)
+
+  // Conditions (JSON)
+  conditions Json // e.g., { "minMargin": 15, "lanes": ["CA-TX"], "equipmentTypes": ["VAN"] }
+
+  // Posting settings
+  frequency       PostingFrequency
+  scheduleTime    String?          @db.VarChar(10) // e.g., "14:00" for 2 PM
+  expirationHours Int?
+
+  // Performance
+  rulesMatched    Int       @default(0)
+  postsCreated    Int       @default(0)
+  lastTriggeredAt DateTime?
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([accountId])
+  @@index([isActive])
+  @@index([frequency])
+  @@index([externalId, sourceSystem])
+}
+
+model PostingSchedule {
+  id       String  @id @default(cuid())
+  tenantId String
+  postId   String?
+  ruleId   String?
+
+  // Schedule details
+  scheduledFor DateTime
+  status       String   @default("PENDING") @db.VarChar(50) // PENDING, COMPLETED, FAILED, CANCELLED
+
+  // Execution
+  executedAt   DateTime?
+  errorMessage String?   @db.Text
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([postId])
+  @@index([ruleId])
+  @@index([scheduledFor])
+  @@index([status])
+  @@index([externalId, sourceSystem])
+}
+
+model RateData {
+  id       String @id @default(cuid())
+  tenantId String
+  postId   String
+
+  // Market rate data from load board
+  marketLowRate    Decimal? @db.Decimal(10, 2)
+  marketHighRate   Decimal? @db.Decimal(10, 2)
+  marketAvgRate    Decimal? @db.Decimal(10, 2)
+  similarLoadCount Int?
+  dataSource       String?  @db.VarChar(50)
+  asOfDate         DateTime @db.Date
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  post   LoadPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([postId])
+  @@index([asOfDate])
+  @@index([externalId, sourceSystem])
+}
+
+model BoardMetric {
+  id        String  @id @default(cuid())
+  tenantId  String
+  accountId String?
+
+  // Metrics period
+  periodType  String   @db.VarChar(20) // DAY, WEEK, MONTH
+  periodStart DateTime @db.Date
+  periodEnd   DateTime @db.Date
+
+  // Post metrics
+  postsCreated Int @default(0)
+  postsActive  Int @default(0)
+  postsExpired Int @default(0)
+  postsCovered Int @default(0)
+
+  // Engagement metrics
+  totalViews     Int @default(0)
+  totalClicks    Int @default(0)
+  totalLeads     Int @default(0)
+  leadsContacted Int @default(0)
+  leadsConverted Int @default(0)
+
+  // Rates
+  avgClickRate      Decimal? @db.Decimal(5, 2)
+  avgConversionRate Decimal? @db.Decimal(5, 2)
+  avgPostedRate     Decimal? @db.Decimal(10, 2)
+  avgAcceptedRate   Decimal? @db.Decimal(10, 2)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, accountId, periodType, periodStart])
+  @@index([tenantId])
+  @@index([accountId])
+  @@index([periodType])
+  @@index([periodStart])
   @@index([externalId, sourceSystem])
 }
