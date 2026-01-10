@@ -179,16 +179,16 @@
     <div class="container">
         <header>
             <h1>🚛 Ultra-TMS Development Progress</h1>
-            <p class="subtitle">162-Week Development Roadmap • Last Updated: <span id="lastUpdated">January 10, 2026 (15 Services Seeded - Cache/Help Desk/Feedback Complete)</span></p>
+            <p class="subtitle">162-Week Development Roadmap • Last Updated: <span id="lastUpdated">January 11, 2026 (TMS Core API Complete)</span></p>
         </header>
 
         <!-- Dashboard Stats -->
         <section class="dashboard">
             <div class="stat-card">
                 <div class="label">Overall Progress</div>
-                <div class="value" style="color: var(--primary);">28.9%</div>
-                <div class="progress-bar"><div class="progress-fill primary" style="width: 28.9%;"></div></div>
-                <div class="sub">11 of 38 services complete</div>
+                <div class="value" style="color: var(--primary);">31.6%</div>
+                <div class="progress-bar"><div class="progress-fill primary" style="width: 31.6%;"></div></div>
+                <div class="sub">12 of 38 services complete</div>
             </div>
             <div class="stat-card">
                 <div class="label">Current Phase</div>
@@ -202,8 +202,8 @@
             </div>
             <div class="stat-card">
                 <div class="label">API Endpoints</div>
-                <div class="value">425</div>
-                <div class="sub">of ~985 planned (43.1%)</div>
+                <div class="value">470</div>
+                <div class="sub">of ~985 planned (47.7%)</div>
             </div>
             <div class="stat-card">
                 <div class="label">UI Screens</div>
@@ -327,9 +327,9 @@
                         <td>TMS Core</td>
                         <td>25-32</td>
                         <td>6 / 6</td>
-                        <td>0 / 45</td>
+                        <td>45 / 45</td>
                         <td>0 / 14</td>
-                        <td><span class="status"><span class="status-dot active"></span> Schema Complete</span></td>
+                        <td><span class="status"><span class="status-dot complete"></span> API Complete</span></td>
                     </tr>
                     <tr>
                         <td>Carrier</td>
@@ -721,6 +721,14 @@
         <section>
             <h2>📝 Change Log</h2>
             <div class="changelog">
+                <div class="log-entry">
+                    <div class="log-date">January 11, 2026 - TMS Core API Complete</div>
+                    <ul class="log-items">
+                        <li>✅ Implemented TMS Core API (45 endpoints across Orders, Loads, Stops) with tenant isolation, status workflows, and soft deletes</li>
+                        <li>📡 Wired domain events for orders, loads, stops, and check-calls; added e2e tests validating emitted events</li>
+                        <li>🧪 Added Jest/Supertest test harness and passing e2e suite for core lifecycle flows</li>
+                    </ul>
+                </div>
                 <div class="log-entry">
                     <div class="log-date">January 10, 2026 - Cache, Help Desk & Feedback Services Completed</div>
                     <ul class="log-items">

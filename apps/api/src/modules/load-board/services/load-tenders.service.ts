@@ -44,6 +44,7 @@ export class LoadTendersService {
         createdById: userId,
         recipients: {
           create: dto.recipients.map((recipient) => ({
+            tenantId,
             carrierId: recipient.carrierId,
             position: recipient.position,
             status: dto.tenderType === TenderType.WATERFALL && recipient.position === 1 ? 'OFFERED' : 'PENDING',
@@ -78,7 +79,7 @@ export class LoadTendersService {
   }
 
   async findAll(tenantId: string, loadId?: string, status?: string) {
-    const where: any = { tenantId };
+    const where: any = { tenantId, deletedAt: null };
 
     if (loadId) {
       where.loadId = loadId;
@@ -115,7 +116,7 @@ export class LoadTendersService {
 
   async findOne(tenantId: string, id: string) {
     const tender = await this.prisma.loadTender.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
       include: {
         load: {
           include: {

@@ -28,7 +28,6 @@ export class ProfileService {
       throw new NotFoundException('User not found');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash: _passwordHash, ...sanitized } = user;
 
     return {
@@ -39,7 +38,6 @@ export class ProfileService {
   /**
    * Update user's own profile
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async updateProfile(userId: string, data: any) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -62,7 +60,6 @@ export class ProfileService {
       include: { role: true },
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash: _passwordHash, ...sanitized } = updated;
 
     return {

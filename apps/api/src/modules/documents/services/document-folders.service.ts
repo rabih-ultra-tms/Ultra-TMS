@@ -36,15 +36,16 @@ export class DocumentFoldersService {
         entityType: dto.entityType,
         entityId: dto.entityId,
         isSystem: dto.isSystem || false,
-        createdBy: userId,
+        createdById: userId,
       },
     });
   }
 
   async findAll(tenantId: string, parentFolderId?: string) {
-    const where: { tenantId: string; parentFolderId: string | null } = {
+    const where: { tenantId: string; parentFolderId: string | null; deletedAt?: Date | null } = {
       tenantId,
       parentFolderId: parentFolderId ?? null,
+      deletedAt: null,
     };
 
     return this.prisma.documentFolder.findMany({
@@ -63,7 +64,7 @@ export class DocumentFoldersService {
 
   async findOne(tenantId: string, id: string) {
     const folder = await this.prisma.documentFolder.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
       include: {
         folderDocuments: {
           include: {
@@ -83,7 +84,7 @@ export class DocumentFoldersService {
 
   async update(tenantId: string, id: string, dto: UpdateDocumentFolderDto) {
     const folder = await this.prisma.documentFolder.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!folder) {
@@ -98,15 +99,16 @@ export class DocumentFoldersService {
 
   async remove(tenantId: string, id: string) {
     const folder = await this.prisma.documentFolder.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!folder) {
       throw new NotFoundException('Document folder not found');
     }
 
-    return this.prisma.documentFolder.delete({
+    return this.prisma.documentFolder.update({
       where: { id },
+      data: { deletedAt: new Date() },
     });
   }
 
@@ -117,7 +119,7 @@ export class DocumentFoldersService {
     userId?: string
   ) {
     const folder = await this.prisma.documentFolder.findFirst({
-      where: { id: folderId, tenantId },
+      where: { id: folderId, tenantId, deletedAt: null },
     });
 
     if (!folder) {
@@ -143,7 +145,7 @@ export class DocumentFoldersService {
 
   async removeDocument(tenantId: string, folderId: string, documentId: string) {
     const folder = await this.prisma.documentFolder.findFirst({
-      where: { id: folderId, tenantId },
+      where: { id: folderId, tenantId, deletedAt: null },
     });
 
     if (!folder) {

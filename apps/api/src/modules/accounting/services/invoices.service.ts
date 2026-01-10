@@ -49,6 +49,7 @@ export class InvoicesService {
         lineItems: data.lineItems
           ? {
               create: data.lineItems.map((item) => ({
+                tenantId,
                 lineNumber: item.lineNumber,
                 description: item.description,
                 itemType: item.itemType,

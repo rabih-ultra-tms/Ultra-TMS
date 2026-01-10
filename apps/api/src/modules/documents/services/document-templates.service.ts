@@ -29,7 +29,7 @@ export class DocumentTemplatesService {
         footerContent: dto.footerContent,
         isDefault: dto.isDefault || false,
         language: dto.language || 'en',
-        createdBy: userId,
+        createdById: userId,
       },
     });
   }

@@ -36,7 +36,7 @@ export class CommissionEntriesService {
         parentEntryId: dto.parentEntryId,
         commissionPeriod: new Date(dto.commissionPeriod),
         notes: dto.notes,
-        createdBy: userId,
+        createdById: userId,
       },
       include: {
         user: true,

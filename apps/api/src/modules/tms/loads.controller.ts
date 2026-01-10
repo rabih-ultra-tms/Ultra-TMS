@@ -10,15 +10,15 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Patch,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { LoadsService } from './loads.service';
-import { CreateLoadDto, UpdateLoadDto, AssignCarrierDto, UpdateLoadLocationDto } from './dto';
-import { CheckCallDto } from './dto/create-stop.dto';
+import { CreateLoadDto, UpdateLoadDto, AssignCarrierDto, UpdateLoadLocationDto, LoadQueryDto, CreateCheckCallDto } from './dto';
 
-@Controller('loads')
+@Controller('api/v1/loads')
 @UseGuards(JwtAuthGuard)
 export class LoadsController {
   constructor(private readonly loadsService: LoadsService) {}
@@ -26,28 +26,18 @@ export class LoadsController {
   @Post()
   async create(
     @CurrentTenant() tenantId: string,
-    @CurrentUser() user: { id: string },
+    @CurrentUser('id') userId: string,
     @Body() dto: CreateLoadDto,
   ) {
-    return this.loadsService.create(tenantId, user.id, dto);
+    return this.loadsService.create(tenantId, userId, dto);
   }
 
   @Get()
   async findAll(
     @CurrentTenant() tenantId: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-    @Query('status') status?: string,
-    @Query('carrierId') carrierId?: string,
-    @Query('orderId') orderId?: string,
+    @Query() query: LoadQueryDto,
   ) {
-    return this.loadsService.findAll(tenantId, {
-      page: page ? parseInt(page, 10) : undefined,
-      limit: limit ? parseInt(limit, 10) : undefined,
-      status,
-      carrierId,
-      orderId,
-    });
+    return this.loadsService.findAll(tenantId, query);
   }
 
   @Get('board')
@@ -73,22 +63,52 @@ export class LoadsController {
   @Put(':id')
   async update(
     @CurrentTenant() tenantId: string,
+    @CurrentUser('id') userId: string,
     @Param('id') id: string,
     @Body() dto: UpdateLoadDto,
   ) {
-    return this.loadsService.update(tenantId, id, dto);
+    return this.loadsService.update(tenantId, id, userId, dto);
   }
 
   @Post(':id/assign-carrier')
   @HttpCode(HttpStatus.OK)
   async assignCarrier(
     @CurrentTenant() tenantId: string,
-    @CurrentUser() user: { id: string },
+    @CurrentUser('id') userId: string,
     @Param('id') id: string,
     @Body() dto: AssignCarrierDto,
   ) {
-    return this.loadsService.assignCarrier(tenantId, id, user.id, dto);
+    return this.loadsService.assignCarrier(tenantId, id, userId, dto);
   }
+
+    @Patch(':id/assign')
+    async assign(
+      @CurrentTenant() tenantId: string,
+      @CurrentUser('id') userId: string,
+      @Param('id') id: string,
+      @Body() dto: AssignCarrierDto,
+    ) {
+      return this.loadsService.assignCarrier(tenantId, id, userId, dto);
+    }
+
+    @Patch(':id/dispatch')
+    async dispatch(
+      @CurrentTenant() tenantId: string,
+      @CurrentUser('id') userId: string,
+      @Param('id') id: string,
+    ) {
+      return this.loadsService.dispatch(tenantId, id, userId);
+    }
+
+    @Patch(':id/status')
+    async updateStatus(
+      @CurrentTenant() tenantId: string,
+      @CurrentUser('id') userId: string,
+      @Param('id') id: string,
+      @Body() body: { status: string; notes?: string },
+    ) {
+      return this.loadsService.updateStatus(tenantId, id, userId, body.status, body.notes);
+    }
 
   @Put(':id/location')
   async updateLocation(
@@ -102,27 +122,19 @@ export class LoadsController {
   @Post(':id/check-calls')
   async addCheckCall(
     @CurrentTenant() tenantId: string,
-    @CurrentUser() user: { id: string },
+    @CurrentUser('id') userId: string,
     @Param('id') id: string,
-    @Body() dto: CheckCallDto,
+    @Body() dto: CreateCheckCallDto,
   ) {
-    return this.loadsService.addCheckCall(tenantId, id, user.id, {
-      latitude: dto.latitude,
-      longitude: dto.longitude,
-      city: dto.city,
-      state: dto.state,
-      status: dto.status,
-      notes: dto.notes,
-      eta: dto.eta,
-    });
+    return this.loadsService.addCheckCall(tenantId, id, userId, dto);
   }
-
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   async delete(
     @CurrentTenant() tenantId: string,
+    @CurrentUser('id') userId: string,
     @Param('id') id: string,
   ) {
-    return this.loadsService.delete(tenantId, id);
+    return this.loadsService.delete(tenantId, id, userId);
   }
 }

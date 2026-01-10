@@ -106,6 +106,7 @@ export class LoadPostingsService {
     const where: Prisma.LoadPostingWhereInput = {
       tenantId,
       status: status || PostingStatus.ACTIVE,
+      deletedAt: null,
     };
 
     if (originState) {
@@ -177,7 +178,7 @@ export class LoadPostingsService {
 
   async findOne(tenantId: string, id: string) {
     const posting = await this.prisma.loadPosting.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
       include: {
         load: {
           include: {
@@ -213,7 +214,7 @@ export class LoadPostingsService {
 
   async update(tenantId: string, id: string, dto: UpdateLoadPostingDto) {
     const posting = await this.prisma.loadPosting.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!posting) {
@@ -235,8 +236,9 @@ export class LoadPostingsService {
       throw new NotFoundException('Load posting not found');
     }
 
-    return this.prisma.loadPosting.delete({
+    return this.prisma.loadPosting.update({
       where: { id },
+      data: { deletedAt: new Date() },
     });
   }
 
@@ -301,6 +303,7 @@ export class LoadPostingsService {
         },
       },
       create: {
+        tenantId,
         postingId,
         carrierId,
         viewedAt: new Date(),

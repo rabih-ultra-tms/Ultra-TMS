@@ -14,11 +14,11 @@ export async function seedCommission(prisma: any, tenantIds: string[]): Promise<
       const plan = await prisma.commissionPlan.create({
         data: {
           tenantId,
-          name: `${faker.helpers.arrayElement(['Standard', 'Premium', 'Enterprise'])} Sales Plan`,
+          name: `${faker.helpers.arrayElement(['Standard', 'Premium', 'Enterprise'])} Sales Plan ${i + 1} ${faker.string.alphanumeric(6)}`,
           description: faker.lorem.sentence(),
           planType: faker.helpers.arrayElement(['FLAT_FEE', 'PERCENT_REVENUE', 'PERCENT_MARGIN', 'TIERED']),
           percentRate: faker.number.float({ min: 2, max: 10, fractionDigits: 2 }),
-          effectiveDate: faker.date.past(),
+          effectiveDate: new Date(Date.UTC(2023, 0, 1 + i)),
           status: 'ACTIVE',
           externalId: `SEED-COMMPLAN-${total + i + 1}`,
           sourceSystem: 'FAKER_SEED',

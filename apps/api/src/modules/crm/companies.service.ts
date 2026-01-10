@@ -142,7 +142,7 @@ export class CompaniesService {
     return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
-  async syncToHubspot(tenantId: string, id: string, userId: string) {
+  async syncToHubspot(tenantId: string, id: string, _userId: string) {
     const company = await this.findOne(tenantId, id);
 
     // Stub for HubSpot sync - will be implemented when HubSpot integration is ready

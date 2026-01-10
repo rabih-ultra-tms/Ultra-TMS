@@ -79,8 +79,12 @@ export class ActivitiesController {
   }
 
   @Delete(':id')
-  async delete(@CurrentTenant() tenantId: string, @Param('id') id: string) {
-    return this.activitiesService.delete(tenantId, id);
+  async delete(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ) {
+    return this.activitiesService.delete(tenantId, id, userId);
   }
 
   @Get('tasks/my')

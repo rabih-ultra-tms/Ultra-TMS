@@ -1,15 +1,19 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../prisma.service';
-import { CreateLoadDto, UpdateLoadDto, AssignCarrierDto, UpdateLoadLocationDto } from './dto';
+import { CreateLoadDto, UpdateLoadDto, AssignCarrierDto, UpdateLoadLocationDto, LoadQueryDto, CreateCheckCallDto } from './dto';
 
 @Injectable()
 export class LoadsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private eventEmitter: EventEmitter2,
+  ) {}
 
   async create(tenantId: string, userId: string, dto: CreateLoadDto) {
     // Verify order exists
     const order = await this.prisma.order.findFirst({
-      where: { id: dto.orderId, tenantId },
+      where: { id: dto.orderId, tenantId, deletedAt: null },
     });
 
     if (!order) {
@@ -37,6 +41,7 @@ export class LoadsService {
         equipmentWeightLimit: dto.equipmentWeightLimit,
         dispatchNotes: dto.dispatchNotes,
         createdById: userId,
+        updatedById: userId,
       },
       include: {
         order: { select: { id: true, orderNumber: true, status: true } },
@@ -44,23 +49,38 @@ export class LoadsService {
       },
     });
 
+    this.eventEmitter.emit('load.created', {
+      loadId: load.id,
+      loadNumber: load.loadNumber,
+      orderId: load.orderId,
+      tenantId,
+    });
+
     return load;
   }
 
-  async findAll(tenantId: string, options: {
-    page?: number;
-    limit?: number;
-    status?: string;
-    carrierId?: string;
-    orderId?: string;
-  }) {
-    const { page = 1, limit = 20, status, carrierId, orderId } = options;
+  async findAll(tenantId: string, query: LoadQueryDto) {
+    const { page = 1, limit = 20, status, carrierId, orderId, dispatcherId, search, fromDate, toDate, equipmentType } = query;
     const skip = (page - 1) * limit;
 
-    const where: any = { tenantId };
+    const where: any = { tenantId, deletedAt: null };
     if (status) where.status = status;
     if (carrierId) where.carrierId = carrierId;
     if (orderId) where.orderId = orderId;
+    if (dispatcherId) where.createdById = dispatcherId;
+    if (equipmentType) where.equipmentType = equipmentType;
+    if (fromDate || toDate) {
+      where.createdAt = {
+        ...(fromDate ? { gte: new Date(fromDate) } : {}),
+        ...(toDate ? { lte: new Date(toDate) } : {}),
+      };
+    }
+    if (search) {
+      where.OR = [
+        { loadNumber: { contains: search, mode: 'insensitive' } },
+        { order: { is: { orderNumber: { contains: search, mode: 'insensitive' } } } },
+      ];
+    }
 
     const [loads, total] = await Promise.all([
       this.prisma.load.findMany({
@@ -94,7 +114,7 @@ export class LoadsService {
 
   async findOne(tenantId: string, id: string) {
     const load = await this.prisma.load.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
       include: {
         order: {
           include: {
@@ -114,9 +134,9 @@ export class LoadsService {
     return load;
   }
 
-  async update(tenantId: string, id: string, dto: UpdateLoadDto) {
+  async update(tenantId: string, id: string, userId: string, dto: UpdateLoadDto) {
     const load = await this.prisma.load.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!load) {
@@ -144,7 +164,9 @@ export class LoadsService {
         equipmentWeightLimit: dto.equipmentWeightLimit,
         status: dto.status,
         dispatchNotes: dto.dispatchNotes,
+        deliveredAt: dto.status === 'DELIVERED' ? new Date() : undefined,
         updatedAt: new Date(),
+        updatedById: userId,
       },
       include: {
         order: { select: { id: true, orderNumber: true } },
@@ -152,12 +174,33 @@ export class LoadsService {
       },
     });
 
+    if (dto.status && dto.status !== load.status) {
+      await this.recordStatusHistory(tenantId, id, load.status, dto.status, userId, 'Status updated');
+
+      this.eventEmitter.emit('load.status.changed', {
+        loadId: id,
+        oldStatus: load.status,
+        newStatus: dto.status,
+        tenantId,
+      });
+
+      if (dto.status === 'DELIVERED') {
+        const actualDelivery = updated.deliveredAt ?? new Date();
+        this.eventEmitter.emit('load.delivered', {
+          loadId: id,
+          orderId: load.orderId,
+          actualDelivery,
+          tenantId,
+        });
+      }
+    }
+
     return updated;
   }
 
   async assignCarrier(tenantId: string, id: string, userId: string, dto: AssignCarrierDto) {
     const load = await this.prisma.load.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!load) {
@@ -182,8 +225,9 @@ export class LoadsService {
         truckNumber: dto.truckNumber,
         trailerNumber: dto.trailerNumber,
         carrierRate: dto.carrierRate,
-        status: 'ASSIGNED',
+        status: 'ACCEPTED',
         updatedAt: new Date(),
+        updatedById: userId,
       },
       include: {
         order: { select: { id: true, orderNumber: true } },
@@ -191,12 +235,109 @@ export class LoadsService {
       },
     });
 
+    await this.recordStatusHistory(tenantId, id, load.status, 'ACCEPTED', userId, 'Carrier assigned');
+
+    this.eventEmitter.emit('load.assigned', {
+      loadId: id,
+      carrierId: dto.carrierId,
+      carrierRate: dto.carrierRate,
+      tenantId,
+    });
+
+    this.eventEmitter.emit('load.status.changed', {
+      loadId: id,
+      oldStatus: load.status,
+      newStatus: 'ACCEPTED',
+      tenantId,
+    });
+
+    return updated;
+  }
+
+  async dispatch(tenantId: string, id: string, userId: string) {
+    const load = await this.prisma.load.findFirst({ where: { id, tenantId, deletedAt: null } });
+    if (!load) {
+      throw new NotFoundException('Load not found');
+    }
+
+    if (!this.isValidStatusTransition(load.status, 'DISPATCHED')) {
+      throw new BadRequestException(`Cannot dispatch from status ${load.status}`);
+    }
+
+    const updated = await this.prisma.load.update({
+      where: { id },
+      data: {
+        status: 'DISPATCHED',
+        dispatchedAt: new Date(),
+        updatedAt: new Date(),
+        updatedById: userId,
+      },
+    });
+
+    await this.recordStatusHistory(tenantId, id, load.status, 'DISPATCHED', userId, 'Load dispatched');
+
+    this.eventEmitter.emit('load.dispatched', {
+      loadId: id,
+      carrierId: load.carrierId,
+      driverId: null,
+      tenantId,
+    });
+
+    this.eventEmitter.emit('load.status.changed', {
+      loadId: id,
+      oldStatus: load.status,
+      newStatus: 'DISPATCHED',
+      tenantId,
+    });
+    return updated;
+  }
+
+  async updateStatus(tenantId: string, id: string, userId: string, status: string, notes?: string) {
+    const load = await this.prisma.load.findFirst({ where: { id, tenantId, deletedAt: null } });
+    if (!load) {
+      throw new NotFoundException('Load not found');
+    }
+
+    if (!this.isValidStatusTransition(load.status, status)) {
+      throw new BadRequestException(`Cannot transition from ${load.status} to ${status}`);
+    }
+
+    const deliveryTimestamp = status === 'DELIVERED' ? new Date() : undefined;
+
+    const updated = await this.prisma.load.update({
+      where: { id },
+      data: {
+        status,
+        deliveredAt: deliveryTimestamp,
+        updatedAt: new Date(),
+        updatedById: userId,
+      },
+    });
+
+    await this.recordStatusHistory(tenantId, id, load.status, status, userId, notes);
+
+    this.eventEmitter.emit('load.status.changed', {
+      loadId: id,
+      oldStatus: load.status,
+      newStatus: status,
+      tenantId,
+    });
+
+    if (status === 'DELIVERED') {
+      const actualDelivery = deliveryTimestamp ?? updated.deliveredAt ?? new Date();
+      this.eventEmitter.emit('load.delivered', {
+        loadId: id,
+        orderId: load.orderId,
+        actualDelivery,
+        tenantId,
+      });
+    }
     return updated;
   }
 
   async updateLocation(tenantId: string, id: string, dto: UpdateLoadLocationDto) {
     const load = await this.prisma.load.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!load) {
@@ -218,17 +359,9 @@ export class LoadsService {
     return updated;
   }
 
-  async addCheckCall(tenantId: string, loadId: string, userId: string, data: {
-    latitude?: number;
-    longitude?: number;
-    city?: string;
-    state?: string;
-    status?: string;
-    notes?: string;
-    eta?: string;
-  }) {
+  async addCheckCall(tenantId: string, loadId: string, userId: string, data: CreateCheckCallDto) {
     const load = await this.prisma.load.findFirst({
-      where: { id: loadId, tenantId },
+      where: { id: loadId, tenantId, deletedAt: null },
     });
 
     if (!load) {
@@ -239,13 +372,14 @@ export class LoadsService {
       data: {
         tenantId,
         loadId,
-        latitude: data.latitude,
-        longitude: data.longitude,
+        latitude: data.lat,
+        longitude: data.lng,
         city: data.city,
         state: data.state,
         status: data.status,
         notes: data.notes,
         eta: data.eta ? new Date(data.eta) : null,
+        createdAt: data.timestamp ? new Date(data.timestamp) : undefined,
         createdById: userId,
       },
     });
@@ -254,13 +388,25 @@ export class LoadsService {
     await this.prisma.load.update({
       where: { id: loadId },
       data: {
-        currentLocationLat: data.latitude,
-        currentLocationLng: data.longitude,
+        currentLocationLat: data.lat,
+        currentLocationLng: data.lng,
         currentCity: data.city,
         currentState: data.state,
         eta: data.eta ? new Date(data.eta) : undefined,
         lastTrackingUpdate: new Date(),
       },
+    });
+
+    this.eventEmitter.emit('check-call.received', {
+      loadId,
+      location: {
+        lat: data.lat,
+        lng: data.lng,
+        city: data.city,
+        state: data.state,
+      },
+      eta: data.eta ? new Date(data.eta) : null,
+      tenantId,
     });
 
     return checkCall;
@@ -269,8 +415,8 @@ export class LoadsService {
   async getLoadBoard(tenantId: string, options: {
     status?: string[];
     region?: string;
-  }) {
-    const { status = ['PENDING', 'ASSIGNED', 'IN_TRANSIT'], region } = options;
+  } = {}) {
+    const { status = ['PENDING', 'ASSIGNED', 'IN_TRANSIT'] } = options;
 
     const loads = await this.prisma.load.findMany({
       where: {
@@ -311,9 +457,9 @@ export class LoadsService {
     };
   }
 
-  async delete(tenantId: string, id: string) {
+  async delete(tenantId: string, id: string, userId: string) {
     const load = await this.prisma.load.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!load) {
@@ -324,9 +470,40 @@ export class LoadsService {
       throw new BadRequestException('Only pending or cancelled loads can be deleted');
     }
 
-    await this.prisma.load.delete({ where: { id } });
+    await this.prisma.load.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+        status: load.status === 'CANCELLED' ? load.status : 'CANCELLED',
+        updatedById: userId,
+      },
+    });
+
+    await this.recordStatusHistory(tenantId, id, load.status, 'CANCELLED', userId, 'Load cancelled');
 
     return { success: true, message: 'Load deleted successfully' };
+  }
+
+  private async recordStatusHistory(
+    tenantId: string,
+    loadId: string,
+    oldStatus: string | null,
+    newStatus: string,
+    userId: string,
+    notes?: string,
+  ) {
+    await this.prisma.statusHistory.create({
+      data: {
+        tenantId,
+        entityType: 'LOAD',
+        entityId: loadId,
+        loadId,
+        oldStatus: oldStatus ?? undefined,
+        newStatus,
+        notes,
+        createdById: userId,
+      },
+    });
   }
 
   private async generateLoadNumber(tenantId: string): Promise<string> {
@@ -352,15 +529,17 @@ export class LoadsService {
 
   private isValidStatusTransition(current: string, next: string): boolean {
     const transitions: Record<string, string[]> = {
-      PENDING: ['ASSIGNED', 'CANCELLED'],
-      ASSIGNED: ['DISPATCHED', 'PENDING', 'CANCELLED'],
-      DISPATCHED: ['IN_TRANSIT', 'CANCELLED'],
-      IN_TRANSIT: ['AT_PICKUP', 'AT_DELIVERY', 'DELIVERED'],
-      AT_PICKUP: ['IN_TRANSIT'],
+      PENDING: ['TENDERED', 'ACCEPTED', 'CANCELLED'],
+      TENDERED: ['ACCEPTED', 'CANCELLED'],
+      ACCEPTED: ['DISPATCHED', 'CANCELLED'],
+      DISPATCHED: ['AT_PICKUP', 'IN_TRANSIT', 'CANCELLED'],
+      AT_PICKUP: ['PICKED_UP', 'IN_TRANSIT'],
+      PICKED_UP: ['IN_TRANSIT'],
+      IN_TRANSIT: ['AT_DELIVERY', 'DELIVERED', 'CANCELLED'],
       AT_DELIVERY: ['DELIVERED', 'IN_TRANSIT'],
       DELIVERED: ['COMPLETED'],
       COMPLETED: [],
-      CANCELLED: ['PENDING'],
+      CANCELLED: [],
     };
 
     return transitions[current]?.includes(next) || false;

@@ -51,7 +51,11 @@ export class AuthService {
    * Login user with email and password
    */
   async login(loginDto: LoginDto, userAgent?: string, ipAddress?: string): Promise<TokenPair> {
-    const { email, password } = loginDto;
+    const { email, password, tenantId } = loginDto;
+
+    if (!tenantId) {
+      throw new BadRequestException('tenantId is required');
+    }
 
     // Check if account is locked
     const isLocked = await this.redisService.isAccountLocked(email);
@@ -61,7 +65,7 @@ export class AuthService {
 
     // Find user
     const user = await this.prisma.user.findFirst({
-      where: { email },
+      where: { email, tenantId },
       include: { role: true },
     });
 
@@ -115,15 +119,16 @@ export class AuthService {
         throw new UnauthorizedException('Invalid token type');
       }
 
-      // Check if session exists in Redis
+      // Check if session exists in Redis and DB
       const sessionData = await this.redisService.getSession(payload.sub, payload.jti);
-      if (!sessionData) {
+      const dbSession = await this.prisma.session.findUnique({ where: { id: payload.jti } });
+      if (!sessionData || !dbSession || dbSession.userId !== payload.sub || dbSession.expiresAt <= new Date()) {
         throw new UnauthorizedException('Session not found or expired');
       }
 
       // Verify refresh token hash
       const tokenHash = this.hashToken(refreshToken);
-      if (tokenHash !== sessionData.refreshTokenHash) {
+      if (tokenHash !== sessionData.refreshTokenHash || tokenHash !== dbSession.refreshTokenHash) {
         throw new UnauthorizedException('Invalid refresh token');
       }
 
@@ -151,6 +156,7 @@ export class AuthService {
    */
   async logout(userId: string, sessionId: string): Promise<void> {
     await this.redisService.revokeSession(userId, sessionId);
+    await this.prisma.session.deleteMany({ where: { id: sessionId, userId } });
   }
 
   /**
@@ -158,6 +164,7 @@ export class AuthService {
    */
   async logoutAll(userId: string): Promise<void> {
     await this.redisService.revokeAllUserSessions(userId);
+    await this.prisma.session.deleteMany({ where: { userId } });
   }
 
   /**
@@ -358,14 +365,14 @@ export class AuthService {
       Object.assign({}, accessTokenPayload),
       {
         expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRATION', '15m'),
-      } as any // eslint-disable-line @typescript-eslint/no-explicit-any
+      } as any
     );
 
     const refreshToken = this.jwtService.sign(
       Object.assign({}, refreshTokenPayload),
       {
         expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRATION', '7d'),
-      } as any // eslint-disable-line @typescript-eslint/no-explicit-any
+      } as any
     );
 
     // Store refresh token hash in Redis

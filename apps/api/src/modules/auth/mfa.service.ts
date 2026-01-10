@@ -66,7 +66,6 @@ export class MfaService {
    * Verify MFA code (STUB)
    * Phase B: Implement actual TOTP verification
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async verifyCode(userId: string, code: string, _secret: string): Promise<boolean> {
     if (!this.mfaEnabled) {
       this.logger.debug(`MFA disabled - would verify code ${code} for user ${userId}`);
@@ -81,7 +80,6 @@ export class MfaService {
   /**
    * Enable MFA for user (STUB)
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async enableForUser(userId: string, _secret: string): Promise<void> {
     if (!this.mfaEnabled) {
       this.logger.debug(`MFA disabled - would enable for user ${userId}`);

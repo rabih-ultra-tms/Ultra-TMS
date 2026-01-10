@@ -9,22 +9,24 @@ export async function seedLoadBoardExternal(prisma: any, tenantIds: string[]): P
     const users = await prisma.user.findMany({ where: { tenantId }, take: 5 });
     if (orders.length === 0) continue;
 
-    // Load Board Providers (2 per tenant = 10 total)
+    // Load Board Providers (reuse globally unique types)
     const providers = [];
-    for (let i = 0; i < 2; i++) {
-      const providerType = faker.helpers.arrayElement(['DAT', 'TRUCKSTOP']);
-      const provider = await prisma.loadBoardProvider.create({
-        data: {
-          tenantId,
-          providerType,
-          apiEndpoint: faker.internet.url(),
-          isActive: true,
-          externalId: `SEED-LOADBOARDPROVIDER-${total + i + 1}`,
-          sourceSystem: 'FAKER_SEED',
-        },
-      });
+    for (const providerType of ['DAT', 'TRUCKSTOP']) {
+      let provider = await prisma.loadBoardProvider.findFirst({ where: { providerType } });
+      if (!provider) {
+        provider = await prisma.loadBoardProvider.create({
+          data: {
+            tenantId,
+            providerType,
+            apiEndpoint: faker.internet.url(),
+            isActive: true,
+            externalId: `SEED-LOADBOARDPROVIDER-${total + 1}`,
+            sourceSystem: 'FAKER_SEED',
+          },
+        });
+        total++;
+      }
       providers.push(provider);
-      total++;
     }
 
     // Create Load Board Accounts for each provider
@@ -52,10 +54,28 @@ export async function seedLoadBoardExternal(prisma: any, tenantIds: string[]): P
           accountId: accounts[Math.floor(Math.random() * accounts.length)].id,
           orderId: orders[Math.floor(Math.random() * orders.length)]?.id,
           postNumber: `POST-${Date.now()}-${i}`,
-          status: faker.helpers.arrayElement(['POSTED', 'REMOVED', 'EXPIRED']),
+          status: faker.helpers.arrayElement(['DRAFT', 'POSTED', 'RESPONDED', 'COVERED', 'EXPIRED', 'CANCELLED']),
+          // Load details
+          originCity: faker.location.city(),
+          originState: faker.location.state({ abbreviated: true }),
+          originZip: faker.location.zipCode(),
+          destCity: faker.location.city(),
+          destState: faker.location.state({ abbreviated: true }),
+          destZip: faker.location.zipCode(),
+          pickupDate: faker.date.recent(),
+          deliveryDate: faker.helpers.maybe(() => faker.date.future(), { probability: 0.5 }),
+          equipmentType: faker.helpers.arrayElement(['VAN', 'REEFER', 'FLATBED']),
+          length: faker.number.int({ min: 10, max: 53 }),
+          weight: faker.number.int({ min: 500, max: 45000 }),
+          commodity: faker.commerce.productName(),
+          // Rates
+          postedRate: parseFloat(faker.commerce.price({ min: 800, max: 5000 })),
+          currency: 'USD',
+          // Dates
           postedAt: faker.date.recent(),
           expiresAt: faker.date.future(),
-          postedById: users[Math.floor(Math.random() * users.length)].id,
+          // Audit
+          createdById: users[Math.floor(Math.random() * users.length)].id,
           externalId: `SEED-LOADPOST-${total + i + 1}`,
           sourceSystem: 'FAKER_SEED',
         },

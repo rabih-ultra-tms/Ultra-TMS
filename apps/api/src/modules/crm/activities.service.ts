@@ -19,7 +19,7 @@ export class ActivitiesService {
     const { page = 1, limit = 20, activityType, companyId, contactId, opportunityId, ownerId, completed } = options || {};
     const skip = (page - 1) * limit;
 
-    const where: any = { tenantId };
+    const where: any = { tenantId, deletedAt: null };
     if (activityType) where.activityType = activityType;
     if (companyId) where.companyId = companyId;
     if (contactId) where.contactId = contactId;
@@ -50,7 +50,7 @@ export class ActivitiesService {
 
   async findOne(tenantId: string, id: string) {
     const activity = await this.prisma.activity.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
       include: {
         company: true,
         contact: true,
@@ -112,9 +112,12 @@ export class ActivitiesService {
     });
   }
 
-  async delete(tenantId: string, id: string) {
+  async delete(tenantId: string, id: string, userId?: string) {
     await this.findOne(tenantId, id);
-    await this.prisma.activity.delete({ where: { id } });
+    await this.prisma.activity.update({
+      where: { id },
+      data: { deletedAt: new Date(), updatedById: userId },
+    });
     return { success: true };
   }
 
@@ -236,7 +239,7 @@ export class ActivitiesService {
   }
 
   async getStats(tenantId: string, userId?: string) {
-    const where: any = { tenantId };
+    const where: any = { tenantId, deletedAt: null };
     if (userId) where.ownerId = userId;
 
     const now = new Date();

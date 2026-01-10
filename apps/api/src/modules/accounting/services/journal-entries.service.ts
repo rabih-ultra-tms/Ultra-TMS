@@ -43,6 +43,7 @@ export class JournalEntriesService {
         createdById: userId,
         lines: {
           create: data.lines.map((line) => ({
+            tenantId,
             lineNumber: line.lineNumber,
             accountId: line.accountId,
             description: line.description,

@@ -18,13 +18,6 @@ export async function seedHelpDesk(prisma: any, tenantIds: string[]): Promise<vo
           name: teamNames[i],
           description: `${teamNames[i]} team handles ${faker.lorem.sentence()}`,
           isActive: true,
-          businessHours: JSON.stringify({
-            monday: { start: '09:00', end: '17:00' },
-            tuesday: { start: '09:00', end: '17:00' },
-            wednesday: { start: '09:00', end: '17:00' },
-            thursday: { start: '09:00', end: '17:00' },
-            friday: { start: '09:00', end: '17:00' },
-          }),
           externalId: `SEED-TEAM-${total + i + 1}`,
           sourceSystem: 'FAKER_SEED',
         },
@@ -35,21 +28,21 @@ export async function seedHelpDesk(prisma: any, tenantIds: string[]): Promise<vo
 
     // Support Team Members (2 per team = 6 per tenant = 30 total)
     for (const team of teams) {
-      for (let i = 0; i < 2; i++) {
+      const memberIds = faker.helpers.shuffle(users).slice(0, 2).map((u: any) => u.id);
+      for (let i = 0; i < memberIds.length; i++) {
         await prisma.supportTeamMember.create({
           data: {
-            tenantId,
-            userId: users[Math.floor(Math.random() * users.length)].id,
+            userId: memberIds[i],
             teamId: team.id,
-            role: faker.helpers.arrayElement(['MEMBER', 'LEAD', 'MANAGER']),
-            isActive: true,
-            assignmentCapacity: faker.number.int({ min: 5, max: 20 }),
+            role: faker.helpers.arrayElement(['LEAD', 'MEMBER']),
+            maxOpenTickets: faker.number.int({ min: 10, max: 30 }),
+            isAvailable: faker.datatype.boolean(),
             externalId: `SEED-TEAM-MEMBER-${total + i + 1}`,
             sourceSystem: 'FAKER_SEED',
           },
         });
       }
-      total += 2;
+      total += memberIds.length;
     }
 
     // SLA Policies (4 per tenant = 20 total)
@@ -59,10 +52,12 @@ export async function seedHelpDesk(prisma: any, tenantIds: string[]): Promise<vo
         data: {
           tenantId,
           name: `${priorities[i]} Priority SLA`,
-          priority: priorities[i],
-          category: faker.helpers.arrayElement(['TECHNICAL', 'BILLING', 'GENERAL']),
-          firstResponseMinutes: priorities[i] === 'URGENT' ? 15 : priorities[i] === 'HIGH' ? 60 : priorities[i] === 'NORMAL' ? 240 : 480,
-          resolutionMinutes: priorities[i] === 'URGENT' ? 240 : priorities[i] === 'HIGH' ? 480 : priorities[i] === 'NORMAL' ? 1440 : 2880,
+          description: faker.lorem.sentence(),
+          conditions: { priority: [priorities[i]] },
+          firstResponseTarget: priorities[i] === 'URGENT' ? 15 : priorities[i] === 'HIGH' ? 60 : priorities[i] === 'NORMAL' ? 240 : 480,
+          resolutionTarget: priorities[i] === 'URGENT' ? 240 : priorities[i] === 'HIGH' ? 480 : priorities[i] === 'NORMAL' ? 1440 : 2880,
+          useBusinessHours: true,
+          priority: i,
           isActive: true,
           externalId: `SEED-SLA-${total + i + 1}`,
           sourceSystem: 'FAKER_SEED',
@@ -77,10 +72,12 @@ export async function seedHelpDesk(prisma: any, tenantIds: string[]): Promise<vo
         data: {
           tenantId,
           name: `Auto-escalate ${faker.helpers.arrayElement(['unresponsive', 'high priority'])} tickets`,
-          priority: faker.helpers.arrayElement(['HIGH', 'URGENT']),
-          category: faker.helpers.arrayElement(['TECHNICAL', 'BILLING', 'GENERAL']),
-          escalateAfterMinutes: faker.number.int({ min: 60, max: 480 }),
-          escalateToTeamId: teams[Math.floor(Math.random() * teams.length)].id,
+          description: faker.lorem.sentence(),
+          triggerType: faker.helpers.arrayElement(['SLA_BREACH', 'NO_RESPONSE', 'CUSTOMER_REPLY']),
+          triggerMinutes: faker.number.int({ min: 60, max: 480 }),
+          conditions: { priority: ['URGENT'] },
+          actionType: faker.helpers.arrayElement(['NOTIFY', 'REASSIGN', 'CHANGE_PRIORITY']),
+          actionConfig: { notify_users: [], reassign_to: teams[Math.floor(Math.random() * teams.length)].id },
           isActive: true,
           externalId: `SEED-ESCALATION-${total + i + 1}`,
           sourceSystem: 'FAKER_SEED',
@@ -98,7 +95,7 @@ export async function seedHelpDesk(prisma: any, tenantIds: string[]): Promise<vo
           title: faker.lorem.words(3),
           category: faker.helpers.arrayElement(responseCategories),
           content: faker.lorem.paragraphs(2),
-          shortcut: faker.string.alpha({ length: 3, casing: 'lower' }),
+          isPublic: faker.datatype.boolean(),
           isActive: true,
           externalId: `SEED-CANNED-${total + i + 1}`,
           sourceSystem: 'FAKER_SEED',
@@ -121,7 +118,7 @@ export async function seedHelpDesk(prisma: any, tenantIds: string[]): Promise<vo
           priority: faker.helpers.arrayElement(['LOW', 'NORMAL', 'HIGH', 'URGENT']),
           createdById: users[Math.floor(Math.random() * users.length)].id,
           assignedToId: faker.helpers.maybe(() => users[Math.floor(Math.random() * users.length)].id, { probability: 0.7 }),
-          assignedToTeamId: faker.helpers.maybe(() => teams[Math.floor(Math.random() * teams.length)].id, { probability: 0.8 }),
+          teamId: faker.helpers.maybe(() => teams[Math.floor(Math.random() * teams.length)].id, { probability: 0.8 }),
           externalId: `SEED-TICKET-${total + i + 1}`,
           sourceSystem: 'FAKER_SEED',
         },

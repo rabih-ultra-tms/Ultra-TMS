@@ -8,6 +8,7 @@ import {
 import { JwtAuthGuard } from './guards';
 import { TenantService } from './tenant.service';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @Controller('tenant')
 @UseGuards(JwtAuthGuard)
@@ -30,10 +31,10 @@ export class TenantController {
   @Put()
   async updateTenant(
     @CurrentTenant() tenantId: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    @CurrentUser('id') userId: string,
     @Body() data: any,
   ) {
-    return this.tenantService.updateTenant(tenantId, data);
+    return this.tenantService.updateTenant(tenantId, userId, data);
   }
 
   /**
@@ -52,11 +53,10 @@ export class TenantController {
   @Put('settings')
   async updateSettings(
     @CurrentTenant() tenantId: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    @CurrentUser('id') userId: string,
     @Body('settings') settings: any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     @Body('features') features?: any,
   ) {
-    return this.tenantService.updateSettings(tenantId, settings, features);
+    return this.tenantService.updateSettings(tenantId, userId, settings, features);
   }
 }

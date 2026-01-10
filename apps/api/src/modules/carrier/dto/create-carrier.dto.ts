@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsBoolean, IsNumber, IsEmail, IsUUID, IsArray, IsObject, IsDateString } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsNumber, IsEmail, IsArray, IsObject } from 'class-validator';
 
 export class CreateCarrierDto {
   @IsString()

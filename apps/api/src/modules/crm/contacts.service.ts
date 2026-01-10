@@ -97,7 +97,7 @@ export class ContactsService {
     return { success: true };
   }
 
-  async syncToHubspot(tenantId: string, id: string, userId: string) {
+  async syncToHubspot(tenantId: string, id: string, _userId: string) {
     const contact = await this.findOne(tenantId, id);
 
     // Stub for HubSpot sync - will be implemented when HubSpot integration is ready

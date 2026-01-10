@@ -148,6 +148,7 @@ export class PaymentsReceivedService {
         // Create application record
         await tx.paymentApplication.create({
           data: {
+            tenantId,
             paymentId,
             invoiceId: application.invoiceId,
             amount: application.amount,

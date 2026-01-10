@@ -14,7 +14,8 @@ export async function seedAudit(prisma: any, tenantIds: string[]): Promise<void>
         data: {
           tenantId,
           userId: users[Math.floor(Math.random() * users.length)].id,
-          action: faker.helpers.arrayElement(['CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT']),
+          action: faker.helpers.arrayElement(['CREATE', 'READ', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT', 'EXPORT', 'IMPORT']),
+          category: faker.helpers.arrayElement(['DATA', 'AUTH', 'ADMIN', 'SYSTEM']),
           entityType: faker.helpers.arrayElement(['ORDER', 'COMPANY', 'USER', 'INVOICE', 'CARRIER']),
           entityId: faker.string.uuid(),
           ipAddress: faker.internet.ip(),

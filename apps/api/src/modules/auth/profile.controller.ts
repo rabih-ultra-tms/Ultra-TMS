@@ -66,7 +66,6 @@ export class ProfileController {
   @UseInterceptors(FileInterceptor('file'))
   async uploadAvatar(
     @CurrentUser('id') userId: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     @UploadedFile() file: any,
   ) {
     if (!file) {

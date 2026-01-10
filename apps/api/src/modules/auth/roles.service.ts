@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
 import { CreateRoleDto, UpdateRoleDto } from './dto';
 
@@ -49,7 +49,7 @@ export class RolesService {
     const role = await this.findOne(tenantId, id);
 
     if (role.isSystem) {
-      throw new Error('Cannot modify system roles');
+      throw new BadRequestException('Cannot modify system roles');
     }
 
     return this.prisma.role.update({
@@ -62,7 +62,7 @@ export class RolesService {
     const role = await this.findOne(tenantId, id);
 
     if (role.isSystem) {
-      throw new Error('Cannot delete system roles');
+      throw new BadRequestException('Cannot delete system roles');
     }
 
     // Check if any users have this role
@@ -71,7 +71,7 @@ export class RolesService {
     });
 
     if (usersWithRole > 0) {
-      throw new Error(`Cannot delete role: ${usersWithRole} users are assigned to it`);
+      throw new BadRequestException(`Cannot delete role: ${usersWithRole} users are assigned to it`);
     }
 
     await this.prisma.role.delete({ where: { id } });

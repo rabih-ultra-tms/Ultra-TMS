@@ -76,6 +76,7 @@ export class NotificationsService {
     const where: any = {
       tenantId,
       userId,
+      deletedAt: null,
       OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
     };
 
@@ -114,6 +115,7 @@ export class NotificationsService {
         tenantId,
         userId,
         isRead: false,
+        deletedAt: null,
         OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
       },
     });
@@ -121,7 +123,7 @@ export class NotificationsService {
 
   async markAsRead(tenantId: string, userId: string, id: string) {
     const notification = await this.prisma.inAppNotification.findFirst({
-      where: { id, tenantId, userId },
+      where: { id, tenantId, userId, deletedAt: null },
     });
 
     if (!notification) {
@@ -145,6 +147,7 @@ export class NotificationsService {
         tenantId,
         userId,
         isRead: false,
+        deletedAt: null,
       },
       data: {
         isRead: true,
@@ -159,22 +162,26 @@ export class NotificationsService {
 
   async delete(tenantId: string, userId: string, id: string) {
     const notification = await this.prisma.inAppNotification.findFirst({
-      where: { id, tenantId, userId },
+      where: { id, tenantId, userId, deletedAt: null },
     });
 
     if (!notification) {
       throw new NotFoundException(`Notification not found: ${id}`);
     }
 
-    await this.prisma.inAppNotification.delete({ where: { id } });
+    await this.prisma.inAppNotification.update({
+      where: { id },
+      data: { deletedAt: new Date(), updatedById: userId },
+    });
 
     return { success: true, message: 'Notification deleted' };
   }
 
-  async deleteExpired() {
+  async deleteExpired(tenantId?: string) {
     const result = await this.prisma.inAppNotification.deleteMany({
       where: {
         expiresAt: { lt: new Date() },
+        ...(tenantId ? { tenantId } : {}),
       },
     });
 

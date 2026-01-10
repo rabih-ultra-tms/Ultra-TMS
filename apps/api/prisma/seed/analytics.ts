@@ -26,13 +26,16 @@ export async function seedAnalytics(prisma: any, tenantIds: string[]): Promise<v
 
     // Reports (15 per tenant = 75 total)
     for (let i = 0; i < 15; i++) {
+      const isScheduled = faker.datatype.boolean();
       await prisma.report.create({
         data: {
           tenantId,
           name: faker.lorem.words(3),
-          type: faker.helpers.arrayElement(['OPERATIONAL', 'FINANCIAL', 'SALES', 'CUSTOM']),
           description: faker.lorem.sentence(),
-          schedule: faker.helpers.maybe(() => 'DAILY', { probability: 0.5 }),
+          reportType: faker.helpers.arrayElement(['STANDARD', 'CUSTOM', 'AD_HOC']),
+          sourceQuery: 'SELECT 1 as value;',
+          isScheduled,
+          scheduleExpression: isScheduled ? '0 8 * * *' : null,
           createdById: users[Math.floor(Math.random() * users.length)].id,
           externalId: `SEED-REPORT-${total + i + 1}`,
           sourceSystem: 'FAKER_SEED',

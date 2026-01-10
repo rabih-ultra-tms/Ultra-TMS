@@ -1,5 +1,4 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma.service';
 import { SendGridProvider } from './providers/sendgrid.provider';
 import { TemplatesService } from './templates.service';
@@ -40,7 +39,7 @@ export class EmailService {
   async send(tenantId: string, userId: string, dto: SendEmailDto) {
     let subject = dto.subject;
     let body = dto.body;
-    let bodyHtml = dto.bodyHtml;
+    const bodyHtml = dto.bodyHtml;
     let templateId: string | undefined;
     const language = dto.language || 'en';
 
@@ -273,7 +272,7 @@ export class EmailService {
     return log;
   }
 
-  async resend(tenantId: string, id: string, userId: string) {
+  async resend(tenantId: string, id: string, _userId: string) {
     const log = await this.getLogById(tenantId, id);
 
     if (log.status !== 'FAILED') {

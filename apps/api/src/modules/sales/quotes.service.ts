@@ -54,7 +54,7 @@ export class QuotesService {
     const { page = 1, limit = 20, status, companyId, salesRepId, search } = options || {};
     const skip = (page - 1) * limit;
 
-    const where: any = { tenantId };
+    const where: any = { tenantId, deletedAt: null };
     if (status) where.status = status;
     if (companyId) where.companyId = companyId;
     if (salesRepId) where.salesRepId = salesRepId;
@@ -84,7 +84,7 @@ export class QuotesService {
 
   async findOne(tenantId: string, id: string) {
     const quote = await this.prisma.quote.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
       include: {
         company: true,
         contact: true,
@@ -148,6 +148,7 @@ export class QuotesService {
         stops: stops
           ? {
               create: stops.map((stop) => ({
+                tenantId,
                 stopType: stop.stopType,
                 stopSequence: stop.stopSequence,
                 facilityName: stop.facilityName,
@@ -334,6 +335,7 @@ export class QuotesService {
         createdById: userId,
         stops: {
           create: original.stops.map((stop) => ({
+            tenantId,
             stopType: stop.stopType,
             stopSequence: stop.stopSequence,
             facilityName: stop.facilityName,
@@ -398,6 +400,7 @@ export class QuotesService {
         createdById: userId,
         stops: {
           create: original.stops.map((stop) => ({
+            tenantId,
             stopType: stop.stopType,
             stopSequence: stop.stopSequence,
             facilityName: stop.facilityName,
@@ -498,6 +501,7 @@ export class QuotesService {
         stops: {
           create: [
             {
+              tenantId,
               stopType: 'PICKUP',
               stopSequence: 1,
               city: dto.originCity,
@@ -506,6 +510,7 @@ export class QuotesService {
               postalCode: '',
             },
             {
+              tenantId,
               stopType: 'DELIVERY',
               stopSequence: 2,
               city: dto.destinationCity,

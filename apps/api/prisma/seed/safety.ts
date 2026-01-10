@@ -8,9 +8,8 @@ export async function seedSafety(prisma: any, tenantIds: string[]): Promise<void
     const carriers = await prisma.carrier.findMany({ where: { tenantId }, take: 20 });
     if (carriers.length === 0) continue;
 
-    // FMCSA Carrier Records (20 per tenant = 100 total)
-    for (let i = 0; i < 20; i++) {
-      const carrier = carriers[Math.floor(Math.random() * carriers.length)];
+    // FMCSA Carrier Records (one per carrier)
+    for (const carrier of carriers) {
       await prisma.fmcsaCarrierRecord.create({
         data: {
           tenantId,
@@ -19,7 +18,7 @@ export async function seedSafety(prisma: any, tenantIds: string[]): Promise<void
           legalName: carrier.name || faker.company.name(),
           dbaName: faker.helpers.maybe(() => faker.company.name(), { probability: 0.5 }),
           operatingStatus: faker.helpers.arrayElement(['ACTIVE', 'INACTIVE', 'OUT_OF_SERVICE']),
-          externalId: `SEED-FMCSARECORD-${total + i + 1}`,
+          externalId: `SEED-FMCSARECORD-${total + 1}`,
           sourceSystem: 'FAKER_SEED',
         },
       });

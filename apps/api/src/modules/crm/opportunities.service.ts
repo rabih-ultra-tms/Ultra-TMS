@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
 import { CreateOpportunityDto, UpdateOpportunityDto } from './dto';
 
@@ -172,7 +172,7 @@ export class OpportunitiesService {
     // Validate stage transition
     const validStages = ['LEAD', 'QUALIFIED', 'PROPOSAL', 'NEGOTIATION', 'WON', 'LOST'];
     if (!validStages.includes(newStage)) {
-      throw new Error(`Invalid stage: ${newStage}`);
+      throw new BadRequestException(`Invalid stage: ${newStage}`);
     }
 
     const data: any = {
@@ -219,7 +219,7 @@ export class OpportunitiesService {
     const opportunity = await this.findOne(tenantId, id);
 
     if (opportunity.stage !== 'WON') {
-      throw new Error('Only won opportunities can be converted to customers');
+      throw new BadRequestException('Only won opportunities can be converted to customers');
     }
 
     // Update company type to CUSTOMER

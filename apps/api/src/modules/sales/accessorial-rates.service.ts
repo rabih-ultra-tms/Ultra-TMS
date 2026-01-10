@@ -130,7 +130,6 @@ export class AccessorialRatesService {
     });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async delete(tenantId: string, id: string, _userId: string) {
     await this.findOne(tenantId, id);
 
@@ -141,7 +140,6 @@ export class AccessorialRatesService {
     return { success: true };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async seedDefaultAccessorials(tenantId: string, _userId: string) {
     const defaults = [
       {

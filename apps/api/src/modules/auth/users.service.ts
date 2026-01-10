@@ -98,7 +98,7 @@ export class UsersService {
   }
 
   async update(tenantId: string, id: string, updatedById: string, dto: UpdateUserDto) {
-    const user = await this.findOne(tenantId, id);
+    await this.findOne(tenantId, id);
 
     const updateData: any = {
       ...dto,
@@ -177,6 +177,16 @@ export class UsersService {
 
     // Generate invitation token
     const invitationToken = crypto.randomBytes(32).toString('hex');
+    const invitationTokenHash = crypto.createHash('sha256').update(invitationToken).digest('hex');
+
+    await this.prisma.passwordResetToken.create({
+      data: {
+        tenantId,
+        userId: user.id,
+        tokenHash: invitationTokenHash,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
+    });
 
     // Send invitation email
     await this.emailService.sendInvitation(
@@ -268,8 +278,18 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    // Generate reset token
+    // Generate reset token and store hashed for validation
     const resetToken = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+    await this.prisma.passwordResetToken.create({
+      data: {
+        tenantId,
+        userId: user.id,
+        tokenHash,
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+      },
+    });
 
     // Send password reset email
     await this.emailService.sendPasswordReset(user.email, user.firstName, resetToken);
@@ -281,7 +301,7 @@ export class UsersService {
   }
 
   private sanitizeUser(user: any) {
-    const { passwordHash, ...sanitized } = user;
+    const { passwordHash: _passwordHash, ...sanitized } = user;
     return sanitized;
   }
 }

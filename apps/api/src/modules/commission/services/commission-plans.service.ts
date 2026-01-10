@@ -24,7 +24,7 @@ export class CommissionPlansService {
         percentRate: dto.percentRate,
         calculationBasis: dto.calculationBasis,
         minimumMarginPercent: dto.minimumMarginPercent,
-        createdBy: userId,
+        createdById: userId,
         tiers: dto.tiers
           ? {
               create: dto.tiers.map((tier) => ({
@@ -53,6 +53,7 @@ export class CommissionPlansService {
       where: {
         tenantId,
         status: status || undefined,
+        deletedAt: null,
       },
       include: {
         tiers: {
@@ -71,7 +72,7 @@ export class CommissionPlansService {
 
   async findOne(tenantId: string, id: string) {
     const plan = await this.prisma.commissionPlan.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
       include: {
         tiers: {
           orderBy: { tierNumber: 'asc' },
@@ -93,7 +94,7 @@ export class CommissionPlansService {
 
   async update(tenantId: string, id: string, dto: UpdateCommissionPlanDto) {
     const plan = await this.prisma.commissionPlan.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!plan) {
@@ -113,15 +114,16 @@ export class CommissionPlansService {
 
   async remove(tenantId: string, id: string) {
     const plan = await this.prisma.commissionPlan.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!plan) {
       throw new NotFoundException('Commission plan not found');
     }
 
-    return this.prisma.commissionPlan.delete({
+    return this.prisma.commissionPlan.update({
       where: { id },
+      data: { deletedAt: new Date() },
     });
   }
 

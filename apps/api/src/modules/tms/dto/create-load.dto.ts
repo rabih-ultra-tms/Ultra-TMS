@@ -1,4 +1,5 @@
-import { IsString, IsOptional, IsNumber, IsUUID, IsDateString, IsBoolean, IsObject } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsUUID, IsDateString, IsEnum } from 'class-validator';
+import { LoadStatusEnum } from './load-query.dto';
 
 export class CreateLoadDto {
   @IsUUID()
@@ -55,8 +56,8 @@ export class CreateLoadDto {
 
 export class UpdateLoadDto extends CreateLoadDto {
   @IsOptional()
-  @IsString()
-  status?: string;
+  @IsEnum(LoadStatusEnum)
+  status?: LoadStatusEnum;
 }
 
 export class AssignCarrierDto {

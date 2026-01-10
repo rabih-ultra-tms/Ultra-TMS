@@ -152,7 +152,7 @@ export class PreferencesService {
         if (currentTime >= start && currentTime <= end) {
           return false;
         }
-      } catch (error) {
+      } catch (_error) {
         // If timezone is invalid, allow notification
         this.logger.warn(`Invalid timezone for user ${userId}: ${timezone}`);
       }

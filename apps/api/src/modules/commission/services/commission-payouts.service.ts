@@ -78,7 +78,7 @@ export class CommissionPayoutsService {
         drawRecovery,
         netPayout,
         notes: dto.notes,
-        createdBy: userId,
+        createdById: userId,
       },
       include: {
         user: true,

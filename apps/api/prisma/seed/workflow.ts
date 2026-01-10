@@ -14,7 +14,7 @@ export async function seedWorkflow(prisma: any, tenantIds: string[]): Promise<vo
           tenantId,
           name: faker.helpers.arrayElement(['Order Approval', 'Invoice Processing', 'Credit Review', 'Carrier Onboarding', 'Document Upload']),
           description: faker.lorem.sentence(),
-          triggerType: faker.helpers.arrayElement(['MANUAL', 'AUTOMATIC', 'SCHEDULED']),
+          triggerType: faker.helpers.arrayElement(['MANUAL', 'EVENT', 'SCHEDULE', 'WEBHOOK']),
           status: 'ACTIVE',
           createdById: users[Math.floor(Math.random() * users.length)].id,
           externalId: `SEED-WORKFLOW-${total + i + 1}`,

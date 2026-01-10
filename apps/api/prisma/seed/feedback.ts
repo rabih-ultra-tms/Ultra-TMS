@@ -45,7 +45,6 @@ export async function seedFeedback(prisma: any, tenantIds: string[]): Promise<vo
               1: faker.number.int({ min: 1, max: 10 }),
               2: faker.lorem.sentences(2),
             }),
-            completedAt: faker.date.recent(),
             externalId: `SEED-SURVEY-RESPONSE-${total + i + 1}`,
             sourceSystem: 'FAKER_SEED',
           },
@@ -60,12 +59,12 @@ export async function seedFeedback(prisma: any, tenantIds: string[]): Promise<vo
       const featureRequest = await prisma.featureRequest.create({
         data: {
           tenantId,
-          userId: users[Math.floor(Math.random() * users.length)].id,
+          submitterId: users[Math.floor(Math.random() * users.length)].id,
           title: faker.lorem.sentence(),
           description: faker.lorem.paragraphs(2),
-          category: faker.helpers.arrayElement(['UI', 'API', 'INTEGRATION', 'REPORTING', 'MOBILE']),
-          status: faker.helpers.arrayElement(['NEW', 'UNDER_REVIEW', 'PLANNED', 'IN_PROGRESS', 'COMPLETED', 'REJECTED']),
-          votes: faker.number.int({ min: 0, max: 50 }),
+          submitterName: faker.person.fullName(),
+          status: faker.helpers.arrayElement(['SUBMITTED', 'UNDER_REVIEW', 'PLANNED', 'IN_PROGRESS', 'COMPLETED', 'DECLINED']),
+          submitterEmail: faker.internet.email(),
           externalId: `SEED-FEATURE-${total + i + 1}`,
           sourceSystem: 'FAKER_SEED',
         },
@@ -76,31 +75,33 @@ export async function seedFeedback(prisma: any, tenantIds: string[]): Promise<vo
 
     // Feature Request Votes (3 per feature = 30 per tenant = 150 total)
     for (const featureRequest of featureRequests) {
-      for (let i = 0; i < 3; i++) {
+      const voterIds = faker.helpers.arrayElements(users.map(u => u.id), 3);
+      for (let i = 0; i < voterIds.length; i++) {
         await prisma.featureRequestVote.create({
           data: {
-            tenantId,
-            featureRequestId: featureRequest.id,
-            userId: users[Math.floor(Math.random() * users.length)].id,
-            voteType: faker.helpers.arrayElement(['UPVOTE', 'DOWNVOTE']),
+            requestId: featureRequest.id,
+            userId: voterIds[i],
+            voteWeight: faker.helpers.arrayElement([1, -1]),
             externalId: `SEED-VOTE-${total + i + 1}`,
             sourceSystem: 'FAKER_SEED',
           },
         });
       }
-      total += 3;
+      total += voterIds.length;
     }
 
     // Feature Request Comments (2 per feature = 20 per tenant = 100 total)
     for (const featureRequest of featureRequests) {
       for (let i = 0; i < 2; i++) {
+        const author = users[Math.floor(Math.random() * users.length)];
         await prisma.featureRequestComment.create({
           data: {
-            tenantId,
-            featureRequestId: featureRequest.id,
-            userId: users[Math.floor(Math.random() * users.length)].id,
-            comment: faker.lorem.sentences(3),
-            isInternal: faker.datatype.boolean(0.3),
+            requestId: featureRequest.id,
+            authorType: 'USER',
+            authorUserId: author.id,
+            authorName: `${author.firstName} ${author.lastName}`,
+            content: faker.lorem.sentences(3),
+            isOfficial: false,
             externalId: `SEED-COMMENT-${total + i + 1}`,
             sourceSystem: 'FAKER_SEED',
           },
@@ -110,20 +111,20 @@ export async function seedFeedback(prisma: any, tenantIds: string[]): Promise<vo
     }
 
     // Feedback Widgets (3 per tenant = 15 total)
-    const widgetTypes = ['FEEDBACK_BUTTON', 'RATING_POPUP', 'SURVEY_MODAL'];
+    const widgetTypes = ['RATING', 'TEXT', 'EMOJI'];
     for (let i = 0; i < 3; i++) {
       await prisma.feedbackWidget.create({
         data: {
           tenantId,
           name: `${widgetTypes[i]} Widget`,
           widgetType: widgetTypes[i],
-          placement: faker.helpers.arrayElement(['BOTTOM_RIGHT', 'BOTTOM_LEFT', 'TOP_RIGHT', 'INLINE']),
+          placement: faker.helpers.arrayElement(['BOTTOM_RIGHT', 'MODAL', 'INLINE']),
           isActive: true,
-          settings: JSON.stringify({
+          config: {
             triggerDelay: faker.number.int({ min: 0, max: 5000 }),
             hideOnMobile: faker.datatype.boolean(),
             primaryColor: faker.color.rgb(),
-          }),
+          },
           externalId: `SEED-WIDGET-${total + i + 1}`,
           sourceSystem: 'FAKER_SEED',
         },
@@ -133,14 +134,16 @@ export async function seedFeedback(prisma: any, tenantIds: string[]): Promise<vo
 
     // NPS Surveys (existing - keep for backwards compatibility)
     for (let i = 0; i < 5; i++) {
-      await prisma.npsSurvey.create({
+      await prisma.nPSSurvey.create({
         data: {
           tenantId,
-          userId: users[Math.floor(Math.random() * users.length)].id,
-          source: faker.helpers.arrayElement(['EMAIL', 'PORTAL', 'IN_APP']),
-          status: faker.helpers.arrayElement(['SENT', 'COMPLETED', 'EXPIRED']),
-          sentAt: faker.date.recent(),
+          surveyNumber: `NPS-${i + 1}-${faker.string.alphanumeric(6)}`,
+          question: 'How likely are you to recommend us to a friend?',
+          followUpQuestion: 'What is the primary reason for your score?',
+          targetType: faker.helpers.arrayElement(['ALL', 'CUSTOMERS', 'CARRIERS']),
+          scheduledAt: faker.date.recent(),
           expiresAt: faker.date.future(),
+          status: faker.helpers.arrayElement(['DRAFT', 'SCHEDULED', 'SENT', 'COMPLETED', 'EXPIRED']),
           externalId: `SEED-NPS-${total + i + 1}`,
           sourceSystem: 'FAKER_SEED',
         },

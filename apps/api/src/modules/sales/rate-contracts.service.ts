@@ -90,7 +90,7 @@ export class RateContractsService {
         customFields: dto.customFields || {},
         createdById: userId,
         laneRates: dto.laneRates ? {
-          create: dto.laneRates.map(rate => this.mapLaneRateDto(rate)),
+          create: dto.laneRates.map(rate => ({ tenantId, ...this.mapLaneRateDto(rate) })),
         } : undefined,
       },
       include: {
@@ -283,11 +283,12 @@ export class RateContractsService {
     });
   }
 
-  async addLaneRate(tenantId: string, contractId: string, userId: string, dto: CreateLaneRateDto) {
+  async addLaneRate(tenantId: string, contractId: string, _userId: string, dto: CreateLaneRateDto) {
     await this.findOne(tenantId, contractId);
 
     return this.prisma.contractLaneRate.create({
       data: {
+        tenantId,
         contractId,
         ...this.mapLaneRateDto(dto as any),
       },
@@ -298,7 +299,7 @@ export class RateContractsService {
     tenantId: string,
     contractId: string,
     laneId: string,
-    userId: string,
+    _userId: string,
     dto: UpdateLaneRateDto,
   ) {
     await this.findOne(tenantId, contractId);
@@ -317,7 +318,7 @@ export class RateContractsService {
     });
   }
 
-  async deleteLaneRate(tenantId: string, contractId: string, laneId: string, userId: string) {
+  async deleteLaneRate(tenantId: string, contractId: string, laneId: string, _userId: string) {
     await this.findOne(tenantId, contractId);
 
     const lane = await this.prisma.contractLaneRate.findFirst({
@@ -376,6 +377,7 @@ export class RateContractsService {
     if (lanesToCopy.length > 0) {
       await this.prisma.contractLaneRate.createMany({
         data: lanesToCopy.map((lane) => ({
+          tenantId,
           contractId: newContract.id,
           originCity: lane.originCity,
           originState: lane.originState,
