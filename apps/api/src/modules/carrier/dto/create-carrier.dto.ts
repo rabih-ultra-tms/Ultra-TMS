@@ -1,7 +1,43 @@
-import { IsString, IsOptional, IsBoolean, IsNumber, IsEmail, IsArray, IsObject } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsString,
+  IsOptional,
+  IsBoolean,
+  IsNumber,
+  IsEmail,
+  IsArray,
+  IsEnum,
+  IsUrl,
+  IsNotEmpty,
+  ValidateNested,
+  Min,
+  IsInt,
+  IsObject,
+} from 'class-validator';
+import {
+  CarrierStatus,
+  CarrierTier,
+  CarrierContactRole,
+  PaymentTerms,
+  PaymentMethod,
+  EquipmentType,
+  InsuranceType,
+} from './enums';
+import { CreateCarrierContactDto } from './create-contact.dto';
+import { CreateInsuranceDto } from './create-insurance.dto';
+import { PartialType } from '@nestjs/mapped-types';
 
 export class CreateCarrierDto {
   @IsString()
+  @IsNotEmpty()
+  dotNumber!: string;
+
+  @IsOptional()
+  @IsString()
+  mcNumber?: string;
+
+  @IsString()
+  @IsNotEmpty()
   name!: string;
 
   @IsOptional()
@@ -12,61 +48,112 @@ export class CreateCarrierDto {
   @IsString()
   dbaName?: string;
 
-  @IsOptional()
   @IsString()
-  mcNumber?: string;
+  @IsNotEmpty()
+  address1!: string;
 
   @IsOptional()
   @IsString()
-  dotNumber?: string;
+  address2?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  city!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  state!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  postalCode!: string;
 
   @IsOptional()
   @IsString()
-  scacCode?: string;
+  country?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  phone!: string;
+
+  @IsOptional()
+  @IsString()
+  fax?: string;
+
+  @IsEmail()
+  email!: string;
+
+  @IsOptional()
+  @IsUrl()
+  website?: string;
 
   @IsOptional()
   @IsString()
   taxId?: string;
 
   @IsOptional()
-  @IsString()
-  carrierType?: string; // ASSET, OWNER_OPERATOR, CARRIER
+  @IsEnum(PaymentTerms)
+  paymentTerms?: PaymentTerms;
+
+  @IsOptional()
+  @IsEnum(PaymentMethod)
+  paymentMethod?: PaymentMethod;
+
+  @IsOptional()
+  @IsArray()
+  @IsEnum(EquipmentType, { each: true })
+  equipmentTypes?: EquipmentType[];
+
+  @IsOptional()
+  @IsInt()
+  tractorCount?: number;
+
+  @IsOptional()
+  @IsInt()
+  trailerCount?: number;
+
+  @IsOptional()
+  @IsInt()
+  driverCount?: number;
+
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => CreateCarrierContactDto)
+  contacts?: CreateCarrierContactDto[];
+
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => CreateInsuranceDto)
+  insurance?: CreateInsuranceDto[];
+
+  @IsOptional()
+  @IsEnum(CarrierStatus)
+  status?: CarrierStatus;
+
+  @IsOptional()
+  @IsEnum(CarrierTier)
+  tier?: CarrierTier;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  quickpayPercent?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  w9OnFile?: boolean;
 
   @IsOptional()
   @IsString()
-  addressLine1?: string;
+  primaryContactName?: string;
 
   @IsOptional()
   @IsString()
-  addressLine2?: string;
-
-  @IsOptional()
-  @IsString()
-  city?: string;
-
-  @IsOptional()
-  @IsString()
-  state?: string;
-
-  @IsOptional()
-  @IsString()
-  postalCode?: string;
-
-  @IsOptional()
-  @IsString()
-  country?: string;
-
-  @IsOptional()
-  @IsString()
-  contactName?: string;
-
-  @IsOptional()
-  @IsString()
-  contactPhone?: string;
+  primaryContactPhone?: string;
 
   @IsOptional()
   @IsEmail()
-  contactEmail?: string;
+  primaryContactEmail?: string;
 
   @IsOptional()
   @IsString()
@@ -77,52 +164,21 @@ export class CreateCarrierDto {
   dispatchEmail?: string;
 
   @IsOptional()
-  @IsString()
-  factoringCompany?: string;
-
-  @IsOptional()
-  @IsString()
-  paymentTerms?: string;
-
-  @IsOptional()
-  @IsNumber()
-  defaultPaymentDays?: number;
-
-  @IsOptional()
-  @IsString()
-  w9OnFile?: string;
-
-  @IsOptional()
-  @IsBoolean()
-  quickpayEnabled?: boolean;
-
-  @IsOptional()
-  @IsNumber()
-  quickpayPercent?: number;
-
-  @IsOptional()
-  @IsString()
-  notes?: string;
-
-  @IsOptional()
   @IsArray()
-  equipmentTypes?: string[];
-
-  @IsOptional()
-  @IsArray()
-  serviceAreas?: string[];
-
-  @IsOptional()
-  @IsNumber()
-  safetyRating?: number;
+  @IsString({ each: true })
+  serviceStates?: string[];
 
   @IsOptional()
   @IsObject()
-  customFields?: Record<string, any>;
+  customFields?: Record<string, unknown>;
 }
 
-export class UpdateCarrierDto extends CreateCarrierDto {
+export class UpdateCarrierDto extends PartialType(CreateCarrierDto) {
   @IsOptional()
-  @IsString()
-  status?: string;
+  @IsEnum(CarrierStatus)
+  status?: CarrierStatus;
+
+  @IsOptional()
+  @IsEnum(CarrierTier)
+  tier?: CarrierTier;
 }

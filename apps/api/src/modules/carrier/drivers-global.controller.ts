@@ -1,60 +1,25 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Body,
-  Param,
-  Query,
-  UseGuards,
-  Patch,
-  HttpCode,
-  HttpStatus,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Put, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { DriversService } from './drivers.service';
-import { CreateDriverDto, UpdateDriverDto, DriverStatus } from './dto';
+import { UpdateDriverDto, DriverStatus } from './dto';
 
-@Controller('carriers/:carrierId/drivers')
+@Controller('drivers')
 @UseGuards(JwtAuthGuard)
-export class DriversController {
+export class DriversGlobalController {
   constructor(private readonly driversService: DriversService) {}
 
-  @Post()
-  async create(
-    @CurrentTenant() tenantId: string,
-    @CurrentUser() user: { id: string },
-    @Param('carrierId') carrierId: string,
-    @Body() dto: CreateDriverDto,
-  ) {
-    return this.driversService.create(tenantId, carrierId, user.id, dto);
-  }
-
   @Get()
-  async findAll(
+  async list(
     @CurrentTenant() tenantId: string,
-    @Param('carrierId') carrierId: string,
     @Query('status') status?: string,
+    @Query('carrierId') carrierId?: string,
   ) {
-    return this.driversService.findAllForCarrier(tenantId, carrierId, { status });
-  }
-
-  @Get('expiring-credentials')
-  async getExpiringCredentials(
-    @CurrentTenant() tenantId: string,
-    @Query('days') days?: string,
-  ) {
-    return this.driversService.getExpiringCredentials(
-      tenantId,
-      days ? parseInt(days, 10) : 30,
-    );
+    return this.driversService.findAll(tenantId, { status, carrierId });
   }
 
   @Get(':id')
-  async findOne(
+  async getOne(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
   ) {
@@ -80,11 +45,18 @@ export class DriversController {
   }
 
   @Delete(':id')
-  @HttpCode(HttpStatus.OK)
-  async delete(
+  async remove(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
   ) {
     return this.driversService.delete(tenantId, id);
+  }
+
+  @Get(':id/loads')
+  async loads(
+    @CurrentTenant() tenantId: string,
+    @Param('id') id: string,
+  ) {
+    return this.driversService.getLoads(tenantId, id);
   }
 }

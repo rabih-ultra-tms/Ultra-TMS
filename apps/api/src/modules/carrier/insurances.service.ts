@@ -1,12 +1,22 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
-import { CreateInsuranceDto, UpdateInsuranceDto } from './dto';
+import { CreateInsuranceDto, InsuranceType, UpdateInsuranceDto } from './dto';
+
+const COVERAGE_MINIMUMS: Record<InsuranceType, number> = {
+  [InsuranceType.AUTO_LIABILITY]: 1_000_000,
+  [InsuranceType.CARGO]: 100_000,
+  [InsuranceType.GENERAL_LIABILITY]: 500_000,
+  [InsuranceType.WORKERS_COMP]: 0,
+};
 
 @Injectable()
 export class InsurancesService {
   constructor(private prisma: PrismaService) {}
 
   async create(tenantId: string, carrierId: string, userId: string, dto: CreateInsuranceDto) {
+    this.validateCoverage(dto.type, dto.coverageAmount);
+    this.ensureDates(dto.effectiveDate, dto.expirationDate);
+
     const carrier = await this.prisma.carrier.findFirst({
       where: { id: carrierId, tenantId },
     });
@@ -17,8 +27,9 @@ export class InsurancesService {
 
     const existing = await this.prisma.insuranceCertificate.findFirst({
       where: {
+        tenantId,
         carrierId,
-        insuranceType: dto.insuranceType,
+        insuranceType: dto.type,
         status: 'ACTIVE',
       },
     });
@@ -34,13 +45,16 @@ export class InsurancesService {
       data: {
         tenantId,
         carrierId,
-        insuranceType: dto.insuranceType,
+        insuranceType: dto.type,
         policyNumber: dto.policyNumber,
-        insuranceCompany: dto.insurer || 'Unknown',
+        insuranceCompany: dto.insuranceCompany,
         coverageAmount: dto.coverageAmount || 0,
         deductible: dto.deductible,
         effectiveDate: new Date(dto.effectiveDate),
         expirationDate: new Date(dto.expirationDate),
+        certificateHolderName: dto.certificateHolder,
+        additionalInsured: dto.additionalInsured ?? false,
+        documentUrl: dto.documentUrl,
         verified: dto.verified || false,
         verifiedAt: dto.verified ? new Date() : null,
         verifiedById: dto.verified ? userId : null,
@@ -105,17 +119,25 @@ export class InsurancesService {
       throw new NotFoundException('Insurance not found');
     }
 
+    const typeToUse = dto.type ?? (insurance.insuranceType as InsuranceType);
+    const coverageToUse = dto.coverageAmount ?? Number((insurance.coverageAmount as any)?.toNumber?.() ?? insurance.coverageAmount);
+    this.validateCoverage(typeToUse, coverageToUse);
+    this.ensureDates(dto.effectiveDate ?? insurance.effectiveDate?.toISOString?.(), dto.expirationDate ?? insurance.expirationDate?.toISOString?.());
+
     const updated = await this.prisma.insuranceCertificate.update({
       where: { id },
       data: {
-        insuranceType: dto.insuranceType,
-        policyNumber: dto.policyNumber,
-        insuranceCompany: dto.insurer,
-        coverageAmount: dto.coverageAmount,
+        insuranceType: dto.type ?? insurance.insuranceType,
+        policyNumber: dto.policyNumber ?? insurance.policyNumber,
+        insuranceCompany: dto.insuranceCompany ?? insurance.insuranceCompany,
+        coverageAmount: dto.coverageAmount ?? insurance.coverageAmount,
         deductible: dto.deductible,
         effectiveDate: dto.effectiveDate ? new Date(dto.effectiveDate) : undefined,
         expirationDate: dto.expirationDate ? new Date(dto.expirationDate) : undefined,
-        status: dto.status,
+        certificateHolderName: dto.certificateHolder ?? insurance.certificateHolderName,
+        additionalInsured: dto.additionalInsured ?? insurance.additionalInsured,
+        documentUrl: dto.documentUrl ?? insurance.documentUrl,
+        status: dto.status ?? insurance.status,
         updatedAt: new Date(),
       },
     });
@@ -177,5 +199,21 @@ export class InsurancesService {
     });
 
     return { expiredCount: expired.count };
+  }
+
+  private validateCoverage(type: InsuranceType, coverageAmount: number) {
+    const minimum = COVERAGE_MINIMUMS[type] ?? 0;
+    if (coverageAmount < minimum) {
+      throw new BadRequestException(`Coverage for ${type} must be at least ${minimum.toLocaleString()}`);
+    }
+  }
+
+  private ensureDates(effectiveDate?: string | Date, expirationDate?: string | Date) {
+    if (!effectiveDate || !expirationDate) return;
+    const effective = new Date(effectiveDate);
+    const expiration = new Date(expirationDate);
+    if (expiration <= effective) {
+      throw new BadRequestException('Expiration date must be after effective date');
+    }
   }
 }

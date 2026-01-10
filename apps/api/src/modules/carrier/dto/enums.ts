@@ -1,0 +1,86 @@
+export enum CarrierStatus {
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  SUSPENDED = 'SUSPENDED',
+  BLACKLISTED = 'BLACKLISTED',
+}
+
+export enum CarrierTier {
+  PLATINUM = 'PLATINUM',
+  GOLD = 'GOLD',
+  SILVER = 'SILVER',
+  BRONZE = 'BRONZE',
+  UNQUALIFIED = 'UNQUALIFIED',
+}
+
+export enum CarrierContactRole {
+  OWNER = 'OWNER',
+  DISPATCH = 'DISPATCH',
+  ACCOUNTING = 'ACCOUNTING',
+  SAFETY = 'SAFETY',
+  CLAIMS = 'CLAIMS',
+  OPERATIONS = 'OPERATIONS',
+}
+
+export enum PaymentTerms {
+  NET_15 = 'NET_15',
+  NET_30 = 'NET_30',
+  NET_45 = 'NET_45',
+  QUICKPAY = 'QUICKPAY',
+}
+
+export enum PaymentMethod {
+  CHECK = 'CHECK',
+  ACH = 'ACH',
+  WIRE = 'WIRE',
+  QUICKPAY = 'QUICKPAY',
+}
+
+export enum EquipmentType {
+  VAN = 'VAN',
+  REEFER = 'REEFER',
+  FLATBED = 'FLATBED',
+  STEP_DECK = 'STEP_DECK',
+  POWER_ONLY = 'POWER_ONLY',
+  BOX_TRUCK = 'BOX_TRUCK',
+  SPRINTER = 'SPRINTER',
+  INTERMODAL = 'INTERMODAL',
+  CONESTOGA = 'CONESTOGA',
+}
+
+export enum InsuranceType {
+  AUTO_LIABILITY = 'AUTO_LIABILITY',
+  CARGO = 'CARGO',
+  GENERAL_LIABILITY = 'GENERAL_LIABILITY',
+  WORKERS_COMP = 'WORKERS_COMP',
+}
+
+export enum CdlClass {
+  A = 'A',
+  B = 'B',
+  C = 'C',
+}
+
+export enum DriverStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  SUSPENDED = 'SUSPENDED',
+}
+
+export enum DocumentType {
+  W9 = 'W9',
+  CARRIER_AGREEMENT = 'CARRIER_AGREEMENT',
+  AUTHORITY_LETTER = 'AUTHORITY_LETTER',
+  VOID_CHECK = 'VOID_CHECK',
+  INSURANCE_CERTIFICATE = 'INSURANCE_CERTIFICATE',
+  OTHER = 'OTHER',
+}
+
+export enum DocumentStatus {
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+  EXPIRED = 'EXPIRED',
+}

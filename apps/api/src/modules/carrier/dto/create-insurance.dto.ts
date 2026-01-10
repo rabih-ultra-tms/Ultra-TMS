@@ -1,27 +1,27 @@
-import { IsString, IsOptional, IsNumber, IsDateString, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsDateString, IsBoolean, IsEnum, Min, IsUrl, IsNotEmpty } from 'class-validator';
+import { InsuranceType } from './enums';
+import { PartialType } from '@nestjs/mapped-types';
 
 export class CreateInsuranceDto {
-  @IsString()
-  insuranceType!: string; // AUTO_LIABILITY, CARGO, GENERAL_LIABILITY, WORKERS_COMP
+  @IsEnum(InsuranceType)
+  type!: InsuranceType;
 
   @IsString()
+  @IsNotEmpty()
+  insuranceCompany!: string;
+
+  @IsString()
+  @IsNotEmpty()
   policyNumber!: string;
 
-  @IsOptional()
-  @IsString()
-  insurer?: string;
+  @IsNumber()
+  @Min(0)
+  coverageAmount!: number;
 
   @IsOptional()
-  @IsString()
-  agentName?: string;
-
-  @IsOptional()
-  @IsString()
-  agentPhone?: string;
-
-  @IsOptional()
-  @IsString()
-  agentEmail?: string;
+  @IsNumber()
+  @Min(0)
+  deductible?: number;
 
   @IsDateString()
   effectiveDate!: string;
@@ -30,28 +30,24 @@ export class CreateInsuranceDto {
   expirationDate!: string;
 
   @IsOptional()
-  @IsNumber()
-  coverageAmount?: number;
+  @IsString()
+  certificateHolder?: string;
 
   @IsOptional()
-  @IsNumber()
-  deductible?: number;
+  @IsBoolean()
+  additionalInsured?: boolean;
+
+  @IsOptional()
+  @IsUrl()
+  documentUrl?: string;
+}
+
+export class UpdateInsuranceDto extends PartialType(CreateInsuranceDto) {
+  @IsOptional()
+  @IsString()
+  status?: string;
 
   @IsOptional()
   @IsBoolean()
   verified?: boolean;
-
-  @IsOptional()
-  @IsDateString()
-  verifiedAt?: string;
-
-  @IsOptional()
-  @IsString()
-  notes?: string;
-}
-
-export class UpdateInsuranceDto extends CreateInsuranceDto {
-  @IsOptional()
-  @IsString()
-  status?: string;
 }

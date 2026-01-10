@@ -1,27 +1,40 @@
-import { IsString, IsOptional, IsBoolean, IsEmail, IsDateString } from 'class-validator';
+import { IsString, IsOptional, IsEmail, IsDateString, IsEnum, IsArray, IsNotEmpty } from 'class-validator';
+import { CdlClass, DriverStatus } from './enums';
+import { PartialType } from '@nestjs/mapped-types';
 
 export class CreateDriverDto {
   @IsString()
+  @IsNotEmpty()
   firstName!: string;
 
   @IsString()
+  @IsNotEmpty()
   lastName!: string;
 
-  @IsOptional()
   @IsString()
-  licenseNumber?: string;
+  @IsNotEmpty()
+  licenseNumber!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  licenseState!: string;
+
+  @IsEnum(CdlClass)
+  cdlClass!: CdlClass;
 
   @IsOptional()
-  @IsString()
-  licenseState?: string;
+  @IsArray()
+  @IsString({ each: true })
+  endorsements?: string[];
 
   @IsOptional()
-  @IsString()
-  licenseClass?: string;
+  @IsArray()
+  @IsString({ each: true })
+  restrictions?: string[];
 
   @IsOptional()
   @IsDateString()
-  licenseExpiry?: string;
+  licenseExpiration?: string;
 
   @IsOptional()
   @IsString()
@@ -33,51 +46,19 @@ export class CreateDriverDto {
 
   @IsOptional()
   @IsDateString()
-  dateOfBirth?: string;
-
-  @IsOptional()
-  @IsString()
-  ssn?: string;
-
-  @IsOptional()
-  @IsBoolean()
-  hazmatEndorsement?: boolean;
+  medicalCardExpiration?: string;
 
   @IsOptional()
   @IsDateString()
-  hazmatExpiry?: string;
-
-  @IsOptional()
-  @IsBoolean()
-  twicCard?: boolean;
-
-  @IsOptional()
-  @IsDateString()
-  twicExpiry?: string;
-
-  @IsOptional()
-  @IsDateString()
-  medicalCardExpiry?: string;
-
-  @IsOptional()
-  @IsDateString()
-  mvr?: string;
-
-  @IsOptional()
-  @IsString()
-  emergencyContactName?: string;
-
-  @IsOptional()
-  @IsString()
-  emergencyContactPhone?: string;
+  hireDate?: string;
 
   @IsOptional()
   @IsString()
   notes?: string;
 }
 
-export class UpdateDriverDto extends CreateDriverDto {
+export class UpdateDriverDto extends PartialType(CreateDriverDto) {
   @IsOptional()
-  @IsString()
-  status?: string;
+  @IsEnum(DriverStatus)
+  status?: DriverStatus;
 }

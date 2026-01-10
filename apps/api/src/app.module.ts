@@ -19,6 +19,7 @@ import { LoadBoardModule } from './modules/load-board/load-board.module';
 import { CommissionModule } from './modules/commission/commission.module';
 import { DocumentsModule } from './modules/documents/documents.module';
 import { CommunicationModule } from './modules/communication/communication.module';
+import { CreditModule } from './modules/credit/credit.module';
 
 // Support services - commented out until schemas are added
 // import { AnalyticsModule } from './modules/analytics/analytics.module';
@@ -49,6 +50,7 @@ import { CommunicationModule } from './modules/communication/communication.modul
     CommissionModule,
     DocumentsModule,
     CommunicationModule,
+    CreditModule,
     // Support services - enable after adding schemas:
     // AnalyticsModule,
     // IntegrationHubModule,

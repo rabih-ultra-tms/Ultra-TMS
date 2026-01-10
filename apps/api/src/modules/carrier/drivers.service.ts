@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../prisma.service';
 import { CreateDriverDto, UpdateDriverDto } from './dto';
 
 @Injectable()
 export class DriversService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private eventEmitter: EventEmitter2,
+  ) {}
 
   async create(tenantId: string, carrierId: string, _userId: string, dto: CreateDriverDto) {
     const carrier = await this.prisma.carrier.findFirst({
@@ -15,17 +19,15 @@ export class DriversService {
       throw new NotFoundException('Carrier not found');
     }
 
-    if (dto.licenseNumber) {
-      const existing = await this.prisma.driver.findFirst({
-        where: {
-          tenantId,
-          cdlNumber: dto.licenseNumber,
-          cdlState: dto.licenseState,
-        },
-      });
-      if (existing) {
-        throw new BadRequestException('Driver with this CDL already exists');
-      }
+    const existing = await this.prisma.driver.findFirst({
+      where: {
+        tenantId,
+        cdlNumber: dto.licenseNumber,
+        cdlState: dto.licenseState,
+      },
+    });
+    if (existing) {
+      throw new BadRequestException('Driver with this CDL already exists');
     }
 
     const driver = await this.prisma.driver.create({
@@ -37,13 +39,15 @@ export class DriversService {
         status: 'ACTIVE',
         cdlNumber: dto.licenseNumber,
         cdlState: dto.licenseState,
-        cdlClass: dto.licenseClass,
-        cdlExpiration: dto.licenseExpiry ? new Date(dto.licenseExpiry) : null,
+        cdlClass: dto.cdlClass,
+        cdlExpiration: dto.licenseExpiration ? new Date(dto.licenseExpiration) : null,
         phone: dto.phone,
         email: dto.email,
-        endorsements: dto.hazmatEndorsement ? ['H'] : [],
+        endorsements: dto.endorsements ?? [],
       },
     });
+
+    this.eventEmitter.emit('driver.created', { driverId: driver.id, carrierId, tenantId });
 
     return driver;
   }
@@ -70,6 +74,20 @@ export class DriversService {
     return drivers;
   }
 
+  async findAll(tenantId: string, options: { status?: string; carrierId?: string }) {
+    const where: any = { tenantId };
+    if (options.status) where.status = options.status;
+    if (options.carrierId) where.carrierId = options.carrierId;
+
+    return this.prisma.driver.findMany({
+      where,
+      orderBy: { lastName: 'asc' },
+      include: {
+        carrier: { select: { id: true, legalName: true, mcNumber: true } },
+      },
+    });
+  }
+
   async findOne(tenantId: string, id: string) {
     const driver = await this.prisma.driver.findFirst({
       where: { id, tenantId },
@@ -83,6 +101,22 @@ export class DriversService {
     }
 
     return driver;
+  }
+
+  async getLoads(tenantId: string, id: string) {
+    const driver = await this.prisma.driver.findFirst({ where: { id, tenantId } });
+    if (!driver) throw new NotFoundException('Driver not found');
+
+    const loads = await this.prisma.load.findMany({
+      where: { tenantId, carrierId: driver.carrierId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        order: { select: { id: true, orderNumber: true, status: true } },
+        carrier: { select: { id: true, legalName: true } },
+      },
+    });
+
+    return loads;
   }
 
   async update(tenantId: string, id: string, dto: UpdateDriverDto) {
@@ -111,18 +145,28 @@ export class DriversService {
     const updated = await this.prisma.driver.update({
       where: { id },
       data: {
-        firstName: dto.firstName,
-        lastName: dto.lastName,
-        status: dto.status,
-        cdlNumber: dto.licenseNumber,
-        cdlState: dto.licenseState,
-        cdlClass: dto.licenseClass,
-        cdlExpiration: dto.licenseExpiry ? new Date(dto.licenseExpiry) : undefined,
-        phone: dto.phone,
-        email: dto.email,
+        firstName: dto.firstName ?? driver.firstName,
+        lastName: dto.lastName ?? driver.lastName,
+        status: dto.status ?? driver.status,
+        cdlNumber: dto.licenseNumber ?? driver.cdlNumber,
+        cdlState: dto.licenseState ?? driver.cdlState,
+        cdlClass: dto.cdlClass ?? driver.cdlClass,
+        cdlExpiration: dto.licenseExpiration ? new Date(dto.licenseExpiration) : driver.cdlExpiration,
+        phone: dto.phone ?? driver.phone,
+        email: dto.email ?? driver.email,
         updatedAt: new Date(),
       },
     });
+
+    if (dto.status && dto.status !== driver.status) {
+      this.eventEmitter.emit('driver.status.changed', {
+        driverId: id,
+        carrierId: driver.carrierId,
+        oldStatus: driver.status,
+        newStatus: dto.status,
+        tenantId,
+      });
+    }
 
     return updated;
   }

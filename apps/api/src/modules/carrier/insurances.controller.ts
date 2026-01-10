@@ -17,7 +17,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { InsurancesService } from './insurances.service';
 import { CreateInsuranceDto, UpdateInsuranceDto } from './dto';
 
-@Controller('carriers/:carrierId/insurances')
+@Controller('carriers/:carrierId/insurance')
 @UseGuards(JwtAuthGuard)
 export class InsurancesController {
   constructor(private readonly insurancesService: InsurancesService) {}
