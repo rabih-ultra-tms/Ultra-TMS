@@ -179,16 +179,16 @@
     <div class="container">
         <header>
             <h1>🚛 Ultra-TMS Development Progress</h1>
-            <p class="subtitle">162-Week Development Roadmap • Last Updated: <span id="lastUpdated">January 11, 2026 (Credit API Complete)</span></p>
+            <p class="subtitle">162-Week Development Roadmap • Last Updated: <span id="lastUpdated">January 11, 2026 (Contracts API Complete)</span></p>
         </header>
 
         <!-- Dashboard Stats -->
         <section class="dashboard">
             <div class="stat-card">
                 <div class="label">Overall Progress</div>
-                <div class="value" style="color: var(--primary);">34.2%</div>
-                <div class="progress-bar"><div class="progress-fill primary" style="width: 34.2%;"></div></div>
-                <div class="sub">13 of 38 services complete</div>
+                <div class="value" style="color: var(--primary);">36.8%</div>
+                <div class="progress-bar"><div class="progress-fill primary" style="width: 36.8%;"></div></div>
+                <div class="sub">14 of 38 services complete</div>
             </div>
             <div class="stat-card">
                 <div class="label">Current Phase</div>
@@ -202,8 +202,8 @@
             </div>
             <div class="stat-card">
                 <div class="label">API Endpoints</div>
-                <div class="value">510</div>
-                <div class="sub">of ~985 planned (51.8%)</div>
+                <div class="value">535</div>
+                <div class="sub">of ~985 planned (54.3%)</div>
             </div>
             <div class="stat-card">
                 <div class="label">UI Screens</div>
@@ -228,10 +228,10 @@
                     </div>
                     <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1rem;">Weeks 1-78 • Internal MVP</p>
                     <div style="display: flex; justify-content: space-between; font-size: 0.875rem; margin-bottom: 0.5rem;">
-                        <span>13 of 27 services</span>
-                        <span>48%</span>
+                        <span>14 of 27 services</span>
+                        <span>52%</span>
                     </div>
-                    <div class="progress-bar"><div class="progress-fill primary" style="width: 48%;"></div></div>
+                    <div class="progress-bar"><div class="progress-fill primary" style="width: 52%;"></div></div>
                 </div>
                 <div class="phase-card">
                     <div class="phase-header">
@@ -367,9 +367,9 @@
                         <td>Claims</td>
                         <td>57-60</td>
                         <td>8 / 8</td>
-                        <td>0 / 30</td>
+                        <td>30 / 30</td>
                         <td>0 / 10</td>
-                        <td><span class="status"><span class="status-dot complete"></span> Schema Complete</span></td>
+                        <td><span class="status"><span class="status-dot complete"></span> API Complete</span></td>
                     </tr>
                     <tr>
                         <td>Documents</td>
@@ -391,25 +391,25 @@
                         <td>Customer Portal</td>
                         <td>57-60</td>
                         <td>8 / 8</td>
-                        <td>0 / 35</td>
-                        <td>0 / 10</td>
-                        <td><span class="status"><span class="status-dot complete"></span> Schema Complete</span></td>
+                        <td>40 / 40</td>
+                        <td>6 / 6</td>
+                        <td><span class="status"><span class="status-dot complete"></span> API Complete</span></td>
                     </tr>
                     <tr>
                         <td>Carrier Portal</td>
                         <td>61-64</td>
                         <td>9 / 9</td>
-                        <td>0 / 40</td>
+                        <td>45 / 45</td>
                         <td>0 / 12</td>
-                        <td><span class="status"><span class="status-dot complete"></span> Schema Complete</span></td>
+                        <td><span class="status"><span class="status-dot complete"></span> API Complete</span></td>
                     </tr>
                     <tr>
                         <td>Contracts</td>
                         <td>65-70</td>
                         <td>11 / 11</td>
-                        <td>0 / 25</td>
+                        <td>25 / 25</td>
                         <td>0 / 8</td>
-                        <td><span class="status"><span class="status-dot complete"></span> Schema Complete</span></td>
+                        <td><span class="status"><span class="status-dot complete"></span> API Complete</span></td>
                     </tr>
                     <tr>
                         <td>Agent</td>
@@ -722,6 +722,28 @@
             <h2>📝 Change Log</h2>
             <div class="changelog">
                 <div class="log-entry">
+                    <div class="log-date">January 11, 2026 - Contracts API Complete</div>
+                    <ul class="log-items">
+                        <li>Implemented 25 Contracts API endpoints across contracts, rate tables/lanes, fuel surcharge, SLAs, volume commitments, and amendments</li>
+                        <li>Applied JWT guard and CurrentUser on all routes with tenant isolation, audit fields, and soft delete</li>
+                        <li>Added CSV import/export for rate tables with validation and bulk create</li>
+                        <li>Emitted lifecycle, SLA, volume, and e-sign events with DocuSign envelope stub</li>
+                        <li>Wired contracts events listener; smoke tests passing</li>
+                    </ul>
+                </div>
+                <div class="log-entry">
+                    <div class="log-date">January 11, 2026 - Carrier Portal API Complete</div>
+                    <ul class="log-items">
+                        <li>Implemented 45 Carrier Portal API endpoints (Auth, Dashboard, Available Loads, My Loads, Documents/POD, Invoices, Quick Pay, Compliance, Users)</li>
+                        <li>Portal-specific JWT authentication with carrier guard and session tracking</li>
+                        <li>Load browsing, save/bid/match plus tender accept/decline and status/location/ETA updates</li>
+                        <li>POD and document uploads with compliance tracking and expiring alerts</li>
+                        <li>Invoice submission, settlements, quick pay with fee calculation, and payment history</li>
+                        <li>Account management for carrier users, profile, and carrier info</li>
+                        <li>Full integration test suite passing</li>
+                    </ul>
+                </div>
+                <div class="log-entry">
                     <div class="log-date">January 11, 2026 - Credit API Complete</div>
                     <ul class="log-items">
                         <li>Implemented 30 Credit API endpoints</li>
@@ -828,6 +850,18 @@
                         <li>📦 <strong>Seed Infrastructure:</strong> 32 modular seed files in prisma/seed/ directory</li>
                         <li>🔧 <strong>Remaining Services:</strong> 17 services have seed files created but require minor fixes (factoring, hr, analytics, workflow, integration-hub, search, audit, config, scheduler, cache, help-desk, feedback, edi, safety, load-board-external, rate-intelligence, claims)</li>
                         <li>🎯 <strong>Phase A Progress:</strong> 15 of 27 services fully seeded (55.6%)</li>
+                    </ul>
+                </div>
+                <div class="log-entry">
+                    <div class="log-date">January 11, 2026 - Customer Portal API Complete</div>
+                    <ul class="log-items">
+                        <li>Implemented 40 Customer Portal API endpoints (Auth, Quotes, Shipments, Invoices, Payments, Users)</li>
+                        <li>Portal-specific JWT authentication with session tracking</li>
+                        <li>Quote requests with instant estimates and acceptance/decline flows</li>
+                        <li>Shipment tracking with events and document access</li>
+                        <li>Invoice viewing, aging summary, and payment processing with saved methods</li>
+                        <li>Multi-user account management with invitations and deactivation</li>
+                        <li>Full integration test coverage for portal flows</li>
                     </ul>
                 </div>
                 <div class="log-entry">

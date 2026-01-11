@@ -20,6 +20,10 @@ import { CommissionModule } from './modules/commission/commission.module';
 import { DocumentsModule } from './modules/documents/documents.module';
 import { CommunicationModule } from './modules/communication/communication.module';
 import { CreditModule } from './modules/credit/credit.module';
+import { ClaimsModule } from './modules/claims/claims.module';
+import { CustomerPortalModule } from './modules/customer-portal/customer-portal.module';
+import { CarrierPortalModule } from './modules/carrier-portal/carrier-portal.module';
+import { ContractsModule } from './modules/contracts/contracts.module';
 
 // Support services - commented out until schemas are added
 // import { AnalyticsModule } from './modules/analytics/analytics.module';
@@ -51,6 +55,10 @@ import { CreditModule } from './modules/credit/credit.module';
     DocumentsModule,
     CommunicationModule,
     CreditModule,
+    ClaimsModule,
+    CustomerPortalModule,
+    CarrierPortalModule,
+    ContractsModule,
     // Support services - enable after adding schemas:
     // AnalyticsModule,
     // IntegrationHubModule,
