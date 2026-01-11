@@ -48,7 +48,7 @@ export class TradingPartnersService {
         sendFunctionalAck: dto.sendFunctionalAck ?? true,
         requireFunctionalAck: dto.requireFunctionalAck ?? true,
         testMode: dto.testMode ?? false,
-        fieldMappings: dto.fieldMappings ? (dto.fieldMappings as Prisma.JsonValue) : Prisma.JsonNull,
+        fieldMappings: dto.fieldMappings ? (dto.fieldMappings as Prisma.InputJsonValue) : Prisma.JsonNull,
         externalId: dto.externalId,
         sourceSystem: dto.sourceSystem,
         createdById: userId,
@@ -123,7 +123,9 @@ export class TradingPartnersService {
         ...(dto.sendFunctionalAck !== undefined ? { sendFunctionalAck: dto.sendFunctionalAck } : {}),
         ...(dto.requireFunctionalAck !== undefined ? { requireFunctionalAck: dto.requireFunctionalAck } : {}),
         ...(dto.testMode !== undefined ? { testMode: dto.testMode } : {}),
-        ...(dto.fieldMappings !== undefined ? { fieldMappings: dto.fieldMappings as Prisma.JsonValue } : {}),
+        ...(dto.fieldMappings !== undefined
+          ? { fieldMappings: (dto.fieldMappings ?? Prisma.JsonNull) as Prisma.InputJsonValue | Prisma.JsonNullValueInput }
+          : {}),
         updatedById: userId,
       },
     });

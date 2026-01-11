@@ -38,10 +38,19 @@ export class EdiMappingsService {
         tenantId,
         tradingPartnerId: dto.tradingPartnerId,
         transactionType: dto.transactionType,
-        fieldMappings: dto.fieldMappings as Prisma.JsonValue,
-        defaultValues: dto.defaultValues ?? null,
-        transformRules: dto.transformRules ?? null,
-        validationRules: dto.validationRules ?? null,
+        fieldMappings: dto.fieldMappings as Prisma.InputJsonValue,
+        defaultValues:
+          dto.defaultValues !== undefined
+            ? (dto.defaultValues as Prisma.InputJsonValue)
+            : Prisma.JsonNull,
+        transformRules:
+          dto.transformRules !== undefined
+            ? (dto.transformRules as Prisma.InputJsonValue)
+            : Prisma.JsonNull,
+        validationRules:
+          dto.validationRules !== undefined
+            ? (dto.validationRules as Prisma.InputJsonValue)
+            : Prisma.JsonNull,
         isActive: dto.isActive ?? true,
         createdById: userId,
         updatedById: userId,
@@ -59,10 +68,16 @@ export class EdiMappingsService {
     return this.prisma.ediTransactionMapping.update({
       where: { id },
       data: {
-        ...(dto.fieldMappings !== undefined ? { fieldMappings: dto.fieldMappings as Prisma.JsonValue } : {}),
-        ...(dto.defaultValues !== undefined ? { defaultValues: dto.defaultValues as Prisma.JsonValue } : {}),
-        ...(dto.transformRules !== undefined ? { transformRules: dto.transformRules as Prisma.JsonValue } : {}),
-        ...(dto.validationRules !== undefined ? { validationRules: dto.validationRules as Prisma.JsonValue } : {}),
+        ...(dto.fieldMappings !== undefined ? { fieldMappings: dto.fieldMappings as Prisma.InputJsonValue } : {}),
+        ...(dto.defaultValues !== undefined
+          ? { defaultValues: (dto.defaultValues ?? Prisma.JsonNull) as Prisma.InputJsonValue | Prisma.JsonNullValueInput }
+          : {}),
+        ...(dto.transformRules !== undefined
+          ? { transformRules: (dto.transformRules ?? Prisma.JsonNull) as Prisma.InputJsonValue | Prisma.JsonNullValueInput }
+          : {}),
+        ...(dto.validationRules !== undefined
+          ? { validationRules: (dto.validationRules ?? Prisma.JsonNull) as Prisma.InputJsonValue | Prisma.JsonNullValueInput }
+          : {}),
         ...(dto.isActive !== undefined ? { isActive: dto.isActive } : {}),
         updatedById: userId,
       },

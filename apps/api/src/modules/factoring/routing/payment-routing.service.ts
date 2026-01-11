@@ -57,7 +57,8 @@ export class PaymentRoutingService {
     }
 
     if (status.factoringStatus === FactoringStatus.QUICK_PAY_ONLY || status.quickPayEnabled) {
-      return { type: 'QUICK_PAY', quickPayFeePercent: status.quickPayFeePercent ?? undefined };
+      const quickPayFee = status.quickPayFeePercent ? Number(status.quickPayFeePercent) : undefined;
+      return { type: 'QUICK_PAY', quickPayFeePercent: quickPayFee };
     }
 
     return { type: 'CARRIER', carrierId };

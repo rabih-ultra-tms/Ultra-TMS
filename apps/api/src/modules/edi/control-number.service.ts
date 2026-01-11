@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, PrismaClientKnownRequestError } from '@prisma/client';
+import { Prisma, EdiTransactionType } from '@prisma/client';
 import { PrismaService } from '../../prisma.service';
 
 @Injectable()
@@ -9,8 +9,8 @@ export class EdiControlNumberService {
   async next(
     tenantId: string,
     controlType: string,
-    tradingPartnerId?: string,
-    transactionType?: string,
+    tradingPartnerId: string,
+    transactionType: EdiTransactionType,
   ): Promise<string> {
     try {
       const record = await this.prisma.ediControlNumber.upsert({
@@ -18,16 +18,16 @@ export class EdiControlNumberService {
           tenantId_controlType_tradingPartnerId_transactionType: {
             tenantId,
             controlType,
-            tradingPartnerId: tradingPartnerId ?? null,
-            transactionType: transactionType ?? null,
+            tradingPartnerId,
+            transactionType,
           },
         },
         create: {
           tenantId,
           controlType,
           currentNumber: 1,
-          tradingPartnerId: tradingPartnerId ?? null,
-          transactionType: transactionType ?? null,
+          tradingPartnerId,
+          transactionType,
           minValue: 1,
           maxValue: 999999999,
         },
@@ -39,14 +39,14 @@ export class EdiControlNumberService {
       this.assertWithinRange(record);
       return this.formatNumber(record);
     } catch (err) {
-      if (err instanceof PrismaClientKnownRequestError && err.code === 'P2002') {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
         throw err;
       }
       throw err;
     }
   }
 
-  async nextTriple(tenantId: string, tradingPartnerId: string, transactionType: string) {
+  async nextTriple(tenantId: string, tradingPartnerId: string, transactionType: EdiTransactionType) {
     const [isaControlNumber, gsControlNumber, stControlNumber] = await Promise.all([
       this.next(tenantId, 'ISA', tradingPartnerId, transactionType),
       this.next(tenantId, 'GS', tradingPartnerId, transactionType),

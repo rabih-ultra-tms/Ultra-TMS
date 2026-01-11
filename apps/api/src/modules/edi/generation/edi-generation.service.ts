@@ -41,7 +41,7 @@ export class EdiGenerationService {
       rawContent,
       entityType: 'LOAD',
       entityId,
-      parsedContent: dto,
+      parsedContent: dto as unknown as Prisma.InputJsonValue,
       sendImmediately: dto.sendImmediately,
       controlNumbers,
     });
@@ -62,7 +62,7 @@ export class EdiGenerationService {
       rawContent,
       entityType: 'INVOICE',
       entityId: dto.invoiceId,
-      parsedContent: dto,
+      parsedContent: dto as unknown as Prisma.InputJsonValue,
       sendImmediately: dto.sendImmediately,
       controlNumbers,
     });
@@ -83,7 +83,7 @@ export class EdiGenerationService {
       rawContent,
       entityType: 'LOAD',
       entityId: dto.loadId,
-      parsedContent: dto,
+      parsedContent: dto as unknown as Prisma.InputJsonValue,
       sendImmediately: dto.sendImmediately,
       controlNumbers,
     });
@@ -104,7 +104,7 @@ export class EdiGenerationService {
       rawContent,
       entityType: 'LOAD',
       entityId: dto.loadId,
-      parsedContent: dto,
+      parsedContent: dto as unknown as Prisma.InputJsonValue,
       sendImmediately: dto.sendImmediately,
       controlNumbers,
     });
@@ -122,7 +122,7 @@ export class EdiGenerationService {
       rawContent,
       entityType: null,
       entityId: dto.originalMessageId,
-      parsedContent: dto,
+      parsedContent: dto as unknown as Prisma.InputJsonValue,
       sendImmediately: dto.sendImmediately,
       controlNumbers,
     });
@@ -171,7 +171,7 @@ export class EdiGenerationService {
     rawContent: string;
     entityType: string | null;
     entityId?: string | null;
-    parsedContent?: Prisma.JsonValue;
+    parsedContent?: Prisma.InputJsonValue | Prisma.JsonNullValueInput;
     sendImmediately?: boolean;
     controlNumbers?: { isaControlNumber: string; gsControlNumber: string; stControlNumber: string };
   }) {
@@ -193,7 +193,7 @@ export class EdiGenerationService {
         entityType: params.entityType,
         entityId: params.entityId ?? null,
         rawContent: params.rawContent,
-        parsedContent: params.parsedContent ?? null,
+        parsedContent: params.parsedContent ?? Prisma.JsonNull,
         processedAt: params.sendImmediately ? new Date() : null,
         createdById: params.userId,
         updatedById: params.userId,

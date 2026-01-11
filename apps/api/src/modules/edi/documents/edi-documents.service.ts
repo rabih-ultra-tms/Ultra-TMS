@@ -61,19 +61,19 @@ export class EdiDocumentsService {
     const direction = dto.direction ?? EdiDirection.INBOUND;
     const controlNumbers = await this.controlNumbers.nextTriple(tenantId, dto.tradingPartnerId, dto.transactionType);
 
-    let parsedContent: Prisma.JsonValue | null = null;
+    let parsedContent: Prisma.InputJsonValue | Prisma.JsonNullValueInput = Prisma.JsonNull;
     let validationStatus: EdiValidationStatus | null = null;
-    let validationErrors: Prisma.JsonValue | null = null;
+    let validationErrors: Prisma.InputJsonValue | Prisma.JsonNullValueInput = Prisma.JsonNull;
     let status: EdiMessageStatus = EdiMessageStatus.PENDING;
 
     try {
-      parsedContent = this.parser.parse(dto.rawContent) as Prisma.JsonValue;
+      parsedContent = this.parser.parse(dto.rawContent) as Prisma.InputJsonValue;
       validationStatus = EdiValidationStatus.VALID;
       status = EdiMessageStatus.DELIVERED;
       this.eventEmitter.emit('edi.document.received', { documentType: dto.transactionType, tenantId });
     } catch (err) {
       validationStatus = EdiValidationStatus.ERROR;
-      validationErrors = [{ message: (err as Error).message }];
+      validationErrors = [{ message: (err as Error).message }] as Prisma.InputJsonValue;
       status = EdiMessageStatus.ERROR;
       this.eventEmitter.emit('edi.document.error', { error: (err as Error).message });
     }
@@ -120,7 +120,7 @@ export class EdiDocumentsService {
       data: {
         status: EdiMessageStatus.PENDING,
         validationStatus: null,
-        validationErrors: dto.reason ? [{ reason: dto.reason }] : null,
+        validationErrors: dto.reason ? ([{ reason: dto.reason }] as Prisma.InputJsonValue) : Prisma.JsonNull,
         retryCount,
         lastRetryAt: new Date(),
         updatedAt: new Date(),
@@ -137,7 +137,7 @@ export class EdiDocumentsService {
         originalMessageId: message.id,
         ackControlNumber: dto.ackControlNumber,
         ackStatus: dto.ackStatus,
-        errorCodes: dto.errorCodes ?? null,
+        errorCodes: (dto.errorCodes ?? Prisma.JsonNull) as Prisma.InputJsonValue | Prisma.JsonNullValueInput,
         receivedAt: new Date(),
       },
     });
@@ -189,8 +189,8 @@ export class EdiDocumentsService {
     return null;
   }
 
-  private inferEntityId(transactionType: EdiTransactionType, parsedContent: Prisma.JsonValue | null) {
-    if (!parsedContent || typeof parsedContent !== 'object') return null;
+  private inferEntityId(transactionType: EdiTransactionType, parsedContent: Prisma.InputJsonValue | Prisma.JsonNullValueInput) {
+    if (!parsedContent || parsedContent === Prisma.JsonNull || typeof parsedContent !== 'object') return null;
     const payload = parsedContent as Record<string, unknown>;
     if (transactionType === EdiTransactionType.EDI_210 && typeof payload.invoiceId === 'string') {
       return payload.invoiceId;

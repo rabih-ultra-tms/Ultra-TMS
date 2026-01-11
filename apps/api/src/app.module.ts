@@ -27,6 +27,7 @@ import { ContractsModule } from './modules/contracts/contracts.module';
 import { AgentsModule } from './modules/agents/agents.module';
 import { FactoringModule } from './modules/factoring/factoring.module';
 import { EdiModule } from './modules/edi/edi.module';
+import { SafetyModule } from './modules/safety/safety.module';
 
 // Support services - commented out until schemas are added
 // import { AnalyticsModule } from './modules/analytics/analytics.module';
@@ -65,6 +66,7 @@ import { EdiModule } from './modules/edi/edi.module';
     AgentsModule,
     FactoringModule,
     EdiModule,
+    SafetyModule,
     // Support services - enable after adding schemas:
     // AnalyticsModule,
     // IntegrationHubModule,

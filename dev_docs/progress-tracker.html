@@ -535,9 +535,9 @@
                         <td>Safety</td>
                         <td>63-66</td>
                         <td>10 / 10</td>
-                        <td>0 / 35</td>
+                        <td>40 / 40</td>
                         <td>0 / 10</td>
-                        <td><span class="status"><span class="status-dot complete"></span> Schema Complete</span></td>
+                        <td><span class="status"><span class="status-dot complete"></span> API Complete</span></td>
                     </tr>
                     <tr>
                         <td>Load Board External</td>
@@ -880,8 +880,20 @@
                             </ul>
                         </li>
                         <li>📦 <strong>Seed Infrastructure:</strong> 32 modular seed files in prisma/seed/ directory</li>
-                        <li>🔧 <strong>Remaining Services:</strong> 15 services have seed files created but require minor fixes (hr, analytics, workflow, integration-hub, search, audit, config, scheduler, cache, help-desk, feedback, safety, load-board-external, rate-intelligence, claims)</li>
+                        <li>🔧 <strong>Remaining Services:</strong> 14 services have seed files created but require minor fixes (hr, analytics, workflow, integration-hub, search, audit, config, scheduler, cache, help-desk, feedback, load-board-external, rate-intelligence, claims)</li>
                         <li>🎯 <strong>Phase A Progress:</strong> 15 of 27 services fully seeded (55.6%)</li>
+                    </ul>
+                </div>
+                <div class="log-entry">
+                    <div class="log-date">January 12, 2026 - Safety Service API Complete</div>
+                    <ul class="log-items">
+                        <li>✅ Completed Service 11: Safety Module
+                            <ul style="list-style: circle; padding-left: 1.5rem;">
+                                <li>FMCSA lookup/verify/refresh, CSA score refresh, insurance verification, DQF compliance, incidents, watchlist, alerts, safety scores, and reports delivered</li>
+                                <li>40 API endpoints implemented with Prisma persistence and tenant isolation</li>
+                                <li>New end-to-end tests covering FMCSA, CSA alerts, insurance expiration, DQF compliance, incident closure, watchlist resolution, alerts lifecycle, safety scores, and compliance reports</li>
+                            </ul>
+                        </li>
                     </ul>
                 </div>
                 <div class="log-entry">
