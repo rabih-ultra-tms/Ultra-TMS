@@ -3,38 +3,38 @@ import { IsArray, IsNumber, IsOptional, IsString, Min, ValidateNested } from 'cl
 
 export class InvoiceLineItemDto {
   @IsString()
-  loadId: string;
+  loadId!: string;
 
   @IsNumber()
-  lineHaul: number;
+  lineHaul!: number;
 
   @IsNumber()
-  fuelSurcharge: number;
+  fuelSurcharge!: number;
 
   @IsOptional()
   @IsNumber()
   accessorials?: number;
 
   @IsNumber()
-  total: number;
+  total!: number;
 }
 
 export class SubmitInvoiceDto {
   @IsString()
-  carrierInvoiceNumber: string;
+  carrierInvoiceNumber!: string;
 
   @IsArray()
   @IsString({ each: true })
-  loadIds: string[];
+  loadIds!: string[];
 
   @IsNumber()
   @Min(0)
-  totalAmount: number;
+  totalAmount!: number;
 
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => InvoiceLineItemDto)
-  lineItems: InvoiceLineItemDto[];
+  lineItems!: InvoiceLineItemDto[];
 
   @IsOptional()
   @IsString()

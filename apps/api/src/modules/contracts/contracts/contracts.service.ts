@@ -53,7 +53,6 @@ export class ContractsService {
   async detail(tenantId: string, id: string) {
     const contract = await this.prisma.contract.findFirst({
       where: { id, tenantId, deletedAt: null },
-      include: { rateTables: true, slas: true, volumeCommitments: true, amendments: true },
     });
     if (!contract) throw new NotFoundException('Contract not found');
     return contract;
@@ -112,7 +111,11 @@ export class ContractsService {
     const envelope = await this.docusign.sendEnvelope(contract.id, contract.name);
     const updated = await this.prisma.contract.update({
       where: { id },
-      data: { status: ContractStatus.SENT_FOR_SIGNATURE, esignEnvelopeId: envelope.envelopeId, esignProvider: 'DOCUSIGN', esignStatus: envelope.status.toUpperCase() },
+      data: {
+        status: ContractStatus.SENT_FOR_SIGNATURE,
+        esignEnvelopeId: envelope.envelopeId,
+        esignProvider: 'DOCUSIGN',
+      },
     });
     this.emit('contract.esign.sent', { contractId: updated.id, envelopeId: envelope.envelopeId, tenantId });
     return updated;

@@ -3,7 +3,7 @@ import { IsNumber, IsOptional, IsString, Min } from 'class-validator';
 export class SubmitBidDto {
   @IsNumber()
   @Min(0)
-  bidAmount: number;
+  bidAmount!: number;
 
   @IsOptional()
   @IsString()

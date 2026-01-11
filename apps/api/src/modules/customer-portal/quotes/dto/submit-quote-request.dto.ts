@@ -1,29 +1,29 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsBoolean, IsDateString, IsInt, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { IsArray, IsBoolean, IsDateString, IsInt, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class SubmitQuoteRequestDto {
   @IsString()
-  originCity: string;
+  originCity!: string;
 
   @IsString()
-  originState: string;
+  originState!: string;
 
   @IsOptional()
   @IsString()
   originZip?: string;
 
   @IsString()
-  destCity: string;
+  destCity!: string;
 
   @IsString()
-  destState: string;
+  destState!: string;
 
   @IsOptional()
   @IsString()
   destZip?: string;
 
   @IsDateString()
-  pickupDate: string;
+  pickupDate!: string;
 
   @IsOptional()
   @IsDateString()
@@ -34,7 +34,7 @@ export class SubmitQuoteRequestDto {
   isFlexibleDates?: boolean;
 
   @IsString()
-  equipmentType: string;
+  equipmentType!: string;
 
   @IsOptional()
   @IsString()
@@ -82,15 +82,15 @@ export class DeclineQuoteDto {
 
 export class RevisionRequestDto {
   @IsString()
-  request: string;
+  request!: string;
 }
 
 export class EstimateQuoteDto {
   @IsString()
-  originCity: string;
+  originCity!: string;
 
   @IsString()
-  destCity: string;
+  destCity!: string;
 
   @IsOptional()
   @Type(() => Number)

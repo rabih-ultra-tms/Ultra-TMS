@@ -24,6 +24,7 @@ import { ClaimsModule } from './modules/claims/claims.module';
 import { CustomerPortalModule } from './modules/customer-portal/customer-portal.module';
 import { CarrierPortalModule } from './modules/carrier-portal/carrier-portal.module';
 import { ContractsModule } from './modules/contracts/contracts.module';
+import { AgentsModule } from './modules/agents/agents.module';
 
 // Support services - commented out until schemas are added
 // import { AnalyticsModule } from './modules/analytics/analytics.module';
@@ -59,6 +60,7 @@ import { ContractsModule } from './modules/contracts/contracts.module';
     CustomerPortalModule,
     CarrierPortalModule,
     ContractsModule,
+    AgentsModule,
     // Support services - enable after adding schemas:
     // AnalyticsModule,
     // IntegrationHubModule,

@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma.service';
 import { SubmitInvoiceDto } from './dto/submit-invoice.dto';
 import { RequestQuickPayDto } from './dto/request-quick-pay.dto';
@@ -28,7 +29,7 @@ export class CarrierPortalInvoicesService {
               lineItems: payload.lineItems,
               invoiceDocumentId: payload.invoiceDocumentId,
               carrierNotes: payload.carrierNotes,
-            },
+            } as unknown as Prisma.InputJsonValue,
           },
         }),
       ),

@@ -2,15 +2,15 @@ import { IsInt, IsNumber, IsOptional } from 'class-validator';
 
 export class CreateFuelTierDto {
   @IsInt()
-  tierNumber: number;
+  tierNumber!: number;
 
   @IsNumber()
-  priceMin: number;
+  priceMin!: number;
 
   @IsOptional()
   @IsNumber()
   priceMax?: number;
 
   @IsNumber()
-  surchargePercent: number;
+  surchargePercent!: number;
 }

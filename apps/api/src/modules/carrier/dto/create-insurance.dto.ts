@@ -40,6 +40,10 @@ export class CreateInsuranceDto {
   @IsOptional()
   @IsUrl()
   documentUrl?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  verified?: boolean;
 }
 
 export class UpdateInsuranceDto extends PartialType(CreateInsuranceDto) {

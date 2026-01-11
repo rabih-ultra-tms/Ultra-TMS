@@ -9,25 +9,25 @@ export enum PaymentMethodDto {
 
 export class InvoicePaymentDto {
   @IsString()
-  invoiceId: string;
+  invoiceId!: string;
 
   @IsNumber()
   @Min(0.01)
-  amount: number;
+  amount!: number;
 }
 
 export class MakePaymentDto {
   @IsNumber()
   @Min(0.01)
-  amount: number;
+  amount!: number;
 
   @IsEnum(PaymentMethodDto)
-  paymentMethod: PaymentMethodDto;
+  paymentMethod!: PaymentMethodDto;
 
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => InvoicePaymentDto)
-  invoices: InvoicePaymentDto[];
+  invoices!: InvoicePaymentDto[];
 
   @IsOptional()
   @IsString()

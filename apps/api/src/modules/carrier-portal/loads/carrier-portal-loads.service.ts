@@ -9,7 +9,7 @@ import { LoadStatusEnum } from '../../tms/dto/load-query.dto';
 export class CarrierPortalLoadsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async available(tenantId: string, carrierId: string, userId: string) {
+  async available(tenantId: string, _carrierId: string, _userId: string) {
     return this.prisma.load.findMany({
       where: { tenantId, carrierId: null },
       orderBy: { createdAt: 'desc' },
@@ -61,7 +61,7 @@ export class CarrierPortalLoadsService {
     });
   }
 
-  async matching(tenantId: string, carrierId: string, userId: string) {
+  async matching(tenantId: string, _carrierId: string, _userId: string) {
     return this.prisma.load.findMany({ where: { tenantId, carrierId: null }, take: 5 });
   }
 

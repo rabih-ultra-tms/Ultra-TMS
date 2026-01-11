@@ -39,7 +39,7 @@ export class CarrierPortalAuthGuard implements CanActivate {
       req.carrierPortalUser = user;
       req.tenantId = user.tenantId;
       return true;
-    } catch (err) {
+    } catch (_err) {
       throw new UnauthorizedException('Invalid carrier portal token');
     }
   }

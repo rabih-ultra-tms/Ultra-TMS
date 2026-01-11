@@ -2,7 +2,7 @@ import { IsArray, IsDateString, IsOptional, IsString } from 'class-validator';
 
 export class CreateAmendmentDto {
   @IsDateString()
-  effectiveDate: string;
+  effectiveDate!: string;
 
   @IsOptional()
   @IsString()

@@ -3,34 +3,34 @@ import { RateType } from '@prisma/client';
 
 export class CreateRateLaneDto {
   @IsString()
-  originCity: string;
+  originCity!: string;
 
   @IsString()
-  originState: string;
+  originState!: string;
 
   @IsOptional()
   @IsString()
   originZip?: string;
 
   @IsString()
-  destCity: string;
+  destCity!: string;
 
   @IsString()
-  destState: string;
+  destState!: string;
 
   @IsOptional()
   @IsString()
   destZip?: string;
 
   @IsString()
-  equipmentType: string;
+  equipmentType!: string;
 
   @IsEnum(RateType)
-  rateType: RateType;
+  rateType!: RateType;
 
   @IsNumber()
   @Min(0)
-  rateAmount: number;
+  rateAmount!: number;
 
   @IsOptional()
   @IsString()

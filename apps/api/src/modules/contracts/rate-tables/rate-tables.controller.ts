@@ -3,7 +3,8 @@ import { RateTablesService } from './rate-tables.service';
 import { CreateRateTableDto } from './dto/create-rate-table.dto';
 import { UpdateRateTableDto } from './dto/update-rate-table.dto';
 import { JwtAuthGuard } from '../../auth/guards';
-import { CurrentUser, CurrentUserData } from '../../../common/decorators/current-user.decorator';
+import { CurrentUser } from '../../../common/decorators/current-user.decorator';
+import type { CurrentUserData } from '../../../common/decorators/current-user.decorator';
 
 @Controller()
 @UseGuards(JwtAuthGuard)

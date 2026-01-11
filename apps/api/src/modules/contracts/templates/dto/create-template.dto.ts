@@ -3,13 +3,13 @@ import { ContractType } from '@prisma/client';
 
 export class CreateTemplateDto {
   @IsString()
-  templateName: string;
+  templateName!: string;
 
   @IsEnum(ContractType)
-  contractType: ContractType;
+  contractType!: ContractType;
 
   @IsString()
-  templateContent: string;
+  templateContent!: string;
 
   @IsOptional()
   @IsString()

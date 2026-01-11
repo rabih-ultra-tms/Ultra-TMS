@@ -90,7 +90,7 @@ export class CarrierPortalAuthService {
 
       const accessToken = this.signAccess(user);
       return { accessToken };
-    } catch (err) {
+    } catch (_err) {
       throw new UnauthorizedException('Invalid refresh token');
     }
   }

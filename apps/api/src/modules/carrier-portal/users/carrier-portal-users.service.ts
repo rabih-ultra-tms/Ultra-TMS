@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Prisma, PortalUserStatus, $Enums } from '@prisma/client';
 import { PrismaService } from '../../../prisma.service';
 import { InviteCarrierPortalUserDto, UpdateCarrierPortalUserDto } from './dto/invite-carrier-portal-user.dto';
 import { CarrierPortalUserRole } from './types';
-import { PortalUserStatus } from '@prisma/client';
 import { randomBytes } from 'crypto';
 
 @Injectable()
@@ -65,10 +65,12 @@ export class CarrierPortalUsersService {
         password: token,
         firstName: dto.firstName,
         lastName: dto.lastName,
-        role: dto.role,
+        role: dto.role as $Enums.CarrierPortalUserRole,
         status: PortalUserStatus.PENDING,
         verificationToken: token,
-        customFields: dto.permissions ? { permissions: dto.permissions } : {},
+        customFields: dto.permissions
+          ? ({ permissions: dto.permissions } as Prisma.InputJsonValue)
+          : Prisma.JsonNull,
       },
     });
   }
@@ -91,10 +93,10 @@ export class CarrierPortalUsersService {
     return this.prisma.carrierPortalUser.update({
       where: { id: userId },
       data: {
-        role: dto.role ?? user.role,
+        role: (dto.role as $Enums.CarrierPortalUserRole | undefined) ?? user.role,
         firstName: dto.firstName ?? user.firstName,
         lastName: dto.lastName ?? user.lastName,
-        customFields,
+        customFields: (customFields as Prisma.InputJsonValue) ?? Prisma.JsonNull,
       },
     });
   }

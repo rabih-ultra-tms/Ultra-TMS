@@ -2,10 +2,10 @@ import { IsBoolean, IsDateString, IsOptional, IsString } from 'class-validator';
 
 export class CreateRateTableDto {
   @IsString()
-  tableName: string;
+  tableName!: string;
 
   @IsDateString()
-  effectiveDate: string;
+  effectiveDate!: string;
 
   @IsOptional()
   @IsDateString()

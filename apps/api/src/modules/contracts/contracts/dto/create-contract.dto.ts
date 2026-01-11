@@ -3,14 +3,14 @@ import { ContractType } from '@prisma/client';
 
 export class CreateContractDto {
   @IsString()
-  name: string;
+  name!: string;
 
   @IsOptional()
   @IsString()
   description?: string;
 
   @IsEnum(ContractType)
-  contractType: ContractType;
+  contractType!: ContractType;
 
   @IsOptional()
   @IsString()
@@ -25,10 +25,10 @@ export class CreateContractDto {
   agentId?: string;
 
   @IsDateString()
-  effectiveDate: string;
+  effectiveDate!: string;
 
   @IsDateString()
-  expirationDate: string;
+  expirationDate!: string;
 
   @IsOptional()
   @IsBoolean()

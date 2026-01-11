@@ -106,7 +106,7 @@ export class PortalAuthService {
 
       const accessToken = this.signAccessToken(user);
       return { accessToken };
-    } catch (err) {
+    } catch (_err) {
       throw new UnauthorizedException('Invalid refresh token');
     }
   }

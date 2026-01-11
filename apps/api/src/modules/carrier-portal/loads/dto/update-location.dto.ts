@@ -2,10 +2,10 @@ import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class UpdateLocationDto {
   @IsNumber()
-  latitude: number;
+  latitude!: number;
 
   @IsNumber()
-  longitude: number;
+  longitude!: number;
 
   @IsOptional()
   @IsString()

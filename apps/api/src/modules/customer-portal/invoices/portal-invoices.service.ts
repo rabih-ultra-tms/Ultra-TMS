@@ -29,13 +29,14 @@ export class PortalInvoicesService {
 
     const now = new Date();
     for (const inv of invoices) {
+      if (!inv.dueDate) continue;
       const days = Math.floor((now.getTime() - inv.dueDate.getTime()) / (1000 * 60 * 60 * 24));
-      const balance = Number(inv.balanceDue);
-      if (days <= 0) buckets['CURRENT'] += balance;
-      else if (days <= 30) buckets['1-30'] += balance;
-      else if (days <= 60) buckets['31-60'] += balance;
-      else if (days <= 90) buckets['61-90'] += balance;
-      else buckets['90+'] += balance;
+      const balance = Number(inv.balanceDue ?? 0);
+      if (days <= 0) buckets['CURRENT'] = (buckets['CURRENT'] ?? 0) + balance;
+      else if (days <= 30) buckets['1-30'] = (buckets['1-30'] ?? 0) + balance;
+      else if (days <= 60) buckets['31-60'] = (buckets['31-60'] ?? 0) + balance;
+      else if (days <= 90) buckets['61-90'] = (buckets['61-90'] ?? 0) + balance;
+      else buckets['90+'] = (buckets['90+'] ?? 0) + balance;
     }
 
     return buckets;

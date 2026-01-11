@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
+import type { JwtSignOptions } from '@nestjs/jwt';
 import { PortalAuthGuard } from './guards/portal-auth.guard';
 import { PrismaService } from '../../prisma.service';
 import { PortalAuthController } from './auth/portal-auth.controller';
@@ -21,7 +22,9 @@ import { PortalUsersService } from './users/portal-users.service';
   imports: [
     JwtModule.register({
       secret: process.env.PORTAL_JWT_SECRET || process.env.JWT_SECRET || 'portal-secret',
-      signOptions: { expiresIn: process.env.PORTAL_JWT_EXPIRES_IN || '1h' },
+      signOptions: {
+        expiresIn: (process.env.PORTAL_JWT_EXPIRES_IN || '1h') as JwtSignOptions['expiresIn'],
+      },
     }),
   ],
   controllers: [

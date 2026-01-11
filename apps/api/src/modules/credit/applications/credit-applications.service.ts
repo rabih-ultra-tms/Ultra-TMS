@@ -45,11 +45,11 @@ export class CreditApplicationsService {
         bankName: dto.bankName,
         bankContactName: dto.bankContactName,
         bankContactPhone: dto.bankContactPhone,
-        tradeReferences: dto.tradeReferences,
+        tradeReferences: dto.tradeReferences ? (dto.tradeReferences as unknown as Prisma.InputJsonValue) : Prisma.JsonNull,
         ownerName: dto.ownerName,
         ownerAddress: dto.ownerAddress,
         ownerSSN: dto.ownerSSN,
-        customFields: Object.keys(customFields).length ? customFields : undefined,
+        customFields: Object.keys(customFields).length ? (customFields as Prisma.InputJsonValue) : undefined,
         createdById: userId,
         updatedById: userId,
       },
@@ -128,14 +128,16 @@ export class CreditApplicationsService {
       ...(dto.bankName !== undefined ? { bankName: dto.bankName } : {}),
       ...(dto.bankContactName !== undefined ? { bankContactName: dto.bankContactName } : {}),
       ...(dto.bankContactPhone !== undefined ? { bankContactPhone: dto.bankContactPhone } : {}),
-      ...(dto.tradeReferences !== undefined ? { tradeReferences: dto.tradeReferences } : {}),
+      ...(dto.tradeReferences !== undefined
+        ? { tradeReferences: (dto.tradeReferences as unknown as Prisma.InputJsonValue) ?? Prisma.JsonNull }
+        : {}),
       ...(dto.ownerName !== undefined ? { ownerName: dto.ownerName } : {}),
       ...(dto.ownerAddress !== undefined ? { ownerAddress: dto.ownerAddress } : {}),
       ...(dto.ownerSSN !== undefined ? { ownerSSN: dto.ownerSSN } : {}),
       ...(dto.companyId !== undefined
         ? { company: { connect: { id: dto.companyId } }, customerId: dto.companyId }
         : {}),
-      ...(Object.keys(nextCustomFields).length ? { customFields: nextCustomFields } : {}),
+      ...(Object.keys(nextCustomFields).length ? { customFields: nextCustomFields as Prisma.InputJsonValue } : {}),
       updatedById: userId,
     };
 

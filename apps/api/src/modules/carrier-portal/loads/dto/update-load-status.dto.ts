@@ -3,7 +3,7 @@ import { LoadStatusEnum } from '../../../tms/dto/load-query.dto';
 
 export class UpdateLoadStatusDto {
   @IsEnum(LoadStatusEnum)
-  status: LoadStatusEnum;
+  status!: LoadStatusEnum;
 
   @IsOptional()
   @IsString()

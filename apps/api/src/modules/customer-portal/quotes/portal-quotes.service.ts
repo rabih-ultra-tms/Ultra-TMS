@@ -60,9 +60,10 @@ export class PortalQuotesService {
         weightLbs: dto.weightLbs as unknown as Prisma.Decimal,
         palletCount: dto.pallets,
         isHazmat: dto.isHazmat ?? false,
-        specialInstructions: dto.specialInstructions,
         status: QuoteRequestStatus.SUBMITTED,
-        customFields: dto.requestedAccessorials?.length ? { accessorials: dto.requestedAccessorials } : {},
+        customFields: dto.requestedAccessorials?.length
+          ? ({ accessorials: dto.requestedAccessorials, specialInstructions: dto.specialInstructions } as Prisma.InputJsonValue)
+          : (dto.specialInstructions ? ({ specialInstructions: dto.specialInstructions } as Prisma.InputJsonValue) : Prisma.JsonNull),
       },
     });
   }
@@ -73,9 +74,16 @@ export class PortalQuotesService {
       throw new BadRequestException('Quote cannot be accepted in current state');
     }
 
+    const customFields = ((quote.customFields as Prisma.JsonObject) ?? {}) as Record<string, unknown>;
+    if (dto.notes) customFields.responseNotes = dto.notes;
+
     return this.prisma.quoteRequest.update({
       where: { id },
-      data: { status: QuoteRequestStatus.ACCEPTED, acceptedAt: new Date(), responseNotes: dto.notes },
+      data: {
+        status: QuoteRequestStatus.ACCEPTED,
+        acceptedAt: new Date(),
+        customFields: Object.keys(customFields).length ? (customFields as Prisma.InputJsonValue) : Prisma.JsonNull,
+      },
     });
   }
 
@@ -89,14 +97,15 @@ export class PortalQuotesService {
 
   async revision(tenantId: string, id: string, dto: RevisionRequestDto) {
     const quote = await this.requireQuote(tenantId, id);
-    const revisions = (quote.customFields as any)?.revisions ?? [];
+    const customFields = ((quote.customFields as Prisma.JsonObject) ?? {}) as Record<string, unknown>;
+    const revisions = (customFields.revisions as any[]) ?? [];
     revisions.push({ requestedAt: new Date().toISOString(), request: dto.request });
 
     return this.prisma.quoteRequest.update({
       where: { id },
       data: {
         status: QuoteRequestStatus.REVIEWING,
-        customFields: { ...quote.customFields, revisions },
+        customFields: { ...customFields, revisions } as Prisma.InputJsonValue,
       },
     });
   }

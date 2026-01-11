@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma.service';
 import { CreateCollectionActivityDto, UpdateCollectionActivityDto } from '../dto/collection-activity.dto';
 import { PaginationDto } from '../dto/pagination.dto';
@@ -19,12 +18,12 @@ export class CollectionsService {
 
     const [data, total] = await Promise.all([
       this.prisma.collectionActivity.findMany({
-        where: { tenantId, deletedAt: null },
+        where: { tenantId },
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
       }),
-      this.prisma.collectionActivity.count({ where: { tenantId, deletedAt: null } }),
+      this.prisma.collectionActivity.count({ where: { tenantId } }),
     ]);
 
     return {
@@ -38,7 +37,7 @@ export class CollectionsService {
 
   async historyByCustomer(tenantId: string, companyId: string) {
     return this.prisma.collectionActivity.findMany({
-      where: { tenantId, companyId, deletedAt: null },
+      where: { tenantId, companyId },
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -115,7 +114,6 @@ export class CollectionsService {
     const invoices = await this.prisma.invoice.findMany({
       where: {
         tenantId,
-        deletedAt: null,
         status: { notIn: ['PAID', 'VOID'] },
       },
       select: {
@@ -138,15 +136,15 @@ export class CollectionsService {
       const days = this.daysPastDue(now, inv.dueDate);
       const amount = Number(inv.balanceDue ?? 0);
       if (days <= 0) {
-        buckets.CURRENT += amount;
+        buckets.CURRENT = (buckets.CURRENT ?? 0) + amount;
       } else if (days <= 30) {
-        buckets['1-30'] += amount;
+        buckets['1-30'] = (buckets['1-30'] ?? 0) + amount;
       } else if (days <= 60) {
-        buckets['31-60'] += amount;
+        buckets['31-60'] = (buckets['31-60'] ?? 0) + amount;
       } else if (days <= 90) {
-        buckets['61-90'] += amount;
+        buckets['61-90'] = (buckets['61-90'] ?? 0) + amount;
       } else {
-        buckets['90+'] += amount;
+        buckets['90+'] = (buckets['90+'] ?? 0) + amount;
       }
     });
 
@@ -180,7 +178,7 @@ export class CollectionsService {
   }
 
   private async requireCompany(tenantId: string, companyId: string) {
-    const company = await this.prisma.company.findFirst({ where: { id: companyId, tenantId, deletedAt: null } });
+    const company = await this.prisma.company.findFirst({ where: { id: companyId, tenantId } });
     if (!company) {
       throw new NotFoundException('Company not found for this tenant');
     }
@@ -188,7 +186,7 @@ export class CollectionsService {
   }
 
   private async requireInvoice(tenantId: string, invoiceId: string, companyId: string) {
-    const invoice = await this.prisma.invoice.findFirst({ where: { id: invoiceId, tenantId, companyId, deletedAt: null } });
+    const invoice = await this.prisma.invoice.findFirst({ where: { id: invoiceId, tenantId, companyId } });
     if (!invoice) {
       throw new NotFoundException('Invoice not found for this customer');
     }

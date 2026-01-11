@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma.service';
 import { CreateAmendmentDto } from './dto/create-amendment.dto';
 import { UpdateAmendmentDto } from './dto/update-amendment.dto';
@@ -22,8 +23,8 @@ export class AmendmentsService {
         effectiveDate: new Date(dto.effectiveDate),
         description: dto.description ?? '',
         changedFields: dto.changedFields ?? [],
-        previousValues: {},
-        newValues: dto.changes ?? {},
+        previousValues: Prisma.JsonNull,
+        newValues: (dto.changes as Prisma.InputJsonValue | undefined) ?? Prisma.JsonNull,
         changedBy: userId,
         createdById: userId,
       },
@@ -53,6 +54,14 @@ export class AmendmentsService {
   async apply(id: string, tenantId: string) {
     const amend = await this.detail(tenantId, id);
     // For now, mark as applied using customFields flag
-    return this.prisma.contractAmendment.update({ where: { id }, data: { customFields: { ...(amend.customFields as object), appliedAt: new Date() } } });
+    return this.prisma.contractAmendment.update({
+      where: { id },
+      data: {
+        customFields: {
+          ...(((amend.customFields as Prisma.JsonObject | null) ?? {}) as Record<string, unknown>),
+          appliedAt: new Date(),
+        } as Prisma.InputJsonValue,
+      },
+    });
   }
 }

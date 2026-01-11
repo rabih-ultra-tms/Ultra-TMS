@@ -3,16 +3,16 @@ import { CarrierPortalUserRole } from '../types';
 
 export class InviteCarrierPortalUserDto {
   @IsEmail()
-  email: string;
+  email!: string;
 
   @IsString()
-  firstName: string;
+  firstName!: string;
 
   @IsString()
-  lastName: string;
+  lastName!: string;
 
   @IsEnum(CarrierPortalUserRole)
-  role: CarrierPortalUserRole;
+  role!: CarrierPortalUserRole;
 
   @IsOptional()
   @IsArray()

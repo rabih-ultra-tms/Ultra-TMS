@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
+import type { JwtSignOptions } from '@nestjs/jwt';
 import { PrismaService } from '../../prisma.service';
 import { CarrierPortalAuthGuard } from './guards/carrier-portal-auth.guard';
 import { CarrierPortalAuthController } from './auth/carrier-portal-auth.controller';
@@ -19,9 +20,12 @@ import { CarrierPortalUsersService } from './users/carrier-portal-users.service'
 
 @Module({
   imports: [
+    // align type expectations for expiresIn across string/number
     JwtModule.register({
       secret: process.env.CARRIER_PORTAL_JWT_SECRET || process.env.JWT_SECRET || 'carrier-portal-secret',
-      signOptions: { expiresIn: process.env.CARRIER_PORTAL_JWT_EXPIRES_IN || '2h' },
+      signOptions: {
+        expiresIn: (process.env.CARRIER_PORTAL_JWT_EXPIRES_IN || '2h') as JwtSignOptions['expiresIn'],
+      },
     }),
   ],
   controllers: [

@@ -3,7 +3,8 @@ import { VolumeCommitmentsService } from './volume-commitments.service';
 import { CreateVolumeCommitmentDto } from './dto/create-volume-commitment.dto';
 import { UpdateVolumeCommitmentDto } from './dto/update-volume-commitment.dto';
 import { JwtAuthGuard } from '../../auth/guards';
-import { CurrentUser, CurrentUserData } from '../../../common/decorators/current-user.decorator';
+import { CurrentUser } from '../../../common/decorators/current-user.decorator';
+import type { CurrentUserData } from '../../../common/decorators/current-user.decorator';
 
 @Controller()
 @UseGuards(JwtAuthGuard)

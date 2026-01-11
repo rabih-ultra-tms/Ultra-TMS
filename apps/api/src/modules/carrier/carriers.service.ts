@@ -70,7 +70,7 @@ export class CarriersService {
         w9OnFile: dto.w9OnFile ?? false,
         equipmentTypes: dto.equipmentTypes ?? [],
         serviceStates: dto.serviceStates ?? [],
-        customFields: dto.customFields ?? {},
+        customFields: (dto.customFields as Prisma.InputJsonValue) ?? Prisma.JsonNull,
         createdById: userId,
         updatedById: userId,
         contacts: dto.contacts?.length
@@ -254,7 +254,7 @@ export class CarriersService {
         w9OnFile: dto.w9OnFile ?? carrier.w9OnFile,
         equipmentTypes: dto.equipmentTypes ?? carrier.equipmentTypes,
         serviceStates: dto.serviceStates ?? carrier.serviceStates,
-        customFields: dto.customFields ?? carrier.customFields,
+        customFields: (dto.customFields as Prisma.InputJsonValue | undefined) ?? (carrier.customFields as Prisma.InputJsonValue | null) ?? Prisma.JsonNull,
         updatedAt: new Date(),
       },
     });
@@ -520,8 +520,8 @@ export class CarriersService {
         authorityStatus: mockResponse.operatingStatus,
         safetyRating: mockResponse.safetyRating,
         outOfService: mockResponse.outOfService,
-        fmcsaInsuranceOnFile: mockResponse.insuranceOnFile,
-        rawResponse: mockResponse,
+        fmcsaInsuranceOnFile: Boolean(mockResponse.insuranceOnFile),
+        rawResponse: mockResponse as Prisma.InputJsonValue,
         createdById: userId,
       },
     });
@@ -633,7 +633,7 @@ export class CarriersService {
         outOfService: false,
         fmcsaInsuranceOnFile: true,
         fmcsaInsuranceAmount: fmcsaData.insurance?.bipdOnFile ?? null,
-        rawResponse: fmcsaData,
+        rawResponse: fmcsaData as unknown as Prisma.InputJsonValue,
         createdById: userId,
       },
     });

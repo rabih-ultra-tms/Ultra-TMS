@@ -53,7 +53,7 @@ export class PaymentPlansService {
   async create(tenantId: string, userId: string, dto: CreatePaymentPlanDto) {
     await this.requireCompany(tenantId, dto.companyId);
     const invoiceIds = dto.invoices.map((i) => i.invoiceId);
-    const invoices = await this.prisma.invoice.findMany({ where: { id: { in: invoiceIds }, tenantId, deletedAt: null } });
+    const invoices = await this.prisma.invoice.findMany({ where: { id: { in: invoiceIds }, tenantId } });
 
     if (invoices.length !== invoiceIds.length) {
       throw new BadRequestException('One or more invoices not found for this tenant');
@@ -94,8 +94,7 @@ export class PaymentPlansService {
         interestRate: dto.interestRate,
         lateFeePct: dto.lateFeePct,
         lateFeeFixed: dto.lateFeeFixed,
-        invoiceIds,
-        notes: dto.notes,
+        invoiceIds: invoiceIds as Prisma.InputJsonValue,
         createdById: userId,
         approvedById: userId,
         approvedAt: new Date(),
@@ -119,7 +118,7 @@ export class PaymentPlansService {
     let totalAmount = Number(plan.totalAmount);
     if (dto.invoices) {
       invoiceIds = dto.invoices.map((i) => i.invoiceId);
-      const invoices = await this.prisma.invoice.findMany({ where: { id: { in: invoiceIds }, tenantId, deletedAt: null } });
+      const invoices = await this.prisma.invoice.findMany({ where: { id: { in: invoiceIds }, tenantId } });
       if (invoices.length !== invoiceIds.length) {
         throw new BadRequestException('One or more invoices not found for this tenant');
       }
@@ -151,8 +150,7 @@ export class PaymentPlansService {
         interestRate: dto.interestRate ?? plan.interestRate,
         lateFeePct: dto.lateFeePct ?? plan.lateFeePct,
         lateFeeFixed: dto.lateFeeFixed ?? plan.lateFeeFixed,
-        invoiceIds: invoiceIds ?? plan.invoiceIds,
-        notes: dto.notes ?? plan.notes,
+        invoiceIds: (invoiceIds as Prisma.InputJsonValue | null) ?? (plan.invoiceIds as Prisma.InputJsonValue),
         updatedById: userId,
       },
     });

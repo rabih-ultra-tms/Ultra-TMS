@@ -2,14 +2,14 @@ import { IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class CalculateFuelSurchargeDto {
   @IsString()
-  fuelTableId: string;
+  fuelTableId!: string;
 
   @IsNumber()
-  currentFuelPrice: number;
+  currentFuelPrice!: number;
 
   @IsNumber()
   @Min(0)
-  lineHaulAmount: number;
+  lineHaulAmount!: number;
 
   @IsOptional()
   @IsNumber()

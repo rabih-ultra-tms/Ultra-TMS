@@ -2,10 +2,10 @@ import { IsDateString, IsInt, IsNumber, IsOptional, IsString, Min } from 'class-
 
 export class CreateVolumeCommitmentDto {
   @IsDateString()
-  periodStart: string;
+  periodStart!: string;
 
   @IsDateString()
-  periodEnd: string;
+  periodEnd!: string;
 
   @IsOptional()
   @IsInt()

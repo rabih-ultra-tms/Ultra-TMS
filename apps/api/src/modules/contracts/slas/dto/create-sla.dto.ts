@@ -3,13 +3,13 @@ import { SLAType } from '@prisma/client';
 
 export class CreateSlaDto {
   @IsEnum(SLAType)
-  slaType: SLAType;
+  slaType!: SLAType;
 
   @IsNumber()
-  targetPercent: number;
+  targetPercent!: number;
 
   @IsString()
-  measurementPeriod: string;
+  measurementPeriod!: string;
 
   @IsOptional()
   @IsNumber()

@@ -14,15 +14,7 @@ import {
   IsInt,
   IsObject,
 } from 'class-validator';
-import {
-  CarrierStatus,
-  CarrierTier,
-  CarrierContactRole,
-  PaymentTerms,
-  PaymentMethod,
-  EquipmentType,
-  InsuranceType,
-} from './enums';
+import { CarrierStatus, CarrierTier, PaymentTerms, PaymentMethod, EquipmentType } from './enums';
 import { CreateCarrierContactDto } from './create-contact.dto';
 import { CreateInsuranceDto } from './create-insurance.dto';
 import { PartialType } from '@nestjs/mapped-types';

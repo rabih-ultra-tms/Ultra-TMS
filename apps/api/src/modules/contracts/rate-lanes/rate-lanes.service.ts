@@ -9,7 +9,7 @@ export class RateLanesService {
 
   async list(tenantId: string, rateTableId: string) {
     await this.ensureRateTable(rateTableId, tenantId);
-    return this.prisma.contractRateLane.findMany({ where: { tenantId, rateTableId }, orderBy: { origin: 'asc' } });
+    return this.prisma.contractRateLane.findMany({ where: { tenantId, rateTableId }, orderBy: { originCity: 'asc' } });
   }
 
   async create(tenantId: string, rateTableId: string, userId: string, dto: CreateRateLaneDto) {

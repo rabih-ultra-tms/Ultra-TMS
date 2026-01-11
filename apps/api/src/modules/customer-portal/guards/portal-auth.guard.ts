@@ -41,7 +41,7 @@ export class PortalAuthGuard implements CanActivate {
       req.portalUser = user;
       req.tenantId = user.tenantId;
       return true;
-    } catch (err) {
+    } catch (_err) {
       throw new UnauthorizedException('Invalid portal access token');
     }
   }

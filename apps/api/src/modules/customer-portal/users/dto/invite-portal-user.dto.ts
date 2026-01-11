@@ -3,16 +3,16 @@ import { PortalUserRole } from '@prisma/client';
 
 export class InvitePortalUserDto {
   @IsEmail()
-  email: string;
+  email!: string;
 
   @IsString()
-  firstName: string;
+  firstName!: string;
 
   @IsString()
-  lastName: string;
+  lastName!: string;
 
   @IsEnum(PortalUserRole)
-  role: PortalUserRole;
+  role!: PortalUserRole;
 
   @IsOptional()
   @IsArray()

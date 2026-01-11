@@ -183,31 +183,31 @@ model Tenant {
   changeHistory ChangeHistory[]
 
   // Cache Relations
-  cacheConfigs            CacheConfig[]
-  rateLimits              RateLimit[]
-  cacheStats              CacheStats[]
-  cacheInvalidationRules  CacheInvalidationRule[]
-  distributedLocks        DistributedLock[]
+  cacheConfigs           CacheConfig[]
+  rateLimits             RateLimit[]
+  cacheStats             CacheStats[]
+  cacheInvalidationRules CacheInvalidationRule[]
+  distributedLocks       DistributedLock[]
 
   // Scheduler Relations
   scheduledJobs ScheduledJob[]
 
   // Help Desk Relations
-  supportTickets   SupportTicket[]
-  ticketReplies    TicketReply[]
-  kbArticles       KBArticle[]
-  supportTeams     SupportTeam[]
-  slaPolicies      SlaPolicy[]
-  escalationRules  EscalationRule[]
-  cannedResponses  CannedResponse[]
+  supportTickets  SupportTicket[]
+  ticketReplies   TicketReply[]
+  kbArticles      KBArticle[]
+  supportTeams    SupportTeam[]
+  slaPolicies     SlaPolicy[]
+  escalationRules EscalationRule[]
+  cannedResponses CannedResponse[]
 
   // Feedback Relations
-  npsSurveys             NPSSurvey[]
-  npsResponses           NPSResponse[]
-  featureRequests        FeatureRequest[]
-  surveys                Survey[]
-  surveyResponses        SurveyResponse[]
-  feedbackWidgets        FeedbackWidget[]
+  npsSurveys      NPSSurvey[]
+  npsResponses    NPSResponse[]
+  featureRequests FeatureRequest[]
+  surveys         Survey[]
+  surveyResponses SurveyResponse[]
+  feedbackWidgets FeedbackWidget[]
 
   // Credit Service Relations
   creditApplications   CreditApplication[]
@@ -603,6 +603,7 @@ model Company {
   portalPayments           PortalPayment[]
   contractsAsCustomer      Contract[]                @relation("CustomerContracts")
   agentCustomerAssignments AgentCustomerAssignment[] @relation("AgentCustomerAssignments")
+  agentCommissions         AgentCommission[]
 
   // Credit Service Relations
   creditApplications   CreditApplication[]
@@ -2146,6 +2147,9 @@ model Invoice {
   lineItems      InvoiceLineItem[]
   applications   PaymentApplication[]
 
+  // Agent Service Relations
+  agentCommissions AgentCommission[]
+
   // Credit Service Relations
   collectionActivities CollectionActivity[]
 
@@ -3262,17 +3266,18 @@ model Document {
   updatedById String?
 
   // Relations
-  tenant             Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  load               Load?               @relation(fields: [loadId], references: [id], onDelete: SetNull)
-  order              Order?              @relation(fields: [orderId], references: [id], onDelete: SetNull)
-  carrier            Carrier?            @relation(fields: [carrierId], references: [id], onDelete: SetNull)
-  company            Company?            @relation(fields: [companyId], references: [id], onDelete: SetNull)
-  uploader           User?               @relation(fields: [uploadedBy], references: [id], onDelete: SetNull)
-  parentDocument     Document?           @relation("DocumentVersions", fields: [parentDocumentId], references: [id], onDelete: SetNull)
-  childDocuments     Document[]          @relation("DocumentVersions")
-  shares             DocumentShare[]
-  folderDocuments    FolderDocument[]
-  generatedDocuments GeneratedDocument[]
+  tenant                Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  load                  Load?               @relation(fields: [loadId], references: [id], onDelete: SetNull)
+  order                 Order?              @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  carrier               Carrier?            @relation(fields: [carrierId], references: [id], onDelete: SetNull)
+  company               Company?            @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  uploader              User?               @relation(fields: [uploadedBy], references: [id], onDelete: SetNull)
+  parentDocument        Document?           @relation("DocumentVersions", fields: [parentDocumentId], references: [id], onDelete: SetNull)
+  childDocuments        Document[]          @relation("DocumentVersions")
+  shares                DocumentShare[]
+  folderDocuments       FolderDocument[]
+  generatedDocuments    GeneratedDocument[]
+  agentPayoutStatements AgentPayout[]       @relation("AgentPayoutStatementDocument")
 
   // Claims Service Relations
   claimDocuments         ClaimDocument[]
@@ -3990,20 +3995,48 @@ enum AgentStatus {
   TERMINATED
 }
 
-enum AgentAssignmentType {
+enum AgentTier {
+  STANDARD
+  SILVER
+  GOLD
+  PLATINUM
+}
+
+enum AssignmentType {
   PRIMARY
   SECONDARY
   SPLIT
 }
 
+enum AssignmentStatus {
+  ACTIVE
+  SUNSET
+  TRANSFERRED
+  TERMINATED
+}
+
 enum LeadStatus {
   SUBMITTED
-  REVIEWING
+  IN_REVIEW
   QUALIFIED
   WORKING
   CONVERTED
   REJECTED
   EXPIRED
+}
+
+enum CommissionSplitType {
+  PERCENT_OF_REP
+  PERCENT_OF_MARGIN
+  FLAT_PER_LOAD
+  TIERED
+}
+
+enum AgreementStatus {
+  DRAFT
+  ACTIVE
+  EXPIRED
+  TERMINATED
 }
 
 enum AgentCommissionStatus {
@@ -4012,6 +4045,14 @@ enum AgentCommissionStatus {
   PAID
   ADJUSTED
   VOIDED
+}
+
+enum AgentPayoutStatus {
+  PENDING
+  APPROVED
+  PROCESSING
+  PAID
+  FAILED
 }
 
 // Factoring (Service 16)
@@ -5700,52 +5741,93 @@ model Agent {
   id       String @id @default(cuid())
   tenantId String
 
-  // Agent details
-  agentCode String    @unique @db.VarChar(50)
-  name      String    @db.VarChar(255)
+  // Agent Reference
+  agentCode String @db.VarChar(20)
+
+  // Company Info
+  companyName     String  @db.VarChar(200)
+  dbaName         String? @db.VarChar(200)
+  legalEntityType String? @db.VarChar(50)
+  taxId           String? @db.VarChar(20)
+
+  // Address
+  addressLine1 String? @db.VarChar(200)
+  addressLine2 String? @db.VarChar(200)
+  city         String? @db.VarChar(100)
+  state        String? @db.VarChar(50)
+  zip          String? @db.VarChar(20)
+  country      String  @default("USA") @db.VarChar(3)
+
+  // Primary Contact
+  contactFirstName String  @db.VarChar(100)
+  contactLastName  String  @db.VarChar(100)
+  contactEmail     String  @db.VarChar(255)
+  contactPhone     String? @db.VarChar(20)
+
+  // Agent Type
   agentType AgentType
 
-  // Contact
-  email   String? @db.VarChar(255)
-  phone   String? @db.VarChar(20)
-  address String? @db.Text
+  // Territory & Industry
+  territories   Json @default("[]")
+  industryFocus Json @default("[]")
 
   // Status
   status AgentStatus @default(PENDING)
 
-  // Active date
-  activeFrom DateTime? @db.Date
-  activeTo   DateTime? @db.Date
+  // Onboarding
+  applicationDate       DateTime?
+  backgroundCheckStatus String?   @db.VarChar(20)
+  backgroundCheckDate   DateTime?
+  trainingCompleted     Boolean   @default(false)
+  trainingCompletedDate DateTime?
 
-  // Migration support
-  externalId   String? @db.VarChar(255)
-  sourceSystem String? @db.VarChar(100)
+  // Activation
+  activatedAt DateTime?
+  activatedBy String?
+
+  // Tier
+  tier AgentTier @default(STANDARD)
+
+  // Payment Info
+  paymentMethod   String? @db.VarChar(20)
+  bankName        String? @db.VarChar(100)
+  bankRouting     String? @db.VarChar(20)
+  bankAccount     String? @db.VarChar(50)
+  bankAccountType String? @db.VarChar(20)
+
+  // Termination
+  terminatedAt      DateTime?
+  terminatedBy      String?
+  terminationReason String?   @db.Text
+
+  // Migration / Custom
+  externalId   String? @db.VarChar(100)
+  sourceSystem String? @db.VarChar(50)
   customFields Json    @default("{}")
 
   // Audit
+  createdById String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
-  createdById String?
-  updatedById String?
 
   // Relations
   tenant              Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  contacts            AgentContact[]
   agreements          AgentAgreement[]
   customerAssignments AgentCustomerAssignment[]
+  leads               AgentLead[]
   commissions         AgentCommission[]
+  payouts             AgentPayout[]
+  drawBalances        AgentDrawBalance[]
+  portalUsers         AgentPortalUser[]
   contracts           Contract[]
-  agentContacts       AgentContact[]
-  agentLeads          AgentLead[]
-  agentPayouts        AgentPayout[]
-  agentDrawBalance    AgentDrawBalance?
-  agentPortalUsers    AgentPortalUser[]
 
+  @@unique([tenantId, agentCode])
   @@index([tenantId])
-  @@index([agentCode])
   @@index([status])
   @@index([agentType])
-  @@index([externalId, sourceSystem])
+  @@index([contactEmail])
 }
 
 model AgentAgreement {
@@ -5753,54 +5835,46 @@ model AgentAgreement {
   tenantId String
   agentId  String
 
-  // Agreement details
-  agreementNumber String  @unique @db.VarChar(50)
-  description     String? @db.Text
+  agreementNumber String  @db.VarChar(30)
+  name            String? @db.VarChar(200)
 
-  // Dates
   effectiveDate  DateTime  @db.Date
   expirationDate DateTime? @db.Date
 
-  // Commission structure
-  commissionType String   @db.VarChar(50) // PERCENTAGE, FLAT, TIERED
-  commissionRate Decimal? @db.Decimal(5, 2)
-  flatAmount     Decimal? @db.Decimal(10, 2)
+  splitType      CommissionSplitType
+  splitRate      Decimal?            @db.Decimal(5, 4)
+  minimumPerLoad Decimal?            @db.Decimal(10, 2)
 
-  // Basis
-  calculationBasis String @db.VarChar(50) // REP_COMMISSION, MARGIN, REVENUE
+  tiers Json @default("[]")
 
-  // Protection
   protectionPeriodMonths Int @default(12)
 
-  // Sunset provision
-  hasSunset              Boolean  @default(false)
-  sunsetStartMonth       Int?
-  sunsetReductionPercent Decimal? @db.Decimal(5, 2)
+  sunsetEnabled      Boolean @default(false)
+  sunsetPeriodMonths Int?    @default(12)
+  sunsetSchedule     Json    @default("[]")
 
-  // Status
-  status String @default("ACTIVE") @db.VarChar(50)
+  drawAmount      Decimal? @db.Decimal(10, 2)
+  drawFrequency   String?  @db.VarChar(20)
+  drawRecoverable Boolean  @default(true)
 
-  // Migration support
-  externalId   String? @db.VarChar(255)
-  sourceSystem String? @db.VarChar(100)
-  customFields Json    @default("{}")
+  paymentDay    Int     @default(15)
+  minimumPayout Decimal @default(100) @db.Decimal(10, 2)
 
-  // Audit
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-  createdById String?
-  updatedById String?
+  status              AgreementStatus @default(ACTIVE)
+  version             Int             @default(1)
+  previousAgreementId String?
 
-  // Relations
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  agent  Agent  @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@index([tenantId])
+  tenant            Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  agent             Agent            @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  previousAgreement AgentAgreement?  @relation("AgreementVersions", fields: [previousAgreementId], references: [id])
+  nextAgreements    AgentAgreement[] @relation("AgreementVersions")
+
   @@index([agentId])
   @@index([status])
   @@index([effectiveDate])
-  @@index([externalId, sourceSystem])
 }
 
 model AgentCustomerAssignment {
@@ -5809,96 +5883,98 @@ model AgentCustomerAssignment {
   agentId    String
   customerId String
 
-  // Assignment details
-  assignmentType AgentAssignmentType @default(PRIMARY)
-  splitPercent   Decimal             @default(100) @db.Decimal(5, 2)
+  assignmentType AssignmentType
 
-  // Dates
-  assignedDate DateTime  @db.Date
-  releaseDate  DateTime? @db.Date
+  protectionStart DateTime
+  protectionEnd   DateTime?
+  isProtected     Boolean   @default(true)
 
-  // Protection
-  protectionEndsAt DateTime? @db.Date
+  splitPercent Decimal? @db.Decimal(5, 4)
 
-  // Status
-  status String @default("ACTIVE") @db.VarChar(50)
+  leadId String?
+  source String? @db.VarChar(50)
 
-  // Migration support
-  externalId   String? @db.VarChar(255)
-  sourceSystem String? @db.VarChar(100)
-  customFields Json    @default("{}")
+  overrideSplitRate Decimal? @db.Decimal(5, 4)
+  overrideReason    String?  @db.Text
 
-  // Audit
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
+  inSunset          Boolean   @default(false)
+  sunsetStartDate   DateTime?
+  currentSunsetRate Decimal?  @db.Decimal(5, 4)
+
+  status AssignmentStatus @default(ACTIVE)
+
+  terminatedAt         DateTime?
+  terminatedReason     String?   @db.Text
+  transferredToAgentId String?
+
   createdById String?
-  updatedById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  // Relations
-  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  agent    Agent   @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  customer Company @relation("AgentCustomerAssignments", fields: [customerId], references: [id], onDelete: Cascade)
+  tenant      Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  agent       Agent             @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  customer    Company           @relation("AgentCustomerAssignments", fields: [customerId], references: [id], onDelete: Cascade)
+  lead        AgentLead?        @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  commissions AgentCommission[]
+
+  @@unique([agentId, customerId])
+  @@index([customerId])
+  @@index([status])
+  @@index([tenantId])
+  @@index([assignmentType])
+}
+
+model AgentCommission {
+  id       String @id @default(cuid())
+  tenantId String
+  agentId  String
+
+  customerId   String?
+  orderId      String?
+  loadId       String?
+  invoiceId    String?
+  assignmentId String?
+
+  loadRevenue        Decimal? @db.Decimal(12, 2)
+  loadMargin         Decimal? @db.Decimal(12, 2)
+  salesRepCommission Decimal? @db.Decimal(10, 2)
+
+  splitRate      Decimal             @db.Decimal(5, 4)
+  splitType      CommissionSplitType
+  commissionBase Decimal             @db.Decimal(12, 2)
+
+  grossCommission Decimal @db.Decimal(10, 2)
+  adjustments     Decimal @default(0) @db.Decimal(10, 2)
+  netCommission   Decimal @db.Decimal(10, 2)
+
+  status AgentCommissionStatus @default(CALCULATED)
+
+  commissionPeriod String?   @db.VarChar(7)
+  payoutId         String?
+  paidAt           DateTime?
+
+  notes String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant     Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  agent      Agent                    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  customer   Company?                 @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  order      Order?                   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  load       Load?                    @relation(fields: [loadId], references: [id], onDelete: SetNull)
+  invoice    Invoice?                 @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  assignment AgentCustomerAssignment? @relation(fields: [assignmentId], references: [id], onDelete: SetNull)
+  payout     AgentPayout?             @relation(fields: [payoutId], references: [id], onDelete: SetNull)
 
   @@index([tenantId])
   @@index([agentId])
   @@index([customerId])
-  @@index([status])
-  @@index([assignmentType])
-  @@index([externalId, sourceSystem])
-}
-
-model AgentCommission {
-  id       String  @id @default(cuid())
-  tenantId String
-  agentId  String
-  loadId   String?
-  orderId  String?
-
-  // Commission details
-  calculationBasis String  @db.VarChar(50)
-  basisAmount      Decimal @db.Decimal(12, 2)
-  commissionRate   Decimal @db.Decimal(5, 2)
-  commissionAmount Decimal @db.Decimal(12, 2)
-
-  // Split
-  isSplit      Boolean @default(false)
-  splitPercent Decimal @default(100) @db.Decimal(5, 2)
-
-  // Status
-  status AgentCommissionStatus @default(CALCULATED)
-
-  // Period
-  commissionPeriod DateTime @db.Date
-
-  // Payment
-  paidAt DateTime?
-
-  // Migration support
-  externalId   String? @db.VarChar(255)
-  sourceSystem String? @db.VarChar(100)
-  customFields Json    @default("{}")
-
-  // Audit
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-  createdById String?
-  updatedById String?
-
-  // Relations
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  agent  Agent  @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  load   Load?  @relation(fields: [loadId], references: [id], onDelete: SetNull)
-  order  Order? @relation(fields: [orderId], references: [id], onDelete: SetNull)
-
-  @@index([tenantId])
-  @@index([agentId])
-  @@index([loadId])
   @@index([orderId])
+  @@index([loadId])
+  @@index([invoiceId])
   @@index([status])
   @@index([commissionPeriod])
-  @@index([externalId, sourceSystem])
 }
 
 model AgentContact {
@@ -5906,33 +5982,29 @@ model AgentContact {
   tenantId String
   agentId  String
 
-  // Contact details
-  contactName String  @db.VarChar(255)
-  title       String? @db.VarChar(100)
-  phone       String? @db.VarChar(20)
-  email       String? @db.VarChar(255)
-  isPrimary   Boolean @default(false)
+  firstName String  @db.VarChar(100)
+  lastName  String  @db.VarChar(100)
+  email     String? @db.VarChar(255)
+  phone     String? @db.VarChar(20)
+  mobile    String? @db.VarChar(20)
 
-  // Migration support
-  externalId   String? @db.VarChar(255)
-  sourceSystem String? @db.VarChar(100)
-  customFields Json    @default("{}")
+  role      String? @db.VarChar(50)
+  isPrimary Boolean @default(false)
 
-  // Audit
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-  createdById String?
-  updatedById String?
+  hasPortalAccess Boolean @default(false)
 
-  // Relations
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  agent  Agent  @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant      Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  agent       Agent             @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  portalUsers AgentPortalUser[] @relation("AgentContactPortalUsers")
 
   @@index([tenantId])
   @@index([agentId])
   @@index([isPrimary])
-  @@index([externalId, sourceSystem])
 }
 
 model AgentLead {
@@ -5940,47 +6012,54 @@ model AgentLead {
   tenantId String
   agentId  String
 
-  // Lead details
-  leadCompanyName String  @db.VarChar(255)
-  contactName     String? @db.VarChar(255)
-  contactEmail    String? @db.VarChar(255)
-  contactPhone    String? @db.VarChar(20)
+  leadNumber String @db.VarChar(20)
 
-  // Status
-  status             LeadStatus @default(SUBMITTED)
-  qualificationNotes String?    @db.Text
+  companyName             String   @db.VarChar(200)
+  website                 String?  @db.VarChar(255)
+  industry                String?  @db.VarChar(100)
+  estimatedMonthlyVolume  Int?
+  estimatedMonthlyRevenue Decimal? @db.Decimal(12, 2)
 
-  // Conversion
-  convertedToCustomerId String?
-  convertedAt           DateTime?
+  contactFirstName String  @db.VarChar(100)
+  contactLastName  String  @db.VarChar(100)
+  contactTitle     String? @db.VarChar(100)
+  contactEmail     String? @db.VarChar(255)
+  contactPhone     String? @db.VarChar(20)
 
-  // Dates
-  submittedDate   DateTime  @default(now()) @db.Date
-  lastContactedAt DateTime?
+  city  String? @db.VarChar(100)
+  state String? @db.VarChar(50)
 
-  // Migration support
-  externalId   String? @db.VarChar(255)
-  sourceSystem String? @db.VarChar(100)
-  customFields Json    @default("{}")
+  leadSource String? @db.VarChar(50)
+  notes      String? @db.Text
 
-  // Audit
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-  createdById String?
-  updatedById String?
+  primaryLanes   Json @default("[]")
+  equipmentNeeds Json @default("[]")
 
-  // Relations
-  tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  agent             Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  convertedCustomer Company? @relation(fields: [convertedToCustomerId], references: [id], onDelete: SetNull)
+  status LeadStatus @default(SUBMITTED)
 
-  @@index([tenantId])
+  qualifiedBy     String?
+  qualifiedAt     DateTime?
+  rejectionReason String?
+
+  convertedAt         DateTime?
+  convertedCustomerId String?
+  conversionDeadline  DateTime?
+
+  assignedTo String?
+  assignedAt DateTime?
+
+  submittedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant              Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  agent               Agent                     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  customer            Company?                  @relation(fields: [convertedCustomerId], references: [id], onDelete: SetNull)
+  customerAssignments AgentCustomerAssignment[]
+
+  @@unique([tenantId, leadNumber])
   @@index([agentId])
   @@index([status])
-  @@index([convertedToCustomerId])
-  @@index([submittedDate])
-  @@index([externalId, sourceSystem])
+  @@index([conversionDeadline])
 }
 
 enum PaymentMethod {
@@ -5995,111 +6074,96 @@ model AgentPayout {
   tenantId String
   agentId  String
 
-  // Payout details
-  payoutNumber String   @unique @db.VarChar(50)
+  payoutNumber String   @db.VarChar(30)
   periodStart  DateTime @db.Date
   periodEnd    DateTime @db.Date
 
-  // Amounts
-  grossCommission Decimal @db.Decimal(12, 2)
-  deductions      Decimal @default(0) @db.Decimal(12, 2)
-  netPayout       Decimal @db.Decimal(12, 2)
+  grossCommissions Decimal @db.Decimal(12, 2)
+  adjustments      Decimal @default(0) @db.Decimal(10, 2)
+  drawRecovery     Decimal @default(0) @db.Decimal(10, 2)
+  netAmount        Decimal @db.Decimal(12, 2)
 
-  // Payment
-  paymentDate   DateTime?      @db.Date
-  paymentMethod PaymentMethod?
+  status AgentPayoutStatus @default(PENDING)
 
-  // Status
-  status String @default("PENDING") @db.VarChar(50) // PENDING, APPROVED, PAID, CANCELLED
+  approvedBy String?
+  approvedAt DateTime?
 
-  // Migration support
-  externalId   String? @db.VarChar(255)
-  sourceSystem String? @db.VarChar(100)
-  customFields Json    @default("{}")
+  paymentMethod    PaymentMethod?
+  paymentReference String?        @db.VarChar(100)
+  paymentDate      DateTime?      @db.Date
 
-  // Audit
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
+  statementDocumentId String?
+
   createdById String?
-  updatedById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  // Relations
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  agent  Agent  @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  tenant            Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  agent             Agent             @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  statementDocument Document?         @relation("AgentPayoutStatementDocument", fields: [statementDocumentId], references: [id], onDelete: SetNull)
+  commissions       AgentCommission[]
 
   @@index([tenantId])
   @@index([agentId])
-  @@index([payoutNumber])
-  @@index([periodStart])
   @@index([status])
-  @@index([externalId, sourceSystem])
+  @@index([periodStart, periodEnd])
 }
 
 model AgentDrawBalance {
   id       String @id @default(cuid())
   tenantId String
-  agentId  String @unique
+  agentId  String
 
-  // Balance tracking
-  currentBalance         Decimal   @default(0) @db.Decimal(12, 2)
-  totalDrawn             Decimal   @default(0) @db.Decimal(12, 2)
-  totalEarned            Decimal   @default(0) @db.Decimal(12, 2)
-  lastReconciliationDate DateTime? @db.Date
+  period String @db.VarChar(7)
 
-  // Migration support
-  externalId   String? @db.VarChar(255)
-  sourceSystem String? @db.VarChar(100)
-  customFields Json    @default("{}")
+  drawAmount        Decimal   @db.Decimal(10, 2)
+  drawPaidAt        DateTime?
+  commissionsEarned Decimal   @default(0) @db.Decimal(10, 2)
+  shortfall         Decimal   @default(0) @db.Decimal(10, 2)
+  carryoverBalance  Decimal   @default(0) @db.Decimal(10, 2)
+  amountRecovered   Decimal   @default(0) @db.Decimal(10, 2)
 
-  // Audit
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-  createdById String?
-  updatedById String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  // Relations
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   agent  Agent  @relation(fields: [agentId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
-  @@index([externalId, sourceSystem])
+  @@index([agentId])
+  @@index([period])
 }
 
 model AgentPortalUser {
-  id       String @id @default(cuid())
-  tenantId String
-  agentId  String
-  userId   String
+  id             String  @id @default(cuid())
+  tenantId       String
+  agentId        String
+  agentContactId String?
+  userId         String?
 
-  // Permissions
-  role               String  @db.VarChar(50) // ADMIN, USER, VIEW_ONLY
-  canViewCommissions Boolean @default(true)
-  canSubmitLeads     Boolean @default(true)
+  email        String @db.VarChar(255)
+  passwordHash String @db.VarChar(255)
+  firstName    String @db.VarChar(100)
+  lastName     String @db.VarChar(100)
 
-  // Migration support
-  externalId   String? @db.VarChar(255)
-  sourceSystem String? @db.VarChar(100)
-  customFields Json    @default("{}")
+  role   String @default("USER") @db.VarChar(20)
+  status String @default("ACTIVE") @db.VarChar(20)
 
-  // Audit
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-  createdById String?
-  updatedById String?
+  lastLoginAt       DateTime?
+  passwordChangedAt DateTime?
 
-  // Relations
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  agent  Agent  @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@unique([agentId, userId])
+  tenant  Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  agent   Agent         @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  contact AgentContact? @relation("AgentContactPortalUsers", fields: [agentContactId], references: [id], onDelete: SetNull)
+  user    User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@unique([tenantId, email])
   @@index([tenantId])
   @@index([agentId])
   @@index([userId])
-  @@index([externalId, sourceSystem])
 }
 
 // ==============================================
@@ -9124,8 +9188,8 @@ model CacheInvalidationRule {
   triggerEvent String @db.VarChar(100) // order.updated, carrier.approved
 
   // Cache to invalidate
-  cachePattern      String @db.VarChar(200) // Pattern with wildcards
-  invalidationType  String @db.VarChar(20) // DELETE, REFRESH
+  cachePattern     String @db.VarChar(200) // Pattern with wildcards
+  invalidationType String @db.VarChar(20) // DELETE, REFRESH
 
   // Status
   isEnabled Boolean @default(true)
@@ -9152,7 +9216,7 @@ model CacheInvalidationRule {
 }
 
 model DistributedLock {
-  id       String @id @default(cuid())
+  id       String  @id @default(cuid())
   tenantId String?
 
   // Lock details
@@ -9427,8 +9491,8 @@ model SupportTeamMember {
   role String @default("MEMBER") @db.VarChar(20) // LEAD, MEMBER
 
   // Capacity
-  maxOpenTickets      Int     @default(20)
-  currentTicketCount  Int     @default(0)
+  maxOpenTickets     Int @default(20)
+  currentTicketCount Int @default(0)
 
   // Status
   isAvailable Boolean @default(true)
@@ -9711,7 +9775,7 @@ model FeatureRequest {
   updatedById String?
 
   // Relations
-  tenant   Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant   Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   votes    FeatureRequestVote[]
   comments FeatureRequestComment[]
 
@@ -9801,11 +9865,11 @@ model Survey {
   questions  Json // Array of question objects
 
   // Settings
-  anonymous            Boolean @default(false)
-  requireAllQuestions  Boolean @default(false)
-  showProgress         Boolean @default(true)
-  thankYouMessage      String? @db.Text
-  redirectUrl          String? @db.VarChar(500)
+  anonymous           Boolean @default(false)
+  requireAllQuestions Boolean @default(false)
+  showProgress        Boolean @default(true)
+  thankYouMessage     String? @db.Text
+  redirectUrl         String? @db.VarChar(500)
 
   // Targeting
   triggerEvent  String? @db.VarChar(100)
@@ -9857,8 +9921,8 @@ model SurveyResponse {
   answers Json // {question_id: answer}
 
   // Completion
-  completionPercentage   Int  @default(100)
-  timeToCompleteSeconds  Int?
+  completionPercentage  Int  @default(100)
+  timeToCompleteSeconds Int?
 
   // Context
   responseChannel String? @db.VarChar(30)

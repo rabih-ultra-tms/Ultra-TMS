@@ -2,21 +2,21 @@ import { IsBoolean, IsDateString, IsNumber, IsOptional, IsString } from 'class-v
 
 export class CreateFuelTableDto {
   @IsString()
-  name: string;
+  name!: string;
 
   @IsOptional()
   @IsString()
   description?: string;
 
   @IsNumber()
-  basePrice: number;
+  basePrice!: number;
 
   @IsOptional()
   @IsBoolean()
   isDefault?: boolean;
 
   @IsDateString()
-  effectiveDate: string;
+  effectiveDate!: string;
 
   @IsOptional()
   @IsDateString()

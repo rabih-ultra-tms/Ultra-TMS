@@ -3,7 +3,8 @@ import { ContractsService } from './contracts.service';
 import { CreateContractDto } from './dto/create-contract.dto';
 import { UpdateContractDto } from './dto/update-contract.dto';
 import { JwtAuthGuard } from '../../auth/guards';
-import { CurrentUser, CurrentUserData } from '../../../common/decorators/current-user.decorator';
+import { CurrentUser } from '../../../common/decorators/current-user.decorator';
+import type { CurrentUserData } from '../../../common/decorators/current-user.decorator';
 
 @Controller('contracts')
 @UseGuards(JwtAuthGuard)

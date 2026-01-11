@@ -1,4 +1,4 @@
-import { IsDateString, IsNotEmpty, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { IsDateString, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class RecordPaymentDto {
   @IsNumber()

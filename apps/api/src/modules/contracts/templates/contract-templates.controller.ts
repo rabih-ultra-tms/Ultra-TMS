@@ -3,7 +3,8 @@ import { ContractTemplatesService } from './contract-templates.service';
 import { CreateTemplateDto } from './dto/create-template.dto';
 import { UpdateTemplateDto } from './dto/update-template.dto';
 import { JwtAuthGuard } from '../../auth/guards';
-import { CurrentUser, CurrentUserData } from '../../../common/decorators/current-user.decorator';
+import { CurrentUser } from '../../../common/decorators/current-user.decorator';
+import type { CurrentUserData } from '../../../common/decorators/current-user.decorator';
 
 @Controller('contract-templates')
 @UseGuards(JwtAuthGuard)

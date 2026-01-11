@@ -3,7 +3,8 @@ import { AmendmentsService } from './amendments.service';
 import { CreateAmendmentDto } from './dto/create-amendment.dto';
 import { UpdateAmendmentDto } from './dto/update-amendment.dto';
 import { JwtAuthGuard } from '../../auth/guards';
-import { CurrentUser, CurrentUserData } from '../../../common/decorators/current-user.decorator';
+import { CurrentUser } from '../../../common/decorators/current-user.decorator';
+import type { CurrentUserData } from '../../../common/decorators/current-user.decorator';
 
 @Controller()
 @UseGuards(JwtAuthGuard)

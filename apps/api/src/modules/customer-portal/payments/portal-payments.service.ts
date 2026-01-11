@@ -53,6 +53,8 @@ export class PortalPaymentsService {
       });
     }
 
+    const [firstInvoice] = dto.invoices;
+
     await this.prisma.portalActivityLog.create({
       data: {
         tenantId,
@@ -60,7 +62,7 @@ export class PortalPaymentsService {
         companyId,
         action: 'PORTAL_PAYMENT',
         entityType: 'INVOICE',
-        entityId: dto.invoices[0].invoiceId,
+        entityId: firstInvoice?.invoiceId ?? '',
         description: `Payment ${payment.paymentNumber} processed`,
       },
     });
