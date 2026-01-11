@@ -1,0 +1,12 @@
+export enum EdiPartnerType {
+  CUSTOMER = 'CUSTOMER',
+  CARRIER = 'CARRIER',
+  BROKER = 'BROKER',
+  THIRD_PARTY = 'THIRD_PARTY',
+}
+
+export enum EdiAckStatus {
+  ACCEPTED = 'ACCEPTED',
+  ACCEPTED_WITH_ERRORS = 'ACCEPTED_WITH_ERRORS',
+  REJECTED = 'REJECTED',
+}

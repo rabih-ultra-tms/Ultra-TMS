@@ -179,16 +179,16 @@
     <div class="container">
         <header>
             <h1>🚛 Ultra-TMS Development Progress</h1>
-            <p class="subtitle">162-Week Development Roadmap • Last Updated: <span id="lastUpdated">January 12, 2026 (Agent API Complete)</span></p>
+            <p class="subtitle">162-Week Development Roadmap • Last Updated: <span id="lastUpdated">January 11, 2026 (EDI API Complete)</span></p>
         </header>
 
         <!-- Dashboard Stats -->
         <section class="dashboard">
             <div class="stat-card">
                 <div class="label">Overall Progress</div>
-                <div class="value" style="color: var(--primary);">39.5%</div>
-                <div class="progress-bar"><div class="progress-fill primary" style="width: 39.5%;"></div></div>
-                <div class="sub">15 of 38 services complete</div>
+                <div class="value" style="color: var(--primary);">44.7%</div>
+                <div class="progress-bar"><div class="progress-fill primary" style="width: 44.7%;"></div></div>
+                <div class="sub">17 of 38 services complete</div>
             </div>
             <div class="stat-card">
                 <div class="label">Current Phase</div>
@@ -202,8 +202,8 @@
             </div>
             <div class="stat-card">
                 <div class="label">API Endpoints</div>
-                <div class="value">535</div>
-                <div class="sub">of ~985 planned (54.3%)</div>
+                <div class="value">570</div>
+                <div class="sub">of ~985 planned (57.9%)</div>
             </div>
             <div class="stat-card">
                 <div class="label">UI Screens</div>
@@ -431,9 +431,9 @@
                         <td>Factoring (Internal)</td>
                         <td>71-74</td>
                         <td>5 / 5</td>
-                        <td>0 / 25</td>
-                        <td>0 / 6</td>
-                        <td><span class="status"><span class="status-dot complete"></span> Schema Complete</span></td>
+                        <td>30 / 30</td>
+                        <td>5 / 5</td>
+                        <td><span class="status"><span class="status-dot complete"></span> API Complete</span></td>
                     </tr>
                     <tr>
                         <td>HR</td>
@@ -527,9 +527,9 @@
                         <td>EDI</td>
                         <td>59-62</td>
                         <td>11 / 11</td>
-                        <td>0 / 30</td>
+                        <td>35 / 35</td>
                         <td>0 / 8</td>
-                        <td><span class="status"><span class="status-dot complete"></span> Schema Complete</span></td>
+                        <td><span class="status"><span class="status-dot complete"></span> API Complete</span></td>
                     </tr>
                     <tr>
                         <td>Safety</td>
@@ -731,6 +731,29 @@
                     </ul>
                 </div>
                 <div class="log-entry">
+                    <div class="log-date">January 11, 2026 - EDI API Complete</div>
+                    <ul class="log-items">
+                        <li>Implemented 35 EDI endpoints across trading partners, documents, mappings, generation, and queue management</li>
+                        <li>Added inbound parsing with acknowledgment handling and control number sequencing</li>
+                        <li>Built outbound generators for 204/210/214/990/997 with queue processing and send actions</li>
+                        <li>Connection testing with communication logs per trading partner</li>
+                        <li>End-to-end test coverage for core EDI flows</li>
+                    </ul>
+                </div>
+                <div class="log-entry">
+                    <div class="log-date">January 11, 2026 - Factoring Internal API Complete</div>
+                    <ul class="log-items">
+                        <li>Implemented 30 Factoring API endpoints</li>
+                        <li>Factoring company database with payment instructions</li>
+                        <li>NOA lifecycle management</li>
+                        <li>Carrier factoring status tracking</li>
+                        <li>Quick pay enrollment</li>
+                        <li>Load verification workflow</li>
+                        <li>Payment routing logic</li>
+                        <li>Full integration test coverage</li>
+                    </ul>
+                </div>
+                <div class="log-entry">
                     <div class="log-date">January 11, 2026 - Contracts API Complete</div>
                     <ul class="log-items">
                         <li>Implemented 25 Contracts API endpoints across contracts, rate tables/lanes, fuel surcharge, SLAs, volume commitments, and amendments</li>
@@ -857,7 +880,7 @@
                             </ul>
                         </li>
                         <li>📦 <strong>Seed Infrastructure:</strong> 32 modular seed files in prisma/seed/ directory</li>
-                        <li>🔧 <strong>Remaining Services:</strong> 17 services have seed files created but require minor fixes (factoring, hr, analytics, workflow, integration-hub, search, audit, config, scheduler, cache, help-desk, feedback, edi, safety, load-board-external, rate-intelligence, claims)</li>
+                        <li>🔧 <strong>Remaining Services:</strong> 15 services have seed files created but require minor fixes (hr, analytics, workflow, integration-hub, search, audit, config, scheduler, cache, help-desk, feedback, safety, load-board-external, rate-intelligence, claims)</li>
                         <li>🎯 <strong>Phase A Progress:</strong> 15 of 27 services fully seeded (55.6%)</li>
                     </ul>
                 </div>

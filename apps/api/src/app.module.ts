@@ -25,6 +25,8 @@ import { CustomerPortalModule } from './modules/customer-portal/customer-portal.
 import { CarrierPortalModule } from './modules/carrier-portal/carrier-portal.module';
 import { ContractsModule } from './modules/contracts/contracts.module';
 import { AgentsModule } from './modules/agents/agents.module';
+import { FactoringModule } from './modules/factoring/factoring.module';
+import { EdiModule } from './modules/edi/edi.module';
 
 // Support services - commented out until schemas are added
 // import { AnalyticsModule } from './modules/analytics/analytics.module';
@@ -61,6 +63,8 @@ import { AgentsModule } from './modules/agents/agents.module';
     CarrierPortalModule,
     ContractsModule,
     AgentsModule,
+    FactoringModule,
+    EdiModule,
     // Support services - enable after adding schemas:
     // AnalyticsModule,
     // IntegrationHubModule,
