@@ -92,8 +92,7 @@ export class NoaRecordsService {
 
   async findOne(tenantId: string, id: string) {
     const noa = await this.requireNoa(tenantId, id);
-    const refreshed = await this.autoExpireIfNeeded(noa);
-    return refreshed;
+    return this.autoExpireIfNeeded(noa);
   }
 
   async update(tenantId: string, userId: string, id: string, dto: UpdateNoaRecordDto) {
@@ -171,7 +170,7 @@ export class NoaRecordsService {
   }
 
   async release(tenantId: string, userId: string, id: string, dto: ReleaseNoaDto) {
-    const noa = await this.requireNoa(tenantId, id);
+    await this.requireNoa(tenantId, id);
 
     const updated = await this.prisma.nOARecord.update({
       where: { id },

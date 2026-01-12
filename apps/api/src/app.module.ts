@@ -28,6 +28,8 @@ import { AgentsModule } from './modules/agents/agents.module';
 import { FactoringModule } from './modules/factoring/factoring.module';
 import { EdiModule } from './modules/edi/edi.module';
 import { SafetyModule } from './modules/safety/safety.module';
+import { RateIntelligenceModule } from './modules/rate-intelligence/rate-intelligence.module';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
 
 // Support services - commented out until schemas are added
 // import { AnalyticsModule } from './modules/analytics/analytics.module';
@@ -67,8 +69,9 @@ import { SafetyModule } from './modules/safety/safety.module';
     FactoringModule,
     EdiModule,
     SafetyModule,
+    RateIntelligenceModule,
+    AnalyticsModule,
     // Support services - enable after adding schemas:
-    // AnalyticsModule,
     // IntegrationHubModule,
     // WorkflowModule,
   ],

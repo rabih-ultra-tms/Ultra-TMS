@@ -34,6 +34,13 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
+   * Basic set helper with TTL (in seconds) for generic caching use cases.
+   */
+  async setWithTTL(key: string, value: string, ttlSeconds: number): Promise<void> {
+    await this.client.set(key, value, 'EX', ttlSeconds);
+  }
+
+  /**
    * Store a refresh token session in Redis
    * Key format: session:{userId}:{sessionId}
    */

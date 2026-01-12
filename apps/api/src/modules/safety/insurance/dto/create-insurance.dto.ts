@@ -1,6 +1,6 @@
 import { InsuranceType } from '@prisma/client';
 import { Type } from 'class-transformer';
-import { IsBoolean, IsDate, IsEmail, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsPhoneNumber, IsString, Min } from 'class-validator';
+import { IsBoolean, IsDate, IsEmail, IsEnum, IsNumber, IsOptional, IsPhoneNumber, IsString, Min } from 'class-validator';
 
 export class CreateInsuranceDto {
   @IsString()

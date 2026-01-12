@@ -179,16 +179,16 @@
     <div class="container">
         <header>
             <h1>🚛 Ultra-TMS Development Progress</h1>
-            <p class="subtitle">162-Week Development Roadmap • Last Updated: <span id="lastUpdated">January 11, 2026 (EDI API Complete)</span></p>
+            <p class="subtitle">162-Week Development Roadmap • Last Updated: <span id="lastUpdated">January 13, 2026 (Analytics dashboards/reports/alerts + tests passing)</span></p>
         </header>
 
         <!-- Dashboard Stats -->
         <section class="dashboard">
             <div class="stat-card">
                 <div class="label">Overall Progress</div>
-                <div class="value" style="color: var(--primary);">44.7%</div>
-                <div class="progress-bar"><div class="progress-fill primary" style="width: 44.7%;"></div></div>
-                <div class="sub">17 of 38 services complete</div>
+                <div class="value" style="color: var(--primary);">52.6%</div>
+                <div class="progress-bar"><div class="progress-fill primary" style="width: 52.6%;"></div></div>
+                <div class="sub">20 of 38 services complete</div>
             </div>
             <div class="stat-card">
                 <div class="label">Current Phase</div>
@@ -202,8 +202,8 @@
             </div>
             <div class="stat-card">
                 <div class="label">API Endpoints</div>
-                <div class="value">570</div>
-                <div class="sub">of ~985 planned (57.9%)</div>
+                <div class="value">670</div>
+                <div class="sub">of ~985 planned (68.0%)</div>
             </div>
             <div class="stat-card">
                 <div class="label">UI Screens</div>
@@ -228,10 +228,10 @@
                     </div>
                     <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1rem;">Weeks 1-78 • Internal MVP</p>
                     <div style="display: flex; justify-content: space-between; font-size: 0.875rem; margin-bottom: 0.5rem;">
-                        <span>14 of 27 services</span>
-                        <span>52%</span>
+                        <span>17 of 27 services</span>
+                        <span>63%</span>
                     </div>
-                    <div class="progress-bar"><div class="progress-fill primary" style="width: 52%;"></div></div>
+                    <div class="progress-bar"><div class="progress-fill primary" style="width: 63%;"></div></div>
                 </div>
                 <div class="phase-card">
                     <div class="phase-header">
@@ -447,9 +447,9 @@
                         <td>Analytics</td>
                         <td>35-38</td>
                         <td>11 / 11</td>
-                        <td>0 / 40</td>
+                        <td>40 / 40</td>
                         <td>0 / 10</td>
-                        <td><span class="status"><span class="status-dot complete"></span> Schema Complete</span></td>
+                        <td><span class="status"><span class="status-dot complete"></span> API Complete</span></td>
                     </tr>
                     <tr>
                         <td>Workflow</td>
@@ -543,17 +543,17 @@
                         <td>Load Board External</td>
                         <td>67-70</td>
                         <td>10 / 10</td>
-                        <td>0 / 35</td>
+                        <td>35 / 35</td>
                         <td>0 / 8</td>
-                        <td><span class="status"><span class="status-dot complete"></span> Schema Complete</span></td>
+                        <td><span class="status"><span class="status-dot complete"></span> API Complete</span></td>
                     </tr>
                     <tr>
                         <td>Rate Intelligence</td>
                         <td>63-66</td>
                         <td>6 / 6</td>
-                        <td>0 / 25</td>
+                        <td>25 / 25</td>
                         <td>0 / 8</td>
-                        <td><span class="status"><span class="status-dot complete"></span> Schema Complete</span></td>
+                        <td><span class="status"><span class="status-dot complete"></span> API Complete</span></td>
                     </tr>
                 </tbody>
             </table>
@@ -722,6 +722,39 @@
             <h2>📝 Change Log</h2>
             <div class="changelog">
                 <div class="log-entry">
+                    <div class="log-date">January 13, 2026 - Analytics Dashboards/Reports/Alerts Complete</div>
+                    <ul class="log-items">
+                        <li>Delivered analytics dashboards with widget CRUD, report creation/execution listing, KPI alerts ACK/resolve, saved views, and data query/export/trend/compare endpoints with tenant isolation</li>
+                        <li>Updated AnalyticsModule wiring, Prisma services, and e2e suite (9/9 suites, 44 tests) now passing</li>
+                    </ul>
+                </div>
+                <div class="log-entry">
+                    <div class="log-date">January 12, 2026 - Analytics KPI Endpoints Added</div>
+                    <ul class="log-items">
+                        <li>Enabled AnalyticsModule in AppModule and delivered authenticated KPI endpoints (list, current, category, get, values, create/update/delete, calculate) with tenant isolation</li>
+                        <li>Built Prisma-backed KPI service for create/update, soft delete, date-range snapshots, current-value aggregation, and mock trend calculation using enum-driven DTOs</li>
+                        <li>All Jest suites passing after change (8/8 suites, 40 tests)</li>
+                    </ul>
+                </div>
+                <div class="log-entry">
+                    <div class="log-date">January 12, 2026 - Rate Intelligence API Complete</div>
+                    <ul class="log-items">
+                        <li>Implemented rate lookup, batch lookup, trends, lane analytics, alerts, analytics dashboard, and provider management endpoints</li>
+                        <li>Added multi-provider aggregation with confidence scoring, Redis TTL caching, and Prisma persistence for queries/history/alerts</li>
+                        <li>Provider adapters stubbed for DAT, Truckstop, Greenscreens; alert evaluator scaffolded for scheduler integration</li>
+                        <li>All e2e suites passing after infra up (40/40)</li>
+                    </ul>
+                </div>
+                <div class="log-entry">
+                    <div class="log-date">January 12, 2026 - Load Board External API Complete</div>
+                    <ul class="log-items">
+                        <li>Delivered external load board controllers/services for accounts, postings, capacity, leads, rules, and analytics with tenant isolation</li>
+                        <li>Supports posting flows, carrier lead lifecycle, capacity search/contact, custom rules JSON casting, and board metrics aggregation</li>
+                        <li>Emits load board domain events for postings and lead actions; DTO validation and Prisma mappings updated</li>
+                        <li>E2E harness attempted; blocked by missing Postgres/Redis infrastructure in local environment</li>
+                    </ul>
+                </div>
+                <div class="log-entry">
                     <div class="log-date">January 12, 2026 - Agent API Complete</div>
                     <ul class="log-items">
                         <li>Implemented 35 Agent API endpoints across lifecycle, agreements, assignments, leads, commissions, and statements</li>
@@ -880,7 +913,7 @@
                             </ul>
                         </li>
                         <li>📦 <strong>Seed Infrastructure:</strong> 32 modular seed files in prisma/seed/ directory</li>
-                        <li>🔧 <strong>Remaining Services:</strong> 14 services have seed files created but require minor fixes (hr, analytics, workflow, integration-hub, search, audit, config, scheduler, cache, help-desk, feedback, load-board-external, rate-intelligence, claims)</li>
+                        <li>🔧 <strong>Remaining Services:</strong> 13 services have seed files created but require minor fixes (hr, workflow, integration-hub, search, audit, config, scheduler, cache, help-desk, feedback, load-board-external, rate-intelligence, claims)</li>
                         <li>🎯 <strong>Phase A Progress:</strong> 15 of 27 services fully seeded (55.6%)</li>
                     </ul>
                 </div>

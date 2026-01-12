@@ -3,7 +3,6 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EdiDirection, EdiMessageStatus, EdiTransactionType, EdiValidationStatus, Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../../../prisma.service';
-import { EdiAckStatus } from '../dto/enums';
 import { EdiControlNumberService } from '../control-number.service';
 import { EdiParserService } from '../parsing/edi-parser.service';
 import { AcknowledgeEdiDocumentDto } from './dto/acknowledge-edi-document.dto';

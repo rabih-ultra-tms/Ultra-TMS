@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../../prisma.service';
 import { CalculateSafetyScoreDto } from './dto/calculate-score.dto';
-import { calculateSafetyScore, deriveRiskLevel } from './scoring.engine';
+import { calculateSafetyScore } from './scoring.engine';
 
 @Injectable()
 export class SafetyScoresService {
