@@ -30,6 +30,9 @@ import { EdiModule } from './modules/edi/edi.module';
 import { SafetyModule } from './modules/safety/safety.module';
 import { RateIntelligenceModule } from './modules/rate-intelligence/rate-intelligence.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { WorkflowModule } from './modules/workflow/workflow.module';
+import { IntegrationHubModule } from './modules/integration-hub/integration-hub.module';
+import { SearchModule } from './modules/search/search.module';
 
 // Support services - commented out until schemas are added
 // import { AnalyticsModule } from './modules/analytics/analytics.module';
@@ -71,9 +74,9 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
     SafetyModule,
     RateIntelligenceModule,
     AnalyticsModule,
-    // Support services - enable after adding schemas:
-    // IntegrationHubModule,
-    // WorkflowModule,
+    WorkflowModule,
+    IntegrationHubModule,
+    SearchModule,
   ],
   providers: [PrismaService],
   exports: [PrismaService],
