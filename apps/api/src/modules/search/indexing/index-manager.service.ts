@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma.service';
 
 @Injectable()
@@ -15,13 +14,23 @@ export class IndexManagerService {
     return index;
   }
 
-  async setStatus(tenantId: string, indexName: string, status: string, errorMessage?: string) {
+  async setStatus(
+    tenantId: string,
+    indexName: string,
+    status: string,
+    _errorMessage?: string,
+    documentCount?: number,
+  ) {
     const existing = await this.prisma.searchIndex.findFirst({ where: { indexName, tenantId } });
 
     if (existing) {
       return this.prisma.searchIndex.update({
         where: { id: existing.id },
-        data: { status, lastUpdated: new Date(), documentCount: existing.documentCount },
+        data: {
+          status,
+          lastUpdated: new Date(),
+          documentCount: documentCount ?? existing.documentCount,
+        },
       });
     }
 
@@ -32,6 +41,7 @@ export class IndexManagerService {
         entityType: indexName,
         status,
         lastUpdated: new Date(),
+        ...(documentCount !== undefined ? { documentCount } : {}),
       },
     });
   }

@@ -179,7 +179,7 @@
     <div class="container">
         <header>
             <h1>🚛 Ultra-TMS Development Progress</h1>
-            <p class="subtitle">162-Week Development Roadmap • Last Updated: <span id="lastUpdated">January 13, 2026 (Integration Hub + Search APIs, lint/test/build passing)</span></p>
+            <p class="subtitle">162-Week Development Roadmap • Last Updated: <span id="lastUpdated">January 13, 2026 (Search indexing wired to seeded data; lint/build passing)</span></p>
         </header>
 
         <!-- Dashboard Stats -->
@@ -712,7 +712,7 @@
                         <div class="integration-name">Elasticsearch</div>
                         <div class="integration-status">Full-text search</div>
                     </div>
-                    <span class="integration-badge pending">Week 43-44</span>
+                    <span class="integration-badge connected">Connected</span>
                 </div>
             </div>
         </section>
@@ -721,6 +721,14 @@
         <section>
             <h2>📝 Change Log</h2>
             <div class="changelog">
+                <div class="log-entry">
+                    <div class="log-date">January 13, 2026 - Search Indexing Wired to Seeded Data</div>
+                    <ul class="log-items">
+                        <li>Queue processor now fetches Prisma entities (customers, orders, loads, carriers, documents) and maps them into Elasticsearch documents</li>
+                        <li>Reindex jobs populate ES with seeded records (counts: customers 1, orders 1, loads 1, carriers 21, documents 16); index statuses marked READY with stored counts for carriers/documents</li>
+                        <li>ES client defaults to JSON headers with optional compat flag; lint/build passing</li>
+                    </ul>
+                </div>
                 <div class="log-entry">
                     <div class="log-date">January 13, 2026 - Integration Hub & Search APIs Complete</div>
                     <ul class="log-items">

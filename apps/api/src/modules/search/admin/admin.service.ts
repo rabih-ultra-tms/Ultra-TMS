@@ -4,6 +4,7 @@ import { PrismaService } from '../../../prisma.service';
 import { CreateSynonymDto, QueueQueryDto, SearchAnalyticsDto, SynonymResponseDto } from '../dto';
 import { IndexingService } from '../indexing/indexing.service';
 import { IndexManagerService } from '../indexing/index-manager.service';
+import { ElasticsearchService } from '../elasticsearch/elasticsearch.service';
 
 @Injectable()
 export class AdminService {
@@ -11,6 +12,7 @@ export class AdminService {
     private readonly prisma: PrismaService,
     private readonly indexingService: IndexingService,
     private readonly indexManager: IndexManagerService,
+    private readonly elasticsearch: ElasticsearchService,
   ) {}
 
   async listIndexes(tenantId: string) {
@@ -25,6 +27,12 @@ export class AdminService {
 
   async indexStatus(tenantId: string, name: string) {
     return this.indexManager.getIndexStatus(tenantId, name);
+  }
+
+  async ensureIndex(tenantId: string, name: string) {
+    const result = await this.elasticsearch.ensureIndex(name);
+    await this.indexManager.setStatus(tenantId, name, 'READY');
+    return result;
   }
 
   async listSynonyms(tenantId: string): Promise<SynonymResponseDto[]> {
@@ -101,5 +109,9 @@ export class AdminService {
   async queueStatus(tenantId: string, query: QueueQueryDto) {
     const items = await this.indexingService.listQueue(tenantId, query.status as 'pending' | 'processed' | undefined, query.limit ?? 20);
     return items;
+  }
+
+  async health(): Promise<any> {
+    return this.elasticsearch.health();
   }
 }

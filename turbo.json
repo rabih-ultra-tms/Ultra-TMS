@@ -14,7 +14,12 @@
         "CARRIER_PORTAL_JWT_EXPIRES_IN",
         "PORTAL_JWT_SECRET",
         "PORTAL_JWT_EXPIRES_IN",
-        "JWT_SECRET"
+        "JWT_SECRET",
+        "ELASTIC_NODE",
+        "ELASTIC_MAX_RETRIES",
+        "ELASTIC_NAME_PREFIX",
+        "ELASTIC_REQUEST_TIMEOUT",
+        "ELASTIC_USE_COMPAT_HEADERS"
       ]
     },
     "check-types": {

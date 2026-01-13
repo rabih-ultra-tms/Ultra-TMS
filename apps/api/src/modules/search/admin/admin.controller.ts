@@ -9,6 +9,11 @@ import { CreateSynonymDto, QueueQueryDto } from '../dto';
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
+  @Get('health')
+  health(): Promise<any> {
+    return this.adminService.health();
+  }
+
   @Get('indexes')
   listIndexes(@CurrentTenant() tenantId: string) {
     return this.adminService.listIndexes(tenantId);
@@ -22,6 +27,11 @@ export class AdminController {
   @Get('indexes/:name/status')
   indexStatus(@CurrentTenant() tenantId: string, @Param('name') name: string) {
     return this.adminService.indexStatus(tenantId, name);
+  }
+
+  @Post('indexes/:name/init')
+  initIndex(@CurrentTenant() tenantId: string, @Param('name') name: string) {
+    return this.adminService.ensureIndex(tenantId, name);
   }
 
   @Get('synonyms')
