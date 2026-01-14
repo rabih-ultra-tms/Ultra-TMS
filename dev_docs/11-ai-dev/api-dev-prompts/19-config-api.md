@@ -661,6 +661,10 @@ class NumberSequenceService {
 }
 ```
 
+### Caching & Inheritance
+- Use Redis to cache system configs, tenant configs (merged with system defaults), and feature flags; invalidate cache on writes to keep reads hot.
+- Resolve values in order: system defaults → tenant overrides → user preferences, with feature flags honoring tenant/user overrides and rollout buckets.
+
 ---
 
 ## 📡 Events to Publish

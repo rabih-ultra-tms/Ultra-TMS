@@ -179,16 +179,16 @@
     <div class="container">
         <header>
             <h1>🚛 Ultra-TMS Development Progress</h1>
-            <p class="subtitle">162-Week Development Roadmap • Last Updated: <span id="lastUpdated">January 13, 2026 (Search indexing wired to seeded data; lint/build passing)</span></p>
+            <p class="subtitle">162-Week Development Roadmap • Last Updated: <span id="lastUpdated">January 14, 2026 (Scheduler API complete + lint/check-types/tests passing; Config cached; Audit e2e green)</span></p>
         </header>
 
         <!-- Dashboard Stats -->
         <section class="dashboard">
             <div class="stat-card">
                 <div class="label">Overall Progress</div>
-                <div class="value" style="color: var(--primary);">57.9%</div>
-                <div class="progress-bar"><div class="progress-fill primary" style="width: 57.9%;"></div></div>
-                <div class="sub">22 of 38 services complete</div>
+                <div class="value" style="color: var(--primary);">65.8%</div>
+                <div class="progress-bar"><div class="progress-fill primary" style="width: 65.8%;"></div></div>
+                <div class="sub">25 of 38 services complete</div>
             </div>
             <div class="stat-card">
                 <div class="label">Current Phase</div>
@@ -202,8 +202,8 @@
             </div>
             <div class="stat-card">
                 <div class="label">API Endpoints</div>
-                <div class="value">735</div>
-                <div class="sub">of ~985 planned (74.6%)</div>
+                <div class="value">765</div>
+                <div class="sub">of ~985 planned (77.7%)</div>
             </div>
             <div class="stat-card">
                 <div class="label">UI Screens</div>
@@ -228,10 +228,10 @@
                     </div>
                     <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1rem;">Weeks 1-78 • Internal MVP</p>
                     <div style="display: flex; justify-content: space-between; font-size: 0.875rem; margin-bottom: 0.5rem;">
-                        <span>19 of 27 services</span>
-                        <span>70%</span>
+                        <span>21 of 27 services</span>
+                        <span>78%</span>
                     </div>
-                    <div class="progress-bar"><div class="progress-fill primary" style="width: 70%;"></div></div>
+                    <div class="progress-bar"><div class="progress-fill primary" style="width: 74%;"></div></div>
                 </div>
                 <div class="phase-card">
                     <div class="phase-header">
@@ -479,25 +479,25 @@
                         <td>Audit</td>
                         <td>45-46</td>
                         <td>10 / 10</td>
-                        <td>0 / 25</td>
-                        <td>0 / 6</td>
-                        <td><span class="status"><span class="status-dot complete"></span> Schema Complete</span></td>
+                        <td>25 / 25</td>
+                        <td>4 / 4</td>
+                        <td><span class="status"><span class="status-dot complete"></span> API Complete</span></td>
                     </tr>
                     <tr>
                         <td>Config</td>
                         <td>47-48</td>
                         <td>10 / 10</td>
-                        <td>0 / 30</td>
-                        <td>0 / 8</td>
-                        <td><span class="status"><span class="status-dot complete"></span> Schema Complete</span></td>
+                        <td>30 / 30</td>
+                        <td>4 / 4</td>
+                        <td><span class="status"><span class="status-dot complete"></span> API Complete</span></td>
                     </tr>
                     <tr>
                         <td>Scheduler</td>
                         <td>49-50</td>
+                        <td>8 / 8</td>
+                        <td>25 / 25</td>
                         <td>4 / 4</td>
-                        <td>0 / 25</td>
-                        <td>0 / 6</td>
-                        <td><span class="status"><span class="status-dot complete"></span> Schema Complete</span></td>
+                        <td><span class="status"><span class="status-dot complete"></span> API Complete</span></td>
                     </tr>
                     <tr>
                         <td>Cache</td>
@@ -722,6 +722,15 @@
             <h2>📝 Change Log</h2>
             <div class="changelog">
                 <div class="log-entry">
+                    <div class="log-date">January 14, 2026 - Scheduler API Complete & Tested</div>
+                    <ul class="log-items">
+                        <li>Scheduler API delivered with jobs, executions, tasks, reminders, templates, locking, retries, and handler registry wiring</li>
+                        <li>New scheduler e2e suite added (jobs, retries, locking, tasks, reminders, templates) and passing locally</li>
+                        <li>Lint, type-check, and Jest suites now passing for Scheduler (pnpm lint, pnpm check-types, pnpm test)</li>
+                        <li>Progress tracker updated for Scheduler (25/25 endpoints, 4/4 tests) and overall service count</li>
+                    </ul>
+                </div>
+                <div class="log-entry">
                     <div class="log-date">January 13, 2026 - Search Indexing Wired to Seeded Data</div>
                     <ul class="log-items">
                         <li>Queue processor now fetches Prisma entities (customers, orders, loads, carriers, documents) and maps them into Elasticsearch documents</li>
@@ -851,6 +860,15 @@
                     </ul>
                 </div>
                 <div class="log-entry">
+                    <div class="log-date">January 14, 2026 - Config API Cached & Tested</div>
+                    <ul class="log-items">
+                        <li>🚀 Implemented Redis-backed config caching for system, tenant, preferences, and feature flags with proper invalidation on writes</li>
+                        <li>🔁 Added inheritance resolution (system → tenant → user) and cached flag evaluation with rollout/override logic</li>
+                        <li>🧪 Config API e2e suite passing (system/tenant configs, preferences, flags, business hours, sequences, templates)</li>
+                        <li>📌 Audit e2e remains green; Scheduler API now complete with passing e2e suite</li>
+                    </ul>
+                </div>
+                <div class="log-entry">
                     <div class="log-date">January 11, 2026 - TMS Core API Complete</div>
                     <ul class="log-items">
                         <li>✅ Implemented TMS Core API (45 endpoints across Orders, Loads, Stops) with tenant isolation, status workflows, and soft deletes</li>
@@ -929,8 +947,8 @@
                             </ul>
                         </li>
                         <li>📦 <strong>Seed Infrastructure:</strong> 32 modular seed files in prisma/seed/ directory</li>
-                        <li>🔧 <strong>Remaining Services:</strong> 13 services have seed files created but require minor fixes (hr, workflow, integration-hub, search, audit, config, scheduler, cache, help-desk, feedback, load-board-external, rate-intelligence, claims)</li>
-                        <li>🎯 <strong>Phase A Progress:</strong> 15 of 27 services fully seeded (55.6%)</li>
+                        <li>🔧 <strong>Remaining Services:</strong> 10 services have seed files created but require minor fixes (hr, workflow, integration-hub, search, cache, help-desk, feedback, load-board-external, rate-intelligence, claims)</li>
+                        <li>🎯 <strong>Phase A Progress:</strong> 16 of 27 services fully seeded (59.3%)</li>
                     </ul>
                 </div>
                 <div class="log-entry">

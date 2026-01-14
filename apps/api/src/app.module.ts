@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule as NestConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { PrismaService } from './prisma.service';
 
@@ -33,6 +33,9 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { WorkflowModule } from './modules/workflow/workflow.module';
 import { IntegrationHubModule } from './modules/integration-hub/integration-hub.module';
 import { SearchModule } from './modules/search/search.module';
+import { AuditModule } from './modules/audit/audit.module';
+import { ConfigModule } from './modules/config/config.module';
+import { SchedulerModule } from './modules/scheduler/scheduler.module';
 
 // Support services - commented out until schemas are added
 // import { AnalyticsModule } from './modules/analytics/analytics.module';
@@ -42,12 +45,16 @@ import { SearchModule } from './modules/search/search.module';
 @Module({
   imports: [
     // Configuration module - loads .env
-    ConfigModule.forRoot({
+    NestConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
     }),
     // Event system for inter-module communication
-    EventEmitterModule.forRoot(),
+    EventEmitterModule.forRoot({
+      // Enable wildcard listeners so audit can capture *.created/updated/deleted events
+      wildcard: true,
+      delimiter: '.',
+    }),
     // Infrastructure
     RedisModule,
     EmailModule,
@@ -77,6 +84,9 @@ import { SearchModule } from './modules/search/search.module';
     WorkflowModule,
     IntegrationHubModule,
     SearchModule,
+    AuditModule,
+    ConfigModule,
+    SchedulerModule,
   ],
   providers: [PrismaService],
   exports: [PrismaService],

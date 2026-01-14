@@ -8910,6 +8910,9 @@ model ScheduledJob {
   id       String  @id @default(cuid())
   tenantId String?
 
+  // Identifiers
+  code String? @db.VarChar(100)
+
   // Job details
   name        String  @db.VarChar(255)
   description String? @db.Text
@@ -8918,28 +8921,41 @@ model ScheduledJob {
   jobType      JobType
   scheduleType ScheduleType
 
+  // Handler
+  handler   String  @default("noop") @db.VarChar(255)
+  parameters Json   @default("{}")
+
   // Schedule
   cronExpression  String?   @db.VarChar(255)
-  intervalMinutes Int?
-  scheduledAt     DateTime?
-
-  // Handler
-  handlerName String @db.VarChar(255)
-  parameters  Json   @default("{}")
+  intervalSeconds Int?
+  runAt           DateTime?
+  timezone        String    @default("UTC") @db.VarChar(100)
 
   // Settings
-  timeoutMinutes Int @default(30)
-  retryAttempts  Int @default(3)
+  timeoutSeconds    Int  @default(300)
+  maxRetries        Int  @default(3)
+  retryDelaySeconds Int  @default(60)
+  priority          Int  @default(5)
+  queue             String @default("default") @db.VarChar(100)
+  allowConcurrent   Boolean @default(false)
+  maxInstances      Int     @default(1)
 
   // Status
-  status String @default("ACTIVE") @db.VarChar(50)
+  status     String  @default("ACTIVE") @db.VarChar(50)
+  isEnabled  Boolean @default(true)
+  lastRunAt  DateTime?
+  lastRunStatus     String? @db.VarChar(50)
+  lastRunDurationMs Int?
+  nextRunAt         DateTime?
+  runCount          Int @default(0)
+  failureCount      Int @default(0)
 
-  // Last run
-  lastRunAt     DateTime?
-  lastRunStatus String?   @db.VarChar(50)
-
-  // Next run
-  nextRunAt DateTime?
+  // Legacy compatibility
+  handlerName     String?  @db.VarChar(255)
+  intervalMinutes Int?
+  scheduledAt     DateTime?
+  timeoutMinutes  Int?
+  retryAttempts   Int?
 
   // Migration support
   externalId   String? @db.VarChar(255)
@@ -8954,34 +8970,56 @@ model ScheduledJob {
   updatedById String?
 
   // Relations
-  tenant     Tenant?        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  executions JobExecution[]
+  tenant       Tenant?         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  executions   JobExecution[]
+  dependencies JobDependency[] @relation("JobDependencies")
+  dependents   JobDependency[] @relation("DependentJobs")
+  alerts       JobAlert[]
+  lock         JobLock?
 
+  @@unique([tenantId, code])
   @@index([tenantId])
   @@index([jobType])
   @@index([status])
   @@index([nextRunAt])
+  @@index([queue, priority])
   @@index([externalId, sourceSystem])
 }
 
 model JobExecution {
-  id    String @id @default(cuid())
-  jobId String
+  id       String @id @default(cuid())
+  jobId    String
+  tenantId String?
 
-  // Execution details
-  status JobExecutionStatus @default(PENDING)
+  // Ordering
+  executionNumber Int @default(1)
+  attemptNumber   Int @default(1)
 
   // Timing
+  scheduledAt DateTime?
   startedAt   DateTime?
   completedAt DateTime?
-  duration    Int? // milliseconds
+  durationMs  Int?
 
-  // Result
-  result       Json?
+  // Worker
+  workerId       String? @db.VarChar(100)
+  workerHostname String? @db.VarChar(255)
+
+  // Payload
+  parameters Json?
+
+  // Status
+  status      JobExecutionStatus @default(PENDING)
+  result      Json?
   errorMessage String? @db.Text
 
+  // Progress
+  progressPercent Int @default(0)
+  progressMessage String?
+
   // Retry
-  attempt Int @default(1)
+  retryOf   String?
+  willRetry Boolean @default(false)
 
   // Migration support
   externalId   String? @db.VarChar(255)
@@ -8998,10 +9036,70 @@ model JobExecution {
   // Relations
   job ScheduledJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
-  @@index([jobId])
-  @@index([status])
-  @@index([startedAt])
+  @@index([jobId, createdAt])
+  @@index([status, scheduledAt])
+  @@index([tenantId, createdAt])
+  @@index([retryOf])
   @@index([externalId, sourceSystem])
+}
+
+model JobDependency {
+  id             String @id @default(cuid())
+  jobId          String
+  dependsOnJobId String
+
+  dependencyType String @default("SUCCESS") @db.VarChar(20)
+
+  createdAt DateTime @default(now())
+
+  job         ScheduledJob @relation("JobDependencies", fields: [jobId], references: [id], onDelete: Cascade)
+  dependsOnJob ScheduledJob @relation("DependentJobs", fields: [dependsOnJobId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, dependsOnJobId])
+}
+
+model JobLock {
+  id       String @id @default(cuid())
+  jobId    String @unique
+  tenantId String?
+
+  workerId   String @db.VarChar(100)
+  lockedAt   DateTime
+  expiresAt  DateTime
+  lastHeartbeat DateTime?
+
+  job ScheduledJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+}
+
+model JobTemplate {
+  id                String @id @default(cuid())
+  code              String @unique @db.VarChar(100)
+  name              String
+  description       String? @db.Text
+  category          String? @db.VarChar(100)
+  handler           String
+  defaultSchedule   String?
+  defaultParameters Json              @default("{}")
+  isSystemRequired  Boolean           @default(false)
+  isTenantConfigurable Boolean        @default(true)
+  createdAt         DateTime          @default(now())
+}
+
+model JobAlert {
+  id       String @id @default(cuid())
+  jobId    String
+
+  alertType         String @db.VarChar(50)
+  thresholdValue    Int?
+  notificationChannels Json
+  recipients        Json
+  isEnabled         Boolean @default(true)
+
+  createdAt DateTime @default(now())
+
+  job ScheduledJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
 }
 
 enum TaskStatus {
@@ -9017,20 +9115,34 @@ model ScheduledTask {
   tenantId String
 
   // Task details
-  taskName     String   @db.VarChar(255)
-  taskType     String   @db.VarChar(100)
-  scheduledFor DateTime @db.Timestamp()
+  taskType    String   @db.VarChar(100)
+  referenceType String? @db.VarChar(50)
+  referenceId   String? @db.VarChar(255)
 
-  // Entity reference
-  entityType String? @db.VarChar(50)
-  entityId   String? @db.VarChar(255)
+  // Schedule
+  scheduledAt DateTime @db.Timestamp()
+  timezone    String   @default("UTC") @db.VarChar(100)
 
-  // Task data
-  taskData Json @default("{}")
+  // Payload
+  payload Json @default("{}")
+  handler String @db.VarChar(255)
+
+  // Settings
+  priority       Int  @default(5)
+  timeoutSeconds Int  @default(60)
 
   // Status
   status      TaskStatus @default(PENDING)
+  processedAt DateTime?
+  errorMessage String? @db.Text
   completedAt DateTime?
+
+  // Legacy compatibility
+  taskName     String?   @db.VarChar(255)
+  entityType   String?   @db.VarChar(50)
+  entityId     String?   @db.VarChar(255)
+  scheduledFor DateTime? @db.Timestamp()
+  taskData     Json?
 
   // Migration support
   externalId   String? @db.VarChar(255)
@@ -9049,9 +9161,9 @@ model ScheduledTask {
 
   @@index([tenantId])
   @@index([taskType])
-  @@index([scheduledFor])
+  @@index([scheduledAt, status])
+  @@index([referenceType, referenceId])
   @@index([status])
-  @@index([entityType, entityId])
   @@index([externalId, sourceSystem])
 }
 
@@ -9061,19 +9173,37 @@ model Reminder {
   userId   String
 
   // Reminder details
-  reminderType String   @db.VarChar(100)
-  title        String   @db.VarChar(255)
-  message      String?  @db.Text
-  remindAt     DateTime @db.Timestamp()
+  title       String   @db.VarChar(255)
+  description String?  @db.Text
+  remindAt    DateTime @db.Timestamp()
+  timezone    String?  @db.VarChar(100)
 
-  // Entity reference
-  entityType String? @db.VarChar(50)
-  entityId   String? @db.VarChar(255)
+  // References
+  referenceType String? @db.VarChar(50)
+  referenceId   String? @db.VarChar(255)
+  referenceUrl  String? @db.VarChar(500)
+
+  // Recurrence
+  isRecurring       Boolean  @default(false)
+  recurrenceRule    String?  @db.VarChar(255)
+  recurrenceEndDate DateTime?
+
+  // Notifications
+  notificationChannels Json @default("[\"in_app\"]")
 
   // Status
-  status       ReminderStatus @default(PENDING)
-  snoozedUntil DateTime?      @db.Timestamp()
-  sentAt       DateTime?
+  status        ReminderStatus @default(PENDING)
+  snoozedUntil  DateTime?      @db.Timestamp()
+  snoozeCount   Int            @default(0)
+  sentAt        DateTime?
+  dismissedAt   DateTime?
+  completedAt   DateTime?
+
+  // Legacy compatibility
+  reminderType String?  @db.VarChar(100)
+  message      String?  @db.Text
+  entityType   String?  @db.VarChar(50)
+  entityId     String?  @db.VarChar(255)
 
   // Migration support
   externalId   String? @db.VarChar(255)
@@ -9093,10 +9223,9 @@ model Reminder {
 
   @@index([tenantId])
   @@index([userId])
-  @@index([reminderType])
   @@index([remindAt])
   @@index([status])
-  @@index([entityType, entityId])
+  @@index([referenceType, referenceId])
   @@index([externalId, sourceSystem])
 }
 

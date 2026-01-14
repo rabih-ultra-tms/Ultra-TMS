@@ -33,6 +33,38 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     await this.client.quit();
   }
 
+  async getValue(key: string): Promise<string | null> {
+    return this.client.get(key);
+  }
+
+  async setValue(key: string, value: string, ttlSeconds?: number): Promise<void> {
+    if (ttlSeconds && ttlSeconds > 0) {
+      await this.client.set(key, value, 'EX', ttlSeconds);
+    } else {
+      await this.client.set(key, value);
+    }
+  }
+
+  async deleteKeys(keys: string[]): Promise<void> {
+    if (!keys.length) return;
+    await this.client.del(...keys);
+  }
+
+  async getJson<T>(key: string): Promise<T | null> {
+    const raw = await this.getValue(key);
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as T;
+    } catch (error) {
+      this.logger.warn(`Failed to parse JSON for key ${key}: ${error}`);
+      return null;
+    }
+  }
+
+  async setJson(key: string, value: unknown, ttlSeconds?: number): Promise<void> {
+    await this.setValue(key, JSON.stringify(value), ttlSeconds);
+  }
+
   /**
    * Basic set helper with TTL (in seconds) for generic caching use cases.
    */

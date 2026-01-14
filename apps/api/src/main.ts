@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { AuditInterceptor } from './modules/audit/interceptors/audit.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,6 +14,9 @@ async function bootstrap() {
 
   // Global API prefix
   app.setGlobalPrefix('api/v1');
+
+  // Global HTTP audit logging (hash-chained, tenant-aware)
+  app.useGlobalInterceptors(app.get(AuditInterceptor));
 
   // Global validation pipe
   app.useGlobalPipes(
