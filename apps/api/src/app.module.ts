@@ -10,6 +10,7 @@ import { StorageModule } from './modules/storage/storage.module';
 
 // Feature modules - Phase 1 (Services 1-6 with schema)
 import { AuthModule } from './modules/auth/auth.module';
+import { HelpDeskModule } from './modules/help-desk/help-desk.module';
 import { CrmModule } from './modules/crm/crm.module';
 import { SalesModule } from './modules/sales/sales.module';
 import { TmsModule } from './modules/tms/tms.module';
@@ -36,6 +37,9 @@ import { SearchModule } from './modules/search/search.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { ConfigModule } from './modules/config/config.module';
 import { SchedulerModule } from './modules/scheduler/scheduler.module';
+import { CacheModule } from './modules/cache/cache.module';
+import { HrModule } from './modules/hr/hr.module';
+import { FeedbackModule } from './modules/feedback/feedback.module';
 
 // Support services - commented out until schemas are added
 // import { AnalyticsModule } from './modules/analytics/analytics.module';
@@ -49,7 +53,6 @@ import { SchedulerModule } from './modules/scheduler/scheduler.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
-    // Event system for inter-module communication
     EventEmitterModule.forRoot({
       // Enable wildcard listeners so audit can capture *.created/updated/deleted events
       wildcard: true,
@@ -87,6 +90,10 @@ import { SchedulerModule } from './modules/scheduler/scheduler.module';
     AuditModule,
     ConfigModule,
     SchedulerModule,
+    CacheModule,
+    HrModule,
+    HelpDeskModule,
+    FeedbackModule,
   ],
   providers: [PrismaService],
   exports: [PrismaService],
