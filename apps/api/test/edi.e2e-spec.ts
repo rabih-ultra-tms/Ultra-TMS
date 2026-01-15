@@ -7,7 +7,14 @@ import { PrismaService } from '../src/prisma.service';
 import { JwtAuthGuard } from '../src/modules/auth/guards/jwt-auth.guard';
 
 const TEST_TENANT = 'tenant-edi';
-const TEST_USER = { id: 'user-edi', email: 'user@edi.test', tenantId: TEST_TENANT, roles: ['admin'] };
+const TEST_USER = {
+  id: 'user-edi',
+  email: 'user@edi.test',
+  tenantId: TEST_TENANT,
+  roleName: 'SUPER_ADMIN',
+  role: { name: 'SUPER_ADMIN', permissions: [] },
+  roles: ['SUPER_ADMIN'],
+};
 
 describe('EDI Service API E2E', () => {
   let app: INestApplication;
@@ -78,7 +85,7 @@ describe('EDI Service API E2E', () => {
         .send({ partnerName: 'Partner One', partnerType: 'CUSTOMER', isaId: 'ISA-100', protocol: 'FTP' })
         .expect(201);
 
-      const partnerId = createRes.body.id;
+      const partnerId = createRes.body.data.id;
 
       const testRes = await request(app.getHttpServer())
         .post(`/api/v1/edi/trading-partners/${partnerId}/test`)
@@ -90,7 +97,7 @@ describe('EDI Service API E2E', () => {
         .patch(`/api/v1/edi/trading-partners/${partnerId}/status`)
         .expect(200);
 
-      expect(toggleRes.body.isActive).toBe(false);
+      expect(toggleRes.body.data.isActive).toBe(false);
     });
   });
 
@@ -107,18 +114,18 @@ describe('EDI Service API E2E', () => {
         })
         .expect(201);
 
-      expect(importRes.body.status).toBe(EdiMessageStatus.DELIVERED);
-      expect(importRes.body.entityType).toBe('LOAD');
-      expect(importRes.body.entityId).toBe('LOAD-123');
+      expect(importRes.body.data.status).toBe(EdiMessageStatus.DELIVERED);
+      expect(importRes.body.data.entityType).toBe('LOAD');
+      expect(importRes.body.data.entityId).toBe('LOAD-123');
 
       const ackRes = await request(app.getHttpServer())
-        .post(`/api/v1/edi/documents/${importRes.body.id}/acknowledge`)
+        .post(`/api/v1/edi/documents/${importRes.body.data.id}/acknowledge`)
         .send({ ackControlNumber: '000000001', ackStatus: 'ACCEPTED' })
         .expect(201);
 
-      expect(ackRes.body.ackStatus).toBe('ACCEPTED');
+      expect(ackRes.body.data.ackStatus).toBe('ACCEPTED');
 
-      const message = await prisma.ediMessage.findUnique({ where: { id: importRes.body.id } });
+      const message = await prisma.ediMessage.findUnique({ where: { id: importRes.body.data.id } });
       expect(message?.status).toBe(EdiMessageStatus.ACKNOWLEDGED);
     });
 
@@ -130,8 +137,8 @@ describe('EDI Service API E2E', () => {
         .send({ tradingPartnerId: partner.id, transactionType: 'EDI_204', rawContent: 'not-json' })
         .expect(201);
 
-      expect(errorRes.body.status).toBe(EdiMessageStatus.ERROR);
-      expect(errorRes.body.validationStatus).toBe('ERROR');
+      expect(errorRes.body.data.status).toBe(EdiMessageStatus.ERROR);
+      expect(errorRes.body.data.validationStatus).toBe('ERROR');
     });
   });
 
@@ -144,19 +151,21 @@ describe('EDI Service API E2E', () => {
         .send({ tradingPartnerId: partner.id, invoiceId: 'INV-100' })
         .expect(201);
 
-      expect(invoiceRes.body.transactionType).toBe(EdiTransactionType.EDI_210);
-      expect(invoiceRes.body.status).toBe(EdiMessageStatus.QUEUED);
+      expect(invoiceRes.body.data.transactionType).toBe(EdiTransactionType.EDI_210);
+      expect(invoiceRes.body.data.status).toBe(EdiMessageStatus.QUEUED);
 
       const statusRes = await request(app.getHttpServer())
         .post('/api/v1/edi/generate/214')
         .send({ tradingPartnerId: partner.id, loadId: 'LOAD-777', statusCode: 'X1' })
         .expect(201);
 
-      expect(statusRes.body.transactionType).toBe(EdiTransactionType.EDI_214);
+      expect(statusRes.body.data.transactionType).toBe(EdiTransactionType.EDI_214);
 
-      await request(app.getHttpServer()).post(`/api/v1/edi/send/${invoiceRes.body.id}`).expect(201);
+      await request(app.getHttpServer())
+        .post(`/api/v1/edi/send/${invoiceRes.body.data.id}`)
+        .expect(201);
 
-      const sent = await prisma.ediMessage.findUnique({ where: { id: invoiceRes.body.id } });
+      const sent = await prisma.ediMessage.findUnique({ where: { id: invoiceRes.body.data.id } });
       expect(sent?.status).toBe(EdiMessageStatus.SENT);
     });
   });
@@ -214,7 +223,7 @@ describe('EDI Service API E2E', () => {
         .post('/api/v1/edi/queue/process')
         .expect(201);
 
-      expect(processRes.body.processed).toBeGreaterThanOrEqual(1);
+      expect(processRes.body.data.processed).toBeGreaterThanOrEqual(1);
 
       await request(app.getHttpServer()).post(`/api/v1/edi/queue/${errorItem.id}/retry`).expect(201);
       const retried = await prisma.ediMessage.findUnique({ where: { id: errorItem.id } });

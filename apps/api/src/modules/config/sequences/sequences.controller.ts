@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../modules/auth/guards/jwt-auth.guard';
 import { CurrentTenant } from '../../../common/decorators';
 import { UpdateNumberSequenceDto } from '../dto';
@@ -6,6 +7,8 @@ import { SequencesService } from './sequences.service';
 
 @Controller('config/sequences')
 @UseGuards(JwtAuthGuard)
+@ApiTags('Config')
+@ApiBearerAuth('JWT-auth')
 export class SequencesController {
   constructor(private readonly service: SequencesService) {}
 

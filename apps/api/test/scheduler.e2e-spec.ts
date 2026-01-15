@@ -7,6 +7,7 @@ import { JwtAuthGuard } from '../src/modules/auth/guards/jwt-auth.guard';
 import { HandlerRegistry } from '../src/modules/scheduler/handlers/handler-registry';
 import { LockService } from '../src/modules/scheduler/locking/lock.service';
 import { JobExecutionStatus } from '@prisma/client';
+import { CustomThrottlerGuard } from '../src/common/guards/custom-throttler.guard';
 
 const TEST_TENANT = 'tenant-scheduler';
 const SYSTEM_TENANT = 'system';
@@ -14,7 +15,9 @@ const TEST_USER = {
   id: 'user-scheduler',
   email: 'user@scheduler.test',
   tenantId: TEST_TENANT,
-  roles: ['admin'],
+  roles: ['SUPER_ADMIN'],
+  role: 'SUPER_ADMIN',
+  roleName: 'SUPER_ADMIN',
 };
 
 describe('Scheduler API E2E', () => {
@@ -35,6 +38,8 @@ describe('Scheduler API E2E', () => {
           return true;
         },
       })
+      .overrideGuard(CustomThrottlerGuard)
+      .useValue({ canActivate: () => true })
       .compile();
 
     app = moduleRef.createNestApplication();
@@ -106,7 +111,7 @@ describe('Scheduler API E2E', () => {
           handler: 'noop.handler',
         })
         .expect(201);
-      expect(cronRes.body.nextRunAt).toBeTruthy();
+      expect(cronRes.body.data.nextRunAt).toBeTruthy();
 
       const intervalRes = await request(app.getHttpServer())
         .post('/api/v1/jobs')
@@ -118,7 +123,7 @@ describe('Scheduler API E2E', () => {
           handler: 'noop.handler',
         })
         .expect(201);
-      expect(intervalRes.body.nextRunAt).toBeTruthy();
+      expect(intervalRes.body.data.nextRunAt).toBeTruthy();
     });
 
     it('runs manual job, tracks execution, and toggles pause/resume', async () => {
@@ -134,16 +139,16 @@ describe('Scheduler API E2E', () => {
         .expect(201);
 
       const runRes = await request(app.getHttpServer())
-        .post(`/api/v1/jobs/${createRes.body.id}/run`)
+        .post(`/api/v1/jobs/${createRes.body.data.id}/run`)
         .expect(201);
-      expect(runRes.body.status).toBe(JobExecutionStatus.COMPLETED);
+      expect(runRes.body.data.status).toBe(JobExecutionStatus.COMPLETED);
       expect(handledPayload).toEqual({ a: 1 });
 
-      const paused = await request(app.getHttpServer()).post(`/api/v1/jobs/${createRes.body.id}/pause`).expect(201);
-      expect(paused.body.status).toBe('PAUSED');
+      const paused = await request(app.getHttpServer()).post(`/api/v1/jobs/${createRes.body.data.id}/pause`).expect(201);
+      expect(paused.body.data.status).toBe('PAUSED');
 
-      const resumed = await request(app.getHttpServer()).post(`/api/v1/jobs/${createRes.body.id}/resume`).expect(201);
-      expect(resumed.body.status).toBe('ACTIVE');
+      const resumed = await request(app.getHttpServer()).post(`/api/v1/jobs/${createRes.body.data.id}/resume`).expect(201);
+      expect(resumed.body.data.status).toBe('ACTIVE');
     });
   });
 
@@ -155,19 +160,21 @@ describe('Scheduler API E2E', () => {
         throw new Error(`fail-${attempts}`);
       });
 
+      await new Promise((resolve) => setTimeout(resolve, 1100));
+
       const jobRes = await request(app.getHttpServer())
         .post('/api/v1/jobs')
         .send({ code: 'retry-job', name: 'Retry Job', scheduleType: 'MANUAL', handler: 'test.retry', maxRetries: 2, retryDelaySeconds: 1 })
         .expect(201);
 
       const execRes = await request(app.getHttpServer())
-        .post(`/api/v1/jobs/${jobRes.body.id}/run`)
+        .post(`/api/v1/jobs/${jobRes.body.data.id}/run`)
         .expect(201);
-      expect(execRes.body.status).toBe(JobExecutionStatus.FAILED);
-      expect(execRes.body.willRetry).toBe(true);
+      expect(execRes.body.data.status).toBe(JobExecutionStatus.FAILED);
+      expect(execRes.body.data.willRetry).toBe(true);
 
       const pendingRetry = await prisma.jobExecution.findFirst({
-        where: { jobId: jobRes.body.id, status: JobExecutionStatus.PENDING, retryOf: execRes.body.id },
+        where: { jobId: jobRes.body.data.id, status: JobExecutionStatus.PENDING, retryOf: execRes.body.data.id },
       });
       expect(pendingRetry).toBeTruthy();
       expect(pendingRetry?.attemptNumber).toBe(2);
@@ -188,12 +195,12 @@ describe('Scheduler API E2E', () => {
       const execution = await prisma.jobExecution.create({ data: { jobId: job.id, status: JobExecutionStatus.PENDING } });
 
       const listRes = await request(app.getHttpServer()).get(`/api/v1/jobs/${job.id}/executions`).expect(200);
-      expect(listRes.body.length).toBeGreaterThanOrEqual(1);
+      expect(listRes.body.data.length).toBeGreaterThanOrEqual(1);
 
       const cancelRes = await request(app.getHttpServer())
         .post(`/api/v1/jobs/${job.id}/executions/${execution.id}/cancel`)
         .expect(201);
-      expect(cancelRes.body.status).toBe(JobExecutionStatus.CANCELLED);
+      expect(cancelRes.body.data.status).toBe(JobExecutionStatus.CANCELLED);
     });
   });
 
@@ -235,10 +242,10 @@ describe('Scheduler API E2E', () => {
         .expect(201);
 
       const listRes = await request(app.getHttpServer()).get('/api/v1/tasks').expect(200);
-      expect(listRes.body.length).toBeGreaterThanOrEqual(1);
+      expect(listRes.body.data.length).toBeGreaterThanOrEqual(1);
 
-      const cancelRes = await request(app.getHttpServer()).delete(`/api/v1/tasks/${createRes.body.id}`).expect(200);
-      expect(cancelRes.body.status).toBe('CANCELLED');
+      const cancelRes = await request(app.getHttpServer()).delete(`/api/v1/tasks/${createRes.body.data.id}`).expect(200);
+      expect(cancelRes.body.data.status).toBe('CANCELLED');
     });
 
     it('creates, snoozes, and dismisses reminders', async () => {
@@ -252,15 +259,15 @@ describe('Scheduler API E2E', () => {
         .expect(201);
 
       const snoozeRes = await request(app.getHttpServer())
-        .post(`/api/v1/reminders/${createRes.body.id}/snooze`)
+        .post(`/api/v1/reminders/${createRes.body.data.id}/snooze`)
         .send({ minutes: 10 })
         .expect(201);
-      expect(snoozeRes.body.status).toBe('SNOOZED');
+      expect(snoozeRes.body.data.status).toBe('SNOOZED');
 
       const dismissRes = await request(app.getHttpServer())
-        .post(`/api/v1/reminders/${createRes.body.id}/dismiss`)
+        .post(`/api/v1/reminders/${createRes.body.data.id}/dismiss`)
         .expect(201);
-      expect(dismissRes.body.status).toBe('DISMISSED');
+      expect(dismissRes.body.data.status).toBe('DISMISSED');
     });
   });
 
@@ -280,8 +287,8 @@ describe('Scheduler API E2E', () => {
         .send({ scheduleType: 'ONCE', runAt: new Date(Date.now() + 60000).toISOString() })
         .expect(201);
 
-      expect(res.body.code).toBe('tpl-report');
-      expect(res.body.tenantId).toBe(TEST_TENANT);
+      expect(res.body.data.code).toBe('tpl-report');
+      expect(res.body.data.tenantId).toBe(TEST_TENANT);
     });
   });
 });

@@ -14,9 +14,11 @@ import { UsersService } from './users.service';
 import { CreateUserDto, UpdateUserDto } from './dto';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Roles } from '../../common/decorators';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
+@Roles('ADMIN', 'SUPER_ADMIN')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 

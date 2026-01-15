@@ -1,7 +1,15 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { ConfigModule as NestConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { PrismaService } from './prisma.service';
+import { RolesGuard } from './common/guards/roles.guard';
+import { ResponseTransformInterceptor } from './common/interceptors/response-transform.interceptor';
+import { AuditInterceptor } from './modules/audit/interceptors/audit.interceptor';
+import { CustomThrottlerGuard } from './common/guards/custom-throttler.guard';
+import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
+import { RequestLoggingMiddleware } from './common/middleware/request-logging.middleware';
 
 // Core infrastructure modules
 import { RedisModule } from './modules/redis/redis.module';
@@ -40,6 +48,7 @@ import { SchedulerModule } from './modules/scheduler/scheduler.module';
 import { CacheModule } from './modules/cache/cache.module';
 import { HrModule } from './modules/hr/hr.module';
 import { FeedbackModule } from './modules/feedback/feedback.module';
+import { HealthModule } from './modules/health/health.module';
 
 // Support services - commented out until schemas are added
 // import { AnalyticsModule } from './modules/analytics/analytics.module';
@@ -58,6 +67,23 @@ import { FeedbackModule } from './modules/feedback/feedback.module';
       wildcard: true,
       delimiter: '.',
     }),
+    ThrottlerModule.forRoot([
+      {
+        name: 'short',
+        ttl: 1000,
+        limit: 3,
+      },
+      {
+        name: 'medium',
+        ttl: 10000,
+        limit: 20,
+      },
+      {
+        name: 'long',
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
     // Infrastructure
     RedisModule,
     EmailModule,
@@ -94,8 +120,33 @@ import { FeedbackModule } from './modules/feedback/feedback.module';
     HrModule,
     HelpDeskModule,
     FeedbackModule,
+    HealthModule,
   ],
-  providers: [PrismaService],
+  providers: [
+    PrismaService,
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: CustomThrottlerGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ResponseTransformInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: AuditInterceptor,
+    },
+  ],
   exports: [PrismaService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(CorrelationIdMiddleware, RequestLoggingMiddleware)
+      .forRoutes('*');
+  }
+}

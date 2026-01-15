@@ -4,7 +4,7 @@ import { CurrentTenant, CurrentUser } from '../../../common/decorators';
 import { FeaturesService } from './features.service';
 import { AddFeatureCommentDto, SubmitFeatureRequestDto, UpdateFeatureRequestDto } from '../dto/feedback.dto';
 
-@Controller('api/v1/feedback/features')
+@Controller('feedback/features')
 @UseGuards(JwtAuthGuard)
 export class FeaturesController {
   constructor(private readonly features: FeaturesService) {}

@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../prisma.service';
-import { CreateLoadDto, UpdateLoadDto, AssignCarrierDto, UpdateLoadLocationDto, LoadQueryDto, CreateCheckCallDto } from './dto';
+import PDFDocument from 'pdfkit';
+import { CreateLoadDto, UpdateLoadDto, AssignCarrierDto, UpdateLoadLocationDto, LoadQueryDto, CreateCheckCallDto, PaginationDto, RateConfirmationOptionsDto } from './dto';
 
 @Injectable()
 export class LoadsService {
@@ -108,7 +109,6 @@ export class LoadsService {
       total,
       page,
       limit,
-      totalPages: Math.ceil(total / limit),
     };
   }
 
@@ -410,6 +410,115 @@ export class LoadsService {
     });
 
     return checkCall;
+  }
+
+  async getCheckCalls(tenantId: string, loadId: string, params: PaginationDto) {
+    const { page = 1, limit = 20 } = params;
+    const skip = (page - 1) * limit;
+
+    const load = await this.prisma.load.findFirst({
+      where: { id: loadId, tenantId, deletedAt: null },
+    });
+
+    if (!load) {
+      throw new NotFoundException('Load not found');
+    }
+
+    const [data, total] = await Promise.all([
+      this.prisma.checkCall.findMany({
+        where: { loadId, tenantId, deletedAt: null },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.checkCall.count({ where: { loadId, tenantId, deletedAt: null } }),
+    ]);
+
+    return { data, total, page, limit };
+  }
+
+  async generateRateConfirmation(
+    tenantId: string,
+    loadId: string,
+    options: RateConfirmationOptionsDto,
+    _userId: string,
+  ): Promise<Buffer> {
+    const load = await this.prisma.load.findFirst({
+      where: { id: loadId, tenantId, deletedAt: null },
+      include: {
+        order: {
+          include: { customer: true },
+        },
+        carrier: true,
+        stops: { orderBy: { stopSequence: 'asc' } },
+      },
+    });
+
+    if (!load) {
+      throw new NotFoundException('Load not found');
+    }
+
+    if (!load.carrierId) {
+      throw new BadRequestException('Load must be assigned to a carrier');
+    }
+
+    const doc = new PDFDocument({ margin: 50 });
+    const chunks: Buffer[] = [];
+
+    doc.on('data', (chunk: Buffer) => chunks.push(chunk));
+
+    doc.fontSize(20).text('RATE CONFIRMATION', { align: 'center' });
+    doc.moveDown();
+
+    doc.fontSize(12);
+    doc.text(`Load #: ${load.loadNumber}`);
+    doc.text(`Date: ${new Date().toLocaleDateString()}`);
+    doc.moveDown();
+
+    doc.text('CARRIER INFORMATION', { underline: true });
+    doc.text(`Company: ${load.carrier?.legalName || ''}`);
+    doc.text(`MC#: ${load.carrier?.mcNumber || ''}`);
+    doc.moveDown();
+
+    doc.text('RATE DETAILS', { underline: true });
+    doc.text(`Line Haul: $${load.carrierRate?.toFixed(2) || '0.00'}`);
+    if (options.includeAccessorials) {
+      doc.text(`Accessorials: $${load.accessorialCosts?.toFixed(2) || '0.00'}`);
+      doc.text(`Fuel Advance: $${load.fuelAdvance?.toFixed(2) || '0.00'}`);
+    }
+    doc.moveDown();
+
+    doc.text('STOPS', { underline: true });
+    for (const stop of load.stops) {
+      doc.text(`${stop.stopType}: ${stop.facilityName || ''}`);
+      doc.text(`  ${stop.addressLine1 || ''}, ${stop.city || ''}, ${stop.state || ''} ${stop.postalCode || ''}`);
+      doc.text(
+        `  Appointment: ${stop.appointmentDate ? stop.appointmentDate.toDateString() : ''} ${stop.appointmentTimeStart || ''}`,
+      );
+      doc.moveDown(0.5);
+    }
+
+    if (options.customMessage) {
+      doc.moveDown();
+      doc.text(options.customMessage);
+    }
+
+    if (options.includeTerms) {
+      doc.addPage();
+      doc.text('TERMS AND CONDITIONS', { underline: true });
+      doc.fontSize(10);
+      doc.text('Standard carrier terms and conditions apply.');
+    }
+
+    doc.moveDown(2);
+    doc.text('_________________________________');
+    doc.text('Carrier Signature                Date');
+
+    doc.end();
+
+    return new Promise((resolve) => {
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+    });
   }
 
   async getLoadBoard(tenantId: string, options: {

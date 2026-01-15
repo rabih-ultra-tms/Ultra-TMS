@@ -4,7 +4,7 @@ import { CurrentTenant, CurrentUser } from '../../../common/decorators';
 import { AccountsService } from './accounts.service';
 import { AccountQueryDto, CreateAccountDto, UpdateAccountDto } from './dto';
 
-@Controller('api/v1/load-board/accounts')
+@Controller('load-board/accounts')
 @UseGuards(JwtAuthGuard)
 export class AccountsController {
   constructor(private readonly accountsService: AccountsService) {}

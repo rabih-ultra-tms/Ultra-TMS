@@ -7,6 +7,8 @@ import { FeaturesController } from './features/features.controller';
 import { FeatureFlagEvaluator } from './features/feature-flag.evaluator';
 import { FeaturesService } from './features/features.service';
 import { ConfigHistoryService } from './history/config-history.service';
+import { EmailTemplatesController } from './email-templates/email-templates.controller';
+import { EmailTemplatesService } from './email-templates/email-templates.service';
 import { PreferencesController } from './preferences/preferences.controller';
 import { PreferencesService } from './preferences/preferences.service';
 import { SequencesController } from './sequences/sequences.controller';
@@ -27,6 +29,7 @@ import { TenantConfigService } from './tenant/tenant-config.service';
     BusinessHoursController,
     SequencesController,
     TemplatesController,
+    EmailTemplatesController,
   ],
   providers: [
     PrismaService,
@@ -40,6 +43,7 @@ import { TenantConfigService } from './tenant/tenant-config.service';
     BusinessHoursService,
     SequencesService,
     TemplatesService,
+    EmailTemplatesService,
   ],
   exports: [SystemConfigService, TenantConfigService, PreferencesService, FeaturesService],
 })

@@ -8,7 +8,10 @@ import {
   SettlementsController,
   PaymentsReceivedController,
   PaymentsMadeController,
+  PaymentsController,
   JournalEntriesController,
+  ReportsController,
+  QuickBooksController,
 } from './controllers';
 
 // Services
@@ -19,6 +22,8 @@ import {
   PaymentsReceivedService,
   PaymentsMadeService,
   JournalEntriesService,
+  ReportsService,
+  PdfService,
 } from './services';
 
 @Module({
@@ -28,7 +33,10 @@ import {
     SettlementsController,
     PaymentsReceivedController,
     PaymentsMadeController,
+    PaymentsController,
     JournalEntriesController,
+    ReportsController,
+    QuickBooksController,
   ],
   providers: [
     PrismaService,
@@ -38,6 +46,8 @@ import {
     PaymentsReceivedService,
     PaymentsMadeService,
     JournalEntriesService,
+    ReportsService,
+    PdfService,
   ],
   exports: [
     ChartOfAccountsService,
@@ -46,6 +56,8 @@ import {
     PaymentsReceivedService,
     PaymentsMadeService,
     JournalEntriesService,
+    ReportsService,
+    PdfService,
   ],
 })
 export class AccountingModule {}

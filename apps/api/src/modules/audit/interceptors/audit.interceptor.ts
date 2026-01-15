@@ -2,23 +2,30 @@ import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nes
 import { AuditAction, AuditActionCategory, Prisma } from '@prisma/client';
 import { Observable, tap } from 'rxjs';
 import { AuditLogsService } from '../logs/audit-logs.service';
+import { PrismaService } from '../../../prisma.service';
 
 @Injectable()
 export class AuditInterceptor implements NestInterceptor {
-  constructor(private readonly auditLogs: AuditLogsService) {}
+  constructor(
+    private readonly auditLogs: AuditLogsService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    const request = context.switchToHttp().getRequest();
+    const httpContext = context.switchToHttp();
+    const request = httpContext.getRequest();
+    const response = httpContext.getResponse();
     const startedAt = Date.now();
 
     return next.handle().pipe(
-      tap(async (response) => {
+      tap(async (result) => {
         try {
           const tenantId = request.tenantId ?? request.user?.tenantId ?? request.headers['x-tenant-id'];
+          const statusCode = response?.statusCode ?? result?.statusCode ?? result?.status ?? 200;
           const metadata: Prisma.InputJsonValue = {
             requestId: request.id ?? request.headers['x-request-id'],
             durationMs: Date.now() - startedAt,
-            statusCode: response?.statusCode ?? response?.status ?? 200,
+            statusCode,
             path: request.path,
           };
 
@@ -33,6 +40,22 @@ export class AuditInterceptor implements NestInterceptor {
             metadata,
             ipAddress: request.ip,
             userAgent: request.headers?.['user-agent'],
+          });
+
+          await this.prisma.aPIAuditLog.create({
+            data: {
+              tenantId: tenantId ?? null,
+              userId: request.user?.id ?? null,
+              endpoint: request.path,
+              method: request.method,
+              requestParams: {
+                params: request.params ?? {},
+                query: request.query ?? {},
+              },
+              responseStatus: statusCode,
+              responseTimeMs: Date.now() - startedAt,
+              ipAddress: request.ip,
+            },
           });
         } catch (_err) {
           // Avoid interceptors breaking primary response flow

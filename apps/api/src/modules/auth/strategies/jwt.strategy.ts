@@ -20,10 +20,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private configService: ConfigService,
     private prisma: PrismaService,
   ) {
+    const jwtSecret = configService.get<string>('JWT_SECRET');
+    if (!jwtSecret) {
+      throw new Error('FATAL: JWT_SECRET environment variable is required');
+    }
+
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_SECRET') || 'default-secret',
+      secretOrKey: jwtSecret,
     });
   }
 
@@ -66,6 +71,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       tenantId: user.tenantId,
       roleId: user.roleId,
       roleName: user.role?.name,
+      role: user.role,
       permissions: user.role?.permissions || [],
       firstName: user.firstName,
       lastName: user.lastName,

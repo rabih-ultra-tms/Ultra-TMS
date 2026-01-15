@@ -4,7 +4,7 @@ import { CurrentTenant, CurrentUser } from '../../../common/decorators';
 import { SurveysService } from './surveys.service';
 import { CreateSurveyDto, SubmitSurveyResponseDto, UpdateSurveyDto } from '../dto/feedback.dto';
 
-@Controller('api/v1/feedback/surveys')
+@Controller('feedback/surveys')
 @UseGuards(JwtAuthGuard)
 export class SurveysController {
   constructor(private readonly surveys: SurveysService) {}

@@ -1,11 +1,12 @@
 import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { CurrentTenant } from '../../../common/decorators';
+import { CurrentTenant, Roles } from '../../../common/decorators';
 import { RetentionService } from './retention.service';
 import { CreateRetentionPolicyDto, UpdateRetentionPolicyDto } from '../dto';
 
 @Controller('audit/retention')
 @UseGuards(JwtAuthGuard)
+@Roles('COMPLIANCE', 'ADMIN', 'SUPER_ADMIN')
 export class RetentionController {
   constructor(private readonly service: RetentionService) {}
 

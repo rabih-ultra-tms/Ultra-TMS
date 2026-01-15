@@ -1,11 +1,12 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { CurrentTenant, CurrentUser } from '../../../common/decorators';
+import { CurrentTenant, CurrentUser, Roles } from '../../../common/decorators';
 import { CheckpointService } from './checkpoint.service';
 import { CreateComplianceCheckpointDto } from '../dto';
 
 @Controller('audit/compliance/checkpoints')
 @UseGuards(JwtAuthGuard)
+@Roles('COMPLIANCE', 'ADMIN', 'SUPER_ADMIN')
 export class ComplianceController {
   constructor(private readonly service: CheckpointService) {}
 

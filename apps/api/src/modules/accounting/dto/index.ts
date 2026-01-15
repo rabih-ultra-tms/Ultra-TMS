@@ -5,3 +5,7 @@ export * from './create-payment-received.dto';
 export * from './create-payment-made.dto';
 export * from './create-journal-entry.dto';
 export * from './apply-payment.dto';
+export * from './reports.dto';
+export * from './send-invoice.dto';
+export * from './statement-query.dto';
+export * from './batch-payment.dto';

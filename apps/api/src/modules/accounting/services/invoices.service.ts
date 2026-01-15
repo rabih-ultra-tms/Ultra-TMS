@@ -1,6 +1,11 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma.service';
-import { CreateInvoiceDto, InvoiceLineItemType } from '../dto';
+import {
+  CreateInvoiceDto,
+  InvoiceLineItemType,
+  SendInvoiceDto,
+  StatementQueryDto,
+} from '../dto';
 
 @Injectable()
 export class InvoicesService {
@@ -165,7 +170,7 @@ export class InvoicesService {
     });
   }
 
-  async sendInvoice(id: string, tenantId: string) {
+  async sendInvoice(id: string, tenantId: string, dto?: SendInvoiceDto) {
     const invoice = await this.prisma.invoice.findFirst({
       where: { id, tenantId },
     });
@@ -174,13 +179,18 @@ export class InvoicesService {
       throw new NotFoundException('Invoice not found');
     }
 
-    return this.prisma.invoice.update({
+    const updated = await this.prisma.invoice.update({
       where: { id },
       data: {
         status: 'SENT',
         sentAt: new Date(),
       },
     });
+
+    return {
+      invoice: updated,
+      delivery: dto ?? null,
+    };
   }
 
   async voidInvoice(id: string, tenantId: string, userId: string, reason: string) {
@@ -203,6 +213,32 @@ export class InvoicesService {
         voidedAt: new Date(),
         voidedById: userId,
         voidReason: reason,
+      },
+    });
+  }
+
+  async sendReminder(id: string, tenantId: string) {
+    const invoice = await this.prisma.invoice.findFirst({
+      where: { id, tenantId },
+    });
+
+    if (!invoice) {
+      throw new NotFoundException('Invoice not found');
+    }
+
+    if (invoice.status === 'VOID') {
+      throw new BadRequestException('Cannot remind a voided invoice');
+    }
+
+    const now = new Date();
+    const shouldMarkOverdue = invoice.dueDate < now && invoice.status !== 'PAID';
+
+    return this.prisma.invoice.update({
+      where: { id },
+      data: {
+        lastReminderDate: now,
+        reminderCount: { increment: 1 },
+        status: shouldMarkOverdue ? 'OVERDUE' : invoice.status,
       },
     });
   }
@@ -302,5 +338,35 @@ export class InvoicesService {
         },
       ],
     });
+  }
+
+  async getStatementData(
+    tenantId: string,
+    companyId: string,
+    query: StatementQueryDto,
+  ) {
+    const fromDate = query.fromDate
+      ? new Date(query.fromDate)
+      : new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+    const toDate = query.toDate ? new Date(query.toDate) : new Date();
+
+    const company = await this.prisma.company.findFirst({
+      where: { id: companyId, tenantId },
+    });
+
+    if (!company) {
+      throw new NotFoundException('Company not found');
+    }
+
+    const invoices = await this.prisma.invoice.findMany({
+      where: {
+        tenantId,
+        companyId,
+        invoiceDate: { gte: fromDate, lte: toDate },
+      },
+      orderBy: { invoiceDate: 'asc' },
+    });
+
+    return { company, invoices, fromDate, toDate };
   }
 }

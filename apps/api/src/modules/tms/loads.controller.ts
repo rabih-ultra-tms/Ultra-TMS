@@ -11,14 +11,17 @@ import {
   HttpCode,
   HttpStatus,
   Patch,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { LoadsService } from './loads.service';
-import { CreateLoadDto, UpdateLoadDto, AssignCarrierDto, UpdateLoadLocationDto, LoadQueryDto, CreateCheckCallDto } from './dto';
+import { CreateLoadDto, UpdateLoadDto, AssignCarrierDto, UpdateLoadLocationDto, LoadQueryDto, CreateCheckCallDto, RateConfirmationOptionsDto, PaginationDto } from './dto';
+import { Roles } from '../../common/decorators';
 
-@Controller('api/v1/loads')
+@Controller('loads')
 @UseGuards(JwtAuthGuard)
 export class LoadsController {
   constructor(private readonly loadsService: LoadsService) {}
@@ -127,6 +130,40 @@ export class LoadsController {
     @Body() dto: CreateCheckCallDto,
   ) {
     return this.loadsService.addCheckCall(tenantId, id, userId, dto);
+  }
+
+  @Get(':id/check-calls')
+  async getCheckCalls(
+    @CurrentTenant() tenantId: string,
+    @Param('id') id: string,
+    @Query() query: PaginationDto,
+  ) {
+    return this.loadsService.getCheckCalls(tenantId, id, query);
+  }
+
+  @Post(':id/rate-confirmation')
+  @Roles('ADMIN', 'DISPATCHER')
+  async generateRateConfirmation(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+    @Body() options: RateConfirmationOptionsDto,
+    @Res() res: Response,
+  ) {
+    const pdfBuffer = await this.loadsService.generateRateConfirmation(
+      tenantId,
+      id,
+      options,
+      userId,
+    );
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="rate-confirmation-${id}.pdf"`,
+      'Content-Length': pdfBuffer.length,
+    });
+
+    res.send(pdfBuffer);
   }
   @Delete(':id')
   @HttpCode(HttpStatus.OK)

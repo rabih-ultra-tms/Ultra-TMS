@@ -11,7 +11,9 @@ const TEST_USER = {
   id: 'user-test',
   email: 'user@test.com',
   tenantId: TEST_TENANT,
-  roles: ['admin'],
+  roleName: 'SUPER_ADMIN',
+  role: { name: 'SUPER_ADMIN', permissions: [] },
+  roles: ['SUPER_ADMIN'],
 };
 
 type EventBucket = Record<string, any[]>;
@@ -50,6 +52,7 @@ describe('TMS Core E2E (domain events)', () => {
       .compile();
 
     app = moduleRef.createNestApplication();
+    app.setGlobalPrefix('api/v1');
     await app.init();
 
     prisma = app.get(PrismaService);
@@ -132,7 +135,7 @@ describe('TMS Core E2E (domain events)', () => {
       .post('/api/v1/orders')
       .send(payload)
       .expect(201);
-    return { orderId: res.body.id, stops: res.body.stops };
+    return { orderId: res.body.data.id, stops: res.body.data.stops };
   }
 
   it('emits order.created on order creation', async () => {
@@ -147,10 +150,10 @@ describe('TMS Core E2E (domain events)', () => {
 
     dispose();
 
-    expect(res.body).toHaveProperty('id');
+    expect(res.body.data).toHaveProperty('id');
     expect(bucket['order.created']).toHaveLength(1);
     expect(bucket['order.created'][0]).toMatchObject({
-      orderId: res.body.id,
+      orderId: res.body.data.id,
       tenantId: TEST_TENANT,
     });
   });
@@ -181,7 +184,7 @@ describe('TMS Core E2E (domain events)', () => {
       .send({ orderId, carrierRate: 1000 })
       .expect(201);
 
-    const loadId = createLoadRes.body.id;
+    const loadId = createLoadRes.body.data.id;
     expect(bucket['load.created']).toHaveLength(1);
 
     await request(app.getHttpServer())

@@ -8,6 +8,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import type { Request } from 'express';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards';
@@ -29,6 +30,7 @@ export class AuthController {
    * Login with email and password
    */
   @Post('login')
+  @Throttle({ long: { limit: 5, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   async login(@Body() loginDto: LoginDto, @Req() req: Request) {
     const userAgent = req.headers['user-agent'];

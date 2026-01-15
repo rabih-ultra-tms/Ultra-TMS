@@ -19,9 +19,14 @@ export class CarrierPortalAuthGuard implements CanActivate {
     }
 
     const token = authHeader.slice(7);
+    const portalSecret = process.env.CARRIER_PORTAL_JWT_SECRET;
+    if (!portalSecret) {
+      throw new UnauthorizedException('Carrier portal JWT secret not configured');
+    }
+
     try {
       const payload = this.jwtService.verify(token, {
-        secret: process.env.CARRIER_PORTAL_JWT_SECRET || process.env.JWT_SECRET || 'carrier-portal-secret',
+        secret: portalSecret,
       });
 
       const user = await this.prisma.carrierPortalUser.findFirst({

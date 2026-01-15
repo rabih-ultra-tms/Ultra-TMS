@@ -1,6 +1,6 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { CurrentTenant } from '../../../common/decorators';
+import { CurrentTenant, Roles } from '../../../common/decorators';
 import { AuditLogsService } from '../logs/audit-logs.service';
 import { AccessLogService } from './access-log.service';
 import { LoginAuditService } from './login-audit.service';
@@ -8,6 +8,7 @@ import { AccessLogQueryDto, LoginAuditQueryDto, UserActivityQueryDto } from '../
 
 @Controller('audit')
 @UseGuards(JwtAuthGuard)
+@Roles('COMPLIANCE', 'ADMIN', 'SUPER_ADMIN')
 export class UserActivityController {
   constructor(
     private readonly auditLogs: AuditLogsService,

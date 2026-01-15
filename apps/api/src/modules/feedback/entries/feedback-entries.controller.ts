@@ -4,7 +4,7 @@ import { CurrentTenant, CurrentUser } from '../../../common/decorators';
 import { FeedbackEntriesService } from './feedback-entries.service';
 import { RespondFeedbackDto, SubmitFeedbackDto } from '../dto/feedback.dto';
 
-@Controller('api/v1/feedback/entries')
+@Controller('feedback/entries')
 @UseGuards(JwtAuthGuard)
 export class FeedbackEntriesController {
   constructor(private readonly entries: FeedbackEntriesService) {}

@@ -5,6 +5,8 @@ import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma.service';
 import { JwtAuthGuard } from '../src/modules/auth/guards/jwt-auth.guard';
 import { ConfigCategory, FeatureFlagStatus, ResetFrequency } from '@prisma/client';
+import { RolesGuard } from '../src/common/guards/roles.guard';
+import { APP_GUARD } from '@nestjs/core';
 
 const TEST_TENANT = 'tenant-config';
 const SYSTEM_TENANT = 'system';
@@ -12,7 +14,9 @@ const TEST_USER = {
   id: 'user-config',
   email: 'user@config.test',
   tenantId: TEST_TENANT,
-  roles: ['admin'],
+  roles: ['SUPER_ADMIN'],
+  role: { name: 'SUPER_ADMIN', permissions: [] },
+  roleName: 'SUPER_ADMIN',
 };
 
 describe('Config API E2E', () => {
@@ -31,9 +35,19 @@ describe('Config API E2E', () => {
           return true;
         },
       })
+      .overrideGuard(RolesGuard)
+      .useValue({ canActivate: () => true })
+      .overrideProvider(APP_GUARD)
+      .useValue({ canActivate: () => true })
       .compile();
 
     app = moduleRef.createNestApplication();
+    app.use((req, _res, next) => {
+      req.user = TEST_USER;
+      req.headers['x-tenant-id'] = TEST_TENANT;
+      req.tenantId = TEST_TENANT;
+      next();
+    });
     app.setGlobalPrefix('api/v1');
     await app.init();
 
@@ -100,19 +114,19 @@ describe('Config API E2E', () => {
       });
 
       const listRes = await request(app.getHttpServer()).get('/api/v1/config/system').expect(200);
-      expect(listRes.body.length).toBe(2);
+      expect(listRes.body.data.length).toBe(2);
 
       const validateRes = await request(app.getHttpServer())
         .post('/api/v1/config/system/validate')
         .send({ key: 'app.theme', value: 'dark' })
         .expect(201);
-      expect(validateRes.body.valid).toBe(true);
+      expect(validateRes.body.data.valid).toBe(true);
 
       const updateRes = await request(app.getHttpServer())
         .put('/api/v1/config/system/app.theme')
         .send({ value: 'dark', changeReason: 'test' })
         .expect(200);
-      expect(updateRes.body.value).toBe('dark');
+      expect(updateRes.body.data.value).toBe('dark');
 
       const history = await prisma.configHistory.findMany({ where: { tenantId: SYSTEM_TENANT } });
       expect(history.length).toBe(1);
@@ -126,18 +140,18 @@ describe('Config API E2E', () => {
         .put('/api/v1/config/tenant/ui.locale')
         .send({ value: 'en-US', description: 'locale' })
         .expect(200);
-      expect(setRes.body.configValue).toBe('en-US');
+      expect(setRes.body.data.configValue).toBe('en-US');
 
       const bulkRes = await request(app.getHttpServer())
         .post('/api/v1/config/tenant/bulk')
         .send({ configs: [{ key: 'date.format', value: 'MM/DD' }, { key: 'currency', value: 'USD' }] })
         .expect(201);
-      expect(bulkRes.body.length).toBe(2);
+      expect(bulkRes.body.data.length).toBe(2);
 
       const resetRes = await request(app.getHttpServer())
         .delete('/api/v1/config/tenant/ui.locale')
         .expect(200);
-      expect(resetRes.body.reset).toBe(true);
+      expect(resetRes.body.data.reset).toBe(true);
     });
   });
 
@@ -153,7 +167,7 @@ describe('Config API E2E', () => {
       });
 
       const listWithTenant = await request(app.getHttpServer()).get('/api/v1/preferences').expect(200);
-      expect(listWithTenant.body.find((p: any) => p.key === 'ui.timezone')?.source).toBe('tenant');
+      expect(listWithTenant.body.data.find((p: any) => p.key === 'ui.timezone')?.source).toBe('tenant');
 
       await request(app.getHttpServer())
         .put('/api/v1/preferences/ui.timezone')
@@ -161,12 +175,12 @@ describe('Config API E2E', () => {
         .expect(200);
 
       const listAfterUser = await request(app.getHttpServer()).get('/api/v1/preferences').expect(200);
-      const userPref = listAfterUser.body.find((p: any) => p.key === 'ui.timezone');
+      const userPref = listAfterUser.body.data.find((p: any) => p.key === 'ui.timezone');
       expect(userPref.source).toBe('user');
       expect(userPref.value).toBe('CST');
 
       const resetRes = await request(app.getHttpServer()).delete('/api/v1/preferences/ui.timezone').expect(200);
-      expect(resetRes.body.reset).toBe(true);
+      expect(resetRes.body.data.reset).toBe(true);
     });
   });
 
@@ -180,18 +194,18 @@ describe('Config API E2E', () => {
       const baseEnabled = await request(app.getHttpServer())
         .get('/api/v1/features/beta_feature/enabled')
         .expect(200);
-      expect(baseEnabled.body.enabled).toBe(false);
+      expect(baseEnabled.body.data.enabled).toBe(false);
 
       const overrideRes = await request(app.getHttpServer())
         .put('/api/v1/features/beta_feature/override')
         .send({ isEnabled: true, userIds: [TEST_USER.id] })
         .expect(200);
-      expect(overrideRes.body.overrideValue).toBe(true);
+      expect(overrideRes.body.data.overrideValue).toBe(true);
 
       const afterOverride = await request(app.getHttpServer())
         .get('/api/v1/features/beta_feature/enabled')
         .expect(200);
-      expect(afterOverride.body.enabled).toBe(true);
+      expect(afterOverride.body.data.enabled).toBe(true);
 
       await request(app.getHttpServer())
         .post('/api/v1/features')
@@ -201,7 +215,7 @@ describe('Config API E2E', () => {
       const rolloutRes = await request(app.getHttpServer())
         .get('/api/v1/features/rollout_feature/enabled')
         .expect(200);
-      expect(rolloutRes.body.enabled).toBe(true);
+      expect(rolloutRes.body.data.enabled).toBe(true);
     });
   });
 
@@ -217,16 +231,16 @@ describe('Config API E2E', () => {
           ],
         })
         .expect(200);
-      expect(hoursRes.body.length).toBeGreaterThanOrEqual(2);
+      expect(hoursRes.body.data.length).toBeGreaterThanOrEqual(2);
 
       const holidayRes = await request(app.getHttpServer())
         .post('/api/v1/config/holidays')
         .send({ name: 'NY', date: '2025-01-01', isRecurring: true })
         .expect(201);
-      expect(holidayRes.body.holidayName).toBe('NY');
+      expect(holidayRes.body.data.holidayName).toBe('NY');
 
       const holidayList = await request(app.getHttpServer()).get('/api/v1/config/holidays').expect(200);
-      expect(holidayList.body.length).toBe(1);
+      expect(holidayList.body.data.length).toBe(1);
     });
   });
 
@@ -240,7 +254,7 @@ describe('Config API E2E', () => {
       const first = await request(app.getHttpServer())
         .post('/api/v1/config/sequences/ORDER/next')
         .expect(201);
-      expect(first.body.value).toBeDefined();
+      expect(first.body.data.value).toBeDefined();
 
       // Force reset by moving lastResetAt to yesterday
       const yesterday = new Date();
@@ -253,7 +267,7 @@ describe('Config API E2E', () => {
       const second = await request(app.getHttpServer())
         .post('/api/v1/config/sequences/ORDER/next')
         .expect(201);
-      expect(second.body.value).toBeDefined();
+      expect(second.body.data.value).toBeDefined();
     });
   });
 
@@ -271,13 +285,13 @@ describe('Config API E2E', () => {
       });
 
       const listRes = await request(app.getHttpServer()).get('/api/v1/config/templates').expect(200);
-      expect(listRes.body.length).toBeGreaterThanOrEqual(1);
+      expect(listRes.body.data.length).toBeGreaterThanOrEqual(1);
 
       const applyRes = await request(app.getHttpServer())
         .post('/api/v1/config/templates/tpl-1/apply')
         .send({})
         .expect(201);
-      expect(applyRes.body.applied).toBe(true);
+      expect(applyRes.body.data.applied).toBe(true);
 
       const tenantConfig = await prisma.tenantConfig.findFirst({
         where: { tenantId: TEST_TENANT, configKey: 'ui.theme' },

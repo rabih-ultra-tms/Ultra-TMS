@@ -1,11 +1,12 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { CurrentTenant } from '../../../common/decorators';
+import { CurrentTenant, Roles } from '../../../common/decorators';
 import { ChangeHistoryService } from './change-history.service';
 import { HistoryQueryDto } from '../dto';
 
 @Controller('audit/history')
 @UseGuards(JwtAuthGuard)
+@Roles('COMPLIANCE', 'ADMIN', 'SUPER_ADMIN')
 export class ChangeHistoryController {
   constructor(private readonly service: ChangeHistoryService) {}
 

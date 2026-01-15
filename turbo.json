@@ -12,6 +12,7 @@
       "env": [
         "CARRIER_PORTAL_JWT_SECRET",
         "CARRIER_PORTAL_JWT_EXPIRES_IN",
+        "CUSTOMER_PORTAL_JWT_SECRET",
         "PORTAL_JWT_SECRET",
         "PORTAL_JWT_EXPIRES_IN",
         "JWT_SECRET",

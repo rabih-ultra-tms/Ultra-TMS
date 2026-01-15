@@ -7,7 +7,14 @@ import { PrismaService } from '../src/prisma.service';
 import { JwtAuthGuard } from '../src/modules/auth/guards/jwt-auth.guard';
 
 const TEST_TENANT = 'tenant-safety';
-const TEST_USER = { id: 'user-safety', email: 'user@safety.test', tenantId: TEST_TENANT, roles: ['admin'] };
+const TEST_USER = {
+  id: 'user-safety',
+  email: 'user@safety.test',
+  tenantId: TEST_TENANT,
+  roleName: 'SUPER_ADMIN',
+  role: { name: 'SUPER_ADMIN', permissions: [] },
+  roles: ['SUPER_ADMIN'],
+};
 
 describe('Safety Service API E2E', () => {
   let app: INestApplication;
@@ -87,20 +94,20 @@ describe('Safety Service API E2E', () => {
         .query({ dotNumber: carrier.dotNumber })
         .expect(200);
 
-      expect(lookupRes.body.carrierId).toBe(carrier.id);
-      expect(lookupRes.body.dotNumber).toBe(carrier.dotNumber);
+      expect(lookupRes.body.data.carrierId).toBe(carrier.id);
+      expect(lookupRes.body.data.dotNumber).toBe(carrier.dotNumber);
 
       const verifyRes = await request(app.getHttpServer())
         .post(`/api/v1/safety/fmcsa/verify/${carrier.id}`)
         .expect(201);
 
-      expect(verifyRes.body.operatingStatus).toBe('ACTIVE');
+      expect(verifyRes.body.data.operatingStatus).toBe('ACTIVE');
 
       const refreshRes = await request(app.getHttpServer())
         .post(`/api/v1/safety/fmcsa/refresh/${carrier.id}`)
         .expect(201);
 
-      expect(new Date(refreshRes.body.lastSyncedAt).getTime()).toBeGreaterThan(0);
+      expect(new Date(refreshRes.body.data.lastSyncedAt).getTime()).toBeGreaterThan(0);
     });
   });
 
@@ -112,14 +119,14 @@ describe('Safety Service API E2E', () => {
         .get(`/api/v1/safety/csa/${carrier.id}`)
         .expect(200);
 
-      expect(current.body.length).toBe(7);
-      expect(current.body.some((s: any) => s.isAlert === true)).toBe(true);
+      expect(current.body.data.length).toBe(7);
+      expect(current.body.data.some((s: any) => s.isAlert === true)).toBe(true);
 
       const history = await request(app.getHttpServer())
         .get(`/api/v1/safety/csa/${carrier.id}/history`)
         .expect(200);
 
-      expect(history.body.length).toBe(7);
+      expect(history.body.data.length).toBe(7);
     });
   });
 
@@ -139,9 +146,9 @@ describe('Safety Service API E2E', () => {
         .expect(201);
 
       const verifyRes = await request(app.getHttpServer())
-        .post(`/api/v1/safety/insurance/${createRes.body.id}/verify`)
+        .post(`/api/v1/safety/insurance/${createRes.body.data.id}/verify`)
         .expect(201);
-      expect(verifyRes.body.isVerified).toBe(true);
+      expect(verifyRes.body.data.isVerified).toBe(true);
 
       await request(app.getHttpServer())
         .post('/api/v1/safety/insurance')
@@ -173,7 +180,7 @@ describe('Safety Service API E2E', () => {
         .get('/api/v1/safety/insurance/expiring?days=15')
         .expect(200);
 
-      expect(expiring.body.length).toBeGreaterThanOrEqual(1);
+      expect(expiring.body.data.length).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -190,17 +197,17 @@ describe('Safety Service API E2E', () => {
         .expect(201);
 
       const compliance = await request(app.getHttpServer())
-        .get(`/api/v1/safety/dqf/${dqfRes.body.id}/compliance`)
+        .get(`/api/v1/safety/dqf/${dqfRes.body.data.id}/compliance`)
         .expect(200);
-      expect(compliance.body.status).toBe('EXPIRED');
-      expect(compliance.body.missingDocuments.length).toBeGreaterThan(0);
+      expect(compliance.body.data.status).toBe('EXPIRED');
+      expect(compliance.body.data.missingDocuments.length).toBeGreaterThan(0);
 
       const addDoc = await request(app.getHttpServer())
-        .post(`/api/v1/safety/dqf/${dqfRes.body.id}/documents`)
+        .post(`/api/v1/safety/dqf/${dqfRes.body.data.id}/documents`)
         .send({ documentUrl: 'https://docs.test/dqf.pdf', expirationDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString() })
         .expect(201);
 
-      expect(addDoc.body.documentUrl).toContain('dqf.pdf');
+      expect(addDoc.body.data.documentUrl).toContain('dqf.pdf');
     });
   });
 
@@ -220,16 +227,16 @@ describe('Safety Service API E2E', () => {
         .expect(201);
 
       const closeRes = await request(app.getHttpServer())
-        .post(`/api/v1/safety/incidents/${incidentRes.body.id}/close`)
+        .post(`/api/v1/safety/incidents/${incidentRes.body.data.id}/close`)
         .send({ investigationNotes: 'Closed', resolutionNotes: 'Resolved' })
         .expect(201);
 
-      expect(closeRes.body.customFields).toBeDefined();
+      expect(closeRes.body.data.customFields).toBeDefined();
 
       const violations = await request(app.getHttpServer())
-        .get(`/api/v1/safety/incidents/${incidentRes.body.id}/violations`)
+        .get(`/api/v1/safety/incidents/${incidentRes.body.data.id}/violations`)
         .expect(200);
-      expect(violations.body.violations.length).toBe(2);
+      expect(violations.body.data.violations.length).toBe(2);
     });
   });
 
@@ -240,14 +247,14 @@ describe('Safety Service API E2E', () => {
         .send({ carrierId: carrier.id, reason: 'CSA alert', riskLevel: 'HIGH', isRestricted: true })
         .expect(201);
 
-      expect(addRes.body.isRestricted).toBe(true);
+      expect(addRes.body.data.isRestricted).toBe(true);
 
       const resolveRes = await request(app.getHttpServer())
-        .post(`/api/v1/safety/watchlist/${addRes.body.id}/resolve`)
+        .post(`/api/v1/safety/watchlist/${addRes.body.data.id}/resolve`)
         .send({ resolutionNotes: 'Cleared' })
         .expect(201);
 
-      expect(resolveRes.body.isActive).toBe(false);
+      expect(resolveRes.body.data.isActive).toBe(false);
     });
   });
 
@@ -264,19 +271,19 @@ describe('Safety Service API E2E', () => {
         .expect(201);
 
       await request(app.getHttpServer())
-        .post(`/api/v1/safety/alerts/${alertRes.body.id}/acknowledge`)
+        .post(`/api/v1/safety/alerts/${alertRes.body.data.id}/acknowledge`)
         .expect(201);
 
       await request(app.getHttpServer())
-        .post(`/api/v1/safety/alerts/${alertRes.body.id}/dismiss`)
+        .post(`/api/v1/safety/alerts/${alertRes.body.data.id}/dismiss`)
         .expect(201);
 
       const resolved = await request(app.getHttpServer())
-        .post(`/api/v1/safety/alerts/${alertRes.body.id}/resolve`)
+        .post(`/api/v1/safety/alerts/${alertRes.body.data.id}/resolve`)
         .send({ resolutionNotes: 'Handled' })
         .expect(201);
 
-      expect(resolved.body.isActive).toBe(false);
+      expect(resolved.body.data.isActive).toBe(false);
     });
   });
 
@@ -287,18 +294,18 @@ describe('Safety Service API E2E', () => {
         .send({ carrierId: carrier.id })
         .expect(201);
 
-      expect(calcRes.body.overallScore).toBeGreaterThan(0);
-      expect(calcRes.body.riskLevel).toBeDefined();
+      expect(calcRes.body.data.overallScore).toBeGreaterThan(0);
+      expect(calcRes.body.data.riskLevel).toBeDefined();
 
       const current = await request(app.getHttpServer())
         .get(`/api/v1/safety/scores/${carrier.id}`)
         .expect(200);
-      expect(current.body.overallScore).toBe(calcRes.body.overallScore);
+      expect(current.body.data.overallScore).toBe(calcRes.body.data.overallScore);
 
       const history = await request(app.getHttpServer())
         .get(`/api/v1/safety/scores/${carrier.id}/history`)
         .expect(200);
-      expect(history.body.length).toBeGreaterThanOrEqual(1);
+      expect(history.body.data.length).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -322,17 +329,17 @@ describe('Safety Service API E2E', () => {
       const compliance = await request(app.getHttpServer())
         .get('/api/v1/safety/reports/compliance')
         .expect(200);
-      expect(compliance.body).toHaveProperty('watchlistActive');
+      expect(compliance.body.data).toHaveProperty('watchlistActive');
 
       const incidentsReport = await request(app.getHttpServer())
         .get('/api/v1/safety/reports/incidents')
         .expect(200);
-      expect(incidentsReport.body.total).toBeGreaterThanOrEqual(1);
+      expect(incidentsReport.body.data.total).toBeGreaterThanOrEqual(1);
 
       const expiring = await request(app.getHttpServer())
         .get('/api/v1/safety/reports/expiring')
         .expect(200);
-      expect(expiring.body).toHaveProperty('insurance');
+      expect(expiring.body.data).toHaveProperty('insurance');
     });
   });
 });

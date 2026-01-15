@@ -1,11 +1,12 @@
 import { Controller, Get, Post, Put, Delete, Param, Body, Query, HttpCode, HttpStatus, UseGuards, Patch } from '@nestjs/common';
 import { OrdersService } from './orders.service';
-import { CreateOrderDto, UpdateOrderDto, CloneOrderDto, ChangeOrderStatusDto, CancelOrderDto, OrderQueryDto, CreateLoadDto, CreateOrderItemDto } from './dto';
+import { CreateOrderDto, UpdateOrderDto, CloneOrderDto, ChangeOrderStatusDto, CancelOrderDto, OrderQueryDto, CreateLoadDto, CreateOrderItemDto, CreateOrderFromTemplateDto } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Roles } from '../../common/decorators';
 
-@Controller('api/v1/orders')
+@Controller('orders')
 @UseGuards(JwtAuthGuard)
 export class OrdersController {
   constructor(private ordersService: OrdersService) {}
@@ -57,6 +58,22 @@ export class OrdersController {
     @Param('quoteId') quoteId: string,
   ) {
     return this.ordersService.createFromQuote(tenantId, userId, quoteId);
+  }
+
+  /**
+   * Create order from template
+   * POST /api/v1/orders/from-template/:templateId
+   */
+  @Post('from-template/:templateId')
+  @Roles('ADMIN', 'DISPATCHER', 'SALES_REP')
+  @HttpCode(HttpStatus.CREATED)
+  async createFromTemplate(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser('id') userId: string,
+    @Param('templateId') templateId: string,
+    @Body() dto: CreateOrderFromTemplateDto,
+  ) {
+    return this.ordersService.createFromTemplate(tenantId, userId, templateId, dto);
   }
 
   /**

@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma.service';
 import { CreatePaymentReceivedDto, ApplyPaymentDto } from '../dto';
+import { BatchPaymentDto } from '../dto/batch-payment.dto';
 
 @Injectable()
 export class PaymentsReceivedService {
@@ -237,5 +238,87 @@ export class PaymentsReceivedService {
         },
       });
     });
+  }
+
+  async processBatch(
+    tenantId: string,
+    dto: BatchPaymentDto,
+    userId: string,
+  ): Promise<{ processed: number; failed: number; results: any[] }> {
+    const results: any[] = [];
+    let processed = 0;
+    let failed = 0;
+
+    for (const paymentItem of dto.payments) {
+      try {
+        const paymentNumber = await this.generatePaymentNumber(tenantId);
+
+        const payment = await this.prisma.paymentReceived.create({
+          data: {
+            tenantId,
+            paymentNumber,
+            companyId: paymentItem.companyId,
+            paymentDate: paymentItem.paymentDate
+              ? new Date(paymentItem.paymentDate)
+              : new Date(),
+            paymentMethod: dto.paymentMethod || 'CHECK',
+            amount: paymentItem.amount,
+            unappliedAmount: paymentItem.amount,
+            currency: 'USD',
+            referenceNumber: paymentItem.referenceNumber,
+            notes: paymentItem.checkNumber,
+            createdById: userId,
+          },
+        });
+
+        if (paymentItem.allocations?.length) {
+          for (const allocation of paymentItem.allocations) {
+            const invoice = await this.prisma.invoice.findFirst({
+              where: { id: allocation.invoiceId, tenantId },
+            });
+
+            if (!invoice) {
+              throw new NotFoundException(`Invoice ${allocation.invoiceId} not found`);
+            }
+
+            await this.prisma.paymentApplication.create({
+              data: {
+                tenantId,
+                paymentId: payment.id,
+                invoiceId: allocation.invoiceId,
+                amount: allocation.amount,
+                createdById: userId,
+              },
+            });
+
+            const newAmountPaid = Number(invoice.amountPaid) + allocation.amount;
+            const newBalanceDue = Number(invoice.totalAmount) - newAmountPaid;
+            const newStatus = newBalanceDue <= 0 ? 'PAID' : 'PARTIAL';
+
+            await this.prisma.invoice.update({
+              where: { id: allocation.invoiceId },
+              data: {
+                amountPaid: newAmountPaid,
+                balanceDue: newBalanceDue,
+                status: newStatus,
+              },
+            });
+          }
+
+          await this.prisma.paymentReceived.update({
+            where: { id: payment.id },
+            data: { unappliedAmount: 0, status: 'APPLIED' },
+          });
+        }
+
+        results.push({ companyId: paymentItem.companyId, paymentId: payment.id, status: 'success' });
+        processed++;
+      } catch (error: any) {
+        results.push({ companyId: paymentItem.companyId, status: 'failed', error: error.message });
+        failed++;
+      }
+    }
+
+    return { processed, failed, results };
   }
 }

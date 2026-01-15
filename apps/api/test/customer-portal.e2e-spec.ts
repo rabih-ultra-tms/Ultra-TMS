@@ -18,6 +18,8 @@ describe('Customer Portal API', () => {
   let invoiceId: string;
 
   beforeAll(async () => {
+    process.env.CUSTOMER_PORTAL_JWT_SECRET = process.env.CUSTOMER_PORTAL_JWT_SECRET || 'portal-secret';
+    process.env.PORTAL_JWT_SECRET = process.env.PORTAL_JWT_SECRET || 'portal-secret';
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
 
     app = moduleRef.createNestApplication();
@@ -127,8 +129,8 @@ describe('Customer Portal API', () => {
       .send({ email: PORTAL_USER_EMAIL, password: PORTAL_USER_PASSWORD })
       .expect(201);
 
-    accessToken = loginRes.body.accessToken;
-    refreshToken = loginRes.body.refreshToken;
+    accessToken = loginRes.body.data.accessToken;
+    refreshToken = loginRes.body.data.refreshToken;
     expect(accessToken).toBeDefined();
     expect(refreshToken).toBeDefined();
 
@@ -152,14 +154,14 @@ describe('Customer Portal API', () => {
       .post('/api/v1/portal/auth/refresh')
       .send({ refreshToken })
       .expect(201);
-    expect(refreshRes.body.accessToken).toBeDefined();
+    expect(refreshRes.body.data.accessToken).toBeDefined();
 
     const forgot = await request(app.getHttpServer())
       .post('/api/v1/portal/auth/forgot-password')
       .send({ email: PORTAL_USER_EMAIL })
       .expect(201);
 
-    const token = forgot.body.token;
+    const token = forgot.body.data.token;
     expect(token).toBeDefined();
 
     await request(app.getHttpServer())
@@ -171,16 +173,16 @@ describe('Customer Portal API', () => {
       .post('/api/v1/portal/auth/login')
       .send({ email: PORTAL_USER_EMAIL, password: 'newpassword123' })
       .expect(201);
-    expect(relogin.body.accessToken).toBeDefined();
+    expect(relogin.body.data.accessToken).toBeDefined();
 
     await request(app.getHttpServer())
       .post('/api/v1/portal/auth/logout')
-      .set('Authorization', `Bearer ${relogin.body.accessToken}`)
-      .send({ refreshToken: relogin.body.refreshToken })
+      .set('Authorization', `Bearer ${relogin.body.data.accessToken}`)
+      .send({ refreshToken: relogin.body.data.refreshToken })
       .expect(201);
 
-    accessToken = relogin.body.accessToken;
-    refreshToken = relogin.body.refreshToken;
+    accessToken = relogin.body.data.accessToken;
+    refreshToken = relogin.body.data.refreshToken;
   });
 
   it('supports quote requests and workflows', async () => {
@@ -198,8 +200,8 @@ describe('Customer Portal API', () => {
       })
       .expect(201);
 
-    const quoteId = submitRes.body.id;
-    expect(submitRes.body.status).toBe('SUBMITTED');
+    const quoteId = submitRes.body.data.id;
+    expect(submitRes.body.data.status).toBe('SUBMITTED');
 
     // Estimate
     const estimate = await request(app.getHttpServer())
@@ -207,7 +209,7 @@ describe('Customer Portal API', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .send({ originCity: 'Austin', destCity: 'Houston', miles: 150 })
       .expect(201);
-    expect(estimate.body.estimatedRate).toBeGreaterThan(0);
+    expect(estimate.body.data.estimatedRate).toBeGreaterThan(0);
 
     // Accept
     const acceptRes = await request(app.getHttpServer())
@@ -215,7 +217,7 @@ describe('Customer Portal API', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .send({})
       .expect(201);
-    expect(acceptRes.body.status).toBe('ACCEPTED');
+    expect(acceptRes.body.data.status).toBe('ACCEPTED');
 
     // Second quote for revision/decline
     const submitRes2 = await request(app.getHttpServer())
@@ -231,21 +233,21 @@ describe('Customer Portal API', () => {
       })
       .expect(201);
 
-    const quoteId2 = submitRes2.body.id;
+    const quoteId2 = submitRes2.body.data.id;
 
     const revision = await request(app.getHttpServer())
       .post(`/api/v1/portal/quotes/${quoteId2}/revision`)
       .set('Authorization', `Bearer ${accessToken}`)
       .send({ request: 'Need weekend pickup' })
       .expect(201);
-    expect(revision.body.status).toBe('REVIEWING');
+    expect(revision.body.data.status).toBe('REVIEWING');
 
     const decline = await request(app.getHttpServer())
       .post(`/api/v1/portal/quotes/${quoteId2}/decline`)
       .set('Authorization', `Bearer ${accessToken}`)
       .send({ reason: 'Decided to wait' })
       .expect(201);
-    expect(decline.body.status).toBe('DECLINED');
+    expect(decline.body.data.status).toBe('DECLINED');
   });
 
   it('returns shipment tracking and events', async () => {
@@ -253,25 +255,25 @@ describe('Customer Portal API', () => {
       .get('/api/v1/portal/shipments')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
-    expect(listRes.body.length).toBeGreaterThan(0);
+    expect(listRes.body.data.length).toBeGreaterThan(0);
 
     const tracking = await request(app.getHttpServer())
       .get(`/api/v1/portal/shipments/${loadId}/tracking`)
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
-    expect(tracking.body.status).toBeDefined();
+    expect(tracking.body.data.status).toBeDefined();
 
     const events = await request(app.getHttpServer())
       .get(`/api/v1/portal/shipments/${loadId}/events`)
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
-    expect(events.body.length).toBeGreaterThanOrEqual(1);
+    expect(events.body.data.length).toBeGreaterThanOrEqual(1);
 
     const docs = await request(app.getHttpServer())
       .get(`/api/v1/portal/shipments/${loadId}/documents`)
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
-    expect(Array.isArray(docs.body)).toBe(true);
+    expect(Array.isArray(docs.body.data)).toBe(true);
 
     await request(app.getHttpServer())
       .post(`/api/v1/portal/shipments/${loadId}/contact`)
@@ -285,7 +287,7 @@ describe('Customer Portal API', () => {
       .get('/api/v1/portal/invoices')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
-    expect(invoices.body.some((i: any) => i.id === invoiceId)).toBe(true);
+    expect(invoices.body.data.some((i: any) => i.id === invoiceId)).toBe(true);
 
     const paymentRes = await request(app.getHttpServer())
       .post('/api/v1/portal/payments')
@@ -299,7 +301,7 @@ describe('Customer Portal API', () => {
       })
       .expect(201);
 
-    expect(paymentRes.body.paymentNumber).toBeDefined();
+    expect(paymentRes.body.data.paymentNumber).toBeDefined();
 
     const updatedInvoice = await prisma.invoice.findUnique({ where: { id: invoiceId } });
     expect(Number(updatedInvoice?.amountPaid)).toBe(100);
@@ -308,7 +310,7 @@ describe('Customer Portal API', () => {
       .get('/api/v1/portal/payments')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
-    expect(history.body.length).toBeGreaterThan(0);
+    expect(history.body.data.length).toBeGreaterThan(0);
   });
 
   it('supports account management', async () => {
@@ -317,7 +319,7 @@ describe('Customer Portal API', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .send({ firstName: 'Updated', phone: '1234567890' })
       .expect(200);
-    expect(profile.body.firstName).toBe('Updated');
+    expect(profile.body.data.firstName).toBe('Updated');
 
     const invite = await request(app.getHttpServer())
       .post('/api/v1/portal/users')
@@ -330,8 +332,8 @@ describe('Customer Portal API', () => {
         permissions: ['VIEW_SHIPMENTS'],
       })
       .expect(201);
-    const invitedId = invite.body.id;
-    expect(invite.body.invitationToken).toBeDefined();
+    const invitedId = invite.body.data.id;
+    expect(invite.body.data.invitationToken).toBeDefined();
 
     await request(app.getHttpServer())
       .put(`/api/v1/portal/users/${invitedId}`)
@@ -343,6 +345,6 @@ describe('Customer Portal API', () => {
       .delete(`/api/v1/portal/users/${invitedId}`)
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
-    expect(deactivate.body.status).toBe('DEACTIVATED');
+    expect(deactivate.body.data.status).toBe('DEACTIVATED');
   });
 });

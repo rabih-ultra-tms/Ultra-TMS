@@ -4,7 +4,7 @@ import { CurrentTenant } from '../../../common/decorators';
 import { WidgetsService } from './widgets.service';
 import { CreateWidgetDto } from '../dto/feedback.dto';
 
-@Controller('api/v1/feedback/widgets')
+@Controller('feedback/widgets')
 @UseGuards(JwtAuthGuard)
 export class WidgetsController {
   constructor(private readonly widgets: WidgetsService) {}

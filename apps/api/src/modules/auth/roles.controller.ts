@@ -12,9 +12,11 @@ import { JwtAuthGuard } from './guards';
 import { RolesService } from './roles.service';
 import { CreateRoleDto, UpdateRoleDto } from './dto';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
+import { Roles } from '../../common/decorators';
 
 @Controller('roles')
 @UseGuards(JwtAuthGuard)
+@Roles('ADMIN', 'SUPER_ADMIN')
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 

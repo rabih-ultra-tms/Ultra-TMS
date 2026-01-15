@@ -1,11 +1,12 @@
 import { Body, Controller, Get, Param, Put, Post, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { CurrentTenant, CurrentUser } from '../../../common/decorators';
+import { CurrentTenant, CurrentUser, Roles } from '../../../common/decorators';
 import { AlertsService } from './alerts.service';
 import { CreateAuditAlertDto, IncidentQueryDto, UpdateAuditAlertDto } from '../dto';
 
 @Controller('audit/alerts')
 @UseGuards(JwtAuthGuard)
+@Roles('COMPLIANCE', 'ADMIN', 'SUPER_ADMIN')
 export class AlertsController {
   constructor(private readonly service: AlertsService) {}
 

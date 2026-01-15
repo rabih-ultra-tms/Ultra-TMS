@@ -7,7 +7,14 @@ import { JwtAuthGuard } from '../src/modules/auth/guards/jwt-auth.guard';
 import { FactoringStatus, NoaStatus, VerificationStatusEnum } from '../src/modules/factoring/dto/enums';
 
 const TEST_TENANT = 'tenant-factoring';
-const TEST_USER = { id: 'user-factoring', email: 'user@factoring.test', tenantId: TEST_TENANT, roles: ['admin'] };
+const TEST_USER = {
+  id: 'user-factoring',
+  email: 'user@factoring.test',
+  tenantId: TEST_TENANT,
+  roleName: 'SUPER_ADMIN',
+  role: { name: 'SUPER_ADMIN', permissions: [] },
+  roles: ['SUPER_ADMIN'],
+};
 
 describe('Factoring API E2E', () => {
   let app: INestApplication;
@@ -98,22 +105,22 @@ describe('Factoring API E2E', () => {
       .send({ companyCode: 'FC-ABC', name: 'Acme Factors', verificationMethod: 'EMAIL' })
       .expect(201);
 
-    const companyId = createRes.body.id;
-    expect(createRes.body.status).toBe('ACTIVE');
+    const companyId = createRes.body.data.id;
+    expect(createRes.body.data.status).toBe('ACTIVE');
 
     const updateRes = await request(app.getHttpServer())
       .put(`/api/v1/factoring-companies/${companyId}`)
       .send({ address: '123 Money St', verificationSLAHours: 8 })
       .expect(200);
 
-    expect(updateRes.body.address).toBe('123 Money St');
+    expect(updateRes.body.data.address).toBe('123 Money St');
 
     const toggleRes = await request(app.getHttpServer())
       .patch(`/api/v1/factoring-companies/${companyId}/status`)
       .send({ status: 'INACTIVE' })
       .expect(200);
 
-    expect(toggleRes.body.status).toBe('INACTIVE');
+    expect(toggleRes.body.data.status).toBe('INACTIVE');
   });
 
   it('runs NOA lifecycle: create, verify, release, auto-expire', async () => {
@@ -130,21 +137,21 @@ describe('Factoring API E2E', () => {
       })
       .expect(201);
 
-    const noaId = createRes.body.id;
+    const noaId = createRes.body.data.id;
 
     const verifyRes = await request(app.getHttpServer())
       .post(`/api/v1/noa-records/${noaId}/verify`)
       .send({ verificationMethod: 'EMAIL', verificationNotes: 'Confirmed by email' })
       .expect(201);
 
-    expect(verifyRes.body.status).toBe(NoaStatus.VERIFIED);
+    expect(verifyRes.body.data.status).toBe(NoaStatus.VERIFIED);
 
     const releaseRes = await request(app.getHttpServer())
       .post(`/api/v1/noa-records/${noaId}/release`)
       .send({ releaseReason: 'Completed engagement' })
       .expect(201);
 
-    expect(releaseRes.body.status).toBe(NoaStatus.RELEASED);
+    expect(releaseRes.body.data.status).toBe(NoaStatus.RELEASED);
 
     const expiredRes = await request(app.getHttpServer())
       .post('/api/v1/noa-records')
@@ -158,10 +165,10 @@ describe('Factoring API E2E', () => {
       .expect(201);
 
     const getExpired = await request(app.getHttpServer())
-      .get(`/api/v1/noa-records/${expiredRes.body.id}`)
+      .get(`/api/v1/noa-records/${expiredRes.body.data.id}`)
       .expect(200);
 
-    expect(getExpired.body.status).toBe(NoaStatus.EXPIRED);
+    expect(getExpired.body.data.status).toBe(NoaStatus.EXPIRED);
   });
 
   it('updates carrier factoring status, quick pay, and overrides', async () => {
@@ -172,28 +179,28 @@ describe('Factoring API E2E', () => {
       .get(`/api/v1/carriers/${carrier.id}/factoring-status`)
       .expect(200);
 
-    expect(initialStatus.body.factoringStatus).toBe(FactoringStatus.NONE);
+    expect(initialStatus.body.data.factoringStatus).toBe(FactoringStatus.NONE);
 
     const updateRes = await request(app.getHttpServer())
       .put(`/api/v1/carriers/${carrier.id}/factoring-status`)
       .send({ factoringStatus: FactoringStatus.FACTORED, factoringCompanyId: company.id })
       .expect(200);
 
-    expect(updateRes.body.factoringCompanyId).toBe(company.id);
+    expect(updateRes.body.data.factoringCompanyId).toBe(company.id);
 
     const quickPayRes = await request(app.getHttpServer())
       .post(`/api/v1/carriers/${carrier.id}/quick-pay/enroll`)
       .send({ quickPayFeePercent: 0.03 })
       .expect(201);
 
-    expect(quickPayRes.body.quickPayEnabled).toBe(true);
+    expect(quickPayRes.body.data.quickPayEnabled).toBe(true);
 
     const overrideRes = await request(app.getHttpServer())
       .post(`/api/v1/carriers/${carrier.id}/factoring/override`)
       .send({ factoringCompanyId: company.id, overrideReason: 'Manual override' })
       .expect(201);
 
-    expect(overrideRes.body.customFields.overrideReason).toBeDefined();
+    expect(overrideRes.body.data.customFields.overrideReason).toBeDefined();
   });
 
   it('handles verification workflow with load lookup', async () => {
@@ -211,7 +218,7 @@ describe('Factoring API E2E', () => {
       })
       .expect(201);
 
-    const verificationId = createRes.body.id;
+    const verificationId = createRes.body.data.id;
 
     await request(app.getHttpServer())
       .post(`/api/v1/factoring-verifications/${verificationId}/respond`)
@@ -228,7 +235,7 @@ describe('Factoring API E2E', () => {
       .get('/api/v1/factoring-verifications/loads/LOAD-123/verification')
       .expect(200);
 
-    expect(byLoad.body.id).toBe(verificationId);
+    expect(byLoad.body.data.id).toBe(verificationId);
   });
 
   it('processes factored payments and routes to factoring company', async () => {
@@ -267,18 +274,18 @@ describe('Factoring API E2E', () => {
       .send({ notes: 'Paid', status: 'PAID' })
       .expect(201);
 
-    expect(processRes.body.customFields.status).toBe('PAID');
+    expect(processRes.body.data.customFields.status).toBe('PAID');
 
     const carrierPayments = await request(app.getHttpServer())
       .get(`/api/v1/carriers/${carrier.id}/factored-payments`)
       .expect(200);
 
-    expect(carrierPayments.body.length).toBe(1);
+    expect(carrierPayments.body.data.length).toBe(1);
 
     const companyPayments = await request(app.getHttpServer())
       .get(`/api/v1/factoring-companies/${company.id}/payments`)
       .expect(200);
 
-    expect(companyPayments.body.length).toBe(1);
+    expect(companyPayments.body.data.length).toBe(1);
   });
 });

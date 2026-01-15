@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { DayOfWeek } from '@prisma/client';
 import { PrismaService } from '../../../prisma.service';
 import { CreateHolidayDto, DayHoursDto, UpdateBusinessHoursDto } from '../dto';
@@ -44,6 +44,16 @@ export class BusinessHoursService {
         countryCode: dto.countryCode,
       },
     });
+  }
+
+  async removeHoliday(tenantId: string, id: string) {
+    const existing = await this.prisma.holiday.findFirst({ where: { id, tenantId } });
+    if (!existing) {
+      throw new NotFoundException('Holiday not found');
+    }
+
+    await this.prisma.holiday.delete({ where: { id } });
+    return { removed: true, id };
   }
 
   private toDayEnum(day: DayHoursDto): DayOfWeek {

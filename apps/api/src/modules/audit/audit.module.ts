@@ -19,9 +19,12 @@ import { RetentionController } from './retention/retention.controller';
 import { RetentionService } from './retention/retention.service';
 import { AuditInterceptor } from './interceptors/audit.interceptor';
 import { AuditEventsListener } from './audit-events.listener';
+import { AuditController } from './audit.controller';
+import { AuditService } from './audit.service';
 
 @Module({
   controllers: [
+    AuditController,
     AuditLogsController,
     ChangeHistoryController,
     UserActivityController,
@@ -32,6 +35,7 @@ import { AuditEventsListener } from './audit-events.listener';
   ],
   providers: [
     PrismaService,
+    AuditService,
     AuditLogsService,
     AuditHashService,
     ChangeHistoryService,

@@ -16,7 +16,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { StopsService } from './stops.service';
 import { CreateStopDto, UpdateStopDto } from './dto';
 
-@Controller('api/v1/orders/:orderId/stops')
+@Controller('orders/:orderId/stops')
 @UseGuards(JwtAuthGuard)
 export class StopsController {
   constructor(private readonly stopsService: StopsService) {}

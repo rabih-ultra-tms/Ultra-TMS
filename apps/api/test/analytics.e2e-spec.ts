@@ -11,7 +11,9 @@ const TEST_USER = {
   id: 'user-analytics',
   email: 'user@analytics.test',
   tenantId: TEST_TENANT,
-  roles: ['admin'],
+  roles: ['SUPER_ADMIN'],
+  role: 'SUPER_ADMIN',
+  roleName: 'SUPER_ADMIN',
 };
 
 describe('Analytics API E2E', () => {
@@ -112,21 +114,21 @@ describe('Analytics API E2E', () => {
       .send({ name: 'Ops Dashboard', description: 'Main view', isPublic: true })
       .expect(201);
 
-    const dashboardId = dashboardRes.body.id;
+    const dashboardId = dashboardRes.body.data.id;
 
     const widgetRes = await request(app.getHttpServer())
       .post(`/api/v1/analytics/dashboards/${dashboardId}/widgets`)
       .send({ widgetType: 'KPI_CARD', title: 'Revenue', kpiDefinitionId: kpiId })
       .expect(201);
 
-    expect(widgetRes.body.dashboardId).toBe(dashboardId);
+    expect(widgetRes.body.data.dashboardId).toBe(dashboardId);
 
     const listRes = await request(app.getHttpServer())
       .get('/api/v1/analytics/dashboards')
       .expect(200);
 
-    expect(Array.isArray(listRes.body)).toBe(true);
-    expect(listRes.body[0].dashboardWidgets.length).toBeGreaterThan(0);
+    expect(Array.isArray(listRes.body.data)).toBe(true);
+    expect(listRes.body.data[0].dashboardWidgets.length).toBeGreaterThan(0);
   });
 
   it('creates report, executes, and lists executions', async () => {
@@ -141,14 +143,14 @@ describe('Analytics API E2E', () => {
       })
       .expect(201);
 
-    const reportId = createRes.body.id;
+    const reportId = createRes.body.data.id;
 
     const execRes = await request(app.getHttpServer())
       .post(`/api/v1/analytics/reports/${reportId}/execute`)
       .send({ outputFormat: OutputFormat.CSV })
       .expect(201);
 
-    expect(execRes.body.status).toBe('COMPLETED');
+    expect(execRes.body.data.status).toBe('COMPLETED');
 
     const executions = await request(app.getHttpServer())
       .get(`/api/v1/analytics/reports/${reportId}/executions`)
@@ -174,7 +176,7 @@ describe('Analytics API E2E', () => {
       .get('/api/v1/analytics/alerts?isActive=true')
       .expect(200);
 
-    expect(listRes.body.length).toBe(1);
+    expect(listRes.body.data.length).toBe(1);
 
     await request(app.getHttpServer())
       .post(`/api/v1/analytics/alerts/${alert.id}/acknowledge`)
@@ -186,7 +188,7 @@ describe('Analytics API E2E', () => {
       .send({ resolutionNotes: 'Threshold adjusted' })
       .expect(201);
 
-    expect(resolveRes.body.isActive).toBe(false);
+    expect(resolveRes.body.data.isActive).toBe(false);
   });
 
   it('manages saved views and data queries', async () => {
@@ -195,19 +197,19 @@ describe('Analytics API E2E', () => {
       .send({ viewName: 'Loads Grid', entityType: 'LOAD', columns: ['id'], isPublic: false })
       .expect(201);
 
-    const viewId = viewRes.body.id;
+    const viewId = viewRes.body.data.id;
 
     const listRes = await request(app.getHttpServer())
       .get('/api/v1/analytics/views')
       .expect(200);
 
-    expect(listRes.body.length).toBe(1);
-    expect(listRes.body[0].id).toBe(viewId);
+    expect(listRes.body.data.length).toBe(1);
+    expect(listRes.body.data[0].id).toBe(viewId);
 
     const dims = await request(app.getHttpServer())
       .get('/api/v1/analytics/data/dimensions')
       .expect(200);
-    expect(Array.isArray(dims.body.dimensions)).toBe(true);
+    expect(Array.isArray(dims.body.data.dimensions)).toBe(true);
 
     const queryRes = await request(app.getHttpServer())
       .post('/api/v1/analytics/data/query')

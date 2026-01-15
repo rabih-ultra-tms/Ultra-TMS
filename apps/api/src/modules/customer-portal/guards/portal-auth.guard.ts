@@ -21,9 +21,14 @@ export class PortalAuthGuard implements CanActivate {
 
     const token = authHeader.slice(7);
 
+    const portalSecret = process.env.CUSTOMER_PORTAL_JWT_SECRET;
+    if (!portalSecret) {
+      throw new UnauthorizedException('Customer portal JWT secret not configured');
+    }
+
     try {
       const payload = this.jwtService.verify(token, {
-        secret: process.env.PORTAL_JWT_SECRET || process.env.JWT_SECRET || 'portal-secret',
+        secret: portalSecret,
       });
 
       const user = await this.prisma.portalUser.findFirst({

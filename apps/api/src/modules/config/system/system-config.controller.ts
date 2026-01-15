@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../../modules/auth/guards/jwt-auth.guard';
-import { CurrentUser } from '../../../common/decorators';
+import { CurrentUser, Roles } from '../../../common/decorators';
 import { UpdateSystemConfigDto } from '../dto';
 import { SystemConfigService } from './system-config.service';
 
@@ -25,11 +25,13 @@ export class SystemConfigController {
   }
 
   @Put(':key')
+  @Roles('ADMIN', 'SUPER_ADMIN')
   update(@Param('key') key: string, @Body() dto: UpdateSystemConfigDto, @CurrentUser('id') userId: string) {
     return this.service.update(key, dto, userId);
   }
 
   @Post('validate')
+  @Roles('ADMIN', 'SUPER_ADMIN')
   validate(@Body() dto: { key: string; value: unknown }) {
     return this.service.validate(dto.key, dto.value);
   }

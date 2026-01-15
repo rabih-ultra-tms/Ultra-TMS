@@ -5,7 +5,7 @@ import { NpsSurveysService } from './nps-surveys.service';
 import { FeedbackAnalyticsService } from '../analytics/feedback-analytics.service';
 import { CreateNpsSurveyDto, SubmitNpsResponseDto, UpdateNpsSurveyDto } from '../dto/feedback.dto';
 
-@Controller('api/v1/feedback/nps')
+@Controller('feedback/nps')
 @UseGuards(JwtAuthGuard)
 export class NpsController {
   constructor(

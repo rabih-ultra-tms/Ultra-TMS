@@ -11,7 +11,9 @@ const TEST_USER = {
   id: 'user-agent',
   email: 'user@agent.test',
   tenantId: TEST_TENANT,
-  roles: ['admin'],
+  roles: ['SUPER_ADMIN'],
+  role: 'SUPER_ADMIN',
+  roleName: 'SUPER_ADMIN',
 };
 
 describe('Agent API E2E', () => {
@@ -96,9 +98,9 @@ describe('Agent API E2E', () => {
       })
       .expect(201);
 
-    const agentId = createRes.body.id;
-    expect(createRes.body.agentCode).toContain('A-');
-    expect(createRes.body.status).toBe('PENDING');
+    const agentId = createRes.body.data.id;
+    expect(createRes.body.data.agentCode).toContain('A-');
+    expect(createRes.body.data.status).toBe('PENDING');
 
     const listRes = await request(app.getHttpServer())
       .get('/api/v1/agents')
@@ -111,7 +113,7 @@ describe('Agent API E2E', () => {
       .get(`/api/v1/agents/${agentId}`)
       .expect(200);
 
-    expect(getRes.body.id).toBe(agentId);
+    expect(getRes.body.data.id).toBe(agentId);
 
     await request(app.getHttpServer())
       .post(`/api/v1/agents/${agentId}/activate`)
@@ -127,8 +129,8 @@ describe('Agent API E2E', () => {
       .send({ reason: 'Inactive' })
       .expect(200);
 
-    expect(terminateRes.body.status).toBe('TERMINATED');
-    expect(terminateRes.body.terminationReason).toBe('Inactive');
+    expect(terminateRes.body.data.status).toBe('TERMINATED');
+    expect(terminateRes.body.data.terminationReason).toBe('Inactive');
   });
 
   it('manages agent contacts', async () => {
@@ -156,27 +158,27 @@ describe('Agent API E2E', () => {
       })
       .expect(201);
 
-    const contactId = addRes.body.id;
+    const contactId = addRes.body.data.id;
 
     const listRes = await request(app.getHttpServer())
       .get(`/api/v1/agents/${agent.id}/contacts`)
       .expect(200);
 
-    expect(listRes.body[0].id).toBe(contactId);
+    expect(listRes.body.data[0].id).toBe(contactId);
 
     const updateRes = await request(app.getHttpServer())
       .put(`/api/v1/agents/${agent.id}/contacts/${contactId}`)
       .send({ role: 'SALES', hasPortalAccess: true })
       .expect(200);
 
-    expect(updateRes.body.role).toBe('SALES');
-    expect(updateRes.body.hasPortalAccess).toBe(true);
+    expect(updateRes.body.data.role).toBe('SALES');
+    expect(updateRes.body.data.hasPortalAccess).toBe(true);
 
     const deleteRes = await request(app.getHttpServer())
       .delete(`/api/v1/agents/${agent.id}/contacts/${contactId}`)
       .expect(200);
 
-    expect(deleteRes.body.isActive).toBe(false);
+    expect(deleteRes.body.data.isActive).toBe(false);
   });
 
   it('creates agreements and updates status', async () => {
@@ -203,19 +205,19 @@ describe('Agent API E2E', () => {
       })
       .expect(201);
 
-    const agreementId = createRes.body.id;
+    const agreementId = createRes.body.data.id;
 
     const activateRes = await request(app.getHttpServer())
       .post(`/api/v1/agent-agreements/${agreementId}/activate`)
       .expect(200);
 
-    expect(activateRes.body.status).toBe('ACTIVE');
+    expect(activateRes.body.data.status).toBe('ACTIVE');
 
     const terminateRes = await request(app.getHttpServer())
       .post(`/api/v1/agent-agreements/${agreementId}/terminate`)
       .expect(200);
 
-    expect(terminateRes.body.status).toBe('TERMINATED');
+    expect(terminateRes.body.data.status).toBe('TERMINATED');
   });
 
   it('assigns customers and handles lifecycle', async () => {
@@ -237,27 +239,27 @@ describe('Agent API E2E', () => {
       .send({ customerId: 'customer-1', assignmentType: 'PRIMARY' })
       .expect(201);
 
-    const assignmentId = assignRes.body.id;
+    const assignmentId = assignRes.body.data.id;
 
     const startSunsetRes = await request(app.getHttpServer())
       .post(`/api/v1/agent-assignments/${assignmentId}/start-sunset`)
       .send({ reason: 'Transition' })
       .expect(200);
 
-    expect(startSunsetRes.body.status).toBe('SUNSET');
+    expect(startSunsetRes.body.data.status).toBe('SUNSET');
 
     const lookupRes = await request(app.getHttpServer())
       .get(`/api/v1/customers/${'customer-1'}/agent`)
       .expect(200);
 
-    expect(lookupRes.body?.id).toBe(assignmentId);
+    expect(lookupRes.body.data?.id).toBe(assignmentId);
 
     const terminateRes = await request(app.getHttpServer())
       .post(`/api/v1/agent-assignments/${assignmentId}/terminate`)
       .send({ reason: 'Ended' })
       .expect(200);
 
-    expect(terminateRes.body.status).toBe('TERMINATED');
+    expect(terminateRes.body.data.status).toBe('TERMINATED');
   });
 
   it('submits, qualifies, converts leads and auto-assigns customer', async () => {
@@ -284,7 +286,7 @@ describe('Agent API E2E', () => {
       })
       .expect(201);
 
-    const leadId = leadRes.body.id;
+    const leadId = leadRes.body.data.id;
 
     await request(app.getHttpServer())
       .post(`/api/v1/agent-leads/${leadId}/qualify`)
@@ -296,7 +298,7 @@ describe('Agent API E2E', () => {
       .send({ customerId: 'customer-1', notes: 'Converted' })
       .expect(200);
 
-    expect(convertRes.body.status).toBe('CONVERTED');
+    expect(convertRes.body.data.status).toBe('CONVERTED');
 
     const assignment = await prisma.agentCustomerAssignment.findFirst({
       where: { tenantId: TEST_TENANT, agentId: agent.id, customerId: 'customer-1' },
@@ -342,13 +344,13 @@ describe('Agent API E2E', () => {
       .get(`/api/v1/agents/${agent.id}/performance`)
       .expect(200);
 
-    expect(perfRes.body.totalNet).toBeDefined();
+    expect(perfRes.body.data.totalNet).toBeDefined();
 
     const rankingsRes = await request(app.getHttpServer())
       .get('/api/v1/agents/rankings')
       .expect(200);
 
-    expect(rankingsRes.body.length).toBeGreaterThan(0);
+    expect(rankingsRes.body.data.length).toBeGreaterThan(0);
   });
 
   it('returns statements list and details', async () => {
@@ -388,7 +390,7 @@ describe('Agent API E2E', () => {
       .get(`/api/v1/agents/${agent.id}/statements/${payout.id}`)
       .expect(200);
 
-    expect(detailRes.body.id).toBe(payout.id);
+    expect(detailRes.body.data.id).toBe(payout.id);
 
     const pdfRes = await request(app.getHttpServer())
       .get(`/api/v1/agents/${agent.id}/statements/${payout.id}/pdf`)

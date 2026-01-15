@@ -1,11 +1,12 @@
 import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { CurrentTenant } from '../../../common/decorators';
+import { CurrentTenant, Roles } from '../../../common/decorators';
 import { AuditLogsService } from './audit-logs.service';
 import { ExportAuditLogsDto, QueryAuditLogsDto, VerifyAuditChainDto } from '../dto';
 
 @Controller('audit/logs')
 @UseGuards(JwtAuthGuard)
+@Roles('COMPLIANCE', 'ADMIN', 'SUPER_ADMIN')
 export class AuditLogsController {
   constructor(private readonly service: AuditLogsService) {}
 

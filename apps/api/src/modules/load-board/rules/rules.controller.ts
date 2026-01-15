@@ -4,7 +4,7 @@ import { CurrentTenant, CurrentUser } from '../../../common/decorators';
 import { CreatePostingRuleDto, RuleQueryDto, UpdatePostingRuleDto } from './dto';
 import { RulesService } from './rules.service';
 
-@Controller('api/v1/load-board/rules')
+@Controller('load-board/rules')
 @UseGuards(JwtAuthGuard)
 export class RulesController {
   constructor(private readonly rulesService: RulesService) {}

@@ -3,4 +3,7 @@ export * from './invoices.controller';
 export * from './settlements.controller';
 export * from './payments-received.controller';
 export * from './payments-made.controller';
+export * from './payments.controller';
 export * from './journal-entries.controller';
+export * from './reports.controller';
+export * from './quickbooks.controller';

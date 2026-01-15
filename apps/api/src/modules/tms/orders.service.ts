@@ -12,6 +12,7 @@ import {
 } from './dto/create-order.dto';
 import { CreateLoadDto } from './dto/create-load.dto';
 import { OrderQueryDto } from './dto/order-query.dto';
+import { CreateOrderFromTemplateDto } from './dto/create-order-from-template.dto';
 import { Prisma } from '@prisma/client';
 
 // Simple function to generate random alphanumeric string
@@ -280,6 +281,78 @@ export class OrdersService {
     });
 
     return order;
+  }
+
+  async createFromTemplate(
+    tenantId: string,
+    userId: string,
+    templateId: string,
+    overrides: CreateOrderFromTemplateDto,
+  ) {
+    const template = await this.prisma.order.findFirst({
+      where: { id: templateId, tenantId, deletedAt: null },
+      include: {
+        stops: { where: { deletedAt: null }, orderBy: { stopSequence: 'asc' } },
+        items: { where: { deletedAt: null } },
+      },
+    });
+
+    if (!template) {
+      throw new NotFoundException('Order template not found');
+    }
+
+    const customerId = overrides.customerId || template.customerId;
+    if (!customerId) {
+      throw new BadRequestException('Template is missing customerId');
+    }
+
+    const stops: CreateStopDto[] = template.stops.map((stop, index) => {
+      const override = overrides.stopOverrides?.[index];
+      return {
+        stopType: stop.stopType,
+        companyName: override?.facilityName || stop.facilityName || '',
+        address: override?.address || stop.addressLine1 || '',
+        city: override?.city || stop.city || '',
+        state: override?.state || stop.state || '',
+        zip: override?.postalCode || stop.postalCode || '',
+        contactName: stop.contactName || undefined,
+        phone: stop.contactPhone || undefined,
+        email: stop.contactEmail || undefined,
+        appointmentDate: override?.appointmentDate
+          ? override.appointmentDate
+          : stop.appointmentDate
+          ? stop.appointmentDate.toISOString()
+          : undefined,
+        appointmentTime:
+          override?.appointmentTime || stop.appointmentTimeStart || undefined,
+        stopSequence: stop.stopSequence || index + 1,
+      };
+    });
+
+    const items: CreateOrderItemDto[] = template.items.map((item) => ({
+      description: item.description || 'Item',
+      quantity: item.quantity ?? undefined,
+      quantityType: item.quantityType || undefined,
+      weightLbs: item.weightLbs ? Number(item.weightLbs) : undefined,
+      commodityClass: item.commodityClass || undefined,
+      nmfcCode: item.nmfcCode || undefined,
+      isHazmat: item.isHazmat ?? false,
+      hazmatClass: item.hazmatClass || undefined,
+      unNumber: item.unNumber || undefined,
+      sku: item.sku || undefined,
+      lotNumber: item.lotNumber || undefined,
+    }));
+
+    const createDto: CreateOrderDto = {
+      customerId,
+      customerReference:
+        overrides.referenceNumber || template.customerReference || undefined,
+      specialInstructions: template.specialInstructions || undefined,
+      stops,
+      items,
+    };
+
+    return this.create(tenantId, createDto, userId);
   }
 
   /**

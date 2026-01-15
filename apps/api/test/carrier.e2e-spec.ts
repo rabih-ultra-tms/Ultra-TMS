@@ -11,7 +11,9 @@ const TEST_USER = {
   id: 'user-carrier',
   email: 'user@carrier.test',
   tenantId: TEST_TENANT,
-  roles: ['admin'],
+  roles: ['SUPER_ADMIN'],
+  role: 'SUPER_ADMIN',
+  roleName: 'SUPER_ADMIN',
 };
 
 describe('Carrier API E2E', () => {
@@ -104,7 +106,7 @@ describe('Carrier API E2E', () => {
       })
       .expect(201);
 
-    const carrierId = createRes.body.id;
+    const carrierId = createRes.body.data.id;
 
     const w9Doc = await request(app.getHttpServer())
       .post(`/api/v1/carriers/${carrierId}/documents`)
@@ -117,11 +119,11 @@ describe('Carrier API E2E', () => {
       .expect(201);
 
     await request(app.getHttpServer())
-      .post(`/api/v1/carriers/${carrierId}/documents/${w9Doc.body.id}/approve`)
+      .post(`/api/v1/carriers/${carrierId}/documents/${w9Doc.body.data.id}/approve`)
       .expect(201);
 
     await request(app.getHttpServer())
-      .post(`/api/v1/carriers/${carrierId}/documents/${agreementDoc.body.id}/approve`)
+      .post(`/api/v1/carriers/${carrierId}/documents/${agreementDoc.body.data.id}/approve`)
       .expect(201);
 
     const approveRes = await request(app.getHttpServer())
@@ -129,7 +131,7 @@ describe('Carrier API E2E', () => {
       .send()
       .expect(200);
 
-    expect(approveRes.body.status).toBe('ACTIVE');
+    expect(approveRes.body.data.status).toBe('ACTIVE');
   });
 
   it('provides FMCSA lookup and onboarding flow', async () => {
@@ -137,8 +139,8 @@ describe('Carrier API E2E', () => {
       .get('/api/v1/carriers/fmcsa/lookup/dot/5551234')
       .expect(200);
 
-    expect(lookupRes.body.dotNumber).toBe('5551234');
-    expect(lookupRes.body.operatingStatus).toBeDefined();
+    expect(lookupRes.body.data.dotNumber).toBe('5551234');
+    expect(lookupRes.body.data.operatingStatus).toBeDefined();
 
     const onboardRes = await request(app.getHttpServer())
       .post('/api/v1/carriers/onboard')
@@ -150,9 +152,9 @@ describe('Carrier API E2E', () => {
       })
       .expect(201);
 
-    expect(onboardRes.body.carrier).toBeDefined();
-    expect(onboardRes.body.fmcsa.dotNumber).toBe('DOTOB12345');
-    expect(onboardRes.body.existing).toBe(false);
+    expect(onboardRes.body.data.carrier).toBeDefined();
+    expect(onboardRes.body.data.fmcsa.dotNumber).toBe('DOTOB12345');
+    expect(onboardRes.body.data.existing).toBe(false);
   });
 
   it('lists only tenant carriers and supports search', async () => {
@@ -201,11 +203,11 @@ describe('Carrier API E2E', () => {
       .expect(201);
 
     const scoreRes = await request(app.getHttpServer())
-      .get(`/api/v1/carriers/${carrierRes.body.id}/scorecard`)
+      .get(`/api/v1/carriers/${carrierRes.body.data.id}/scorecard`)
       .expect(200);
 
-    expect(scoreRes.body.metrics.totalLoads).toBe(0);
-    expect(scoreRes.body.carrier.recommendedTier).toBeDefined();
+    expect(scoreRes.body.data.metrics.totalLoads).toBe(0);
+    expect(scoreRes.body.data.carrier.recommendedTier).toBeDefined();
   });
 
   it('creates driver for carrier and updates status', async () => {
@@ -230,7 +232,7 @@ describe('Carrier API E2E', () => {
       })
       .expect(201);
 
-    const driverId = driverRes.body.id;
+    const driverId = driverRes.body.data.id;
 
     await request(app.getHttpServer())
       .patch(`/api/v1/drivers/${driverId}/status`)
@@ -241,6 +243,6 @@ describe('Carrier API E2E', () => {
       .get('/api/v1/drivers')
       .expect(200);
 
-    expect(getRes.body.find((d: any) => d.id === driverId)?.status).toBe('SUSPENDED');
+    expect(getRes.body.data.find((d: any) => d.id === driverId)?.status).toBe('SUSPENDED');
   });
 });

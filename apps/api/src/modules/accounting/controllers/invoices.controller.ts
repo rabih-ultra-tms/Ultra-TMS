@@ -7,17 +7,24 @@ import {
   Param,
   Query,
   UseGuards,
+  Header,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { CurrentTenant } from '../../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
-import { InvoicesService } from '../services';
-import { CreateInvoiceDto } from '../dto';
+import { InvoicesService, PdfService } from '../services';
+import { CreateInvoiceDto, SendInvoiceDto, StatementQueryDto } from '../dto';
 
 @Controller('invoices')
 @UseGuards(JwtAuthGuard)
+@ApiTags('Accounting')
+@ApiBearerAuth('JWT-auth')
 export class InvoicesController {
-  constructor(private readonly invoicesService: InvoicesService) {}
+  constructor(
+    private readonly invoicesService: InvoicesService,
+    private readonly pdfService: PdfService,
+  ) {}
 
   @Post()
   async create(
@@ -49,6 +56,31 @@ export class InvoicesController {
     return this.invoicesService.getAgingReport(tenantId);
   }
 
+  @Get('statements/:companyId')
+  @Header('Content-Type', 'application/pdf')
+  @Header('Content-Disposition', 'inline; filename="statement.pdf"')
+  async getStatement(
+    @Param('companyId') companyId: string,
+    @CurrentTenant() tenantId: string,
+    @Query() query: StatementQueryDto,
+  ) {
+    const { company, invoices, fromDate, toDate } =
+      await this.invoicesService.getStatementData(tenantId, companyId, query);
+
+    return this.pdfService.generateStatementPdf(company, invoices, {
+      from: fromDate,
+      to: toDate,
+    });
+  }
+
+  @Get(':id/pdf')
+  @Header('Content-Type', 'application/pdf')
+  @Header('Content-Disposition', 'inline; filename="invoice.pdf"')
+  async getInvoicePdf(@Param('id') id: string, @CurrentTenant() tenantId: string) {
+    const invoice = await this.invoicesService.findOne(id, tenantId);
+    return this.pdfService.generateInvoicePdf(invoice);
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string, @CurrentTenant() tenantId: string) {
     return this.invoicesService.findOne(id, tenantId);
@@ -65,8 +97,17 @@ export class InvoicesController {
   }
 
   @Post(':id/send')
-  async sendInvoice(@Param('id') id: string, @CurrentTenant() tenantId: string) {
-    return this.invoicesService.sendInvoice(id, tenantId);
+  async sendInvoice(
+    @Param('id') id: string,
+    @CurrentTenant() tenantId: string,
+    @Body() dto: SendInvoiceDto,
+  ) {
+    return this.invoicesService.sendInvoice(id, tenantId, dto);
+  }
+
+  @Post(':id/remind')
+  async sendReminder(@Param('id') id: string, @CurrentTenant() tenantId: string) {
+    return this.invoicesService.sendReminder(id, tenantId);
   }
 
   @Post(':id/void')
