@@ -8,18 +8,23 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../auth/guards';
 import { SmsService } from './sms.service';
 import { SendSmsDto, ReplySmsDto } from './dto';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
 
 @Controller('communication/sms')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class SmsController {
   constructor(private readonly smsService: SmsService) {}
 
   @Post('send')
+  @Roles('ADMIN', 'DISPATCHER', 'OPERATIONS')
+  @Throttle({ long: { limit: 10, ttl: 60000 } })
   async send(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -29,6 +34,7 @@ export class SmsController {
   }
 
   @Get('conversations')
+  @Roles('ADMIN', 'DISPATCHER', 'OPERATIONS')
   async getConversations(
     @CurrentTenant() tenantId: string,
     @Query('page') page?: number,
@@ -49,6 +55,7 @@ export class SmsController {
   }
 
   @Get('conversations/:id')
+  @Roles('ADMIN', 'DISPATCHER', 'OPERATIONS')
   async getConversation(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -57,6 +64,7 @@ export class SmsController {
   }
 
   @Post('conversations/:id/reply')
+  @Roles('ADMIN', 'DISPATCHER', 'OPERATIONS')
   async reply(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -67,6 +75,7 @@ export class SmsController {
   }
 
   @Patch('conversations/:id/close')
+  @Roles('ADMIN', 'DISPATCHER', 'OPERATIONS')
   async closeConversation(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -75,6 +84,7 @@ export class SmsController {
   }
 
   @Get('logs')
+  @Roles('ADMIN', 'OPERATIONS')
   async getLogs(
     @CurrentTenant() tenantId: string,
     @Query('page') page?: number,
@@ -84,6 +94,7 @@ export class SmsController {
   }
 
   @Get('stats')
+  @Roles('ADMIN', 'OPERATIONS')
   async getStats(@CurrentTenant() tenantId: string) {
     return this.smsService.getStats(tenantId);
   }

@@ -18,9 +18,11 @@ import { ActivitiesService } from './activities.service';
 import { CreateCompanyDto, UpdateCompanyDto } from './dto';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
 
 @Controller('companies')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class CompaniesController {
   constructor(
     private readonly companiesService: CompaniesService,
@@ -30,6 +32,7 @@ export class CompaniesController {
   ) {}
 
   @Get()
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async findAll(
     @CurrentTenant() tenantId: string,
     @Query('page') page?: number,
@@ -43,11 +46,13 @@ export class CompaniesController {
   }
 
   @Get(':id')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async findOne(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.companiesService.findOne(tenantId, id);
   }
 
   @Post()
+  @Roles('ADMIN', 'SALES_MANAGER')
   async create(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -57,6 +62,7 @@ export class CompaniesController {
   }
 
   @Put(':id')
+  @Roles('ADMIN', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async update(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -67,6 +73,7 @@ export class CompaniesController {
   }
 
   @Delete(':id')
+  @Roles('ADMIN')
   async delete(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -77,6 +84,7 @@ export class CompaniesController {
 
   // Nested resource endpoints
   @Get(':id/contacts')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async getContacts(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -87,6 +95,7 @@ export class CompaniesController {
   }
 
   @Get(':id/opportunities')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async getOpportunities(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -97,6 +106,7 @@ export class CompaniesController {
   }
 
   @Get(':id/activities')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async getActivities(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -107,6 +117,7 @@ export class CompaniesController {
   }
 
   @Get(':id/orders')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async getOrders(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -117,6 +128,7 @@ export class CompaniesController {
   }
 
   @Post(':id/sync-hubspot')
+  @Roles('ADMIN', 'SALES_MANAGER')
   async syncHubspot(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -126,6 +138,7 @@ export class CompaniesController {
   }
 
   @Patch(':id/assign')
+  @Roles('ADMIN', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async assignRep(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -136,6 +149,7 @@ export class CompaniesController {
   }
 
   @Patch(':id/tier')
+  @Roles('ADMIN', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async updateTier(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,

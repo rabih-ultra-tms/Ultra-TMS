@@ -1,5 +1,7 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { Roles } from '../../../common/decorators';
 import { CurrentTenant } from '../../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { NoaRecordsService } from './noa-records.service';
@@ -8,13 +10,21 @@ import { UpdateNoaRecordDto } from './dto/update-noa-record.dto';
 import { VerifyNoaDto } from './dto/verify-noa.dto';
 import { ReleaseNoaDto } from './dto/release-noa.dto';
 import { NoaQueryDto } from './dto/noa-query.dto';
+import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('noa-records')
 @UseGuards(JwtAuthGuard)
+@ApiTags('NOA Management')
+@ApiBearerAuth('JWT-auth')
+@Roles('user', 'manager', 'admin')
 export class NoaRecordsController {
   constructor(private readonly service: NoaRecordsService) {}
 
   @Get()
+  @ApiOperation({ summary: 'List NOA records' })
+  @ApiStandardResponse('NOA records list')
+  @ApiErrorResponses()
+  @Roles('viewer', 'user', 'manager', 'admin')
   async findAll(
     @CurrentTenant() tenantId: string,
     @Query() query: NoaQueryDto,
@@ -23,6 +33,9 @@ export class NoaRecordsController {
   }
 
   @Post()
+  @ApiOperation({ summary: 'Create NOA record' })
+  @ApiStandardResponse('NOA record created')
+  @ApiErrorResponses()
   async create(
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: { id: string },
@@ -32,6 +45,11 @@ export class NoaRecordsController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get NOA record by ID' })
+  @ApiParam({ name: 'id', description: 'NOA record ID' })
+  @ApiStandardResponse('NOA record details')
+  @ApiErrorResponses()
+  @Roles('viewer', 'user', 'manager', 'admin')
   async findOne(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -40,6 +58,10 @@ export class NoaRecordsController {
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'Update NOA record' })
+  @ApiParam({ name: 'id', description: 'NOA record ID' })
+  @ApiStandardResponse('NOA record updated')
+  @ApiErrorResponses()
   async update(
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: { id: string },
@@ -50,6 +72,11 @@ export class NoaRecordsController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete NOA record' })
+  @ApiParam({ name: 'id', description: 'NOA record ID' })
+  @ApiStandardResponse('NOA record deleted')
+  @ApiErrorResponses()
+  @Roles('admin')
   @HttpCode(HttpStatus.OK)
   async remove(
     @CurrentTenant() tenantId: string,
@@ -60,6 +87,10 @@ export class NoaRecordsController {
   }
 
   @Post(':id/verify')
+  @ApiOperation({ summary: 'Verify NOA record' })
+  @ApiParam({ name: 'id', description: 'NOA record ID' })
+  @ApiStandardResponse('NOA record verified')
+  @ApiErrorResponses()
   async verify(
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: { id: string },
@@ -70,6 +101,10 @@ export class NoaRecordsController {
   }
 
   @Post(':id/release')
+  @ApiOperation({ summary: 'Release NOA record' })
+  @ApiParam({ name: 'id', description: 'NOA record ID' })
+  @ApiStandardResponse('NOA record released')
+  @ApiErrorResponses()
   async release(
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: { id: string },

@@ -1,9 +1,7 @@
 import request from 'supertest';
-import { INestApplication, ExecutionContext } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
-import { AppModule } from '../src/app.module';
+import { INestApplication } from '@nestjs/common';
 import { PrismaService } from '../src/prisma.service';
-import { JwtAuthGuard } from '../src/modules/auth/guards/jwt-auth.guard';
+import { createTestAppWithRole } from './helpers/test-app.helper';
 
 const TEST_TENANT = 'tenant-carrier';
 const OTHER_TENANT = 'tenant-other';
@@ -11,9 +9,9 @@ const TEST_USER = {
   id: 'user-carrier',
   email: 'user@carrier.test',
   tenantId: TEST_TENANT,
-  roles: ['SUPER_ADMIN'],
-  role: 'SUPER_ADMIN',
-  roleName: 'SUPER_ADMIN',
+  roles: ['ADMIN'],
+  role: 'ADMIN',
+  roleName: 'ADMIN',
 };
 
 describe('Carrier API E2E', () => {
@@ -21,23 +19,14 @@ describe('Carrier API E2E', () => {
   let prisma: PrismaService;
 
   beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
-      .overrideGuard(JwtAuthGuard)
-      .useValue({
-        canActivate: (ctx: ExecutionContext) => {
-          const req = ctx.switchToHttp().getRequest();
-          req.user = TEST_USER;
-          req.headers['x-tenant-id'] = TEST_TENANT;
-          return true;
-        },
-      })
-      .compile();
-
-  app = moduleRef.createNestApplication();
-  app.setGlobalPrefix('api/v1');
-    await app.init();
-
-    prisma = app.get(PrismaService);
+    const setup = await createTestAppWithRole(
+      TEST_TENANT,
+      TEST_USER.id,
+      TEST_USER.email,
+      'ADMIN',
+    );
+    app = setup.app;
+    prisma = setup.prisma;
 
     await prisma.tenant.upsert({
       where: { slug: TEST_TENANT },
@@ -244,5 +233,45 @@ describe('Carrier API E2E', () => {
       .expect(200);
 
     expect(getRes.body.data.find((d: any) => d.id === driverId)?.status).toBe('SUSPENDED');
+  });
+});
+
+describe('Carrier RBAC E2E', () => {
+  let dispatcherApp: INestApplication;
+  let carrierApp: INestApplication;
+
+  beforeAll(async () => {
+    const dispatcherSetup = await createTestAppWithRole(
+      'tenant-carrier-rbac',
+      'user-carrier-dispatcher',
+      'dispatcher@carrier.test',
+      'DISPATCHER',
+    );
+    dispatcherApp = dispatcherSetup.app;
+
+    const carrierSetup = await createTestAppWithRole(
+      'tenant-carrier-rbac',
+      'user-carrier-external',
+      'carrier@carrier.test',
+      'CARRIER',
+    );
+    carrierApp = carrierSetup.app;
+  });
+
+  afterAll(async () => {
+    await dispatcherApp.close();
+    await carrierApp.close();
+  });
+
+  it('denies carrier access to carriers list', async () => {
+    await request(carrierApp.getHttpServer())
+      .get('/api/v1/carriers')
+      .expect(403);
+  });
+
+  it('allows dispatcher access to carriers list', async () => {
+    await request(dispatcherApp.getHttpServer())
+      .get('/api/v1/carriers')
+      .expect(200);
   });
 });

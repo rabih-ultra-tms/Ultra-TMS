@@ -15,13 +15,16 @@ import { OpportunitiesService } from './opportunities.service';
 import { CreateOpportunityDto, UpdateOpportunityDto } from './dto';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
 
 @Controller('opportunities')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class OpportunitiesController {
   constructor(private readonly opportunitiesService: OpportunitiesService) {}
 
   @Get()
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async findAll(
     @CurrentTenant() tenantId: string,
     @Query('page') page?: number,
@@ -35,6 +38,7 @@ export class OpportunitiesController {
   }
 
   @Get('pipeline')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async getPipeline(
     @CurrentTenant() tenantId: string,
     @Query('ownerId') ownerId?: string,
@@ -43,11 +47,13 @@ export class OpportunitiesController {
   }
 
   @Get(':id')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async findOne(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.opportunitiesService.findOne(tenantId, id);
   }
 
   @Post()
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async create(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -57,6 +63,7 @@ export class OpportunitiesController {
   }
 
   @Put(':id')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async update(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -67,6 +74,7 @@ export class OpportunitiesController {
   }
 
   @Delete(':id')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async delete(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -76,6 +84,7 @@ export class OpportunitiesController {
   }
 
   @Patch(':id/stage')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async updateStage(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -86,6 +95,7 @@ export class OpportunitiesController {
   }
 
   @Post(':id/convert')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async convertToCustomer(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -95,6 +105,7 @@ export class OpportunitiesController {
   }
 
   @Get(':id/activities')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async getActivities(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -105,6 +116,7 @@ export class OpportunitiesController {
   }
 
   @Patch(':id/owner')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async updateOwner(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,

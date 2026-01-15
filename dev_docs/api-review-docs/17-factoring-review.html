@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Factoring Service Review - Ultra-TMS Phase A</title>
+  <style>
+    :root { --green: #10b981; --green-bg: #d1fae5; --yellow: #f59e0b; --yellow-bg: #fef3c7; --red: #ef4444; --red-bg: #fee2e2; --blue: #3b82f6; --blue-bg: #dbeafe; --gray: #6b7280; --orange: #f97316; --orange-bg: #ffedd5; --purple: #8b5cf6; --purple-bg: #ede9fe; }
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; max-width: 1200px; margin: 0 auto; padding: 20px; background: #f9fafb; }
+    h1 { color: #111827; border-bottom: 3px solid var(--yellow); padding-bottom: 10px; }
+    h2 { color: #374151; margin-top: 30px; border-left: 4px solid var(--yellow); padding-left: 12px; }
+    .service-header { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 24px; border-radius: 12px; margin-bottom: 24px; }
+    .service-header h1 { color: white; border: none; margin: 0; padding: 0; }
+    .summary-box { background: white; border-radius: 12px; padding: 24px; margin: 20px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin: 20px 0; }
+    .score-card { background: white; border-radius: 8px; padding: 16px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .score-card .score { font-size: 32px; font-weight: bold; }
+    .score-card .label { color: var(--gray); font-size: 13px; }
+    .score-high { color: var(--green); } .score-medium { color: var(--yellow); } .score-low { color: var(--red); }
+    .status-good { background: var(--green-bg); color: #065f46; padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; }
+    .status-warning { background: var(--yellow-bg); color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; }
+    .status-error { background: var(--red-bg); color: #991b1b; padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; }
+    .status-p1 { background: var(--orange-bg); color: #c2410c; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+    .status-p2 { background: var(--yellow-bg); color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    th { background: #f9fafb; font-weight: 600; color: #374151; }
+    .nav-links { background: white; padding: 12px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); font-size: 14px; }
+    .nav-links a { color: var(--blue); text-decoration: none; margin-right: 16px; }
+    .warning-box { background: var(--yellow-bg); border: 2px solid var(--yellow); border-radius: 12px; padding: 20px; margin: 20px 0; }
+    .warning-box h3 { color: #92400e; margin-top: 0; }
+    .success-box { background: var(--green-bg); border: 2px solid var(--green); border-radius: 12px; padding: 20px; margin: 20px 0; }
+    .success-box h3 { color: #065f46; margin-top: 0; }
+    code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    ul.checklist { list-style: none; padding-left: 0; }
+    ul.checklist li { padding: 6px 0; }
+    .info-box { background: var(--blue-bg); border: 2px solid var(--blue); border-radius: 12px; padding: 20px; margin: 20px 0; }
+    .info-box h3 { color: #1e40af; margin-top: 0; }
+  </style>
+</head>
+<body>
+
+<div class="nav-links">
+  <a href="00-general-review.html">← General Review</a> |
+  <a href="16-credit-review.html">← Credit</a> |
+  <a href="18-analytics-review.html">Next: Analytics →</a>
+</div>
+
+<div class="service-header">
+  <h1>🏦 Factoring Service Review</h1>
+  <p>Service 17 | Platform Service | Module: <code>modules/factoring</code> | <strong>CONDITIONAL PASS</strong></p>
+</div>
+
+<div class="warning-box">
+  <h3>⚠️ P1 Issue: Low RBAC (~25%)</h3>
+  <p>Factoring service has RBAC on fund release but submission and client management need protection. Financial service with high sensitivity.</p>
+</div>
+
+<div class="summary-box">
+  <h2 style="margin-top: 0;">📊 Service Summary</h2>
+  <div class="score-grid">
+    <div class="score-card"><div class="score score-medium">6.5</div><div class="label">Overall Score</div></div>
+    <div class="score-card"><div class="score score-low">25%</div><div class="label">RBAC Coverage</div></div>
+    <div class="score-card"><div class="score score-medium">2</div><div class="label">E2E Tests</div></div>
+    <div class="score-card"><div class="score score-low">No</div><div class="label">Swagger Docs</div></div>
+    <div class="score-card"><div class="score score-high">Yes</div><div class="label">Tenant Isolation</div></div>
+  </div>
+  <p><strong>Frontend Ready:</strong> <span class="status-warning">PARTIAL</span> - Critical fund release protected, complete RBAC before production</p>
+</div>
+
+<h2>📁 Module Structure</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>File</th><th>Purpose</th><th>RBAC</th><th>E2E Tests</th></tr></thead>
+    <tbody>
+      <tr><td><code>factoring-clients.controller.ts</code></td><td>Client enrollment</td><td><span class="status-error">None</span></td><td><span class="status-warning">Partial</span></td></tr>
+      <tr><td><code>factoring-submissions.controller.ts</code></td><td>Invoice submissions</td><td><span class="status-warning">Partial</span></td><td><span class="status-good">Yes</span></td></tr>
+      <tr><td><code>factoring-funds.controller.ts</code></td><td>Fund releases</td><td><span class="status-good">Good</span></td><td><span class="status-good">Yes</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>🗄️ Database Models</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>Model</th><th>Key Fields</th><th>Compliance</th></tr></thead>
+    <tbody>
+      <tr><td><code>FactoringClient</code></td><td>carrierId, status, advanceRate, reservePercentage, feeRate</td><td><span class="status-good">100%</span></td></tr>
+      <tr><td><code>FactoringSubmission</code></td><td>clientId, invoiceAmount, advanceAmount, status, fundedDate</td><td><span class="status-good">100%</span></td></tr>
+      <tr><td><code>FactoringFund</code></td><td>submissionId, fundType (advance/reserve), amount, releasedBy</td><td><span class="status-good">100%</span></td></tr>
+      <tr><td><code>FactoringReserve</code></td><td>clientId, totalReserve, availableReserve</td><td><span class="status-good">100%</span></td></tr>
+    </tbody>
+  </table>
+  <p><strong>Note:</strong> This is <em>internal</em> factoring (TMS as factor). External factoring integration is service 38.</p>
+</div>
+
+<h2>✅ Implemented Features</h2>
+<div class="summary-box">
+  <div class="two-col">
+    <div>
+      <h4>Working Features</h4>
+      <ul class="checklist">
+        <li>✅ Carrier enrollment as factoring client</li>
+        <li>✅ Advance rate configuration</li>
+        <li>✅ Reserve percentage tracking</li>
+        <li>✅ Invoice submission workflow</li>
+        <li>✅ Advance fund calculation</li>
+        <li>✅ Fund release (protected)</li>
+        <li>✅ Reserve balance tracking</li>
+        <li>✅ Fee calculation</li>
+      </ul>
+    </div>
+    <div>
+      <h4>Missing Features</h4>
+      <ul class="checklist">
+        <li>❌ Recourse/non-recourse tracking</li>
+        <li>❌ Chargebacks from reserves</li>
+        <li>❌ ACH integration</li>
+        <li>❌ Factoring statements</li>
+        <li>❌ UCC filing tracking</li>
+        <li>❌ Debtor (customer) notifications</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<h2>🔌 Key Endpoints</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>Method</th><th>Endpoint</th><th>RBAC Status</th><th>Required Role</th></tr></thead>
+    <tbody>
+      <tr><td><code>GET</code></td><td>/api/v1/factoring/clients</td><td><span class="status-error">Unprotected</span></td><td>factoring-mgr, admin</td></tr>
+      <tr><td><code>POST</code></td><td>/api/v1/factoring/clients</td><td><span class="status-error">Unprotected</span></td><td>factoring-mgr, admin</td></tr>
+      <tr><td><code>POST</code></td><td>/api/v1/factoring/submissions</td><td><span class="status-warning">Partial</span></td><td>carrier-portal, factoring-mgr</td></tr>
+      <tr><td><code>POST</code></td><td>/api/v1/factoring/funds/:id/release</td><td><span class="status-good">Protected</span></td><td>factoring-mgr, accounting</td></tr>
+      <tr><td><code>GET</code></td><td>/api/v1/factoring/clients/:id/reserves</td><td><span class="status-error">Unprotected</span></td><td>carrier (own), factoring-mgr</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>🔗 Dependencies</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>Depends On</th><th>Used By</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Auth, Carrier, Accounting (invoices), TMS Core (loads)</td>
+        <td>Carrier Portal (submission), Accounting (fund tracking)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>💡 Recommendations</h2>
+<div class="summary-box">
+  <ol>
+    <li><strong><span class="status-p1">P1</span> Add RBAC to client management</strong>
+      <ul>
+        <li>View clients: <code>@Roles('factoring-mgr', 'accounting', 'admin')</code></li>
+        <li>Modify clients: <code>@Roles('factoring-mgr', 'admin')</code></li>
+      </ul>
+    </li>
+    <li><strong><span class="status-p1">P1</span> Add carrier scoping for reserves</strong> - Carriers only see own reserve balance.</li>
+    <li><strong><span class="status-p2">P2</span> Add chargebacks functionality</strong></li>
+    <li><strong><span class="status-p2">P2</span> Add E2E tests for reserve workflow</strong></li>
+    <li><strong><span class="status-p3">P3</span> ACH integration for fund disbursement</strong></li>
+  </ol>
+</div>
+
+<div class="success-box">
+  <h3>📋 Summary</h3>
+  <p><strong>Status:</strong> <span class="status-warning">CONDITIONAL PASS</span></p>
+  <p>Factoring service has the critical fund release endpoint protected. Not P0 because:</p>
+  <ul>
+    <li>Money movement (fund release) is protected</li>
+    <li>Factoring is optional/secondary feature</li>
+    <li>Carriers will use Carrier Portal (separate auth)</li>
+  </ul>
+  <p><strong>Business Note:</strong> Internal factoring requires significant operational setup. May defer to external factoring integration.</p>
+  <p><strong>Estimated Fix Time:</strong> 4-5 hours for RBAC</p>
+</div>
+
+<footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: var(--gray); text-align: center;">
+  <p>Factoring Service Review | Ultra-TMS Phase A | January 15, 2026</p>
+</footer>
+
+</body>
+</html>

@@ -28,9 +28,9 @@ export class PortalQuotesService {
     });
   }
 
-  async detail(tenantId: string, id: string) {
+  async detail(tenantId: string, companyId: string, id: string) {
     const quote = await this.prisma.quoteRequest.findFirst({
-      where: { id, tenantId, deletedAt: null },
+      where: { id, tenantId, companyId, deletedAt: null },
       include: { quote: true },
     });
     if (!quote) {
@@ -68,8 +68,8 @@ export class PortalQuotesService {
     });
   }
 
-  async accept(tenantId: string, id: string, dto: AcceptQuoteDto) {
-    const quote = await this.requireQuote(tenantId, id);
+  async accept(tenantId: string, companyId: string, id: string, dto: AcceptQuoteDto) {
+    const quote = await this.requireQuote(tenantId, companyId, id);
     if (quote.status !== QuoteRequestStatus.QUOTED && quote.status !== QuoteRequestStatus.SUBMITTED) {
       throw new BadRequestException('Quote cannot be accepted in current state');
     }
@@ -87,16 +87,16 @@ export class PortalQuotesService {
     });
   }
 
-  async decline(tenantId: string, id: string, dto: DeclineQuoteDto) {
-    await this.requireQuote(tenantId, id);
+  async decline(tenantId: string, companyId: string, id: string, dto: DeclineQuoteDto) {
+    await this.requireQuote(tenantId, companyId, id);
     return this.prisma.quoteRequest.update({
       where: { id },
       data: { status: QuoteRequestStatus.DECLINED, declinedAt: new Date(), declineReason: dto.reason },
     });
   }
 
-  async revision(tenantId: string, id: string, dto: RevisionRequestDto) {
-    const quote = await this.requireQuote(tenantId, id);
+  async revision(tenantId: string, companyId: string, id: string, dto: RevisionRequestDto) {
+    const quote = await this.requireQuote(tenantId, companyId, id);
     const customFields = ((quote.customFields as Prisma.JsonObject) ?? {}) as Record<string, unknown>;
     const revisions = (customFields.revisions as any[]) ?? [];
     revisions.push({ requestedAt: new Date().toISOString(), request: dto.request });
@@ -127,8 +127,10 @@ export class PortalQuotesService {
     };
   }
 
-  private async requireQuote(tenantId: string, id: string) {
-    const quote = await this.prisma.quoteRequest.findFirst({ where: { id, tenantId, deletedAt: null } });
+  private async requireQuote(tenantId: string, companyId: string, id: string) {
+    const quote = await this.prisma.quoteRequest.findFirst({
+      where: { id, tenantId, companyId, deletedAt: null },
+    });
     if (!quote) {
       throw new NotFoundException('Quote request not found');
     }

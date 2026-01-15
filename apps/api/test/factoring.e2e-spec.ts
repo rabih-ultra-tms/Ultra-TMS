@@ -5,6 +5,7 @@ import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma.service';
 import { JwtAuthGuard } from '../src/modules/auth/guards/jwt-auth.guard';
 import { FactoringStatus, NoaStatus, VerificationStatusEnum } from '../src/modules/factoring/dto/enums';
+import { createTestAppWithRole } from './helpers/test-app.helper';
 
 const TEST_TENANT = 'tenant-factoring';
 const TEST_USER = {
@@ -34,6 +35,12 @@ describe('Factoring API E2E', () => {
       .compile();
 
     app = moduleRef.createNestApplication();
+    app.use((req, _res, next) => {
+      req.user = TEST_USER;
+      req.headers['x-tenant-id'] = TEST_TENANT;
+      req.tenantId = TEST_TENANT;
+      next();
+    });
     app.setGlobalPrefix('api/v1');
     await app.init();
 
@@ -121,6 +128,29 @@ describe('Factoring API E2E', () => {
       .expect(200);
 
     expect(toggleRes.body.data.status).toBe('INACTIVE');
+  });
+
+  it('restricts factoring company creation to managers', async () => {
+    const accountingSetup = await createTestAppWithRole('tenant-factoring-rbac', 'user-accounting', 'accounting@factoring.test', 'ACCOUNTING');
+    const accountingApp = accountingSetup.app;
+
+    await request(accountingApp.getHttpServer())
+      .post('/api/v1/factoring-companies')
+      .send({ companyCode: 'FC-RBAC', name: 'RBAC Factors', verificationMethod: 'EMAIL' })
+      .expect(403);
+
+    await accountingApp.close();
+
+    const managerSetup = await createTestAppWithRole('tenant-factoring-rbac', 'user-factoring-manager', 'manager@factoring.test', 'FACTORING_MANAGER');
+    const managerApp = managerSetup.app;
+
+    await request(managerApp.getHttpServer())
+      .post('/api/v1/factoring-companies')
+      .send({ companyCode: 'FC-RBAC-2', name: 'RBAC Factors 2', verificationMethod: 'EMAIL' })
+      .expect(201);
+
+    await managerSetup.prisma.factoringCompany.deleteMany({ where: { tenantId: 'tenant-factoring-rbac' } });
+    await managerApp.close();
   });
 
   it('runs NOA lifecycle: create, verify, release, auto-expire', async () => {

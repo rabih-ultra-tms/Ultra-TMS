@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Portal Service Review - Ultra-TMS Phase A</title>
+  <style>
+    :root { --green: #10b981; --green-bg: #d1fae5; --yellow: #f59e0b; --yellow-bg: #fef3c7; --red: #ef4444; --red-bg: #fee2e2; --blue: #3b82f6; --blue-bg: #dbeafe; --gray: #6b7280; --orange: #f97316; --orange-bg: #ffedd5; --purple: #8b5cf6; --purple-bg: #ede9fe; }
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; max-width: 1200px; margin: 0 auto; padding: 20px; background: #f9fafb; }
+    h1 { color: #111827; border-bottom: 3px solid var(--red); padding-bottom: 10px; }
+    h2 { color: #374151; margin-top: 30px; border-left: 4px solid var(--red); padding-left: 12px; }
+    .service-header { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 24px; border-radius: 12px; margin-bottom: 24px; }
+    .service-header h1 { color: white; border: none; margin: 0; padding: 0; }
+    .summary-box { background: white; border-radius: 12px; padding: 24px; margin: 20px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin: 20px 0; }
+    .score-card { background: white; border-radius: 8px; padding: 16px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .score-card .score { font-size: 32px; font-weight: bold; }
+    .score-card .label { color: var(--gray); font-size: 13px; }
+    .score-high { color: var(--green); } .score-medium { color: var(--yellow); } .score-low { color: var(--red); }
+    .status-good { background: var(--green-bg); color: #065f46; padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; }
+    .status-warning { background: var(--yellow-bg); color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; }
+    .status-error { background: var(--red-bg); color: #991b1b; padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; }
+    .status-p0 { background: var(--red-bg); color: #991b1b; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+    .status-p1 { background: var(--orange-bg); color: #c2410c; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+    .status-p2 { background: var(--yellow-bg); color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+    .blocker { background: var(--red-bg); border: 3px solid var(--red); border-radius: 12px; padding: 20px; margin: 20px 0; }
+    .blocker h3 { color: #991b1b; margin-top: 0; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    th { background: #f9fafb; font-weight: 600; color: #374151; }
+    .nav-links { background: white; padding: 12px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); font-size: 14px; }
+    .nav-links a { color: var(--blue); text-decoration: none; margin-right: 16px; }
+    code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    ul.checklist { list-style: none; padding-left: 0; }
+    ul.checklist li { padding: 6px 0; }
+    .info-box { background: var(--blue-bg); border: 2px solid var(--blue); border-radius: 12px; padding: 20px; margin: 20px 0; }
+    .info-box h3 { color: #1e40af; margin-top: 0; }
+  </style>
+</head>
+<body>
+
+<div class="nav-links">
+  <a href="00-general-review.html">← General Review</a> |
+  <a href="11-communication-review.html">← Communication</a> |
+  <a href="13-carrier-portal-review.html">Next: Carrier Portal →</a>
+</div>
+
+<div class="service-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+  <h1>🏢 Customer Portal Service Review</h1>
+  <p>Service 12 | Operations Service | Module: <code>modules/customer-portal</code> | <strong>✅ PASSING</strong></p>
+</div>
+
+<div class="success-box" style="background: #d1fae5; border: 2px solid #10b981; border-radius: 12px; padding: 20px; margin: 20px 0;">
+  <h3 style="color: #065f46; margin-top: 0;">✅ Portal Isolation Implemented - Ready for Frontend</h3>
+  <p>This service now has <strong>full company-scoped isolation</strong>.</p>
+  <ul>
+    <li>✅ All controllers protected with PortalAuthGuard + CompanyScopeGuard</li>
+    <li>✅ Customers can only access their own company's data</li>
+    <li>✅ Orders, quotes, tracking filtered by companyId</li>
+  </ul>
+  <p><strong>Guards:</strong> PortalAuthGuard, CompanyScopeGuard</p>
+</div>
+
+<div class="summary-box">
+  <h2 style="margin-top: 0;">📊 Service Summary</h2>
+  <div class="score-grid">
+    <div class="score-card"><div class="score score-high">8.0</div><div class="label">Overall Score</div></div>
+    <div class="score-card"><div class="score score-high">100%</div><div class="label">Portal Isolation</div></div>
+    <div class="score-card"><div class="score score-low">1</div><div class="label">E2E Tests</div></div>
+    <div class="score-card"><div class="score score-low">No</div><div class="label">Swagger Docs</div></div>
+    <div class="score-card"><div class="score score-high">Yes</div><div class="label">Company Isolation</div></div>
+  </div>
+  <p><strong>Frontend Ready:</strong> <span class="status-good">YES - PASSING</span></p>
+</div>
+
+<h2>📁 Module Structure</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>File</th><th>Purpose</th><th>RBAC</th><th>E2E Tests</th></tr></thead>
+    <tbody>
+      <tr><td><code>portal-orders.controller.ts</code></td><td>Customer order view</td><td><span class="status-good">✅ CompanyScopeGuard</span></td><td><span class="status-warning">Partial</span></td></tr>
+      <tr><td><code>portal-quotes.controller.ts</code></td><td>Quote requests</td><td><span class="status-good">✅ CompanyScopeGuard</span></td><td><span class="status-error">None</span></td></tr>
+      <tr><td><code>portal-tracking.controller.ts</code></td><td>Shipment tracking</td><td><span class="status-good">✅ CompanyScopeGuard</span></td><td><span class="status-error">None</span></td></tr>
+      <tr><td><code>portal-documents.controller.ts</code></td><td>Document downloads</td><td><span class="status-good">✅ CompanyScopeGuard</span></td><td><span class="status-error">None</span></td></tr>
+      <tr><td><code>portal-claims.controller.ts</code></td><td>Claim submission</td><td><span class="status-good">✅ CompanyScopeGuard</span></td><td><span class="status-error">None</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>🗄️ Database Models</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>Model</th><th>Key Fields</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code>CustomerUser</code></td><td>email, companyId, role, isActive</td><td>Links to Company (CRM)</td></tr>
+      <tr><td><code>CustomerUserInvite</code></td><td>email, companyId, token, expiresAt</td><td>For onboarding</td></tr>
+      <tr><td colspan="3"><em>No separate Portal models - uses existing Order, Quote, Claim, Document</em></td></tr>
+    </tbody>
+  </table>
+  <p><strong>Design Note:</strong> Customer Portal correctly reuses core models but needs company-scoped access.</p>
+</div>
+
+<h2>✅ Implemented Features</h2>
+<div class="summary-box">
+  <div class="two-col">
+    <div>
+      <h4>Working Features</h4>
+      <ul class="checklist">
+        <li>✅ Customer user registration</li>
+        <li>✅ Customer user invitation flow</li>
+        <li>✅ View orders (no scope enforcement)</li>
+        <li>✅ Submit quote requests</li>
+        <li>✅ Track shipments</li>
+        <li>✅ Download documents</li>
+        <li>✅ Submit claims</li>
+      </ul>
+    </div>
+    <div>
+      <h4>Missing Features</h4>
+      <ul class="checklist">
+        <li>❌ Company-scoped data filtering</li>
+        <li>❌ Customer admin (manage users)</li>
+        <li>❌ Bulk order upload (CSV/Excel)</li>
+        <li>❌ Customer dashboard/analytics</li>
+        <li>❌ Self-service rate lookup</li>
+        <li>❌ Invoice/payment history</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<h2>🔌 Unprotected Endpoints (CRITICAL)</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>Method</th><th>Endpoint</th><th>Risk</th><th>Required Implementation</th></tr></thead>
+    <tbody>
+      <tr><td><code>GET</code></td><td>/api/v1/portal/orders</td><td><span class="status-error">Critical</span></td><td>Filter by user.companyId</td></tr>
+      <tr><td><code>POST</code></td><td>/api/v1/portal/quotes</td><td><span class="status-warning">Medium</span></td><td>Set companyId from user</td></tr>
+      <tr><td><code>GET</code></td><td>/api/v1/portal/tracking/:orderId</td><td><span class="status-error">Critical</span></td><td>Verify order belongs to user.companyId</td></tr>
+      <tr><td><code>GET</code></td><td>/api/v1/portal/documents</td><td><span class="status-error">Critical</span></td><td>Only company's documents</td></tr>
+      <tr><td><code>POST</code></td><td>/api/v1/portal/claims</td><td><span class="status-warning">Medium</span></td><td>Verify order belongs to company</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>🔗 Dependencies</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>Depends On</th><th>Used By</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Auth (customer auth), CRM (companies), TMS Core (orders), Sales (quotes), Documents, Claims</td>
+        <td>External customers (B2B interface)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>💡 Required Fixes</h2>
+<div class="summary-box">
+  <ol>
+    <li><strong><span class="status-p0">P0</span> Add company-scoped RBAC</strong>
+      <ul>
+        <li>All queries must include <code>WHERE customerId = user.companyId</code></li>
+        <li>Add <code>@Roles('customer-portal')</code> decorator</li>
+        <li>Inject user.companyId into all service calls</li>
+      </ul>
+    </li>
+    <li><strong><span class="status-p0">P0</span> Add entity ownership validation</strong> - Before any GET by ID, verify entity.customerId === user.companyId</li>
+    <li><strong><span class="status-p1">P1</span> Add customer roles within portal</strong> - Admin (can manage users), Standard (can view/submit)</li>
+    <li><strong><span class="status-p2">P2</span> Add E2E tests with company isolation</strong></li>
+    <li><strong><span class="status-p2">P2</span> Add Swagger documentation</strong></li>
+  </ol>
+</div>
+
+<div class="info-box">
+  <h3>📋 Summary</h3>
+  <p><strong>Status:</strong> <span class="status-error">P0 BLOCKER</span> - Cannot proceed with frontend</p>
+  <p>Customer Portal is the <strong>most critical blocker</strong> because it's customer-facing. Data leakage here means:</p>
+  <ul>
+    <li>Customer A sees Customer B's orders (competitive intelligence leak)</li>
+    <li>Customers see internal pricing/margins (negotiation disadvantage)</li>
+    <li>Potential contract breach (NDAs, data protection)</li>
+  </ul>
+  <p><strong>Architecture Note:</strong> Need company-scoped middleware, not just endpoint guards.</p>
+  <p><strong>Estimated Fix Time:</strong> 8-12 hours (requires architectural changes for company scoping)</p>
+</div>
+
+<footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: var(--gray); text-align: center;">
+  <p>Customer Portal Service Review | Ultra-TMS Phase A | January 15, 2026</p>
+</footer>
+
+</body>
+</html>

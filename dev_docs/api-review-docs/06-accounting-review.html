@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Accounting Service Review - Ultra-TMS Phase A</title>
+  <style>
+    :root { --green: #10b981; --green-bg: #d1fae5; --yellow: #f59e0b; --yellow-bg: #fef3c7; --red: #ef4444; --red-bg: #fee2e2; --blue: #3b82f6; --blue-bg: #dbeafe; --gray: #6b7280; --orange: #f97316; --orange-bg: #ffedd5; --purple: #8b5cf6; --purple-bg: #ede9fe; }
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; max-width: 1200px; margin: 0 auto; padding: 20px; background: #f9fafb; }
+    h1 { color: #111827; border-bottom: 3px solid var(--green); padding-bottom: 10px; }
+    h2 { color: #374151; margin-top: 30px; border-left: 4px solid var(--green); padding-left: 12px; }
+    .service-header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 24px; border-radius: 12px; margin-bottom: 24px; }
+    .service-header h1 { color: white; border: none; margin: 0; padding: 0; }
+    .summary-box { background: white; border-radius: 12px; padding: 24px; margin: 20px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin: 20px 0; }
+    .score-card { background: white; border-radius: 8px; padding: 16px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .score-card .score { font-size: 32px; font-weight: bold; }
+    .score-card .label { color: var(--gray); font-size: 13px; }
+    .score-high { color: var(--green); } .score-medium { color: var(--yellow); } .score-low { color: var(--red); }
+    .status-good { background: var(--green-bg); color: #065f46; padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; }
+    .status-warning { background: var(--yellow-bg); color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; }
+    .status-error { background: var(--red-bg); color: #991b1b; padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; }
+    .status-p0 { background: var(--red-bg); color: #991b1b; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+    .status-p1 { background: var(--orange-bg); color: #c2410c; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+    .status-p2 { background: var(--yellow-bg); color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    th { background: #f9fafb; font-weight: 600; color: #374151; }
+    .nav-links { background: white; padding: 12px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); font-size: 14px; }
+    .nav-links a { color: var(--blue); text-decoration: none; margin-right: 16px; }
+    .warning-box { background: var(--yellow-bg); border: 2px solid var(--yellow); border-radius: 12px; padding: 20px; margin: 20px 0; }
+    .warning-box h3 { color: #92400e; margin-top: 0; }
+    .success-box { background: var(--green-bg); border: 2px solid var(--green); border-radius: 12px; padding: 20px; margin: 20px 0; }
+    .success-box h3 { color: #065f46; margin-top: 0; }
+    code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    ul.checklist { list-style: none; padding-left: 0; }
+    ul.checklist li { padding: 6px 0; }
+  </style>
+</head>
+<body>
+
+<div class="nav-links">
+  <a href="00-general-review.html">← General Review</a> |
+  <a href="05-carrier-review.html">← Carrier</a> |
+  <a href="07-load-board-review.html">Next: Load Board →</a>
+</div>
+
+<div class="service-header">
+  <h1>💰 Accounting Service Review</h1>
+  <p>Service 06 | Core Service | Module: <code>modules/accounting</code> | <strong>PARTIAL PASS</strong></p>
+</div>
+
+<div class="warning-box">
+  <h3>⚠️ P1 Issue: Low RBAC Coverage (~10%)</h3>
+  <p>Accounting has RBAC on invoice approval but most endpoints are unprotected. Financial data requires strict role control.</p>
+</div>
+
+<div class="summary-box">
+  <h2 style="margin-top: 0;">📊 Service Summary</h2>
+  <div class="score-grid">
+    <div class="score-card"><div class="score score-medium">6.5</div><div class="label">Overall Score</div></div>
+    <div class="score-card"><div class="score score-low">10%</div><div class="label">RBAC Coverage</div></div>
+    <div class="score-card"><div class="score score-medium">3</div><div class="label">E2E Tests</div></div>
+    <div class="score-card"><div class="score score-low">No</div><div class="label">Swagger Docs</div></div>
+    <div class="score-card"><div class="score score-high">Yes</div><div class="label">Tenant Isolation</div></div>
+  </div>
+  <p><strong>Frontend Ready:</strong> <span class="status-warning">PARTIAL</span> - Needs RBAC completion before AR/AP screens</p>
+</div>
+
+<h2>📁 Module Structure</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>File</th><th>Purpose</th><th>RBAC</th><th>E2E Tests</th></tr></thead>
+    <tbody>
+      <tr><td><code>invoices.controller.ts</code></td><td>Customer invoices (AR)</td><td><span class="status-warning">Partial</span></td><td><span class="status-good">Yes</span></td></tr>
+      <tr><td><code>carrier-bills.controller.ts</code></td><td>Carrier invoices (AP)</td><td><span class="status-error">No</span></td><td><span class="status-warning">Minimal</span></td></tr>
+      <tr><td><code>payments.controller.ts</code></td><td>Payment tracking</td><td><span class="status-error">No</span></td><td><span class="status-warning">Minimal</span></td></tr>
+      <tr><td><code>gl-accounts.controller.ts</code></td><td>Chart of accounts</td><td><span class="status-error">No</span></td><td><span class="status-error">None</span></td></tr>
+      <tr><td><code>journal-entries.controller.ts</code></td><td>GL journal entries</td><td><span class="status-error">No</span></td><td><span class="status-error">None</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>🗄️ Database Models</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>Model</th><th>Key Fields</th><th>Compliance</th></tr></thead>
+    <tbody>
+      <tr><td><code>Invoice</code></td><td>invoiceNumber, orderId, customerId, status, totalAmount, dueDate</td><td><span class="status-good">100%</span></td></tr>
+      <tr><td><code>InvoiceItem</code></td><td>description, quantity, rate, amount, glAccountId</td><td><span class="status-good">100%</span></td></tr>
+      <tr><td><code>CarrierBill</code></td><td>billNumber, loadId, carrierId, amount, status</td><td><span class="status-good">100%</span></td></tr>
+      <tr><td><code>Payment</code></td><td>invoiceId, amount, paymentDate, method, referenceNumber</td><td><span class="status-good">100%</span></td></tr>
+      <tr><td><code>GLAccount</code></td><td>accountNumber, name, type, category, balance</td><td><span class="status-good">100%</span></td></tr>
+      <tr><td><code>JournalEntry</code></td><td>entryNumber, date, debitAccount, creditAccount, amount</td><td><span class="status-good">100%</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>✅ Implemented Features</h2>
+<div class="summary-box">
+  <div class="two-col">
+    <div>
+      <h4>Working Features (AR)</h4>
+      <ul class="checklist">
+        <li>✅ Invoice creation from orders</li>
+        <li>✅ Invoice line items with GL coding</li>
+        <li>✅ Invoice approval workflow</li>
+        <li>✅ Invoice PDF generation</li>
+        <li>✅ Payment tracking</li>
+        <li>✅ Aging reports (AR aging)</li>
+        <li>✅ Invoice status management</li>
+      </ul>
+    </div>
+    <div>
+      <h4>Working Features (AP)</h4>
+      <ul class="checklist">
+        <li>✅ Carrier bill creation from loads</li>
+        <li>✅ Bill approval workflow</li>
+        <li>✅ Carrier payment tracking</li>
+        <li>✅ AP aging report</li>
+        <li>✅ GL account management</li>
+        <li>✅ Journal entry creation</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<h2>🔌 Key Endpoints</h2>
+<div class="summary-box">
+  <h4>Accounts Receivable (AR)</h4>
+  <table>
+    <thead><tr><th>Method</th><th>Endpoint</th><th>Status</th><th>Required Role</th></tr></thead>
+    <tbody>
+      <tr><td><code>GET</code></td><td>/api/v1/invoices</td><td><span class="status-error">Unprotected</span></td><td>ar-clerk, accounting, admin</td></tr>
+      <tr><td><code>POST</code></td><td>/api/v1/invoices/from-order/:orderId</td><td><span class="status-error">Unprotected</span></td><td>ar-clerk, accounting</td></tr>
+      <tr><td><code>POST</code></td><td>/api/v1/invoices/:id/approve</td><td><span class="status-good">Has @Roles</span></td><td>ar-mgr, accounting</td></tr>
+      <tr><td><code>POST</code></td><td>/api/v1/invoices/:id/send</td><td><span class="status-error">Unprotected</span></td><td>ar-clerk, ar-mgr</td></tr>
+      <tr><td><code>POST</code></td><td>/api/v1/payments</td><td><span class="status-error">Unprotected</span></td><td>ar-clerk, accounting</td></tr>
+    </tbody>
+  </table>
+  
+  <h4>Accounts Payable (AP)</h4>
+  <table>
+    <thead><tr><th>Method</th><th>Endpoint</th><th>Status</th><th>Required Role</th></tr></thead>
+    <tbody>
+      <tr><td><code>GET</code></td><td>/api/v1/carrier-bills</td><td><span class="status-error">Unprotected</span></td><td>ap-clerk, accounting, admin</td></tr>
+      <tr><td><code>POST</code></td><td>/api/v1/carrier-bills/:id/approve</td><td><span class="status-good">Has @Roles</span></td><td>ap-mgr, accounting</td></tr>
+      <tr><td><code>POST</code></td><td>/api/v1/carrier-bills/:id/schedule-payment</td><td><span class="status-error">Unprotected</span></td><td>ap-mgr, accounting</td></tr>
+    </tbody>
+  </table>
+  
+  <h4>General Ledger</h4>
+  <table>
+    <thead><tr><th>Method</th><th>Endpoint</th><th>Status</th><th>Required Role</th></tr></thead>
+    <tbody>
+      <tr><td><code>GET</code></td><td>/api/v1/gl-accounts</td><td><span class="status-error">Unprotected</span></td><td>accounting, admin</td></tr>
+      <tr><td><code>POST</code></td><td>/api/v1/journal-entries</td><td><span class="status-error">Unprotected</span></td><td>accounting (high level)</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>🔗 Dependencies</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>Depends On</th><th>Used By</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Auth, TMS Core (orders/loads), CRM (customers), Carrier</td>
+        <td>Commission (commission calc), Analytics (financial reports), Factoring</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>💡 Recommendations</h2>
+<div class="summary-box">
+  <ol>
+    <li><strong><span class="status-p1">P1</span> Complete RBAC for all endpoints</strong>
+      <ul>
+        <li>AR endpoints: <code>@Roles('ar-clerk', 'ar-mgr', 'accounting')</code></li>
+        <li>AP endpoints: <code>@Roles('ap-clerk', 'ap-mgr', 'accounting')</code></li>
+        <li>GL endpoints: <code>@Roles('accounting', 'controller')</code></li>
+      </ul>
+    </li>
+    <li><strong><span class="status-p1">P1</span> Add audit logging</strong> - All financial transactions must be logged.</li>
+    <li><strong><span class="status-p2">P2</span> Add E2E tests for GL</strong> - Journal entries untested.</li>
+    <li><strong><span class="status-p2">P2</span> Add Swagger documentation</strong></li>
+    <li><strong><span class="status-p3">P3</span> QuickBooks/Xero integration</strong> - Export capability for external accounting.</li>
+  </ol>
+</div>
+
+<div class="success-box">
+  <h3>📋 Summary</h3>
+  <p><strong>Status:</strong> <span class="status-warning">PARTIAL PASS</span> - RBAC incomplete but approval endpoints protected</p>
+  <p>Accounting has a solid foundation with proper GL structure and invoice/bill workflows. The main gap is incomplete RBAC which is rated P1 (not P0) because approval endpoints ARE protected.</p>
+  <p><strong>Key Strength:</strong> Double-entry bookkeeping model with GL coding</p>
+  <p><strong>Verdict:</strong> Can start basic frontend but must complete RBAC before production</p>
+  <p><strong>Estimated Fix Time:</strong> 4-5 hours for RBAC + 3 hours for E2E tests</p>
+</div>
+
+<footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: var(--gray); text-align: center;">
+  <p>Accounting Service Review | Ultra-TMS Phase A | January 15, 2026</p>
+</footer>
+
+</body>
+</html>

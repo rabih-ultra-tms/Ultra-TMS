@@ -4,6 +4,7 @@ import { Test } from '@nestjs/testing';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma.service';
 import { JwtAuthGuard } from '../src/modules/auth/guards/jwt-auth.guard';
+import { createTestAppWithRole } from './helpers/test-app.helper';
 
 const TEST_TENANT = 'tenant-claims';
 const TEST_USER = {
@@ -33,6 +34,12 @@ describe('Claims API E2E', () => {
       .compile();
 
     app = moduleRef.createNestApplication();
+    app.use((req, _res, next) => {
+      req.user = TEST_USER;
+      req.headers['x-tenant-id'] = TEST_TENANT;
+      req.tenantId = TEST_TENANT;
+      next();
+    });
     app.setGlobalPrefix('api/v1');
     await app.init();
 
@@ -155,5 +162,69 @@ describe('Claims API E2E', () => {
       .get('/api/v1/claims/reports/overdue')
       .expect(200);
     expect(overdue.body.data.overdue).toBeGreaterThanOrEqual(0);
+  });
+
+  it('enforces RBAC on claim updates and deletes', async () => {
+    const { app: dispatcherApp, prisma: dispatcherPrisma } = await createTestAppWithRole(
+      TEST_TENANT,
+      'user-dispatcher',
+      'dispatcher@test.com',
+      'DISPATCHER',
+    );
+
+    const claim = await dispatcherPrisma.claim.create({
+      data: {
+        tenantId: TEST_TENANT,
+        claimNumber: `CLM-${Date.now()}`,
+        claimType: 'CARGO_DAMAGE',
+        description: 'RBAC claim',
+        incidentDate: new Date(),
+        claimedAmount: 250,
+        claimantName: 'RBAC Claimant',
+        status: 'DRAFT',
+      },
+    });
+
+    await request(dispatcherApp.getHttpServer())
+      .put(`/api/v1/claims/${claim.id}`)
+      .send({ description: 'Updated by dispatcher' })
+      .expect(403);
+
+    await request(dispatcherApp.getHttpServer())
+      .delete(`/api/v1/claims/${claim.id}`)
+      .expect(403);
+
+    await dispatcherApp.close();
+
+    const { app: managerApp, prisma: managerPrisma } = await createTestAppWithRole(
+      TEST_TENANT,
+      'user-claims-manager',
+      'claims.manager@test.com',
+      'CLAIMS_MANAGER',
+    );
+
+    const claimForManager = await managerPrisma.claim.create({
+      data: {
+        tenantId: TEST_TENANT,
+        claimNumber: `CLM-${Date.now()}-M`,
+        claimType: 'CARGO_DAMAGE',
+        description: 'Manager claim',
+        incidentDate: new Date(),
+        claimedAmount: 300,
+        claimantName: 'Manager Claimant',
+        status: 'SUBMITTED',
+      },
+    });
+
+    await request(managerApp.getHttpServer())
+      .put(`/api/v1/claims/${claimForManager.id}`)
+      .send({ description: 'Updated by manager' })
+      .expect(200);
+
+    await request(managerApp.getHttpServer())
+      .delete(`/api/v1/claims/${claimForManager.id}`)
+      .expect(200);
+
+    await managerApp.close();
   });
 });

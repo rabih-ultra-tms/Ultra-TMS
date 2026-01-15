@@ -6,3 +6,6 @@ export * from './create-insurance.dto';
 export * from './carrier-query.dto';
 export * from './create-document.dto';
 export * from './onboard-carrier.dto';
+export * from './carrier-response.dto';
+export * from './driver-response.dto';
+export * from './banking-info-response.dto';

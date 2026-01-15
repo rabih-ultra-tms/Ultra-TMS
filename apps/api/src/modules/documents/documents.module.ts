@@ -10,6 +10,7 @@ import {
   DocumentTemplatesController,
   DocumentFoldersController,
 } from './controllers';
+import { DocumentAccessGuard } from './guards/document-access.guard';
 
 @Module({
   controllers: [
@@ -22,6 +23,7 @@ import {
     DocumentsService,
     DocumentTemplatesService,
     DocumentFoldersService,
+    DocumentAccessGuard,
   ],
   exports: [DocumentsService, DocumentTemplatesService, DocumentFoldersService],
 })

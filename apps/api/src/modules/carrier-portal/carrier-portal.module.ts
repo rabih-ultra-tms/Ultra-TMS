@@ -3,6 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import type { JwtSignOptions } from '@nestjs/jwt';
 import { PrismaService } from '../../prisma.service';
 import { CarrierPortalAuthGuard } from './guards/carrier-portal-auth.guard';
+import { CarrierScopeGuard } from './guards/carrier-scope.guard';
 import { CarrierPortalAuthController } from './auth/carrier-portal-auth.controller';
 import { CarrierPortalAuthService } from './auth/carrier-portal-auth.service';
 import { CarrierPortalDashboardController } from './dashboard/carrier-portal-dashboard.controller';
@@ -40,6 +41,7 @@ import { CarrierPortalUsersService } from './users/carrier-portal-users.service'
   providers: [
     PrismaService,
     CarrierPortalAuthGuard,
+    CarrierScopeGuard,
     CarrierPortalAuthService,
     CarrierPortalDashboardService,
     CarrierPortalLoadsService,

@@ -1,10 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma.service';
 import { CreateDocumentDto, UpdateDocumentDto } from '../dto';
+import type { IStorageService } from '../../storage/storage.interface';
+import { STORAGE_SERVICE } from '../../storage/storage.module';
 
 @Injectable()
 export class DocumentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(STORAGE_SERVICE) private readonly storageService: IStorageService,
+  ) {}
 
   async create(tenantId: string, dto: CreateDocumentDto, userId?: string) {
     return this.prisma.document.create({
@@ -121,6 +126,28 @@ export class DocumentsService {
     }
 
     return document;
+  }
+
+  async getDownloadUrl(tenantId: string, id: string) {
+    const document = await this.prisma.document.findFirst({
+      where: { id, tenantId, deletedAt: null },
+    });
+
+    if (!document) {
+      throw new NotFoundException('Document not found');
+    }
+
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+    const downloadUrl = await this.storageService.getSignedUrl(document.filePath, {
+      expiresIn: 15 * 60,
+    });
+
+    return {
+      id: document.id,
+      name: document.name,
+      downloadUrl,
+      expiresAt,
+    };
   }
 
   async update(tenantId: string, id: string, dto: UpdateDocumentDto) {

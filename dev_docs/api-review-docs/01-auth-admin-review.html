@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auth &amp; Admin Service Review - Ultra-TMS Phase A</title>
+  <style>
+    :root {
+      --green: #10b981; --green-bg: #d1fae5;
+      --yellow: #f59e0b; --yellow-bg: #fef3c7;
+      --red: #ef4444; --red-bg: #fee2e2;
+      --blue: #3b82f6; --blue-bg: #dbeafe;
+      --gray: #6b7280; --gray-bg: #f3f4f6;
+      --purple: #8b5cf6; --purple-bg: #ede9fe;
+      --orange: #f97316; --orange-bg: #ffedd5;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; max-width: 1200px; margin: 0 auto; padding: 20px; background: #f9fafb; }
+    h1 { color: #111827; border-bottom: 3px solid var(--blue); padding-bottom: 10px; }
+    h2 { color: #374151; margin-top: 30px; border-left: 4px solid var(--blue); padding-left: 12px; }
+    h3 { color: #4b5563; }
+    .service-header { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; padding: 24px; border-radius: 12px; margin-bottom: 24px; }
+    .service-header h1 { color: white; border: none; margin: 0; padding: 0; }
+    .service-header p { margin: 10px 0 0 0; opacity: 0.9; }
+    .summary-box { background: white; border-radius: 12px; padding: 24px; margin: 20px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin: 20px 0; }
+    .score-card { background: white; border-radius: 8px; padding: 16px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .score-card .score { font-size: 32px; font-weight: bold; }
+    .score-card .label { color: var(--gray); font-size: 13px; }
+    .score-high { color: var(--green); }
+    .score-medium { color: var(--yellow); }
+    .score-low { color: var(--red); }
+    .status-good { background: var(--green-bg); color: #065f46; padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; }
+    .status-warning { background: var(--yellow-bg); color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; }
+    .status-error { background: var(--red-bg); color: #991b1b; padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; }
+    .status-p0 { background: var(--red-bg); color: #991b1b; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+    .status-p1 { background: var(--orange-bg); color: #c2410c; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+    .status-p2 { background: var(--yellow-bg); color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+    .status-p3 { background: var(--blue-bg); color: #1e40af; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    th { background: #f9fafb; font-weight: 600; color: #374151; }
+    .nav-links { background: white; padding: 12px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); font-size: 14px; }
+    .nav-links a { color: var(--blue); text-decoration: none; margin-right: 16px; }
+    .blocker-box { background: var(--red-bg); border: 2px solid var(--red); border-radius: 12px; padding: 20px; margin: 20px 0; }
+    .blocker-box h3 { color: var(--red); margin-top: 0; }
+    .warning-box { background: var(--yellow-bg); border: 2px solid var(--yellow); border-radius: 12px; padding: 20px; margin: 20px 0; }
+    .warning-box h3 { color: #92400e; margin-top: 0; }
+    .success-box { background: var(--green-bg); border: 2px solid var(--green); border-radius: 12px; padding: 20px; margin: 20px 0; }
+    .success-box h3 { color: #065f46; margin-top: 0; }
+    code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    ul.checklist { list-style: none; padding-left: 0; }
+    ul.checklist li { padding: 6px 0; }
+    .endpoint-list { font-size: 14px; }
+    .endpoint-list code { display: inline-block; min-width: 80px; }
+  </style>
+</head>
+<body>
+
+<div class="nav-links">
+  <a href="00-general-review.html">← Back to General Review</a> |
+  <a href="02-crm-review.html">Next: CRM →</a>
+</div>
+
+<div class="service-header">
+  <h1>🔐 Auth &amp; Admin Service Review</h1>
+  <p>Service 01 | Foundation Service | Module: <code>modules/auth</code></p>
+</div>
+
+<div class="summary-box">
+  <h2 style="margin-top: 0;">📊 Service Summary</h2>
+  <div class="score-grid">
+    <div class="score-card">
+      <div class="score score-medium">7.0</div>
+      <div class="label">Overall Score</div>
+    </div>
+    <div class="score-card">
+      <div class="score score-medium">40%</div>
+      <div class="label">RBAC Coverage</div>
+    </div>
+    <div class="score-card">
+      <div class="score score-low">0</div>
+      <div class="label">E2E Tests</div>
+    </div>
+    <div class="score-card">
+      <div class="score score-low">No</div>
+      <div class="label">Swagger Docs</div>
+    </div>
+    <div class="score-card">
+      <div class="score score-high">Yes</div>
+      <div class="label">Tenant Isolation</div>
+    </div>
+  </div>
+  <p><strong>Frontend Ready:</strong> <span class="status-warning">PARTIAL</span> - Missing complete RBAC and E2E tests</p>
+</div>
+
+<!-- Issues -->
+<div class="warning-box">
+  <h3>⚠️ Issues Found</h3>
+  <table>
+    <thead><tr><th>Priority</th><th>Issue</th><th>Impact</th><th>Effort</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="status-p1">P1</span></td>
+        <td>Incomplete RBAC coverage (~40%)</td>
+        <td>Endpoints accessible without role check</td>
+        <td>4 hours</td>
+      </tr>
+      <tr>
+        <td><span class="status-p1">P1</span></td>
+        <td>UPPERCASE role names (ADMIN, SUPER_ADMIN)</td>
+        <td>Inconsistent with other services</td>
+        <td>2 hours</td>
+      </tr>
+      <tr>
+        <td><span class="status-p1">P1</span></td>
+        <td>No E2E tests for authentication flows</td>
+        <td>Cannot verify login/logout/refresh works</td>
+        <td>1 day</td>
+      </tr>
+      <tr>
+        <td><span class="status-p2">P2</span></td>
+        <td>Missing @ApiTags on controllers</td>
+        <td>Not documented in Swagger</td>
+        <td>2 hours</td>
+      </tr>
+      <tr>
+        <td><span class="status-p3">P3</span></td>
+        <td>JWT expiry too long (recommend 15min)</td>
+        <td>Security best practice</td>
+        <td>1 hour</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Module Structure -->
+<h2>📁 Module Structure</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>File</th><th>Purpose</th><th>RBAC</th><th>Swagger</th></tr></thead>
+    <tbody>
+      <tr><td><code>auth.controller.ts</code></td><td>Login, logout, refresh token</td><td><span class="status-error">No</span></td><td><span class="status-error">No</span></td></tr>
+      <tr><td><code>users.controller.ts</code></td><td>User CRUD operations</td><td><span class="status-good">Yes</span></td><td><span class="status-error">No</span></td></tr>
+      <tr><td><code>roles.controller.ts</code></td><td>Role management</td><td><span class="status-good">Yes</span></td><td><span class="status-error">No</span></td></tr>
+      <tr><td><code>sessions.controller.ts</code></td><td>Session management</td><td><span class="status-error">No</span></td><td><span class="status-error">No</span></td></tr>
+      <tr><td><code>password.controller.ts</code></td><td>Password reset flow</td><td><span class="status-error">No</span></td><td><span class="status-error">No</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Database Models -->
+<h2>🗄️ Database Models</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>Model</th><th>Fields</th><th>Migration Support</th><th>Soft Delete</th></tr></thead>
+    <tbody>
+      <tr><td><code>Tenant</code></td><td>name, slug, domain, settings, features, branding, status</td><td><span class="status-good">Yes</span></td><td><span class="status-good">Yes</span></td></tr>
+      <tr><td><code>User</code></td><td>email, passwordHash, firstName, lastName, status, roleId</td><td><span class="status-good">Yes</span></td><td><span class="status-good">Yes</span></td></tr>
+      <tr><td><code>Role</code></td><td>name, description, permissions, isSystem</td><td><span class="status-good">Yes</span></td><td><span class="status-good">Yes</span></td></tr>
+      <tr><td><code>Session</code></td><td>userId, refreshTokenHash, userAgent, ipAddress, expiresAt</td><td><span class="status-good">Yes</span></td><td><span class="status-warning">N/A</span></td></tr>
+      <tr><td><code>PasswordResetToken</code></td><td>userId, tokenHash, expiresAt, usedAt</td><td><span class="status-good">Yes</span></td><td><span class="status-warning">N/A</span></td></tr>
+    </tbody>
+  </table>
+  <p><strong>Schema Compliance:</strong> <span class="status-good">100%</span> - All models have required fields (tenantId, externalId, sourceSystem, customFields, timestamps)</p>
+</div>
+
+<!-- Endpoints Analysis -->
+<h2>🔌 Endpoints Analysis</h2>
+<div class="summary-box">
+  <h4>Authentication Endpoints</h4>
+  <div class="endpoint-list">
+    <table>
+      <thead><tr><th>Method</th><th>Endpoint</th><th>Purpose</th><th>RBAC</th></tr></thead>
+      <tbody>
+        <tr><td><code>POST</code></td><td>/api/v1/auth/login</td><td>User login</td><td><span class="status-good">Public</span></td></tr>
+        <tr><td><code>POST</code></td><td>/api/v1/auth/logout</td><td>User logout</td><td><span class="status-warning">Auth only</span></td></tr>
+        <tr><td><code>POST</code></td><td>/api/v1/auth/refresh</td><td>Refresh token</td><td><span class="status-warning">Auth only</span></td></tr>
+        <tr><td><code>GET</code></td><td>/api/v1/auth/me</td><td>Current user profile</td><td><span class="status-warning">Auth only</span></td></tr>
+        <tr><td><code>POST</code></td><td>/api/v1/auth/forgot-password</td><td>Request password reset</td><td><span class="status-good">Public</span></td></tr>
+        <tr><td><code>POST</code></td><td>/api/v1/auth/reset-password</td><td>Reset password</td><td><span class="status-good">Public</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  
+  <h4>User Management Endpoints</h4>
+  <div class="endpoint-list">
+    <table>
+      <thead><tr><th>Method</th><th>Endpoint</th><th>Purpose</th><th>RBAC</th></tr></thead>
+      <tbody>
+        <tr><td><code>GET</code></td><td>/api/v1/users</td><td>List users</td><td><span class="status-good">@Roles(ADMIN)</span></td></tr>
+        <tr><td><code>POST</code></td><td>/api/v1/users</td><td>Create user</td><td><span class="status-good">@Roles(ADMIN)</span></td></tr>
+        <tr><td><code>GET</code></td><td>/api/v1/users/:id</td><td>Get user</td><td><span class="status-good">@Roles(ADMIN)</span></td></tr>
+        <tr><td><code>PATCH</code></td><td>/api/v1/users/:id</td><td>Update user</td><td><span class="status-good">@Roles(ADMIN)</span></td></tr>
+        <tr><td><code>DELETE</code></td><td>/api/v1/users/:id</td><td>Delete user</td><td><span class="status-good">@Roles(ADMIN)</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  
+  <h4>Role Management Endpoints</h4>
+  <div class="endpoint-list">
+    <table>
+      <thead><tr><th>Method</th><th>Endpoint</th><th>Purpose</th><th>RBAC</th></tr></thead>
+      <tbody>
+        <tr><td><code>GET</code></td><td>/api/v1/roles</td><td>List roles</td><td><span class="status-good">@Roles(ADMIN)</span></td></tr>
+        <tr><td><code>POST</code></td><td>/api/v1/roles</td><td>Create role</td><td><span class="status-good">@Roles(SUPER_ADMIN)</span></td></tr>
+        <tr><td><code>GET</code></td><td>/api/v1/roles/:id</td><td>Get role</td><td><span class="status-good">@Roles(ADMIN)</span></td></tr>
+        <tr><td><code>PATCH</code></td><td>/api/v1/roles/:id</td><td>Update role</td><td><span class="status-good">@Roles(SUPER_ADMIN)</span></td></tr>
+        <tr><td><code>DELETE</code></td><td>/api/v1/roles/:id</td><td>Delete role</td><td><span class="status-good">@Roles(SUPER_ADMIN)</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Security Features -->
+<h2>🔒 Security Implementation</h2>
+<div class="summary-box">
+  <div class="two-col">
+    <div>
+      <h4>✅ Implemented</h4>
+      <ul class="checklist">
+        <li>✅ Password hashing with bcrypt</li>
+        <li>✅ JWT tokens with proper claims</li>
+        <li>✅ Refresh token rotation</li>
+        <li>✅ Session management with device tracking</li>
+        <li>✅ Rate limiting on login endpoint</li>
+        <li>✅ Account lockout after failed attempts</li>
+        <li>✅ Password reset with secure tokens</li>
+        <li>✅ Multi-tenant isolation (tenantId)</li>
+      </ul>
+    </div>
+    <div>
+      <h4>⚠️ Needs Improvement</h4>
+      <ul class="checklist">
+        <li>⚠️ JWT expiry should be 15min (currently longer)</li>
+        <li>⚠️ JWT secret rotation strategy needed</li>
+        <li>⚠️ Consider Redis for token blacklist</li>
+        <li>⚠️ MFA schema ready but not implemented (Phase B)</li>
+        <li>⚠️ Session cleanup job needed</li>
+        <li>⚠️ IP-based rate limiting enhancement</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- Dependencies -->
+<h2>🔗 Dependencies</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>Depends On</th><th>Used By</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>None (Foundation service)</td>
+        <td>All other services (JWT validation, user context, role checks)</td>
+      </tr>
+    </tbody>
+  </table>
+  <p><strong>Critical Note:</strong> Auth is the foundation for all other services. Any issues here affect the entire system.</p>
+</div>
+
+<!-- Recommendations -->
+<h2>💡 Recommendations</h2>
+<div class="summary-box">
+  <ol>
+    <li><strong><span class="status-p1">P1</span> Complete RBAC coverage</strong> - Add @Roles() to sessions.controller and ensure all admin endpoints are protected.</li>
+    <li><strong><span class="status-p1">P1</span> Standardize role names</strong> - Convert ADMIN, SUPER_ADMIN to lowercase (admin, super_admin) to match other services.</li>
+    <li><strong><span class="status-p1">P1</span> Add E2E tests</strong> - Test login, logout, refresh, password reset, user CRUD, role CRUD flows.</li>
+    <li><strong><span class="status-p2">P2</span> Add Swagger documentation</strong> - Add @ApiTags('Auth'), @ApiBearerAuth() to all controllers.</li>
+    <li><strong><span class="status-p3">P3</span> Reduce JWT expiry</strong> - Change access token expiry to 15 minutes for security.</li>
+  </ol>
+</div>
+
+<!-- Test Requirements -->
+<h2>🧪 Required E2E Tests</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>Test Case</th><th>Priority</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>Login with valid credentials</td><td>P1</td><td><span class="status-error">Missing</span></td></tr>
+      <tr><td>Login with invalid credentials</td><td>P1</td><td><span class="status-error">Missing</span></td></tr>
+      <tr><td>Account lockout after failed attempts</td><td>P1</td><td><span class="status-error">Missing</span></td></tr>
+      <tr><td>Refresh token rotation</td><td>P1</td><td><span class="status-error">Missing</span></td></tr>
+      <tr><td>Logout invalidates session</td><td>P1</td><td><span class="status-error">Missing</span></td></tr>
+      <tr><td>Password reset flow</td><td>P2</td><td><span class="status-error">Missing</span></td></tr>
+      <tr><td>User CRUD with RBAC validation</td><td>P1</td><td><span class="status-error">Missing</span></td></tr>
+      <tr><td>Role CRUD with RBAC validation</td><td>P1</td><td><span class="status-error">Missing</span></td></tr>
+      <tr><td>Multi-tenant user isolation</td><td>P1</td><td><span class="status-error">Missing</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="summary-box" style="border-left: 4px solid var(--yellow);">
+  <h3>📋 Summary</h3>
+  <p>Auth &amp; Admin is the foundation service and is <strong>mostly functional</strong> but has gaps in RBAC coverage and lacks E2E tests. Given its critical role, P1 issues should be addressed before frontend development begins on dependent services.</p>
+  <p><strong>Verdict:</strong> <span class="status-warning">CONDITIONAL PASS</span> - Can proceed with frontend for Auth screens, but must complete RBAC and add tests.</p>
+</div>
+
+<footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: var(--gray); text-align: center;">
+  <p>Auth &amp; Admin Service Review | Ultra-TMS Phase A | January 15, 2026</p>
+</footer>
+
+</body>
+</html>

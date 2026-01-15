@@ -3,23 +3,28 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentTenant, CurrentUser } from '../../common/decorators';
 import { CreateDashboardDto, CreateWidgetDto, UpdateDashboardDto, UpdateWidgetDto } from './dto';
 import { DashboardsService } from './dashboards.service';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
 
 @Controller('analytics/dashboards')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class DashboardsController {
   constructor(private readonly service: DashboardsService) {}
 
   @Get()
+  @Roles('ADMIN', 'SALES_REP', 'DISPATCHER', 'ACCOUNTING', 'OPERATIONS')
   list(@CurrentTenant() tenantId: string) {
     return this.service.list(tenantId);
   }
 
   @Get(':id')
+  @Roles('ADMIN', 'SALES_REP', 'DISPATCHER', 'ACCOUNTING', 'OPERATIONS')
   get(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.service.get(tenantId, id);
   }
 
   @Post()
+  @Roles('ADMIN', 'SALES_REP', 'DISPATCHER', 'ACCOUNTING', 'OPERATIONS')
   create(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -29,6 +34,7 @@ export class DashboardsController {
   }
 
   @Patch(':id')
+  @Roles('ADMIN', 'SALES_REP', 'DISPATCHER', 'ACCOUNTING', 'OPERATIONS')
   update(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -39,11 +45,13 @@ export class DashboardsController {
   }
 
   @Delete(':id')
+  @Roles('ADMIN', 'SALES_REP', 'DISPATCHER', 'ACCOUNTING', 'OPERATIONS')
   remove(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.service.remove(tenantId, id);
   }
 
   @Post(':id/widgets')
+  @Roles('ADMIN', 'SALES_REP', 'DISPATCHER', 'ACCOUNTING', 'OPERATIONS')
   addWidget(
     @CurrentTenant() tenantId: string,
     @Param('id') dashboardId: string,
@@ -53,6 +61,7 @@ export class DashboardsController {
   }
 
   @Patch(':dashboardId/widgets/:widgetId')
+  @Roles('ADMIN', 'SALES_REP', 'DISPATCHER', 'ACCOUNTING', 'OPERATIONS')
   updateWidget(
     @CurrentTenant() tenantId: string,
     @Param('dashboardId') dashboardId: string,
@@ -63,6 +72,7 @@ export class DashboardsController {
   }
 
   @Delete(':dashboardId/widgets/:widgetId')
+  @Roles('ADMIN', 'SALES_REP', 'DISPATCHER', 'ACCOUNTING', 'OPERATIONS')
   removeWidget(
     @CurrentTenant() tenantId: string,
     @Param('dashboardId') dashboardId: string,

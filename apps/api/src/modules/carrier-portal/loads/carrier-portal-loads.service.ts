@@ -79,13 +79,13 @@ export class CarrierPortalLoadsService {
   }
 
   async accept(tenantId: string, carrierId: string, id: string) {
-    const load = await this.prisma.load.findFirst({ where: { id, tenantId } });
+    const load = await this.prisma.load.findFirst({ where: { id, tenantId, carrierId: null } });
     if (!load) throw new NotFoundException('Load not found');
     return this.prisma.load.update({ where: { id }, data: { carrierId, status: LoadStatusEnum.ACCEPTED } });
   }
 
-  async decline(tenantId: string, id: string) {
-    const load = await this.prisma.load.findFirst({ where: { id, tenantId } });
+  async decline(tenantId: string, carrierId: string, id: string) {
+    const load = await this.prisma.load.findFirst({ where: { id, tenantId, carrierId } });
     if (!load) throw new NotFoundException('Load not found');
     return this.prisma.load.update({ where: { id }, data: { carrierId: null, status: LoadStatusEnum.CANCELLED } });
   }

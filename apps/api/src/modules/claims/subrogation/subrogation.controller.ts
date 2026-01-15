@@ -1,18 +1,30 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { Roles } from '../../../common/decorators';
+import { RolesGuard } from '../../../common/guards/roles.guard';
 import { CurrentTenant } from '../../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { SubrogationService } from './subrogation.service';
 import { CreateSubrogationDto } from './dto/create-subrogation.dto';
 import { UpdateSubrogationDto } from './dto/update-subrogation.dto';
 import { RecoverSubrogationDto } from './dto/recover-subrogation.dto';
+import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('claims/:claimId/subrogation')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('Claims')
+@ApiBearerAuth('JWT-auth')
+@Roles('ADMIN', 'CLAIMS_MANAGER', 'CLAIMS_ADJUSTER')
 export class SubrogationController {
   constructor(private readonly subrogationService: SubrogationService) {}
 
   @Get()
+  @ApiOperation({ summary: 'List subrogation entries' })
+  @ApiParam({ name: 'claimId', description: 'Claim ID' })
+  @ApiStandardResponse('Subrogation list')
+  @ApiErrorResponses()
+  @Roles('ADMIN', 'CLAIMS_MANAGER', 'CLAIMS_ADJUSTER', 'DISPATCHER')
   async list(
     @CurrentTenant() tenantId: string,
     @Param('claimId') claimId: string,
@@ -21,6 +33,12 @@ export class SubrogationController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get subrogation entry by ID' })
+  @ApiParam({ name: 'claimId', description: 'Claim ID' })
+  @ApiParam({ name: 'id', description: 'Subrogation ID' })
+  @ApiStandardResponse('Subrogation details')
+  @ApiErrorResponses()
+  @Roles('ADMIN', 'CLAIMS_MANAGER', 'CLAIMS_ADJUSTER', 'DISPATCHER')
   async findOne(
     @CurrentTenant() tenantId: string,
     @Param('claimId') claimId: string,
@@ -30,6 +48,11 @@ export class SubrogationController {
   }
 
   @Post()
+  @ApiOperation({ summary: 'Create subrogation entry' })
+  @ApiParam({ name: 'claimId', description: 'Claim ID' })
+  @ApiStandardResponse('Subrogation created')
+  @ApiErrorResponses()
+  @Roles('ADMIN', 'CLAIMS_MANAGER', 'CLAIMS_ADJUSTER')
   async create(
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: { id: string },
@@ -40,6 +63,12 @@ export class SubrogationController {
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'Update subrogation entry' })
+  @ApiParam({ name: 'claimId', description: 'Claim ID' })
+  @ApiParam({ name: 'id', description: 'Subrogation ID' })
+  @ApiStandardResponse('Subrogation updated')
+  @ApiErrorResponses()
+  @Roles('ADMIN', 'CLAIMS_MANAGER', 'CLAIMS_ADJUSTER')
   async update(
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: { id: string },
@@ -51,7 +80,13 @@ export class SubrogationController {
   }
 
   @Post(':id/recover')
+  @ApiOperation({ summary: 'Recover subrogation' })
+  @ApiParam({ name: 'claimId', description: 'Claim ID' })
+  @ApiParam({ name: 'id', description: 'Subrogation ID' })
+  @ApiStandardResponse('Subrogation recovered')
+  @ApiErrorResponses()
   @HttpCode(HttpStatus.OK)
+  @Roles('ADMIN', 'CLAIMS_MANAGER', 'CLAIMS_ADJUSTER')
   async recover(
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: { id: string },
@@ -63,6 +98,12 @@ export class SubrogationController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete subrogation entry' })
+  @ApiParam({ name: 'claimId', description: 'Claim ID' })
+  @ApiParam({ name: 'id', description: 'Subrogation ID' })
+  @ApiStandardResponse('Subrogation deleted')
+  @ApiErrorResponses()
+  @Roles('ADMIN', 'CLAIMS_MANAGER')
   @HttpCode(HttpStatus.OK)
   async remove(
     @CurrentTenant() tenantId: string,

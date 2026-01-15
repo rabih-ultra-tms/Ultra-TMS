@@ -16,9 +16,11 @@ import { ActivitiesService } from './activities.service';
 import { CreateContactDto, UpdateContactDto } from './dto';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
 
 @Controller('contacts')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class ContactsController {
   constructor(
     private readonly contactsService: ContactsService,
@@ -26,6 +28,7 @@ export class ContactsController {
   ) {}
 
   @Get()
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async findAll(
     @CurrentTenant() tenantId: string,
     @Query('page') page?: number,
@@ -38,11 +41,13 @@ export class ContactsController {
   }
 
   @Get(':id')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async findOne(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.contactsService.findOne(tenantId, id);
   }
 
   @Post()
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async create(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -52,6 +57,7 @@ export class ContactsController {
   }
 
   @Put(':id')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async update(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -62,6 +68,7 @@ export class ContactsController {
   }
 
   @Delete(':id')
+  @Roles('ADMIN', 'SALES_MANAGER')
   async delete(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -72,6 +79,7 @@ export class ContactsController {
 
   // Nested resource endpoints
   @Get(':id/activities')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async getActivities(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -82,6 +90,7 @@ export class ContactsController {
   }
 
   @Post(':id/sync-hubspot')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async syncHubspot(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -91,6 +100,7 @@ export class ContactsController {
   }
 
   @Patch(':id/set-primary')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async setPrimary(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,

@@ -16,13 +16,16 @@ import { QuotesService } from './quotes.service';
 import { CreateQuoteDto, UpdateQuoteDto, QuickQuoteDto, CalculateRateDto } from './dto';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
 
 @Controller('quotes')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class QuotesController {
   constructor(private readonly quotesService: QuotesService) {}
 
   @Get()
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'PRICING_ANALYST')
   async findAll(
     @CurrentTenant() tenantId: string,
     @Query('page') page?: number,
@@ -36,11 +39,13 @@ export class QuotesController {
   }
 
   @Get(':id')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'PRICING_ANALYST')
   async findOne(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.quotesService.findOne(tenantId, id);
   }
 
   @Post()
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async create(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -50,6 +55,7 @@ export class QuotesController {
   }
 
   @Put(':id')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async update(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -60,6 +66,7 @@ export class QuotesController {
   }
 
   @Delete(':id')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async delete(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -69,6 +76,7 @@ export class QuotesController {
   }
 
   @Post(':id/convert')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async convertToOrder(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -78,6 +86,7 @@ export class QuotesController {
   }
 
   @Post(':id/duplicate')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async duplicate(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -87,6 +96,7 @@ export class QuotesController {
   }
 
   @Post(':id/new-version')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async createNewVersion(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -96,6 +106,7 @@ export class QuotesController {
   }
 
   @Post(':id/send')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async send(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -105,6 +116,7 @@ export class QuotesController {
   }
 
   @Get(':id/pdf')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'PRICING_ANALYST')
   async generatePdf(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -120,6 +132,7 @@ export class QuotesController {
   }
 
   @Post('quick')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async quickQuote(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -129,6 +142,7 @@ export class QuotesController {
   }
 
   @Post('calculate-rate')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'PRICING_ANALYST')
   async calculateRate(
     @CurrentTenant() tenantId: string,
     @Body() dto: CalculateRateDto,

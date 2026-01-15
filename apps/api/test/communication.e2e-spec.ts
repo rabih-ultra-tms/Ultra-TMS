@@ -19,4 +19,18 @@ describe('Communication API E2E', () => {
       .get('/api/v1/communication/templates')
       .expect(200);
   });
+
+  it('denies carrier access to templates', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/communication/templates')
+      .set('x-test-role', 'CARRIER')
+      .expect(403);
+  });
+
+  it('allows marketing access to templates', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/communication/templates')
+      .set('x-test-role', 'MARKETING')
+      .expect(200);
+  });
 });

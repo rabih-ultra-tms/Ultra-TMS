@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, WebhookStatus } from '@prisma/client';
 import * as crypto from 'crypto';
 import { PrismaService } from '../../prisma.service';
+import { CredentialMaskerService } from './services/credential-masker.service';
 import {
   CreateWebhookEndpointDto,
   CreateWebhookSubscriptionDto,
@@ -20,7 +21,10 @@ import {
 
 @Injectable()
 export class WebhooksService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly credentialMasker: CredentialMaskerService,
+  ) {}
 
   private generateSecret(): string {
     return crypto.randomBytes(24).toString('hex');
@@ -67,7 +71,8 @@ export class WebhooksService {
     tenantId: string,
     userId: string,
     dto: CreateWebhookEndpointDto,
-  ): Promise<WebhookEndpointResponseDto> {
+  ): Promise<{ endpoint: WebhookEndpointResponseDto; secret: string }> {
+    const secret = this.generateSecret();
     const endpoint = await this.prisma.webhookEndpoint.create({
       data: {
         tenantId,
@@ -75,14 +80,14 @@ export class WebhooksService {
         url: dto.url,
         description: dto.description,
         events: dto.events,
-        secret: this.generateSecret(),
+        secret,
         status: 'ACTIVE',
         createdById: userId,
         updatedById: userId,
       },
     });
 
-    return this.getEndpoint(tenantId, endpoint.id);
+    return { endpoint: this.toEndpointDto(endpoint, true), secret };
   }
 
   async updateEndpoint(
@@ -114,13 +119,22 @@ export class WebhooksService {
     });
   }
 
-  async rotateSecret(tenantId: string, id: string, userId: string): Promise<WebhookEndpointResponseDto> {
+  async rotateSecret(
+    tenantId: string,
+    id: string,
+    userId: string,
+  ): Promise<{ endpoint: WebhookEndpointResponseDto; secret: string }> {
     await this.getEndpoint(tenantId, id);
+    const secret = this.generateSecret();
     await this.prisma.webhookEndpoint.update({
       where: { id },
-      data: { secret: this.generateSecret(), updatedById: userId },
+      data: { secret, updatedById: userId },
     });
-    return this.getEndpoint(tenantId, id);
+    const endpoint = await this.prisma.webhookEndpoint.findFirst({ where: { id, tenantId, deletedAt: null } });
+    if (!endpoint) {
+      throw new NotFoundException('Webhook endpoint not found');
+    }
+    return { endpoint: this.toEndpointDto(endpoint, true), secret };
   }
 
   // Outbound subscriptions
@@ -312,14 +326,16 @@ export class WebhooksService {
     return endpoint;
   }
 
-  private toEndpointDto(endpoint: any): WebhookEndpointResponseDto {
+  private toEndpointDto(endpoint: any, includeSecret = false): WebhookEndpointResponseDto {
     return {
       id: endpoint.id,
       name: endpoint.name,
       url: endpoint.url,
       events: [...(endpoint.events ?? [])],
       description: endpoint.description,
-      secret: endpoint.secret,
+      secret: includeSecret
+        ? endpoint.secret
+        : this.credentialMasker.maskSecret(endpoint.secret),
       status: endpoint.status,
       createdAt: endpoint.createdAt,
       updatedAt: endpoint.updatedAt,

@@ -15,13 +15,16 @@ import { ActivitiesService } from './activities.service';
 import { CreateActivityDto, UpdateActivityDto } from './dto';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
 
 @Controller('activities')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class ActivitiesController {
   constructor(private readonly activitiesService: ActivitiesService) {}
 
   @Get()
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async findAll(
     @CurrentTenant() tenantId: string,
     @Query('page') page?: number,
@@ -46,6 +49,7 @@ export class ActivitiesController {
   }
 
   @Get('upcoming')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async getUpcoming(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -55,11 +59,13 @@ export class ActivitiesController {
   }
 
   @Get(':id')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async findOne(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.activitiesService.findOne(tenantId, id);
   }
 
   @Post()
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async create(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -69,6 +75,7 @@ export class ActivitiesController {
   }
 
   @Put(':id')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async update(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -79,6 +86,7 @@ export class ActivitiesController {
   }
 
   @Delete(':id')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async delete(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -88,6 +96,7 @@ export class ActivitiesController {
   }
 
   @Get('tasks/my')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async getMyTasks(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -103,6 +112,7 @@ export class ActivitiesController {
   }
 
   @Get('tasks/overdue')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async getOverdueTasks(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -111,6 +121,7 @@ export class ActivitiesController {
   }
 
   @Patch(':id/complete')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async markComplete(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -120,6 +131,7 @@ export class ActivitiesController {
   }
 
   @Patch(':id/reopen')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async reopenTask(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -129,6 +141,7 @@ export class ActivitiesController {
   }
 
   @Patch(':id/reschedule')
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async reschedule(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,

@@ -1,21 +1,33 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { CurrentTenant, CurrentUser } from '../../../common/decorators';
+import { CurrentTenant, CurrentUser, Roles } from '../../../common/decorators';
 import { CreateRateAlertDto } from './dto/create-rate-alert.dto';
 import { UpdateRateAlertDto } from './dto/update-rate-alert.dto';
 import { RateAlertsService } from './rate-alerts.service';
+import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller()
 @UseGuards(JwtAuthGuard)
+@ApiTags('Market Rates')
+@ApiBearerAuth('JWT-auth')
+@Roles('user', 'manager', 'admin')
 export class RateAlertsController {
   constructor(private readonly service: RateAlertsService) {}
 
   @Get('api/v1/rates/alerts')
+  @ApiOperation({ summary: 'List rate alerts' })
+  @ApiStandardResponse('Rate alerts list')
+  @ApiErrorResponses()
+  @Roles('viewer', 'user', 'manager', 'admin')
   list(@CurrentTenant() tenantId: string) {
     return this.service.list(tenantId);
   }
 
   @Post('api/v1/rates/alerts')
+  @ApiOperation({ summary: 'Create rate alert' })
+  @ApiStandardResponse('Rate alert created')
+  @ApiErrorResponses()
   create(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -25,16 +37,30 @@ export class RateAlertsController {
   }
 
   @Patch('api/v1/rates/alerts/:id')
+  @ApiOperation({ summary: 'Update rate alert' })
+  @ApiParam({ name: 'id', description: 'Alert ID' })
+  @ApiStandardResponse('Rate alert updated')
+  @ApiErrorResponses()
   update(@CurrentTenant() tenantId: string, @Param('id') id: string, @Body() dto: UpdateRateAlertDto) {
     return this.service.update(tenantId, id, dto);
   }
 
   @Delete('api/v1/rates/alerts/:id')
+  @ApiOperation({ summary: 'Delete rate alert' })
+  @ApiParam({ name: 'id', description: 'Alert ID' })
+  @ApiStandardResponse('Rate alert deleted')
+  @ApiErrorResponses()
+  @Roles('manager', 'admin')
   remove(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.service.remove(tenantId, id);
   }
 
   @Get('api/v1/rates/alerts/:id/history')
+  @ApiOperation({ summary: 'Get rate alert history' })
+  @ApiParam({ name: 'id', description: 'Alert ID' })
+  @ApiStandardResponse('Rate alert history')
+  @ApiErrorResponses()
+  @Roles('viewer', 'user', 'manager', 'admin')
   history(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.service.history(tenantId, id);
   }

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agents Service Review - Ultra-TMS Phase A</title>
+  <style>
+    :root { --green: #10b981; --green-bg: #d1fae5; --yellow: #f59e0b; --yellow-bg: #fef3c7; --red: #ef4444; --red-bg: #fee2e2; --blue: #3b82f6; --blue-bg: #dbeafe; --gray: #6b7280; --orange: #f97316; --orange-bg: #ffedd5; --purple: #8b5cf6; --purple-bg: #ede9fe; }
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; max-width: 1200px; margin: 0 auto; padding: 20px; background: #f9fafb; }
+    h1 { color: #111827; border-bottom: 3px solid var(--yellow); padding-bottom: 10px; }
+    h2 { color: #374151; margin-top: 30px; border-left: 4px solid var(--yellow); padding-left: 12px; }
+    .service-header { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 24px; border-radius: 12px; margin-bottom: 24px; }
+    .service-header h1 { color: white; border: none; margin: 0; padding: 0; }
+    .summary-box { background: white; border-radius: 12px; padding: 24px; margin: 20px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin: 20px 0; }
+    .score-card { background: white; border-radius: 8px; padding: 16px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .score-card .score { font-size: 32px; font-weight: bold; }
+    .score-card .label { color: var(--gray); font-size: 13px; }
+    .score-high { color: var(--green); } .score-medium { color: var(--yellow); } .score-low { color: var(--red); }
+    .status-good { background: var(--green-bg); color: #065f46; padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; }
+    .status-warning { background: var(--yellow-bg); color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; }
+    .status-error { background: var(--red-bg); color: #991b1b; padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; }
+    .status-p0 { background: var(--red-bg); color: #991b1b; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+    .status-p1 { background: var(--orange-bg); color: #c2410c; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+    .status-p2 { background: var(--yellow-bg); color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    th { background: #f9fafb; font-weight: 600; color: #374151; }
+    .nav-links { background: white; padding: 12px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); font-size: 14px; }
+    .nav-links a { color: var(--blue); text-decoration: none; margin-right: 16px; }
+    .warning-box { background: var(--yellow-bg); border: 2px solid var(--yellow); border-radius: 12px; padding: 20px; margin: 20px 0; }
+    .warning-box h3 { color: #92400e; margin-top: 0; }
+    .success-box { background: var(--green-bg); border: 2px solid var(--green); border-radius: 12px; padding: 20px; margin: 20px 0; }
+    .success-box h3 { color: #065f46; margin-top: 0; }
+    code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    ul.checklist { list-style: none; padding-left: 0; }
+    ul.checklist li { padding: 6px 0; }
+  </style>
+</head>
+<body>
+
+<div class="nav-links">
+  <a href="00-general-review.html">← General Review</a> |
+  <a href="14-contracts-review.html">← Contracts</a> |
+  <a href="16-credit-review.html">Next: Credit →</a>
+</div>
+
+<div class="service-header">
+  <h1>🤝 Agents Service Review</h1>
+  <p>Service 15 | Operations Service | Module: <code>modules/agents</code> | <strong>CONDITIONAL PASS</strong></p>
+</div>
+
+<div class="warning-box">
+  <h3>⚠️ P1 Issue: Low RBAC Coverage (~20%)</h3>
+  <p>Agents service has RBAC on commission approval but most CRUD operations unprotected. Agent data includes financial information (commission splits).</p>
+</div>
+
+<div class="summary-box">
+  <h2 style="margin-top: 0;">📊 Service Summary</h2>
+  <div class="score-grid">
+    <div class="score-card"><div class="score score-medium">6.5</div><div class="label">Overall Score</div></div>
+    <div class="score-card"><div class="score score-low">20%</div><div class="label">RBAC Coverage</div></div>
+    <div class="score-card"><div class="score score-medium">2</div><div class="label">E2E Tests</div></div>
+    <div class="score-card"><div class="score score-low">No</div><div class="label">Swagger Docs</div></div>
+    <div class="score-card"><div class="score score-high">Yes</div><div class="label">Tenant Isolation</div></div>
+  </div>
+  <p><strong>Frontend Ready:</strong> <span class="status-warning">PARTIAL</span> - Can start basic screens, complete RBAC before production</p>
+</div>
+
+<h2>📁 Module Structure</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>File</th><th>Purpose</th><th>RBAC</th><th>E2E Tests</th></tr></thead>
+    <tbody>
+      <tr><td><code>agents.controller.ts</code></td><td>Agent CRUD</td><td><span class="status-warning">Partial</span></td><td><span class="status-good">Yes</span></td></tr>
+      <tr><td><code>agent-commissions.controller.ts</code></td><td>Agent commission tracking</td><td><span class="status-warning">Partial</span></td><td><span class="status-warning">Partial</span></td></tr>
+      <tr><td><code>agent-customers.controller.ts</code></td><td>Customer assignments</td><td><span class="status-error">None</span></td><td><span class="status-error">None</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>🗄️ Database Models</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>Model</th><th>Key Fields</th><th>Compliance</th></tr></thead>
+    <tbody>
+      <tr><td><code>Agent</code></td><td>name, contactEmail, status, commissionRate, overrideRate</td><td><span class="status-good">100%</span></td></tr>
+      <tr><td><code>AgentCustomer</code></td><td>agentId, customerId, splitType, splitPercentage</td><td><span class="status-good">100%</span></td></tr>
+      <tr><td><code>AgentCommission</code></td><td>agentId, orderId, amount, status, paidDate</td><td><span class="status-good">100%</span></td></tr>
+      <tr><td><code>AgentUser</code></td><td>agentId, userId, role</td><td><span class="status-good">100%</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>✅ Implemented Features</h2>
+<div class="summary-box">
+  <div class="two-col">
+    <div>
+      <h4>Working Features</h4>
+      <ul class="checklist">
+        <li>✅ Agent CRUD operations</li>
+        <li>✅ Customer assignment to agents</li>
+        <li>✅ Commission rate configuration</li>
+        <li>✅ Override rates (bonus/special deals)</li>
+        <li>✅ Commission calculation on order</li>
+        <li>✅ Commission approval workflow (has RBAC)</li>
+        <li>✅ Agent user management</li>
+        <li>✅ Split commission (agent + house)</li>
+      </ul>
+    </div>
+    <div>
+      <h4>Missing Features</h4>
+      <ul class="checklist">
+        <li>❌ Agent portal (separate login)</li>
+        <li>❌ Agent performance dashboard</li>
+        <li>❌ Agent statements</li>
+        <li>❌ Agent hierarchy (sub-agents)</li>
+        <li>❌ 1099 tax form generation</li>
+        <li>❌ Agent onboarding workflow</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<h2>🔌 Key Endpoints</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>Method</th><th>Endpoint</th><th>RBAC Status</th><th>Required Role</th></tr></thead>
+    <tbody>
+      <tr><td><code>GET</code></td><td>/api/v1/agents</td><td><span class="status-error">Unprotected</span></td><td>agent-mgr, admin</td></tr>
+      <tr><td><code>POST</code></td><td>/api/v1/agents</td><td><span class="status-error">Unprotected</span></td><td>agent-mgr, admin</td></tr>
+      <tr><td><code>GET</code></td><td>/api/v1/agents/:id/commissions</td><td><span class="status-warning">Partial</span></td><td>Own: agent | All: agent-mgr, admin</td></tr>
+      <tr><td><code>POST</code></td><td>/api/v1/agents/:id/commissions/approve</td><td><span class="status-good">Has @Roles</span></td><td>agent-mgr, accounting</td></tr>
+      <tr><td><code>GET</code></td><td>/api/v1/agents/:id/customers</td><td><span class="status-error">Unprotected</span></td><td>agent-mgr, sales, admin</td></tr>
+      <tr><td><code>POST</code></td><td>/api/v1/agents/:id/customers</td><td><span class="status-error">Unprotected</span></td><td>agent-mgr, admin</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>🔗 Dependencies</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>Depends On</th><th>Used By</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Auth (users), CRM (customers), Commission (commission calc), TMS Core (orders)</td>
+        <td>Analytics (agent performance), Accounting (agent payments)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>💡 Recommendations</h2>
+<div class="summary-box">
+  <ol>
+    <li><strong><span class="status-p1">P1</span> Add RBAC to remaining endpoints</strong>
+      <ul>
+        <li>View agents: <code>@Roles('agent-mgr', 'admin')</code></li>
+        <li>Modify agents: <code>@Roles('agent-mgr', 'admin')</code></li>
+        <li>Own commissions: <code>@Roles('agent')</code> (filtered to own data)</li>
+      </ul>
+    </li>
+    <li><strong><span class="status-p1">P1</span> Add row-level security for commissions</strong> - Agents only see own commissions.</li>
+    <li><strong><span class="status-p2">P2</span> Add agent portal</strong> - Separate auth flow for external agents.</li>
+    <li><strong><span class="status-p2">P2</span> Add E2E tests for customer assignments</strong></li>
+    <li><strong><span class="status-p3">P3</span> 1099 integration</strong> - Tax form generation for agent payments.</li>
+  </ol>
+</div>
+
+<div class="success-box">
+  <h3>📋 Summary</h3>
+  <p><strong>Status:</strong> <span class="status-warning">CONDITIONAL PASS</span></p>
+  <p>Agents service has commission approval protected. Not rated P0 because:</p>
+  <ul>
+    <li>Commission approval (most critical) has RBAC</li>
+    <li>Agent data is internal (not customer/carrier facing)</li>
+    <li>Less sensitive than portal services</li>
+  </ul>
+  <p><strong>Frontend Impact:</strong> Can start building agent management screens.</p>
+  <p><strong>Estimated Fix Time:</strong> 3-4 hours for RBAC + 2 hours for row-level security</p>
+</div>
+
+<footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: var(--gray); text-align: center;">
+  <p>Agents Service Review | Ultra-TMS Phase A | January 15, 2026</p>
+</footer>
+
+</body>
+</html>

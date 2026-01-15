@@ -5,6 +5,7 @@ import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma.service';
 import { JwtAuthGuard } from '../src/modules/auth/guards/jwt-auth.guard';
 import { Prisma } from '@prisma/client';
+import { createTestAppWithRole } from './helpers/test-app.helper';
 
 const TEST_TENANT = 'tenant-agent';
 const TEST_USER = {
@@ -34,6 +35,12 @@ describe('Agent API E2E', () => {
       .compile();
 
     app = moduleRef.createNestApplication();
+    app.use((req, _res, next) => {
+      req.user = TEST_USER;
+      req.headers['x-tenant-id'] = TEST_TENANT;
+      req.tenantId = TEST_TENANT;
+      next();
+    });
     app.setGlobalPrefix('api/v1');
     await app.init();
 
@@ -60,6 +67,14 @@ describe('Agent API E2E', () => {
   });
 
   afterAll(async () => {
+    await prisma.agentCommission.deleteMany({ where: { tenantId: TEST_TENANT } });
+    await prisma.agentPayout.deleteMany({ where: { tenantId: TEST_TENANT } });
+    await prisma.agentCustomerAssignment.deleteMany({ where: { tenantId: TEST_TENANT } });
+    await prisma.agentLead.deleteMany({ where: { tenantId: TEST_TENANT } });
+    await prisma.agentAgreement.deleteMany({ where: { tenantId: TEST_TENANT } });
+    await prisma.agentContact.deleteMany({ where: { tenantId: TEST_TENANT } });
+    await prisma.agent.deleteMany({ where: { tenantId: TEST_TENANT } });
+    await prisma.company.deleteMany({ where: { tenantId: TEST_TENANT } });
     await app.close();
   });
 
@@ -260,6 +275,64 @@ describe('Agent API E2E', () => {
       .expect(200);
 
     expect(terminateRes.body.data.status).toBe('TERMINATED');
+  });
+
+  it('enforces agent self-access restrictions', async () => {
+    const setup = await createTestAppWithRole('tenant-agent-rbac', 'user-agent-rbac', 'agent@rbac.test', 'AGENT');
+    const rbacApp = setup.app;
+    const rbacPrisma = setup.prisma;
+
+    const ownAgent = await rbacPrisma.agent.create({
+      data: {
+        tenantId: 'tenant-agent-rbac',
+        agentCode: 'A-1001',
+        companyName: 'RBAC Agent',
+        contactFirstName: 'Self',
+        contactLastName: 'Agent',
+        contactEmail: 'self@agent.test',
+        agentType: 'SELLING',
+        tier: 'STANDARD',
+      },
+    });
+
+    const otherAgent = await rbacPrisma.agent.create({
+      data: {
+        tenantId: 'tenant-agent-rbac',
+        agentCode: 'A-1002',
+        companyName: 'Other Agent',
+        contactFirstName: 'Other',
+        contactLastName: 'Agent',
+        contactEmail: 'other@agent.test',
+        agentType: 'REFERRING',
+        tier: 'STANDARD',
+      },
+    });
+
+    await rbacPrisma.agentPortalUser.create({
+      data: {
+        tenantId: 'tenant-agent-rbac',
+        agentId: ownAgent.id,
+        userId: 'user-agent-rbac',
+        email: 'agent@rbac.test',
+        passwordHash: 'hashed',
+        firstName: 'Self',
+        lastName: 'Agent',
+        role: 'USER',
+        status: 'ACTIVE',
+      },
+    });
+
+    await request(rbacApp.getHttpServer())
+      .get(`/api/v1/agents/${ownAgent.id}`)
+      .expect(200);
+
+    await request(rbacApp.getHttpServer())
+      .get(`/api/v1/agents/${otherAgent.id}`)
+      .expect(403);
+
+    await rbacPrisma.agentPortalUser.deleteMany({ where: { tenantId: 'tenant-agent-rbac' } });
+    await rbacPrisma.agent.deleteMany({ where: { tenantId: 'tenant-agent-rbac' } });
+    await rbacApp.close();
   });
 
   it('submits, qualifies, converts leads and auto-assigns customer', async () => {

@@ -19,4 +19,18 @@ describe('CRM API E2E', () => {
       .get('/api/v1/companies')
       .expect(200);
   });
+
+  it('denies carrier access to companies', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/companies')
+      .set('x-test-role', 'CARRIER')
+      .expect(403);
+  });
+
+  it('allows sales rep access to companies', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/companies')
+      .set('x-test-role', 'SALES_REP')
+      .expect(200);
+  });
 });

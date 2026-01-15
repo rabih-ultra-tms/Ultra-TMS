@@ -77,18 +77,38 @@
 | 23 | [23-help-desk-api.md](./23-help-desk-api.md) | Help Desk | 30 | Auth ✅, Users | ✅ Complete | 2026-01-14 |
 | 24 | [24-feedback-api.md](./24-feedback-api.md) | Feedback | 25 | Auth ✅, Users | ✅ Complete | 2026-01-14 |
 
+### Phase A Enhancement: P5 Completion (Services 13-27)
+
+> **NOTE:** These prompts bring Phase A services 13-27 to the same quality level as services 00-12.
+
+| # | Prompt File | Task | Scope | Time Est. | Status | Completed |
+|---|-------------|------|-------|-----------|--------|-----------|
+| 17 | [17-p5-phase-a-services-rbac.md](../api-dev-prompts-phase2/17-p5-phase-a-services-rbac.md) | RBAC Implementation | 84 controllers, 496 endpoints | 4-6 hours | ⬜ Pending | - |
+| 18 | [18-p5-phase-a-services-swagger.md](../api-dev-prompts-phase2/18-p5-phase-a-services-swagger.md) | Swagger Documentation | 14 modules, all DTOs | 6-8 hours | ⬜ Pending | - |
+| 19 | [19-p5-phase-a-services-e2e-expansion.md](../api-dev-prompts-phase2/19-p5-phase-a-services-e2e-expansion.md) | E2E Test Expansion | 30% → 80% coverage | 8-10 hours | ⬜ Pending | - |
+
 ---
 
 ## 📊 Progress Summary
 
 | Metric | Count | Percentage |
 |--------|-------|------------|
-| Total Prompts | 25 | - |
+| Total Prompts (00-24) | 25 | - |
 | Completed | 25 | 100% |
 | In Progress | 0 | 0% |
 | Pending | 0 | 0% |
 | Total Endpoints | 820 | - |
 | Endpoints Implemented | 820 | 100% |
+
+### P5 Enhancement Summary (Prompts 17-19)
+
+| Metric | Count | Status |
+|--------|-------|--------|
+| Phase A Services (13-27) | 14 modules | Functional |
+| Controllers Needing RBAC | 84 | ⚠️ 0% done |
+| Endpoints Needing Swagger | 496 | ⚠️ 0% done |
+| E2E Coverage | ~30% | ⚠️ Target 80% |
+| P5 Total Time Estimate | 18-24 hours | ⬜ Pending |
 
 ---
 

@@ -10,13 +10,16 @@ import {
   TransformTestDto,
   UpdateTransformationDto,
 } from './dto';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
 
 @Controller('integration-hub/sync-jobs')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class SyncJobsController {
   constructor(private readonly syncService: SyncService) {}
 
   @Get()
+  @Roles('SUPER_ADMIN', 'ADMIN', 'SYSTEM_INTEGRATOR')
   async listJobs(
     @CurrentTenant() tenantId: string,
     @Query() query: SyncJobQueryDto,
@@ -25,6 +28,7 @@ export class SyncJobsController {
   }
 
   @Get(':id')
+  @Roles('SUPER_ADMIN', 'ADMIN', 'SYSTEM_INTEGRATOR')
   async getJob(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -33,6 +37,7 @@ export class SyncJobsController {
   }
 
   @Post()
+  @Roles('SUPER_ADMIN', 'ADMIN', 'SYSTEM_INTEGRATOR')
   async createJob(
     @CurrentTenant() tenantId: string,
     @CurrentUser('userId') userId: string,
@@ -42,6 +47,7 @@ export class SyncJobsController {
   }
 
   @Post(':id/cancel')
+  @Roles('SUPER_ADMIN', 'ADMIN', 'SYSTEM_INTEGRATOR')
   async cancelJob(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -51,6 +57,7 @@ export class SyncJobsController {
   }
 
   @Get(':id/progress')
+  @Roles('SUPER_ADMIN', 'ADMIN', 'SYSTEM_INTEGRATOR')
   async getProgress(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -59,6 +66,7 @@ export class SyncJobsController {
   }
 
   @Get(':id/errors')
+  @Roles('SUPER_ADMIN', 'ADMIN', 'SYSTEM_INTEGRATOR')
   async getErrors(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -68,11 +76,12 @@ export class SyncJobsController {
 }
 
 @Controller('integration-hub/api-logs')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class ApiLogsController {
   constructor(private readonly syncService: SyncService) {}
 
   @Get()
+  @Roles('SUPER_ADMIN', 'ADMIN', 'SYSTEM_INTEGRATOR')
   async listLogs(
     @CurrentTenant() tenantId: string,
     @Query() query: ApiLogQueryDto,
@@ -81,6 +90,7 @@ export class ApiLogsController {
   }
 
   @Get(':id')
+  @Roles('SUPER_ADMIN', 'ADMIN', 'SYSTEM_INTEGRATOR')
   async getLog(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -90,16 +100,18 @@ export class ApiLogsController {
 }
 
 @Controller('integration-hub/transformations')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class TransformationsController {
   constructor(private readonly syncService: SyncService) {}
 
   @Get()
+  @Roles('SUPER_ADMIN', 'ADMIN', 'SYSTEM_INTEGRATOR')
   async listTransformations(@CurrentTenant() tenantId: string) {
     return this.syncService.listTransformations(tenantId);
   }
 
   @Get(':id')
+  @Roles('SUPER_ADMIN', 'ADMIN', 'SYSTEM_INTEGRATOR')
   async getTransformation(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -108,6 +120,7 @@ export class TransformationsController {
   }
 
   @Post()
+  @Roles('SUPER_ADMIN', 'ADMIN', 'SYSTEM_INTEGRATOR')
   async createTransformation(
     @CurrentTenant() tenantId: string,
     @CurrentUser('userId') userId: string,
@@ -117,6 +130,7 @@ export class TransformationsController {
   }
 
   @Put(':id')
+  @Roles('SUPER_ADMIN', 'ADMIN', 'SYSTEM_INTEGRATOR')
   async updateTransformation(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -127,6 +141,7 @@ export class TransformationsController {
   }
 
   @Delete(':id')
+  @Roles('SUPER_ADMIN', 'ADMIN', 'SYSTEM_INTEGRATOR')
   async deleteTransformation(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -136,6 +151,7 @@ export class TransformationsController {
   }
 
   @Post('test')
+  @Roles('SUPER_ADMIN', 'ADMIN', 'SYSTEM_INTEGRATOR')
   async testTransformation(
     @CurrentTenant() tenantId: string,
     @Body() dto: TransformTestDto,

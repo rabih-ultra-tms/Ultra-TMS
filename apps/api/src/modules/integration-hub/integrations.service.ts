@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, Integration, APIRequestLog } from '@prisma/client';
 import { PrismaService } from '../../prisma.service';
+import { CredentialMaskerService } from './services/credential-masker.service';
+import { EncryptionService } from './services/encryption.service';
 import {
   ApiLogListResponseDto,
   ApiLogQueryDto,
@@ -15,11 +17,16 @@ import {
   ProviderResponseDto,
   ToggleStatusDto,
   UpdateIntegrationDto,
+  UpdateIntegrationCredentialsDto,
 } from './dto';
 
 @Injectable()
 export class IntegrationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly encryptionService: EncryptionService,
+    private readonly credentialMasker: CredentialMaskerService,
+  ) {}
 
   // Providers
   async listProviders(tenantId: string, query: ProviderQueryDto): Promise<ProviderResponseDto[]> {
@@ -114,6 +121,12 @@ export class IntegrationsService {
   }
 
   async createIntegration(tenantId: string, userId: string, dto: CreateIntegrationDto): Promise<IntegrationResponseDto> {
+    const encryptedApiKey = this.encryptionService.encrypt(dto.apiKey ?? null);
+    const encryptedApiSecret = this.encryptionService.encrypt(dto.apiSecret ?? null);
+    const encryptedOauthTokens = dto.oauthTokens
+      ? this.encryptionService.encrypt(JSON.stringify(dto.oauthTokens))
+      : null;
+
     const integration = await this.prisma.integration.create({
       data: {
         tenantId,
@@ -122,9 +135,9 @@ export class IntegrationsService {
         category: dto.category,
         provider: dto.provider,
         authType: dto.authType,
-        apiKey: dto.apiKey,
-        apiSecret: dto.apiSecret,
-        oauthTokens: dto.oauthTokens as Prisma.InputJsonValue,
+        apiKey: encryptedApiKey,
+        apiSecret: encryptedApiSecret,
+        oauthTokens: encryptedOauthTokens as Prisma.InputJsonValue,
         config: (dto.config ?? {}) as Prisma.InputJsonValue,
         syncFrequency: dto.syncFrequency ?? 'MANUAL',
         status: dto.status ?? 'ACTIVE',
@@ -153,9 +166,19 @@ export class IntegrationsService {
         ...(dto.provider !== undefined ? { provider: dto.provider } : {}),
         ...(dto.authType !== undefined ? { authType: dto.authType } : {}),
         ...(dto.config !== undefined ? { config: dto.config as Prisma.InputJsonValue } : {}),
-        ...(dto.apiKey !== undefined ? { apiKey: dto.apiKey } : {}),
-        ...(dto.apiSecret !== undefined ? { apiSecret: dto.apiSecret } : {}),
-        ...(dto.oauthTokens !== undefined ? { oauthTokens: dto.oauthTokens as Prisma.InputJsonValue } : {}),
+        ...(dto.apiKey !== undefined
+          ? { apiKey: this.encryptionService.encrypt(dto.apiKey ?? null) }
+          : {}),
+        ...(dto.apiSecret !== undefined
+          ? { apiSecret: this.encryptionService.encrypt(dto.apiSecret ?? null) }
+          : {}),
+        ...(dto.oauthTokens !== undefined
+          ? {
+              oauthTokens: this.encryptionService.encrypt(
+                JSON.stringify(dto.oauthTokens ?? {}),
+              ) as Prisma.InputJsonValue,
+            }
+          : {}),
         ...(dto.syncFrequency !== undefined ? { syncFrequency: dto.syncFrequency } : {}),
         ...(dto.status !== undefined ? { status: dto.status } : {}),
         updatedById: userId,
@@ -163,6 +186,35 @@ export class IntegrationsService {
     });
 
     return this.getIntegration(tenantId, id);
+  }
+
+  async updateCredentials(
+    tenantId: string,
+    id: string,
+    userId: string,
+    dto: UpdateIntegrationCredentialsDto,
+  ): Promise<void> {
+    await this.getIntegration(tenantId, id);
+
+    await this.prisma.integration.update({
+      where: { id },
+      data: {
+        ...(dto.apiKey !== undefined
+          ? { apiKey: this.encryptionService.encrypt(dto.apiKey ?? null) }
+          : {}),
+        ...(dto.apiSecret !== undefined
+          ? { apiSecret: this.encryptionService.encrypt(dto.apiSecret ?? null) }
+          : {}),
+        ...(dto.oauthTokens !== undefined
+          ? {
+              oauthTokens: this.encryptionService.encrypt(
+                JSON.stringify(dto.oauthTokens ?? {}),
+              ) as Prisma.InputJsonValue,
+            }
+          : {}),
+        updatedById: userId,
+      },
+    });
   }
 
   async deleteIntegration(tenantId: string, id: string): Promise<void> {
@@ -199,7 +251,11 @@ export class IntegrationsService {
     await this.getIntegration(tenantId, id);
     await this.prisma.integration.update({
       where: { id },
-      data: { oauthTokens: tokens as Prisma.InputJsonValue, status: 'ACTIVE', lastSyncAt: new Date() },
+      data: {
+        oauthTokens: this.encryptionService.encrypt(JSON.stringify(tokens)) as Prisma.InputJsonValue,
+        status: 'ACTIVE',
+        lastSyncAt: new Date(),
+      },
     });
     return this.getIntegration(tenantId, id);
   }
@@ -272,7 +328,9 @@ export class IntegrationsService {
       category: integration.category,
       provider: integration.provider,
       authType: integration.authType,
-      config: JSON.parse(JSON.stringify(integration.config ?? {})),
+      config: this.credentialMasker.maskObject(
+        JSON.parse(JSON.stringify(integration.config ?? {})),
+      ),
       syncFrequency: integration.syncFrequency,
       status: integration.status,
       lastSyncAt: integration.lastSyncAt,

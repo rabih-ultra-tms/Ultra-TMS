@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Search Service Review - Ultra-TMS Phase A</title>
+  <style>
+    :root { --green: #10b981; --green-bg: #d1fae5; --yellow: #f59e0b; --yellow-bg: #fef3c7; --red: #ef4444; --red-bg: #fee2e2; --blue: #3b82f6; --blue-bg: #dbeafe; --gray: #6b7280; --orange: #f97316; --orange-bg: #ffedd5; }
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; max-width: 1200px; margin: 0 auto; padding: 20px; background: #f9fafb; }
+    h1 { color: #111827; border-bottom: 3px solid var(--blue); padding-bottom: 10px; }
+    h2 { color: #374151; margin-top: 30px; border-left: 4px solid var(--blue); padding-left: 12px; }
+    .service-header { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 24px; border-radius: 12px; margin-bottom: 24px; }
+    .service-header h1 { color: white; border: none; margin: 0; padding: 0; }
+    .summary-box { background: white; border-radius: 12px; padding: 24px; margin: 20px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin: 20px 0; }
+    .score-card { background: white; border-radius: 8px; padding: 16px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .score-card .score { font-size: 32px; font-weight: bold; }
+    .score-card .label { color: var(--gray); font-size: 13px; }
+    .score-high { color: var(--green); } .score-medium { color: var(--yellow); } .score-low { color: var(--red); }
+    .status-good { background: var(--green-bg); color: #065f46; padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; }
+    .status-warning { background: var(--yellow-bg); color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; }
+    .status-error { background: var(--red-bg); color: #991b1b; padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; }
+    .status-p1 { background: var(--orange-bg); color: #c2410c; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+    .status-p2 { background: var(--yellow-bg); color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    th { background: #f9fafb; font-weight: 600; color: #374151; }
+    .nav-links { background: white; padding: 12px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); font-size: 14px; }
+    .nav-links a { color: var(--blue); text-decoration: none; margin-right: 16px; }
+    .warning-box { background: var(--yellow-bg); border: 2px solid var(--yellow); border-radius: 12px; padding: 20px; margin: 20px 0; }
+    .warning-box h3 { color: #92400e; margin-top: 0; }
+    .success-box { background: var(--green-bg); border: 2px solid var(--green); border-radius: 12px; padding: 20px; margin: 20px 0; }
+    .success-box h3 { color: #065f46; margin-top: 0; }
+    code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    ul.checklist { list-style: none; padding-left: 0; }
+    ul.checklist li { padding: 6px 0; }
+  </style>
+</head>
+<body>
+
+<div class="nav-links">
+  <a href="00-general-review.html">← General Review</a> |
+  <a href="20-integration-hub-review.html">← Integration Hub</a> |
+  <a href="22-audit-review.html">Next: Audit →</a>
+</div>
+
+<div class="service-header">
+  <h1>🔍 Search Service Review</h1>
+  <p>Service 21 | Platform Service | Module: <code>modules/search</code> | <strong>CONDITIONAL PASS</strong></p>
+</div>
+
+<div class="warning-box">
+  <h3>⚠️ P1 Issue: Security Through Data Filtering Needed</h3>
+  <p>Search relies on underlying entity permissions. Must ensure search results respect RBAC of source entities.</p>
+</div>
+
+<div class="summary-box">
+  <h2 style="margin-top: 0;">📊 Service Summary</h2>
+  <div class="score-grid">
+    <div class="score-card"><div class="score score-medium">6.5</div><div class="label">Overall Score</div></div>
+    <div class="score-card"><div class="score score-medium">40%</div><div class="label">RBAC Coverage</div></div>
+    <div class="score-card"><div class="score score-low">1</div><div class="label">E2E Tests</div></div>
+    <div class="score-card"><div class="score score-low">No</div><div class="label">Swagger Docs</div></div>
+    <div class="score-card"><div class="score score-high">Yes</div><div class="label">Tenant Isolation</div></div>
+  </div>
+  <p><strong>Frontend Ready:</strong> <span class="status-warning">PARTIAL</span> - Basic search works, needs result filtering by permissions</p>
+</div>
+
+<h2>📁 Module Structure</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>File</th><th>Purpose</th><th>RBAC</th><th>E2E Tests</th></tr></thead>
+    <tbody>
+      <tr><td><code>search.controller.ts</code></td><td>Global search</td><td><span class="status-warning">Partial</span></td><td><span class="status-warning">Partial</span></td></tr>
+      <tr><td><code>search.service.ts</code></td><td>Search logic</td><td><span class="status-good">N/A</span></td><td>-</td></tr>
+      <tr><td><code>elasticsearch.service.ts</code></td><td>ES adapter (optional)</td><td><span class="status-good">N/A</span></td><td>-</td></tr>
+      <tr><td><code>search-index.service.ts</code></td><td>Index management</td><td><span class="status-warning">Admin only</span></td><td><span class="status-error">None</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>🗄️ Database Models</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>Model</th><th>Key Fields</th><th>Compliance</th></tr></thead>
+    <tbody>
+      <tr><td><code>SearchIndex</code></td><td>entityType, entityId, content, metadata (JSON)</td><td><span class="status-good">100%</span></td></tr>
+      <tr><td><code>SearchHistory</code></td><td>userId, query, resultCount, timestamp</td><td><span class="status-good">100%</span></td></tr>
+      <tr><td><code>SavedSearch</code></td><td>userId, name, query, filters (JSON)</td><td><span class="status-good">100%</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>✅ Implemented Features</h2>
+<div class="summary-box">
+  <div class="two-col">
+    <div>
+      <h4>Working Features</h4>
+      <ul class="checklist">
+        <li>✅ Global text search</li>
+        <li>✅ Entity type filtering</li>
+        <li>✅ Pagination</li>
+        <li>✅ Search history tracking</li>
+        <li>✅ Saved searches</li>
+        <li>✅ Tenant-scoped results</li>
+      </ul>
+    </div>
+    <div>
+      <h4>Missing Features</h4>
+      <ul class="checklist">
+        <li>❌ Full-text search with stemming</li>
+        <li>❌ Fuzzy matching</li>
+        <li>❌ Relevance scoring</li>
+        <li>❌ Faceted search</li>
+        <li>❌ <strong>Permission-aware result filtering</strong></li>
+        <li>❌ Real-time index updates</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<h2>🔌 Key Endpoints</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>Method</th><th>Endpoint</th><th>RBAC Status</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code>GET</code></td><td>/api/v1/search</td><td><span class="status-warning">Partial</span></td><td>Needs permission filtering</td></tr>
+      <tr><td><code>GET</code></td><td>/api/v1/search/global</td><td><span class="status-warning">Partial</span></td><td>Cross-entity search</td></tr>
+      <tr><td><code>GET</code></td><td>/api/v1/search/history</td><td><span class="status-good">Protected</span></td><td>Own history only</td></tr>
+      <tr><td><code>POST</code></td><td>/api/v1/search/saved</td><td><span class="status-good">Protected</span></td><td>Own saved searches</td></tr>
+      <tr><td><code>POST</code></td><td>/api/v1/search/reindex</td><td><span class="status-good">Protected</span></td><td>SUPER_ADMIN only</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>🔗 Dependencies</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>Depends On</th><th>Used By</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Auth (user context), All entity services (for indexing)</td>
+        <td>All frontend components (global search bar)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>🔐 Security Consideration</h2>
+<div class="warning-box">
+  <h3>Permission-Aware Search Results</h3>
+  <p>Search service must filter results based on the user's access to underlying entities:</p>
+  <ul>
+    <li><strong>Example:</strong> If user can't access carrier banking info, search shouldn't return those records</li>
+    <li><strong>Solution:</strong> Post-filter search results by checking entity-level permissions</li>
+    <li><strong>Alternative:</strong> Pre-index with permission tags, filter at query time</li>
+  </ul>
+  <pre>// Recommended approach
+const results = await searchService.search(query);
+const filteredResults = await permissionService.filterByAccess(
+  results,
+  user.roles,
+  user.tenantId
+);</pre>
+</div>
+
+<h2>💡 Recommendations</h2>
+<div class="summary-box">
+  <ol>
+    <li><strong><span class="status-p1">P1</span> Add permission-aware result filtering</strong>
+      <ul>
+        <li>Check user's access to each entity type in results</li>
+        <li>Hide sensitive fields from search results</li>
+      </ul>
+    </li>
+    <li><strong><span class="status-p1">P1</span> Add entity-type RBAC</strong> - Users should only search entity types they can access.</li>
+    <li><strong><span class="status-p2">P2</span> Add Elasticsearch integration</strong> - Current DB-based search won't scale.</li>
+    <li><strong><span class="status-p2">P2</span> Add fuzzy matching</strong> - Handle typos.</li>
+    <li><strong><span class="status-p3">P3</span> Add search analytics</strong> - Track common searches for optimization.</li>
+  </ol>
+</div>
+
+<div class="success-box">
+  <h3>📋 Summary</h3>
+  <p><strong>Status:</strong> <span class="status-warning">CONDITIONAL PASS</span></p>
+  <p>Search service is architecturally sound but needs permission-aware filtering. Not P0 because:</p>
+  <ul>
+    <li>Tenant isolation is already in place</li>
+    <li>Search results only contain entity IDs (details fetched separately with proper RBAC)</li>
+    <li>Index management is admin-only</li>
+  </ul>
+  <p><strong>Frontend Impact:</strong> Can build search UI. Add permission filtering before production.</p>
+  <p><strong>Estimated Fix Time:</strong> 4-6 hours for permission filtering</p>
+</div>
+
+<footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: var(--gray); text-align: center;">
+  <p>Search Service Review | Ultra-TMS Phase A | January 15, 2026</p>
+</footer>
+
+</body>
+</html>

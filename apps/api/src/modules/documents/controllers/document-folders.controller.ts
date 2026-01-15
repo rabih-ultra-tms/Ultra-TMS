@@ -17,13 +17,16 @@ import {
   AddDocumentToFolderDto,
 } from '../dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { Roles } from '../../../common/decorators/roles.decorator';
+import { RolesGuard } from '../../../common/guards/roles.guard';
 
 @Controller('documents/folders')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class DocumentFoldersController {
   constructor(private readonly foldersService: DocumentFoldersService) {}
 
   @Post()
+  @Roles('ADMIN', 'COMPLIANCE')
   create(@Request() req: any, @Body() createDto: CreateDocumentFolderDto) {
     return this.foldersService.create(
       req.user.tenantId,
@@ -33,6 +36,7 @@ export class DocumentFoldersController {
   }
 
   @Get()
+  @Roles('ADMIN', 'OPERATIONS', 'ACCOUNTING', 'COMPLIANCE')
   findAll(
     @Request() req: any,
     @Query('parentFolderId') parentFolderId?: string
@@ -41,11 +45,13 @@ export class DocumentFoldersController {
   }
 
   @Get(':id')
+  @Roles('ADMIN', 'OPERATIONS', 'ACCOUNTING', 'COMPLIANCE')
   findOne(@Request() req: any, @Param('id') id: string) {
     return this.foldersService.findOne(req.user.tenantId, id);
   }
 
   @Patch(':id')
+  @Roles('ADMIN', 'COMPLIANCE')
   update(
     @Request() req: any,
     @Param('id') id: string,
@@ -55,11 +61,13 @@ export class DocumentFoldersController {
   }
 
   @Delete(':id')
+  @Roles('ADMIN', 'COMPLIANCE')
   remove(@Request() req: any, @Param('id') id: string) {
     return this.foldersService.remove(req.user.tenantId, id);
   }
 
   @Post(':id/documents')
+  @Roles('ADMIN', 'COMPLIANCE')
   addDocument(
     @Request() req: any,
     @Param('id') id: string,
@@ -74,6 +82,7 @@ export class DocumentFoldersController {
   }
 
   @Delete(':id/documents/:documentId')
+  @Roles('ADMIN', 'COMPLIANCE')
   removeDocument(
     @Request() req: any,
     @Param('id') id: string,

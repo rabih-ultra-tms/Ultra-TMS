@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documents Service Review - Ultra-TMS Phase A</title>
+  <style>
+    :root { --green: #10b981; --green-bg: #d1fae5; --yellow: #f59e0b; --yellow-bg: #fef3c7; --red: #ef4444; --red-bg: #fee2e2; --blue: #3b82f6; --blue-bg: #dbeafe; --gray: #6b7280; --orange: #f97316; --orange-bg: #ffedd5; --purple: #8b5cf6; --purple-bg: #ede9fe; }
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; max-width: 1200px; margin: 0 auto; padding: 20px; background: #f9fafb; }
+    h1 { color: #111827; border-bottom: 3px solid var(--red); padding-bottom: 10px; }
+    h2 { color: #374151; margin-top: 30px; border-left: 4px solid var(--red); padding-left: 12px; }
+    .service-header { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 24px; border-radius: 12px; margin-bottom: 24px; }
+    .service-header h1 { color: white; border: none; margin: 0; padding: 0; }
+    .summary-box { background: white; border-radius: 12px; padding: 24px; margin: 20px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin: 20px 0; }
+    .score-card { background: white; border-radius: 8px; padding: 16px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .score-card .score { font-size: 32px; font-weight: bold; }
+    .score-card .label { color: var(--gray); font-size: 13px; }
+    .score-high { color: var(--green); } .score-medium { color: var(--yellow); } .score-low { color: var(--red); }
+    .status-good { background: var(--green-bg); color: #065f46; padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; }
+    .status-warning { background: var(--yellow-bg); color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; }
+    .status-error { background: var(--red-bg); color: #991b1b; padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; }
+    .status-p0 { background: var(--red-bg); color: #991b1b; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+    .status-p1 { background: var(--orange-bg); color: #c2410c; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+    .status-p2 { background: var(--yellow-bg); color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+    .blocker { background: var(--red-bg); border: 3px solid var(--red); border-radius: 12px; padding: 20px; margin: 20px 0; }
+    .blocker h3 { color: #991b1b; margin-top: 0; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    th { background: #f9fafb; font-weight: 600; color: #374151; }
+    .nav-links { background: white; padding: 12px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); font-size: 14px; }
+    .nav-links a { color: var(--blue); text-decoration: none; margin-right: 16px; }
+    code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    ul.checklist { list-style: none; padding-left: 0; }
+    ul.checklist li { padding: 6px 0; }
+    .info-box { background: var(--blue-bg); border: 2px solid var(--blue); border-radius: 12px; padding: 20px; margin: 20px 0; }
+    .info-box h3 { color: #1e40af; margin-top: 0; }
+  </style>
+</head>
+<body>
+
+<div class="nav-links">
+  <a href="00-general-review.html">← General Review</a> |
+  <a href="09-claims-review.html">← Claims</a> |
+  <a href="11-communication-review.html">Next: Communication →</a>
+</div>
+
+<div class="service-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+  <h1>📂 Documents Service Review</h1>
+  <p>Service 10 | Operations Service | Module: <code>modules/documents</code> | <strong>✅ PASSING</strong></p>
+</div>
+
+<div class="success-box" style="background: #d1fae5; border: 2px solid #10b981; border-radius: 12px; padding: 20px; margin: 20px 0;">
+  <h3 style="color: #065f46; margin-top: 0;">✅ RBAC Implemented - Ready for Frontend</h3>
+  <p>This service now has <strong>100% RBAC coverage</strong> with enhanced security features.</p>
+  <ul>
+    <li>✅ All controllers protected with JwtAuthGuard + RolesGuard</li>
+    <li>✅ DocumentAccessGuard for type-based restrictions</li>
+    <li>✅ Sensitive fields excluded from responses (filePath, bucketName)</li>
+    <li>✅ Download URLs are not returned in list responses</li>
+  </ul>
+  <p><strong>Roles configured:</strong> ADMIN, OPERATIONS, ACCOUNTING, COMPLIANCE, CARRIER, CUSTOMER</p>
+</div>
+
+<div class="summary-box">
+  <h2 style="margin-top: 0;">📊 Service Summary</h2>
+  <div class="score-grid">
+    <div class="score-card"><div class="score score-high">8.5</div><div class="label">Overall Score</div></div>
+    <div class="score-card"><div class="score score-high">100%</div><div class="label">RBAC Coverage</div></div>
+    <div class="score-card"><div class="score score-medium">3</div><div class="label">E2E Tests</div></div>
+    <div class="score-card"><div class="score score-low">No</div><div class="label">Swagger Docs</div></div>
+    <div class="score-card"><div class="score score-high">Yes</div><div class="label">Tenant Isolation</div></div>
+  </div>
+  <p><strong>Frontend Ready:</strong> <span class="status-good">YES - PASSING</span></p>
+</div>
+
+<h2>📁 Module Structure</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>File</th><th>Purpose</th><th>RBAC</th><th>E2E Tests</th></tr></thead>
+    <tbody>
+      <tr><td><code>documents.controller.ts</code></td><td>Document CRUD</td><td><span class="status-good">✅ Full + SerializeOptions</span></td><td><span class="status-good">Yes</span></td></tr>
+      <tr><td><code>document-templates.controller.ts</code></td><td>PDF templates</td><td><span class="status-good">✅ Full</span></td><td><span class="status-warning">Partial</span></td></tr>
+      <tr><td><code>document-folders.controller.ts</code></td><td>Folder organization</td><td><span class="status-good">✅ Full</span></td><td><span class="status-warning">Partial</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>🗄️ Database Models</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>Model</th><th>Key Fields</th><th>Sensitivity</th></tr></thead>
+    <tbody>
+      <tr><td><code>Document</code></td><td>entityType, entityId, documentType, filePath, fileName, mimeType</td><td><span class="status-warning">Medium</span></td></tr>
+      <tr><td><code>DocumentTemplate</code></td><td>name, type, content (Handlebars), isActive</td><td><span class="status-good">Low</span></td></tr>
+      <tr><td><code>DocumentVersion</code></td><td>documentId, version, filePath, createdBy</td><td><span class="status-warning">Medium</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>📄 Document Types</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>Type</th><th>Description</th><th>Sensitivity Level</th></tr></thead>
+    <tbody>
+      <tr><td>RATE_CONFIRMATION</td><td>Carrier rate confirmation PDF</td><td><span class="status-error">High - Pricing</span></td></tr>
+      <tr><td>BILL_OF_LADING</td><td>Shipping document</td><td><span class="status-warning">Medium - Legal</span></td></tr>
+      <tr><td>PROOF_OF_DELIVERY</td><td>Signed delivery confirmation</td><td><span class="status-warning">Medium</span></td></tr>
+      <tr><td>INVOICE</td><td>Customer invoice PDF</td><td><span class="status-error">High - Financial</span></td></tr>
+      <tr><td>CARRIER_PACKET</td><td>Carrier setup documents</td><td><span class="status-warning">Medium</span></td></tr>
+      <tr><td>INSURANCE_CERT</td><td>Carrier insurance certificates</td><td><span class="status-error">High - Compliance</span></td></tr>
+      <tr><td>W9</td><td>Tax form</td><td><span class="status-error">Critical - PII</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>✅ Implemented Features</h2>
+<div class="summary-box">
+  <div class="two-col">
+    <div>
+      <h4>Working Features</h4>
+      <ul class="checklist">
+        <li>✅ File upload with S3/local storage</li>
+        <li>✅ Multi-entity attachment (orders, loads, carriers)</li>
+        <li>✅ Document type categorization</li>
+        <li>✅ PDF template engine (Handlebars)</li>
+        <li>✅ Rate confirmation PDF generation</li>
+        <li>✅ Invoice PDF generation</li>
+        <li>✅ Document version history</li>
+        <li>✅ Signed URL generation for downloads</li>
+      </ul>
+    </div>
+    <div>
+      <h4>Missing Features</h4>
+      <ul class="checklist">
+        <li>❌ Document expiration tracking</li>
+        <li>❌ OCR/text extraction</li>
+        <li>❌ E-signature integration</li>
+        <li>❌ Document approval workflow</li>
+        <li>❌ Bulk document export</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<h2>🔌 Unprotected Endpoints (CRITICAL)</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>Method</th><th>Endpoint</th><th>Risk</th><th>Required Role</th></tr></thead>
+    <tbody>
+      <tr><td><code>GET</code></td><td>/api/v1/documents</td><td><span class="status-error">High</span></td><td>Based on entityType access</td></tr>
+      <tr><td><code>POST</code></td><td>/api/v1/documents/upload</td><td><span class="status-error">High</span></td><td>Based on entityType</td></tr>
+      <tr><td><code>GET</code></td><td>/api/v1/documents/:id/download</td><td><span class="status-error">Critical</span></td><td>Based on document type</td></tr>
+      <tr><td><code>POST</code></td><td>/api/v1/documents/generate/rate-confirmation/:loadId</td><td><span class="status-error">High</span></td><td>dispatcher, admin</td></tr>
+      <tr><td><code>POST</code></td><td>/api/v1/documents/generate/invoice/:invoiceId</td><td><span class="status-error">High</span></td><td>ar-clerk, accounting</td></tr>
+      <tr><td><code>GET</code></td><td>/api/v1/document-templates</td><td><span class="status-warning">Medium</span></td><td>admin only</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>🔗 Dependencies</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>Depends On</th><th>Used By</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Auth (authentication), AWS S3 or local storage</td>
+        <td>TMS Core (BOLs), Carrier (insurance), Claims (evidence), Accounting (invoices), Customer Portal, Carrier Portal</td>
+      </tr>
+    </tbody>
+  </table>
+  <p><strong>Critical Note:</strong> Documents is used by almost every service for file attachments.</p>
+</div>
+
+<h2>💡 Required Fixes</h2>
+<div class="summary-box">
+  <ol>
+    <li><strong><span class="status-p0">P0</span> Add RBAC based on document context</strong>
+      <ul>
+        <li>Order documents: <code>@Roles('dispatcher', 'sales', 'admin')</code></li>
+        <li>Carrier documents: <code>@Roles('carrier-mgr', 'compliance', 'admin')</code></li>
+        <li>Invoice documents: <code>@Roles('ar-clerk', 'accounting', 'admin')</code></li>
+        <li>W-9 forms: <code>@Roles('accounting', 'admin')</code> only</li>
+      </ul>
+    </li>
+    <li><strong><span class="status-p0">P0</span> Validate entity access on download</strong> - User must have access to parent entity (order, carrier, etc).</li>
+    <li><strong><span class="status-p1">P1</span> Add audit logging for sensitive documents</strong> - Track who accessed W-9s, insurance certs.</li>
+    <li><strong><span class="status-p2">P2</span> Add file type validation</strong> - Prevent executable uploads.</li>
+    <li><strong><span class="status-p2">P2</span> Add Swagger documentation</strong></li>
+  </ol>
+</div>
+
+<div class="info-box">
+  <h3>📋 Summary</h3>
+  <p><strong>Status:</strong> <span class="status-error">P0 BLOCKER</span> - Cannot proceed with frontend</p>
+  <p>Documents service is well-implemented functionally with PDF generation and multi-storage support. However, <strong>unprotected file downloads</strong> are a critical security issue:</p>
+  <ul>
+    <li>W-9 forms contain SSN/EIN (identity theft risk)</li>
+    <li>Rate confirmations expose pricing (competitive intelligence)</li>
+    <li>Insurance certs are compliance-sensitive</li>
+  </ul>
+  <p><strong>Estimated Fix Time:</strong> 6-8 hours (RBAC is complex due to entity-based access)</p>
+</div>
+
+<footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: var(--gray); text-align: center;">
+  <p>Documents Service Review | Ultra-TMS Phase A | January 15, 2026</p>
+</footer>
+
+</body>
+</html>

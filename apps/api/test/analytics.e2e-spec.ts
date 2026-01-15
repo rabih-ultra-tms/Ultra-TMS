@@ -1,19 +1,17 @@
 import request from 'supertest';
-import { ExecutionContext, INestApplication } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
-import { AppModule } from '../src/app.module';
+import { INestApplication } from '@nestjs/common';
 import { PrismaService } from '../src/prisma.service';
-import { JwtAuthGuard } from '../src/modules/auth/guards/jwt-auth.guard';
 import { AlertCondition, OutputFormat, ReportType } from '@prisma/client';
+import { createTestAppWithRole } from './helpers/test-app.helper';
 
 const TEST_TENANT = 'tenant-analytics';
 const TEST_USER = {
   id: 'user-analytics',
   email: 'user@analytics.test',
   tenantId: TEST_TENANT,
-  roles: ['SUPER_ADMIN'],
-  role: 'SUPER_ADMIN',
-  roleName: 'SUPER_ADMIN',
+  roles: ['ADMIN'],
+  role: 'ADMIN',
+  roleName: 'ADMIN',
 };
 
 describe('Analytics API E2E', () => {
@@ -22,49 +20,14 @@ describe('Analytics API E2E', () => {
   let kpiId: string;
 
   beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
-      .overrideGuard(JwtAuthGuard)
-      .useValue({
-        canActivate: (ctx: ExecutionContext) => {
-          const req = ctx.switchToHttp().getRequest();
-          req.user = TEST_USER;
-          req.headers['x-tenant-id'] = TEST_TENANT;
-          return true;
-        },
-      })
-      .compile();
-
-    app = moduleRef.createNestApplication();
-    app.setGlobalPrefix('api/v1');
-    await app.init();
-
-    prisma = app.get(PrismaService);
-
-    await prisma.tenant.upsert({
-      where: { slug: TEST_TENANT },
-      update: { name: 'Analytics Tenant' },
-      create: { id: TEST_TENANT, slug: TEST_TENANT, name: 'Analytics Tenant' },
-    });
-
-    await prisma.user.upsert({
-      where: { id: TEST_USER.id },
-      update: {
-        tenantId: TEST_TENANT,
-        email: TEST_USER.email,
-        firstName: 'Analytics',
-        lastName: 'User',
-        passwordHash: 'hashed-password',
-      },
-      create: {
-        id: TEST_USER.id,
-        tenantId: TEST_TENANT,
-        email: TEST_USER.email,
-        firstName: 'Analytics',
-        lastName: 'User',
-        passwordHash: 'hashed-password',
-        status: 'ACTIVE',
-      },
-    });
+    const setup = await createTestAppWithRole(
+      TEST_TENANT,
+      TEST_USER.id,
+      TEST_USER.email,
+      'ADMIN',
+    );
+    app = setup.app;
+    prisma = setup.prisma;
 
     await prisma.kPIDefinition.deleteMany({ where: { tenantId: TEST_TENANT } });
 
@@ -194,7 +157,7 @@ describe('Analytics API E2E', () => {
   it('manages saved views and data queries', async () => {
     const viewRes = await request(app.getHttpServer())
       .post('/api/v1/analytics/views')
-      .send({ viewName: 'Loads Grid', entityType: 'LOAD', columns: ['id'], isPublic: false })
+      .send({ viewName: 'Loads Grid', entityType: 'LOAD', columns: { id: true }, isPublic: false })
       .expect(201);
 
     const viewId = viewRes.body.data.id;

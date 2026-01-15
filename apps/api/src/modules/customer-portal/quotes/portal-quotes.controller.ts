@@ -1,5 +1,7 @@
 import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { PortalAuthGuard } from '../guards/portal-auth.guard';
+import { CompanyScopeGuard } from '../guards/company-scope.guard';
 import { PortalQuotesService } from './portal-quotes.service';
 import {
   AcceptQuoteDto,
@@ -8,49 +10,83 @@ import {
   RevisionRequestDto,
   SubmitQuoteRequestDto,
 } from './dto/submit-quote-request.dto';
+import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
+import { CompanyScope } from '../decorators/company-scope.decorator';
+import type { CompanyScopeType } from '../decorators/company-scope.decorator';
 
-@UseGuards(PortalAuthGuard)
+@UseGuards(PortalAuthGuard, CompanyScopeGuard)
 @Controller('portal/quotes')
+@ApiTags('Customer Portal')
+@ApiBearerAuth('Portal-JWT')
 export class PortalQuotesController {
   constructor(private readonly quotesService: PortalQuotesService) {}
 
   @Get()
-  list(@Req() req: any) {
-    return this.quotesService.list(req.portalUser.tenantId, req.portalUser.companyId, req.portalUser.id);
+  @ApiOperation({ summary: 'List portal quotes' })
+  @ApiStandardResponse('Portal quotes list')
+  @ApiErrorResponses()
+  list(@CompanyScope() scope: CompanyScopeType, @Req() req: any) {
+    return this.quotesService.list(scope.tenantId, scope.id, req.portalUser.id);
   }
 
   @Post('request')
-  submit(@Body() dto: SubmitQuoteRequestDto, @Req() req: any) {
-    return this.quotesService.submit(req.portalUser.tenantId, req.portalUser.companyId, req.portalUser.id, dto);
+  @ApiOperation({ summary: 'Submit quote request' })
+  @ApiStandardResponse('Quote request submitted')
+  @ApiErrorResponses()
+  submit(@Body() dto: SubmitQuoteRequestDto, @CompanyScope() scope: CompanyScopeType, @Req() req: any) {
+    return this.quotesService.submit(scope.tenantId, scope.id, req.portalUser.id, dto);
   }
 
   @Get(':id')
-  detail(@Param('id') id: string, @Req() req: any) {
-    return this.quotesService.detail(req.portalUser.tenantId, id);
+  @ApiOperation({ summary: 'Get quote by ID' })
+  @ApiParam({ name: 'id', description: 'Quote ID' })
+  @ApiStandardResponse('Quote details')
+  @ApiErrorResponses()
+  detail(@Param('id') id: string, @CompanyScope() scope: CompanyScopeType) {
+    return this.quotesService.detail(scope.tenantId, scope.id, id);
   }
 
   @Post(':id/accept')
-  accept(@Param('id') id: string, @Body() dto: AcceptQuoteDto, @Req() req: any) {
-    return this.quotesService.accept(req.portalUser.tenantId, id, dto);
+  @ApiOperation({ summary: 'Accept quote' })
+  @ApiParam({ name: 'id', description: 'Quote ID' })
+  @ApiStandardResponse('Quote accepted')
+  @ApiErrorResponses()
+  accept(@Param('id') id: string, @Body() dto: AcceptQuoteDto, @CompanyScope() scope: CompanyScopeType) {
+    return this.quotesService.accept(scope.tenantId, scope.id, id, dto);
   }
 
   @Post(':id/decline')
-  decline(@Param('id') id: string, @Body() dto: DeclineQuoteDto, @Req() req: any) {
-    return this.quotesService.decline(req.portalUser.tenantId, id, dto);
+  @ApiOperation({ summary: 'Decline quote' })
+  @ApiParam({ name: 'id', description: 'Quote ID' })
+  @ApiStandardResponse('Quote declined')
+  @ApiErrorResponses()
+  decline(@Param('id') id: string, @Body() dto: DeclineQuoteDto, @CompanyScope() scope: CompanyScopeType) {
+    return this.quotesService.decline(scope.tenantId, scope.id, id, dto);
   }
 
   @Post(':id/revision')
-  revision(@Param('id') id: string, @Body() dto: RevisionRequestDto, @Req() req: any) {
-    return this.quotesService.revision(req.portalUser.tenantId, id, dto);
+  @ApiOperation({ summary: 'Request quote revision' })
+  @ApiParam({ name: 'id', description: 'Quote ID' })
+  @ApiStandardResponse('Quote revision requested')
+  @ApiErrorResponses()
+  revision(@Param('id') id: string, @Body() dto: RevisionRequestDto, @CompanyScope() scope: CompanyScopeType) {
+    return this.quotesService.revision(scope.tenantId, scope.id, id, dto);
   }
 
   @Get(':id/pdf')
-  pdf(@Param('id') id: string, @Req() req: any) {
-    return { url: `/portal/quotes/${id}/quote.pdf`, tenantId: req.portalUser.tenantId };
+  @ApiOperation({ summary: 'Get quote PDF' })
+  @ApiParam({ name: 'id', description: 'Quote ID' })
+  @ApiStandardResponse('Quote PDF')
+  @ApiErrorResponses()
+  pdf(@Param('id') id: string, @CompanyScope() scope: CompanyScopeType) {
+    return { url: `/portal/quotes/${id}/quote.pdf`, tenantId: scope.tenantId };
   }
 
   @Post('estimate')
-  estimate(@Body() dto: EstimateQuoteDto, @Req() req: any) {
-    return this.quotesService.estimate(req.portalUser.tenantId, req.portalUser.companyId, req.portalUser.id, dto);
+  @ApiOperation({ summary: 'Estimate quote' })
+  @ApiStandardResponse('Quote estimate')
+  @ApiErrorResponses()
+  estimate(@Body() dto: EstimateQuoteDto, @CompanyScope() scope: CompanyScopeType, @Req() req: any) {
+    return this.quotesService.estimate(scope.tenantId, scope.id, req.portalUser.id, dto);
   }
 }

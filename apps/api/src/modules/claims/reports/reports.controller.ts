@@ -1,14 +1,24 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { Roles } from '../../../common/decorators';
 import { CurrentTenant } from '../../../common/decorators/current-tenant.decorator';
 import { ClaimsReportsService } from './reports.service';
+import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('claims/reports')
 @UseGuards(JwtAuthGuard)
+@ApiTags('Reports')
+@ApiBearerAuth('JWT-auth')
+@Roles('USER', 'MANAGER', 'ADMIN')
 export class ClaimsReportsController {
   constructor(private readonly reportsService: ClaimsReportsService) {}
 
   @Get('status')
+  @ApiOperation({ summary: 'Get claim status report' })
+  @ApiStandardResponse('Claim status report')
+  @ApiErrorResponses()
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   async status(
     @CurrentTenant() tenantId: string,
   ) {
@@ -16,6 +26,10 @@ export class ClaimsReportsController {
   }
 
   @Get('types')
+  @ApiOperation({ summary: 'Get claim types report' })
+  @ApiStandardResponse('Claim types report')
+  @ApiErrorResponses()
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   async types(
     @CurrentTenant() tenantId: string,
   ) {
@@ -23,6 +37,10 @@ export class ClaimsReportsController {
   }
 
   @Get('financials')
+  @ApiOperation({ summary: 'Get claim financials report' })
+  @ApiStandardResponse('Claim financials report')
+  @ApiErrorResponses()
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   async financials(
     @CurrentTenant() tenantId: string,
   ) {
@@ -30,6 +48,10 @@ export class ClaimsReportsController {
   }
 
   @Get('overdue')
+  @ApiOperation({ summary: 'Get overdue claims report' })
+  @ApiStandardResponse('Overdue claims report')
+  @ApiErrorResponses()
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   async overdue(
     @CurrentTenant() tenantId: string,
   ) {

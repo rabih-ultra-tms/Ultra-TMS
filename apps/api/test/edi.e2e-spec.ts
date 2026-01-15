@@ -5,6 +5,7 @@ import { EdiDirection, EdiMessageStatus, EdiTransactionType, Prisma } from '@pri
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma.service';
 import { JwtAuthGuard } from '../src/modules/auth/guards/jwt-auth.guard';
+import { createTestAppWithRole } from './helpers/test-app.helper';
 
 const TEST_TENANT = 'tenant-edi';
 const TEST_USER = {
@@ -34,6 +35,12 @@ describe('EDI Service API E2E', () => {
       .compile();
 
     app = moduleRef.createNestApplication();
+    app.use((req, _res, next) => {
+      req.user = TEST_USER;
+      req.headers['x-tenant-id'] = TEST_TENANT;
+      req.tenantId = TEST_TENANT;
+      next();
+    });
     app.setGlobalPrefix('api/v1');
     await app.init();
 
@@ -99,6 +106,18 @@ describe('EDI Service API E2E', () => {
 
       expect(toggleRes.body.data.isActive).toBe(false);
     });
+
+    it('restricts trading partner creation to EDI managers', async () => {
+      const setup = await createTestAppWithRole('tenant-edi-rbac', 'user-edi-ops', 'ops@edi.test', 'OPERATIONS_MANAGER');
+      const rbacApp = setup.app;
+
+      await request(rbacApp.getHttpServer())
+        .post('/api/v1/edi/trading-partners')
+        .send({ partnerName: 'RBAC Partner', partnerType: 'CUSTOMER', isaId: 'ISA-RBAC-1', protocol: 'FTP' })
+        .expect(403);
+
+      await rbacApp.close();
+    });
   });
 
   describe('Document Processing', () => {
@@ -139,6 +158,37 @@ describe('EDI Service API E2E', () => {
 
       expect(errorRes.body.data.status).toBe(EdiMessageStatus.ERROR);
       expect(errorRes.body.data.validationStatus).toBe('ERROR');
+    });
+
+    it('restricts EDI document import to EDI managers', async () => {
+      const setup = await createTestAppWithRole('tenant-edi-rbac', 'user-edi-dispatch', 'dispatch@edi.test', 'DISPATCHER');
+      const rbacApp = setup.app;
+      const rbacPrisma = setup.prisma;
+
+      const partner = await rbacPrisma.ediTradingPartner.create({
+        data: {
+          tenantId: 'tenant-edi-rbac',
+          partnerName: 'RBAC Partner',
+          partnerType: 'CUSTOMER',
+          isaId: 'ISA-RBAC-2',
+          protocol: 'FTP',
+          sendFunctionalAck: true,
+          requireFunctionalAck: true,
+          fieldMappings: Prisma.JsonNull,
+        },
+      });
+
+      await request(rbacApp.getHttpServer())
+        .post('/api/v1/edi/documents/import')
+        .send({
+          tradingPartnerId: partner.id,
+          transactionType: 'EDI_204',
+          rawContent: JSON.stringify({ loadId: 'LOAD-RBAC', status: 'NEW' }),
+        })
+        .expect(403);
+
+      await rbacPrisma.ediTradingPartner.deleteMany({ where: { tenantId: 'tenant-edi-rbac' } });
+      await rbacApp.close();
     });
   });
 

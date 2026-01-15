@@ -26,6 +26,13 @@ export interface IStorageService {
   getUrl(filepath: string): string;
 
   /**
+   * Get a signed URL for a file
+   * @param filepath - Relative path to the file
+   * @param options - Signing options
+   */
+  getSignedUrl(filepath: string, options?: { expiresIn?: number }): Promise<string>;
+
+  /**
    * Check if a file exists
    * @param filepath - Relative path to the file
    */

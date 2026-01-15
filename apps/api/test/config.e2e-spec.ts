@@ -7,6 +7,7 @@ import { JwtAuthGuard } from '../src/modules/auth/guards/jwt-auth.guard';
 import { ConfigCategory, FeatureFlagStatus, ResetFrequency } from '@prisma/client';
 import { RolesGuard } from '../src/common/guards/roles.guard';
 import { APP_GUARD } from '@nestjs/core';
+import { ConfigCacheService } from '../src/modules/config/config-cache.service';
 
 const TEST_TENANT = 'tenant-config';
 const SYSTEM_TENANT = 'system';
@@ -98,6 +99,9 @@ describe('Config API E2E', () => {
     await prisma.holiday.deleteMany({ where: { tenantId: TEST_TENANT } });
     await prisma.numberSequence.deleteMany({ where: { tenantId: TEST_TENANT } });
     await prisma.configTemplate.deleteMany({});
+
+    const cache = app.get(ConfigCacheService);
+    await cache.invalidateSystem();
   });
 
   afterAll(async () => {

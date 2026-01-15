@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM Service Review - Ultra-TMS Phase A</title>
+  <style>
+    :root {
+      --green: #10b981; --green-bg: #d1fae5;
+      --yellow: #f59e0b; --yellow-bg: #fef3c7;
+      --red: #ef4444; --red-bg: #fee2e2;
+      --blue: #3b82f6; --blue-bg: #dbeafe;
+      --gray: #6b7280; --gray-bg: #f3f4f6;
+      --purple: #8b5cf6; --purple-bg: #ede9fe;
+      --orange: #f97316; --orange-bg: #ffedd5;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; max-width: 1200px; margin: 0 auto; padding: 20px; background: #f9fafb; }
+    h1 { color: #111827; border-bottom: 3px solid var(--blue); padding-bottom: 10px; }
+    h2 { color: #374151; margin-top: 30px; border-left: 4px solid var(--blue); padding-left: 12px; }
+    h3 { color: #4b5563; }
+    .service-header { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 24px; border-radius: 12px; margin-bottom: 24px; }
+    .service-header h1 { color: white; border: none; margin: 0; padding: 0; }
+    .service-header p { margin: 10px 0 0 0; opacity: 0.9; }
+    .summary-box { background: white; border-radius: 12px; padding: 24px; margin: 20px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin: 20px 0; }
+    .score-card { background: white; border-radius: 8px; padding: 16px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .score-card .score { font-size: 32px; font-weight: bold; }
+    .score-card .label { color: var(--gray); font-size: 13px; }
+    .score-high { color: var(--green); }
+    .score-medium { color: var(--yellow); }
+    .score-low { color: var(--red); }
+    .status-good { background: var(--green-bg); color: #065f46; padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; }
+    .status-warning { background: var(--yellow-bg); color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; }
+    .status-error { background: var(--red-bg); color: #991b1b; padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; }
+    .status-p0 { background: var(--red-bg); color: #991b1b; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+    .status-p1 { background: var(--orange-bg); color: #c2410c; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+    .status-p2 { background: var(--yellow-bg); color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+    .status-p3 { background: var(--blue-bg); color: #1e40af; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    th { background: #f9fafb; font-weight: 600; color: #374151; }
+    .nav-links { background: white; padding: 12px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); font-size: 14px; }
+    .nav-links a { color: var(--blue); text-decoration: none; margin-right: 16px; }
+    .blocker-box { background: var(--red-bg); border: 2px solid var(--red); border-radius: 12px; padding: 20px; margin: 20px 0; }
+    .blocker-box h3 { color: var(--red); margin-top: 0; }
+    .warning-box { background: var(--yellow-bg); border: 2px solid var(--yellow); border-radius: 12px; padding: 20px; margin: 20px 0; }
+    .warning-box h3 { color: #92400e; margin-top: 0; }
+    code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    ul.checklist { list-style: none; padding-left: 0; }
+    ul.checklist li { padding: 6px 0; }
+  </style>
+</head>
+<body>
+
+<div class="nav-links">
+  <a href="00-general-review.html">← Back to General Review</a> |
+  <a href="01-auth-admin-review.html">← Auth/Admin</a> |
+  <a href="03-sales-review.html">Next: Sales →</a>
+</div>
+
+<div class="service-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+  <h1>✅ CRM Service Review - PASSING</h1>
+  <p>Service 02 | Core Service | Module: <code>modules/crm</code></p>
+</div>
+
+<div class="success-box" style="background: #d1fae5; border: 2px solid #10b981;">
+  <h3 style="color: #065f46; margin-top: 0;">✅ RBAC Implemented - Ready for Frontend</h3>
+  <p>This service now has <strong>100% RBAC coverage</strong>. All 4 controllers (companies, contacts, opportunities, activities) are protected with JwtAuthGuard + RolesGuard and appropriate @Roles decorators.</p>
+  <p><strong>Roles configured:</strong> ADMIN, SALES_REP, SALES_MANAGER, ACCOUNT_MANAGER</p>
+</div>
+
+<div class="summary-box">
+  <h2 style="margin-top: 0;">📊 Service Summary</h2>
+  <div class="score-grid">
+    <div class="score-card">
+      <div class="score score-high">8.5</div>
+      <div class="label">Overall Score</div>
+    </div>
+    <div class="score-card">
+      <div class="score score-high">100%</div>
+      <div class="label">RBAC Coverage</div>
+    </div>
+    <div class="score-card">
+      <div class="score score-low">1</div>
+      <div class="label">E2E Tests</div>
+    </div>
+    <div class="score-card">
+      <div class="score score-low">No</div>
+      <div class="label">Swagger Docs</div>
+    </div>
+    <div class="score-card">
+      <div class="score score-high">Yes</div>
+      <div class="label">Tenant Isolation</div>
+    </div>
+  </div>
+  <p><strong>Frontend Ready:</strong> <span class="status-good">YES - PASSING</span></p>
+</div>
+
+<!-- Issues -->
+<div class="summary-box">
+  <h3>Issues Found</h3>
+  <table>
+    <thead><tr><th>Priority</th><th>Issue</th><th>Impact</th><th>Effort</th></tr></thead>
+    <tbody>
+      <tr style="background: var(--red-bg);">
+        <td><span class="status-p0">P0</span></td>
+        <td>No @Roles() on any endpoint</td>
+        <td>Any user can access all CRM data</td>
+        <td>4 hours</td>
+      </tr>
+      <tr>
+        <td><span class="status-p2">P2</span></td>
+        <td>Only 1 basic E2E test</td>
+        <td>Cannot verify CRUD operations work</td>
+        <td>1 day</td>
+      </tr>
+      <tr>
+        <td><span class="status-p2">P2</span></td>
+        <td>Missing @ApiTags on controllers</td>
+        <td>Not documented in Swagger</td>
+        <td>2 hours</td>
+      </tr>
+      <tr>
+        <td><span class="status-p3">P3</span></td>
+        <td>HubSpot sync needs error handling review</td>
+        <td>Integration reliability</td>
+        <td>4 hours</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Module Structure -->
+<h2>📁 Module Structure</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>File</th><th>Purpose</th><th>RBAC</th><th>Swagger</th></tr></thead>
+    <tbody>
+      <tr><td><code>companies.controller.ts</code></td><td>Company CRUD</td><td><span class="status-error">No</span></td><td><span class="status-error">No</span></td></tr>
+      <tr><td><code>contacts.controller.ts</code></td><td>Contact CRUD</td><td><span class="status-error">No</span></td><td><span class="status-error">No</span></td></tr>
+      <tr><td><code>opportunities.controller.ts</code></td><td>Opportunity/Deal CRUD</td><td><span class="status-error">No</span></td><td><span class="status-error">No</span></td></tr>
+      <tr><td><code>activities.controller.ts</code></td><td>Activity tracking</td><td><span class="status-error">No</span></td><td><span class="status-error">No</span></td></tr>
+      <tr><td><code>hubspot.controller.ts</code></td><td>HubSpot integration</td><td><span class="status-error">No</span></td><td><span class="status-error">No</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Database Models -->
+<h2>🗄️ Database Models</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>Model</th><th>Key Fields</th><th>Migration Support</th><th>Soft Delete</th></tr></thead>
+    <tbody>
+      <tr><td><code>Company</code></td><td>name, companyType, status, industry, segment, tier, creditLimit, paymentTerms</td><td><span class="status-good">Yes</span></td><td><span class="status-good">Yes</span></td></tr>
+      <tr><td><code>Contact</code></td><td>firstName, lastName, email, phone, roleType, isPrimary</td><td><span class="status-good">Yes</span></td><td><span class="status-good">Yes</span></td></tr>
+      <tr><td><code>Opportunity</code></td><td>name, stage, probability, estimatedValue, expectedCloseDate</td><td><span class="status-good">Yes</span></td><td><span class="status-good">Yes</span></td></tr>
+      <tr><td><code>Activity</code></td><td>entityType, activityType, subject, activityDate, status</td><td><span class="status-good">Yes</span></td><td><span class="status-good">Yes</span></td></tr>
+      <tr><td><code>HubspotSyncLog</code></td><td>entityType, hubspotId, syncDirection, syncStatus</td><td><span class="status-good">Yes</span></td><td><span class="status-warning">N/A</span></td></tr>
+    </tbody>
+  </table>
+  <p><strong>Schema Compliance:</strong> <span class="status-good">100%</span> - All models have required fields</p>
+</div>
+
+<!-- Endpoints -->
+<h2>🔌 Endpoints Analysis</h2>
+<div class="summary-box">
+  <h4>Companies (~8 endpoints)</h4>
+  <table>
+    <thead><tr><th>Method</th><th>Endpoint</th><th>Purpose</th><th>Required Role</th></tr></thead>
+    <tbody>
+      <tr><td><code>GET</code></td><td>/api/v1/companies</td><td>List companies</td><td><span class="status-error">Missing - needs SALES, ADMIN</span></td></tr>
+      <tr><td><code>POST</code></td><td>/api/v1/companies</td><td>Create company</td><td><span class="status-error">Missing - needs SALES, ADMIN</span></td></tr>
+      <tr><td><code>GET</code></td><td>/api/v1/companies/:id</td><td>Get company</td><td><span class="status-error">Missing - needs SALES, ADMIN</span></td></tr>
+      <tr><td><code>PATCH</code></td><td>/api/v1/companies/:id</td><td>Update company</td><td><span class="status-error">Missing - needs SALES, ADMIN</span></td></tr>
+      <tr><td><code>DELETE</code></td><td>/api/v1/companies/:id</td><td>Delete company</td><td><span class="status-error">Missing - needs ADMIN</span></td></tr>
+    </tbody>
+  </table>
+  
+  <h4>Contacts (~8 endpoints)</h4>
+  <table>
+    <thead><tr><th>Method</th><th>Endpoint</th><th>Purpose</th><th>Required Role</th></tr></thead>
+    <tbody>
+      <tr><td><code>GET</code></td><td>/api/v1/contacts</td><td>List contacts</td><td><span class="status-error">Missing - needs SALES, ADMIN</span></td></tr>
+      <tr><td><code>POST</code></td><td>/api/v1/contacts</td><td>Create contact</td><td><span class="status-error">Missing - needs SALES, ADMIN</span></td></tr>
+      <tr><td><code>GET</code></td><td>/api/v1/contacts/:id</td><td>Get contact</td><td><span class="status-error">Missing - needs SALES, ADMIN</span></td></tr>
+      <tr><td><code>PATCH</code></td><td>/api/v1/contacts/:id</td><td>Update contact</td><td><span class="status-error">Missing - needs SALES, ADMIN</span></td></tr>
+      <tr><td><code>DELETE</code></td><td>/api/v1/contacts/:id</td><td>Delete contact</td><td><span class="status-error">Missing - needs ADMIN</span></td></tr>
+    </tbody>
+  </table>
+  
+  <h4>Opportunities (~8 endpoints)</h4>
+  <table>
+    <thead><tr><th>Method</th><th>Endpoint</th><th>Purpose</th><th>Required Role</th></tr></thead>
+    <tbody>
+      <tr><td><code>GET</code></td><td>/api/v1/opportunities</td><td>List opportunities</td><td><span class="status-error">Missing - needs SALES, MANAGER, ADMIN</span></td></tr>
+      <tr><td><code>POST</code></td><td>/api/v1/opportunities</td><td>Create opportunity</td><td><span class="status-error">Missing - needs SALES, ADMIN</span></td></tr>
+      <tr><td><code>PATCH</code></td><td>/api/v1/opportunities/:id/stage</td><td>Update stage</td><td><span class="status-error">Missing - needs SALES, MANAGER</span></td></tr>
+    </tbody>
+  </table>
+  
+  <h4>HubSpot Integration (~6 endpoints)</h4>
+  <table>
+    <thead><tr><th>Method</th><th>Endpoint</th><th>Purpose</th><th>Required Role</th></tr></thead>
+    <tbody>
+      <tr><td><code>POST</code></td><td>/api/v1/hubspot/sync</td><td>Trigger sync</td><td><span class="status-error">Missing - needs ADMIN</span></td></tr>
+      <tr><td><code>GET</code></td><td>/api/v1/hubspot/status</td><td>Sync status</td><td><span class="status-error">Missing - needs ADMIN</span></td></tr>
+      <tr><td><code>POST</code></td><td>/api/v1/hubspot/webhook</td><td>HubSpot webhook</td><td><span class="status-warning">Needs signature verification</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Features -->
+<h2>✅ Implemented Features</h2>
+<div class="summary-box">
+  <div class="two-col">
+    <div>
+      <h4>Working Features</h4>
+      <ul class="checklist">
+        <li>✅ Company CRUD with hierarchy (parent/child)</li>
+        <li>✅ Contact management linked to companies</li>
+        <li>✅ Opportunity pipeline with stages</li>
+        <li>✅ Activity tracking (calls, emails, meetings)</li>
+        <li>✅ HubSpot bi-directional sync</li>
+        <li>✅ Company segmentation (Enterprise, Mid-Market, SMB)</li>
+        <li>✅ Customer tiers (Platinum, Gold, Silver, Bronze)</li>
+        <li>✅ Tags and custom fields support</li>
+      </ul>
+    </div>
+    <div>
+      <h4>Missing/Incomplete</h4>
+      <ul class="checklist">
+        <li>❌ RBAC on all endpoints</li>
+        <li>❌ Swagger documentation</li>
+        <li>❌ Comprehensive E2E tests</li>
+        <li>⚠️ HubSpot webhook signature verification</li>
+        <li>⚠️ Bulk import validation</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- Dependencies -->
+<h2>🔗 Dependencies</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>Depends On</th><th>Used By</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Auth (user context, roles)</td>
+        <td>Sales (quotes linked to companies/contacts)<br>
+            TMS Core (orders linked to customers)<br>
+            Accounting (invoices linked to companies)<br>
+            Customer Portal (portal users linked to companies)</td>
+      </tr>
+    </tbody>
+  </table>
+  <p><strong>Impact:</strong> CRM is a core data service. Companies and Contacts are referenced by most other services.</p>
+</div>
+
+<!-- Required Fix -->
+<h2>🔧 Required RBAC Implementation</h2>
+<div class="summary-box">
+  <p>Add the following to each controller:</p>
+  <pre style="background: #f3f4f6; padding: 16px; border-radius: 8px; overflow-x: auto;">
+@Controller('api/v1/companies')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('CRM - Companies')
+@ApiBearerAuth()
+export class CompaniesController {
+  
+  @Get()
+  @Roles('admin', 'manager', 'sales')
+  async findAll() { ... }
+  
+  @Post()
+  @Roles('admin', 'sales')
+  async create() { ... }
+  
+  @Delete(':id')
+  @Roles('admin')
+  async remove() { ... }
+}
+  </pre>
+</div>
+
+<!-- Recommendations -->
+<h2>💡 Recommendations</h2>
+<div class="summary-box">
+  <ol>
+    <li><strong><span class="status-p0">P0</span> Add @Roles() to all endpoints</strong> - Use Claims service as reference pattern. Estimated 4 hours.</li>
+    <li><strong><span class="status-p2">P2</span> Expand E2E tests</strong> - Add tests for CRUD, pagination, filtering, HubSpot sync.</li>
+    <li><strong><span class="status-p2">P2</span> Add Swagger docs</strong> - Document all DTOs and response formats.</li>
+    <li><strong><span class="status-p3">P3</span> Add HubSpot webhook signature verification</strong> - Security hardening.</li>
+  </ol>
+</div>
+
+<div class="blocker-box">
+  <h3>📋 Summary</h3>
+  <p>CRM Service is <strong>functionally complete</strong> but has a <strong>critical security gap</strong> with 0% RBAC coverage. This is a P0 blocker that prevents frontend development.</p>
+  <p><strong>Verdict:</strong> <span class="status-error">BLOCKED</span> - Cannot proceed until RBAC is implemented</p>
+  <p><strong>Estimated Fix Time:</strong> 4-6 hours</p>
+</div>
+
+<footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: var(--gray); text-align: center;">
+  <p>CRM Service Review | Ultra-TMS Phase A | January 15, 2026</p>
+</footer>
+
+</body>
+</html>

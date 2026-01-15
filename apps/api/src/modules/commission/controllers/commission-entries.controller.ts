@@ -16,13 +16,16 @@ import {
   ReverseCommissionDto,
 } from '../dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { Roles } from '../../../common/decorators/roles.decorator';
+import { RolesGuard } from '../../../common/guards/roles.guard';
 
 @Controller('commission/entries')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class CommissionEntriesController {
   constructor(private readonly entriesService: CommissionEntriesService) {}
 
   @Post()
+  @Roles('ADMIN', 'ACCOUNTING')
   create(@Request() req: any, @Body() createDto: CreateCommissionEntryDto) {
     return this.entriesService.create(
       req.user.tenantId,
@@ -32,6 +35,7 @@ export class CommissionEntriesController {
   }
 
   @Get()
+  @Roles('ADMIN', 'ACCOUNTING', 'SALES_MANAGER', 'AGENT_MANAGER')
   findAll(
     @Request() req: any,
     @Query('userId') userId?: string,
@@ -47,11 +51,13 @@ export class CommissionEntriesController {
   }
 
   @Get(':id')
+  @Roles('ADMIN', 'ACCOUNTING', 'SALES_MANAGER', 'AGENT_MANAGER')
   findOne(@Request() req: any, @Param('id') id: string) {
     return this.entriesService.findOne(req.user.tenantId, id);
   }
 
   @Patch(':id/approve')
+  @Roles('ADMIN', 'ACCOUNTING_MANAGER')
   approve(
     @Request() req: any,
     @Param('id') id: string,
@@ -66,6 +72,7 @@ export class CommissionEntriesController {
   }
 
   @Patch(':id/reverse')
+  @Roles('ADMIN', 'ACCOUNTING_MANAGER')
   reverse(
     @Request() req: any,
     @Param('id') id: string,
@@ -80,6 +87,7 @@ export class CommissionEntriesController {
   }
 
   @Post('calculate/load/:loadId')
+  @Roles('ADMIN', 'ACCOUNTING')
   calculateLoadCommission(
     @Request() req: any,
     @Param('loadId') loadId: string
@@ -92,6 +100,7 @@ export class CommissionEntriesController {
   }
 
   @Get('user/:userId/earnings')
+  @Roles('ADMIN', 'ACCOUNTING', 'SALES_MANAGER', 'AGENT_MANAGER')
   getUserEarnings(
     @Request() req: any,
     @Param('userId') userId: string,

@@ -9,14 +9,20 @@ import {
   ProviderQueryDto,
   ToggleStatusDto,
   UpdateIntegrationDto,
+  UpdateIntegrationCredentialsDto,
 } from './dto';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Audit } from '../audit/decorators/audit.decorator';
+import { AuditAction, AuditActionCategory, AuditSeverity } from '@prisma/client';
 
 @Controller('integration-hub/providers')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class IntegrationProvidersController {
   constructor(private readonly integrationsService: IntegrationsService) {}
 
   @Get()
+  @Roles('SUPER_ADMIN', 'ADMIN', 'SYSTEM_INTEGRATOR')
   async listProviders(
     @CurrentTenant() tenantId: string,
     @Query() query: ProviderQueryDto,
@@ -25,11 +31,13 @@ export class IntegrationProvidersController {
   }
 
   @Get('categories')
+  @Roles('SUPER_ADMIN', 'ADMIN', 'SYSTEM_INTEGRATOR')
   async listCategories(@CurrentTenant() tenantId: string) {
     return this.integrationsService.listProviderCategories(tenantId);
   }
 
   @Get(':id')
+  @Roles('SUPER_ADMIN', 'ADMIN', 'SYSTEM_INTEGRATOR')
   async getProvider(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -39,11 +47,13 @@ export class IntegrationProvidersController {
 }
 
 @Controller('integration-hub/integrations')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('SUPER_ADMIN')
 export class IntegrationsController {
   constructor(private readonly integrationsService: IntegrationsService) {}
 
   @Get()
+  @Roles('SUPER_ADMIN', 'ADMIN')
   async listIntegrations(
     @CurrentTenant() tenantId: string,
     @Query() query: IntegrationQueryDto,
@@ -52,11 +62,22 @@ export class IntegrationsController {
   }
 
   @Get('health')
+  @Roles('SUPER_ADMIN', 'ADMIN')
   async healthAll(@CurrentTenant() tenantId: string) {
     return this.integrationsService.healthAll(tenantId);
   }
 
   @Get(':id')
+  @Roles('SUPER_ADMIN', 'ADMIN')
+  @Audit({
+    action: AuditAction.READ,
+    category: AuditActionCategory.DATA,
+    severity: AuditSeverity.WARNING,
+    entityType: 'INTEGRATION',
+    entityIdParam: 'id',
+    sensitiveFields: ['credentials'],
+    description: 'Viewed integration details',
+  })
   async getIntegration(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -65,6 +86,7 @@ export class IntegrationsController {
   }
 
   @Post()
+  @Roles('SUPER_ADMIN')
   async createIntegration(
     @CurrentTenant() tenantId: string,
     @CurrentUser('userId') userId: string,
@@ -74,6 +96,7 @@ export class IntegrationsController {
   }
 
   @Put(':id')
+  @Roles('SUPER_ADMIN')
   async updateIntegration(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -83,7 +106,29 @@ export class IntegrationsController {
     return this.integrationsService.updateIntegration(tenantId, id, userId, dto);
   }
 
+  @Put(':id/credentials')
+  @Roles('SUPER_ADMIN')
+  @Audit({
+    action: AuditAction.UPDATE,
+    category: AuditActionCategory.ADMIN,
+    severity: AuditSeverity.CRITICAL,
+    entityType: 'INTEGRATION_CREDENTIALS',
+    entityIdParam: 'id',
+    sensitiveFields: ['apiKey', 'apiSecret', 'oauthTokens'],
+    description: 'Updated integration credentials',
+  })
+  async updateCredentials(
+    @CurrentTenant() tenantId: string,
+    @Param('id') id: string,
+    @CurrentUser('userId') userId: string,
+    @Body() dto: UpdateIntegrationCredentialsDto,
+  ) {
+    await this.integrationsService.updateCredentials(tenantId, id, userId, dto);
+    return { success: true };
+  }
+
   @Delete(':id')
+  @Roles('SUPER_ADMIN')
   async deleteIntegration(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -93,6 +138,7 @@ export class IntegrationsController {
   }
 
   @Post(':id/test')
+  @Roles('SUPER_ADMIN')
   async testConnection(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -101,6 +147,7 @@ export class IntegrationsController {
   }
 
   @Post(':id/status')
+  @Roles('SUPER_ADMIN')
   async toggleStatus(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -110,6 +157,7 @@ export class IntegrationsController {
   }
 
   @Post(':id/oauth/authorize')
+  @Roles('SUPER_ADMIN')
   async oauthAuthorize(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -118,6 +166,7 @@ export class IntegrationsController {
   }
 
   @Post(':id/oauth/callback')
+  @Roles('SUPER_ADMIN')
   async oauthCallback(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -127,6 +176,7 @@ export class IntegrationsController {
   }
 
   @Get(':id/health')
+  @Roles('SUPER_ADMIN', 'ADMIN')
   async health(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -135,6 +185,7 @@ export class IntegrationsController {
   }
 
   @Get(':id/stats')
+  @Roles('SUPER_ADMIN', 'ADMIN')
   async stats(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -143,6 +194,7 @@ export class IntegrationsController {
   }
 
   @Get(':id/logs')
+  @Roles('SUPER_ADMIN', 'ADMIN', 'SYSTEM_INTEGRATOR')
   async listLogs(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,

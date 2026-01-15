@@ -73,6 +73,19 @@ export class LocalStorageService implements IStorageService, OnModuleInit {
   }
 
   /**
+   * Get signed URL for a file (local storage uses a simple expiring query param)
+   */
+  async getSignedUrl(filepath: string, options?: { expiresIn?: number }): Promise<string> {
+    const url = this.getUrl(filepath);
+    if (!options?.expiresIn) {
+      return url;
+    }
+
+    const expiresAt = Math.floor(Date.now() / 1000) + options.expiresIn;
+    return `${url}?expiresAt=${expiresAt}`;
+  }
+
+  /**
    * Check if a file exists
    */
   async exists(filepath: string): Promise<boolean> {

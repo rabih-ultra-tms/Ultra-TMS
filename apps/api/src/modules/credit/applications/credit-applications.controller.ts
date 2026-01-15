@@ -11,7 +11,9 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { Roles } from '../../../common/decorators';
 import { CurrentTenant } from '../../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { CreditApplicationsService } from './credit-applications.service';
@@ -19,13 +21,20 @@ import { CreateCreditApplicationDto, UpdateCreditApplicationDto } from '../dto/c
 import { ApproveCreditApplicationDto } from '../dto/approve-application.dto';
 import { RejectCreditApplicationDto } from '../dto/reject-application.dto';
 import { CreditApplicationQueryDto } from '../dto/application-query.dto';
+import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('credit/applications')
 @UseGuards(JwtAuthGuard)
+@ApiTags('Credit Applications')
+@ApiBearerAuth('JWT-auth')
+@Roles('user', 'manager', 'admin')
 export class CreditApplicationsController {
   constructor(private readonly creditApplicationsService: CreditApplicationsService) {}
 
   @Post()
+  @ApiOperation({ summary: 'Create credit application' })
+  @ApiStandardResponse('Credit application created')
+  @ApiErrorResponses()
   async create(
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: { id: string },
@@ -35,6 +44,10 @@ export class CreditApplicationsController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'List credit applications' })
+  @ApiStandardResponse('Credit applications list')
+  @ApiErrorResponses()
+  @Roles('viewer', 'user', 'manager', 'admin')
   async findAll(
     @CurrentTenant() tenantId: string,
     @Query() query: CreditApplicationQueryDto,
@@ -43,6 +56,11 @@ export class CreditApplicationsController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get credit application by ID' })
+  @ApiParam({ name: 'id', description: 'Application ID' })
+  @ApiStandardResponse('Credit application details')
+  @ApiErrorResponses()
+  @Roles('viewer', 'user', 'manager', 'admin')
   async findOne(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -51,6 +69,10 @@ export class CreditApplicationsController {
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'Update credit application' })
+  @ApiParam({ name: 'id', description: 'Application ID' })
+  @ApiStandardResponse('Credit application updated')
+  @ApiErrorResponses()
   async update(
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: { id: string },
@@ -61,6 +83,11 @@ export class CreditApplicationsController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete credit application' })
+  @ApiParam({ name: 'id', description: 'Application ID' })
+  @ApiStandardResponse('Credit application deleted')
+  @ApiErrorResponses()
+  @Roles('manager', 'admin')
   @HttpCode(HttpStatus.OK)
   async delete(
     @CurrentTenant() tenantId: string,
@@ -71,6 +98,10 @@ export class CreditApplicationsController {
   }
 
   @Post(':id/submit')
+  @ApiOperation({ summary: 'Submit credit application' })
+  @ApiParam({ name: 'id', description: 'Application ID' })
+  @ApiStandardResponse('Credit application submitted')
+  @ApiErrorResponses()
   @HttpCode(HttpStatus.OK)
   async submit(
     @CurrentTenant() tenantId: string,
@@ -81,6 +112,11 @@ export class CreditApplicationsController {
   }
 
   @Post(':id/approve')
+  @ApiOperation({ summary: 'Approve credit application' })
+  @ApiParam({ name: 'id', description: 'Application ID' })
+  @ApiStandardResponse('Credit application approved')
+  @ApiErrorResponses()
+  @Roles('admin')
   @HttpCode(HttpStatus.OK)
   async approve(
     @CurrentTenant() tenantId: string,
@@ -92,6 +128,11 @@ export class CreditApplicationsController {
   }
 
   @Post(':id/reject')
+  @ApiOperation({ summary: 'Reject credit application' })
+  @ApiParam({ name: 'id', description: 'Application ID' })
+  @ApiStandardResponse('Credit application rejected')
+  @ApiErrorResponses()
+  @Roles('admin')
   @HttpCode(HttpStatus.OK)
   async reject(
     @CurrentTenant() tenantId: string,

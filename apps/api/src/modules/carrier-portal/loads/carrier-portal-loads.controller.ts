@@ -1,46 +1,75 @@
 import { Body, Controller, Delete, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { CarrierPortalAuthGuard } from '../guards/carrier-portal-auth.guard';
+import { CarrierScopeGuard } from '../guards/carrier-scope.guard';
 import { CarrierPortalLoadsService } from './carrier-portal-loads.service';
 import { UpdateLoadStatusDto } from './dto/update-load-status.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { SubmitBidDto } from './dto/submit-bid.dto';
+import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
+import { CarrierScope } from '../decorators/carrier-scope.decorator';
+import type { CarrierScopeType } from '../decorators/carrier-scope.decorator';
 
-@UseGuards(CarrierPortalAuthGuard)
+@UseGuards(CarrierPortalAuthGuard, CarrierScopeGuard)
 @Controller('carrier-portal')
+@ApiTags('Carrier Portal')
+@ApiBearerAuth('Portal-JWT')
 export class CarrierPortalLoadsController {
   constructor(private readonly loadsService: CarrierPortalLoadsService) {}
 
   // Available loads
   @Get('loads/available')
-  available(@Req() req: any) {
-    return this.loadsService.available(req.carrierPortalUser.tenantId, req.carrierPortalUser.carrierId, req.carrierPortalUser.id);
+  @ApiOperation({ summary: 'List available loads' })
+  @ApiStandardResponse('Available loads list')
+  @ApiErrorResponses()
+  available(@CarrierScope() scope: CarrierScopeType, @Req() req: any) {
+    return this.loadsService.available(scope.tenantId, scope.id, req.carrierPortalUser.id);
   }
 
   @Get('loads/available/:id')
-  availableDetail(@Param('id') id: string, @Req() req: any) {
-    return this.loadsService.availableDetail(req.carrierPortalUser.tenantId, id);
+  @ApiOperation({ summary: 'Get available load details' })
+  @ApiParam({ name: 'id', description: 'Load ID' })
+  @ApiStandardResponse('Available load details')
+  @ApiErrorResponses()
+  availableDetail(@Param('id') id: string, @CarrierScope() scope: CarrierScopeType) {
+    return this.loadsService.availableDetail(scope.tenantId, id);
   }
 
   @Post('loads/available/:id/save')
-  save(@Param('id') id: string, @Req() req: any) {
-    return this.loadsService.saveLoad(req.carrierPortalUser.tenantId, req.carrierPortalUser.id, id);
+  @ApiOperation({ summary: 'Save available load' })
+  @ApiParam({ name: 'id', description: 'Load ID' })
+  @ApiStandardResponse('Load saved')
+  @ApiErrorResponses()
+  save(@Param('id') id: string, @CarrierScope() scope: CarrierScopeType, @Req() req: any) {
+    return this.loadsService.saveLoad(scope.tenantId, req.carrierPortalUser.id, id);
   }
 
   @Delete('loads/saved/:id')
-  removeSaved(@Param('id') id: string, @Req() req: any) {
-    return this.loadsService.removeSaved(req.carrierPortalUser.tenantId, req.carrierPortalUser.id, id);
+  @ApiOperation({ summary: 'Remove saved load' })
+  @ApiParam({ name: 'id', description: 'Load ID' })
+  @ApiStandardResponse('Saved load removed')
+  @ApiErrorResponses()
+  removeSaved(@Param('id') id: string, @CarrierScope() scope: CarrierScopeType, @Req() req: any) {
+    return this.loadsService.removeSaved(scope.tenantId, req.carrierPortalUser.id, id);
   }
 
   @Get('loads/saved')
-  saved(@Req() req: any) {
-    return this.loadsService.saved(req.carrierPortalUser.tenantId, req.carrierPortalUser.id);
+  @ApiOperation({ summary: 'List saved loads' })
+  @ApiStandardResponse('Saved loads list')
+  @ApiErrorResponses()
+  saved(@CarrierScope() scope: CarrierScopeType, @Req() req: any) {
+    return this.loadsService.saved(scope.tenantId, req.carrierPortalUser.id);
   }
 
   @Post('loads/:id/bid')
-  bid(@Param('id') id: string, @Body() dto: SubmitBidDto, @Req() req: any) {
+  @ApiOperation({ summary: 'Submit bid for load' })
+  @ApiParam({ name: 'id', description: 'Load ID' })
+  @ApiStandardResponse('Bid submitted')
+  @ApiErrorResponses()
+  bid(@Param('id') id: string, @Body() dto: SubmitBidDto, @CarrierScope() scope: CarrierScopeType, @Req() req: any) {
     return this.loadsService.bid(
-      req.carrierPortalUser.tenantId,
-      req.carrierPortalUser.carrierId,
+      scope.tenantId,
+      scope.id,
       req.carrierPortalUser.id,
       id,
       dto,
@@ -48,51 +77,85 @@ export class CarrierPortalLoadsController {
   }
 
   @Get('loads/matching')
-  matching(@Req() req: any) {
-    return this.loadsService.matching(req.carrierPortalUser.tenantId, req.carrierPortalUser.carrierId, req.carrierPortalUser.id);
+  @ApiOperation({ summary: 'List matching loads' })
+  @ApiStandardResponse('Matching loads list')
+  @ApiErrorResponses()
+  matching(@CarrierScope() scope: CarrierScopeType, @Req() req: any) {
+    return this.loadsService.matching(scope.tenantId, scope.id, req.carrierPortalUser.id);
   }
 
   // My loads
   @Get('loads')
-  myLoads(@Req() req: any) {
-    return this.loadsService.myLoads(req.carrierPortalUser.tenantId, req.carrierPortalUser.carrierId);
+  @ApiOperation({ summary: 'List my loads' })
+  @ApiStandardResponse('My loads list')
+  @ApiErrorResponses()
+  myLoads(@CarrierScope() scope: CarrierScopeType) {
+    return this.loadsService.myLoads(scope.tenantId, scope.id);
   }
 
   @Get('loads/:id')
-  myLoad(@Param('id') id: string, @Req() req: any) {
-    return this.loadsService.myLoadDetail(req.carrierPortalUser.tenantId, req.carrierPortalUser.carrierId, id);
+  @ApiOperation({ summary: 'Get my load by ID' })
+  @ApiParam({ name: 'id', description: 'Load ID' })
+  @ApiStandardResponse('Load details')
+  @ApiErrorResponses()
+  myLoad(@Param('id') id: string, @CarrierScope() scope: CarrierScopeType) {
+    return this.loadsService.myLoadDetail(scope.tenantId, scope.id, id);
   }
 
   @Post('loads/:id/accept')
-  accept(@Param('id') id: string, @Req() req: any) {
-    return this.loadsService.accept(req.carrierPortalUser.tenantId, req.carrierPortalUser.carrierId, id);
+  @ApiOperation({ summary: 'Accept load' })
+  @ApiParam({ name: 'id', description: 'Load ID' })
+  @ApiStandardResponse('Load accepted')
+  @ApiErrorResponses()
+  accept(@Param('id') id: string, @CarrierScope() scope: CarrierScopeType) {
+    return this.loadsService.accept(scope.tenantId, scope.id, id);
   }
 
   @Post('loads/:id/decline')
-  decline(@Param('id') id: string, @Req() req: any) {
-    return this.loadsService.decline(req.carrierPortalUser.tenantId, id);
+  @ApiOperation({ summary: 'Decline load' })
+  @ApiParam({ name: 'id', description: 'Load ID' })
+  @ApiStandardResponse('Load declined')
+  @ApiErrorResponses()
+  decline(@Param('id') id: string, @CarrierScope() scope: CarrierScopeType) {
+    return this.loadsService.decline(scope.tenantId, scope.id, id);
   }
 
   @Post('loads/:id/status')
-  updateStatus(@Param('id') id: string, @Body() dto: UpdateLoadStatusDto, @Req() req: any) {
-    return this.loadsService.updateStatus(req.carrierPortalUser.tenantId, req.carrierPortalUser.carrierId, id, dto);
+  @ApiOperation({ summary: 'Update load status' })
+  @ApiParam({ name: 'id', description: 'Load ID' })
+  @ApiStandardResponse('Load status updated')
+  @ApiErrorResponses()
+  updateStatus(@Param('id') id: string, @Body() dto: UpdateLoadStatusDto, @CarrierScope() scope: CarrierScopeType) {
+    return this.loadsService.updateStatus(scope.tenantId, scope.id, id, dto);
   }
 
   @Post('loads/:id/location')
-  updateLocation(@Param('id') id: string, @Body() body: UpdateLocationDto, @Req() req: any) {
-    return this.loadsService.updateLocation(req.carrierPortalUser.tenantId, req.carrierPortalUser.carrierId, id, body);
+  @ApiOperation({ summary: 'Update load location' })
+  @ApiParam({ name: 'id', description: 'Load ID' })
+  @ApiStandardResponse('Load location updated')
+  @ApiErrorResponses()
+  updateLocation(@Param('id') id: string, @Body() body: UpdateLocationDto, @CarrierScope() scope: CarrierScopeType) {
+    return this.loadsService.updateLocation(scope.tenantId, scope.id, id, body);
   }
 
   @Post('loads/:id/eta')
-  updateEta(@Param('id') id: string, @Body('eta') eta: string, @Req() req: any) {
-    return this.loadsService.updateEta(req.carrierPortalUser.tenantId, req.carrierPortalUser.carrierId, id, eta);
+  @ApiOperation({ summary: 'Update load ETA' })
+  @ApiParam({ name: 'id', description: 'Load ID' })
+  @ApiStandardResponse('Load ETA updated')
+  @ApiErrorResponses()
+  updateEta(@Param('id') id: string, @Body('eta') eta: string, @CarrierScope() scope: CarrierScopeType) {
+    return this.loadsService.updateEta(scope.tenantId, scope.id, id, eta);
   }
 
   @Post('loads/:id/message')
-  message(@Param('id') id: string, @Body('message') message: string, @Req() req: any) {
+  @ApiOperation({ summary: 'Send load message' })
+  @ApiParam({ name: 'id', description: 'Load ID' })
+  @ApiStandardResponse('Load message sent')
+  @ApiErrorResponses()
+  message(@Param('id') id: string, @Body('message') message: string, @CarrierScope() scope: CarrierScopeType, @Req() req: any) {
     return this.loadsService.message(
-      req.carrierPortalUser.tenantId,
-      req.carrierPortalUser.carrierId,
+      scope.tenantId,
+      scope.id,
       req.carrierPortalUser.id,
       id,
       message,

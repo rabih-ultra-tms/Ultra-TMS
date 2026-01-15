@@ -11,9 +11,12 @@ import {
   WebhookEndpointQueryDto,
   WebhookSubscriptionQueryDto,
 } from './dto';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
 
 @Controller('integration-hub/webhooks/endpoints')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('SUPER_ADMIN')
 export class WebhookEndpointsController {
   constructor(private readonly webhooksService: WebhooksService) {}
 
@@ -39,7 +42,12 @@ export class WebhookEndpointsController {
     @CurrentUser('userId') userId: string,
     @Body() dto: CreateWebhookEndpointDto,
   ) {
-    return this.webhooksService.createEndpoint(tenantId, userId, dto);
+    const { endpoint, secret } = await this.webhooksService.createEndpoint(tenantId, userId, dto);
+    return {
+      ...endpoint,
+      secret,
+      secretHint: 'Save this secret now. It will not be shown again.',
+    };
   }
 
   @Put(':id')
@@ -67,7 +75,12 @@ export class WebhookEndpointsController {
     @Param('id') id: string,
     @CurrentUser('userId') userId: string,
   ) {
-    return this.webhooksService.rotateSecret(tenantId, id, userId);
+    const { endpoint, secret } = await this.webhooksService.rotateSecret(tenantId, id, userId);
+    return {
+      ...endpoint,
+      secret,
+      secretHint: 'Save this new secret. The old secret is now invalid.',
+    };
   }
 
   @Get(':id/deliveries')
@@ -90,7 +103,8 @@ export class WebhookEndpointsController {
 }
 
 @Controller('integration-hub/webhooks/subscriptions')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('SUPER_ADMIN')
 export class WebhookSubscriptionsController {
   constructor(private readonly webhooksService: WebhooksService) {}
 

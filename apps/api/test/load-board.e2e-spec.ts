@@ -19,4 +19,18 @@ describe('Load Board API E2E', () => {
       .get('/api/v1/load-board/accounts')
       .expect(200);
   });
+
+  it('denies carrier access to load postings', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/load-postings')
+      .set('x-test-role', 'CARRIER')
+      .expect(403);
+  });
+
+  it('allows dispatcher access to load postings', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/load-postings')
+      .set('x-test-role', 'DISPATCHER')
+      .expect(200);
+  });
 });

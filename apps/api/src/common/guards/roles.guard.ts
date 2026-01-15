@@ -35,21 +35,34 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('Access denied: Authentication required');
     }
 
+    const normalizeRole = (role: string) => role.replace(/-/g, '_').toUpperCase();
     const userRole = user?.role?.name ?? user?.roleName ?? user?.role;
+    const userRoles: string[] = Array.isArray(user?.roles)
+      ? user.roles
+      : userRole
+        ? [userRole]
+        : [];
+    const normalizedUserRoles = userRoles.map((role) => normalizeRole(role));
 
-    if (!userRole) {
+    if (!userRole && userRoles.length === 0) {
       throw new ForbiddenException('Access denied: No role assigned');
     }
 
-    if (userRole === 'SUPER_ADMIN') {
+    if (
+      normalizeRole(userRole ?? '') === 'SUPER_ADMIN' ||
+      normalizedUserRoles.includes('SUPER_ADMIN')
+    ) {
       return true;
     }
 
     if (requiredRoles?.length) {
-      const hasRole = requiredRoles.some((role) => userRole === role);
+      const normalizedRequiredRoles = requiredRoles.map((role) => normalizeRole(role));
+      const hasRole = normalizedRequiredRoles.some((role) =>
+        normalizedUserRoles.includes(role),
+      );
       if (!hasRole) {
         throw new ForbiddenException(
-          `Access denied: Required role(s): ${requiredRoles.join(', ')}`,
+          `Access denied: Required role(s): ${normalizedRequiredRoles.join(', ')}`,
         );
       }
     }

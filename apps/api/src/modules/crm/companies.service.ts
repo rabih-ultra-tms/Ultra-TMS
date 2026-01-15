@@ -15,7 +15,9 @@ export class CompaniesService {
     assignedUserId?: string;
   }) {
     const { page = 1, limit = 20, companyType, status, search, assignedUserId } = options || {};
-    const skip = (page - 1) * limit;
+    const safePage = Number.isFinite(page) && page > 0 ? page : 1;
+    const safeLimit = Number.isFinite(limit) && limit > 0 ? limit : 20;
+    const skip = (safePage - 1) * safeLimit;
 
     const where: any = { tenantId, deletedAt: null };
     if (companyType) where.companyType = companyType;
@@ -33,7 +35,7 @@ export class CompaniesService {
       this.prisma.company.findMany({
         where,
         skip,
-        take: limit,
+        take: safeLimit,
         orderBy: { createdAt: 'desc' },
         include: {
           contacts: { where: { isPrimary: true }, take: 1 },
@@ -43,7 +45,7 @@ export class CompaniesService {
       this.prisma.company.count({ where }),
     ]);
 
-    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
+    return { data, total, page: safePage, limit: safeLimit, totalPages: Math.ceil(total / safeLimit) };
   }
 
   async findOne(tenantId: string, id: string) {

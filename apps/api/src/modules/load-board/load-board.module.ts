@@ -12,10 +12,14 @@ import { RulesController } from './rules/rules.controller';
 import { RulesService } from './rules/rules.service';
 import { AnalyticsController } from './analytics/analytics.controller';
 import { AnalyticsService } from './analytics/analytics.service';
+import { LoadPostingsController } from './controllers';
+import { LoadPostingsService } from './services';
+import { GeocodingService } from './services/geocoding.service';
 
 @Module({
   controllers: [
     AccountsController,
+    LoadPostingsController,
     PostingController,
     CapacityController,
     LeadsController,
@@ -25,12 +29,14 @@ import { AnalyticsService } from './analytics/analytics.service';
   providers: [
     PrismaService,
     AccountsService,
+    LoadPostingsService,
     PostingService,
     CapacityService,
     LeadsService,
     RulesService,
     AnalyticsService,
+    GeocodingService,
   ],
-  exports: [PostingService, AccountsService, CapacityService, LeadsService, RulesService],
+  exports: [PostingService, AccountsService, CapacityService, LeadsService, RulesService, LoadPostingsService],
 })
 export class LoadBoardModule {}

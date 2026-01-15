@@ -140,6 +140,20 @@ export class UpdateIntegrationDto {
   status?: string;
 }
 
+export class UpdateIntegrationCredentialsDto {
+  @IsOptional()
+  @IsString()
+  apiKey?: string;
+
+  @IsOptional()
+  @IsString()
+  apiSecret?: string;
+
+  @IsOptional()
+  @IsObject()
+  oauthTokens?: Record<string, unknown>;
+}
+
 export class IntegrationResponseDto {
   id!: string;
   tenantId!: string;

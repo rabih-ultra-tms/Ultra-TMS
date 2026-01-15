@@ -13,13 +13,16 @@ import { JwtAuthGuard } from '../auth/guards';
 import { NotificationsService } from './notifications.service';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
 
 @Controller('communication/notifications')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
   @Get()
+  @Roles('ADMIN', 'SALES_REP', 'DISPATCHER', 'CARRIER', 'CUSTOMER', 'AGENT')
   async findAll(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -37,6 +40,7 @@ export class NotificationsController {
   }
 
   @Get('unread-count')
+  @Roles('ADMIN', 'SALES_REP', 'DISPATCHER', 'CARRIER', 'CUSTOMER', 'AGENT')
   async getUnreadCount(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -50,6 +54,7 @@ export class NotificationsController {
 
   @Post(':id/read')
   @HttpCode(HttpStatus.OK)
+  @Roles('ADMIN', 'SALES_REP', 'DISPATCHER', 'CARRIER', 'CUSTOMER', 'AGENT')
   async markAsRead(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -60,6 +65,7 @@ export class NotificationsController {
 
   @Post('read-all')
   @HttpCode(HttpStatus.OK)
+  @Roles('ADMIN', 'SALES_REP', 'DISPATCHER', 'CARRIER', 'CUSTOMER', 'AGENT')
   async markAllAsRead(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -68,6 +74,7 @@ export class NotificationsController {
   }
 
   @Delete(':id')
+  @Roles('ADMIN', 'SALES_REP', 'DISPATCHER', 'CARRIER', 'CUSTOMER', 'AGENT')
   async delete(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,

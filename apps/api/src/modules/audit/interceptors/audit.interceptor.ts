@@ -1,14 +1,17 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
-import { AuditAction, AuditActionCategory, Prisma } from '@prisma/client';
+import { Reflector } from '@nestjs/core';
+import { AuditAction, AuditActionCategory, AuditSeverity, Prisma } from '@prisma/client';
 import { Observable, tap } from 'rxjs';
 import { AuditLogsService } from '../logs/audit-logs.service';
 import { PrismaService } from '../../../prisma.service';
+import { AUDIT_METADATA_KEY, AuditDecoratorPayload } from '../decorators/audit.decorator';
 
 @Injectable()
 export class AuditInterceptor implements NestInterceptor {
   constructor(
     private readonly auditLogs: AuditLogsService,
     private readonly prisma: PrismaService,
+    private readonly reflector: Reflector,
   ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
@@ -16,6 +19,8 @@ export class AuditInterceptor implements NestInterceptor {
     const request = httpContext.getRequest();
     const response = httpContext.getResponse();
     const startedAt = Date.now();
+
+    const auditMetadata = this.reflector.get<AuditDecoratorPayload>(AUDIT_METADATA_KEY, context.getHandler());
 
     return next.handle().pipe(
       tap(async (result) => {
@@ -57,6 +62,33 @@ export class AuditInterceptor implements NestInterceptor {
               ipAddress: request.ip,
             },
           });
+
+          if (auditMetadata) {
+            const roleName = request.user?.role?.name ?? request.user?.roleName ?? request.user?.role;
+            const entityIdParam = auditMetadata.entityIdParam ?? 'id';
+            const entityId = request.params?.[entityIdParam] ?? request.params?.id ?? null;
+
+            await this.auditLogs.log({
+              tenantId: tenantId ?? null,
+              userId: request.user?.id ?? null,
+              action: auditMetadata.action,
+              category: auditMetadata.category ?? AuditActionCategory.DATA,
+              severity: auditMetadata.severity ?? AuditSeverity.INFO,
+              entityType: auditMetadata.entityType,
+              entityId,
+              description: auditMetadata.description ?? `Sensitive operation: ${auditMetadata.action}`,
+              metadata: {
+                ...(auditMetadata.metadata ?? {}),
+                sensitiveFields: auditMetadata.sensitiveFields ?? [],
+                method: request.method,
+                path: request.path,
+                userEmail: request.user?.email ?? null,
+                userRole: roleName ?? null,
+              },
+              ipAddress: request.ip,
+              userAgent: request.headers?.['user-agent'],
+            });
+          }
         } catch (_err) {
           // Avoid interceptors breaking primary response flow
         }

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EDI Service Review - Ultra-TMS Phase A</title>
+  <style>
+    :root { --green: #10b981; --green-bg: #d1fae5; --yellow: #f59e0b; --yellow-bg: #fef3c7; --red: #ef4444; --red-bg: #fee2e2; --blue: #3b82f6; --blue-bg: #dbeafe; --gray: #6b7280; --orange: #f97316; --orange-bg: #ffedd5; --purple: #8b5cf6; --purple-bg: #ede9fe; }
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; max-width: 1200px; margin: 0 auto; padding: 20px; background: #f9fafb; }
+    h1 { color: #111827; border-bottom: 3px solid var(--purple); padding-bottom: 10px; }
+    h2 { color: #374151; margin-top: 30px; border-left: 4px solid var(--purple); padding-left: 12px; }
+    .service-header { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; padding: 24px; border-radius: 12px; margin-bottom: 24px; }
+    .service-header h1 { color: white; border: none; margin: 0; padding: 0; }
+    .summary-box { background: white; border-radius: 12px; padding: 24px; margin: 20px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin: 20px 0; }
+    .score-card { background: white; border-radius: 8px; padding: 16px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .score-card .score { font-size: 32px; font-weight: bold; }
+    .score-card .label { color: var(--gray); font-size: 13px; }
+    .score-high { color: var(--green); } .score-medium { color: var(--yellow); } .score-low { color: var(--red); }
+    .status-good { background: var(--green-bg); color: #065f46; padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; }
+    .status-warning { background: var(--yellow-bg); color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; }
+    .status-error { background: var(--red-bg); color: #991b1b; padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; }
+    .status-p1 { background: var(--orange-bg); color: #c2410c; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+    .status-p2 { background: var(--yellow-bg); color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    th { background: #f9fafb; font-weight: 600; color: #374151; }
+    .nav-links { background: white; padding: 12px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); font-size: 14px; }
+    .nav-links a { color: var(--blue); text-decoration: none; margin-right: 16px; }
+    .warning-box { background: var(--yellow-bg); border: 2px solid var(--yellow); border-radius: 12px; padding: 20px; margin: 20px 0; }
+    .warning-box h3 { color: #92400e; margin-top: 0; }
+    .info-box { background: var(--blue-bg); border: 2px solid var(--blue); border-radius: 12px; padding: 20px; margin: 20px 0; }
+    .info-box h3 { color: #1e40af; margin-top: 0; }
+    code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    ul.checklist { list-style: none; padding-left: 0; }
+    ul.checklist li { padding: 6px 0; }
+  </style>
+</head>
+<body>
+
+<div class="nav-links">
+  <a href="00-general-review.html">← General Review</a> |
+  <a href="23-config-review.html">← Config</a> |
+  <a href="25-safety-review.html">Next: Safety →</a>
+</div>
+
+<div class="service-header">
+  <h1>📡 EDI Service Review</h1>
+  <p>Service 24 | Extended Service | Module: <code>modules/edi</code> | <strong>CONDITIONAL PASS</strong></p>
+</div>
+
+<div class="warning-box">
+  <h3>⚠️ P1 Issue: Trading Partner Config Security</h3>
+  <p>EDI service has basic RBAC but trading partner credentials need additional protection.</p>
+</div>
+
+<div class="summary-box">
+  <h2 style="margin-top: 0;">📊 Service Summary</h2>
+  <div class="score-grid">
+    <div class="score-card"><div class="score score-medium">6.5</div><div class="label">Overall Score</div></div>
+    <div class="score-card"><div class="score score-medium">35%</div><div class="label">RBAC Coverage</div></div>
+    <div class="score-card"><div class="score score-low">1</div><div class="label">E2E Tests</div></div>
+    <div class="score-card"><div class="score score-low">No</div><div class="label">Swagger Docs</div></div>
+    <div class="score-card"><div class="score score-high">Yes</div><div class="label">Tenant Isolation</div></div>
+  </div>
+  <p><strong>Frontend Ready:</strong> <span class="status-warning">PARTIAL</span> - Config admin needs credential masking</p>
+</div>
+
+<h2>📁 Module Structure</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>File</th><th>Purpose</th><th>RBAC</th><th>E2E Tests</th></tr></thead>
+    <tbody>
+      <tr><td><code>edi.controller.ts</code></td><td>EDI transactions</td><td><span class="status-good">Admin Only</span></td><td><span class="status-warning">Partial</span></td></tr>
+      <tr><td><code>trading-partners.controller.ts</code></td><td>Partner config</td><td><span class="status-warning">Partial</span></td><td><span class="status-error">None</span></td></tr>
+      <tr><td><code>edi-parser.service.ts</code></td><td>X12/EDIFACT parsing</td><td><span class="status-good">N/A</span></td><td>-</td></tr>
+      <tr><td><code>edi-generator.service.ts</code></td><td>EDI generation</td><td><span class="status-good">N/A</span></td><td>-</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>🗄️ Database Models</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>Model</th><th>Key Fields</th><th>Compliance</th></tr></thead>
+    <tbody>
+      <tr><td><code>TradingPartner</code></td><td>name, isaId, gsId, protocol (AS2/SFTP), credentials (JSON)</td><td><span class="status-warning">⚠️ Credentials exposed</span></td></tr>
+      <tr><td><code>EdiTransaction</code></td><td>partnerId, transactionSet, direction, status, rawData</td><td><span class="status-good">100%</span></td></tr>
+      <tr><td><code>EdiMapping</code></td><td>partnerId, transactionSet, fieldMappings (JSON)</td><td><span class="status-good">100%</span></td></tr>
+      <tr><td><code>EdiError</code></td><td>transactionId, errorCode, errorDescription, segment</td><td><span class="status-good">100%</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>✅ Implemented Features</h2>
+<div class="summary-box">
+  <div class="two-col">
+    <div>
+      <h4>Working Features</h4>
+      <ul class="checklist">
+        <li>✅ X12 204 (Load Tender)</li>
+        <li>✅ X12 214 (Status Update)</li>
+        <li>✅ X12 210 (Freight Invoice)</li>
+        <li>✅ Trading partner configuration</li>
+        <li>✅ Transaction logging</li>
+        <li>✅ Error tracking</li>
+        <li>✅ Field mapping customization</li>
+      </ul>
+    </div>
+    <div>
+      <h4>Missing Features</h4>
+      <ul class="checklist">
+        <li>❌ X12 990 (Load Response)</li>
+        <li>❌ X12 997 (Functional Acknowledgment)</li>
+        <li>❌ AS2 protocol support</li>
+        <li>❌ Automatic retransmission</li>
+        <li>❌ <strong>Credential encryption</strong></li>
+        <li>❌ Segment validation</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<h2>🔌 Key Endpoints</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>Method</th><th>Endpoint</th><th>RBAC Status</th><th>Required Role</th></tr></thead>
+    <tbody>
+      <tr><td><code>GET</code></td><td>/api/v1/edi/transactions</td><td><span class="status-good">Protected</span></td><td>ADMIN, edi-admin</td></tr>
+      <tr><td><code>POST</code></td><td>/api/v1/edi/send</td><td><span class="status-good">Protected</span></td><td>ADMIN, edi-admin</td></tr>
+      <tr><td><code>GET</code></td><td>/api/v1/trading-partners</td><td><span class="status-warning">Partial</span></td><td>Exposes credentials</td></tr>
+      <tr><td><code>POST</code></td><td>/api/v1/trading-partners</td><td><span class="status-good">Protected</span></td><td>ADMIN</td></tr>
+      <tr><td><code>POST</code></td><td>/api/v1/edi/receive</td><td><span class="status-good">System</span></td><td>Service-to-service</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>🔗 Dependencies</h2>
+<div class="summary-box">
+  <table>
+    <thead><tr><th>Depends On</th><th>Used By</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Auth, Integration Hub, TMS Core (orders)</td>
+        <td>Customers (load tenders), Carriers (status updates), Accounting (invoices)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>📋 EDI Transaction Coverage</h2>
+<div class="info-box">
+  <h3>X12 Transaction Sets</h3>
+  <table>
+    <thead><tr><th>Set</th><th>Name</th><th>Status</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>204</td><td>Motor Carrier Load Tender</td><td><span class="status-good">Implemented</span></td><td>-</td></tr>
+      <tr><td>210</td><td>Motor Carrier Freight Invoice</td><td><span class="status-good">Implemented</span></td><td>-</td></tr>
+      <tr><td>214</td><td>Transportation Status</td><td><span class="status-good">Implemented</span></td><td>-</td></tr>
+      <tr><td>990</td><td>Response to Load Tender</td><td><span class="status-error">Missing</span></td><td>P2 - Needed for tender workflow</td></tr>
+      <tr><td>997</td><td>Functional Acknowledgment</td><td><span class="status-error">Missing</span></td><td>P1 - Required for compliance</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>💡 Recommendations</h2>
+<div class="summary-box">
+  <ol>
+    <li><strong><span class="status-p1">P1</span> Mask trading partner credentials</strong>
+      <ul>
+        <li>Never return credentials in GET responses</li>
+        <li>Use separate PUT endpoint for credential updates</li>
+      </ul>
+    </li>
+    <li><strong><span class="status-p1">P1</span> Implement 997 Functional Acknowledgments</strong> - Required for EDI compliance.</li>
+    <li><strong><span class="status-p2">P2</span> Add credential encryption at rest</strong></li>
+    <li><strong><span class="status-p2">P2</span> Implement 990 Response to Load Tender</strong></li>
+    <li><strong><span class="status-p2">P2</span> Add E2E tests for transaction flows</strong></li>
+    <li><strong><span class="status-p3">P3</span> Add AS2 protocol support</strong></li>
+  </ol>
+</div>
+
+<div class="warning-box">
+  <h3>📋 Summary</h3>
+  <p><strong>Status:</strong> <span class="status-warning">CONDITIONAL PASS</span></p>
+  <p>EDI service has good core functionality but needs security hardening:</p>
+  <ul>
+    <li>✅ Core transaction sets implemented</li>
+    <li>✅ Admin-only access to transactions</li>
+    <li>⚠️ Trading partner credentials exposed in responses</li>
+    <li>⚠️ Missing 997 acknowledgments for compliance</li>
+  </ul>
+  <p><strong>Frontend Impact:</strong> Can build EDI dashboard. Partner config UI needs credential masking.</p>
+  <p><strong>Estimated Fix Time:</strong> 4-6 hours for credential masking, 8-12 hours for 997 implementation</p>
+</div>
+
+<footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: var(--gray); text-align: center;">
+  <p>EDI Service Review | Ultra-TMS Phase A | January 15, 2026</p>
+</footer>
+
+</body>
+</html>

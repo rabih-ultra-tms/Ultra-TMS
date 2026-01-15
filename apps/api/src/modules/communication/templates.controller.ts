@@ -14,13 +14,16 @@ import { TemplatesService } from './templates.service';
 import { CreateTemplateDto, UpdateTemplateDto } from './dto';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
 
 @Controller('communication/templates')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class TemplatesController {
   constructor(private readonly templatesService: TemplatesService) {}
 
   @Post()
+  @Roles('ADMIN')
   async create(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -30,6 +33,7 @@ export class TemplatesController {
   }
 
   @Get()
+  @Roles('ADMIN', 'MARKETING')
   async findAll(
     @CurrentTenant() tenantId: string,
     @Query('page') page?: number,
@@ -50,11 +54,13 @@ export class TemplatesController {
   }
 
   @Get('codes')
+  @Roles('ADMIN', 'MARKETING')
   async getTemplateCodes() {
     return this.templatesService.getTemplateCodes();
   }
 
   @Get(':id')
+  @Roles('ADMIN', 'MARKETING')
   async findOne(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -63,6 +69,7 @@ export class TemplatesController {
   }
 
   @Put(':id')
+  @Roles('ADMIN')
   async update(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -72,6 +79,7 @@ export class TemplatesController {
   }
 
   @Delete(':id')
+  @Roles('ADMIN')
   async delete(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -80,6 +88,7 @@ export class TemplatesController {
   }
 
   @Post(':id/clone')
+  @Roles('ADMIN', 'MARKETING')
   async clone(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -89,6 +98,7 @@ export class TemplatesController {
   }
 
   @Post('preview')
+  @Roles('ADMIN', 'MARKETING')
   async preview(
     @CurrentTenant() tenantId: string,
     @Body()

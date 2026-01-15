@@ -1,5 +1,7 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { Roles } from '../../../common/decorators';
 import { CurrentTenant } from '../../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { CreditHoldsService } from './credit-holds.service';
@@ -7,13 +9,21 @@ import { CreateCreditHoldDto } from '../dto/create-credit-hold.dto';
 import { ReleaseCreditHoldDto } from '../dto/release-credit-hold.dto';
 import { CreditHoldReason } from '../dto/enums';
 import { PaginationDto } from '../dto/pagination.dto';
+import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('credit/holds')
 @UseGuards(JwtAuthGuard)
+@ApiTags('Credit Holds')
+@ApiBearerAuth('JWT-auth')
+@Roles('user', 'manager', 'admin')
 export class CreditHoldsController {
   constructor(private readonly creditHoldsService: CreditHoldsService) {}
 
   @Get()
+  @ApiOperation({ summary: 'List credit holds' })
+  @ApiStandardResponse('Credit holds list')
+  @ApiErrorResponses()
+  @Roles('viewer', 'user', 'manager', 'admin')
   async findAll(
     @CurrentTenant() tenantId: string,
     @Query() query: PaginationDto & { reason?: CreditHoldReason; isActive?: boolean },
@@ -22,6 +32,11 @@ export class CreditHoldsController {
   }
 
   @Get('customer/:companyId')
+  @ApiOperation({ summary: 'Get credit holds by customer' })
+  @ApiParam({ name: 'companyId', description: 'Company ID' })
+  @ApiStandardResponse('Credit holds for customer')
+  @ApiErrorResponses()
+  @Roles('viewer', 'user', 'manager', 'admin')
   async findByCustomer(
     @CurrentTenant() tenantId: string,
     @Param('companyId') companyId: string,
@@ -30,6 +45,11 @@ export class CreditHoldsController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get credit hold by ID' })
+  @ApiParam({ name: 'id', description: 'Hold ID' })
+  @ApiStandardResponse('Credit hold details')
+  @ApiErrorResponses()
+  @Roles('viewer', 'user', 'manager', 'admin')
   async findOne(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -38,6 +58,10 @@ export class CreditHoldsController {
   }
 
   @Post()
+  @ApiOperation({ summary: 'Create credit hold' })
+  @ApiStandardResponse('Credit hold created')
+  @ApiErrorResponses()
+  @Roles('admin')
   async create(
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: { id: string },
@@ -47,6 +71,11 @@ export class CreditHoldsController {
   }
 
   @Patch(':id/release')
+  @ApiOperation({ summary: 'Release credit hold' })
+  @ApiParam({ name: 'id', description: 'Hold ID' })
+  @ApiStandardResponse('Credit hold released')
+  @ApiErrorResponses()
+  @Roles('admin')
   @HttpCode(HttpStatus.OK)
   async release(
     @CurrentTenant() tenantId: string,

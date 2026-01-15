@@ -6,49 +6,49 @@ export async function seedAuth(prisma: any, tenantIds: string[]): Promise<void> 
   // System Roles (shared across all tenants)
   const systemRoles = [
     {
-      name: 'Super Admin',
+      name: 'SUPER_ADMIN',
       description: 'Full system access',
       permissions: ['*'],
       isSystem: true,
     },
     {
-      name: 'Admin',
+      name: 'ADMIN',
       description: 'Tenant administrator',
       permissions: ['users.*', 'roles.*', 'tenant.*', 'crm.*', 'sales.*', 'tms.*', 'carriers.*', 'accounting.*', 'reports.*'],
       isSystem: true,
     },
     {
-      name: 'Operations Manager',
+      name: 'OPERATIONS_MANAGER',
       description: 'Operations oversight',
       permissions: ['tms.*', 'carriers.*', 'loadboard.*', 'claims.*', 'documents.view', 'reports.operations'],
       isSystem: true,
     },
     {
-      name: 'Dispatcher',
+      name: 'DISPATCHER',
       description: 'Dispatch operations',
       permissions: ['tms.orders.view', 'tms.loads.*', 'tms.tracking.*', 'carriers.view', 'loadboard.view', 'loadboard.post'],
       isSystem: true,
     },
     {
-      name: 'Sales Rep',
+      name: 'SALES_REP',
       description: 'Sales operations',
       permissions: ['crm.*', 'sales.*', 'tms.orders.view', 'tms.orders.create', 'reports.sales', 'commission.view'],
       isSystem: true,
     },
     {
-      name: 'Accounting',
+      name: 'ACCOUNTING',
       description: 'Financial operations',
       permissions: ['accounting.*', 'tms.orders.view', 'tms.loads.view', 'carriers.view', 'commission.*', 'reports.financial'],
       isSystem: true,
     },
     {
-      name: 'Customer Service',
+      name: 'CUSTOMER_SERVICE',
       description: 'Support operations',
       permissions: ['tms.orders.view', 'tms.loads.view', 'tms.tracking.view', 'crm.view', 'claims.view', 'claims.create'],
       isSystem: true,
     },
     {
-      name: 'Read Only',
+      name: 'READ_ONLY',
       description: 'View-only access',
       permissions: ['*.view'],
       isSystem: true,
@@ -109,7 +109,7 @@ export async function seedAuth(prisma: any, tenantIds: string[]): Promise<void> 
         passwordHash,
         firstName: faker.person.firstName(),
         lastName: faker.person.lastName(),
-        roleId: roleMap['Admin'],
+        roleId: roleMap['ADMIN'],
         status: 'ACTIVE',
         emailVerifiedAt: new Date(),
         timezone: 'America/Chicago',
@@ -124,7 +124,7 @@ export async function seedAuth(prisma: any, tenantIds: string[]): Promise<void> 
 
     // Random users (19 per tenant to reach 100 total)
     for (let i = 0; i < 19; i++) {
-      const roles = Object.keys(roleMap).filter(r => r !== 'Super Admin');
+      const roles = Object.keys(roleMap).filter(r => r !== 'SUPER_ADMIN');
       const randomRole = roles[Math.floor(Math.random() * roles.length)];
       const userEmail = `user${totalUsers + i + 1}@tms.local`;
       await prisma.user.upsert({

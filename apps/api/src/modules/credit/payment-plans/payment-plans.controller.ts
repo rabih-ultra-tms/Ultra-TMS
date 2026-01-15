@@ -1,5 +1,7 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { Roles } from '../../../common/decorators';
 import { CurrentTenant } from '../../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { PaymentPlansService } from './payment-plans.service';
@@ -9,13 +11,21 @@ import { UpdatePaymentPlanDto } from '../dto/update-payment-plan.dto';
 import { RecordPaymentDto } from '../dto/record-payment.dto';
 import { CancelPaymentPlanDto } from '../dto/cancel-payment-plan.dto';
 import { PaymentPlanStatus } from '../dto/enums';
+import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('credit/payment-plans')
 @UseGuards(JwtAuthGuard)
+@ApiTags('Credit Applications')
+@ApiBearerAuth('JWT-auth')
+@Roles('user', 'manager', 'admin')
 export class PaymentPlansController {
   constructor(private readonly paymentPlansService: PaymentPlansService) {}
 
   @Get()
+  @ApiOperation({ summary: 'List payment plans' })
+  @ApiStandardResponse('Payment plans list')
+  @ApiErrorResponses()
+  @Roles('viewer', 'user', 'manager', 'admin')
   async list(
     @CurrentTenant() tenantId: string,
     @Query() query: PaginationDto & { status?: PaymentPlanStatus },
@@ -24,6 +34,11 @@ export class PaymentPlansController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get payment plan by ID' })
+  @ApiParam({ name: 'id', description: 'Payment plan ID' })
+  @ApiStandardResponse('Payment plan details')
+  @ApiErrorResponses()
+  @Roles('viewer', 'user', 'manager', 'admin')
   async detail(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -32,6 +47,9 @@ export class PaymentPlansController {
   }
 
   @Post()
+  @ApiOperation({ summary: 'Create payment plan' })
+  @ApiStandardResponse('Payment plan created')
+  @ApiErrorResponses()
   async create(
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: { id: string },
@@ -41,6 +59,10 @@ export class PaymentPlansController {
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'Update payment plan' })
+  @ApiParam({ name: 'id', description: 'Payment plan ID' })
+  @ApiStandardResponse('Payment plan updated')
+  @ApiErrorResponses()
   async update(
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: { id: string },
@@ -51,6 +73,10 @@ export class PaymentPlansController {
   }
 
   @Post(':id/record-payment')
+  @ApiOperation({ summary: 'Record payment on plan' })
+  @ApiParam({ name: 'id', description: 'Payment plan ID' })
+  @ApiStandardResponse('Payment recorded')
+  @ApiErrorResponses()
   @HttpCode(HttpStatus.OK)
   async recordPayment(
     @CurrentTenant() tenantId: string,
@@ -62,6 +88,10 @@ export class PaymentPlansController {
   }
 
   @Patch(':id/cancel')
+  @ApiOperation({ summary: 'Cancel payment plan' })
+  @ApiParam({ name: 'id', description: 'Payment plan ID' })
+  @ApiStandardResponse('Payment plan canceled')
+  @ApiErrorResponses()
   @HttpCode(HttpStatus.OK)
   async cancel(
     @CurrentTenant() tenantId: string,

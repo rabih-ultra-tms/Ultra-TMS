@@ -5,6 +5,7 @@ import { CSABasicType, InsuranceType, SafetyAlertType, SafetyIncidentType } from
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma.service';
 import { JwtAuthGuard } from '../src/modules/auth/guards/jwt-auth.guard';
+import { createTestAppWithRole } from './helpers/test-app.helper';
 
 const TEST_TENANT = 'tenant-safety';
 const TEST_USER = {
@@ -36,6 +37,12 @@ describe('Safety Service API E2E', () => {
       .compile();
 
     app = moduleRef.createNestApplication();
+    app.use((req, _res, next) => {
+      req.user = TEST_USER;
+      req.headers['x-tenant-id'] = TEST_TENANT;
+      req.tenantId = TEST_TENANT;
+      next();
+    });
     app.setGlobalPrefix('api/v1');
     await app.init();
 
@@ -341,5 +348,40 @@ describe('Safety Service API E2E', () => {
         .expect(200);
       expect(expiring.body.data).toHaveProperty('insurance');
     });
+  });
+
+  it('restricts incident updates to safety managers', async () => {
+    const dispatcherSetup = await createTestAppWithRole('tenant-safety-rbac', 'user-safety-dispatch', 'dispatch@safety.test', 'DISPATCHER');
+    const dispatcherApp = dispatcherSetup.app;
+    const dispatcherPrisma = dispatcherSetup.prisma;
+
+    const incident = await dispatcherPrisma.safetyIncident.create({
+      data: {
+        tenantId: 'tenant-safety-rbac',
+        incidentType: SafetyIncidentType.ACCIDENT,
+        severity: 'MINOR',
+        incidentDate: new Date(),
+        location: 'Test Yard',
+        description: 'Test incident',
+      },
+    });
+
+    await request(dispatcherApp.getHttpServer())
+      .put(`/api/v1/safety/incidents/${incident.id}`)
+      .send({ description: 'Updated by dispatcher' })
+      .expect(403);
+
+    await dispatcherApp.close();
+
+    const managerSetup = await createTestAppWithRole('tenant-safety-rbac', 'user-safety-manager', 'manager@safety.test', 'SAFETY_MANAGER');
+    const managerApp = managerSetup.app;
+
+    await request(managerApp.getHttpServer())
+      .put(`/api/v1/safety/incidents/${incident.id}`)
+      .send({ description: 'Updated by manager' })
+      .expect(200);
+
+    await managerSetup.prisma.safetyIncident.deleteMany({ where: { tenantId: 'tenant-safety-rbac' } });
+    await managerApp.close();
   });
 });

@@ -146,6 +146,17 @@ describe('Customer Portal API', () => {
   });
 
   afterAll(async () => {
+    await prisma.portalActivityLog.deleteMany({ where: { tenantId: TEST_TENANT } });
+    await prisma.portalPayment.deleteMany({ where: { tenantId: TEST_TENANT } });
+    await prisma.portalSession.deleteMany({ where: { tenantId: TEST_TENANT } });
+    await prisma.quoteRequest.deleteMany({ where: { tenantId: TEST_TENANT } });
+    await prisma.portalUser.deleteMany({ where: { tenantId: TEST_TENANT } });
+    await prisma.statusHistory.deleteMany({ where: { tenantId: TEST_TENANT } });
+    await prisma.load.deleteMany({ where: { tenantId: TEST_TENANT } });
+    await prisma.order.deleteMany({ where: { tenantId: TEST_TENANT } });
+    await prisma.invoice.deleteMany({ where: { tenantId: TEST_TENANT } });
+    await prisma.company.deleteMany({ where: { tenantId: TEST_TENANT } });
+    await prisma.tenant.deleteMany({ where: { id: TEST_TENANT } });
     await app.close();
   });
 

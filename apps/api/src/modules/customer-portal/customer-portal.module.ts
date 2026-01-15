@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import type { JwtSignOptions } from '@nestjs/jwt';
 import { PortalAuthGuard } from './guards/portal-auth.guard';
+import { CompanyScopeGuard } from './guards/company-scope.guard';
 import { PrismaService } from '../../prisma.service';
 import { PortalAuthController } from './auth/portal-auth.controller';
 import { PortalAuthService } from './auth/portal-auth.service';
@@ -39,6 +40,7 @@ import { PortalUsersService } from './users/portal-users.service';
   providers: [
     PrismaService,
     PortalAuthGuard,
+    CompanyScopeGuard,
     PortalAuthService,
     PortalDashboardService,
     PortalQuotesService,
