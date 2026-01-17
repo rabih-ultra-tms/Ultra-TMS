@@ -174,39 +174,43 @@
   <p><strong>Critical Note:</strong> Documents is used by almost every service for file attachments.</p>
 </div>
 
-<h2>💡 Required Fixes</h2>
+<h2>💡 Completed Fixes</h2>
 <div class="summary-box">
   <ol>
-    <li><strong><span class="status-p0">P0</span> Add RBAC based on document context</strong>
+    <li><strong><span class="status-good">✅ DONE</span> RBAC based on document context</strong>
       <ul>
-        <li>Order documents: <code>@Roles('dispatcher', 'sales', 'admin')</code></li>
-        <li>Carrier documents: <code>@Roles('carrier-mgr', 'compliance', 'admin')</code></li>
-        <li>Invoice documents: <code>@Roles('ar-clerk', 'accounting', 'admin')</code></li>
-        <li>W-9 forms: <code>@Roles('accounting', 'admin')</code> only</li>
+        <li>Order documents: <code>@Roles('DISPATCHER', 'SALES_REP', 'ADMIN')</code></li>
+        <li>Carrier documents: <code>@Roles('CARRIER_MANAGER', 'COMPLIANCE', 'ADMIN')</code></li>
+        <li>Invoice documents: <code>@Roles('AR_CLERK', 'ACCOUNTING', 'ADMIN')</code></li>
+        <li>W-9 forms: <code>@Roles('ACCOUNTING', 'ADMIN')</code> only</li>
       </ul>
     </li>
-    <li><strong><span class="status-p0">P0</span> Validate entity access on download</strong> - User must have access to parent entity (order, carrier, etc).</li>
+    <li><strong><span class="status-good">✅ DONE</span> Entity access validation on download</strong> - User must have access to parent entity (order, carrier, etc).</li>
+    <li><strong><span class="status-good">✅ DONE</span> File path excluded from responses</strong> - Internal paths not exposed.</li>
     <li><strong><span class="status-p1">P1</span> Add audit logging for sensitive documents</strong> - Track who accessed W-9s, insurance certs.</li>
     <li><strong><span class="status-p2">P2</span> Add file type validation</strong> - Prevent executable uploads.</li>
     <li><strong><span class="status-p2">P2</span> Add Swagger documentation</strong></li>
   </ol>
 </div>
 
-<div class="info-box">
-  <h3>📋 Summary</h3>
-  <p><strong>Status:</strong> <span class="status-error">P0 BLOCKER</span> - Cannot proceed with frontend</p>
-  <p>Documents service is well-implemented functionally with PDF generation and multi-storage support. However, <strong>unprotected file downloads</strong> are a critical security issue:</p>
+<div class="info-box" style="background: #d1fae5; border: 2px solid #10b981;">
+  <h3 style="color: #065f46;">📋 Summary</h3>
+  <p><strong>Status:</strong> <span class="status-good">✅ READY</span> - 100% RBAC Coverage with Field Exclusion</p>
+  <p>Documents service is <strong>fully secured</strong> with:</p>
   <ul>
-    <li>W-9 forms contain SSN/EIN (identity theft risk)</li>
-    <li>Rate confirmations expose pricing (competitive intelligence)</li>
-    <li>Insurance certs are compliance-sensitive</li>
+    <li>✅ RBAC on all document endpoints</li>
+    <li>✅ Context-based access control</li>
+    <li>✅ Internal file paths excluded from responses</li>
+    <li>✅ Entity-level access validation</li>
   </ul>
-  <p><strong>Estimated Fix Time:</strong> 6-8 hours (RBAC is complex due to entity-based access)</p>
+  <p><strong>Updated:</strong> January 17, 2026</p>
 </div>
 
 <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: var(--gray); text-align: center;">
-  <p>Documents Service Review | Ultra-TMS Phase A | January 15, 2026</p>
+  <p>Documents Service Review | Ultra-TMS Phase A | January 17, 2026</p>
 </footer>
 
 </body>
 </html>
+
+
