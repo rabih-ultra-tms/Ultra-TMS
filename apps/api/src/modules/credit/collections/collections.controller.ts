@@ -13,7 +13,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('Credit Applications')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('ADMIN', 'CREDIT_ANALYST')
 export class CollectionsController {
   constructor(private readonly collectionsService: CollectionsService) {}
 
@@ -21,7 +21,7 @@ export class CollectionsController {
   @ApiOperation({ summary: 'Get collections queue' })
   @ApiStandardResponse('Collections queue')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('ADMIN', 'CREDIT_ANALYST', 'CREDIT_VIEWER')
   async queue(
     @CurrentTenant() tenantId: string,
     @Query() query: PaginationDto,
@@ -34,7 +34,7 @@ export class CollectionsController {
   @ApiParam({ name: 'companyId', description: 'Company ID' })
   @ApiStandardResponse('Customer collections history')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('ADMIN', 'CREDIT_ANALYST', 'CREDIT_VIEWER')
   async historyByCustomer(
     @CurrentTenant() tenantId: string,
     @Param('companyId') companyId: string,
@@ -72,7 +72,7 @@ export class CollectionsController {
   @ApiOperation({ summary: 'Get aging report' })
   @ApiStandardResponse('Aging report')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('ADMIN', 'CREDIT_ANALYST', 'CREDIT_VIEWER')
   async aging(
     @CurrentTenant() tenantId: string,
   ) {
@@ -83,7 +83,7 @@ export class CollectionsController {
   @ApiOperation({ summary: 'Get follow-ups due' })
   @ApiStandardResponse('Follow-ups due')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('ADMIN', 'CREDIT_ANALYST', 'CREDIT_VIEWER')
   async followUps(
     @CurrentTenant() tenantId: string,
   ) {

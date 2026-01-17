@@ -288,3 +288,115 @@ export class SearchLoadPostingDto {
   @Max(100)
   limit?: number = 50;
 }
+
+export class GeoSearchQueryDto {
+  @ApiPropertyOptional({ description: 'Origin latitude', example: 41.8781 })
+  @IsOptional()
+  @IsNumber()
+  @Min(-90)
+  @Max(90)
+  @Type(() => Number)
+  originLat?: number;
+
+  @ApiPropertyOptional({ description: 'Origin longitude', example: -87.6298 })
+  @IsOptional()
+  @IsNumber()
+  @Min(-180)
+  @Max(180)
+  @Type(() => Number)
+  originLng?: number;
+
+  @ApiPropertyOptional({ description: 'Destination latitude' })
+  @IsOptional()
+  @IsNumber()
+  @Min(-90)
+  @Max(90)
+  @Type(() => Number)
+  destLat?: number;
+
+  @ApiPropertyOptional({ description: 'Destination longitude' })
+  @IsOptional()
+  @IsNumber()
+  @Min(-180)
+  @Max(180)
+  @Type(() => Number)
+  destLng?: number;
+
+  @ApiPropertyOptional({ description: 'Origin radius in miles', default: 50, minimum: 1, maximum: 500 })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Max(500)
+  @Type(() => Number)
+  originRadius?: number = 50;
+
+  @ApiPropertyOptional({ description: 'Destination radius in miles', default: 50, minimum: 1, maximum: 500 })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Max(500)
+  @Type(() => Number)
+  destRadius?: number = 50;
+
+  @ApiPropertyOptional({ description: 'Equipment type filter' })
+  @IsOptional()
+  @IsString()
+  equipmentType?: string;
+
+  @ApiPropertyOptional({ description: 'Include distance in results', default: false })
+  @IsOptional()
+  @IsBoolean()
+  @Type(() => Boolean)
+  includeDistance?: boolean;
+
+  @ApiPropertyOptional({ description: 'Sort by distance', default: false })
+  @IsOptional()
+  @IsBoolean()
+  @Type(() => Boolean)
+  sortByDistance?: boolean;
+
+  @ApiPropertyOptional({ default: 1 })
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  @Min(1)
+  page?: number = 1;
+
+  @ApiPropertyOptional({ default: 50 })
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  @Min(1)
+  @Max(100)
+  limit?: number = 50;
+}
+
+export class LaneSearchDto {
+  @ApiPropertyOptional({ description: 'Origin state (2-letter)', example: 'IL' })
+  @IsString()
+  originState!: string;
+
+  @ApiPropertyOptional({ description: 'Destination state (2-letter)', example: 'NY' })
+  @IsString()
+  destState!: string;
+
+  @ApiPropertyOptional({ description: 'Equipment type filter' })
+  @IsOptional()
+  @IsString()
+  equipmentType?: string;
+
+  @ApiPropertyOptional({ default: 1 })
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  @Min(1)
+  page?: number = 1;
+
+  @ApiPropertyOptional({ default: 50 })
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  @Min(1)
+  @Max(100)
+  limit?: number = 50;
+}

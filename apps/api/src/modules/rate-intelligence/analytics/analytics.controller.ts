@@ -9,7 +9,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('Rate Benchmarks')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('USER', 'MANAGER', 'ADMIN')
 export class AnalyticsController {
   constructor(private readonly service: AnalyticsService) {}
 
@@ -17,7 +17,7 @@ export class AnalyticsController {
   @ApiOperation({ summary: 'Get rate analytics dashboard' })
   @ApiStandardResponse('Analytics dashboard')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   dashboard(@CurrentTenant() tenantId: string) {
     return this.service.dashboard(tenantId);
   }
@@ -26,7 +26,7 @@ export class AnalyticsController {
   @ApiOperation({ summary: 'Get margin analytics' })
   @ApiStandardResponse('Margin analytics')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   margins(@CurrentTenant() tenantId: string) {
     return this.service.margins(tenantId);
   }
@@ -35,7 +35,7 @@ export class AnalyticsController {
   @ApiOperation({ summary: 'Get competitiveness analytics' })
   @ApiStandardResponse('Competitiveness analytics')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   competitiveness(@CurrentTenant() tenantId: string) {
     return this.service.competitiveness(tenantId);
   }
@@ -44,7 +44,7 @@ export class AnalyticsController {
   @ApiOperation({ summary: 'Get market overview analytics' })
   @ApiStandardResponse('Market overview analytics')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   market(@CurrentTenant() tenantId: string) {
     return this.service.marketOverview(tenantId);
   }

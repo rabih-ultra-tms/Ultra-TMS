@@ -13,7 +13,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('Quick Pay')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('USER', 'MANAGER', 'ADMIN')
 export class FactoredPaymentsController {
   constructor(private readonly service: FactoredPaymentsService) {}
 
@@ -21,7 +21,7 @@ export class FactoredPaymentsController {
   @ApiOperation({ summary: 'List factored payments' })
   @ApiStandardResponse('Factored payments list')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   async findAll(
     @CurrentTenant() tenantId: string,
     @Query() query: PaymentQueryDto,
@@ -34,7 +34,7 @@ export class FactoredPaymentsController {
   @ApiParam({ name: 'id', description: 'Payment ID' })
   @ApiStandardResponse('Factored payment details')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   async findOne(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -61,7 +61,7 @@ export class FactoredPaymentsController {
   @ApiParam({ name: 'carrierId', description: 'Carrier ID' })
   @ApiStandardResponse('Carrier factored payments list')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   async carrierPayments(
     @CurrentTenant() tenantId: string,
     @Param('carrierId') carrierId: string,
@@ -74,7 +74,7 @@ export class FactoredPaymentsController {
   @ApiParam({ name: 'id', description: 'Company ID' })
   @ApiStandardResponse('Factoring company payments list')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   async companyPayments(
     @CurrentTenant() tenantId: string,
     @Param('id') companyId: string,

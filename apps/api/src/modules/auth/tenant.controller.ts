@@ -5,13 +5,17 @@ import {
   Body,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from './guards';
 import { TenantService } from './tenant.service';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
 
 @Controller('tenant')
 @UseGuards(JwtAuthGuard)
+@ApiTags('Auth')
+@ApiBearerAuth('JWT-auth')
 export class TenantController {
   constructor(private readonly tenantService: TenantService) {}
 
@@ -20,6 +24,9 @@ export class TenantController {
    * Get current tenant information
    */
   @Get()
+  @ApiOperation({ summary: 'Get tenant' })
+  @ApiStandardResponse('Tenant details')
+  @ApiErrorResponses()
   async getTenant(@CurrentTenant() tenantId: string) {
     return this.tenantService.getTenant(tenantId);
   }
@@ -29,6 +36,9 @@ export class TenantController {
    * Update tenant information
    */
   @Put()
+  @ApiOperation({ summary: 'Update tenant' })
+  @ApiStandardResponse('Tenant updated')
+  @ApiErrorResponses()
   async updateTenant(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -42,6 +52,9 @@ export class TenantController {
    * Get tenant settings
    */
   @Get('settings')
+  @ApiOperation({ summary: 'Get tenant settings' })
+  @ApiStandardResponse('Tenant settings')
+  @ApiErrorResponses()
   async getSettings(@CurrentTenant() tenantId: string) {
     return this.tenantService.getSettings(tenantId);
   }
@@ -51,6 +64,9 @@ export class TenantController {
    * Update tenant settings
    */
   @Put('settings')
+  @ApiOperation({ summary: 'Update tenant settings' })
+  @ApiStandardResponse('Tenant settings updated')
+  @ApiErrorResponses()
   async updateSettings(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,

@@ -7,6 +7,8 @@ import {
   SearchLoadPostingDto,
   PostingStatus,
   GeoSearchDto,
+  GeoSearchQueryDto,
+  LaneSearchDto,
 } from '../dto';
 import {
   calculateDistance,
@@ -26,7 +28,7 @@ export class LoadPostingsService {
   async create(tenantId: string, dto: CreateLoadPostingDto, userId?: string) {
     // Verify load exists and get details for denormalization
     const load = await this.prisma.load.findFirst({
-      where: { id: dto.loadId, tenantId },
+      where: { id: dto.loadId, tenantId, deletedAt: null },
       include: {
         order: {
           include: {
@@ -138,7 +140,7 @@ export class LoadPostingsService {
     };
 
     let originCoords: Coordinates | null = null;
-    if (originSearch?.latitude && originSearch?.longitude) {
+    if (originSearch?.latitude !== undefined && originSearch?.longitude !== undefined) {
       originCoords = {
         latitude: originSearch.latitude,
         longitude: originSearch.longitude,
@@ -167,7 +169,7 @@ export class LoadPostingsService {
     }
 
     let destCoords: Coordinates | null = null;
-    if (destSearch?.latitude && destSearch?.longitude) {
+    if (destSearch?.latitude !== undefined && destSearch?.longitude !== undefined) {
       destCoords = {
         latitude: destSearch.latitude,
         longitude: destSearch.longitude,
@@ -177,6 +179,8 @@ export class LoadPostingsService {
         destSearch.city,
         destSearch.state,
       );
+    } else if (destSearch?.zip) {
+      destCoords = await this.geocodingService.getCoordinatesFromZip(destSearch.zip);
     }
 
     if (destCoords && destSearch?.radiusMiles) {
@@ -357,7 +361,7 @@ export class LoadPostingsService {
 
   async remove(tenantId: string, id: string) {
     const posting = await this.prisma.loadPosting.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!posting) {
@@ -372,7 +376,7 @@ export class LoadPostingsService {
 
   async expire(tenantId: string, id: string) {
     const posting = await this.prisma.loadPosting.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!posting) {
@@ -389,7 +393,7 @@ export class LoadPostingsService {
 
   async refresh(tenantId: string, id: string) {
     const posting = await this.prisma.loadPosting.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!posting) {
@@ -412,10 +416,61 @@ export class LoadPostingsService {
     });
   }
 
+  async searchByGeo(tenantId: string, query: GeoSearchQueryDto) {
+    const {
+      originLat,
+      originLng,
+      destLat,
+      destLng,
+      originRadius,
+      destRadius,
+      equipmentType,
+      includeDistance,
+      sortByDistance,
+      page,
+      limit,
+    } = query;
+
+    const resolvedOriginRadius = originRadius ?? 50;
+    const resolvedDestRadius = destRadius ?? 50;
+
+    const searchDto: SearchLoadPostingDto = {
+      origin:
+        originLat !== undefined && originLng !== undefined
+          ? { latitude: originLat, longitude: originLng, radiusMiles: resolvedOriginRadius }
+          : undefined,
+      destination:
+        destLat !== undefined && destLng !== undefined
+          ? { latitude: destLat, longitude: destLng, radiusMiles: resolvedDestRadius }
+          : undefined,
+      equipmentType,
+      includeDistance,
+      sortByDistance,
+      page,
+      limit,
+    };
+
+    return this.findAll(tenantId, searchDto);
+  }
+
+  async searchByLane(tenantId: string, query: LaneSearchDto) {
+    const { originState, destState, equipmentType, page, limit } = query;
+
+    const searchDto: SearchLoadPostingDto = {
+      originState,
+      destState,
+      equipmentType,
+      page,
+      limit,
+    };
+
+    return this.findAll(tenantId, searchDto);
+  }
+
   async trackView(tenantId: string, postingId: string, carrierId: string, source?: string) {
     // Check if posting exists
     const posting = await this.prisma.loadPosting.findFirst({
-      where: { id: postingId, tenantId },
+      where: { id: postingId, tenantId, deletedAt: null },
     });
 
     if (!posting) {
@@ -458,7 +513,7 @@ export class LoadPostingsService {
 
   async getMetrics(tenantId: string, postingId: string) {
     const posting = await this.prisma.loadPosting.findFirst({
-      where: { id: postingId, tenantId },
+      where: { id: postingId, tenantId, deletedAt: null },
       include: {
         _count: {
           select: {
@@ -492,6 +547,7 @@ export class LoadPostingsService {
     const result = await this.prisma.loadPosting.updateMany({
       where: {
         tenantId,
+        deletedAt: null,
         status: PostingStatus.ACTIVE,
         expiresAt: {
           lte: now,
@@ -512,6 +568,7 @@ export class LoadPostingsService {
     const postingsToRefresh = await this.prisma.loadPosting.findMany({
       where: {
         tenantId,
+        deletedAt: null,
         status: PostingStatus.ACTIVE,
         autoRefresh: true,
         OR: [

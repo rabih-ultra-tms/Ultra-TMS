@@ -13,7 +13,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('Contract Templates')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'CONTRACTS_MANAGER', 'CONTRACTS_VIEWER')
 export class ContractTemplatesController {
   constructor(private readonly templatesService: ContractTemplatesService) {}
 
@@ -21,7 +21,7 @@ export class ContractTemplatesController {
   @ApiOperation({ summary: 'List contract templates' })
   @ApiStandardResponse('Contract templates list')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'CONTRACTS_MANAGER', 'CONTRACTS_VIEWER')
   list(@CurrentUser() user: CurrentUserData) {
     return this.templatesService.list(user.tenantId);
   }
@@ -30,7 +30,7 @@ export class ContractTemplatesController {
   @ApiOperation({ summary: 'Create contract template' })
   @ApiStandardResponse('Contract template created')
   @ApiErrorResponses()
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'CONTRACTS_MANAGER')
   create(@Body() dto: CreateTemplateDto, @CurrentUser() user: CurrentUserData) {
     return this.templatesService.create(user.tenantId, user.userId, dto);
   }
@@ -40,7 +40,7 @@ export class ContractTemplatesController {
   @ApiParam({ name: 'id', description: 'Template ID' })
   @ApiStandardResponse('Contract template details')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'CONTRACTS_MANAGER', 'CONTRACTS_VIEWER')
   detail(@Param('id') id: string, @CurrentUser() user: CurrentUserData) {
     return this.templatesService.detail(user.tenantId, id);
   }
@@ -50,7 +50,7 @@ export class ContractTemplatesController {
   @ApiParam({ name: 'id', description: 'Template ID' })
   @ApiStandardResponse('Contract template updated')
   @ApiErrorResponses()
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'CONTRACTS_MANAGER')
   update(@Param('id') id: string, @Body() dto: UpdateTemplateDto, @CurrentUser() user: CurrentUserData) {
     return this.templatesService.update(user.tenantId, id, dto);
   }
@@ -60,7 +60,7 @@ export class ContractTemplatesController {
   @ApiParam({ name: 'id', description: 'Template ID' })
   @ApiStandardResponse('Contract template deleted')
   @ApiErrorResponses()
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'CONTRACTS_MANAGER')
   delete(@Param('id') id: string, @CurrentUser() user: CurrentUserData) {
     return this.templatesService.delete(user.tenantId, id);
   }
@@ -70,7 +70,7 @@ export class ContractTemplatesController {
   @ApiParam({ name: 'id', description: 'Template ID' })
   @ApiStandardResponse('Contract template cloned')
   @ApiErrorResponses()
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'CONTRACTS_MANAGER')
   clone(@Param('id') id: string, @CurrentUser() user: CurrentUserData) {
     return this.templatesService.clone(user.tenantId, id, user.userId);
   }

@@ -15,7 +15,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('Credit Holds')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('ADMIN', 'CREDIT_ANALYST')
 export class CreditHoldsController {
   constructor(private readonly creditHoldsService: CreditHoldsService) {}
 
@@ -23,7 +23,7 @@ export class CreditHoldsController {
   @ApiOperation({ summary: 'List credit holds' })
   @ApiStandardResponse('Credit holds list')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('ADMIN', 'CREDIT_ANALYST', 'CREDIT_VIEWER')
   async findAll(
     @CurrentTenant() tenantId: string,
     @Query() query: PaginationDto & { reason?: CreditHoldReason; isActive?: boolean },
@@ -36,7 +36,7 @@ export class CreditHoldsController {
   @ApiParam({ name: 'companyId', description: 'Company ID' })
   @ApiStandardResponse('Credit holds for customer')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('ADMIN', 'CREDIT_ANALYST', 'CREDIT_VIEWER')
   async findByCustomer(
     @CurrentTenant() tenantId: string,
     @Param('companyId') companyId: string,
@@ -49,7 +49,7 @@ export class CreditHoldsController {
   @ApiParam({ name: 'id', description: 'Hold ID' })
   @ApiStandardResponse('Credit hold details')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('ADMIN', 'CREDIT_ANALYST', 'CREDIT_VIEWER')
   async findOne(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -61,7 +61,7 @@ export class CreditHoldsController {
   @ApiOperation({ summary: 'Create credit hold' })
   @ApiStandardResponse('Credit hold created')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   async create(
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: { id: string },
@@ -75,7 +75,7 @@ export class CreditHoldsController {
   @ApiParam({ name: 'id', description: 'Hold ID' })
   @ApiStandardResponse('Credit hold released')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   @HttpCode(HttpStatus.OK)
   async release(
     @CurrentTenant() tenantId: string,

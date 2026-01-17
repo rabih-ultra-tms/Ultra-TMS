@@ -15,7 +15,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('Employees')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('USER', 'MANAGER', 'ADMIN')
 export class TimeOffController {
   constructor(private readonly timeOffService: TimeOffService) {}
 
@@ -23,7 +23,7 @@ export class TimeOffController {
   @ApiOperation({ summary: 'List time-off balances' })
   @ApiStandardResponse('Time-off balances')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   listBalances(@CurrentTenant() tenantId: string) {
     return this.timeOffService.listBalances(tenantId);
   }
@@ -32,7 +32,7 @@ export class TimeOffController {
   @ApiOperation({ summary: 'List time-off requests' })
   @ApiStandardResponse('Time-off requests list')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   listRequests(@CurrentTenant() tenantId: string) {
     return this.timeOffService.listRequests(tenantId);
   }
@@ -50,7 +50,7 @@ export class TimeOffController {
   @ApiParam({ name: 'id', description: 'Request ID' })
   @ApiStandardResponse('Time-off request details')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   getRequest(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.timeOffService.findOne(tenantId, id);
   }
@@ -69,7 +69,7 @@ export class TimeOffController {
   @ApiParam({ name: 'id', description: 'Request ID' })
   @ApiStandardResponse('Time-off request approved')
   @ApiErrorResponses()
-  @Roles('manager', 'admin')
+  @Roles('MANAGER', 'ADMIN')
   approveRequest(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -84,7 +84,7 @@ export class TimeOffController {
   @ApiParam({ name: 'id', description: 'Request ID' })
   @ApiStandardResponse('Time-off request denied')
   @ApiErrorResponses()
-  @Roles('manager', 'admin')
+  @Roles('MANAGER', 'ADMIN')
   denyRequest(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,

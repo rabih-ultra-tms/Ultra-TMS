@@ -33,4 +33,50 @@ describe('Load Board API E2E', () => {
       .set('x-test-role', 'DISPATCHER')
       .expect(200);
   });
+
+  it('allows dispatcher access to load bids', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/load-bids')
+      .set('x-test-role', 'DISPATCHER')
+      .expect(200);
+  });
+
+  it('denies carrier access to load bids', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/load-bids')
+      .set('x-test-role', 'CARRIER')
+      .expect(403);
+  });
+
+  it('allows dispatcher access to load tenders', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/load-tenders')
+      .set('x-test-role', 'DISPATCHER')
+      .expect(200);
+  });
+
+  it('denies carrier access to load tenders', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/load-tenders')
+      .set('x-test-role', 'CARRIER')
+      .expect(403);
+  });
+
+  it('lists load board rules', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/load-board/rules')
+      .expect(200);
+  });
+
+  it('gets load board post analytics', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/load-board/analytics/posts')
+      .expect(200);
+  });
+
+  it('gets load board lead analytics', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/load-board/analytics/leads')
+      .expect(200);
+  });
 });

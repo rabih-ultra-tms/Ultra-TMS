@@ -1,4 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { PrismaService } from '../../prisma.service';
 
 interface HealthStatus {
@@ -13,10 +14,12 @@ interface HealthStatus {
 }
 
 @Controller()
+@ApiTags('Health')
 export class HealthController {
   constructor(private prisma: PrismaService) {}
 
   @Get('health')
+  @ApiOperation({ summary: 'Health check' })
   async health(): Promise<HealthStatus> {
     return {
       status: 'ok',
@@ -27,6 +30,7 @@ export class HealthController {
   }
 
   @Get('ready')
+  @ApiOperation({ summary: 'Readiness check' })
   async ready(): Promise<HealthStatus> {
     const checks: HealthStatus['checks'] = {
       database: 'disconnected',
@@ -52,6 +56,7 @@ export class HealthController {
   }
 
   @Get('live')
+  @ApiOperation({ summary: 'Liveness check' })
   async live(): Promise<{ status: string; timestamp: string }> {
     return {
       status: 'alive',

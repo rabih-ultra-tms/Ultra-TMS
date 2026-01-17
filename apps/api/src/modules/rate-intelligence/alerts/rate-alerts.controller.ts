@@ -11,7 +11,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('Market Rates')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('USER', 'MANAGER', 'ADMIN')
 export class RateAlertsController {
   constructor(private readonly service: RateAlertsService) {}
 
@@ -19,7 +19,7 @@ export class RateAlertsController {
   @ApiOperation({ summary: 'List rate alerts' })
   @ApiStandardResponse('Rate alerts list')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   list(@CurrentTenant() tenantId: string) {
     return this.service.list(tenantId);
   }
@@ -50,7 +50,7 @@ export class RateAlertsController {
   @ApiParam({ name: 'id', description: 'Alert ID' })
   @ApiStandardResponse('Rate alert deleted')
   @ApiErrorResponses()
-  @Roles('manager', 'admin')
+  @Roles('MANAGER', 'ADMIN')
   remove(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.service.remove(tenantId, id);
   }
@@ -60,7 +60,7 @@ export class RateAlertsController {
   @ApiParam({ name: 'id', description: 'Alert ID' })
   @ApiStandardResponse('Rate alert history')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   history(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.service.history(tenantId, id);
   }

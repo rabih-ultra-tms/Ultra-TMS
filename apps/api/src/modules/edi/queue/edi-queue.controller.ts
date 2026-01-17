@@ -10,7 +10,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('EDI Transactions')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('USER', 'MANAGER', 'ADMIN')
 export class EdiQueueController {
   constructor(private readonly service: EdiQueueService) {}
 
@@ -18,7 +18,7 @@ export class EdiQueueController {
   @ApiOperation({ summary: 'List EDI queue items' })
   @ApiStandardResponse('EDI queue list')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   list(@CurrentTenant() tenantId: string) {
     return this.service.list(tenantId);
   }
@@ -27,7 +27,7 @@ export class EdiQueueController {
   @ApiOperation({ summary: 'Get EDI queue statistics' })
   @ApiStandardResponse('EDI queue stats')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   stats(@CurrentTenant() tenantId: string) {
     return this.service.stats(tenantId);
   }
@@ -37,7 +37,7 @@ export class EdiQueueController {
   @ApiParam({ name: 'id', description: 'Queue item ID' })
   @ApiStandardResponse('EDI queue item details')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   findOne(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.service.findOne(tenantId, id);
   }
@@ -64,7 +64,7 @@ export class EdiQueueController {
   @ApiOperation({ summary: 'Process EDI queue' })
   @ApiStandardResponse('EDI queue processing started')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   process(@CurrentTenant() tenantId: string) {
     return this.service.process(tenantId);
   }

@@ -10,6 +10,13 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards';
 import { CompaniesService } from './companies.service';
 import { ContactsService } from './contacts.service';
@@ -20,9 +27,12 @@ import { CurrentTenant } from '../../common/decorators/current-tenant.decorator'
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
 
 @Controller('companies')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('Companies')
+@ApiBearerAuth('JWT-auth')
 export class CompaniesController {
   constructor(
     private readonly companiesService: CompaniesService,
@@ -32,6 +42,15 @@ export class CompaniesController {
   ) {}
 
   @Get()
+  @ApiOperation({ summary: 'List companies' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'companyType', required: false, type: String })
+  @ApiQuery({ name: 'status', required: false, type: String })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'assignedUserId', required: false, type: String })
+  @ApiStandardResponse('Companies list')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async findAll(
     @CurrentTenant() tenantId: string,
@@ -46,12 +65,19 @@ export class CompaniesController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get company by ID' })
+  @ApiParam({ name: 'id', description: 'Company ID' })
+  @ApiStandardResponse('Company details')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async findOne(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.companiesService.findOne(tenantId, id);
   }
 
   @Post()
+  @ApiOperation({ summary: 'Create company' })
+  @ApiStandardResponse('Company created')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_MANAGER')
   async create(
     @CurrentTenant() tenantId: string,
@@ -62,6 +88,10 @@ export class CompaniesController {
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'Update company' })
+  @ApiParam({ name: 'id', description: 'Company ID' })
+  @ApiStandardResponse('Company updated')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async update(
     @CurrentTenant() tenantId: string,
@@ -73,6 +103,10 @@ export class CompaniesController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete company' })
+  @ApiParam({ name: 'id', description: 'Company ID' })
+  @ApiStandardResponse('Company deleted')
+  @ApiErrorResponses()
   @Roles('ADMIN')
   async delete(
     @CurrentTenant() tenantId: string,
@@ -84,6 +118,12 @@ export class CompaniesController {
 
   // Nested resource endpoints
   @Get(':id/contacts')
+  @ApiOperation({ summary: 'List company contacts' })
+  @ApiParam({ name: 'id', description: 'Company ID' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiStandardResponse('Company contacts list')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async getContacts(
     @CurrentTenant() tenantId: string,
@@ -95,6 +135,12 @@ export class CompaniesController {
   }
 
   @Get(':id/opportunities')
+  @ApiOperation({ summary: 'List company opportunities' })
+  @ApiParam({ name: 'id', description: 'Company ID' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiStandardResponse('Company opportunities list')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async getOpportunities(
     @CurrentTenant() tenantId: string,
@@ -106,6 +152,12 @@ export class CompaniesController {
   }
 
   @Get(':id/activities')
+  @ApiOperation({ summary: 'List company activities' })
+  @ApiParam({ name: 'id', description: 'Company ID' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiStandardResponse('Company activities list')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async getActivities(
     @CurrentTenant() tenantId: string,
@@ -117,6 +169,12 @@ export class CompaniesController {
   }
 
   @Get(':id/orders')
+  @ApiOperation({ summary: 'List company orders' })
+  @ApiParam({ name: 'id', description: 'Company ID' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiStandardResponse('Company orders list')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async getOrders(
     @CurrentTenant() tenantId: string,
@@ -128,6 +186,10 @@ export class CompaniesController {
   }
 
   @Post(':id/sync-hubspot')
+  @ApiOperation({ summary: 'Sync company to HubSpot' })
+  @ApiParam({ name: 'id', description: 'Company ID' })
+  @ApiStandardResponse('Company synced to HubSpot')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_MANAGER')
   async syncHubspot(
     @CurrentTenant() tenantId: string,
@@ -138,6 +200,10 @@ export class CompaniesController {
   }
 
   @Patch(':id/assign')
+  @ApiOperation({ summary: 'Assign reps to company' })
+  @ApiParam({ name: 'id', description: 'Company ID' })
+  @ApiStandardResponse('Company reps assigned')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async assignRep(
     @CurrentTenant() tenantId: string,
@@ -149,6 +215,10 @@ export class CompaniesController {
   }
 
   @Patch(':id/tier')
+  @ApiOperation({ summary: 'Update company tier' })
+  @ApiParam({ name: 'id', description: 'Company ID' })
+  @ApiStandardResponse('Company tier updated')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
   async updateTier(
     @CurrentTenant() tenantId: string,

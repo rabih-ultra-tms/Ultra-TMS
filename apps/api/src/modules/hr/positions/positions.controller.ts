@@ -10,7 +10,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('Positions')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('USER', 'MANAGER', 'ADMIN')
 export class PositionsController {
   constructor(private readonly positionsService: PositionsService) {}
 
@@ -18,7 +18,7 @@ export class PositionsController {
   @ApiOperation({ summary: 'List positions' })
   @ApiStandardResponse('Positions list')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   list(@CurrentTenant() tenantId: string) {
     return this.positionsService.list(tenantId);
   }
@@ -36,7 +36,7 @@ export class PositionsController {
   @ApiParam({ name: 'id', description: 'Position ID' })
   @ApiStandardResponse('Position details')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   getOne(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.positionsService.findOne(tenantId, id);
   }
@@ -55,7 +55,7 @@ export class PositionsController {
   @ApiParam({ name: 'id', description: 'Position ID' })
   @ApiStandardResponse('Position deleted')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   delete(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.positionsService.remove(tenantId, id);
   }

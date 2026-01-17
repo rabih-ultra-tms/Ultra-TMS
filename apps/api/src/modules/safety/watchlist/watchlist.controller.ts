@@ -14,7 +14,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('Safety Scores')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('USER', 'MANAGER', 'ADMIN')
 export class WatchlistController {
   constructor(private readonly service: WatchlistService) {}
 
@@ -22,7 +22,7 @@ export class WatchlistController {
   @ApiOperation({ summary: 'List safety watchlist entries' })
   @ApiStandardResponse('Watchlist entries')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   list(@CurrentTenant() tenantId: string) {
     return this.service.list(tenantId);
   }
@@ -31,7 +31,7 @@ export class WatchlistController {
   @ApiOperation({ summary: 'Add to safety watchlist' })
   @ApiStandardResponse('Watchlist entry created')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   create(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -59,7 +59,7 @@ export class WatchlistController {
   @ApiParam({ name: 'id', description: 'Watchlist ID' })
   @ApiStandardResponse('Watchlist entry resolved')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   resolve(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,

@@ -10,7 +10,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('Agent Agreements')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('ADMIN', 'AGENT_MANAGER', 'AGENT')
 export class AgentAgreementsController {
   constructor(private readonly agreementsService: AgentAgreementsService) {}
 
@@ -19,7 +19,7 @@ export class AgentAgreementsController {
   @ApiParam({ name: 'id', description: 'Agent ID' })
   @ApiStandardResponse('Agent agreements list')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('ADMIN', 'AGENT_MANAGER', 'AGENT')
   listByAgent(@Request() req: any, @Param('id') id: string) {
     return this.agreementsService.listByAgent(req.user.tenantId, id);
   }
@@ -38,7 +38,7 @@ export class AgentAgreementsController {
   @ApiParam({ name: 'id', description: 'Agreement ID' })
   @ApiStandardResponse('Agent agreement details')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('ADMIN', 'AGENT_MANAGER', 'AGENT')
   findOne(@Request() req: any, @Param('id') id: string) {
     return this.agreementsService.findOne(req.user.tenantId, id);
   }
@@ -57,7 +57,7 @@ export class AgentAgreementsController {
   @ApiParam({ name: 'id', description: 'Agreement ID' })
   @ApiStandardResponse('Agent agreement activated')
   @ApiErrorResponses()
-  @Roles('manager', 'admin')
+  @Roles('ADMIN', 'AGENT_MANAGER')
   @HttpCode(200)
   activate(@Request() req: any, @Param('id') id: string) {
     return this.agreementsService.activate(req.user.tenantId, id);
@@ -68,7 +68,7 @@ export class AgentAgreementsController {
   @ApiParam({ name: 'id', description: 'Agreement ID' })
   @ApiStandardResponse('Agent agreement terminated')
   @ApiErrorResponses()
-  @Roles('manager', 'admin')
+  @Roles('ADMIN', 'AGENT_MANAGER')
   @HttpCode(200)
   terminate(@Request() req: any, @Param('id') id: string) {
     return this.agreementsService.terminate(req.user.tenantId, id);

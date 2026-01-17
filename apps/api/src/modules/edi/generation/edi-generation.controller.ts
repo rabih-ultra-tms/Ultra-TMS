@@ -16,7 +16,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('EDI Transactions')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('USER', 'MANAGER', 'ADMIN')
 export class EdiGenerationController {
   constructor(private readonly service: EdiGenerationService) {}
 
@@ -85,7 +85,7 @@ export class EdiGenerationController {
 @UseGuards(JwtAuthGuard)
 @ApiTags('EDI Transactions')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('USER', 'MANAGER', 'ADMIN')
 export class EdiSendController {
   constructor(private readonly service: EdiGenerationService) {}
 

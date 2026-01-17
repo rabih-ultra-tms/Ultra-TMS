@@ -35,7 +35,7 @@ export class DocumentTemplatesService {
   }
 
   async findAll(tenantId: string, templateType?: string) {
-    const where: Record<string, any> = { tenantId };
+    const where: Record<string, any> = { tenantId, deletedAt: null };
 
     if (templateType) {
       where.templateType = templateType;
@@ -49,7 +49,7 @@ export class DocumentTemplatesService {
 
   async findOne(tenantId: string, id: string) {
     const template = await this.prisma.documentTemplate.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!template) {
@@ -61,7 +61,7 @@ export class DocumentTemplatesService {
 
   async update(tenantId: string, id: string, dto: UpdateDocumentTemplateDto) {
     const template = await this.prisma.documentTemplate.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!template) {
@@ -76,15 +76,16 @@ export class DocumentTemplatesService {
 
   async remove(tenantId: string, id: string) {
     const template = await this.prisma.documentTemplate.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!template) {
       throw new NotFoundException('Document template not found');
     }
 
-    return this.prisma.documentTemplate.delete({
+    return this.prisma.documentTemplate.update({
       where: { id },
+      data: { deletedAt: new Date() },
     });
   }
 
@@ -94,6 +95,7 @@ export class DocumentTemplatesService {
         tenantId,
         templateType,
         isDefault: true,
+        deletedAt: null,
         status: 'ACTIVE',
       },
     });

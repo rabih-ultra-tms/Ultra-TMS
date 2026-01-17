@@ -10,7 +10,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('FAQ')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('USER', 'MANAGER', 'ADMIN')
 export class CannedResponsesController {
   constructor(private readonly cannedResponsesService: CannedResponsesService) {}
 
@@ -18,7 +18,7 @@ export class CannedResponsesController {
   @ApiOperation({ summary: 'List canned responses' })
   @ApiStandardResponse('Canned responses list')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   list(@CurrentTenant() tenantId: string) {
     return this.cannedResponsesService.list(tenantId);
   }
@@ -27,7 +27,7 @@ export class CannedResponsesController {
   @ApiOperation({ summary: 'Create canned response' })
   @ApiStandardResponse('Canned response created')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   create(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -41,7 +41,7 @@ export class CannedResponsesController {
   @ApiParam({ name: 'id', description: 'Response ID' })
   @ApiStandardResponse('Canned response updated')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   update(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -56,7 +56,7 @@ export class CannedResponsesController {
   @ApiParam({ name: 'id', description: 'Response ID' })
   @ApiStandardResponse('Canned response deleted')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   delete(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.cannedResponsesService.remove(tenantId, id);
   }

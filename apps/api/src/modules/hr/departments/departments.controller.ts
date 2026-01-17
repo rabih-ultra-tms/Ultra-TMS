@@ -10,7 +10,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('Departments')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('USER', 'MANAGER', 'ADMIN')
 export class DepartmentsController {
   constructor(private readonly departmentsService: DepartmentsService) {}
 
@@ -18,7 +18,7 @@ export class DepartmentsController {
   @ApiOperation({ summary: 'List departments' })
   @ApiStandardResponse('Departments list')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   list(@CurrentTenant() tenantId: string) {
     return this.departmentsService.list(tenantId);
   }
@@ -36,7 +36,7 @@ export class DepartmentsController {
   @ApiParam({ name: 'id', description: 'Department ID' })
   @ApiStandardResponse('Department details')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   getOne(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.departmentsService.findOne(tenantId, id);
   }
@@ -55,7 +55,7 @@ export class DepartmentsController {
   @ApiParam({ name: 'id', description: 'Department ID' })
   @ApiStandardResponse('Department deleted')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   delete(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.departmentsService.remove(tenantId, id);
   }

@@ -167,7 +167,7 @@ export class DocumentsService {
 
   async remove(tenantId: string, id: string) {
     const document = await this.prisma.document.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!document) {
@@ -197,7 +197,7 @@ export class DocumentsService {
 
   async updateOcrText(tenantId: string, id: string, ocrText: string) {
     const document = await this.prisma.document.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!document) {

@@ -619,10 +619,14 @@ model Company {
 
   @@unique([tenantId, name])
   @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([tenantId, companyType])
+  @@index([tenantId, deletedAt])
   @@index([companyType])
   @@index([status])
   @@index([assignedUserId])
   @@index([hubspotId])
+  @@index([createdAt])
   @@index([externalId, sourceSystem])
 }
 
@@ -676,7 +680,10 @@ model Contact {
   orders Order[] @relation("OrderContact")
 
   @@index([tenantId])
+  @@index([tenantId, email])
+  @@index([tenantId, deletedAt])
   @@index([companyId])
+  @@index([companyId, isPrimary])
   @@index([email])
   @@index([isPrimary])
   @@index([hubspotId])
@@ -1304,10 +1311,10 @@ model Load {
   totalCost        Decimal? @db.Decimal(10, 2)
 
   // Tracking
-  currentLocationLat Decimal?  @db.Decimal(10, 7)
-  currentLocationLng Decimal?  @db.Decimal(10, 7)
-  currentCity        String?   @db.VarChar(100)
-  currentState       String?   @db.VarChar(50)
+  currentLocationLat Decimal? @db.Decimal(10, 7)
+  currentLocationLng Decimal? @db.Decimal(10, 7)
+  currentCity        String?  @db.VarChar(100)
+  currentState       String?  @db.VarChar(50)
   lastTrackingUpdate DateTime?
   eta                DateTime?
 
@@ -1340,9 +1347,9 @@ model Load {
   updatedById String?
 
   // Relations
-  tenant        Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  order         Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  carrier       Carrier?        @relation(fields: [carrierId], references: [id], onDelete: SetNull)
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  carrier       Carrier? @relation(fields: [carrierId], references: [id], onDelete: SetNull)
   stops         Stop[]
   checkCalls    CheckCall[]
   statusHistory StatusHistory[]
@@ -1379,6 +1386,10 @@ model Load {
 
   @@unique([tenantId, loadNumber])
   @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([tenantId, carrierId])
+  @@index([tenantId, deletedAt])
+  @@index([createdAt])
   @@index([orderId])
   @@index([carrierId])
   @@index([status])
@@ -1724,6 +1735,8 @@ model Carrier {
   @@unique([tenantId, mcNumber])
   @@unique([tenantId, dotNumber])
   @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([tenantId, deletedAt])
   @@index([mcNumber])
   @@index([dotNumber])
   @@index([scacCode])
@@ -1828,6 +1841,8 @@ model Driver {
 
   @@unique([tenantId, carrierId, cdlNumber])
   @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([tenantId, deletedAt])
   @@index([carrierId])
   @@index([status])
   @@index([cdlExpiration])
@@ -2155,12 +2170,17 @@ model Invoice {
 
   @@unique([tenantId, invoiceNumber])
   @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([tenantId, companyId])
+  @@index([tenantId, dueDate])
+  @@index([tenantId, status, dueDate])
   @@index([companyId])
   @@index([status])
   @@index([dueDate])
   @@index([invoiceDate])
   @@index([orderId])
   @@index([loadId])
+  @@index([createdAt])
   @@index([externalId, sourceSystem])
 }
 
@@ -2673,12 +2693,17 @@ model LoadPosting {
 
   @@index([tenantId])
   @@index([tenantId, status])
+  @@index([tenantId, deletedAt])
   @@index([loadId])
   @@index([originState, originCity])
   @@index([destState, destCity])
+  @@index([originState, destState])
   @@index([pickupDate])
   @@index([equipmentType])
   @@index([status])
+  @@index([status, expiresAt])
+  @@index([status, originState, expiresAt])
+  @@index([createdAt])
   @@index([externalId, sourceSystem])
 }
 
@@ -2771,9 +2796,12 @@ model LoadBid {
   carrier Carrier     @relation(fields: [carrierId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
-  @@index([postingId])
-  @@index([carrierId])
   @@index([tenantId, status])
+  @@index([tenantId, deletedAt])
+  @@index([postingId])
+  @@index([postingId, status])
+  @@index([carrierId])
+  @@index([carrierId, status])
   @@index([status])
   @@index([externalId, sourceSystem])
 }
@@ -3127,6 +3155,7 @@ model CommissionEntry {
   payout       CommissionPayout? @relation(fields: [payoutId], references: [id], onDelete: SetNull)
 
   @@index([tenantId])
+  @@index([tenantId, deletedAt])
   @@index([userId])
   @@index([loadId])
   @@index([tenantId, commissionPeriod])
@@ -3184,6 +3213,9 @@ model CommissionPayout {
 
   @@unique([tenantId, payoutNumber])
   @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([tenantId, paidAt])
+  @@index([tenantId, deletedAt])
   @@index([userId])
   @@index([tenantId, periodStart])
   @@index([externalId, sourceSystem])
@@ -3286,10 +3318,12 @@ model Document {
 
   @@index([tenantId])
   @@index([tenantId, documentType])
+  @@index([tenantId, deletedAt])
   @@index([entityType, entityId])
   @@index([loadId])
   @@index([carrierId])
   @@index([companyId])
+  @@index([createdAt])
   @@index([externalId, sourceSystem])
 }
 
@@ -6647,6 +6681,9 @@ model Location {
   businessHours BusinessHours[]
 
   @@index([tenantId])
+  @@index([tenantId, city, state])
+  @@index([tenantId, zip])
+  @@index([tenantId, deletedAt])
   @@index([locationCode])
   @@index([isHeadquarters])
   @@index([externalId, sourceSystem])
@@ -7651,6 +7688,9 @@ model Integration {
   circuitBreakerStateRecord CircuitBreakerStateRecord?
 
   @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([tenantId, category])
+  @@index([tenantId, deletedAt])
   @@index([category])
   @@index([provider])
   @@index([status])
@@ -7693,6 +7733,8 @@ model WebhookEndpoint {
   webhookSubscriptions WebhookSubscription[]
 
   @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([tenantId, deletedAt])
   @@index([status])
   @@index([externalId, sourceSystem])
 }
@@ -8244,11 +8286,16 @@ model AuditLog {
   tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
+  @@index([tenantId, userId])
+  @@index([tenantId, action])
+  @@index([tenantId, entityType])
+  @@index([tenantId, createdAt])
   @@index([userId])
   @@index([action])
   @@index([category])
   @@index([severity])
   @@index([entityType, entityId])
+  @@index([entityId])
   @@index([createdAt])
   @@index([externalId, sourceSystem])
 }

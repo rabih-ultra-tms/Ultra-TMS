@@ -11,7 +11,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('Market Rates')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('USER', 'MANAGER', 'ADMIN')
 export class ProvidersController {
   constructor(private readonly service: ProvidersService) {}
 
@@ -19,7 +19,7 @@ export class ProvidersController {
   @ApiOperation({ summary: 'List rate data providers' })
   @ApiStandardResponse('Provider list')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   list(@CurrentTenant() tenantId: string) {
     return this.service.list(tenantId);
   }
@@ -28,7 +28,7 @@ export class ProvidersController {
   @ApiOperation({ summary: 'Create rate data provider' })
   @ApiStandardResponse('Provider created')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   create(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -42,7 +42,7 @@ export class ProvidersController {
   @ApiParam({ name: 'id', description: 'Provider ID' })
   @ApiStandardResponse('Provider updated')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   update(@CurrentTenant() tenantId: string, @Param('id') id: string, @Body() dto: UpdateProviderConfigDto) {
     return this.service.update(tenantId, id, dto);
   }
@@ -52,7 +52,7 @@ export class ProvidersController {
   @ApiParam({ name: 'id', description: 'Provider ID' })
   @ApiStandardResponse('Provider connection tested')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   test(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.service.test(tenantId, id);
   }

@@ -9,20 +9,31 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from './guards';
 import { UsersService } from './users.service';
 import { CreateUserDto, UpdateUserDto } from './dto';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators';
+import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
 @Roles('ADMIN', 'SUPER_ADMIN')
+@ApiTags('Auth')
+@ApiBearerAuth('JWT-auth')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
+  @ApiOperation({ summary: 'List users' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'status', required: false, type: String })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiStandardResponse('Users list')
+  @ApiErrorResponses()
   async findAll(
     @CurrentTenant() tenantId: string,
     @Query('page') page?: string,
@@ -39,11 +50,18 @@ export class UsersController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get user by ID' })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiStandardResponse('User details')
+  @ApiErrorResponses()
   async findOne(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.usersService.findOne(tenantId, id);
   }
 
   @Post()
+  @ApiOperation({ summary: 'Create user' })
+  @ApiStandardResponse('User created')
+  @ApiErrorResponses()
   async create(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -53,6 +71,10 @@ export class UsersController {
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'Update user' })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiStandardResponse('User updated')
+  @ApiErrorResponses()
   async update(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -63,6 +85,10 @@ export class UsersController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete user' })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiStandardResponse('User deleted')
+  @ApiErrorResponses()
   async delete(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -76,6 +102,10 @@ export class UsersController {
    * Send invitation email to user
    */
   @Post(':id/invite')
+  @ApiOperation({ summary: 'Invite user' })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiStandardResponse('User invited')
+  @ApiErrorResponses()
   async inviteUser(
     @CurrentTenant() tenantId: string,
     @CurrentUser() inviter: any,
@@ -89,6 +119,10 @@ export class UsersController {
    * Activate a user account
    */
   @Post(':id/activate')
+  @ApiOperation({ summary: 'Activate user' })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiStandardResponse('User activated')
+  @ApiErrorResponses()
   async activateUser(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -102,6 +136,10 @@ export class UsersController {
    * Deactivate a user account
    */
   @Post(':id/deactivate')
+  @ApiOperation({ summary: 'Deactivate user' })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiStandardResponse('User deactivated')
+  @ApiErrorResponses()
   async deactivateUser(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -115,6 +153,10 @@ export class UsersController {
    * Admin reset user password (sends reset email)
    */
   @Post(':id/reset-password')
+  @ApiOperation({ summary: 'Reset user password' })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiStandardResponse('User password reset')
+  @ApiErrorResponses()
   async resetUserPassword(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,

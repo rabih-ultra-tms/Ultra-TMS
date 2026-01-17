@@ -9,6 +9,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards';
@@ -22,6 +23,7 @@ import {
 } from './dto';
 
 @Controller('auth')
+@ApiTags('Auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
@@ -30,6 +32,11 @@ export class AuthController {
    * Login with email and password
    */
   @Post('login')
+  @ApiOperation({ summary: 'Login with email and password' })
+  @ApiBody({ type: LoginDto })
+  @ApiResponse({ status: 200, description: 'Login successful' })
+  @ApiResponse({ status: 400, description: 'Validation error' })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
   @Throttle({ long: { limit: 5, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   async login(@Body() loginDto: LoginDto, @Req() req: Request) {
@@ -49,6 +56,10 @@ export class AuthController {
    * Refresh access token using refresh token
    */
   @Post('refresh')
+  @ApiOperation({ summary: 'Refresh access token' })
+  @ApiBody({ type: RefreshTokenDto })
+  @ApiResponse({ status: 200, description: 'Token refreshed' })
+  @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
   @HttpCode(HttpStatus.OK)
   async refresh(@Body() refreshTokenDto: RefreshTokenDto) {
     const tokens = await this.authService.refresh(refreshTokenDto);
@@ -65,6 +76,10 @@ export class AuthController {
    */
   @Post('logout')
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Logout current session' })
+  @ApiResponse({ status: 200, description: 'Logout successful' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   @HttpCode(HttpStatus.OK)
   async logout(@CurrentUser() user: { sub: string }) {
     // For now, we'll revoke all sessions (simplified)
@@ -82,6 +97,10 @@ export class AuthController {
    */
   @Post('logout-all')
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Logout all sessions' })
+  @ApiResponse({ status: 200, description: 'All sessions logged out' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   @HttpCode(HttpStatus.OK)
   async logoutAll(@CurrentUser() user: { sub: string }) {
     await this.authService.logoutAll(user.sub);
@@ -97,6 +116,10 @@ export class AuthController {
    * Request password reset
    */
   @Post('forgot-password')
+  @ApiOperation({ summary: 'Request password reset' })
+  @ApiBody({ type: ForgotPasswordDto })
+  @ApiResponse({ status: 200, description: 'Password reset email sent if user exists' })
+  @ApiResponse({ status: 400, description: 'Validation error' })
   @HttpCode(HttpStatus.OK)
   async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
     await this.authService.forgotPassword(forgotPasswordDto);
@@ -112,6 +135,10 @@ export class AuthController {
    * Reset password with token
    */
   @Post('reset-password')
+  @ApiOperation({ summary: 'Reset password with token' })
+  @ApiBody({ type: ResetPasswordDto })
+  @ApiResponse({ status: 200, description: 'Password reset successful' })
+  @ApiResponse({ status: 400, description: 'Invalid or expired reset token' })
   @HttpCode(HttpStatus.OK)
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     await this.authService.resetPassword(resetPasswordDto);
@@ -127,6 +154,10 @@ export class AuthController {
    * Verify email address with token
    */
   @Post('verify-email')
+  @ApiOperation({ summary: 'Verify email address' })
+  @ApiBody({ type: VerifyEmailDto })
+  @ApiResponse({ status: 200, description: 'Email verified' })
+  @ApiResponse({ status: 400, description: 'Invalid or expired verification token' })
   @HttpCode(HttpStatus.OK)
   async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
     await this.authService.verifyEmail(verifyEmailDto);
@@ -143,6 +174,10 @@ export class AuthController {
    */
   @Get('me')
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Get current user profile' })
+  @ApiResponse({ status: 200, description: 'Current user profile' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getMe(@CurrentUser() user: { sub: string }) {
     const userData = await this.authService.getMe(user.sub);
 

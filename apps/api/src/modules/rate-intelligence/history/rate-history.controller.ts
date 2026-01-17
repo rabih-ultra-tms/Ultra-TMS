@@ -10,7 +10,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('Rate History')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('USER', 'MANAGER', 'ADMIN')
 export class RateHistoryController {
   constructor(private readonly service: RateHistoryService) {}
 
@@ -20,7 +20,7 @@ export class RateHistoryController {
   @ApiQuery({ name: 'destination', required: false, type: String })
   @ApiStandardResponse('Rate history')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   history(@CurrentTenant() tenantId: string, @Query() query: RateHistoryQueryDto) {
     return this.service.history(tenantId, query);
   }
@@ -31,7 +31,7 @@ export class RateHistoryController {
   @ApiQuery({ name: 'destination', required: false, type: String })
   @ApiStandardResponse('Rate trends')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   trends(@CurrentTenant() tenantId: string, @Query() query: RateHistoryQueryDto) {
     return this.service.trends(tenantId, query);
   }

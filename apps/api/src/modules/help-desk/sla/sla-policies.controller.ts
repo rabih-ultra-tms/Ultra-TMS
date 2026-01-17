@@ -10,7 +10,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('Tickets')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('USER', 'MANAGER', 'ADMIN')
 export class SlaPoliciesController {
   constructor(private readonly slaService: SlaService) {}
 
@@ -18,7 +18,7 @@ export class SlaPoliciesController {
   @ApiOperation({ summary: 'List SLA policies' })
   @ApiStandardResponse('SLA policies list')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   list(@CurrentTenant() tenantId: string) {
     return this.slaService.listPolicies(tenantId);
   }
@@ -27,7 +27,7 @@ export class SlaPoliciesController {
   @ApiOperation({ summary: 'Create SLA policy' })
   @ApiStandardResponse('SLA policy created')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   create(@CurrentTenant() tenantId: string, @CurrentUser('id') userId: string, @Body() dto: CreateSlaPolicyDto) {
     return this.slaService.createPolicy(tenantId, userId, dto);
   }
@@ -37,7 +37,7 @@ export class SlaPoliciesController {
   @ApiParam({ name: 'id', description: 'Policy ID' })
   @ApiStandardResponse('SLA policy updated')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   update(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -52,7 +52,7 @@ export class SlaPoliciesController {
   @ApiParam({ name: 'id', description: 'Policy ID' })
   @ApiStandardResponse('SLA policy deleted')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   remove(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.slaService.deletePolicy(tenantId, id);
   }

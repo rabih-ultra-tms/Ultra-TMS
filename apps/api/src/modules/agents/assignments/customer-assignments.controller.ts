@@ -16,7 +16,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('Agents')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('USER', 'MANAGER', 'ADMIN')
 export class CustomerAssignmentsController {
   constructor(private readonly assignmentsService: CustomerAssignmentsService) {}
 
@@ -25,7 +25,7 @@ export class CustomerAssignmentsController {
   @ApiParam({ name: 'id', description: 'Agent ID' })
   @ApiStandardResponse('Assigned customers list')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   listByAgent(@Request() req: any, @Param('id') id: string) {
     return this.assignmentsService.listByAgent(req.user.tenantId, id);
   }
@@ -48,7 +48,7 @@ export class CustomerAssignmentsController {
   @ApiParam({ name: 'id', description: 'Assignment ID' })
   @ApiStandardResponse('Assignment details')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   findOne(@Request() req: any, @Param('id') id: string) {
     return this.assignmentsService.findOne(req.user.tenantId, id);
   }
@@ -67,7 +67,7 @@ export class CustomerAssignmentsController {
   @ApiParam({ name: 'id', description: 'Assignment ID' })
   @ApiStandardResponse('Assignment transferred')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   @HttpCode(200)
   transfer(@Request() req: any, @Param('id') id: string, @Body() dto: TransferAssignmentDto) {
     return this.assignmentsService.transfer(req.user.tenantId, id, dto);
@@ -88,7 +88,7 @@ export class CustomerAssignmentsController {
   @ApiParam({ name: 'id', description: 'Assignment ID' })
   @ApiStandardResponse('Assignment terminated')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   @HttpCode(200)
   terminate(@Request() req: any, @Param('id') id: string, @Body() dto: TerminateAssignmentDto) {
     return this.assignmentsService.terminate(req.user.tenantId, id, dto);
@@ -99,7 +99,7 @@ export class CustomerAssignmentsController {
   @ApiParam({ name: 'id', description: 'Customer ID' })
   @ApiStandardResponse('Customer agent')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   getAgent(@Request() req: any, @Param('id') id: string) {
     return this.assignmentsService.getAgentForCustomer(req.user.tenantId, id);
   }

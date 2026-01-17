@@ -18,7 +18,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('Knowledge Base')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('USER', 'MANAGER', 'ADMIN')
 export class KbController {
   constructor(private readonly categories: CategoriesService, private readonly articles: ArticlesService) {}
 
@@ -26,7 +26,7 @@ export class KbController {
   @ApiOperation({ summary: 'List knowledge base categories' })
   @ApiStandardResponse('KB categories list')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   listCategories(@CurrentTenant() tenantId: string) {
     return this.categories.listCategories(tenantId);
   }
@@ -35,7 +35,7 @@ export class KbController {
   @ApiOperation({ summary: 'Create knowledge base category' })
   @ApiStandardResponse('KB category created')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   createCategory(@CurrentTenant() tenantId: string, @Body() dto: CreateKbCategoryDto) {
     return this.categories.create(tenantId, dto);
   }
@@ -45,7 +45,7 @@ export class KbController {
   @ApiParam({ name: 'id', description: 'Category ID' })
   @ApiStandardResponse('KB category updated')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   updateCategory(@CurrentTenant() tenantId: string, @Param('id') id: string, @Body() dto: UpdateKbCategoryDto) {
     return this.categories.update(tenantId, id, dto);
   }
@@ -54,7 +54,7 @@ export class KbController {
   @ApiOperation({ summary: 'List knowledge base articles' })
   @ApiStandardResponse('KB articles list')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   listArticles(@CurrentTenant() tenantId: string) {
     return this.articles.list(tenantId);
   }
@@ -76,7 +76,7 @@ export class KbController {
   @ApiParam({ name: 'id', description: 'Article ID' })
   @ApiStandardResponse('KB article details')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   getArticle(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.articles.findOne(tenantId, id);
   }
@@ -100,7 +100,7 @@ export class KbController {
   @ApiParam({ name: 'id', description: 'Article ID' })
   @ApiStandardResponse('KB article published')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   publishArticle(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,

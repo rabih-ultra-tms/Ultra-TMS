@@ -51,4 +51,16 @@ describe('Commission API E2E', () => {
       .get('/api/v1/commission/entries')
       .expect(200);
   });
+
+  it('allows accounting access to commission payouts', async () => {
+    await request(accountingApp.getHttpServer())
+      .get('/api/v1/commission/payouts')
+      .expect(200);
+  });
+
+  it('denies agent access to commission payouts', async () => {
+    await request(agentApp.getHttpServer())
+      .get('/api/v1/commission/payouts')
+      .expect(403);
+  });
 });

@@ -16,7 +16,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('NOA Management')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('USER', 'MANAGER', 'ADMIN')
 export class NoaRecordsController {
   constructor(private readonly service: NoaRecordsService) {}
 
@@ -24,7 +24,7 @@ export class NoaRecordsController {
   @ApiOperation({ summary: 'List NOA records' })
   @ApiStandardResponse('NOA records list')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   async findAll(
     @CurrentTenant() tenantId: string,
     @Query() query: NoaQueryDto,
@@ -49,7 +49,7 @@ export class NoaRecordsController {
   @ApiParam({ name: 'id', description: 'NOA record ID' })
   @ApiStandardResponse('NOA record details')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   async findOne(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -76,7 +76,7 @@ export class NoaRecordsController {
   @ApiParam({ name: 'id', description: 'NOA record ID' })
   @ApiStandardResponse('NOA record deleted')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   @HttpCode(HttpStatus.OK)
   async remove(
     @CurrentTenant() tenantId: string,

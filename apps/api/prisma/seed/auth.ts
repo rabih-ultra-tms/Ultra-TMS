@@ -53,6 +53,60 @@ export async function seedAuth(prisma: any, tenantIds: string[]): Promise<void> 
       permissions: ['*.view'],
       isSystem: true,
     },
+    {
+      name: 'CLAIMS_MANAGER',
+      description: 'Claims department lead',
+      permissions: ['claims.*'],
+      isSystem: true,
+    },
+    {
+      name: 'CLAIMS_ADJUSTER',
+      description: 'Process claims',
+      permissions: ['claims.view', 'claims.create', 'claims.update'],
+      isSystem: true,
+    },
+    {
+      name: 'CLAIMS_VIEWER',
+      description: 'Claims read-only access',
+      permissions: ['claims.view'],
+      isSystem: true,
+    },
+    {
+      name: 'CONTRACTS_MANAGER',
+      description: 'Manage contracts',
+      permissions: ['contracts.*'],
+      isSystem: true,
+    },
+    {
+      name: 'CONTRACTS_VIEWER',
+      description: 'Contracts read-only access',
+      permissions: ['contracts.view'],
+      isSystem: true,
+    },
+    {
+      name: 'AGENT_MANAGER',
+      description: 'Manage agent relationships',
+      permissions: ['agents.*', 'commission.view'],
+      isSystem: true,
+    },
+    {
+      name: 'AGENT',
+      description: 'Agent portal user',
+      permissions: ['agents.view', 'commission.view'],
+      isSystem: true,
+    },
+    {
+      name: 'CREDIT_ANALYST',
+      description: 'Process credit applications',
+      permissions: ['credit.*'],
+      isSystem: true,
+    },
+    {
+      name: 'CREDIT_VIEWER',
+      description: 'Credit read-only access',
+      permissions: ['credit.view'],
+      isSystem: true,
+    },
   ];
 
   const roleMap: Record<string, string> = {};

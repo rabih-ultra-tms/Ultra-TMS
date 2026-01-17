@@ -3,7 +3,7 @@ import type { Config } from 'jest';
 const config: Config = {
   moduleFileExtensions: ['js', 'json', 'ts'],
   rootDir: '.',
-  testRegex: '.*\.spec\.ts$',
+  testRegex: 'src/.*\.spec\.ts$',
   transform: {
     '^.+\.(t|j)s$': ['ts-jest', { tsconfig: 'tsconfig.json' }],
   },
@@ -11,6 +11,7 @@ const config: Config = {
     'src/**/*.service.ts',
     'src/**/*.guard.ts',
     'src/**/*.interceptor.ts',
+    '!src/**/*.bak/**',
     '!src/**/*.module.ts',
     '!src/main.ts',
   ],
@@ -29,6 +30,7 @@ const config: Config = {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^src/(.*)$': '<rootDir>/src/$1',
   },
+  testPathIgnorePatterns: ['<rootDir>/test/'],
   setupFilesAfterEnv: ['<rootDir>/test/setup-unit.ts'],
 };
 

@@ -1,4 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards';
 import { CurrentTenant, CurrentUser } from '../../common/decorators';
 import { WebhooksService } from './webhooks.service';
@@ -13,14 +14,20 @@ import {
 } from './dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
 
 @Controller('integration-hub/webhooks/endpoints')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('SUPER_ADMIN')
+@ApiTags('Integration Hub')
+@ApiBearerAuth('JWT-auth')
 export class WebhookEndpointsController {
   constructor(private readonly webhooksService: WebhooksService) {}
 
   @Get()
+  @ApiOperation({ summary: 'List webhook endpoints' })
+  @ApiStandardResponse('Webhook endpoints list')
+  @ApiErrorResponses()
   async listEndpoints(
     @CurrentTenant() tenantId: string,
     @Query() query: WebhookEndpointQueryDto,
@@ -29,6 +36,10 @@ export class WebhookEndpointsController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get webhook endpoint by ID' })
+  @ApiParam({ name: 'id', description: 'Endpoint ID' })
+  @ApiStandardResponse('Webhook endpoint details')
+  @ApiErrorResponses()
   async getEndpoint(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -37,6 +48,9 @@ export class WebhookEndpointsController {
   }
 
   @Post()
+  @ApiOperation({ summary: 'Create webhook endpoint' })
+  @ApiStandardResponse('Webhook endpoint created')
+  @ApiErrorResponses()
   async createEndpoint(
     @CurrentTenant() tenantId: string,
     @CurrentUser('userId') userId: string,
@@ -51,6 +65,10 @@ export class WebhookEndpointsController {
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'Update webhook endpoint' })
+  @ApiParam({ name: 'id', description: 'Endpoint ID' })
+  @ApiStandardResponse('Webhook endpoint updated')
+  @ApiErrorResponses()
   async updateEndpoint(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -61,6 +79,10 @@ export class WebhookEndpointsController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete webhook endpoint' })
+  @ApiParam({ name: 'id', description: 'Endpoint ID' })
+  @ApiStandardResponse('Webhook endpoint deleted')
+  @ApiErrorResponses()
   async deleteEndpoint(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -70,6 +92,10 @@ export class WebhookEndpointsController {
   }
 
   @Post(':id/rotate-secret')
+  @ApiOperation({ summary: 'Rotate webhook endpoint secret' })
+  @ApiParam({ name: 'id', description: 'Endpoint ID' })
+  @ApiStandardResponse('Webhook secret rotated')
+  @ApiErrorResponses()
   async rotateSecret(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -84,6 +110,10 @@ export class WebhookEndpointsController {
   }
 
   @Get(':id/deliveries')
+  @ApiOperation({ summary: 'List webhook deliveries' })
+  @ApiParam({ name: 'id', description: 'Endpoint ID' })
+  @ApiStandardResponse('Webhook deliveries list')
+  @ApiErrorResponses()
   async listDeliveries(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -93,6 +123,11 @@ export class WebhookEndpointsController {
   }
 
   @Post(':id/deliveries/:deliveryId/replay')
+  @ApiOperation({ summary: 'Replay webhook delivery' })
+  @ApiParam({ name: 'id', description: 'Endpoint ID' })
+  @ApiParam({ name: 'deliveryId', description: 'Delivery ID' })
+  @ApiStandardResponse('Webhook delivery replayed')
+  @ApiErrorResponses()
   async replayDelivery(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -105,10 +140,15 @@ export class WebhookEndpointsController {
 @Controller('integration-hub/webhooks/subscriptions')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('SUPER_ADMIN')
+@ApiTags('Integration Hub')
+@ApiBearerAuth('JWT-auth')
 export class WebhookSubscriptionsController {
   constructor(private readonly webhooksService: WebhooksService) {}
 
   @Get()
+  @ApiOperation({ summary: 'List webhook subscriptions' })
+  @ApiStandardResponse('Webhook subscriptions list')
+  @ApiErrorResponses()
   async listSubscriptions(
     @CurrentTenant() tenantId: string,
     @Query() query: WebhookSubscriptionQueryDto,
@@ -117,6 +157,10 @@ export class WebhookSubscriptionsController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get webhook subscription by ID' })
+  @ApiParam({ name: 'id', description: 'Subscription ID' })
+  @ApiStandardResponse('Webhook subscription details')
+  @ApiErrorResponses()
   async getSubscription(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -125,6 +169,9 @@ export class WebhookSubscriptionsController {
   }
 
   @Post()
+  @ApiOperation({ summary: 'Create webhook subscription' })
+  @ApiStandardResponse('Webhook subscription created')
+  @ApiErrorResponses()
   async createSubscription(
     @CurrentTenant() tenantId: string,
     @CurrentUser('userId') userId: string,
@@ -134,6 +181,10 @@ export class WebhookSubscriptionsController {
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'Update webhook subscription' })
+  @ApiParam({ name: 'id', description: 'Subscription ID' })
+  @ApiStandardResponse('Webhook subscription updated')
+  @ApiErrorResponses()
   async updateSubscription(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -144,6 +195,10 @@ export class WebhookSubscriptionsController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete webhook subscription' })
+  @ApiParam({ name: 'id', description: 'Subscription ID' })
+  @ApiStandardResponse('Webhook subscription deleted')
+  @ApiErrorResponses()
   async deleteSubscription(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -153,6 +208,10 @@ export class WebhookSubscriptionsController {
   }
 
   @Post(':id/test')
+  @ApiOperation({ summary: 'Test webhook subscription' })
+  @ApiParam({ name: 'id', description: 'Subscription ID' })
+  @ApiStandardResponse('Webhook subscription tested')
+  @ApiErrorResponses()
   async testSubscription(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,

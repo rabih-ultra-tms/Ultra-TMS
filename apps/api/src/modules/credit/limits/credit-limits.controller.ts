@@ -27,7 +27,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('Credit Limits')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('ADMIN', 'CREDIT_ANALYST')
 export class CreditLimitsController {
   constructor(private readonly creditLimitsService: CreditLimitsService) {}
 
@@ -35,7 +35,7 @@ export class CreditLimitsController {
   @ApiOperation({ summary: 'List credit limits' })
   @ApiStandardResponse('Credit limits list')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('ADMIN', 'CREDIT_ANALYST', 'CREDIT_VIEWER')
   async findAll(
     @CurrentTenant() tenantId: string,
     @Query() query: CreditLimitQueryDto,
@@ -47,7 +47,7 @@ export class CreditLimitsController {
   @ApiOperation({ summary: 'Create credit limit' })
   @ApiStandardResponse('Credit limit created')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   async create(
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: { id: string },
@@ -61,7 +61,7 @@ export class CreditLimitsController {
   @ApiParam({ name: 'companyId', description: 'Company ID' })
   @ApiStandardResponse('Credit limit updated')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   async update(
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: { id: string },
@@ -76,7 +76,7 @@ export class CreditLimitsController {
   @ApiParam({ name: 'companyId', description: 'Company ID' })
   @ApiStandardResponse('Credit limit increased')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   @HttpCode(HttpStatus.OK)
   async increase(
     @CurrentTenant() tenantId: string,
@@ -92,7 +92,7 @@ export class CreditLimitsController {
   @ApiParam({ name: 'companyId', description: 'Company ID' })
   @ApiStandardResponse('Credit utilization')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('ADMIN', 'CREDIT_ANALYST', 'CREDIT_VIEWER')
   async utilization(
     @CurrentTenant() tenantId: string,
     @Param('companyId') companyId: string,
@@ -105,7 +105,7 @@ export class CreditLimitsController {
   @ApiParam({ name: 'companyId', description: 'Company ID' })
   @ApiStandardResponse('Credit limit details')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('ADMIN', 'CREDIT_ANALYST', 'CREDIT_VIEWER')
   async findOne(
     @CurrentTenant() tenantId: string,
     @Param('companyId') companyId: string,

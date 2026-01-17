@@ -9,7 +9,10 @@ export class RateLanesService {
 
   async list(tenantId: string, rateTableId: string) {
     await this.ensureRateTable(rateTableId, tenantId);
-    return this.prisma.contractRateLane.findMany({ where: { tenantId, rateTableId }, orderBy: { originCity: 'asc' } });
+    return this.prisma.contractRateLane.findMany({
+      where: { tenantId, rateTableId, deletedAt: null },
+      orderBy: { originCity: 'asc' },
+    });
   }
 
   async create(tenantId: string, rateTableId: string, userId: string, dto: CreateRateLaneDto) {
@@ -35,7 +38,7 @@ export class RateLanesService {
   }
 
   async detail(id: string, tenantId: string) {
-    const lane = await this.prisma.contractRateLane.findFirst({ where: { id, tenantId } });
+    const lane = await this.prisma.contractRateLane.findFirst({ where: { id, tenantId, deletedAt: null } });
     if (!lane) throw new NotFoundException('Rate lane not found');
     return lane;
   }
@@ -47,7 +50,10 @@ export class RateLanesService {
 
   async delete(id: string, tenantId: string) {
     await this.detail(id, tenantId);
-    await this.prisma.contractRateLane.delete({ where: { id } });
+    await this.prisma.contractRateLane.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
     return { success: true };
   }
 

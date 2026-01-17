@@ -10,18 +10,26 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { StopsService } from './stops.service';
 import { CreateStopDto, UpdateStopDto } from './dto';
+import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
 
 @Controller('orders/:orderId/stops')
 @UseGuards(JwtAuthGuard)
+@ApiTags('TMS')
+@ApiBearerAuth('JWT-auth')
 export class StopsController {
   constructor(private readonly stopsService: StopsService) {}
 
   @Post()
+  @ApiOperation({ summary: 'Create stop' })
+  @ApiParam({ name: 'orderId', description: 'Order ID' })
+  @ApiStandardResponse('Stop created')
+  @ApiErrorResponses()
   async create(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -32,6 +40,10 @@ export class StopsController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'List stops for order' })
+  @ApiParam({ name: 'orderId', description: 'Order ID' })
+  @ApiStandardResponse('Stops list')
+  @ApiErrorResponses()
   async findAll(
     @CurrentTenant() tenantId: string,
     @Param('orderId') orderId: string,
@@ -40,6 +52,10 @@ export class StopsController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get stop by ID' })
+  @ApiParam({ name: 'id', description: 'Stop ID' })
+  @ApiStandardResponse('Stop details')
+  @ApiErrorResponses()
   async findOne(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -48,6 +64,10 @@ export class StopsController {
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'Update stop' })
+  @ApiParam({ name: 'id', description: 'Stop ID' })
+  @ApiStandardResponse('Stop updated')
+  @ApiErrorResponses()
   async update(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -58,6 +78,10 @@ export class StopsController {
   }
   @Post(':id/arrive')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Mark stop arrived' })
+  @ApiParam({ name: 'id', description: 'Stop ID' })
+  @ApiStandardResponse('Stop marked arrived')
+  @ApiErrorResponses()
   async markArrived(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -68,6 +92,10 @@ export class StopsController {
 
   @Post(':id/depart')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Mark stop departed' })
+  @ApiParam({ name: 'id', description: 'Stop ID' })
+  @ApiStandardResponse('Stop marked departed')
+  @ApiErrorResponses()
   async markDeparted(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -78,6 +106,10 @@ export class StopsController {
   }
 
   @Put('reorder')
+  @ApiOperation({ summary: 'Reorder stops' })
+  @ApiParam({ name: 'orderId', description: 'Order ID' })
+  @ApiStandardResponse('Stops reordered')
+  @ApiErrorResponses()
   async reorder(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -89,6 +121,10 @@ export class StopsController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Delete stop' })
+  @ApiParam({ name: 'id', description: 'Stop ID' })
+  @ApiStandardResponse('Stop deleted')
+  @ApiErrorResponses()
   async delete(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,

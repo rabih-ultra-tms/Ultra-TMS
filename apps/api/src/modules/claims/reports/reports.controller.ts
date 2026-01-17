@@ -10,7 +10,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('Reports')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'CLAIMS_MANAGER', 'CLAIMS_ADJUSTER', 'CLAIMS_VIEWER')
 export class ClaimsReportsController {
   constructor(private readonly reportsService: ClaimsReportsService) {}
 
@@ -18,7 +18,7 @@ export class ClaimsReportsController {
   @ApiOperation({ summary: 'Get claim status report' })
   @ApiStandardResponse('Claim status report')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'CLAIMS_MANAGER', 'CLAIMS_ADJUSTER', 'CLAIMS_VIEWER')
   async status(
     @CurrentTenant() tenantId: string,
   ) {
@@ -29,7 +29,7 @@ export class ClaimsReportsController {
   @ApiOperation({ summary: 'Get claim types report' })
   @ApiStandardResponse('Claim types report')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'CLAIMS_MANAGER', 'CLAIMS_ADJUSTER', 'CLAIMS_VIEWER')
   async types(
     @CurrentTenant() tenantId: string,
   ) {
@@ -40,7 +40,7 @@ export class ClaimsReportsController {
   @ApiOperation({ summary: 'Get claim financials report' })
   @ApiStandardResponse('Claim financials report')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'CLAIMS_MANAGER', 'CLAIMS_ADJUSTER', 'CLAIMS_VIEWER')
   async financials(
     @CurrentTenant() tenantId: string,
   ) {
@@ -51,7 +51,7 @@ export class ClaimsReportsController {
   @ApiOperation({ summary: 'Get overdue claims report' })
   @ApiStandardResponse('Overdue claims report')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'CLAIMS_MANAGER', 'CLAIMS_ADJUSTER', 'CLAIMS_VIEWER')
   async overdue(
     @CurrentTenant() tenantId: string,
   ) {

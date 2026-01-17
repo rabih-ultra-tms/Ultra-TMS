@@ -19,6 +19,7 @@ export class LoadBidsService {
       where: {
         id: dto.postingId,
         tenantId,
+        deletedAt: null,
       },
     });
 
@@ -35,6 +36,7 @@ export class LoadBidsService {
       where: {
         id: dto.carrierId,
         tenantId,
+        deletedAt: null,
       },
     });
 
@@ -45,8 +47,10 @@ export class LoadBidsService {
     // Check if carrier already has active bid
     const existingBid = await this.prisma.loadBid.findFirst({
       where: {
+        tenantId,
         postingId: dto.postingId,
         carrierId: dto.carrierId,
+        deletedAt: null,
         status: {
           in: [BidStatus.PENDING, BidStatus.COUNTERED],
         },
@@ -82,7 +86,7 @@ export class LoadBidsService {
   }
 
   async findAll(tenantId: string, postingId?: string, carrierId?: string) {
-    const where: any = { tenantId };
+    const where: any = { tenantId, deletedAt: null };
 
     if (postingId) {
       where.postingId = postingId;
@@ -118,7 +122,7 @@ export class LoadBidsService {
 
   async findOne(tenantId: string, id: string) {
     const bid = await this.prisma.loadBid.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
       include: {
         posting: {
           include: {
@@ -148,7 +152,7 @@ export class LoadBidsService {
 
   async update(tenantId: string, id: string, dto: UpdateLoadBidDto) {
     const bid = await this.prisma.loadBid.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!bid) {
@@ -167,7 +171,7 @@ export class LoadBidsService {
 
   async accept(tenantId: string, id: string, _dto: AcceptBidDto) {
     const bid = await this.prisma.loadBid.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
       include: {
         posting: true,
         load: true,
@@ -234,7 +238,7 @@ export class LoadBidsService {
 
   async reject(tenantId: string, id: string, dto: RejectBidDto) {
     const bid = await this.prisma.loadBid.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!bid) {
@@ -257,7 +261,7 @@ export class LoadBidsService {
 
   async counter(tenantId: string, id: string, dto: CounterBidDto) {
     const bid = await this.prisma.loadBid.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!bid) {
@@ -281,7 +285,7 @@ export class LoadBidsService {
 
   async withdraw(tenantId: string, id: string) {
     const bid = await this.prisma.loadBid.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!bid) {
@@ -303,7 +307,7 @@ export class LoadBidsService {
   // Get bids for a specific posting
   async getForPosting(tenantId: string, postingId: string) {
     const posting = await this.prisma.loadPosting.findFirst({
-      where: { id: postingId, tenantId },
+      where: { id: postingId, tenantId, deletedAt: null },
     });
 
     if (!posting) {

@@ -9,7 +9,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('Rate Benchmarks')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('USER', 'MANAGER', 'ADMIN')
 export class LaneAnalyticsController {
   constructor(private readonly service: LaneAnalyticsService) {}
 
@@ -17,7 +17,7 @@ export class LaneAnalyticsController {
   @ApiOperation({ summary: 'List lane analytics' })
   @ApiStandardResponse('Lane analytics list')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   list(@CurrentTenant() tenantId: string) {
     return this.service.list(tenantId);
   }
@@ -27,7 +27,7 @@ export class LaneAnalyticsController {
   @ApiParam({ name: 'id', description: 'Lane ID' })
   @ApiStandardResponse('Lane analytics details')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   findOne(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.service.findOne(tenantId, id);
   }
@@ -37,7 +37,7 @@ export class LaneAnalyticsController {
   @ApiParam({ name: 'id', description: 'Lane ID' })
   @ApiStandardResponse('Lane history')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   history(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.service.historyForLane(tenantId, id);
   }
@@ -47,7 +47,7 @@ export class LaneAnalyticsController {
   @ApiParam({ name: 'id', description: 'Lane ID' })
   @ApiStandardResponse('Lane forecast')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   forecast(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.service.forecast(tenantId, id);
   }

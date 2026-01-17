@@ -10,6 +10,13 @@ import {
   UseGuards,
   Res,
 } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards';
 import { QuotesService } from './quotes.service';
@@ -18,13 +25,25 @@ import { CurrentTenant } from '../../common/decorators/current-tenant.decorator'
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
 
 @Controller('quotes')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('Quotes')
+@ApiBearerAuth('JWT-auth')
 export class QuotesController {
   constructor(private readonly quotesService: QuotesService) {}
 
   @Get()
+  @ApiOperation({ summary: 'List quotes' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'status', required: false, type: String })
+  @ApiQuery({ name: 'companyId', required: false, type: String })
+  @ApiQuery({ name: 'salesRepId', required: false, type: String })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiStandardResponse('Quotes list')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'PRICING_ANALYST')
   async findAll(
     @CurrentTenant() tenantId: string,
@@ -39,12 +58,19 @@ export class QuotesController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get quote by ID' })
+  @ApiParam({ name: 'id', description: 'Quote ID' })
+  @ApiStandardResponse('Quote details')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'PRICING_ANALYST')
   async findOne(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.quotesService.findOne(tenantId, id);
   }
 
   @Post()
+  @ApiOperation({ summary: 'Create quote' })
+  @ApiStandardResponse('Quote created')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async create(
     @CurrentTenant() tenantId: string,
@@ -55,6 +81,10 @@ export class QuotesController {
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'Update quote' })
+  @ApiParam({ name: 'id', description: 'Quote ID' })
+  @ApiStandardResponse('Quote updated')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async update(
     @CurrentTenant() tenantId: string,
@@ -66,6 +96,10 @@ export class QuotesController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete quote' })
+  @ApiParam({ name: 'id', description: 'Quote ID' })
+  @ApiStandardResponse('Quote deleted')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async delete(
     @CurrentTenant() tenantId: string,
@@ -76,6 +110,10 @@ export class QuotesController {
   }
 
   @Post(':id/convert')
+  @ApiOperation({ summary: 'Convert quote to order' })
+  @ApiParam({ name: 'id', description: 'Quote ID' })
+  @ApiStandardResponse('Quote converted to order')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async convertToOrder(
     @CurrentTenant() tenantId: string,
@@ -86,6 +124,10 @@ export class QuotesController {
   }
 
   @Post(':id/duplicate')
+  @ApiOperation({ summary: 'Duplicate quote' })
+  @ApiParam({ name: 'id', description: 'Quote ID' })
+  @ApiStandardResponse('Quote duplicated')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async duplicate(
     @CurrentTenant() tenantId: string,
@@ -96,6 +138,10 @@ export class QuotesController {
   }
 
   @Post(':id/new-version')
+  @ApiOperation({ summary: 'Create new quote version' })
+  @ApiParam({ name: 'id', description: 'Quote ID' })
+  @ApiStandardResponse('Quote version created')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async createNewVersion(
     @CurrentTenant() tenantId: string,
@@ -106,6 +152,10 @@ export class QuotesController {
   }
 
   @Post(':id/send')
+  @ApiOperation({ summary: 'Send quote' })
+  @ApiParam({ name: 'id', description: 'Quote ID' })
+  @ApiStandardResponse('Quote sent')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async send(
     @CurrentTenant() tenantId: string,
@@ -116,6 +166,10 @@ export class QuotesController {
   }
 
   @Get(':id/pdf')
+  @ApiOperation({ summary: 'Download quote PDF' })
+  @ApiParam({ name: 'id', description: 'Quote ID' })
+  @ApiStandardResponse('Quote PDF')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'PRICING_ANALYST')
   async generatePdf(
     @CurrentTenant() tenantId: string,
@@ -132,6 +186,9 @@ export class QuotesController {
   }
 
   @Post('quick')
+  @ApiOperation({ summary: 'Create quick quote' })
+  @ApiStandardResponse('Quick quote created')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async quickQuote(
     @CurrentTenant() tenantId: string,
@@ -142,6 +199,9 @@ export class QuotesController {
   }
 
   @Post('calculate-rate')
+  @ApiOperation({ summary: 'Calculate rate' })
+  @ApiStandardResponse('Rate calculated')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'PRICING_ANALYST')
   async calculateRate(
     @CurrentTenant() tenantId: string,

@@ -8,7 +8,10 @@ export class ContractTemplatesService {
   constructor(private readonly prisma: PrismaService) {}
 
   list(tenantId: string) {
-    return this.prisma.contractTemplate.findMany({ where: { tenantId }, orderBy: { createdAt: 'desc' } });
+    return this.prisma.contractTemplate.findMany({
+      where: { tenantId, deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
   create(tenantId: string, userId: string, dto: CreateTemplateDto) {
@@ -26,7 +29,7 @@ export class ContractTemplatesService {
   }
 
   async detail(tenantId: string, id: string) {
-    const template = await this.prisma.contractTemplate.findFirst({ where: { id, tenantId } });
+    const template = await this.prisma.contractTemplate.findFirst({ where: { id, tenantId, deletedAt: null } });
     if (!template) throw new NotFoundException('Template not found');
     return template;
   }
@@ -38,7 +41,10 @@ export class ContractTemplatesService {
 
   async delete(tenantId: string, id: string) {
     await this.detail(tenantId, id);
-    await this.prisma.contractTemplate.delete({ where: { id } });
+    await this.prisma.contractTemplate.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
     return { success: true };
   }
 

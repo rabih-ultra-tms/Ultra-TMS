@@ -22,4 +22,60 @@ describe('Accounting API E2E', () => {
       .get('/api/v1/invoices')
       .expect(200);
   });
+
+  it('allows accounting access to invoices', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/invoices')
+      .set('x-test-role', 'ACCOUNTING')
+      .expect(200);
+  });
+
+  it('denies dispatcher access to invoices', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/invoices')
+      .set('x-test-role', 'DISPATCHER')
+      .expect(403);
+  });
+
+  it('lists chart of accounts', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/chart-of-accounts')
+      .expect(200);
+  });
+
+  it('gets trial balance summary', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/chart-of-accounts/trial-balance')
+      .expect(200);
+  });
+
+  it('lists journal entries', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/journal-entries')
+      .expect(200);
+  });
+
+  it('lists payments received', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/payments-received')
+      .expect(200);
+  });
+
+  it('lists payments made', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/payments-made')
+      .expect(200);
+  });
+
+  it('lists settlements', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/settlements')
+      .expect(200);
+  });
+
+  it('gets settlements payables summary', async () => {
+    await request(app.getHttpServer())
+      .get('/api/v1/settlements/payables-summary')
+      .expect(200);
+  });
 });

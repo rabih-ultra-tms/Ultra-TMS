@@ -27,7 +27,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('Credit Applications')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('ADMIN', 'CREDIT_ANALYST')
 export class CreditApplicationsController {
   constructor(private readonly creditApplicationsService: CreditApplicationsService) {}
 
@@ -47,7 +47,7 @@ export class CreditApplicationsController {
   @ApiOperation({ summary: 'List credit applications' })
   @ApiStandardResponse('Credit applications list')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('ADMIN', 'CREDIT_ANALYST', 'CREDIT_VIEWER')
   async findAll(
     @CurrentTenant() tenantId: string,
     @Query() query: CreditApplicationQueryDto,
@@ -60,7 +60,7 @@ export class CreditApplicationsController {
   @ApiParam({ name: 'id', description: 'Application ID' })
   @ApiStandardResponse('Credit application details')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('ADMIN', 'CREDIT_ANALYST', 'CREDIT_VIEWER')
   async findOne(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -87,7 +87,7 @@ export class CreditApplicationsController {
   @ApiParam({ name: 'id', description: 'Application ID' })
   @ApiStandardResponse('Credit application deleted')
   @ApiErrorResponses()
-  @Roles('manager', 'admin')
+  @Roles('ADMIN', 'CREDIT_ANALYST')
   @HttpCode(HttpStatus.OK)
   async delete(
     @CurrentTenant() tenantId: string,
@@ -116,7 +116,7 @@ export class CreditApplicationsController {
   @ApiParam({ name: 'id', description: 'Application ID' })
   @ApiStandardResponse('Credit application approved')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   @HttpCode(HttpStatus.OK)
   async approve(
     @CurrentTenant() tenantId: string,
@@ -132,7 +132,7 @@ export class CreditApplicationsController {
   @ApiParam({ name: 'id', description: 'Application ID' })
   @ApiStandardResponse('Credit application rejected')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   @HttpCode(HttpStatus.OK)
   async reject(
     @CurrentTenant() tenantId: string,

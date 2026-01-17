@@ -13,6 +13,7 @@ import {
   Patch,
   Res,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
@@ -20,13 +21,19 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { LoadsService } from './loads.service';
 import { CreateLoadDto, UpdateLoadDto, AssignCarrierDto, UpdateLoadLocationDto, LoadQueryDto, CreateCheckCallDto, RateConfirmationOptionsDto, PaginationDto } from './dto';
 import { Roles } from '../../common/decorators';
+import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
 
 @Controller('loads')
 @UseGuards(JwtAuthGuard)
+@ApiTags('Loads')
+@ApiBearerAuth('JWT-auth')
 export class LoadsController {
   constructor(private readonly loadsService: LoadsService) {}
 
   @Post()
+  @ApiOperation({ summary: 'Create load' })
+  @ApiStandardResponse('Load created')
+  @ApiErrorResponses()
   async create(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -36,6 +43,9 @@ export class LoadsController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'List loads' })
+  @ApiStandardResponse('Loads list')
+  @ApiErrorResponses()
   async findAll(
     @CurrentTenant() tenantId: string,
     @Query() query: LoadQueryDto,
@@ -44,6 +54,11 @@ export class LoadsController {
   }
 
   @Get('board')
+  @ApiOperation({ summary: 'Get load board view' })
+  @ApiQuery({ name: 'status', required: false, type: String })
+  @ApiQuery({ name: 'region', required: false, type: String })
+  @ApiStandardResponse('Load board')
+  @ApiErrorResponses()
   async getLoadBoard(
     @CurrentTenant() tenantId: string,
     @Query('status') status?: string,
@@ -56,6 +71,10 @@ export class LoadsController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get load by ID' })
+  @ApiParam({ name: 'id', description: 'Load ID' })
+  @ApiStandardResponse('Load details')
+  @ApiErrorResponses()
   async findOne(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -64,6 +83,10 @@ export class LoadsController {
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'Update load' })
+  @ApiParam({ name: 'id', description: 'Load ID' })
+  @ApiStandardResponse('Load updated')
+  @ApiErrorResponses()
   async update(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -74,6 +97,10 @@ export class LoadsController {
   }
 
   @Post(':id/assign-carrier')
+  @ApiOperation({ summary: 'Assign carrier to load' })
+  @ApiParam({ name: 'id', description: 'Load ID' })
+  @ApiStandardResponse('Carrier assigned')
+  @ApiErrorResponses()
   @HttpCode(HttpStatus.OK)
   async assignCarrier(
     @CurrentTenant() tenantId: string,
@@ -85,6 +112,10 @@ export class LoadsController {
   }
 
     @Patch(':id/assign')
+    @ApiOperation({ summary: 'Assign carrier to load (alias)' })
+    @ApiParam({ name: 'id', description: 'Load ID' })
+    @ApiStandardResponse('Carrier assigned')
+    @ApiErrorResponses()
     async assign(
       @CurrentTenant() tenantId: string,
       @CurrentUser('id') userId: string,
@@ -95,6 +126,10 @@ export class LoadsController {
     }
 
     @Patch(':id/dispatch')
+    @ApiOperation({ summary: 'Dispatch load' })
+    @ApiParam({ name: 'id', description: 'Load ID' })
+    @ApiStandardResponse('Load dispatched')
+    @ApiErrorResponses()
     async dispatch(
       @CurrentTenant() tenantId: string,
       @CurrentUser('id') userId: string,
@@ -104,6 +139,10 @@ export class LoadsController {
     }
 
     @Patch(':id/status')
+    @ApiOperation({ summary: 'Update load status' })
+    @ApiParam({ name: 'id', description: 'Load ID' })
+    @ApiStandardResponse('Load status updated')
+    @ApiErrorResponses()
     async updateStatus(
       @CurrentTenant() tenantId: string,
       @CurrentUser('id') userId: string,
@@ -114,6 +153,10 @@ export class LoadsController {
     }
 
   @Put(':id/location')
+  @ApiOperation({ summary: 'Update load location' })
+  @ApiParam({ name: 'id', description: 'Load ID' })
+  @ApiStandardResponse('Load location updated')
+  @ApiErrorResponses()
   async updateLocation(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -123,6 +166,10 @@ export class LoadsController {
   }
 
   @Post(':id/check-calls')
+  @ApiOperation({ summary: 'Add check call' })
+  @ApiParam({ name: 'id', description: 'Load ID' })
+  @ApiStandardResponse('Check call created')
+  @ApiErrorResponses()
   async addCheckCall(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -133,6 +180,10 @@ export class LoadsController {
   }
 
   @Get(':id/check-calls')
+  @ApiOperation({ summary: 'List check calls' })
+  @ApiParam({ name: 'id', description: 'Load ID' })
+  @ApiStandardResponse('Check calls list')
+  @ApiErrorResponses()
   async getCheckCalls(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -142,6 +193,10 @@ export class LoadsController {
   }
 
   @Post(':id/rate-confirmation')
+  @ApiOperation({ summary: 'Generate rate confirmation PDF' })
+  @ApiParam({ name: 'id', description: 'Load ID' })
+  @ApiStandardResponse('Rate confirmation PDF')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'DISPATCHER')
   async generateRateConfirmation(
     @CurrentTenant() tenantId: string,
@@ -166,6 +221,10 @@ export class LoadsController {
     res.send(pdfBuffer);
   }
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete load' })
+  @ApiParam({ name: 'id', description: 'Load ID' })
+  @ApiStandardResponse('Load deleted')
+  @ApiErrorResponses()
   @HttpCode(HttpStatus.OK)
   async delete(
     @CurrentTenant() tenantId: string,

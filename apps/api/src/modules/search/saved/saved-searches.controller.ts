@@ -10,7 +10,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('Saved Searches')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('USER', 'MANAGER', 'ADMIN')
 export class SavedSearchesController {
   constructor(private readonly savedSearchesService: SavedSearchesService) {}
 
@@ -18,7 +18,7 @@ export class SavedSearchesController {
   @ApiOperation({ summary: 'List saved searches' })
   @ApiStandardResponse('Saved searches list')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   list(
     @CurrentTenant() tenantId: string,
     @CurrentUser('userId') userId: string,
@@ -31,7 +31,7 @@ export class SavedSearchesController {
   @ApiParam({ name: 'id', description: 'Saved search ID' })
   @ApiStandardResponse('Saved search details')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   getOne(
     @CurrentTenant() tenantId: string,
     @CurrentUser('userId') userId: string,
@@ -71,7 +71,7 @@ export class SavedSearchesController {
   @ApiParam({ name: 'id', description: 'Saved search ID' })
   @ApiStandardResponse('Saved search deleted')
   @ApiErrorResponses()
-  @Roles('manager', 'admin')
+  @Roles('MANAGER', 'ADMIN')
   async remove(
     @CurrentTenant() tenantId: string,
     @CurrentUser('userId') userId: string,

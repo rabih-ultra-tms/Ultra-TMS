@@ -9,15 +9,19 @@ import {
   UploadedFile,
   Inject,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from './guards';
 import { ProfileService } from './profile.service';
 import { CurrentUser } from './decorators/current-user.decorator';
 import type { IStorageService } from '../storage/storage.interface';
 import { STORAGE_SERVICE } from '../storage/storage.module';
+import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
 
 @Controller('profile')
 @UseGuards(JwtAuthGuard)
+@ApiTags('Auth')
+@ApiBearerAuth('JWT-auth')
 export class ProfileController {
   constructor(
     private readonly profileService: ProfileService,
@@ -29,6 +33,9 @@ export class ProfileController {
    * Get current user profile
    */
   @Get()
+  @ApiOperation({ summary: 'Get current user profile' })
+  @ApiStandardResponse('Current user profile')
+  @ApiErrorResponses()
   async getProfile(@CurrentUser('id') userId: string) {
     return this.profileService.getProfile(userId);
   }
@@ -38,6 +45,9 @@ export class ProfileController {
    * Update own profile
    */
   @Put()
+  @ApiOperation({ summary: 'Update current user profile' })
+  @ApiStandardResponse('Profile updated')
+  @ApiErrorResponses()
   async updateProfile(
     @CurrentUser('id') userId: string,
     @Body() data: { firstName?: string; lastName?: string; phone?: string; title?: string },
@@ -50,6 +60,9 @@ export class ProfileController {
    * Change own password
    */
   @Put('password')
+  @ApiOperation({ summary: 'Change current user password' })
+  @ApiStandardResponse('Password updated')
+  @ApiErrorResponses()
   async changePassword(
     @CurrentUser('id') userId: string,
     @Body('currentPassword') currentPassword: string,
@@ -64,6 +77,10 @@ export class ProfileController {
    */
   @Post('avatar')
   @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ summary: 'Upload profile avatar' })
+  @ApiBody({ description: 'Multipart form data with file field', schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } })
+  @ApiStandardResponse('Avatar uploaded')
+  @ApiErrorResponses()
   async uploadAvatar(
     @CurrentUser('id') userId: string,
     @UploadedFile() file: any,

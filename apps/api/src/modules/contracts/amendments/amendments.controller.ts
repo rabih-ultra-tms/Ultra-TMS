@@ -13,7 +13,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('Contracts')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'CONTRACTS_MANAGER', 'CONTRACTS_VIEWER')
 export class AmendmentsController {
   constructor(private readonly service: AmendmentsService) {}
 
@@ -22,7 +22,7 @@ export class AmendmentsController {
   @ApiParam({ name: 'contractId', description: 'Contract ID' })
   @ApiStandardResponse('Contract amendments list')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'CONTRACTS_MANAGER', 'CONTRACTS_VIEWER')
   list(@Param('contractId') contractId: string, @CurrentUser() user: CurrentUserData) {
     return this.service.list(user.tenantId, contractId);
   }
@@ -32,6 +32,7 @@ export class AmendmentsController {
   @ApiParam({ name: 'contractId', description: 'Contract ID' })
   @ApiStandardResponse('Contract amendment created')
   @ApiErrorResponses()
+  @Roles('ADMIN', 'CONTRACTS_MANAGER')
   create(@Param('contractId') contractId: string, @Body() dto: CreateAmendmentDto, @CurrentUser() user: CurrentUserData) {
     return this.service.create(user.tenantId, contractId, user.userId, dto);
   }
@@ -41,7 +42,7 @@ export class AmendmentsController {
   @ApiParam({ name: 'id', description: 'Amendment ID' })
   @ApiStandardResponse('Amendment details')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'CONTRACTS_MANAGER', 'CONTRACTS_VIEWER')
   detail(@Param('id') id: string, @CurrentUser() user: CurrentUserData) {
     return this.service.detail(user.tenantId, id);
   }
@@ -51,6 +52,7 @@ export class AmendmentsController {
   @ApiParam({ name: 'id', description: 'Amendment ID' })
   @ApiStandardResponse('Amendment updated')
   @ApiErrorResponses()
+  @Roles('ADMIN', 'CONTRACTS_MANAGER')
   update(@Param('id') id: string, @Body() dto: UpdateAmendmentDto, @CurrentUser() user: CurrentUserData) {
     return this.service.update(id, user.tenantId, dto);
   }
@@ -60,7 +62,7 @@ export class AmendmentsController {
   @ApiParam({ name: 'id', description: 'Amendment ID' })
   @ApiStandardResponse('Amendment approved')
   @ApiErrorResponses()
-  @Roles('MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'CONTRACTS_MANAGER')
   approve(@Param('id') id: string, @CurrentUser() user: CurrentUserData) {
     return this.service.approve(id, user.tenantId, user.userId);
   }
@@ -70,6 +72,7 @@ export class AmendmentsController {
   @ApiParam({ name: 'id', description: 'Amendment ID' })
   @ApiStandardResponse('Amendment applied')
   @ApiErrorResponses()
+  @Roles('ADMIN', 'CONTRACTS_MANAGER')
   apply(@Param('id') id: string, @CurrentUser() user: CurrentUserData) {
     return this.service.apply(id, user.tenantId);
   }

@@ -10,7 +10,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('FMCSA Data')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('USER', 'MANAGER', 'ADMIN')
 export class CsaController {
   constructor(private readonly service: CsaService) {}
 
@@ -19,7 +19,7 @@ export class CsaController {
   @ApiParam({ name: 'carrierId', description: 'Carrier ID' })
   @ApiStandardResponse('CSA scores')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   getCurrent(@CurrentTenant() tenantId: string, @Param('carrierId') carrierId: string) {
     return this.service.getCurrent(tenantId, carrierId);
   }
@@ -29,7 +29,7 @@ export class CsaController {
   @ApiParam({ name: 'carrierId', description: 'Carrier ID' })
   @ApiStandardResponse('CSA history')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   getHistory(@CurrentTenant() tenantId: string, @Param('carrierId') carrierId: string) {
     return this.service.getHistory(tenantId, carrierId);
   }
@@ -39,7 +39,7 @@ export class CsaController {
   @ApiParam({ name: 'carrierId', description: 'Carrier ID' })
   @ApiStandardResponse('CSA scores refreshed')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   refresh(@CurrentTenant() tenantId: string, @Param('carrierId') carrierId: string) {
     return this.service.refresh(tenantId, carrierId);
   }

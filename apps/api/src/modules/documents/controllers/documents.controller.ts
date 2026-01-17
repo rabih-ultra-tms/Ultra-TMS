@@ -11,6 +11,7 @@ import {
   UseGuards,
   SerializeOptions,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { plainToInstance } from 'class-transformer';
 import { DocumentsService } from '../services';
 import { CreateDocumentDto, UpdateDocumentDto, DocumentDownloadDto, DocumentResponseDto } from '../dto';
@@ -18,14 +19,20 @@ import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { DocumentAccessGuard } from '../guards/document-access.guard';
+import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('documents')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @SerializeOptions({ excludeExtraneousValues: false })
+@ApiTags('Documents')
+@ApiBearerAuth('JWT-auth')
 export class DocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}
 
   @Post()
+  @ApiOperation({ summary: 'Create document' })
+  @ApiStandardResponse('Document created')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'OPERATIONS', 'ACCOUNTING', 'COMPLIANCE')
   create(@Request() req: any, @Body() createDto: CreateDocumentDto) {
     return this.documentsService.create(
@@ -36,6 +43,14 @@ export class DocumentsController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'List documents' })
+  @ApiQuery({ name: 'documentType', required: false, type: String })
+  @ApiQuery({ name: 'entityType', required: false, type: String })
+  @ApiQuery({ name: 'entityId', required: false, type: String })
+  @ApiQuery({ name: 'page', required: false, type: String })
+  @ApiQuery({ name: 'limit', required: false, type: String })
+  @ApiStandardResponse('Documents list', DocumentResponseDto)
+  @ApiErrorResponses()
   @Roles('ADMIN', 'OPERATIONS', 'ACCOUNTING', 'COMPLIANCE')
   findAll(
     @Request() req: any,
@@ -59,6 +74,11 @@ export class DocumentsController {
   }
 
   @Get('entity/:entityType/:entityId')
+  @ApiOperation({ summary: 'List documents for entity' })
+  @ApiParam({ name: 'entityType', description: 'Entity type' })
+  @ApiParam({ name: 'entityId', description: 'Entity ID' })
+  @ApiStandardResponse('Entity documents list', DocumentResponseDto)
+  @ApiErrorResponses()
   @Roles('ADMIN', 'OPERATIONS', 'ACCOUNTING', 'COMPLIANCE')
   getByEntity(
     @Request() req: any,
@@ -73,6 +93,10 @@ export class DocumentsController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get document by ID' })
+  @ApiParam({ name: 'id', description: 'Document ID' })
+  @ApiStandardResponse('Document details', DocumentResponseDto)
+  @ApiErrorResponses()
   @Roles('ADMIN', 'OPERATIONS', 'ACCOUNTING', 'COMPLIANCE', 'CARRIER', 'CUSTOMER')
   @UseGuards(DocumentAccessGuard)
   findOne(@Request() req: any, @Param('id') id: string) {
@@ -81,6 +105,10 @@ export class DocumentsController {
   }
 
   @Get(':id/download')
+  @ApiOperation({ summary: 'Get document download URL' })
+  @ApiParam({ name: 'id', description: 'Document ID' })
+  @ApiStandardResponse('Document download URL', DocumentDownloadDto)
+  @ApiErrorResponses()
   @Roles('ADMIN', 'OPERATIONS', 'ACCOUNTING', 'COMPLIANCE', 'CARRIER', 'CUSTOMER')
   @UseGuards(DocumentAccessGuard)
   async getDownload(@Request() req: any, @Param('id') id: string) {
@@ -89,6 +117,10 @@ export class DocumentsController {
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Update document' })
+  @ApiParam({ name: 'id', description: 'Document ID' })
+  @ApiStandardResponse('Document updated')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'OPERATIONS', 'ACCOUNTING', 'COMPLIANCE')
   @UseGuards(DocumentAccessGuard)
   update(
@@ -100,6 +132,10 @@ export class DocumentsController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete document' })
+  @ApiParam({ name: 'id', description: 'Document ID' })
+  @ApiStandardResponse('Document deleted')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'COMPLIANCE')
   @UseGuards(DocumentAccessGuard)
   remove(@Request() req: any, @Param('id') id: string) {

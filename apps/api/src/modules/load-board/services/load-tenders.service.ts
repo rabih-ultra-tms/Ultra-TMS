@@ -9,7 +9,7 @@ export class LoadTendersService {
   async create(tenantId: string, dto: CreateLoadTenderDto, userId?: string) {
     // Verify load exists
     const load = await this.prisma.load.findFirst({
-      where: { id: dto.loadId, tenantId },
+      where: { id: dto.loadId, tenantId, deletedAt: null },
     });
 
     if (!load) {
@@ -22,6 +22,7 @@ export class LoadTendersService {
       where: {
         id: { in: carrierIds },
         tenantId,
+        deletedAt: null,
         status: 'ACTIVE',
       },
     });
@@ -147,7 +148,7 @@ export class LoadTendersService {
 
   async update(tenantId: string, id: string, dto: UpdateLoadTenderDto) {
     const tender = await this.prisma.loadTender.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!tender) {
@@ -170,7 +171,7 @@ export class LoadTendersService {
 
   async respond(tenantId: string, dto: RespondToTenderDto) {
     const tender = await this.prisma.loadTender.findFirst({
-      where: { id: dto.tenderId, tenantId },
+      where: { id: dto.tenderId, tenantId, deletedAt: null },
       include: {
         recipients: {
           orderBy: { position: 'asc' },

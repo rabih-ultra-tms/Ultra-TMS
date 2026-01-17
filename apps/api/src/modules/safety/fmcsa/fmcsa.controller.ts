@@ -12,7 +12,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('FMCSA Data')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('USER', 'MANAGER', 'ADMIN')
 export class FmcsaController {
   constructor(private readonly service: FmcsaService) {}
 
@@ -20,7 +20,7 @@ export class FmcsaController {
   @ApiOperation({ summary: 'Lookup FMCSA data' })
   @ApiStandardResponse('FMCSA lookup results')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   lookup(@CurrentTenant() tenantId: string, @Query() query: FmcsaLookupDto) {
     return this.service.lookup(tenantId, query);
   }
@@ -30,7 +30,7 @@ export class FmcsaController {
   @ApiParam({ name: 'carrierId', description: 'Carrier ID' })
   @ApiStandardResponse('FMCSA verification complete')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   verify(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -44,7 +44,7 @@ export class FmcsaController {
   @ApiParam({ name: 'carrierId', description: 'Carrier ID' })
   @ApiStandardResponse('FMCSA data refreshed')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   refresh(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -58,7 +58,7 @@ export class FmcsaController {
   @ApiParam({ name: 'carrierId', description: 'Carrier ID' })
   @ApiStandardResponse('FMCSA record')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   getRecord(@CurrentTenant() tenantId: string, @Param('carrierId') carrierId: string) {
     return this.service.getRecord(tenantId, carrierId);
   }

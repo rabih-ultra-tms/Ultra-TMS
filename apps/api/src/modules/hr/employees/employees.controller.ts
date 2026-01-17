@@ -10,7 +10,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('Employees')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('USER', 'MANAGER', 'ADMIN')
 export class EmployeesController {
   constructor(private readonly employeesService: EmployeesService) {}
 
@@ -18,7 +18,7 @@ export class EmployeesController {
   @ApiOperation({ summary: 'List employees' })
   @ApiStandardResponse('Employees list')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   list(@CurrentTenant() tenantId: string) {
     return this.employeesService.list(tenantId);
   }
@@ -36,7 +36,7 @@ export class EmployeesController {
   @ApiParam({ name: 'id', description: 'Employee ID' })
   @ApiStandardResponse('Employee details')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   getOne(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.employeesService.findOne(tenantId, id);
   }
@@ -60,7 +60,7 @@ export class EmployeesController {
   @ApiParam({ name: 'id', description: 'Employee ID' })
   @ApiStandardResponse('Employee deleted')
   @ApiErrorResponses()
-  @Roles('manager', 'admin')
+  @Roles('MANAGER', 'ADMIN')
   delete(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.employeesService.remove(tenantId, id);
   }
@@ -70,7 +70,7 @@ export class EmployeesController {
   @ApiParam({ name: 'id', description: 'Employee ID' })
   @ApiStandardResponse('Org chart')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   orgChart(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.employeesService.orgChart(tenantId, id);
   }
@@ -80,7 +80,7 @@ export class EmployeesController {
   @ApiParam({ name: 'id', description: 'Employee ID' })
   @ApiStandardResponse('Employee terminated')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   terminate(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -94,7 +94,7 @@ export class EmployeesController {
   @ApiParam({ name: 'id', description: 'Employee ID' })
   @ApiStandardResponse('Employee history')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   history(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.employeesService.history(tenantId, id);
   }

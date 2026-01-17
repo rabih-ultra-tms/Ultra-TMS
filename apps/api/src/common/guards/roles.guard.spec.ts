@@ -40,6 +40,15 @@ describe('RolesGuard', () => {
     expect(guard.canActivate(context)).toBe(true);
   });
 
+  it('should allow access when user has one of multiple allowed roles', () => {
+    (reflector.getAllAndOverride as jest.Mock)
+      .mockReturnValueOnce(['ADMIN', 'MANAGER'])
+      .mockReturnValueOnce(undefined);
+
+    const context = createExecutionContext({ roles: ['MANAGER'] });
+    expect(guard.canActivate(context)).toBe(true);
+  });
+
   it('should deny access when user lacks required role', () => {
     (reflector.getAllAndOverride as jest.Mock)
       .mockReturnValueOnce(['ADMIN'])

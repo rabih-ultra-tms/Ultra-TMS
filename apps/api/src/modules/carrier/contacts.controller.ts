@@ -1,15 +1,23 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { ContactsService } from './contacts.service';
 import { CreateCarrierContactDto, UpdateCarrierContactDto } from './dto';
+import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
 
 @Controller('carriers/:carrierId/contacts')
 @UseGuards(JwtAuthGuard)
+@ApiTags('Carrier')
+@ApiBearerAuth('JWT-auth')
 export class ContactsController {
   constructor(private readonly contactsService: ContactsService) {}
 
   @Get()
+  @ApiOperation({ summary: 'List carrier contacts' })
+  @ApiParam({ name: 'carrierId', description: 'Carrier ID' })
+  @ApiStandardResponse('Carrier contacts list')
+  @ApiErrorResponses()
   async list(
     @CurrentTenant() tenantId: string,
     @Param('carrierId') carrierId: string,
@@ -18,6 +26,10 @@ export class ContactsController {
   }
 
   @Post()
+  @ApiOperation({ summary: 'Create carrier contact' })
+  @ApiParam({ name: 'carrierId', description: 'Carrier ID' })
+  @ApiStandardResponse('Carrier contact created')
+  @ApiErrorResponses()
   async create(
     @CurrentTenant() tenantId: string,
     @Param('carrierId') carrierId: string,
@@ -27,6 +39,11 @@ export class ContactsController {
   }
 
   @Put(':contactId')
+  @ApiOperation({ summary: 'Update carrier contact' })
+  @ApiParam({ name: 'carrierId', description: 'Carrier ID' })
+  @ApiParam({ name: 'contactId', description: 'Contact ID' })
+  @ApiStandardResponse('Carrier contact updated')
+  @ApiErrorResponses()
   async update(
     @CurrentTenant() tenantId: string,
     @Param('carrierId') carrierId: string,
@@ -37,6 +54,11 @@ export class ContactsController {
   }
 
   @Delete(':contactId')
+  @ApiOperation({ summary: 'Delete carrier contact' })
+  @ApiParam({ name: 'carrierId', description: 'Carrier ID' })
+  @ApiParam({ name: 'contactId', description: 'Contact ID' })
+  @ApiStandardResponse('Carrier contact deleted')
+  @ApiErrorResponses()
   async remove(
     @CurrentTenant() tenantId: string,
     @Param('carrierId') carrierId: string,

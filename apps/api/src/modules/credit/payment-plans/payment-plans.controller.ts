@@ -17,7 +17,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('Credit Applications')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('ADMIN', 'CREDIT_ANALYST')
 export class PaymentPlansController {
   constructor(private readonly paymentPlansService: PaymentPlansService) {}
 
@@ -25,7 +25,7 @@ export class PaymentPlansController {
   @ApiOperation({ summary: 'List payment plans' })
   @ApiStandardResponse('Payment plans list')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('ADMIN', 'CREDIT_ANALYST', 'CREDIT_VIEWER')
   async list(
     @CurrentTenant() tenantId: string,
     @Query() query: PaginationDto & { status?: PaymentPlanStatus },
@@ -38,7 +38,7 @@ export class PaymentPlansController {
   @ApiParam({ name: 'id', description: 'Payment plan ID' })
   @ApiStandardResponse('Payment plan details')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('ADMIN', 'CREDIT_ANALYST', 'CREDIT_VIEWER')
   async detail(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,

@@ -13,7 +13,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('EDI Transactions')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('USER', 'MANAGER', 'ADMIN')
 export class EdiMappingsController {
   constructor(private readonly service: EdiMappingsService) {}
 
@@ -21,7 +21,7 @@ export class EdiMappingsController {
   @ApiOperation({ summary: 'List EDI mappings' })
   @ApiStandardResponse('EDI mappings list')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   list(
     @CurrentTenant() tenantId: string,
     @Query('tradingPartnerId') tradingPartnerId?: string,
@@ -34,7 +34,7 @@ export class EdiMappingsController {
   @ApiOperation({ summary: 'Create EDI mapping' })
   @ApiStandardResponse('EDI mapping created')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   create(
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: { id: string },
@@ -48,7 +48,7 @@ export class EdiMappingsController {
   @ApiParam({ name: 'id', description: 'Mapping ID' })
   @ApiStandardResponse('EDI mapping details')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   findOne(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.service.findOne(tenantId, id);
   }
@@ -58,7 +58,7 @@ export class EdiMappingsController {
   @ApiParam({ name: 'id', description: 'Mapping ID' })
   @ApiStandardResponse('EDI mapping updated')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   update(
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: { id: string },
@@ -73,7 +73,7 @@ export class EdiMappingsController {
   @ApiParam({ name: 'id', description: 'Mapping ID' })
   @ApiStandardResponse('EDI mapping deleted')
   @ApiErrorResponses()
-  @Roles('admin')
+  @Roles('ADMIN')
   remove(
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: { id: string },

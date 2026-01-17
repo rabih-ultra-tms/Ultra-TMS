@@ -10,7 +10,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('Entity Search')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('USER', 'MANAGER', 'ADMIN')
 export class EntitySearchController {
   constructor(private readonly entitySearchService: EntitySearchService) {}
 
@@ -19,7 +19,7 @@ export class EntitySearchController {
   @ApiQuery({ name: 'q', required: false, type: String })
   @ApiStandardResponse('Order search results')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   searchOrders(@CurrentTenant() tenantId: string, @CurrentUser('userId') userId: string, @Query() query: EntitySearchDto) {
     return this.entitySearchService.search(tenantId, userId, 'orders', query);
   }
@@ -29,7 +29,7 @@ export class EntitySearchController {
   @ApiQuery({ name: 'q', required: false, type: String })
   @ApiStandardResponse('Load search results')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   searchLoads(@CurrentTenant() tenantId: string, @CurrentUser('userId') userId: string, @Query() query: EntitySearchDto) {
     return this.entitySearchService.search(tenantId, userId, 'loads', query);
   }
@@ -39,7 +39,7 @@ export class EntitySearchController {
   @ApiQuery({ name: 'q', required: false, type: String })
   @ApiStandardResponse('Company search results')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   searchCompanies(@CurrentTenant() tenantId: string, @CurrentUser('userId') userId: string, @Query() query: EntitySearchDto) {
     return this.entitySearchService.search(tenantId, userId, 'companies', query);
   }
@@ -49,7 +49,7 @@ export class EntitySearchController {
   @ApiQuery({ name: 'q', required: false, type: String })
   @ApiStandardResponse('Carrier search results')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   searchCarriers(@CurrentTenant() tenantId: string, @CurrentUser('userId') userId: string, @Query() query: EntitySearchDto) {
     return this.entitySearchService.search(tenantId, userId, 'carriers', query);
   }
@@ -59,7 +59,7 @@ export class EntitySearchController {
   @ApiQuery({ name: 'q', required: false, type: String })
   @ApiStandardResponse('Contact search results')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   searchContacts(@CurrentTenant() tenantId: string, @CurrentUser('userId') userId: string, @Query() query: EntitySearchDto) {
     return this.entitySearchService.search(tenantId, userId, 'contacts', query);
   }
@@ -69,7 +69,7 @@ export class EntitySearchController {
   @ApiQuery({ name: 'q', required: false, type: String })
   @ApiStandardResponse('Invoice search results')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   searchInvoices(@CurrentTenant() tenantId: string, @CurrentUser('userId') userId: string, @Query() query: EntitySearchDto) {
     return this.entitySearchService.search(tenantId, userId, 'invoices', query);
   }
@@ -79,7 +79,7 @@ export class EntitySearchController {
   @ApiQuery({ name: 'q', required: false, type: String })
   @ApiStandardResponse('Document search results')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   searchDocuments(@CurrentTenant() tenantId: string, @CurrentUser('userId') userId: string, @Query() query: EntitySearchDto) {
     return this.entitySearchService.search(tenantId, userId, 'documents', query);
   }

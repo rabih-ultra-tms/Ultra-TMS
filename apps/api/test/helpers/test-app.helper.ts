@@ -18,6 +18,7 @@ export type TestRole =
   | 'admin'
   | 'SUPER_ADMIN'
   | 'ADMIN'
+  | 'CLAIMS_VIEWER'
   | 'CLAIMS_MANAGER'
   | 'CLAIMS_ADJUSTER'
   | 'EDI_MANAGER'
@@ -38,6 +39,10 @@ export type TestRole =
   | 'ACCOUNTING_MANAGER'
   | 'AGENT'
   | 'AGENT_MANAGER'
+  | 'CONTRACTS_MANAGER'
+  | 'CONTRACTS_VIEWER'
+  | 'CREDIT_ANALYST'
+  | 'CREDIT_VIEWER'
   | 'COMPLIANCE'
   | 'CUSTOMER'
   | 'CUSTOMER_SERVICE'
@@ -45,6 +50,174 @@ export type TestRole =
   | 'EXECUTIVE'
   | 'OPERATIONS_MANAGER'
   | 'SYSTEM_INTEGRATOR';
+
+const createRedisMock = () => {
+  const keyValueStore = new Map<string, { value: string; expiresAt?: number }>();
+  const sessions = new Map<string, { refreshTokenHash: string; expiresAt?: number }>();
+  const loginAttempts = new Map<string, number>();
+  const accountLocks = new Map<string, number>();
+  const passwordResetTokens = new Map<string, number>();
+  const emailVerificationTokens = new Map<string, number>();
+  const blacklistedTokens = new Map<string, number>();
+
+  const isExpired = (expiresAt?: number) => expiresAt !== undefined && expiresAt <= Date.now();
+
+  const getSessionKey = (userId: string, sessionId: string) => `${userId}:${sessionId}`;
+  const getResetTokenKey = (userId: string, tokenHash: string) => `${userId}:${tokenHash}`;
+  const getEmailTokenKey = (userId: string, tokenHash: string) => `${userId}:${tokenHash}`;
+
+  return {
+    ping: async () => 'PONG',
+    keys: async (pattern: string) => {
+      if (pattern.endsWith('*')) {
+        const prefix = pattern.slice(0, -1);
+        return [...keyValueStore.keys()].filter((key) => key.startsWith(prefix));
+      }
+      return keyValueStore.has(pattern) ? [pattern] : [];
+    },
+    deleteByPattern: async (pattern: string) => {
+      const keys = pattern.endsWith('*')
+        ? [...keyValueStore.keys()].filter((key) => key.startsWith(pattern.slice(0, -1)))
+        : keyValueStore.has(pattern)
+          ? [pattern]
+          : [];
+      keys.forEach((key) => keyValueStore.delete(key));
+      return keys.length;
+    },
+    getValue: async (key: string) => {
+      const entry = keyValueStore.get(key);
+      if (!entry) return null;
+      if (isExpired(entry.expiresAt)) {
+        keyValueStore.delete(key);
+        return null;
+      }
+      return entry.value;
+    },
+    setValue: async (key: string, value: string, ttlSeconds?: number) => {
+      const expiresAt = ttlSeconds ? Date.now() + ttlSeconds * 1000 : undefined;
+      keyValueStore.set(key, { value, expiresAt });
+    },
+    deleteKeys: async (keys: string[]) => {
+      keys.forEach((key) => keyValueStore.delete(key));
+    },
+    getJson: async (key: string) => {
+      const raw = await keyValueStore.get(key)?.value;
+      if (!raw) return null;
+      try {
+        return JSON.parse(raw);
+      } catch {
+        return null;
+      }
+    },
+    setJson: async (key: string, value: unknown, ttlSeconds?: number) => {
+      const expiresAt = ttlSeconds ? Date.now() + ttlSeconds * 1000 : undefined;
+      keyValueStore.set(key, { value: JSON.stringify(value), expiresAt });
+    },
+    setWithTTL: async (key: string, value: string, ttlSeconds: number) => {
+      const expiresAt = Date.now() + ttlSeconds * 1000;
+      keyValueStore.set(key, { value, expiresAt });
+    },
+    storeSession: async (userId: string, sessionId: string, refreshTokenHash: string, expiresInSeconds: number) => {
+      const key = getSessionKey(userId, sessionId);
+      const expiresAt = Date.now() + expiresInSeconds * 1000;
+      sessions.set(key, { refreshTokenHash, expiresAt });
+    },
+    getSession: async (userId: string, sessionId: string) => {
+      const key = getSessionKey(userId, sessionId);
+      const entry = sessions.get(key);
+      if (!entry) return null;
+      if (isExpired(entry.expiresAt)) {
+        sessions.delete(key);
+        return null;
+      }
+      return { refreshTokenHash: entry.refreshTokenHash, createdAt: new Date().toISOString() };
+    },
+    revokeSession: async (userId: string, sessionId: string) => {
+      sessions.delete(getSessionKey(userId, sessionId));
+    },
+    revokeAllUserSessions: async (userId: string) => {
+      [...sessions.keys()]
+        .filter((key) => key.startsWith(`${userId}:`))
+        .forEach((key) => sessions.delete(key));
+    },
+    getUserSessions: async (userId: string) => {
+      return [...sessions.keys()]
+        .filter((key) => key.startsWith(`${userId}:`))
+        .map((key) => key.split(':')[1])
+        .filter((id): id is string => id !== undefined);
+    },
+    getUserSessionCount: async (userId: string) => {
+      return [...sessions.keys()].filter((key) => key.startsWith(`${userId}:`)).length;
+    },
+    blacklistToken: async (jti: string, expiresInSeconds: number) => {
+      const expiresAt = Date.now() + expiresInSeconds * 1000;
+      blacklistedTokens.set(jti, expiresAt);
+    },
+    isTokenBlacklisted: async (jti: string) => {
+      const expiresAt = blacklistedTokens.get(jti);
+      if (isExpired(expiresAt)) {
+        blacklistedTokens.delete(jti);
+        return false;
+      }
+      return blacklistedTokens.has(jti);
+    },
+    storePasswordResetToken: async (userId: string, tokenHash: string, expiresInSeconds: number) => {
+      const key = getResetTokenKey(userId, tokenHash);
+      const expiresAt = Date.now() + expiresInSeconds * 1000;
+      passwordResetTokens.set(key, expiresAt);
+    },
+    consumePasswordResetToken: async (userId: string, tokenHash: string) => {
+      const key = getResetTokenKey(userId, tokenHash);
+      const expiresAt = passwordResetTokens.get(key);
+      if (isExpired(expiresAt)) {
+        passwordResetTokens.delete(key);
+        return false;
+      }
+      if (!passwordResetTokens.has(key)) return false;
+      passwordResetTokens.delete(key);
+      return true;
+    },
+    incrementLoginAttempts: async (email: string) => {
+      const attempts = (loginAttempts.get(email) ?? 0) + 1;
+      loginAttempts.set(email, attempts);
+      return attempts;
+    },
+    getLoginAttempts: async (email: string) => {
+      return loginAttempts.get(email) ?? 0;
+    },
+    resetLoginAttempts: async (email: string) => {
+      loginAttempts.delete(email);
+    },
+    lockAccount: async (email: string, durationSeconds: number) => {
+      const expiresAt = Date.now() + durationSeconds * 1000;
+      accountLocks.set(email, expiresAt);
+    },
+    isAccountLocked: async (email: string) => {
+      const expiresAt = accountLocks.get(email);
+      if (isExpired(expiresAt)) {
+        accountLocks.delete(email);
+        return false;
+      }
+      return accountLocks.has(email);
+    },
+    storeEmailVerificationToken: async (userId: string, tokenHash: string, expiresInSeconds: number) => {
+      const key = getEmailTokenKey(userId, tokenHash);
+      const expiresAt = Date.now() + expiresInSeconds * 1000;
+      emailVerificationTokens.set(key, expiresAt);
+    },
+    consumeEmailVerificationToken: async (userId: string, tokenHash: string) => {
+      const key = getEmailTokenKey(userId, tokenHash);
+      const expiresAt = emailVerificationTokens.get(key);
+      if (isExpired(expiresAt)) {
+        emailVerificationTokens.delete(key);
+        return false;
+      }
+      if (!emailVerificationTokens.has(key)) return false;
+      emailVerificationTokens.delete(key);
+      return true;
+    },
+  };
+};
 
 export async function createTestApp(
   tenantId: string,
@@ -54,6 +227,7 @@ export async function createTestApp(
   const testUser = {
     id: userId,
     userId,
+    sub: userId,
     email,
     tenantId,
     role: { name: 'SUPER_ADMIN', permissions: [] },
@@ -76,6 +250,7 @@ export async function createTestApp(
       ...testUser,
       id: effectiveUserId,
       userId: effectiveUserId,
+      sub: effectiveUserId,
       email: effectiveEmail,
       role: { name: effectiveRole, permissions: [] },
       roleName: effectiveRole,
@@ -95,26 +270,7 @@ export async function createTestApp(
       },
     })
     .overrideProvider(RedisService)
-    .useValue({
-      ping: async () => 'PONG',
-      keys: async () => [],
-      deleteByPattern: async () => 0,
-      getValue: async () => null,
-      setValue: async () => undefined,
-      deleteKeys: async () => undefined,
-      getJson: async () => null,
-      setJson: async () => undefined,
-      setWithTTL: async () => undefined,
-      storeSession: async () => undefined,
-      getSession: async () => null,
-      revokeSession: async () => undefined,
-      revokeAllUserSessions: async () => undefined,
-      getUserSessions: async () => [],
-      getUserSessionCount: async () => 0,
-      blacklistToken: async () => undefined,
-      isTokenBlacklisted: async () => false,
-      storePasswordResetToken: async () => undefined,
-    })
+    .useValue(createRedisMock())
     .compile();
 
   const app = moduleRef.createNestApplication();
@@ -175,6 +331,7 @@ export async function createTestAppWithRole(
   const testUser = {
     id: userId,
     userId,
+    sub: userId,
     email,
     tenantId,
     role: { name: role, permissions: [] },
@@ -197,6 +354,7 @@ export async function createTestAppWithRole(
       ...testUser,
       id: effectiveUserId,
       userId: effectiveUserId,
+      sub: effectiveUserId,
       email: effectiveEmail,
       role: { name: effectiveRole, permissions: [] },
       roleName: effectiveRole,
@@ -216,26 +374,7 @@ export async function createTestAppWithRole(
       },
     })
     .overrideProvider(RedisService)
-    .useValue({
-      ping: async () => 'PONG',
-      keys: async () => [],
-      deleteByPattern: async () => 0,
-      getValue: async () => null,
-      setValue: async () => undefined,
-      deleteKeys: async () => undefined,
-      getJson: async () => null,
-      setJson: async () => undefined,
-      setWithTTL: async () => undefined,
-      storeSession: async () => undefined,
-      getSession: async () => null,
-      revokeSession: async () => undefined,
-      revokeAllUserSessions: async () => undefined,
-      getUserSessions: async () => [],
-      getUserSessionCount: async () => 0,
-      blacklistToken: async () => undefined,
-      isTokenBlacklisted: async () => false,
-      storePasswordResetToken: async () => undefined,
-    })
+    .useValue(createRedisMock())
     .compile();
 
   const app = moduleRef.createNestApplication();

@@ -9,12 +9,13 @@ import {
   UseGuards,
   Header,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { CurrentTenant } from '../../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { InvoicesService, PdfService } from '../services';
 import { CreateInvoiceDto, SendInvoiceDto, StatementQueryDto } from '../dto';
+import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('invoices')
 @UseGuards(JwtAuthGuard)
@@ -27,6 +28,10 @@ export class InvoicesController {
   ) {}
 
   @Post()
+  @ApiOperation({ summary: 'Create invoice' })
+  @ApiBody({ type: CreateInvoiceDto })
+  @ApiStandardResponse('Invoice created')
+  @ApiErrorResponses()
   async create(
     @CurrentTenant() tenantId: string,
     @CurrentUser() userId: string,
@@ -36,6 +41,13 @@ export class InvoicesController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'List invoices' })
+  @ApiQuery({ name: 'status', required: false, type: String })
+  @ApiQuery({ name: 'companyId', required: false, type: String })
+  @ApiQuery({ name: 'skip', required: false, type: String })
+  @ApiQuery({ name: 'take', required: false, type: String })
+  @ApiStandardResponse('Invoices list')
+  @ApiErrorResponses()
   async findAll(
     @CurrentTenant() tenantId: string,
     @Query('status') status?: string,
@@ -52,11 +64,18 @@ export class InvoicesController {
   }
 
   @Get('aging')
+  @ApiOperation({ summary: 'Get aging report' })
+  @ApiStandardResponse('Aging report')
+  @ApiErrorResponses()
   async getAgingReport(@CurrentTenant() tenantId: string) {
     return this.invoicesService.getAgingReport(tenantId);
   }
 
   @Get('statements/:companyId')
+  @ApiOperation({ summary: 'Download customer statement PDF' })
+  @ApiParam({ name: 'companyId', description: 'Company ID' })
+  @ApiStandardResponse('Statement PDF')
+  @ApiErrorResponses()
   @Header('Content-Type', 'application/pdf')
   @Header('Content-Disposition', 'inline; filename="statement.pdf"')
   async getStatement(
@@ -74,6 +93,10 @@ export class InvoicesController {
   }
 
   @Get(':id/pdf')
+  @ApiOperation({ summary: 'Download invoice PDF' })
+  @ApiParam({ name: 'id', description: 'Invoice ID' })
+  @ApiStandardResponse('Invoice PDF')
+  @ApiErrorResponses()
   @Header('Content-Type', 'application/pdf')
   @Header('Content-Disposition', 'inline; filename="invoice.pdf"')
   async getInvoicePdf(@Param('id') id: string, @CurrentTenant() tenantId: string) {
@@ -82,11 +105,19 @@ export class InvoicesController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get invoice by ID' })
+  @ApiParam({ name: 'id', description: 'Invoice ID' })
+  @ApiStandardResponse('Invoice details')
+  @ApiErrorResponses()
   async findOne(@Param('id') id: string, @CurrentTenant() tenantId: string) {
     return this.invoicesService.findOne(id, tenantId);
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'Update invoice' })
+  @ApiParam({ name: 'id', description: 'Invoice ID' })
+  @ApiStandardResponse('Invoice updated')
+  @ApiErrorResponses()
   async update(
     @Param('id') id: string,
     @CurrentTenant() tenantId: string,
@@ -97,6 +128,11 @@ export class InvoicesController {
   }
 
   @Post(':id/send')
+  @ApiOperation({ summary: 'Send invoice' })
+  @ApiParam({ name: 'id', description: 'Invoice ID' })
+  @ApiBody({ type: SendInvoiceDto })
+  @ApiStandardResponse('Invoice sent')
+  @ApiErrorResponses()
   async sendInvoice(
     @Param('id') id: string,
     @CurrentTenant() tenantId: string,
@@ -106,11 +142,19 @@ export class InvoicesController {
   }
 
   @Post(':id/remind')
+  @ApiOperation({ summary: 'Send invoice reminder' })
+  @ApiParam({ name: 'id', description: 'Invoice ID' })
+  @ApiStandardResponse('Invoice reminder sent')
+  @ApiErrorResponses()
   async sendReminder(@Param('id') id: string, @CurrentTenant() tenantId: string) {
     return this.invoicesService.sendReminder(id, tenantId);
   }
 
   @Post(':id/void')
+  @ApiOperation({ summary: 'Void invoice' })
+  @ApiParam({ name: 'id', description: 'Invoice ID' })
+  @ApiStandardResponse('Invoice voided')
+  @ApiErrorResponses()
   async voidInvoice(
     @Param('id') id: string,
     @CurrentTenant() tenantId: string,
@@ -121,6 +165,10 @@ export class InvoicesController {
   }
 
   @Post('generate-from-load/:loadId')
+  @ApiOperation({ summary: 'Generate invoice from load' })
+  @ApiParam({ name: 'loadId', description: 'Load ID' })
+  @ApiStandardResponse('Invoice generated')
+  @ApiErrorResponses()
   async generateFromLoad(
     @Param('loadId') loadId: string,
     @CurrentTenant() tenantId: string,

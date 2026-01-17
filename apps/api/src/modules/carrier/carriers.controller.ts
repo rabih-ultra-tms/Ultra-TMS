@@ -13,6 +13,7 @@ import {
   HttpStatus,
   SerializeOptions,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { plainToInstance } from 'class-transformer';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
@@ -21,15 +22,21 @@ import { CarriersService } from './carriers.service';
 import { CarrierQueryDto, CarrierStatus, CarrierTier, CreateCarrierDto, UpdateCarrierDto, OnboardCarrierDto, CarrierResponseDto } from './dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
 
 @Controller('carriers')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @SerializeOptions({ excludeExtraneousValues: false })
+@ApiTags('Carrier')
+@ApiBearerAuth('JWT-auth')
 export class CarriersController {
   constructor(private readonly carriersService: CarriersService) {}
 
   @Post()
   @Roles('ADMIN', 'CARRIER_MANAGER')
+  @ApiOperation({ summary: 'Create carrier' })
+  @ApiStandardResponse('Carrier created')
+  @ApiErrorResponses()
   async create(
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: { id: string },
@@ -41,6 +48,14 @@ export class CarriersController {
 
   @Get()
   @Roles('ADMIN', 'DISPATCHER', 'CARRIER_MANAGER', 'OPERATIONS')
+  @ApiOperation({ summary: 'List carriers' })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'status', required: false, enum: CarrierStatus })
+  @ApiQuery({ name: 'tier', required: false, enum: CarrierTier })
+  @ApiQuery({ name: 'skip', required: false, type: Number })
+  @ApiQuery({ name: 'take', required: false, type: Number })
+  @ApiStandardResponse('Carriers list')
+  @ApiErrorResponses()
   async findAll(
     @CurrentTenant() tenantId: string,
     @Query() query: CarrierQueryDto,
@@ -54,6 +69,10 @@ export class CarriersController {
 
   @Get('fmcsa/lookup/mc/:mcNumber')
   @Roles('ADMIN', 'DISPATCHER', 'CARRIER_MANAGER', 'OPERATIONS')
+  @ApiOperation({ summary: 'Lookup carrier by MC number' })
+  @ApiParam({ name: 'mcNumber', description: 'MC number' })
+  @ApiStandardResponse('FMCSA lookup result')
+  @ApiErrorResponses()
   async lookupByMc(
     @Param('mcNumber') mcNumber: string,
   ) {
@@ -62,6 +81,10 @@ export class CarriersController {
 
   @Get('fmcsa/lookup/dot/:dotNumber')
   @Roles('ADMIN', 'DISPATCHER', 'CARRIER_MANAGER', 'OPERATIONS')
+  @ApiOperation({ summary: 'Lookup carrier by DOT number' })
+  @ApiParam({ name: 'dotNumber', description: 'DOT number' })
+  @ApiStandardResponse('FMCSA lookup result')
+  @ApiErrorResponses()
   async lookupByDot(
     @Param('dotNumber') dotNumber: string,
   ) {
@@ -70,6 +93,9 @@ export class CarriersController {
 
   @Post('onboard')
   @Roles('ADMIN', 'CARRIER_MANAGER')
+  @ApiOperation({ summary: 'Onboard carrier from FMCSA' })
+  @ApiStandardResponse('Carrier onboarded')
+  @ApiErrorResponses()
   async onboardFromFmcsa(
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: { id: string },
@@ -80,6 +106,10 @@ export class CarriersController {
 
   @Get('expiring-insurance')
   @Roles('ADMIN', 'DISPATCHER', 'CARRIER_MANAGER', 'OPERATIONS')
+  @ApiOperation({ summary: 'Get carriers with expiring insurance' })
+  @ApiQuery({ name: 'days', required: false, type: Number })
+  @ApiStandardResponse('Expiring insurance list')
+  @ApiErrorResponses()
   async getExpiringInsurance(
     @CurrentTenant() tenantId: string,
     @Query('days') days?: string,
@@ -92,6 +122,10 @@ export class CarriersController {
 
   @Get(':id')
   @Roles('ADMIN', 'DISPATCHER', 'CARRIER_MANAGER', 'OPERATIONS')
+  @ApiOperation({ summary: 'Get carrier by ID' })
+  @ApiParam({ name: 'id', description: 'Carrier ID' })
+  @ApiStandardResponse('Carrier details')
+  @ApiErrorResponses()
   async findOne(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -102,6 +136,11 @@ export class CarriersController {
 
   @Get(':id/performance')
   @Roles('ADMIN', 'DISPATCHER', 'CARRIER_MANAGER', 'OPERATIONS')
+  @ApiOperation({ summary: 'Get carrier performance' })
+  @ApiParam({ name: 'id', description: 'Carrier ID' })
+  @ApiQuery({ name: 'days', required: false, type: Number })
+  @ApiStandardResponse('Carrier performance')
+  @ApiErrorResponses()
   async getPerformance(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -116,6 +155,10 @@ export class CarriersController {
 
   @Get(':id/loads')
   @Roles('ADMIN', 'DISPATCHER', 'CARRIER_MANAGER', 'OPERATIONS')
+  @ApiOperation({ summary: 'Get carrier loads' })
+  @ApiParam({ name: 'id', description: 'Carrier ID' })
+  @ApiStandardResponse('Carrier loads')
+  @ApiErrorResponses()
   async getLoads(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -125,6 +168,10 @@ export class CarriersController {
 
   @Get(':id/compliance')
   @Roles('ADMIN', 'DISPATCHER', 'CARRIER_MANAGER', 'OPERATIONS')
+  @ApiOperation({ summary: 'Get carrier compliance' })
+  @ApiParam({ name: 'id', description: 'Carrier ID' })
+  @ApiStandardResponse('Carrier compliance')
+  @ApiErrorResponses()
   async getCompliance(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -134,6 +181,10 @@ export class CarriersController {
 
   @Get(':id/scorecard')
   @Roles('ADMIN', 'DISPATCHER', 'CARRIER_MANAGER', 'OPERATIONS')
+  @ApiOperation({ summary: 'Get carrier scorecard' })
+  @ApiParam({ name: 'id', description: 'Carrier ID' })
+  @ApiStandardResponse('Carrier scorecard')
+  @ApiErrorResponses()
   async getScorecard(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -143,6 +194,10 @@ export class CarriersController {
 
   @Put(':id')
   @Roles('ADMIN', 'CARRIER_MANAGER')
+  @ApiOperation({ summary: 'Update carrier' })
+  @ApiParam({ name: 'id', description: 'Carrier ID' })
+  @ApiStandardResponse('Carrier updated')
+  @ApiErrorResponses()
   async update(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -154,6 +209,10 @@ export class CarriersController {
 
   @Patch(':id/status')
   @Roles('ADMIN', 'CARRIER_MANAGER')
+  @ApiOperation({ summary: 'Update carrier status' })
+  @ApiParam({ name: 'id', description: 'Carrier ID' })
+  @ApiStandardResponse('Carrier status updated')
+  @ApiErrorResponses()
   async updateStatus(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -165,6 +224,10 @@ export class CarriersController {
 
   @Patch(':id/tier')
   @Roles('ADMIN', 'CARRIER_MANAGER')
+  @ApiOperation({ summary: 'Update carrier tier' })
+  @ApiParam({ name: 'id', description: 'Carrier ID' })
+  @ApiStandardResponse('Carrier tier updated')
+  @ApiErrorResponses()
   async updateTier(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -177,6 +240,10 @@ export class CarriersController {
   @Post(':id/approve')
   @HttpCode(HttpStatus.OK)
   @Roles('ADMIN', 'CARRIER_MANAGER')
+  @ApiOperation({ summary: 'Approve carrier' })
+  @ApiParam({ name: 'id', description: 'Carrier ID' })
+  @ApiStandardResponse('Carrier approved')
+  @ApiErrorResponses()
   async approve(
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: { id: string },
@@ -189,6 +256,10 @@ export class CarriersController {
   @Post(':id/fmcsa-check')
   @HttpCode(HttpStatus.OK)
   @Roles('ADMIN', 'CARRIER_MANAGER')
+  @ApiOperation({ summary: 'Run FMCSA check for carrier' })
+  @ApiParam({ name: 'id', description: 'Carrier ID' })
+  @ApiStandardResponse('FMCSA check completed')
+  @ApiErrorResponses()
   async fmcsaCheck(
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: { id: string },
@@ -201,6 +272,10 @@ export class CarriersController {
   @Post(':id/suspend')
   @HttpCode(HttpStatus.OK)
   @Roles('ADMIN', 'CARRIER_MANAGER')
+  @ApiOperation({ summary: 'Suspend carrier' })
+  @ApiParam({ name: 'id', description: 'Carrier ID' })
+  @ApiStandardResponse('Carrier suspended')
+  @ApiErrorResponses()
   async suspend(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -213,6 +288,10 @@ export class CarriersController {
   @Post(':id/blacklist')
   @HttpCode(HttpStatus.OK)
   @Roles('ADMIN', 'CARRIER_MANAGER')
+  @ApiOperation({ summary: 'Blacklist carrier' })
+  @ApiParam({ name: 'id', description: 'Carrier ID' })
+  @ApiStandardResponse('Carrier blacklisted')
+  @ApiErrorResponses()
   async blacklist(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -225,6 +304,10 @@ export class CarriersController {
   @Post(':id/deactivate')
   @HttpCode(HttpStatus.OK)
   @Roles('ADMIN', 'CARRIER_MANAGER')
+  @ApiOperation({ summary: 'Deactivate carrier' })
+  @ApiParam({ name: 'id', description: 'Carrier ID' })
+  @ApiStandardResponse('Carrier deactivated')
+  @ApiErrorResponses()
   async deactivate(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
@@ -237,6 +320,10 @@ export class CarriersController {
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   @Roles('ADMIN', 'CARRIER_MANAGER')
+  @ApiOperation({ summary: 'Delete carrier' })
+  @ApiParam({ name: 'id', description: 'Carrier ID' })
+  @ApiStandardResponse('Carrier deleted')
+  @ApiErrorResponses()
   async delete(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,

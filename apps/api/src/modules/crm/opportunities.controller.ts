@@ -10,6 +10,13 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards';
 import { OpportunitiesService } from './opportunities.service';
 import { CreateOpportunityDto, UpdateOpportunityDto } from './dto';
@@ -17,13 +24,25 @@ import { CurrentTenant } from '../../common/decorators/current-tenant.decorator'
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
 
 @Controller('opportunities')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('Opportunities')
+@ApiBearerAuth('JWT-auth')
 export class OpportunitiesController {
   constructor(private readonly opportunitiesService: OpportunitiesService) {}
 
   @Get()
+  @ApiOperation({ summary: 'List opportunities' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'stage', required: false, type: String })
+  @ApiQuery({ name: 'ownerId', required: false, type: String })
+  @ApiQuery({ name: 'companyId', required: false, type: String })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiStandardResponse('Opportunities list')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async findAll(
     @CurrentTenant() tenantId: string,
@@ -38,6 +57,10 @@ export class OpportunitiesController {
   }
 
   @Get('pipeline')
+  @ApiOperation({ summary: 'Get opportunity pipeline' })
+  @ApiQuery({ name: 'ownerId', required: false, type: String })
+  @ApiStandardResponse('Opportunity pipeline')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async getPipeline(
     @CurrentTenant() tenantId: string,
@@ -47,12 +70,19 @@ export class OpportunitiesController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get opportunity by ID' })
+  @ApiParam({ name: 'id', description: 'Opportunity ID' })
+  @ApiStandardResponse('Opportunity details')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async findOne(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.opportunitiesService.findOne(tenantId, id);
   }
 
   @Post()
+  @ApiOperation({ summary: 'Create opportunity' })
+  @ApiStandardResponse('Opportunity created')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async create(
     @CurrentTenant() tenantId: string,
@@ -63,6 +93,10 @@ export class OpportunitiesController {
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'Update opportunity' })
+  @ApiParam({ name: 'id', description: 'Opportunity ID' })
+  @ApiStandardResponse('Opportunity updated')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async update(
     @CurrentTenant() tenantId: string,
@@ -74,6 +108,10 @@ export class OpportunitiesController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete opportunity' })
+  @ApiParam({ name: 'id', description: 'Opportunity ID' })
+  @ApiStandardResponse('Opportunity deleted')
+  @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
   async delete(
     @CurrentTenant() tenantId: string,

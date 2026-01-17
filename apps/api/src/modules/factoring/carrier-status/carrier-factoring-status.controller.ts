@@ -15,7 +15,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('Quick Pay')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('USER', 'MANAGER', 'ADMIN')
 export class CarrierFactoringStatusController {
   constructor(
     private readonly service: CarrierFactoringStatusService,
@@ -27,7 +27,7 @@ export class CarrierFactoringStatusController {
   @ApiParam({ name: 'carrierId', description: 'Carrier ID' })
   @ApiStandardResponse('Carrier factoring status')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   async getStatus(
     @CurrentTenant() tenantId: string,
     @Param('carrierId') carrierId: string,
@@ -95,7 +95,7 @@ export class CarrierFactoringStatusController {
   @ApiParam({ name: 'carrierId', description: 'Carrier ID' })
   @ApiStandardResponse('Carrier NOA record')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
   async getCarrierNoa(
     @CurrentTenant() tenantId: string,
     @Param('carrierId') carrierId: string,

@@ -1,4 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards';
 import { CurrentTenant, CurrentUser } from '../../common/decorators';
 import { IntegrationsService } from './integrations.service';
@@ -15,13 +16,19 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Audit } from '../audit/decorators/audit.decorator';
 import { AuditAction, AuditActionCategory, AuditSeverity } from '@prisma/client';
+import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
 
 @Controller('integration-hub/providers')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('Integration Hub')
+@ApiBearerAuth('JWT-auth')
 export class IntegrationProvidersController {
   constructor(private readonly integrationsService: IntegrationsService) {}
 
   @Get()
+  @ApiOperation({ summary: 'List integration providers' })
+  @ApiStandardResponse('Integration providers list')
+  @ApiErrorResponses()
   @Roles('SUPER_ADMIN', 'ADMIN', 'SYSTEM_INTEGRATOR')
   async listProviders(
     @CurrentTenant() tenantId: string,
@@ -31,12 +38,19 @@ export class IntegrationProvidersController {
   }
 
   @Get('categories')
+  @ApiOperation({ summary: 'List provider categories' })
+  @ApiStandardResponse('Provider categories list')
+  @ApiErrorResponses()
   @Roles('SUPER_ADMIN', 'ADMIN', 'SYSTEM_INTEGRATOR')
   async listCategories(@CurrentTenant() tenantId: string) {
     return this.integrationsService.listProviderCategories(tenantId);
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get provider by ID' })
+  @ApiParam({ name: 'id', description: 'Provider ID' })
+  @ApiStandardResponse('Provider details')
+  @ApiErrorResponses()
   @Roles('SUPER_ADMIN', 'ADMIN', 'SYSTEM_INTEGRATOR')
   async getProvider(
     @CurrentTenant() tenantId: string,
@@ -49,10 +63,15 @@ export class IntegrationProvidersController {
 @Controller('integration-hub/integrations')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('SUPER_ADMIN')
+@ApiTags('Integration Hub')
+@ApiBearerAuth('JWT-auth')
 export class IntegrationsController {
   constructor(private readonly integrationsService: IntegrationsService) {}
 
   @Get()
+  @ApiOperation({ summary: 'List integrations' })
+  @ApiStandardResponse('Integrations list')
+  @ApiErrorResponses()
   @Roles('SUPER_ADMIN', 'ADMIN')
   async listIntegrations(
     @CurrentTenant() tenantId: string,
@@ -62,12 +81,19 @@ export class IntegrationsController {
   }
 
   @Get('health')
+  @ApiOperation({ summary: 'Check integrations health' })
+  @ApiStandardResponse('Integrations health')
+  @ApiErrorResponses()
   @Roles('SUPER_ADMIN', 'ADMIN')
   async healthAll(@CurrentTenant() tenantId: string) {
     return this.integrationsService.healthAll(tenantId);
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get integration by ID' })
+  @ApiParam({ name: 'id', description: 'Integration ID' })
+  @ApiStandardResponse('Integration details')
+  @ApiErrorResponses()
   @Roles('SUPER_ADMIN', 'ADMIN')
   @Audit({
     action: AuditAction.READ,
@@ -86,6 +112,9 @@ export class IntegrationsController {
   }
 
   @Post()
+  @ApiOperation({ summary: 'Create integration' })
+  @ApiStandardResponse('Integration created')
+  @ApiErrorResponses()
   @Roles('SUPER_ADMIN')
   async createIntegration(
     @CurrentTenant() tenantId: string,
@@ -96,6 +125,10 @@ export class IntegrationsController {
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'Update integration' })
+  @ApiParam({ name: 'id', description: 'Integration ID' })
+  @ApiStandardResponse('Integration updated')
+  @ApiErrorResponses()
   @Roles('SUPER_ADMIN')
   async updateIntegration(
     @CurrentTenant() tenantId: string,
@@ -107,6 +140,10 @@ export class IntegrationsController {
   }
 
   @Put(':id/credentials')
+  @ApiOperation({ summary: 'Update integration credentials' })
+  @ApiParam({ name: 'id', description: 'Integration ID' })
+  @ApiStandardResponse('Integration credentials updated')
+  @ApiErrorResponses()
   @Roles('SUPER_ADMIN')
   @Audit({
     action: AuditAction.UPDATE,
@@ -128,6 +165,10 @@ export class IntegrationsController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete integration' })
+  @ApiParam({ name: 'id', description: 'Integration ID' })
+  @ApiStandardResponse('Integration deleted')
+  @ApiErrorResponses()
   @Roles('SUPER_ADMIN')
   async deleteIntegration(
     @CurrentTenant() tenantId: string,
@@ -138,6 +179,10 @@ export class IntegrationsController {
   }
 
   @Post(':id/test')
+  @ApiOperation({ summary: 'Test integration connection' })
+  @ApiParam({ name: 'id', description: 'Integration ID' })
+  @ApiStandardResponse('Integration connection tested')
+  @ApiErrorResponses()
   @Roles('SUPER_ADMIN')
   async testConnection(
     @CurrentTenant() tenantId: string,
@@ -147,6 +192,10 @@ export class IntegrationsController {
   }
 
   @Post(':id/status')
+  @ApiOperation({ summary: 'Toggle integration status' })
+  @ApiParam({ name: 'id', description: 'Integration ID' })
+  @ApiStandardResponse('Integration status updated')
+  @ApiErrorResponses()
   @Roles('SUPER_ADMIN')
   async toggleStatus(
     @CurrentTenant() tenantId: string,
@@ -157,6 +206,10 @@ export class IntegrationsController {
   }
 
   @Post(':id/oauth/authorize')
+  @ApiOperation({ summary: 'Start OAuth authorization' })
+  @ApiParam({ name: 'id', description: 'Integration ID' })
+  @ApiStandardResponse('OAuth authorization started')
+  @ApiErrorResponses()
   @Roles('SUPER_ADMIN')
   async oauthAuthorize(
     @CurrentTenant() tenantId: string,
@@ -166,6 +219,10 @@ export class IntegrationsController {
   }
 
   @Post(':id/oauth/callback')
+  @ApiOperation({ summary: 'Handle OAuth callback' })
+  @ApiParam({ name: 'id', description: 'Integration ID' })
+  @ApiStandardResponse('OAuth callback processed')
+  @ApiErrorResponses()
   @Roles('SUPER_ADMIN')
   async oauthCallback(
     @CurrentTenant() tenantId: string,
@@ -176,6 +233,10 @@ export class IntegrationsController {
   }
 
   @Get(':id/health')
+  @ApiOperation({ summary: 'Get integration health' })
+  @ApiParam({ name: 'id', description: 'Integration ID' })
+  @ApiStandardResponse('Integration health')
+  @ApiErrorResponses()
   @Roles('SUPER_ADMIN', 'ADMIN')
   async health(
     @CurrentTenant() tenantId: string,
@@ -185,6 +246,10 @@ export class IntegrationsController {
   }
 
   @Get(':id/stats')
+  @ApiOperation({ summary: 'Get integration stats' })
+  @ApiParam({ name: 'id', description: 'Integration ID' })
+  @ApiStandardResponse('Integration stats')
+  @ApiErrorResponses()
   @Roles('SUPER_ADMIN', 'ADMIN')
   async stats(
     @CurrentTenant() tenantId: string,
@@ -194,6 +259,10 @@ export class IntegrationsController {
   }
 
   @Get(':id/logs')
+  @ApiOperation({ summary: 'List integration logs' })
+  @ApiParam({ name: 'id', description: 'Integration ID' })
+  @ApiStandardResponse('Integration logs list')
+  @ApiErrorResponses()
   @Roles('SUPER_ADMIN', 'ADMIN', 'SYSTEM_INTEGRATOR')
   async listLogs(
     @CurrentTenant() tenantId: string,

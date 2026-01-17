@@ -17,7 +17,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard)
 @ApiTags('Agents')
 @ApiBearerAuth('JWT-auth')
-@Roles('user', 'manager', 'admin')
+@Roles('ADMIN', 'AGENT_MANAGER', 'AGENT')
 export class AgentLeadsController {
   constructor(private readonly leadsService: AgentLeadsService) {}
 
@@ -26,7 +26,7 @@ export class AgentLeadsController {
   @ApiParam({ name: 'id', description: 'Agent ID' })
   @ApiStandardResponse('Agent leads list')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('ADMIN', 'AGENT_MANAGER', 'AGENT')
   listByAgent(@Request() req: any, @Param('id') id: string, @Query() query: LeadQueryDto) {
     return this.leadsService.listByAgent(req.user.tenantId, id, query);
   }
@@ -44,7 +44,7 @@ export class AgentLeadsController {
   @ApiOperation({ summary: 'List all agent leads' })
   @ApiStandardResponse('Agent leads list')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('ADMIN', 'AGENT_MANAGER', 'AGENT')
   listAll(@Request() req: any, @Query() query: LeadQueryDto) {
     return this.leadsService.listAll(req.user.tenantId, query);
   }
@@ -54,7 +54,7 @@ export class AgentLeadsController {
   @ApiParam({ name: 'id', description: 'Lead ID' })
   @ApiStandardResponse('Agent lead details')
   @ApiErrorResponses()
-  @Roles('viewer', 'user', 'manager', 'admin')
+  @Roles('ADMIN', 'AGENT_MANAGER', 'AGENT')
   findOne(@Request() req: any, @Param('id') id: string) {
     return this.leadsService.findOne(req.user.tenantId, id);
   }
@@ -93,7 +93,7 @@ export class AgentLeadsController {
   @ApiParam({ name: 'id', description: 'Lead ID' })
   @ApiStandardResponse('Agent lead rejected')
   @ApiErrorResponses()
-  @Roles('manager', 'admin')
+  @Roles('ADMIN', 'AGENT_MANAGER')
   @HttpCode(200)
   reject(@Request() req: any, @Param('id') id: string, @Body() dto: RejectLeadDto) {
     return this.leadsService.reject(req.user.tenantId, id, dto);
