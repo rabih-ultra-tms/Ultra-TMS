@@ -5,7 +5,7 @@ import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma.service';
 import { JwtAuthGuard } from '../src/modules/auth/guards/jwt-auth.guard';
 import { Prisma } from '@prisma/client';
-import { createTestAppWithRole } from './helpers/test-app.helper';
+import { createTestAppWithRole, getTestPrisma } from './helpers/test-app.helper';
 
 const TEST_TENANT = 'tenant-agent';
 const TEST_USER = {
@@ -22,6 +22,7 @@ describe('Agent API E2E', () => {
   let prisma: PrismaService;
 
   beforeAll(async () => {
+    const sharedPrisma = await getTestPrisma();
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideGuard(JwtAuthGuard)
       .useValue({
@@ -32,6 +33,8 @@ describe('Agent API E2E', () => {
           return true;
         },
       })
+      .overrideProvider(PrismaService)
+      .useValue(sharedPrisma)
       .compile();
 
     app = moduleRef.createNestApplication();

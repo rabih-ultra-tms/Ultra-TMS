@@ -14,9 +14,9 @@ import { DocumentAccessGuard } from './guards/document-access.guard';
 
 @Module({
   controllers: [
-    DocumentsController,
     DocumentTemplatesController,
     DocumentFoldersController,
+    DocumentsController,
   ],
   providers: [
     PrismaService,

@@ -35,7 +35,7 @@ describe('DistributedLockService', () => {
 
     const result = await service.lockDetails('k1');
 
-    expect(result.lockKey).toBe('k1');
+    expect(result?.lockKey).toBe('k1');
   });
 
   it('forces release', async () => {

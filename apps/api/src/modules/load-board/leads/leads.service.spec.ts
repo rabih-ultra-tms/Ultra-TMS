@@ -83,11 +83,11 @@ describe('LeadsService', () => {
 
   it('updates lead status', async () => {
     prisma.postLead.findFirst.mockResolvedValue({ id: 'l1' });
-    prisma.postLead.update.mockResolvedValue({ id: 'l1', status: PostLeadStatus.REJECTED });
+    prisma.postLead.update.mockResolvedValue({ id: 'l1', status: PostLeadStatus.DECLINED });
 
-    const result = await service.update('t1', 'l1', { status: PostLeadStatus.REJECTED } as any);
+    const result = await service.update('t1', 'l1', { status: PostLeadStatus.DECLINED } as any);
 
-    expect(result.status).toBe(PostLeadStatus.REJECTED);
+    expect(result.status).toBe(PostLeadStatus.DECLINED);
   });
 
   it('qualifies lead by matching carrier', async () => {

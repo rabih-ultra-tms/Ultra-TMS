@@ -3,6 +3,7 @@ import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma.service';
+import { getTestPrisma } from './helpers/test-app.helper';
 
 const TEST_TENANT = 'tenant-carrier-portal';
 const CARRIER_ID = 'carrier-portal-test';
@@ -18,7 +19,11 @@ describe('Carrier Portal API E2E', () => {
   beforeAll(async () => {
     process.env.CARRIER_PORTAL_JWT_SECRET = process.env.CARRIER_PORTAL_JWT_SECRET || 'carrier-portal-secret';
 
-    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
+    const sharedPrisma = await getTestPrisma();
+    const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
+      .overrideProvider(PrismaService)
+      .useValue(sharedPrisma)
+      .compile();
     app = moduleRef.createNestApplication();
     app.setGlobalPrefix('api/v1');
     await app.init();

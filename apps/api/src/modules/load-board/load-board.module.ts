@@ -12,14 +12,16 @@ import { RulesController } from './rules/rules.controller';
 import { RulesService } from './rules/rules.service';
 import { AnalyticsController } from './analytics/analytics.controller';
 import { AnalyticsService } from './analytics/analytics.service';
-import { LoadPostingsController } from './controllers';
-import { LoadPostingsService } from './services';
+import { LoadBidsController, LoadPostingsController, LoadTendersController } from './controllers';
+import { LoadBidsService, LoadPostingsService, LoadTendersService } from './services';
 import { GeocodingService } from './services/geocoding.service';
 
 @Module({
   controllers: [
     AccountsController,
     LoadPostingsController,
+    LoadBidsController,
+    LoadTendersController,
     PostingController,
     CapacityController,
     LeadsController,
@@ -30,6 +32,8 @@ import { GeocodingService } from './services/geocoding.service';
     PrismaService,
     AccountsService,
     LoadPostingsService,
+    LoadBidsService,
+    LoadTendersService,
     PostingService,
     CapacityService,
     LeadsService,

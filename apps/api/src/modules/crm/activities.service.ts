@@ -16,8 +16,12 @@ export class ActivitiesService {
     ownerId?: string;
     completed?: boolean;
   }) {
-    const { page = 1, limit = 20, activityType, companyId, contactId, opportunityId, ownerId, completed } = options || {};
-    const skip = (page - 1) * limit;
+    const { page, limit, activityType, companyId, contactId, opportunityId, ownerId, completed } = options || {};
+    const resolvedPage = Number(page);
+    const resolvedLimit = Number(limit);
+    const safePage = Number.isFinite(resolvedPage) && resolvedPage > 0 ? resolvedPage : 1;
+    const safeLimit = Number.isFinite(resolvedLimit) && resolvedLimit > 0 ? resolvedLimit : 20;
+    const skip = (safePage - 1) * safeLimit;
 
     const where: any = { tenantId, deletedAt: null };
     if (activityType) where.activityType = activityType;
@@ -33,7 +37,7 @@ export class ActivitiesService {
       this.prisma.activity.findMany({
         where,
         skip,
-        take: limit,
+        take: safeLimit,
         orderBy: { createdAt: 'desc' },
         include: {
           company: { select: { id: true, name: true } },
@@ -45,7 +49,7 @@ export class ActivitiesService {
       this.prisma.activity.count({ where }),
     ]);
 
-    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
+    return { data, total, page: safePage, limit: safeLimit, totalPages: Math.ceil(total / safeLimit) };
   }
 
   async findOne(tenantId: string, id: string) {

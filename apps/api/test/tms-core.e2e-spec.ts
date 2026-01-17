@@ -5,6 +5,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma.service';
 import { JwtAuthGuard } from '../src/modules/auth/guards/jwt-auth.guard';
+import { getTestPrisma } from './helpers/test-app.helper';
 
 const TEST_TENANT = 'tenant-test';
 const TEST_USER = {
@@ -37,6 +38,7 @@ describe('TMS Core E2E (domain events)', () => {
   let emitter: EventEmitter2;
 
   beforeAll(async () => {
+    const sharedPrisma = await getTestPrisma();
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
     })
@@ -49,6 +51,8 @@ describe('TMS Core E2E (domain events)', () => {
           return true;
         },
       })
+      .overrideProvider(PrismaService)
+      .useValue(sharedPrisma)
       .compile();
 
     app = moduleRef.createNestApplication();

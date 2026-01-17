@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { AgentCommissionStatus, AgentPayoutStatus, Prisma } from '@prisma/client';
+import { AgentPayoutStatus, Prisma } from '@prisma/client';
 import { AgentStatementsService } from './agent-statements.service';
 import { PrismaService } from '../../../prisma.service';
 

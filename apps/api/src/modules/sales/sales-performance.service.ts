@@ -17,8 +17,12 @@ export class SalesPerformanceService {
       status?: string;
     },
   ) {
-    const { page = 1, limit = 20, userId, periodType, status } = options || {};
-    const skip = (page - 1) * limit;
+    const { page, limit, userId, periodType, status } = options || {};
+    const resolvedPage = Number(page);
+    const resolvedLimit = Number(limit);
+    const safePage = Number.isFinite(resolvedPage) && resolvedPage > 0 ? resolvedPage : 1;
+    const safeLimit = Number.isFinite(resolvedLimit) && resolvedLimit > 0 ? resolvedLimit : 20;
+    const skip = (safePage - 1) * safeLimit;
 
     const where: Prisma.SalesQuotaWhereInput = { tenantId };
     if (userId) where.userId = userId;
@@ -29,7 +33,7 @@ export class SalesPerformanceService {
       this.prisma.salesQuota.findMany({
         where,
         skip,
-        take: limit,
+        take: safeLimit,
         orderBy: { periodStart: 'desc' },
         include: {
           user: {
@@ -48,9 +52,9 @@ export class SalesPerformanceService {
     return {
       data,
       total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
+      page: safePage,
+      limit: safeLimit,
+      totalPages: Math.ceil(total / safeLimit),
     };
   }
 

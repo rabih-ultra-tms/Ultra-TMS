@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { InvoicesService } from './invoices.service';
 import { PrismaService } from '../../../prisma.service';
+import { InvoiceStatus } from '../dto';
 
 describe('InvoicesService', () => {
   let service: InvoicesService;
@@ -60,7 +61,7 @@ describe('InvoicesService', () => {
     prisma.invoice.findFirst.mockResolvedValue({ id: 'inv-1', status: 'VOID' });
 
     await expect(
-      service.update('inv-1', 'tenant-1', 'user-1', { status: 'SENT' }),
+      service.update('inv-1', 'tenant-1', 'user-1', { status: InvoiceStatus.SENT }),
     ).rejects.toThrow(BadRequestException);
   });
 

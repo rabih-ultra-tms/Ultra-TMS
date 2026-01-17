@@ -10,6 +10,7 @@ describe('CommissionPayoutsService', () => {
     commissionPayout: {
       count: jest.Mock;
       create: jest.Mock;
+      findMany: jest.Mock;
       findFirst: jest.Mock;
       update: jest.Mock;
     };
@@ -95,7 +96,7 @@ describe('CommissionPayoutsService', () => {
 
     const result = await service.findAll('tenant-1', 'user-1', 'APPROVED');
 
-    expect(result[0].id).toBe('pay-1');
+    expect(result[0]?.id).toBe('pay-1');
     expect(prisma.commissionPayout.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: expect.objectContaining({ userId: 'user-1', status: 'APPROVED' }) }),
     );

@@ -5,6 +5,7 @@ import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma.service';
 import { JwtAuthGuard } from '../src/modules/auth/guards/jwt-auth.guard';
 import { RedisService } from '../src/modules/redis/redis.service';
+import { getTestPrisma } from './helpers/test-app.helper';
 
 const TEST_TENANT = 'tenant-cache';
 const TEST_USER = {
@@ -19,6 +20,7 @@ describe('Cache API E2E', () => {
   let prisma: PrismaService;
 
   beforeAll(async () => {
+    const sharedPrisma = await getTestPrisma();
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideGuard(JwtAuthGuard)
       .useValue({
@@ -49,6 +51,8 @@ describe('Cache API E2E', () => {
         setJson: async () => undefined,
         setWithTTL: async () => undefined,
       })
+      .overrideProvider(PrismaService)
+      .useValue(sharedPrisma)
       .compile();
 
     app = moduleRef.createNestApplication();

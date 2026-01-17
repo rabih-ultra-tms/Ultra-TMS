@@ -28,7 +28,7 @@ describe('ElasticsearchService', () => {
     const result = await service.searchGlobal('a');
 
     expect(result.total).toBe(1);
-    expect(result.items[0].entityType).toBe('orders');
+    expect(result.items[0]?.entityType).toBe('orders');
   });
 
   it('searches entity', async () => {

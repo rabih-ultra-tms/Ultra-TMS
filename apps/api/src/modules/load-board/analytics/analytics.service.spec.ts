@@ -48,6 +48,6 @@ describe('AnalyticsService', () => {
 
     const result = await service.boardComparison('t1');
 
-    expect(result[0].posts).toBe(1);
+    expect(result[0]?.posts).toBe(1);
   });
 });

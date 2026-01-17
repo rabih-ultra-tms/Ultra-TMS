@@ -75,8 +75,8 @@ describe('AuditService', () => {
     } as any);
 
     expect(result.users.length).toBe(2);
-    expect(result.users[0].user?.name).toBe('Ava Smith');
-    expect(result.users[1].user).toBeNull();
+    expect(result.users[0]?.user?.name).toBe('Ava Smith');
+    expect(result.users[1]?.user).toBeNull();
   });
 
   it('performs advanced search with filters', async () => {

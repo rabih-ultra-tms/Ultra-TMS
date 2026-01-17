@@ -99,7 +99,7 @@ describe('ExecutionsService', () => {
 
     const result = await service.getSteps('tenant-1', 'exec-1');
 
-    expect(result[0].stepNumber).toBe(1);
+    expect(result[0]?.stepNumber).toBe(1);
   });
 
   it('prevents cancel when status is terminal', async () => {

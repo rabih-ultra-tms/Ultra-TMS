@@ -144,7 +144,7 @@ describe('CommissionEntriesService', () => {
     const result = await service.calculateLoadCommission('tenant-1', 'load-1', 'user-1');
 
     expect(result.eligible).toBe(true);
-    expect(result.entry.id).toBe('entry-1');
+    expect(result.entry?.id).toBe('entry-1');
   });
 
   it('returns ineligible when below minimum margin', async () => {

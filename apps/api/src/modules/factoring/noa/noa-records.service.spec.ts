@@ -86,7 +86,7 @@ describe('NoaRecordsService', () => {
 
     const result = await service.findAll('tenant-1', { page: 1, limit: 10 } as any);
 
-    expect(result.data[0].status).toBe('EXPIRED');
+    expect(result.data[0]?.status).toBe('EXPIRED');
     expect(events.emit).toHaveBeenCalledWith('noa.expired', expect.objectContaining({ noaId: 'n1' }));
   });
 

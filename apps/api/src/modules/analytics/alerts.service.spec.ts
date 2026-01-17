@@ -145,9 +145,9 @@ describe('Analytics Alerts & Saved Views Services', () => {
     await savedViewsService.create('tenant-1', 'user-1', {
       viewName: 'My View',
       entityType: 'loads',
-      filters: [],
-      columns: [],
-      sortOrder: [],
+      filters: {},
+      columns: {},
+      sortOrder: {},
     });
 
     expect(prisma.savedAnalyticsView.create).toHaveBeenCalledWith(
@@ -167,6 +167,7 @@ describe('Analytics Alerts & Saved Views Services', () => {
 
     await savedViewsService.update('tenant-1', 'user-1', 'view-1', {
       viewName: 'Updated',
+      entityType: 'loads',
       isPublic: true,
     });
 

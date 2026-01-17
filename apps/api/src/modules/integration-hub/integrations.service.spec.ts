@@ -95,7 +95,7 @@ describe('IntegrationsService', () => {
         where: expect.objectContaining({ tenantId: 'tenant-1', category: 'CRM', isActive: true }),
       }),
     );
-    expect(result[0].providerName).toBe('HubSpot');
+    expect(result[0]?.providerName).toBe('HubSpot');
   });
 
   it('lists provider categories', async () => {
@@ -302,6 +302,6 @@ describe('IntegrationsService', () => {
     const result = await service.listLogs('tenant-1', 'int-1', { endpoint: '/v1' } as any);
 
     expect(result.total).toBe(1);
-    expect(result.data[0].endpoint).toBe('/v1');
+    expect(result.data[0]?.endpoint).toBe('/v1');
   });
 });

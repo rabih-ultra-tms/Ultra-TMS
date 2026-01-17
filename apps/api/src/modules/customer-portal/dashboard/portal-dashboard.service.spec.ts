@@ -57,7 +57,7 @@ describe('PortalDashboardService', () => {
 
     const result = await service.getAlerts('t1', 'c1');
 
-    expect(result[0].count).toBe(2);
-    expect(result[1].count).toBe(1);
+    expect(result[0]?.count).toBe(2);
+    expect(result[1]?.count).toBe(1);
   });
 });

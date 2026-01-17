@@ -3,6 +3,7 @@ import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma.service';
+import { getTestPrisma } from './helpers/test-app.helper';
 
 const TEST_TENANT = 'tenant-portal';
 const COMPANY_ID = 'company-portal';
@@ -20,7 +21,11 @@ describe('Customer Portal API', () => {
   beforeAll(async () => {
     process.env.CUSTOMER_PORTAL_JWT_SECRET = process.env.CUSTOMER_PORTAL_JWT_SECRET || 'portal-secret';
     process.env.PORTAL_JWT_SECRET = process.env.PORTAL_JWT_SECRET || 'portal-secret';
-    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
+    const sharedPrisma = await getTestPrisma();
+    const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
+      .overrideProvider(PrismaService)
+      .useValue(sharedPrisma)
+      .compile();
 
     app = moduleRef.createNestApplication();
     app.setGlobalPrefix('api/v1');

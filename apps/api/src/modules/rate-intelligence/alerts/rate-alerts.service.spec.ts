@@ -32,7 +32,7 @@ describe('RateAlertsService', () => {
   it('creates alert', async () => {
     prisma.rateAlert.create.mockResolvedValue({ id: 'a1' });
 
-    const result = await service.create('t1', 'u1', { name: 'Lane', condition: AlertCondition.ABOVE } as any);
+    const result = await service.create('t1', 'u1', { name: 'Lane', condition: AlertCondition.RATE_THRESHOLD } as any);
 
     expect(result.id).toBe('a1');
   });

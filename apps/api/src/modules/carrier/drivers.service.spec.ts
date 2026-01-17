@@ -183,6 +183,6 @@ describe('DriversService', () => {
 
     const result = await service.getExpiringCredentials('tenant-1', 30);
 
-    expect(result[0].expiringCredentials[0].type).toBe('CDL');
+    expect(result[0]?.expiringCredentials?.[0]?.type).toBe('CDL');
   });
 });

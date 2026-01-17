@@ -44,7 +44,7 @@ describe('FactoredPaymentsService', () => {
 
     const result = await service.processPayment('t1', 'u1', 'p1', { status: FactoredPaymentStatus.PAID } as any);
 
-    expect(result.customFields.status).toBe(FactoredPaymentStatus.PAID);
+    expect((result.customFields as any)?.status).toBe(FactoredPaymentStatus.PAID);
     expect(events.emit).toHaveBeenCalledWith('factored.payment.processed', expect.any(Object));
   });
 

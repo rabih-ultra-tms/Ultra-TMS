@@ -1,4 +1,4 @@
-import { ExecutionContext, INestApplication, ValidationPipe } from '@nestjs/common';
+import { ExecutionContext, INestApplication, ValidationPipe, UnauthorizedException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
 import { PrismaService } from '../../src/prisma.service';
@@ -219,11 +219,60 @@ const createRedisMock = () => {
   };
 };
 
+let prismaSingleton: PrismaService | null = null;
+let prismaInitPromise: Promise<void> | null = null;
+
+export const getTestPrisma = async () => {
+  if (!prismaSingleton) {
+    prismaSingleton = new PrismaService();
+    const originalInit = prismaSingleton.onModuleInit.bind(prismaSingleton);
+    const originalDestroy = prismaSingleton.onModuleDestroy?.bind(prismaSingleton);
+    prismaSingleton.onModuleInit = async () => {
+      if (!prismaInitPromise) {
+        prismaInitPromise = originalInit();
+      }
+      await prismaInitPromise;
+    };
+    prismaSingleton.onModuleDestroy = async () => {
+      if (typeof originalDestroy === 'function') {
+        await originalDestroy();
+      }
+      prismaInitPromise = null;
+    };
+  }
+
+  await prismaSingleton.onModuleInit();
+  return prismaSingleton;
+};
+
+const isHeaderTruthy = (value: unknown) => {
+  if (Array.isArray(value)) {
+    value = value[0];
+  }
+  return value === true || value === 'true' || value === '1';
+};
+
+const isHeaderFalsy = (value: unknown) => {
+  if (Array.isArray(value)) {
+    value = value[0];
+  }
+  return value === false || value === 'false' || value === '0';
+};
+
+const hasTestAuth = (req?: any) => {
+  const headers = req?.headers ?? {};
+  if (isHeaderTruthy(headers['x-test-unauth']) || isHeaderFalsy(headers['x-test-auth'])) {
+    return false;
+  }
+  return true;
+};
+
 export async function createTestApp(
   tenantId: string,
   userId: string,
   email: string,
 ): Promise<{ app: INestApplication; prisma: PrismaService }> {
+  const prisma = await getTestPrisma();
   const testUser = {
     id: userId,
     userId,
@@ -263,21 +312,28 @@ export async function createTestApp(
     .useValue({
       canActivate: (ctx: ExecutionContext) => {
         const req = ctx.switchToHttp().getRequest();
+        if (!hasTestAuth(req)) {
+          throw new UnauthorizedException();
+        }
         req.user = resolveTestUser(req);
         req.headers['x-tenant-id'] = tenantId;
         req.tenantId = tenantId;
         return true;
       },
     })
+    .overrideProvider(PrismaService)
+    .useValue(prisma)
     .overrideProvider(RedisService)
     .useValue(createRedisMock())
     .compile();
 
   const app = moduleRef.createNestApplication();
   app.use((req, _res, next) => {
-    req.user = resolveTestUser(req);
-    req.headers['x-tenant-id'] = tenantId;
-    req.tenantId = tenantId;
+    if (hasTestAuth(req)) {
+      req.user = resolveTestUser(req);
+      req.headers['x-tenant-id'] = tenantId;
+      req.tenantId = tenantId;
+    }
     next();
   });
   app.setGlobalPrefix('api/v1');
@@ -289,8 +345,6 @@ export async function createTestApp(
     }),
   );
   await app.init();
-
-  const prisma = app.get(PrismaService);
 
   await prisma.tenant.upsert({
     where: { slug: tenantId },
@@ -328,6 +382,7 @@ export async function createTestAppWithRole(
   email: string,
   role: TestRole = 'user',
 ): Promise<{ app: INestApplication; prisma: PrismaService }> {
+  const prisma = await getTestPrisma();
   const testUser = {
     id: userId,
     userId,
@@ -367,21 +422,28 @@ export async function createTestAppWithRole(
     .useValue({
       canActivate: (ctx: ExecutionContext) => {
         const req = ctx.switchToHttp().getRequest();
+        if (!hasTestAuth(req)) {
+          throw new UnauthorizedException();
+        }
         req.user = resolveTestUser(req);
         req.headers['x-tenant-id'] = tenantId;
         req.tenantId = tenantId;
         return true;
       },
     })
+    .overrideProvider(PrismaService)
+    .useValue(prisma)
     .overrideProvider(RedisService)
     .useValue(createRedisMock())
     .compile();
 
   const app = moduleRef.createNestApplication();
   app.use((req, _res, next) => {
-    req.user = resolveTestUser(req);
-    req.headers['x-tenant-id'] = tenantId;
-    req.tenantId = tenantId;
+    if (hasTestAuth(req)) {
+      req.user = resolveTestUser(req);
+      req.headers['x-tenant-id'] = tenantId;
+      req.tenantId = tenantId;
+    }
     next();
   });
   app.setGlobalPrefix('api/v1');
@@ -393,8 +455,6 @@ export async function createTestAppWithRole(
     }),
   );
   await app.init();
-
-  const prisma = app.get(PrismaService);
 
   await prisma.tenant.upsert({
     where: { slug: tenantId },

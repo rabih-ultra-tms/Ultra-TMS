@@ -8,6 +8,7 @@ import { HandlerRegistry } from '../src/modules/scheduler/handlers/handler-regis
 import { LockService } from '../src/modules/scheduler/locking/lock.service';
 import { JobExecutionStatus } from '@prisma/client';
 import { CustomThrottlerGuard } from '../src/common/guards/custom-throttler.guard';
+import { getTestPrisma } from './helpers/test-app.helper';
 
 const TEST_TENANT = 'tenant-scheduler';
 const SYSTEM_TENANT = 'system';
@@ -27,6 +28,7 @@ describe('Scheduler API E2E', () => {
   let lockService: LockService;
 
   beforeAll(async () => {
+    const sharedPrisma = await getTestPrisma();
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideGuard(JwtAuthGuard)
       .useValue({
@@ -40,6 +42,8 @@ describe('Scheduler API E2E', () => {
       })
       .overrideGuard(CustomThrottlerGuard)
       .useValue({ canActivate: () => true })
+      .overrideProvider(PrismaService)
+      .useValue(sharedPrisma)
       .compile();
 
     app = moduleRef.createNestApplication();

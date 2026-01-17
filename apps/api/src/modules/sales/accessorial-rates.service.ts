@@ -17,8 +17,12 @@ export class AccessorialRatesService {
       accessorialType?: string;
     },
   ) {
-    const { page = 1, limit = 20, contractId, status, accessorialType } = options || {};
-    const skip = (page - 1) * limit;
+    const { page, limit, contractId, status, accessorialType } = options || {};
+    const resolvedPage = Number(page);
+    const resolvedLimit = Number(limit);
+    const safePage = Number.isFinite(resolvedPage) && resolvedPage > 0 ? resolvedPage : 1;
+    const safeLimit = Number.isFinite(resolvedLimit) && resolvedLimit > 0 ? resolvedLimit : 20;
+    const skip = (safePage - 1) * safeLimit;
 
     const where: Prisma.AccessorialRateWhereInput = { tenantId };
     if (contractId) where.contractId = contractId;
@@ -29,7 +33,7 @@ export class AccessorialRatesService {
       this.prisma.accessorialRate.findMany({
         where,
         skip,
-        take: limit,
+        take: safeLimit,
         orderBy: { accessorialType: 'asc' },
         include: {
           contract: {
@@ -47,9 +51,9 @@ export class AccessorialRatesService {
     return {
       data,
       total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
+      page: safePage,
+      limit: safeLimit,
+      totalPages: Math.ceil(total / safeLimit),
     };
   }
 

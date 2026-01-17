@@ -109,7 +109,7 @@ describe('SalesPerformanceService', () => {
 
     const result = await service.getLeaderboard('t1', {} as any);
 
-    expect(result.leaderboard[0].user.id).toBe('u2');
+    expect(result.leaderboard[0]?.user?.id).toBe('u2');
   });
 
   it('computes conversion metrics', async () => {

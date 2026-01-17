@@ -8,6 +8,7 @@ import { ConfigCategory, FeatureFlagStatus, ResetFrequency } from '@prisma/clien
 import { RolesGuard } from '../src/common/guards/roles.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigCacheService } from '../src/modules/config/config-cache.service';
+import { getTestPrisma } from './helpers/test-app.helper';
 
 const TEST_TENANT = 'tenant-config';
 const SYSTEM_TENANT = 'system';
@@ -25,6 +26,7 @@ describe('Config API E2E', () => {
   let prisma: PrismaService;
 
   beforeAll(async () => {
+    const sharedPrisma = await getTestPrisma();
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideGuard(JwtAuthGuard)
       .useValue({
@@ -40,6 +42,8 @@ describe('Config API E2E', () => {
       .useValue({ canActivate: () => true })
       .overrideProvider(APP_GUARD)
       .useValue({ canActivate: () => true })
+      .overrideProvider(PrismaService)
+      .useValue(sharedPrisma)
       .compile();
 
     app = moduleRef.createNestApplication();

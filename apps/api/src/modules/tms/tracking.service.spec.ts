@@ -39,7 +39,7 @@ describe('TrackingService', () => {
     const result = await service.getMapData('t1', {} as any);
 
     expect(result).toHaveLength(1);
-    expect(result[0].loadId).toBe('l1');
+    expect(result[0]?.loadId).toBe('l1');
   });
 
   it('throws when load missing for history', async () => {

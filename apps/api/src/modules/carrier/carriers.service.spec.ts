@@ -15,9 +15,9 @@ describe('CarriersService', () => {
       update: jest.Mock;
     };
     load: { count: jest.Mock; findMany: jest.Mock };
-    insuranceCertificate?: { findMany: jest.Mock };
-    carrierDocument?: { findMany: jest.Mock };
-    fmcsaComplianceLog?: { findMany: jest.Mock; create?: jest.Mock };
+    insuranceCertificate: { findMany: jest.Mock };
+    carrierDocument: { findMany: jest.Mock };
+    fmcsaComplianceLog: { findMany: jest.Mock; create: jest.Mock };
   };
   const eventEmitter = { emit: jest.fn() };
 

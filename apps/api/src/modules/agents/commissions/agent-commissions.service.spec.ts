@@ -52,6 +52,6 @@ describe('AgentCommissionsService', () => {
 
     const result = await service.rankings('t1');
 
-    expect(result[0].agent?.id).toBe('a1');
+    expect(result[0]?.agent?.id).toBe('a1');
   });
 });

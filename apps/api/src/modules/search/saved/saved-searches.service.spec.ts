@@ -137,7 +137,7 @@ describe('SavedSearchesService', () => {
 
     const result = await service.executeSaved('tenant-1', 'user-1', 's2');
 
-    expect(result.results).toEqual(['l1']);
+    expect(result.items).toEqual(['l1']);
     expect(entitySearch.search).toHaveBeenCalledWith('tenant-1', 'user-1', 'loads', expect.any(Object));
   });
 

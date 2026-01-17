@@ -81,7 +81,7 @@ describe('Carrier DocumentsService', () => {
     prisma.carrier.findFirst.mockResolvedValue({ id: 'car-1' });
     prisma.carrierDocument.create.mockResolvedValue({ id: 'doc-1' });
 
-    const result = await service.create('tenant-1', 'car-1', 'user-1', {
+    const result = await service.create('tenant-1', 'car-1', {
       documentType: 'W9',
       fileUrl: 'url',
       expirationDate: new Date().toISOString(),
@@ -94,7 +94,7 @@ describe('Carrier DocumentsService', () => {
     prisma.carrier.findFirst.mockResolvedValue(null);
 
     await expect(
-      service.create('tenant-1', 'car-1', 'user-1', { documentType: 'W9', fileUrl: 'url' } as any),
+      service.create('tenant-1', 'car-1', { documentType: 'W9', fileUrl: 'url' } as any),
     ).rejects.toThrow(NotFoundException);
   });
 

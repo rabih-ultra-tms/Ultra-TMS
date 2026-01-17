@@ -34,7 +34,7 @@ describe('PreferencesService', () => {
 
     const result = await service.list('tenant-1', 'user-1');
 
-    expect(result[0].key).toBe('sys');
+    expect(result[0]?.key).toBe('sys');
   });
 
   it('loads system configs when cache miss', async () => {

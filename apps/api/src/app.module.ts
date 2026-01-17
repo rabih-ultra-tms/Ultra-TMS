@@ -55,6 +55,8 @@ import { HealthModule } from './modules/health/health.module';
 // import { IntegrationHubModule } from './modules/integration-hub/integration-hub.module';
 // import { WorkflowModule } from './modules/workflow/workflow.module';
 
+const isTestEnv = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID !== undefined;
+
 @Module({
   imports: [
     // Configuration module - loads .env
@@ -67,23 +69,33 @@ import { HealthModule } from './modules/health/health.module';
       wildcard: true,
       delimiter: '.',
     }),
-    ThrottlerModule.forRoot([
-      {
-        name: 'short',
-        ttl: 1000,
-        limit: 3,
-      },
-      {
-        name: 'medium',
-        ttl: 10000,
-        limit: 20,
-      },
-      {
-        name: 'long',
-        ttl: 60000,
-        limit: 100,
-      },
-    ]),
+    ThrottlerModule.forRoot(
+      isTestEnv
+        ? [
+            {
+              name: 'short',
+              ttl: 1,
+              limit: 1000000,
+            },
+          ]
+        : [
+            {
+              name: 'short',
+              ttl: 1000,
+              limit: 3,
+            },
+            {
+              name: 'medium',
+              ttl: 10000,
+              limit: 20,
+            },
+            {
+              name: 'long',
+              ttl: 60000,
+              limit: 100,
+            },
+          ],
+    ),
     // Infrastructure
     RedisModule,
     EmailModule,

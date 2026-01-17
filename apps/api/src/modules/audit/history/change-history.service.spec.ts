@@ -76,7 +76,7 @@ describe('ChangeHistoryService', () => {
 
     const result = await service.versions('tenant-1', 'ORDER', 'o1');
 
-    expect(result[0].version).toBe(1);
+    expect(result[0]?.version).toBe(1);
   });
 
   it('returns version details for valid version', async () => {

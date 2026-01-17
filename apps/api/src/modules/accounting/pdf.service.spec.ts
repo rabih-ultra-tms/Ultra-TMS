@@ -3,7 +3,6 @@ import { PdfService } from './pdf.service';
 jest.mock('pdfkit', () => {
   const PDFDocument = jest.fn().mockImplementation(() => {
     const handlers: Record<string, Array<(chunk?: any) => void>> = {};
-    let ended = false;
     let endEmitted = false;
     const doc: any = {
       page: { height: 800 },
@@ -23,7 +22,6 @@ jest.mock('pdfkit', () => {
       lineTo: jest.fn(() => doc),
       stroke: jest.fn(() => doc),
       end: jest.fn(() => {
-        ended = true;
         process.nextTick(() => {
           (handlers.data ?? []).forEach(cb => cb(Buffer.from('pdf')));
           (handlers.end ?? []).forEach(cb => cb());

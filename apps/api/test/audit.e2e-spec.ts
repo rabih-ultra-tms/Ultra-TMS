@@ -9,6 +9,7 @@ import { AuditLogsService } from '../src/modules/audit/logs/audit-logs.service';
 import { JwtAuthGuard } from '../src/modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../src/common/guards/roles.guard';
 import { APP_GUARD } from '@nestjs/core';
+import { getTestPrisma } from './helpers/test-app.helper';
 
 const TEST_TENANT = 'tenant-audit';
 const TEST_USER = {
@@ -27,6 +28,7 @@ describe('Audit API E2E', () => {
   let events: EventEmitter2;
 
   beforeAll(async () => {
+    const sharedPrisma = await getTestPrisma();
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideGuard(JwtAuthGuard)
       .useValue({
@@ -42,6 +44,8 @@ describe('Audit API E2E', () => {
       .useValue({ canActivate: () => true })
       .overrideProvider(APP_GUARD)
       .useValue({ canActivate: () => true })
+      .overrideProvider(PrismaService)
+      .useValue(sharedPrisma)
       .compile();
 
     app = moduleRef.createNestApplication();

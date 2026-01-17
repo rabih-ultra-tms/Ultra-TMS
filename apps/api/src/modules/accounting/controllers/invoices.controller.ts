@@ -13,12 +13,14 @@ import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } fro
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { CurrentTenant } from '../../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
+import { Roles } from '../../../common/decorators/roles.decorator';
 import { InvoicesService, PdfService } from '../services';
 import { CreateInvoiceDto, SendInvoiceDto, StatementQueryDto } from '../dto';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('invoices')
 @UseGuards(JwtAuthGuard)
+@Roles('ADMIN', 'ACCOUNTING', 'ACCOUNTING_MANAGER', 'SUPER_ADMIN')
 @ApiTags('Accounting')
 @ApiBearerAuth('JWT-auth')
 export class InvoicesController {

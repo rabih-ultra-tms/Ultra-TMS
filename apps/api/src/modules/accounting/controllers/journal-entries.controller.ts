@@ -11,40 +11,40 @@ import {
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { CurrentTenant } from '../../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
-  import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { JournalEntriesService } from '../services';
 import { CreateJournalEntryDto } from '../dto';
+import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('journal-entries')
 @UseGuards(JwtAuthGuard)
-  import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
+@ApiTags('Accounting')
+@ApiBearerAuth('JWT-auth')
 export class JournalEntriesController {
   constructor(private readonly journalEntriesService: JournalEntriesService) {}
 
-  @ApiTags('Accounting')
-  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Create journal entry' })
+  @ApiStandardResponse('Journal entry created')
+  @ApiErrorResponses()
   @Post()
   async create(
     @CurrentTenant() tenantId: string,
     @CurrentUser() userId: string,
-    @ApiOperation({ summary: 'Create journal entry' })
-    @ApiStandardResponse('Journal entry created')
-    @ApiErrorResponses()
     @Body() dto: CreateJournalEntryDto,
   ) {
     return this.journalEntriesService.create(tenantId, userId, dto);
   }
 
+  @ApiOperation({ summary: 'List journal entries' })
+  @ApiQuery({ name: 'startDate', required: false, type: String })
+  @ApiQuery({ name: 'endDate', required: false, type: String })
+  @ApiQuery({ name: 'accountId', required: false, type: String })
+  @ApiStandardResponse('Journal entries list')
+  @ApiErrorResponses()
   @Get()
   async findAll(
     @CurrentTenant() tenantId: string,
     @Query('status') status?: string,
-    @ApiOperation({ summary: 'List journal entries' })
-    @ApiQuery({ name: 'startDate', required: false, type: String })
-    @ApiQuery({ name: 'endDate', required: false, type: String })
-    @ApiQuery({ name: 'accountId', required: false, type: String })
-    @ApiStandardResponse('Journal entries list')
-    @ApiErrorResponses()
     @Query('referenceType') referenceType?: string,
     @Query('skip') skip?: string,
     @Query('take') take?: string,
@@ -69,23 +69,23 @@ export class JournalEntriesController {
     return this.journalEntriesService.getAccountLedger(tenantId, accountId);
   }
 
+  @ApiOperation({ summary: 'Get journal entry by ID' })
+  @ApiParam({ name: 'id', description: 'Journal entry ID' })
+  @ApiStandardResponse('Journal entry details')
+  @ApiErrorResponses()
   @Get(':id')
   async findOne(@Param('id') id: string, @CurrentTenant() tenantId: string) {
     return this.journalEntriesService.findOne(id, tenantId);
   }
-    @ApiOperation({ summary: 'Get journal entry by ID' })
-    @ApiParam({ name: 'id', description: 'Journal entry ID' })
-    @ApiStandardResponse('Journal entry details')
-    @ApiErrorResponses()
 
+  @ApiOperation({ summary: 'Update journal entry' })
+  @ApiParam({ name: 'id', description: 'Journal entry ID' })
+  @ApiStandardResponse('Journal entry updated')
+  @ApiErrorResponses()
   @Put(':id')
   async update(
     @Param('id') id: string,
     @CurrentTenant() tenantId: string,
-    @ApiOperation({ summary: 'Update journal entry' })
-    @ApiParam({ name: 'id', description: 'Journal entry ID' })
-    @ApiStandardResponse('Journal entry updated')
-    @ApiErrorResponses()
     @Body() dto: Partial<CreateJournalEntryDto>,
   ) {
     return this.journalEntriesService.update(id, tenantId, dto);

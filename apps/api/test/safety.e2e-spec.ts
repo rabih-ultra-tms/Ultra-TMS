@@ -5,7 +5,7 @@ import { CSABasicType, InsuranceType, SafetyAlertType, SafetyIncidentType } from
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma.service';
 import { JwtAuthGuard } from '../src/modules/auth/guards/jwt-auth.guard';
-import { createTestAppWithRole } from './helpers/test-app.helper';
+import { createTestAppWithRole, getTestPrisma } from './helpers/test-app.helper';
 
 const TEST_TENANT = 'tenant-safety';
 const TEST_USER = {
@@ -24,6 +24,7 @@ describe('Safety Service API E2E', () => {
   let driver: { id: string };
 
   beforeAll(async () => {
+    const sharedPrisma = await getTestPrisma();
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideGuard(JwtAuthGuard)
       .useValue({
@@ -34,6 +35,8 @@ describe('Safety Service API E2E', () => {
           return true;
         },
       })
+      .overrideProvider(PrismaService)
+      .useValue(sharedPrisma)
       .compile();
 
     app = moduleRef.createNestApplication();

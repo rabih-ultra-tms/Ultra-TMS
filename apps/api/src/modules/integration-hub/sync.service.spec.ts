@@ -58,7 +58,7 @@ describe('SyncService', () => {
       }),
     );
     expect(result.total).toBe(1);
-    expect(result.data[0].filters).toEqual({ status: 'open' });
+    expect(result.data[0]?.filters).toEqual({ status: 'open' });
   });
 
   it('throws when job not found', async () => {
@@ -156,7 +156,7 @@ describe('SyncService', () => {
     const result = await service.listTransformations('tenant-1');
 
     expect(result.total).toBe(1);
-    expect(result.data[0].testCases).toEqual([{ ok: true }]);
+    expect(result.data[0]?.testCases).toEqual([{ ok: true }]);
   });
 
   it('updates transformation active status', async () => {

@@ -65,7 +65,7 @@ describe('CarrierPortalDashboardService', () => {
 
     const result = await service.alerts('t1', 'c1');
 
-    expect(result[0].count).toBe(2);
-    expect(result[1].count).toBe(1);
+    expect(result[0]?.count).toBe(2);
+    expect(result[1]?.count).toBe(1);
   });
 });

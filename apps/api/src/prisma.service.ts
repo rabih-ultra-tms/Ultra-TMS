@@ -9,7 +9,12 @@ export class PrismaService
   async onModuleInit() {
     await this.$connect();
 
-    this.$use(async (params, next) => {
+    const middleware = (this as any).$use;
+    if (typeof middleware !== 'function') {
+      return;
+    }
+
+    middleware.call(this, async (params: any, next: any) => {
       if (!params.model) {
         return next(params);
       }

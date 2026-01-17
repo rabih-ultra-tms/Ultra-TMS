@@ -163,7 +163,7 @@ describe('RateContractsService', () => {
     );
 
     expect(result?.contract.id).toBe('rc-1');
-    expect(result?.laneRate.id).toBe('lane-1');
+    expect(result?.laneRate?.id).toBe('lane-1');
   });
 
   it('returns null when no lane rates found', async () => {
@@ -246,6 +246,6 @@ describe('RateContractsService', () => {
 
     const result = await service.findRate('tenant-1', 'TX', 'Dallas', 'CA', 'LA', 'cmp-1');
 
-    expect(result?.laneRate.id).toBe('lane-1');
+    expect(result?.laneRate?.id).toBe('lane-1');
   });
 });

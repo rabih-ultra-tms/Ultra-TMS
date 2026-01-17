@@ -103,20 +103,20 @@ describe('DocumentFoldersService', () => {
   it('adds document to folder', async () => {
     prisma.documentFolder.findFirst.mockResolvedValue({ id: 'folder-1' });
     prisma.document.findFirst.mockResolvedValue({ id: 'doc-1' });
-    prisma.folderDocument.create.mockResolvedValue({ id: 'fd-1' });
+    prisma.folderDocument.create.mockResolvedValue({ folderId: 'folder-1', documentId: 'doc-1' });
 
     const result = await service.addDocument('tenant-1', 'folder-1', { documentId: 'doc-1' } as any);
 
-    expect(result.id).toBe('fd-1');
+    expect(result).toEqual(expect.objectContaining({ folderId: 'folder-1', documentId: 'doc-1' }));
   });
 
   it('removes document from folder', async () => {
     prisma.documentFolder.findFirst.mockResolvedValue({ id: 'folder-1' });
     prisma.document.findFirst.mockResolvedValue({ id: 'doc-1' });
-    prisma.folderDocument.delete.mockResolvedValue({ id: 'fd-1' });
+    prisma.folderDocument.delete.mockResolvedValue({ folderId: 'folder-1', documentId: 'doc-1' });
 
     const result = await service.removeDocument('tenant-1', 'folder-1', 'doc-1');
 
-    expect(result.id).toBe('fd-1');
+    expect(result).toEqual(expect.objectContaining({ folderId: 'folder-1', documentId: 'doc-1' }));
   });
 });

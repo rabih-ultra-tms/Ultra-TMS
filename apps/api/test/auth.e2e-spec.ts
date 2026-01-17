@@ -113,6 +113,7 @@ describe('Auth API E2E', () => {
   it('rejects unauthenticated profile request', async () => {
     await request(app.getHttpServer())
       .get('/api/v1/auth/me')
+      .set('x-test-auth', 'false')
       .expect(401);
   });
 
@@ -127,6 +128,7 @@ describe('Auth API E2E', () => {
   it('rejects unauthenticated logout', async () => {
     await request(app.getHttpServer())
       .post('/api/v1/auth/logout')
+      .set('x-test-auth', 'false')
       .expect(401);
   });
 

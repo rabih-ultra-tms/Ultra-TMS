@@ -115,7 +115,7 @@ describe('LoadsService', () => {
 
     expect(result.id).toBe('load-1');
     expect(result.order.id).toBe('order-1');
-    expect(result.carrier.id).toBe('car-1');
+    expect(result.carrier?.id).toBe('car-1');
   });
 
   it('returns paginated loads', async () => {

@@ -60,7 +60,7 @@ describe('CarrierPortalUsersService', () => {
   });
 
   it('blocks invite for non-admin', async () => {
-    await expect(service.inviteUser('t1', 'c1', CarrierPortalUserRole.USER, { email: 'a@b.com' } as any)).rejects.toThrow(
+    await expect(service.inviteUser('t1', 'c1', CarrierPortalUserRole.DRIVER, { email: 'a@b.com' } as any)).rejects.toThrow(
       ForbiddenException,
     );
   });
@@ -68,7 +68,7 @@ describe('CarrierPortalUsersService', () => {
   it('invites user as admin', async () => {
     prisma.carrierPortalUser.create.mockResolvedValue({ id: 'u1', status: PortalUserStatus.PENDING });
 
-    const result = await service.inviteUser('t1', 'c1', CarrierPortalUserRole.ADMIN, { email: 'a@b.com', firstName: 'A', lastName: 'B', role: CarrierPortalUserRole.USER } as any);
+    const result = await service.inviteUser('t1', 'c1', CarrierPortalUserRole.ADMIN, { email: 'a@b.com', firstName: 'A', lastName: 'B', role: CarrierPortalUserRole.DRIVER } as any);
 
     expect(result.id).toBe('u1');
   });
@@ -80,7 +80,7 @@ describe('CarrierPortalUsersService', () => {
       email: 'perm@b.com',
       firstName: 'P',
       lastName: 'U',
-      role: CarrierPortalUserRole.USER,
+      role: CarrierPortalUserRole.DRIVER,
       permissions: ['view-loads'],
     } as any);
 
@@ -97,7 +97,7 @@ describe('CarrierPortalUsersService', () => {
   it('invites user without permissions', async () => {
     prisma.carrierPortalUser.create.mockResolvedValue({ id: 'u3', status: PortalUserStatus.PENDING });
 
-    await service.inviteUser('t1', 'c1', CarrierPortalUserRole.ADMIN, { email: 'n@b.com', role: CarrierPortalUserRole.USER } as any);
+    await service.inviteUser('t1', 'c1', CarrierPortalUserRole.ADMIN, { email: 'n@b.com', role: CarrierPortalUserRole.DRIVER } as any);
 
     expect(prisma.carrierPortalUser.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
@@ -107,7 +107,7 @@ describe('CarrierPortalUsersService', () => {
   });
 
   it('rejects update for non-admin', async () => {
-    await expect(service.updateUser('c1', 'u1', CarrierPortalUserRole.USER, {} as any)).rejects.toThrow(ForbiddenException);
+    await expect(service.updateUser('c1', 'u1', CarrierPortalUserRole.DRIVER, {} as any)).rejects.toThrow(ForbiddenException);
   });
 
   it('rejects update when user missing', async () => {
@@ -123,7 +123,7 @@ describe('CarrierPortalUsersService', () => {
   });
 
   it('updates user permissions', async () => {
-    prisma.carrierPortalUser.findUnique.mockResolvedValue({ id: 'u1', carrierId: 'c1', role: CarrierPortalUserRole.USER, firstName: 'A', lastName: 'B', customFields: {} });
+    prisma.carrierPortalUser.findUnique.mockResolvedValue({ id: 'u1', carrierId: 'c1', role: CarrierPortalUserRole.DRIVER, firstName: 'A', lastName: 'B', customFields: {} });
     prisma.carrierPortalUser.update.mockResolvedValue({ id: 'u1' });
 
     await service.updateUser('c1', 'u1', CarrierPortalUserRole.ADMIN, { permissions: ['loads'] } as any);
@@ -137,7 +137,7 @@ describe('CarrierPortalUsersService', () => {
   });
 
   it('rejects deactivation for non-admin', async () => {
-    await expect(service.deactivateUser('c1', 'u1', CarrierPortalUserRole.USER)).rejects.toThrow(ForbiddenException);
+    await expect(service.deactivateUser('c1', 'u1', CarrierPortalUserRole.DRIVER)).rejects.toThrow(ForbiddenException);
   });
 
   it('rejects deactivation when user missing', async () => {

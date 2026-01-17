@@ -4,7 +4,7 @@ import { Test } from '@nestjs/testing';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma.service';
 import { JwtAuthGuard } from '../src/modules/auth/guards/jwt-auth.guard';
-import { createTestAppWithRole } from './helpers/test-app.helper';
+import { createTestAppWithRole, getTestPrisma } from './helpers/test-app.helper';
 
 const TEST_TENANT = 'tenant-claims';
 const TEST_USER = {
@@ -21,6 +21,7 @@ describe('Claims API E2E', () => {
   let prisma: PrismaService;
 
   beforeAll(async () => {
+    const sharedPrisma = await getTestPrisma();
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideGuard(JwtAuthGuard)
       .useValue({
@@ -31,6 +32,8 @@ describe('Claims API E2E', () => {
           return true;
         },
       })
+      .overrideProvider(PrismaService)
+      .useValue(sharedPrisma)
       .compile();
 
     app = moduleRef.createNestApplication();
