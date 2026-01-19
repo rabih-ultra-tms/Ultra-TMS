@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,8 +15,9 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { apiClient } from "@/lib/api-client";
-import type { Role } from "@/lib/types/auth";
+import { EmptyState, ErrorState, LoadingState } from "@/components/shared";
+import { useRoles } from "@/lib/hooks/admin/use-roles";
+import { useCreateUser } from "@/lib/hooks/admin/use-users";
 
 const userSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -32,10 +32,16 @@ type UserFormValues = z.infer<typeof userSchema>;
 
 export default function CreateUserPage() {
   const router = useRouter();
-  const [roles, setRoles] = useState<Role[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const rolesQuery = useRoles();
+  const createUserMutation = useCreateUser();
+  const roles = rolesQuery.data?.data ?? [];
+  const isLoading = rolesQuery.isLoading;
+  const errorMessage = rolesQuery.error
+    ? rolesQuery.error instanceof Error
+      ? rolesQuery.error.message
+      : "Failed to load roles"
+    : null;
+  const isSaving = createUserMutation.isPending;
 
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userSchema),
@@ -49,52 +55,43 @@ export default function CreateUserPage() {
     },
   });
 
-  useEffect(() => {
-    loadRoles();
-  }, []);
-
-  const loadRoles = async () => {
-    try {
-      setIsLoading(true);
-      const response = await apiClient.get<{ data: Role[] }>("/roles");
-      setRoles(response.data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load roles");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const onSubmit = async (data: UserFormValues) => {
-    setIsSaving(true);
-
     try {
-      await apiClient.post("/users", data);
+      await createUserMutation.mutateAsync(data);
       router.push("/admin/users");
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to create user");
-    } finally {
-      setIsSaving(false);
+    } catch {
+      // handled by mutation
     }
   };
 
   if (isLoading) {
+    return <LoadingState message="Loading roles..." />;
+  }
+
+  if (errorMessage) {
     return (
-      <div className="p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-gray-500">Loading roles...</div>
-        </div>
-      </div>
+      <ErrorState
+        message={errorMessage}
+        backButton={
+          <Link href="/admin/users">
+            <Button variant="outline">Back to users</Button>
+          </Link>
+        }
+      />
     );
   }
 
-  if (error) {
+  if (roles.length === 0) {
     return (
-      <div className="p-6">
-        <div className="rounded-md bg-red-50 p-4">
-          <div className="text-sm text-red-800">{error}</div>
-        </div>
-      </div>
+      <EmptyState
+        title="No roles available"
+        description="Create a role before adding new users."
+        action={
+          <Link href="/admin/roles/new">
+            <Button>Create Role</Button>
+          </Link>
+        }
+      />
     );
   }
 

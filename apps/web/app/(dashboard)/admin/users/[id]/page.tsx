@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,8 +16,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { apiClient } from "@/lib/api-client";
-import type { User, Role } from "@/lib/types/auth";
+import { EmptyState, ErrorState, LoadingState } from "@/components/shared";
+import { useRoles } from "@/lib/hooks/admin/use-roles";
+import {
+  useDeleteUser,
+  useResetUserPassword,
+  useUpdateUser,
+  useUser,
+} from "@/lib/hooks/admin/use-users";
 
 const userSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -36,11 +42,24 @@ export default function UserDetailPage({
   params: { id: string };
 }) {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [roles, setRoles] = useState<Role[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const userQuery = useUser(params.id);
+  const rolesQuery = useRoles();
+  const updateUserMutation = useUpdateUser();
+  const deleteUserMutation = useDeleteUser();
+  const resetPasswordMutation = useResetUserPassword();
+  const user = userQuery.data ?? null;
+  const roles = rolesQuery.data?.data ?? [];
+  const isLoading = userQuery.isLoading || rolesQuery.isLoading;
+  const errorMessage = userQuery.error
+    ? userQuery.error instanceof Error
+      ? userQuery.error.message
+      : "Failed to load user"
+    : rolesQuery.error
+    ? rolesQuery.error instanceof Error
+      ? rolesQuery.error.message
+      : "Failed to load roles"
+    : null;
+  const isSaving = updateUserMutation.isPending;
 
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userSchema),
@@ -55,88 +74,70 @@ export default function UserDetailPage({
   });
 
   useEffect(() => {
-    loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params.id]);
-
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const [userResponse, rolesResponse] = await Promise.all([
-        apiClient.get<User>(`/users/${params.id}`),
-        apiClient.get<{ data: Role[] }>("/roles"),
-      ]);
-
-      setUser(userResponse);
-      setRoles(rolesResponse.data);
-
-      form.reset({
-        firstName: userResponse.firstName,
-        lastName: userResponse.lastName,
-        email: userResponse.email,
-        roleId: userResponse.role.id,
-        phone: "",
-        title: "",
-      });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load user");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    if (!user) return;
+    form.reset({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      roleId: user.role.id,
+      phone: user.phone ?? "",
+      title: user.title ?? "",
+    });
+  }, [form, user]);
 
   const onSubmit = async (data: UserFormValues) => {
-    setIsSaving(true);
-
     try {
-      await apiClient.put(`/users/${params.id}`, data);
+      await updateUserMutation.mutateAsync({ id: params.id, data });
       router.push("/admin/users");
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to update user");
-    } finally {
-      setIsSaving(false);
+    } catch {
+      // handled by mutation
     }
   };
 
-  const handleResetPassword = async () => {
+  const handleResetPassword = () => {
     if (!confirm("Send password reset email to this user?")) return;
-
-    try {
-      await apiClient.post(`/users/${params.id}/reset-password`);
-      alert("Password reset email sent");
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to reset password");
-    }
+    resetPasswordMutation.mutate(params.id);
   };
 
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) return;
 
     try {
-      await apiClient.delete(`/users/${params.id}`);
+      await deleteUserMutation.mutateAsync(params.id);
       router.push("/admin/users");
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to delete user");
+    } catch {
+      // handled by mutation
     }
   };
 
   if (isLoading) {
+    return <LoadingState message="Loading user..." />;
+  }
+
+  if (errorMessage) {
     return (
-      <div className="p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-gray-500">Loading user...</div>
-        </div>
-      </div>
+      <ErrorState
+        message={errorMessage}
+        backButton={
+          <Link href="/admin/users">
+            <Button variant="outline">Back to users</Button>
+          </Link>
+        }
+      />
     );
   }
 
-  if (error || !user) {
+  if (!user) {
     return (
-      <div className="p-6">
-        <div className="rounded-md bg-red-50 p-4">
-          <div className="text-sm text-red-800">{error || "User not found"}</div>
-        </div>
-      </div>
+      <EmptyState
+        title="User not found"
+        description="We couldn't find the user you're looking for."
+        action={
+          <Link href="/admin/users">
+            <Button variant="outline">Back to users</Button>
+          </Link>
+        }
+      />
     );
   }
 

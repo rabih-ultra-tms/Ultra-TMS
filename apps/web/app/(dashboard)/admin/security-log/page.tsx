@@ -1,51 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { apiClient } from "@/lib/api-client";
-
-interface SessionLog {
-  id: string;
-  jti: string;
-  userId: string;
-  ipAddress: string;
-  userAgent: string;
-  isActive: boolean;
-  lastActivityAt: string;
-  createdAt: string;
-}
+import { EmptyState, ErrorState, LoadingState } from "@/components/shared";
+import {
+  useRevokeAllSessions,
+  useRevokeSession,
+  useSessionLogs,
+} from "@/lib/hooks/admin/use-security-log";
 
 export default function SecurityLogPage() {
-  const [sessions, setSessions] = useState<SessionLog[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const sessionsQuery = useSessionLogs();
+  const revokeSessionMutation = useRevokeSession();
+  const revokeAllSessionsMutation = useRevokeAllSessions();
+  const sessions = sessionsQuery.data?.data ?? [];
+  const errorMessage = sessionsQuery.error
+    ? sessionsQuery.error instanceof Error
+      ? sessionsQuery.error.message
+      : "Failed to load sessions"
+    : null;
 
-  useEffect(() => {
-    loadSessions();
-  }, []);
-
-  const loadSessions = async () => {
-    try {
-      setIsLoading(true);
-      // Note: This endpoint needs to be implemented in backend
-      // For now, showing placeholder data structure
-      setSessions([]);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load sessions");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleRevokeSession = async (sessionId: string) => {
+  const handleRevokeSession = (sessionId: string) => {
     if (!confirm("Are you sure you want to revoke this session?")) return;
-
-    try {
-      await apiClient.post(`/auth/logout`, { sessionId });
-      await loadSessions();
-      alert("Session revoked successfully");
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to revoke session");
-    }
+    revokeSessionMutation.mutate(sessionId);
   };
 
   const handleRevokeAllSessions = async () => {
@@ -56,32 +31,23 @@ export default function SecurityLogPage() {
     ) return;
 
     try {
-      await apiClient.post("/auth/logout-all");
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
+      await revokeAllSessionsMutation.mutateAsync();
       window.location.href = "/login";
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to revoke sessions");
+    } catch {
+      // handled by mutation
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-gray-500">Loading security log...</div>
-        </div>
-      </div>
-    );
+  if (sessionsQuery.isLoading) {
+    return <LoadingState message="Loading security log..." />;
   }
 
-  if (error) {
+  if (errorMessage) {
     return (
-      <div className="p-6">
-        <div className="rounded-md bg-red-50 p-4">
-          <div className="text-sm text-red-800">{error}</div>
-        </div>
-      </div>
+      <ErrorState
+        message={errorMessage}
+        onRetry={() => sessionsQuery.refetch()}
+      />
     );
   }
 
@@ -111,29 +77,10 @@ export default function SecurityLogPage() {
           </h2>
           
           {sessions.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-                <svg
-                  className="h-6 w-6 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                  />
-                </svg>
-              </div>
-              <h3 className="mt-4 text-sm font-medium text-gray-900">
-                No active sessions
-              </h3>
-              <p className="mt-2 text-sm text-gray-500">
-                Session tracking endpoint needs to be implemented in the backend.
-              </p>
-            </div>
+            <EmptyState
+              title="No active sessions"
+              description="Session tracking endpoint needs to be implemented in the backend."
+            />
           ) : (
             <div className="space-y-4">
               {sessions.map((session) => (

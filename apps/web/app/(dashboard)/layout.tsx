@@ -20,6 +20,7 @@ import {
   BuildingOfficeIcon,
   WrenchScrewdriverIcon,
 } from '@heroicons/react/24/outline';
+import { useLogout } from '@/lib/hooks';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
@@ -41,6 +42,7 @@ const adminNavigation = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
+  const logoutMutation = useLogout();
 
   const isActive = (href: string) => {
     if (href === '/dashboard') {
@@ -50,9 +52,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    window.location.href = '/login';
+    logoutMutation.mutate();
   };
 
   return (

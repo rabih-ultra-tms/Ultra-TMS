@@ -18,8 +18,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { apiClient } from "@/lib/api-client";
-import type { Role } from "@/lib/types/auth";
+import { EmptyState, ErrorState, LoadingState } from "@/components/shared";
+import { useCreateRole, useRole, useUpdateRole } from "@/lib/hooks/admin/use-roles";
 
 const roleSchema = z.object({
   name: z.string().min(2, "Role name must be at least 2 characters"),
@@ -274,10 +274,18 @@ export default function RoleEditorPage({ params }: { params: Promise<{ id: strin
   const router = useRouter();
   const resolvedParams = use(params);
   const isNew = resolvedParams.id === "new";
-  const [role, setRole] = useState<Role | null>(null);
-  const [isLoading, setIsLoading] = useState(!isNew);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const roleQuery = useRole(isNew ? "" : resolvedParams.id);
+  const createRoleMutation = useCreateRole();
+  const updateRoleMutation = useUpdateRole();
+  const role = roleQuery.data?.data ?? null;
+  const isLoading = !isNew && roleQuery.isLoading;
+  const errorMessage =
+    !isNew && roleQuery.error
+      ? roleQuery.error instanceof Error
+        ? roleQuery.error.message
+        : "Failed to load role"
+      : null;
+  const isSaving = createRoleMutation.isPending || updateRoleMutation.isPending;
   const [expandedCategories, setExpandedCategories] = useState<string[]>(SERVICE_CATEGORIES.map((c) => c.name));
   const [expandedServices, setExpandedServices] = useState<string[]>([]);
 
@@ -315,45 +323,24 @@ export default function RoleEditorPage({ params }: { params: Promise<{ id: strin
   };
 
   useEffect(() => {
-    if (!isNew) {
-      loadRole();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resolvedParams.id, isNew]);
-
-  const loadRole = async () => {
-    try {
-      setIsLoading(true);
-      const response = await apiClient.get<{ data: Role }>(`/roles/${resolvedParams.id}`);
-      const roleData = response.data;
-      setRole(roleData);
-
-      form.reset({
-        name: roleData.name,
-        description: roleData.description,
-        permissions: roleData.permissions,
-      });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load role");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    if (!role) return;
+    form.reset({
+      name: role.name,
+      description: role.description,
+      permissions: role.permissions,
+    });
+  }, [form, role]);
 
   const onSubmit = async (data: RoleFormValues) => {
-    setIsSaving(true);
-
     try {
       if (isNew) {
-        await apiClient.post("/roles", data);
+        await createRoleMutation.mutateAsync(data);
       } else {
-        await apiClient.put(`/roles/${resolvedParams.id}`, data);
+        await updateRoleMutation.mutateAsync({ id: resolvedParams.id, data });
       }
       router.push("/admin/roles");
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to save role");
-    } finally {
-      setIsSaving(false);
+    } catch {
+      // handled by mutation
     }
   };
 
@@ -405,22 +392,33 @@ export default function RoleEditorPage({ params }: { params: Promise<{ id: strin
   };
 
   if (isLoading) {
+    return <LoadingState message="Loading role..." />;
+  }
+
+  if (errorMessage) {
     return (
-      <div className="p-6">
-        <div className="flex items-center justify-center h-48 rounded-lg bg-white border border-slate-200">
-          <div className="text-sm text-slate-500">Loading role...</div>
-        </div>
-      </div>
+      <ErrorState
+        message={errorMessage}
+        backButton={
+          <Link href="/admin/roles">
+            <Button variant="outline">Back to roles</Button>
+          </Link>
+        }
+      />
     );
   }
 
-  if (error) {
+  if (!isNew && !role) {
     return (
-      <div className="p-6">
-        <div className="rounded-md bg-red-50 border border-red-200 p-4">
-          <div className="text-sm text-red-800">{error}</div>
-        </div>
-      </div>
+      <EmptyState
+        title="Role not found"
+        description="We couldn't find the role you're looking for."
+        action={
+          <Link href="/admin/roles">
+            <Button variant="outline">Back to roles</Button>
+          </Link>
+        }
+      />
     );
   }
 

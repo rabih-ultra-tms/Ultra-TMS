@@ -134,13 +134,7 @@ export default function ProfilePage() {
     formData.append("avatar", file);
 
     try {
-      await fetch("http://localhost:3001/api/v1/profile/avatar", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-        body: formData,
-      });
+      await apiClient.upload("/profile/avatar", formData);
       alert("Avatar uploaded successfully");
       await loadProfile();
     } catch {

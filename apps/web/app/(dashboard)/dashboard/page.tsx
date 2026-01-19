@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   ChartBarIcon,
@@ -18,6 +17,7 @@ import {
 import PageHeader from '@/components/ui/PageHeader';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
+import { useCurrentUser } from '@/lib/hooks';
 
 // Mock dashboard data
 const dashboardStats = [
@@ -134,17 +134,8 @@ const upcomingTasks = [
 ];
 
 export default function DashboardPage() {
-  const [userName, setUserName] = useState('User');
-
-  useEffect(() => {
-    // Get user info from token or storage
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      // In a real app, decode token or fetch user info
-      // For now, just show a generic greeting
-      setUserName('Admin');
-    }
-  }, []);
+  const { data: user } = useCurrentUser();
+  const userName = user?.firstName || 'User';
 
   const getIconColor = (color: string) => {
     const colors: Record<string, string> = {

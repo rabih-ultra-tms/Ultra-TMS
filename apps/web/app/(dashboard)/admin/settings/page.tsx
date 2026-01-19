@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -16,8 +16,13 @@ import {
   FormMessage,
   FormDescription,
 } from "@/components/ui/form";
-import { apiClient } from "@/lib/api-client";
-import type { Tenant, TenantSettings } from "@/lib/types/auth";
+import { ErrorState, LoadingState } from "@/components/shared";
+import {
+  useTenant,
+  useTenantSettings,
+  useUpdateTenant,
+  useUpdateTenantSettings,
+} from "@/lib/hooks/admin/use-tenant";
 
 const tenantSchema = z.object({
   name: z.string().min(2, "Company name must be at least 2 characters"),
@@ -46,11 +51,23 @@ type TenantFormValues = z.infer<typeof tenantSchema>;
 type SettingsFormValues = z.infer<typeof settingsSchema>;
 
 export default function TenantSettingsPage() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSavingTenant, setIsSavingTenant] = useState(false);
-  const [isSavingSettings, setIsSavingSettings] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"company" | "settings">("company");
+  const tenantQuery = useTenant();
+  const settingsQuery = useTenantSettings();
+  const updateTenantMutation = useUpdateTenant();
+  const updateSettingsMutation = useUpdateTenantSettings();
+  const isLoading = tenantQuery.isLoading || settingsQuery.isLoading;
+  const errorMessage = tenantQuery.error
+    ? tenantQuery.error instanceof Error
+      ? tenantQuery.error.message
+      : "Failed to load tenant"
+    : settingsQuery.error
+    ? settingsQuery.error instanceof Error
+      ? settingsQuery.error.message
+      : "Failed to load settings"
+    : null;
+  const isSavingTenant = updateTenantMutation.isPending;
+  const isSavingSettings = updateSettingsMutation.isPending;
 
   const tenantForm = useForm<TenantFormValues>({
     resolver: zodResolver(tenantSchema),
@@ -82,76 +99,49 @@ export default function TenantSettingsPage() {
   });
 
   useEffect(() => {
-    loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (!tenantQuery.data) return;
+    tenantForm.reset({
+      name: tenantQuery.data.name,
+      contactEmail: tenantQuery.data.contactEmail,
+      contactPhone: tenantQuery.data.contactPhone,
+      address: tenantQuery.data.address,
+    });
+  }, [tenantForm, tenantQuery.data]);
 
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const [tenantResponse, settingsResponse] = await Promise.all([
-        apiClient.get<Tenant>("/tenant"),
-        apiClient.get<TenantSettings>("/tenant/settings"),
-      ]);
-
-      tenantForm.reset({
-        name: tenantResponse.name,
-        contactEmail: tenantResponse.contactEmail,
-        contactPhone: tenantResponse.contactPhone,
-        address: tenantResponse.address,
-      });
-
-      settingsForm.reset(settingsResponse);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load settings");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  useEffect(() => {
+    if (!settingsQuery.data) return;
+    settingsForm.reset(settingsQuery.data);
+  }, [settingsForm, settingsQuery.data]);
 
   const onSubmitTenant = async (data: TenantFormValues) => {
-    setIsSavingTenant(true);
-
     try {
-      await apiClient.put("/tenant", data);
-      alert("Company information updated successfully");
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to update company information");
-    } finally {
-      setIsSavingTenant(false);
+      await updateTenantMutation.mutateAsync(data);
+    } catch {
+      // handled by mutation
     }
   };
 
   const onSubmitSettings = async (data: SettingsFormValues) => {
-    setIsSavingSettings(true);
-
     try {
-      await apiClient.put("/tenant/settings", data);
-      alert("Settings updated successfully");
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to update settings");
-    } finally {
-      setIsSavingSettings(false);
+      await updateSettingsMutation.mutateAsync(data);
+    } catch {
+      // handled by mutation
     }
   };
 
   if (isLoading) {
-    return (
-      <div className="p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-gray-500">Loading settings...</div>
-        </div>
-      </div>
-    );
+    return <LoadingState message="Loading settings..." />;
   }
 
-  if (error) {
+  if (errorMessage) {
     return (
-      <div className="p-6">
-        <div className="rounded-md bg-red-50 p-4">
-          <div className="text-sm text-red-800">{error}</div>
-        </div>
-      </div>
+      <ErrorState
+        message={errorMessage}
+        onRetry={() => {
+          tenantQuery.refetch();
+          settingsQuery.refetch();
+        }}
+      />
     );
   }
 
