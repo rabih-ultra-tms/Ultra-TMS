@@ -4,17 +4,20 @@ import { Inbox } from "lucide-react";
 interface EmptyStateProps {
   title: string;
   description?: string;
-  icon?: React.ReactNode;
   action?: React.ReactNode;
 }
 
-export function EmptyState({ title, description, icon, action }: EmptyStateProps) {
+export function EmptyState({ title, description, action }: EmptyStateProps) {
   return (
-    <div className="flex min-h-[400px] flex-col items-center justify-center text-center">
-      {icon || <Inbox className="mb-4 h-12 w-12 text-slate-400" />}
-      <h2 className="mb-2 text-xl font-semibold">{title}</h2>
-      {description && <p className="mb-6 max-w-md text-slate-600">{description}</p>}
-      {action}
+    <div className="flex w-full flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-muted/40 p-6 text-center">
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
+        <Inbox className="h-6 w-6" aria-hidden />
+      </div>
+      <div>
+        <p className="text-lg font-semibold text-foreground">{title}</p>
+        {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
+      </div>
+      {action ? <div className="flex flex-wrap items-center justify-center gap-2">{action}</div> : null}
     </div>
   );
 }

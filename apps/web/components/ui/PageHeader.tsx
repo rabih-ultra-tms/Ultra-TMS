@@ -1,30 +1,42 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 interface PageHeaderProps {
   title: string;
   subtitle?: string;
-  description?: string;  // Alias for subtitle
+  description?: string;
+  actions?: ReactNode;
   children?: ReactNode;
-  actions?: ReactNode;   // Alias for children
+  className?: string;
 }
 
-export default function PageHeader({ title, subtitle, description, children, actions }: PageHeaderProps) {
-  const displaySubtitle = subtitle || description;
-  const displayActions = children || actions;
-  
+function PageHeader({
+  title,
+  subtitle,
+  description,
+  actions,
+  children,
+  className,
+}: PageHeaderProps) {
+  const actionNode = actions ?? children;
+
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 mb-4 border-b border-slate-200">
-      <div>
-        <h1 className="text-xl font-semibold text-slate-900">{title}</h1>
-        {displaySubtitle && (
-          <p className="mt-0.5 text-sm text-slate-600">{displaySubtitle}</p>
+    <div
+      className={cn(
+        "flex flex-col gap-3 border-b border-border pb-4 md:flex-row md:items-center md:justify-between",
+        className
+      )}
+    >
+      <div className="space-y-1">
+        <h1 className="text-2xl font-semibold leading-tight text-foreground">{title}</h1>
+        {(subtitle || description) && (
+          <p className="text-sm text-muted-foreground">{subtitle ?? description}</p>
         )}
       </div>
-      {displayActions && (
-        <div className="flex flex-wrap items-center gap-2">
-          {displayActions}
-        </div>
-      )}
+      {actionNode ? <div className="flex flex-wrap items-center gap-2">{actionNode}</div> : null}
     </div>
   );
 }
+
+export { PageHeader };
+export default PageHeader;

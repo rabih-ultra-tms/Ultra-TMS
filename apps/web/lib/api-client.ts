@@ -1,2 +1,2 @@
-export { apiClient, ApiError, getServerCookies } from "./api";
-export type { ApiResponse, PaginatedResponse } from "./api";
+export { apiClient, ApiError, getServerCookies } from "./api/client";
+export type { ApiResponse, PaginatedResponse } from "./api/client";

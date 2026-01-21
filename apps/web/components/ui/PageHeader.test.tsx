@@ -1,21 +1,17 @@
 import { render, screen } from "@/test/utils";
-import PageHeader from "./PageHeader";
+import { PageHeader } from "./PageHeader";
+import { Button } from "./button";
 
 describe("PageHeader", () => {
   it("renders title", () => {
-    render(<PageHeader title="Test Title" />);
-    expect(screen.getByText("Test Title")).toBeInTheDocument();
+    render(<PageHeader title="Carriers" />);
+    expect(screen.getByText("Carriers")).toBeInTheDocument();
   });
 
-  it("renders description when provided", () => {
-    render(<PageHeader title="Title" description="Test description" />);
-    expect(screen.getByText("Test description")).toBeInTheDocument();
-  });
+  it("renders subtitle and actions", () => {
+    render(<PageHeader title="Carriers" subtitle="Manage carriers" actions={<Button>Action</Button>} />);
 
-  it("renders actions when provided", () => {
-    render(
-      <PageHeader title="Title" actions={<button>Action</button>} />
-    );
+    expect(screen.getByText("Manage carriers")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Action" })).toBeInTheDocument();
   });
 });
