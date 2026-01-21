@@ -1,6 +1,4 @@
 "use client";
-
-import * as React from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,57 +9,56 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import Button from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
 interface ConfirmDialogProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
   title: string;
-  description: string;
+  description?: string;
   confirmLabel?: string;
   cancelLabel?: string;
-  variant?: "default" | "destructive";
-  onConfirm: () => void | Promise<void>;
+  onConfirm: () => Promise<void> | void;
+  onCancel: () => void;
   isLoading?: boolean;
+  destructive?: boolean;
 }
 
 export function ConfirmDialog({
   open,
-  onOpenChange,
   title,
   description,
   confirmLabel = "Confirm",
   cancelLabel = "Cancel",
-  variant = "default",
   onConfirm,
+  onCancel,
   isLoading = false,
+  destructive = false,
 }: ConfirmDialogProps) {
   const handleConfirm = async () => {
     await onConfirm();
-    onOpenChange(false);
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog open={open}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
+          {description ? <AlertDialogDescription>{description}</AlertDialogDescription> : null}
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel asChild>
-            <Button variant="secondary" disabled={isLoading}>
+            <Button variant="outline" onClick={onCancel} disabled={isLoading}>
               {cancelLabel}
             </Button>
           </AlertDialogCancel>
           <AlertDialogAction asChild>
             <Button
-              variant={variant === "destructive" ? "danger" : "primary"}
+              variant={destructive ? "destructive" : "default"}
               onClick={handleConfirm}
               disabled={isLoading}
             >
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               {confirmLabel}
             </Button>
           </AlertDialogAction>

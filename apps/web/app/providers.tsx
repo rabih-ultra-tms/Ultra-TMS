@@ -7,7 +7,7 @@ import {
   QueryCache,
   MutationCache,
 } from "@tanstack/react-query";
-import { Toaster, toast } from "sonner";
+import { Toaster, toast } from "@/components/ui/sonner";
 import { ApiError } from "@/lib/api/client";
 
 const ReactQueryDevtools = React.lazy(() =>

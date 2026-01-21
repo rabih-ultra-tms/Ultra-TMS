@@ -26,7 +26,8 @@ export const userKeys = {
 export function useUsers(params: UsersListParams) {
   return useQuery({
     queryKey: userKeys.list(params),
-    queryFn: () => apiClient.get<UsersListResponse>("/users", params),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    queryFn: () => apiClient.get<UsersListResponse>("/users", params as any),
   });
 }
 

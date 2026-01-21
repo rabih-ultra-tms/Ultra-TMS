@@ -1,13 +1,5 @@
-import * as React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface DataTableSkeletonProps {
   columns: number;
@@ -16,22 +8,22 @@ interface DataTableSkeletonProps {
 
 export function DataTableSkeleton({ columns, rows = 10 }: DataTableSkeletonProps) {
   return (
-    <div className="rounded-md border border-slate-200">
+    <div className="overflow-hidden rounded-lg border border-border bg-card">
       <Table>
         <TableHeader>
           <TableRow>
-            {Array.from({ length: columns }).map((_, i) => (
-              <TableHead key={i}>
+            {Array.from({ length: columns }).map((_, index) => (
+              <TableHead key={index}>
                 <Skeleton className="h-4 w-24" />
               </TableHead>
             ))}
           </TableRow>
         </TableHeader>
         <TableBody>
-          {Array.from({ length: rows }).map((_, rowIndex) => (
-            <TableRow key={rowIndex}>
-              {Array.from({ length: columns }).map((_, colIndex) => (
-                <TableCell key={colIndex}>
+          {Array.from({ length: rows }).map((_, rowIdx) => (
+            <TableRow key={rowIdx} className="border-b last:border-b-0">
+              {Array.from({ length: columns }).map((_, colIdx) => (
+                <TableCell key={colIdx}>
                   <Skeleton className="h-4 w-full" />
                 </TableCell>
               ))}

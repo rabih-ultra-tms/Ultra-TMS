@@ -8,6 +8,7 @@ const createJestConfig = nextJest({
 const config: Config = {
   displayName: "web",
   testEnvironment: "jsdom",
+  injectGlobals: true,
   setupFilesAfterEnv: ["<rootDir>/test/setup.ts"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
@@ -39,4 +40,6 @@ const config: Config = {
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
 };
 
-export default createJestConfig(config);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const jestConfig = createJestConfig(config as any);
+export default jestConfig;
