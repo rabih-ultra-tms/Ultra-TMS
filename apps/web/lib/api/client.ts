@@ -10,6 +10,34 @@
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1";
+const AUTH_COOKIE_NAME =
+  process.env.NEXT_PUBLIC_AUTH_COOKIE_NAME || "accessToken";
+
+function readCookie(cookieString: string, name: string): string | undefined {
+  const parts = cookieString.split(";").map((part) => part.trim());
+  const match = parts.find((part) => part.startsWith(`${name}=`));
+  if (!match) {
+    return undefined;
+  }
+  return decodeURIComponent(match.substring(name.length + 1));
+}
+
+function getClientAccessToken(): string | undefined {
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+
+  const fromCookie = readCookie(document.cookie || "", AUTH_COOKIE_NAME);
+  if (fromCookie) {
+    return fromCookie;
+  }
+
+  try {
+    return localStorage.getItem("accessToken") || undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 export class ApiError extends Error {
   public readonly status: number;
@@ -95,6 +123,17 @@ class ApiClient {
       Accept: "application/json",
       ...(options.headers as Record<string, string>),
     };
+
+    const hasAuthHeader =
+      typeof (headers as Record<string, string>).Authorization === "string" ||
+      typeof (headers as Record<string, string>).authorization === "string";
+
+    if (!hasAuthHeader) {
+      const accessToken = getClientAccessToken();
+      if (accessToken) {
+        (headers as Record<string, string>).Authorization = `Bearer ${accessToken}`;
+      }
+    }
 
     if (serverCookies) {
       (headers as Record<string, string>)["Cookie"] = serverCookies;

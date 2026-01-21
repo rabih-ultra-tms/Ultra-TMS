@@ -1,29 +1,34 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api";
-import type { Role } from "@/lib/types/auth";
+import type { Role, Permission } from "@/lib/types/auth";
 import { toast } from "sonner";
 
-interface RolesResponse {
-  data: Role[];
-}
-
 export const roleKeys = {
-  all: ["admin", "roles"] as const,
+  all: ["roles"] as const,
+  list: () => [...roleKeys.all, "list"] as const,
   detail: (id: string) => [...roleKeys.all, "detail", id] as const,
+  permissions: () => [...roleKeys.all, "permissions"] as const,
 };
 
 export function useRoles() {
   return useQuery({
-    queryKey: roleKeys.all,
-    queryFn: () => apiClient.get<RolesResponse>("/roles"),
+    queryKey: roleKeys.list(),
+    queryFn: () => apiClient.get<{ data: Role[] }>("/admin/roles"),
   });
 }
 
 export function useRole(id: string) {
   return useQuery({
     queryKey: roleKeys.detail(id),
-    queryFn: () => apiClient.get<{ data: Role }>(`/roles/${id}`),
+    queryFn: () => apiClient.get<{ data: Role }>(`/admin/roles/${id}`),
     enabled: !!id,
+  });
+}
+
+export function usePermissions() {
+  return useQuery({
+    queryKey: roleKeys.permissions(),
+    queryFn: () => apiClient.get<{ data: Permission[] }>("/admin/permissions"),
   });
 }
 
@@ -31,10 +36,11 @@ export function useCreateRole() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: Record<string, unknown>) => apiClient.post("/roles", data),
+    mutationFn: (data: Partial<Role> & { permissionIds?: string[] }) =>
+      apiClient.post<{ data: Role }>("/admin/roles", data),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: roleKeys.list() });
       toast.success("Role created");
-      queryClient.invalidateQueries({ queryKey: roleKeys.all });
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to create role");
@@ -46,12 +52,17 @@ export function useUpdateRole() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
-      apiClient.put(`/roles/${id}`, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: Partial<Role> & { permissionIds?: string[] };
+    }) => apiClient.patch<{ data: Role }>(`/admin/roles/${id}`, data),
     onSuccess: (_, { id }) => {
-      toast.success("Role updated");
       queryClient.invalidateQueries({ queryKey: roleKeys.detail(id) });
-      queryClient.invalidateQueries({ queryKey: roleKeys.all });
+      queryClient.invalidateQueries({ queryKey: roleKeys.list() });
+      toast.success("Role updated");
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to update role");
@@ -63,10 +74,10 @@ export function useDeleteRole() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (roleId: string) => apiClient.delete(`/roles/${roleId}`),
+    mutationFn: (id: string) => apiClient.delete(`/admin/roles/${id}`),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: roleKeys.list() });
       toast.success("Role deleted");
-      queryClient.invalidateQueries({ queryKey: roleKeys.all });
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to delete role");
