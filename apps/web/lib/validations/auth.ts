@@ -64,9 +64,8 @@ export const userFormSchema = z.object({
   email: z.string().email('Valid email is required'),
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
-  roleIds: z.array(z.string()).min(1, 'At least one role is required'),
-  status: z.enum(['ACTIVE', 'INACTIVE', 'PENDING', 'SUSPENDED']).optional(),
-  sendInvite: z.boolean().default(true),
+  roleId: z.string().optional(),
+  status: z.enum(['ACTIVE', 'INACTIVE', 'PENDING', 'SUSPENDED', 'LOCKED']).optional(),
 });
 
 export const roleFormSchema = z.object({

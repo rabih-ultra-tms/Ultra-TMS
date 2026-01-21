@@ -10,7 +10,6 @@ import * as z from "zod";
 import { Loader2, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -145,9 +144,10 @@ export default function LoginPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel htmlFor="login-email">Email</FormLabel>
                     <FormControl>
                       <Input
+                        id="login-email"
                         type="email"
                         placeholder="you@company.com"
                         autoComplete="email"
@@ -168,9 +168,10 @@ export default function LoginPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel htmlFor="login-password">Password</FormLabel>
                     <FormControl>
                       <Input
+                        id="login-password"
                         type="password"
                         autoComplete="current-password"
                         disabled={isLoading}

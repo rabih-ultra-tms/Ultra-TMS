@@ -245,6 +245,23 @@ export function useHasPermission(permission: string): boolean {
 export function useHasRole(roles: string | string[]): boolean {
   const { data: user } = useCurrentUser();
   const roleArray = Array.isArray(roles) ? roles : [roles];
-  return user ? roleArray.some((r) => user.roles.some((role) => role.name === r)) : false;
+  if (!user) {
+    return false;
+  }
+
+  const normalize = (value: string) => value.replace(/-/g, "_").toUpperCase();
+  const targetRoles = roleArray.map(normalize);
+
+  const rolesFromArray = user.roles?.map((role) => role.name).filter(Boolean) ?? [];
+  const roleNameFallback = (user as { roleName?: string })?.roleName;
+  const roleObjectFallback = (user as { role?: { name?: string } })?.role?.name;
+
+  const userRoles = [
+    ...rolesFromArray,
+    ...(roleNameFallback ? [roleNameFallback] : []),
+    ...(roleObjectFallback ? [roleObjectFallback] : []),
+  ];
+
+  return userRoles.some((role) => targetRoles.includes(normalize(role)));
 }
 

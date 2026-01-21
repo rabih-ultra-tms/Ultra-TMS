@@ -13,7 +13,7 @@ import { HubspotService } from './hubspot.service';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
 
-@Controller('hubspot')
+@Controller('crm/hubspot')
 @ApiTags('CRM')
 export class HubspotController {
   constructor(private readonly hubspotService: HubspotService) {}

@@ -1,6 +1,8 @@
 import * as React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, type RenderOptions } from "@testing-library/react";
+import { ThemeProvider } from "@/lib/theme/theme-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 function createTestQueryClient() {
   return new QueryClient({
@@ -19,7 +21,13 @@ interface WrapperProps {
 function createWrapper() {
   const queryClient = createTestQueryClient();
   return function Wrapper({ children }: WrapperProps) {
-    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+    return (
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <TooltipProvider>{children}</TooltipProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    );
   };
 }
 

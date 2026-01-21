@@ -14,6 +14,7 @@ import type { Request } from 'express';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards';
 import { CurrentUser } from './decorators/current-user.decorator';
+import { Public } from '../../common/decorators';
 import {
   LoginDto,
   ForgotPasswordDto,
@@ -32,6 +33,7 @@ export class AuthController {
    * Login with email and password
    */
   @Post('login')
+  @Public()
   @ApiOperation({ summary: 'Login with email and password' })
   @ApiBody({ type: LoginDto })
   @ApiResponse({ status: 200, description: 'Login successful' })
@@ -56,6 +58,7 @@ export class AuthController {
    * Refresh access token using refresh token
    */
   @Post('refresh')
+  @Public()
   @ApiOperation({ summary: 'Refresh access token' })
   @ApiBody({ type: RefreshTokenDto })
   @ApiResponse({ status: 200, description: 'Token refreshed' })
@@ -116,6 +119,7 @@ export class AuthController {
    * Request password reset
    */
   @Post('forgot-password')
+  @Public()
   @ApiOperation({ summary: 'Request password reset' })
   @ApiBody({ type: ForgotPasswordDto })
   @ApiResponse({ status: 200, description: 'Password reset email sent if user exists' })
@@ -135,6 +139,7 @@ export class AuthController {
    * Reset password with token
    */
   @Post('reset-password')
+  @Public()
   @ApiOperation({ summary: 'Reset password with token' })
   @ApiBody({ type: ResetPasswordDto })
   @ApiResponse({ status: 200, description: 'Password reset successful' })
@@ -154,6 +159,7 @@ export class AuthController {
    * Verify email address with token
    */
   @Post('verify-email')
+  @Public()
   @ApiOperation({ summary: 'Verify email address' })
   @ApiBody({ type: VerifyEmailDto })
   @ApiResponse({ status: 200, description: 'Email verified' })
@@ -178,8 +184,8 @@ export class AuthController {
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({ status: 200, description: 'Current user profile' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getMe(@CurrentUser() user: { sub: string }) {
-    const userData = await this.authService.getMe(user.sub);
+  async getMe(@CurrentUser('id') userId: string) {
+    const userData = await this.authService.getMe(userId);
 
     return {
       data: userData,

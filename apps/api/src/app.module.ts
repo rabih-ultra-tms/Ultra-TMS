@@ -5,6 +5,7 @@ import { ConfigModule as NestConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { PrismaService } from './prisma.service';
 import { RolesGuard } from './common/guards/roles.guard';
+import { JwtAuthGuard } from './modules/auth/guards';
 import { ResponseTransformInterceptor } from './common/interceptors/response-transform.interceptor';
 import { AuditInterceptor } from './modules/audit/interceptors/audit.interceptor';
 import { CustomThrottlerGuard } from './common/guards/custom-throttler.guard';
@@ -136,6 +137,10 @@ const isTestEnv = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID 
   ],
   providers: [
     PrismaService,
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
     {
       provide: APP_GUARD,
       useClass: RolesGuard,

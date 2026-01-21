@@ -19,21 +19,25 @@ export const userKeys = {
   detail: (id: string) => [...userKeys.details(), id] as const,
 };
 
-export function useUsers(params: UsersListParams = {}) {
+export function useUsers(
+  params: UsersListParams = {},
+  options?: { enabled?: boolean }
+) {
   return useQuery({
     queryKey: userKeys.list(params),
     queryFn: () =>
       apiClient.get<PaginatedResponse<User>>(
-        "/admin/users",
+        "/users",
         params as Record<string, string | number | boolean | null | undefined>
       ),
+    enabled: options?.enabled,
   });
 }
 
 export function useUser(id: string) {
   return useQuery({
     queryKey: userKeys.detail(id),
-    queryFn: () => apiClient.get<{ data: User }>(`/admin/users/${id}`),
+    queryFn: () => apiClient.get<{ data: User }>(`/users/${id}`),
     enabled: !!id,
   });
 }
@@ -43,7 +47,7 @@ export function useCreateUser() {
 
   return useMutation({
     mutationFn: (data: Partial<User> & { password?: string; sendInvite?: boolean }) =>
-      apiClient.post<{ data: User }>("/admin/users", data),
+      apiClient.post<{ data: User }>("/users", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: userKeys.lists() });
       toast.success("User created successfully");
@@ -59,7 +63,7 @@ export function useUpdateUser() {
 
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<User> }) =>
-      apiClient.patch<{ data: User }>(`/admin/users/${id}`, data),
+      apiClient.put<{ data: User }>(`/users/${id}`, data),
     onSuccess: (_response, { id }) => {
       queryClient.invalidateQueries({ queryKey: userKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: userKeys.lists() });
@@ -75,8 +79,11 @@ export function useUpdateUserStatus() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, status, reason }: { id: string; status: string; reason?: string }) =>
-      apiClient.patch(`/admin/users/${id}/status`, { status, reason }),
+    mutationFn: ({ id, status }: { id: string; status: string; reason?: string }) => {
+      const normalized = status?.toUpperCase();
+      const endpoint = normalized === "ACTIVE" ? "activate" : "deactivate";
+      return apiClient.post(`/users/${id}/${endpoint}`);
+    },
     onSuccess: (_response, { id }) => {
       queryClient.invalidateQueries({ queryKey: userKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: userKeys.lists() });
@@ -93,7 +100,7 @@ export function useAssignRoles() {
 
   return useMutation({
     mutationFn: ({ userId, roleIds }: { userId: string; roleIds: string[] }) =>
-      apiClient.put(`/admin/users/${userId}/roles`, { roleIds }),
+      apiClient.patch(`/users/${userId}/roles`, { roleIds }),
     onSuccess: (_response, { userId }) => {
       queryClient.invalidateQueries({ queryKey: userKeys.detail(userId) });
       toast.success("Roles updated");
@@ -106,7 +113,7 @@ export function useAssignRoles() {
 
 export function useResetUserPassword() {
   return useMutation({
-    mutationFn: (userId: string) => apiClient.post(`/admin/users/${userId}/reset-password`),
+    mutationFn: (userId: string) => apiClient.post(`/users/${userId}/reset-password`),
     onSuccess: () => {
       toast.success("Password reset email sent");
     },
@@ -120,7 +127,7 @@ export function useUnlockUser() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (userId: string) => apiClient.post(`/admin/users/${userId}/unlock`),
+    mutationFn: (userId: string) => apiClient.post(`/users/${userId}/activate`),
     onSuccess: (_response, userId: string) => {
       queryClient.invalidateQueries({ queryKey: userKeys.detail(userId) });
       queryClient.invalidateQueries({ queryKey: userKeys.lists() });

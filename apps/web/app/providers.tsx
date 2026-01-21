@@ -7,6 +7,7 @@ import {
   QueryCache,
   MutationCache,
 } from "@tanstack/react-query";
+import { ThemeProvider } from "@/lib/theme/theme-provider";
 import { Toaster, toast } from "@/components/ui/sonner";
 import { ApiError } from "@/lib/api/client";
 
@@ -89,15 +90,17 @@ export function Providers({ children }: ProvidersProps) {
   const queryClient = getQueryClient();
 
   return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-      <Toaster position="top-right" richColors closeButton />
-      {process.env.NODE_ENV === "development" && (
-        <React.Suspense fallback={null}>
-          <ReactQueryDevtools initialIsOpen={false} />
-        </React.Suspense>
-      )}
-    </QueryClientProvider>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <QueryClientProvider client={queryClient}>
+        {children}
+        <Toaster position="top-right" richColors closeButton />
+        {process.env.NODE_ENV === "development" && (
+          <React.Suspense fallback={null}>
+            <ReactQueryDevtools initialIsOpen={false} />
+          </React.Suspense>
+        )}
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }
 

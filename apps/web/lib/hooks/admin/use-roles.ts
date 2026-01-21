@@ -10,17 +10,18 @@ export const roleKeys = {
   permissions: () => [...roleKeys.all, "permissions"] as const,
 };
 
-export function useRoles() {
+export function useRoles(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: roleKeys.list(),
-    queryFn: () => apiClient.get<{ data: Role[] }>("/admin/roles"),
+    queryFn: () => apiClient.get<{ data: Role[] }>("/roles"),
+    enabled: options?.enabled,
   });
 }
 
 export function useRole(id: string) {
   return useQuery({
     queryKey: roleKeys.detail(id),
-    queryFn: () => apiClient.get<{ data: Role }>(`/admin/roles/${id}`),
+    queryFn: () => apiClient.get<{ data: Role }>(`/roles/${id}`),
     enabled: !!id,
   });
 }
@@ -28,7 +29,7 @@ export function useRole(id: string) {
 export function usePermissions() {
   return useQuery({
     queryKey: roleKeys.permissions(),
-    queryFn: () => apiClient.get<{ data: Permission[] }>("/admin/permissions"),
+    queryFn: () => apiClient.get<{ data: Permission[] }>("/roles/permissions"),
   });
 }
 
@@ -37,7 +38,7 @@ export function useCreateRole() {
 
   return useMutation({
     mutationFn: (data: Partial<Role> & { permissionIds?: string[] }) =>
-      apiClient.post<{ data: Role }>("/admin/roles", data),
+      apiClient.post<{ data: Role }>("/roles", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: roleKeys.list() });
       toast.success("Role created");
@@ -58,7 +59,7 @@ export function useUpdateRole() {
     }: {
       id: string;
       data: Partial<Role> & { permissionIds?: string[] };
-    }) => apiClient.patch<{ data: Role }>(`/admin/roles/${id}`, data),
+    }) => apiClient.put<{ data: Role }>(`/roles/${id}`, data),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: roleKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: roleKeys.list() });
@@ -74,7 +75,7 @@ export function useDeleteRole() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => apiClient.delete(`/admin/roles/${id}`),
+    mutationFn: (id: string) => apiClient.delete(`/roles/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: roleKeys.list() });
       toast.success("Role deleted");

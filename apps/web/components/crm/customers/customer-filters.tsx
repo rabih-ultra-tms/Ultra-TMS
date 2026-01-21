@@ -1,0 +1,56 @@
+"use client";
+
+import * as React from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCRMStore } from "@/lib/stores/crm-store";
+
+const statusOptions = [
+  { label: "All", value: "all" },
+  { label: "Active", value: "ACTIVE" },
+  { label: "Prospect", value: "PROSPECT" },
+  { label: "Inactive", value: "INACTIVE" },
+  { label: "Suspended", value: "SUSPENDED" },
+];
+
+export function CustomerFilters() {
+  const { customerFilters, setCustomerFilter, resetCustomerFilters } = useCRMStore();
+
+  return (
+    <div className="flex flex-col gap-3 rounded-md border bg-card p-4 md:flex-row md:items-center">
+      <Input
+        placeholder="Search customers"
+        value={customerFilters.search}
+        onChange={(event) => setCustomerFilter("search", event.target.value)}
+        className="md:w-72"
+      />
+      <Select
+        value={customerFilters.status || "all"}
+        onValueChange={(value) =>
+          setCustomerFilter("status", value === "all" ? "" : (value as typeof customerFilters.status))
+        }
+      >
+        <SelectTrigger className="md:w-52">
+          <SelectValue placeholder="Status" />
+        </SelectTrigger>
+        <SelectContent>
+          {statusOptions.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Input
+        placeholder="Account manager ID"
+        value={customerFilters.accountManagerId}
+        onChange={(event) => setCustomerFilter("accountManagerId", event.target.value)}
+        className="md:w-56"
+      />
+      <Button variant="outline" onClick={resetCustomerFilters}>
+        Reset
+      </Button>
+    </div>
+  );
+}

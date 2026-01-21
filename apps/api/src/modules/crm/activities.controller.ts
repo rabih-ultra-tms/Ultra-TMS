@@ -26,7 +26,7 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
 
-@Controller('activities')
+@Controller('crm/activities')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Activities')
 @ApiBearerAuth('JWT-auth')

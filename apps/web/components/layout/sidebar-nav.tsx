@@ -1,0 +1,93 @@
+"use client";
+
+import * as React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
+import type { NavGroup, NavItem } from "@/lib/types/navigation";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+
+interface SidebarNavProps {
+  groups: NavGroup[];
+  collapsed?: boolean;
+  onItemClick?: () => void;
+}
+
+export function SidebarNav({ groups, collapsed = false, onItemClick }: SidebarNavProps) {
+  const pathname = usePathname();
+
+  const isActive = (href: string) => {
+    if (!pathname) return false;
+    if (href === "/dashboard") {
+      return pathname === "/dashboard";
+    }
+    return pathname.startsWith(href);
+  };
+
+  const renderNavItem = (item: NavItem) => {
+    const Icon = item.icon;
+    const active = isActive(item.href);
+
+    const linkContent = (
+      <Link
+        href={item.disabled ? "#" : item.href}
+        onClick={onItemClick}
+        className={cn(
+          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+          "hover:bg-accent hover:text-accent-foreground",
+          active ? "bg-accent text-accent-foreground" : "text-muted-foreground",
+          item.disabled && "pointer-events-none opacity-50",
+          collapsed && "justify-center px-2"
+        )}
+      >
+        <Icon className={cn("h-4 w-4 shrink-0", active && "text-primary")} />
+        {!collapsed && (
+          <>
+            <span className="flex-1">{item.title}</span>
+            {item.badge && (
+              <Badge variant="secondary" className="ml-auto h-5 px-1.5 text-xs">
+                {item.badge}
+              </Badge>
+            )}
+          </>
+        )}
+      </Link>
+    );
+
+    if (collapsed) {
+      return (
+        <Tooltip key={item.href} delayDuration={0}>
+          <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
+          <TooltipContent side="right" className="flex items-center gap-2">
+            {item.title}
+            {item.badge && (
+              <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                {item.badge}
+              </Badge>
+            )}
+          </TooltipContent>
+        </Tooltip>
+      );
+    }
+
+    return <React.Fragment key={item.href}>{linkContent}</React.Fragment>;
+  };
+
+  return (
+    <nav className="flex flex-col gap-1">
+      {groups.map((group, groupIndex) => (
+        <div key={group.title} className={cn(groupIndex > 0 && "mt-4")}> 
+          {!collapsed && group.title ? (
+            <h4 className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              {group.title}
+            </h4>
+          ) : null}
+          <div className="flex flex-col gap-1">
+            {group.items.map(renderNavItem)}
+          </div>
+        </div>
+      ))}
+    </nav>
+  );
+}
