@@ -93,9 +93,9 @@ Add the following scripts to `apps/web/package.json`:
     "start": "next start",
     "lint": "eslint --max-warnings 0",
     "check-types": "next typegen && tsc --noEmit",
-    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
-    "test:watch": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --watch",
-    "test:coverage": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --coverage"
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
   }
 }
 ```
@@ -1722,6 +1722,18 @@ Ensure `apps/web/package.json` has the following scripts:
     "start": "next start",
     "lint": "eslint --max-warnings 0",
     "check-types": "next typegen && tsc --noEmit",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
+  }
+}
+```
+
+**Windows Users:** For PowerShell, use:
+
+```json
+{
+  "scripts": {
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
     "test:watch": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --watch",
     "test:coverage": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --coverage"
@@ -2087,8 +2099,8 @@ cat .npmrc
 **Solution:** Ensure these are in place:
 1. `package.json` has `"type": "module"`
 2. `jest.config.ts` uses `.js` extension for next/jest import
-3. Test scripts use `cross-env NODE_OPTIONS=--experimental-vm-modules`
-4. `cross-env` is installed
+3. Test scripts use `NODE_OPTIONS='--experimental-vm-modules'`
+4. Windows users: Install and use `cross-env`
 
 ```bash
 pnpm add -D cross-env
@@ -2146,6 +2158,99 @@ async function getData() {
   });
 }
 ```
+
+---
+
+### ⚠️ CRITICAL: Next.js Compilation Deadlock on Auth Pages
+
+**Problem:** Auth pages (`/login`, `/register`, `/forgot-password`, `/reset-password`) hang indefinitely during compilation with no error messages—just stuck on "Compiling /login..." forever.
+
+**Root Cause:** Custom hooks or `apiClient` imported at the form component level are evaluated during Next.js build/compile time. These modules depend on client-side APIs (like `useRouter`, React Query hooks) that don't exist in the build context, causing the compilation pipeline to freeze.
+
+**❌ WRONG - Causes compilation deadlock:**
+```typescript
+// forgot-password-form.tsx
+import { apiClient } from "@/lib/api";  // ❌ Triggers bundler evaluation
+
+export default function ForgotPasswordForm() {
+  const onSubmit = async (data) => {
+    await apiClient.post("/auth/forgot-password", data);  // ❌ Deadlock
+  };
+}
+```
+
+**❌ WRONG - Causes compilation deadlock:**
+```typescript
+// login-form.tsx
+import { useLogin } from "@/lib/hooks/use-auth";  // ❌ Hook import
+import { useRouter } from "next/navigation";       // ❌ Router import
+
+export default function LoginForm() {
+  const login = useLogin();           // ❌ Hook usage
+  const router = useRouter();         // ❌ Router usage
+  
+  const onSubmit = async (data) => {
+    await login.mutateAsync(data);
+    router.push("/dashboard");        // ❌ Deadlock
+  };
+}
+```
+
+**✅ CORRECT - Use direct fetch() + window.location:**
+```typescript
+// login-form.tsx
+import { AUTH_CONFIG } from "@/lib/config/auth";  // ✅ Plain config object, no hooks
+
+export default function LoginForm() {
+  const onSubmit = async (data) => {
+    const response = await fetch("/api/v1/auth/login", {  // ✅ Native fetch
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+      credentials: "include",
+    });
+    
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      throw new Error(body.message || "Login failed");
+    }
+    
+    window.location.href = AUTH_CONFIG.defaultRedirect;  // ✅ Native navigation
+  };
+}
+```
+
+**✅ CORRECT - forgot-password-form.tsx:**
+```typescript
+export default function ForgotPasswordForm() {
+  const onSubmit = async (data) => {
+    const response = await fetch("/api/v1/auth/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+      credentials: "include",
+    });
+    
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      throw new Error(body.message || "Request failed");
+    }
+  };
+}
+```
+
+**Key Rules for Auth Forms:**
+1. **NO** `import { apiClient } from "@/lib/api"` - use native `fetch()`
+2. **NO** `import { useRouter } from "next/navigation"` - use `window.location.href`
+3. **NO** `import { useLogin, useLogout } from "@/lib/hooks/use-auth"` - use native `fetch()`
+4. **OK** to import plain config objects like `AUTH_CONFIG`
+5. **OK** to import form libraries (`useForm`, `zod`, etc.)
+6. **OK** to import UI components (`Button`, `Input`, `Form`, etc.)
+
+**Where hooks ARE safe:**
+- Dashboard pages (already past auth boundary)
+- Components loaded after initial page compile
+- Components that don't run during SSR build
 
 ---
 

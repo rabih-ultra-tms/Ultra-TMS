@@ -32,6 +32,148 @@ Before starting, verify:
 - [ ] Foundation prompt (00) is complete
 - [ ] Auth API is deployed and accessible
 - [ ] Environment variables configured (API_URL, AUTH endpoints)
+- [ ] **DELETE** all existing auth pages and components (see below)
+
+---
+
+## ⚠️ CRITICAL: Build Auth Pages From Scratch
+
+### Problem: Next.js Compilation Deadlock
+
+Auth pages (`/login`, `/register`, `/forgot-password`, `/reset-password`) can hang indefinitely during dev compilation with no error messages if built incorrectly. The bundler freezes when custom hooks or `apiClient` are imported at the form component level.
+
+### Solution: Delete Existing Auth Files and Rebuild
+
+**Step 1: Delete all existing auth pages and components**
+
+```powershell
+# Delete existing auth pages
+Remove-Item -Recurse -Force "apps/web/app/(auth)/login" -ErrorAction SilentlyContinue
+Remove-Item -Recurse -Force "apps/web/app/(auth)/register" -ErrorAction SilentlyContinue
+Remove-Item -Recurse -Force "apps/web/app/(auth)/forgot-password" -ErrorAction SilentlyContinue
+Remove-Item -Recurse -Force "apps/web/app/(auth)/reset-password" -ErrorAction SilentlyContinue
+Remove-Item -Recurse -Force "apps/web/app/(auth)/verify-email" -ErrorAction SilentlyContinue
+Remove-Item -Recurse -Force "apps/web/app/(auth)/mfa" -ErrorAction SilentlyContinue
+
+# Delete existing auth components
+Remove-Item -Recurse -Force "apps/web/components/auth" -ErrorAction SilentlyContinue
+```
+
+**Step 2: Follow the SAFE patterns below (NOT the hook-based patterns)**
+
+### ❌ FORBIDDEN in Auth Form Components
+
+These imports cause compilation deadlock in auth forms:
+
+```typescript
+// ❌ NEVER import these in auth form components
+import { apiClient } from "@/lib/api";           // Causes deadlock
+import { useLogin, useLogout } from "@/lib/hooks/auth/use-auth";  // Causes deadlock
+import { useRouter } from "next/navigation";     // Causes deadlock
+import { useMutation } from "@tanstack/react-query";  // Causes deadlock
+```
+
+### ✅ SAFE Imports for Auth Forms
+
+```typescript
+// ✅ These are SAFE in auth form components
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import Link from "next/link";                    // ✅ Static component, OK
+import { useSearchParams } from "next/navigation";  // ✅ OK for reading params
+import { AUTH_CONFIG } from "@/lib/config/auth";   // ✅ Plain config object, OK
+import { Button, Input, Form, ... } from "@/components/ui";  // ✅ UI components, OK
+```
+
+### ✅ Auth Form Pattern (Use This!)
+
+**All auth forms MUST use direct `fetch()` and `window.location` instead of hooks:**
+
+```typescript
+// components/auth/login-form.tsx
+"use client";
+
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import Link from "next/link";
+import { AUTH_CONFIG } from "@/lib/config/auth";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+
+const loginSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
+
+export default function LoginForm() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  });
+
+  const onSubmit = async (data: LoginFormValues) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // ✅ Use direct fetch(), NOT apiClient
+      const response = await fetch("/api/v1/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(data),
+        credentials: "include",  // ✅ Send cookies
+      });
+
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as { message?: string };
+        throw new Error(body.message || `Login failed (${response.status})`);
+      }
+
+      const result = await response.json();
+      
+      // Check for MFA requirement
+      if (result.requiresMfa) {
+        window.location.href = `/mfa?token=${result.mfaToken}`;
+        return;
+      }
+
+      // ✅ Use window.location, NOT router.push()
+      window.location.href = AUTH_CONFIG.defaultRedirect;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="rounded-lg bg-white p-8 shadow-md">
+      {/* Form UI here - see full implementation below */}
+    </div>
+  );
+}
+```
+
+### When Hooks ARE Safe
+
+Hooks and `apiClient` are safe to use in:
+- **Dashboard pages** (already past auth boundary, loaded after compile)
+- **Admin components** (users table, roles, etc.)
+- **Profile components** (after user is authenticated)
+- Any component that loads AFTER the initial page compilation
 
 ---
 
@@ -335,9 +477,17 @@ export interface ChangePasswordRequest {
 
 ## 🪝 React Query Hooks
 
+> **⚠️ IMPORTANT:** These hooks are for use in **dashboard/admin pages ONLY**.
+> Do NOT use these hooks in auth pages (`/login`, `/register`, `/forgot-password`, `/reset-password`).
+> Auth pages must use direct `fetch()` - see the patterns in the "Build Auth Pages From Scratch" section above.
+
 ### File: `lib/hooks/auth/use-auth.ts`
 
 ```typescript
+/**
+ * Auth hooks for DASHBOARD pages only.
+ * ⚠️ Do NOT import these in auth form components - causes compilation deadlock.
+ */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api';
@@ -381,9 +531,8 @@ export function useLogin() {
         // Redirect to MFA verification
         router.push(`/mfa?token=${response.mfaToken}`);
       } else {
-        // Store tokens and redirect
-        localStorage.setItem('accessToken', response.accessToken);
-        localStorage.setItem('refreshToken', response.refreshToken);
+        // Tokens are stored in HTTP-only cookies by the backend
+        // Just update the client cache and redirect
         queryClient.setQueryData(authKeys.user(), { data: response.user });
         router.push('/dashboard');
         toast.success('Welcome back!');
@@ -403,8 +552,7 @@ export function useVerifyMFA() {
     mutationFn: (data: MFAVerifyRequest) =>
       apiClient.post<LoginResponse>('/auth/mfa/verify', data),
     onSuccess: (response) => {
-      localStorage.setItem('accessToken', response.accessToken);
-      localStorage.setItem('refreshToken', response.refreshToken);
+      // Tokens are stored in HTTP-only cookies by the backend
       queryClient.setQueryData(authKeys.user(), { data: response.user });
       router.push('/dashboard');
       toast.success('Welcome back!');
@@ -438,16 +586,14 @@ export function useLogout() {
   return useMutation({
     mutationFn: () => apiClient.post('/auth/logout'),
     onSuccess: () => {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
+      // Backend clears HTTP-only cookies on logout
       queryClient.clear();
       router.push('/login');
       toast.success('Logged out successfully');
     },
     onError: () => {
-      // Still clear local state even if API call fails
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
+      // Still clear client cache even if API call fails
+      queryClient.clear();
       queryClient.clear();
       router.push('/login');
     },
@@ -1000,9 +1146,13 @@ export type RoleFormData = z.infer<typeof roleFormSchema>;
 
 ## 📄 Page Implementations
 
+> **⚠️ IMPORTANT:** Auth pages use direct `fetch()` instead of hooks to avoid compilation deadlock.
+> Dashboard/admin pages CAN use hooks safely since they load after auth boundary.
+
 ### File: `app/(auth)/login/page.tsx`
 
 ```typescript
+// ⚠️ This is a SAFE auth page - uses direct fetch, no apiClient or useLogin hooks
 'use client';
 
 import * as React from 'react';
@@ -1010,6 +1160,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { Loader2, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -1024,15 +1175,25 @@ import {
 } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { loginSchema, LoginFormData } from '@/lib/validations/auth';
-import { useLogin } from '@/lib/hooks/auth/use-auth';
+import { AUTH_CONFIG } from '@/lib/config/auth';
+
+// ✅ Define schema locally - no external imports that cause issues
+const loginSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  rememberMe: z.boolean().default(false),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const searchParams = useSearchParams();
   const registered = searchParams.get('registered') === 'true';
   const reset = searchParams.get('reset') === 'true';
   
-  const { mutate: login, isPending } = useLogin();
+  // ✅ Use local state instead of useMutation
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
   
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -1043,8 +1204,42 @@ export default function LoginPage() {
     },
   });
 
-  const onSubmit = (data: LoginFormData) => {
-    login(data);
+  const onSubmit = async (data: LoginFormData) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // ✅ Use direct fetch(), NOT apiClient
+      const response = await fetch('/api/v1/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(data),
+        credentials: 'include',  // ✅ Send cookies
+      });
+
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as { message?: string };
+        throw new Error(body.message || `Login failed (${response.status})`);
+      }
+
+      const result = await response.json();
+      
+      // Check for MFA requirement
+      if (result.requiresMfa) {
+        window.location.href = `/mfa?token=${result.mfaToken}`;
+        return;
+      }
+
+      // ✅ Use window.location, NOT router.push()
+      window.location.href = AUTH_CONFIG.defaultRedirect;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Invalid credentials');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -1069,6 +1264,12 @@ export default function LoginPage() {
               <AlertDescription>
                 Password reset successful! Please login with your new password.
               </AlertDescription>
+            </Alert>
+          )}
+          
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
           
@@ -1126,8 +1327,8 @@ export default function LoginPage() {
                 )}
               />
               
-              <Button type="submit" className="w-full" disabled={isPending}>
-                {isPending ? (
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <LogIn className="mr-2 h-4 w-4" />
@@ -1152,7 +1353,581 @@ export default function LoginPage() {
 }
 ```
 
+### File: `app/(auth)/register/page.tsx`
+
+```typescript
+// ⚠️ This is a SAFE auth page - uses direct fetch, no apiClient or useRegister hooks
+'use client';
+
+import * as React from 'react';
+import Link from 'next/link';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Loader2, UserPlus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+
+const registerSchema = z.object({
+  firstName: z.string().min(2, 'First name must be at least 2 characters'),
+  lastName: z.string().min(2, 'Last name must be at least 2 characters'),
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  confirmPassword: z.string(),
+  companyName: z.string().min(2, 'Company name must be at least 2 characters'),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ['confirmPassword'],
+});
+
+type RegisterFormData = z.infer<typeof registerSchema>;
+
+export default function RegisterPage() {
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [success, setSuccess] = React.useState(false);
+  
+  const form = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      companyName: '',
+    },
+  });
+
+  const onSubmit = async (data: RegisterFormData) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // ✅ Use direct fetch(), NOT apiClient
+      const response = await fetch('/api/v1/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(data),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as { message?: string };
+        throw new Error(body.message || `Registration failed (${response.status})`);
+      }
+
+      setSuccess(true);
+      form.reset();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Registration failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+              <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <CardTitle className="mt-4 text-2xl">Account created</CardTitle>
+            <CardDescription>Check your email to verify your account.</CardDescription>
+          </CardHeader>
+          <CardFooter className="justify-center">
+            <Link href="/login">
+              <Button className="w-full">Sign in</Button>
+            </Link>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-screen items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl">Create account</CardTitle>
+          <CardDescription>Start managing your operations with Ultra TMS</CardDescription>
+        </CardHeader>
+        
+        <CardContent>
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="firstName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>First name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Jane" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="lastName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Last name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Doe" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="you@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="companyName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Company name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Acme Logistics" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirm password</FormLabel>
+                    <FormControl>
+                      <Input type="password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <UserPlus className="mr-2 h-4 w-4" />
+                )}
+                Create account
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+        
+        <CardFooter className="justify-center">
+          <p className="text-sm text-muted-foreground">
+            Already have an account?{' '}
+            <Link href="/login" className="text-primary hover:underline">
+              Sign in
+            </Link>
+          </p>
+        </CardFooter>
+      </Card>
+    </div>
+  );
+}
+```
+
+### File: `app/(auth)/forgot-password/page.tsx`
+
+```typescript
+// ⚠️ This is a SAFE auth page - uses direct fetch
+'use client';
+
+import * as React from 'react';
+import Link from 'next/link';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Loader2, Mail, ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+
+const forgotPasswordSchema = z.object({
+  email: z.string().email('Invalid email address'),
+});
+
+type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
+
+export default function ForgotPasswordPage() {
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [success, setSuccess] = React.useState(false);
+  
+  const form = useForm<ForgotPasswordFormData>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: { email: '' },
+  });
+
+  const onSubmit = async (data: ForgotPasswordFormData) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // ✅ Use direct fetch(), NOT apiClient
+      const response = await fetch('/api/v1/auth/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(data),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as { message?: string };
+        throw new Error(body.message || `Request failed (${response.status})`);
+      }
+
+      setSuccess(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Request failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+              <Mail className="h-6 w-6 text-green-600" />
+            </div>
+            <CardTitle className="mt-4 text-2xl">Check your email</CardTitle>
+            <CardDescription>
+              If an account exists with <span className="font-medium">{form.getValues('email')}</span>,
+              we've sent password reset instructions.
+            </CardDescription>
+          </CardHeader>
+          <CardFooter className="justify-center">
+            <Link href="/login">
+              <Button variant="outline">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to sign in
+              </Button>
+            </Link>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-screen items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl">Forgot password?</CardTitle>
+          <CardDescription>Enter your email to receive reset instructions</CardDescription>
+        </CardHeader>
+        
+        <CardContent>
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="you@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Mail className="mr-2 h-4 w-4" />
+                )}
+                Send reset link
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+        
+        <CardFooter className="justify-center">
+          <Link href="/login" className="text-sm text-muted-foreground hover:text-primary">
+            <ArrowLeft className="mr-1 inline h-4 w-4" />
+            Back to sign in
+          </Link>
+        </CardFooter>
+      </Card>
+    </div>
+  );
+}
+```
+
+### File: `app/(auth)/reset-password/page.tsx`
+
+```typescript
+// ⚠️ This is a SAFE auth page - uses direct fetch
+'use client';
+
+import * as React from 'react';
+import { Suspense } from 'react';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Loader2, Lock, ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+
+const resetPasswordSchema = z.object({
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ['confirmPassword'],
+});
+
+type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
+
+function ResetPasswordContent() {
+  const searchParams = useSearchParams();
+  const token = searchParams.get('token');
+  
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [success, setSuccess] = React.useState(false);
+  
+  const form = useForm<ResetPasswordFormData>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: { password: '', confirmPassword: '' },
+  });
+
+  const onSubmit = async (data: ResetPasswordFormData) => {
+    if (!token) {
+      setError('Invalid or missing reset token');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // ✅ Use direct fetch(), NOT apiClient
+      const response = await fetch('/api/v1/auth/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ ...data, token }),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as { message?: string };
+        throw new Error(body.message || `Request failed (${response.status})`);
+      }
+
+      setSuccess(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Request failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+              <Lock className="h-6 w-6 text-green-600" />
+            </div>
+            <CardTitle className="mt-4 text-2xl">Password reset</CardTitle>
+            <CardDescription>Your password has been reset successfully.</CardDescription>
+          </CardHeader>
+          <CardFooter className="justify-center">
+            <Link href="/login">
+              <Button className="w-full">Sign in</Button>
+            </Link>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-screen items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl">Reset password</CardTitle>
+          <CardDescription>Enter your new password</CardDescription>
+        </CardHeader>
+        
+        <CardContent>
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>New password</FormLabel>
+                    <FormControl>
+                      <Input type="password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirm password</FormLabel>
+                    <FormControl>
+                      <Input type="password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Lock className="mr-2 h-4 w-4" />
+                )}
+                Reset password
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+        
+        <CardFooter className="justify-center">
+          <Link href="/login" className="text-sm text-muted-foreground hover:text-primary">
+            <ArrowLeft className="mr-1 inline h-4 w-4" />
+            Back to sign in
+          </Link>
+        </CardFooter>
+      </Card>
+    </div>
+  );
+}
+
+// Wrap in Suspense for useSearchParams
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+      <ResetPasswordContent />
+    </Suspense>
+  );
+}
+```
+
 ### File: `app/(dashboard)/admin/users/page.tsx`
+
+> **Note:** Dashboard pages CAN use hooks safely - they load after the auth boundary.
 
 ```typescript
 'use client';
@@ -1539,13 +2314,16 @@ export const authHandlers = [
 - [ ] `components/profile/active-sessions.tsx`
 
 ### Auth Pages
+> ⚠️ **REBUILD FROM SCRATCH** - Delete existing files first and use direct `fetch()` pattern
+
+- [ ] Delete existing auth pages and components (see Pre-Implementation Checklist)
 - [ ] `app/(auth)/layout.tsx`
-- [ ] `app/(auth)/login/page.tsx`
-- [ ] `app/(auth)/register/page.tsx`
-- [ ] `app/(auth)/forgot-password/page.tsx`
-- [ ] `app/(auth)/reset-password/page.tsx`
-- [ ] `app/(auth)/verify-email/page.tsx`
-- [ ] `app/(auth)/mfa/page.tsx`
+- [ ] `app/(auth)/login/page.tsx` - Use direct `fetch()`, NOT hooks
+- [ ] `app/(auth)/register/page.tsx` - Use direct `fetch()`, NOT hooks
+- [ ] `app/(auth)/forgot-password/page.tsx` - Use direct `fetch()`, NOT hooks
+- [ ] `app/(auth)/reset-password/page.tsx` - Use direct `fetch()`, NOT hooks
+- [ ] `app/(auth)/verify-email/page.tsx` - Use direct `fetch()`, NOT hooks
+- [ ] `app/(auth)/mfa/page.tsx` - Use direct `fetch()`, NOT hooks
 
 ### Admin Pages
 - [ ] `app/(dashboard)/admin/users/page.tsx`
