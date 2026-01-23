@@ -35,18 +35,27 @@ export const contactFormSchema = z.object({
 });
 
 export const leadFormSchema = z.object({
-  title: z.string().min(1, "Title is required"),
+  name: z.string().min(1, "Name is required"),
+  companyId: z.string().refine((val) => val.length > 0, {
+    message: "Company is required",
+  }).refine((val) => {
+    if (val.length === 0) return true;
+    // UUID regex pattern
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+  }, {
+    message: "Invalid company selected",
+  }),
   description: z.string().optional(),
-  companyName: z.string().optional(),
-  contactName: z.string().optional(),
-  email: z.string().email("Valid email required").optional().or(z.literal("")),
-  phone: z.string().optional(),
-  stage: z.enum(["NEW", "QUALIFIED", "PROPOSAL", "NEGOTIATION", "WON", "LOST"]),
-  probability: z.number().min(0).max(100),
+  stage: z.enum(["LEAD", "QUALIFIED", "PROPOSAL", "NEGOTIATION", "WON", "LOST"]),
+  probability: z.number().min(0).max(100).optional(),
   estimatedValue: z.number().min(0).optional(),
   expectedCloseDate: z.string().optional(),
-  source: z.string().optional(),
-  ownerId: z.string().optional(),
+  ownerId: z.string().optional().refine((val) => {
+    if (!val || val.length === 0) return true;
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+  }, {
+    message: "Invalid owner selected",
+  }),
 });
 
 export const activityFormSchema = z.object({

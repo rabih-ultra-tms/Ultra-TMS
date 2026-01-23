@@ -9,20 +9,42 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-import { userFormSchema, type UserFormData } from "@/lib/validations/auth";
+import {
+  createUserFormSchema,
+  updateUserFormSchema,
+  type CreateUserFormData,
+  type UpdateUserFormData,
+  type UserFormData,
+} from "@/lib/validations/auth";
 import { useRoles } from "@/lib/hooks/admin/use-roles";
 import { LoadingState } from "@/components/shared";
 
+type UserFormMode = "create" | "edit";
+
+function isUuid(value: string | undefined): value is string {
+  if (!value) return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
 interface UserFormProps {
+  mode?: UserFormMode;
   defaultValues?: Partial<UserFormData>;
   onSubmit: (data: UserFormData) => Promise<void> | void;
   submitLabel?: string;
   isLoading?: boolean;
 }
 
-const statusOptions: Array<UserFormData["status"]> = ["ACTIVE", "INACTIVE", "PENDING", "SUSPENDED", "LOCKED"];
+const statusOptions: Array<NonNullable<UpdateUserFormData["status"]>> = [
+  "ACTIVE",
+  "INACTIVE",
+  "PENDING",
+  "SUSPENDED",
+  "LOCKED",
+  "INVITED",
+];
 
 export function UserForm({
+  mode = "create",
   defaultValues,
   onSubmit,
   submitLabel = "Save User",
@@ -30,32 +52,54 @@ export function UserForm({
 }: UserFormProps) {
   const rolesQuery = useRoles();
   const roles = rolesQuery.data?.data || [];
-  
-  console.log('Available roles:', roles);
+
+  const defaultCreateValues: CreateUserFormData = {
+    email: "",
+    firstName: "",
+    lastName: "",
+    password: "",
+    roleId: "",
+    ...defaultValues,
+  } as CreateUserFormData;
+
+  const defaultEditValues: UpdateUserFormData = {
+    email: "",
+    firstName: "",
+    lastName: "",
+    password: "",
+    roleId: "",
+    status: "ACTIVE",
+    ...defaultValues,
+  } as UpdateUserFormData;
+
+  const resolver = mode === "create" ? createUserFormSchema : updateUserFormSchema;
 
   const form = useForm<UserFormData>({
-    resolver: zodResolver(userFormSchema),
-    defaultValues: {
-      email: "",
-      firstName: "",
-      lastName: "",
-      roleId: "",
-      status: "ACTIVE",
-      ...defaultValues,
-    },
+    resolver: zodResolver(resolver),
+    defaultValues: mode === "create" ? defaultCreateValues : defaultEditValues,
   });
 
   const handleSubmit = form.handleSubmit(async (values) => {
-    console.log('Form values before cleaning:', values);
-    
-    // Remove roleId if it's empty string or undefined
-    const { roleId, ...rest } = values;
-    const cleanedValues = roleId && roleId.trim() !== "" 
-      ? { ...rest, roleId } 
-      : rest;
-    
-    console.log('Cleaned values being submitted:', cleanedValues);
-    await onSubmit(cleanedValues);
+    const { roleId, password, status, ...rest } = values;
+
+    const cleanedRoleId = isUuid(roleId?.trim()) ? roleId?.trim() : undefined;
+    const cleanedPassword = password && password.trim() !== "" ? password : undefined;
+
+    const payload: UserFormData =
+      mode === "create"
+        ? {
+            ...rest,
+            ...(cleanedRoleId ? { roleId: cleanedRoleId } : {}),
+            password: cleanedPassword!,
+          }
+        : {
+            ...rest,
+            ...(cleanedRoleId ? { roleId: cleanedRoleId } : {}),
+            ...(status ? { status } : {}),
+            ...(cleanedPassword ? { password: cleanedPassword } : {}),
+          };
+
+    await onSubmit(payload);
   });
 
   if (rolesQuery.isLoading) {
@@ -138,26 +182,43 @@ export function UserForm({
                 </FormItem>
               )}
             />
+
+            {mode === "edit" && (
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {statusOptions.map((status) => (
+                          <SelectItem key={status} value={status}>
+                            {status}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
             <FormField
               control={form.control}
-              name="status"
+              name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {statusOptions.filter(Boolean).map((status) => (
-                        <SelectItem key={status} value={status!}>
-                          {status}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>{mode === "create" ? "Password" : "New password (optional)"}</FormLabel>
+                  <FormControl>
+                    <Input type="password" autoComplete="new-password" {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

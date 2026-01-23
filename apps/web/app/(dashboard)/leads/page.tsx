@@ -16,7 +16,7 @@ import { useDebounce } from "@/lib/hooks";
 
 const stageOptions = [
   { label: "All", value: "all" },
-  { label: "New", value: "NEW" },
+  { label: "Lead", value: "LEAD" },
   { label: "Qualified", value: "QUALIFIED" },
   { label: "Proposal", value: "PROPOSAL" },
   { label: "Negotiation", value: "NEGOTIATION" },

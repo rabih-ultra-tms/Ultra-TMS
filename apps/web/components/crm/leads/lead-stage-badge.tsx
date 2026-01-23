@@ -3,7 +3,7 @@ import type { LeadStage } from "@/lib/types/crm";
 import { cn } from "@/lib/utils";
 
 const stageStyles: Record<LeadStage, string> = {
-  NEW: "bg-slate-100 text-slate-700 border-slate-200",
+  LEAD: "bg-slate-100 text-slate-700 border-slate-200",
   QUALIFIED: "bg-blue-100 text-blue-700 border-blue-200",
   PROPOSAL: "bg-indigo-100 text-indigo-700 border-indigo-200",
   NEGOTIATION: "bg-amber-100 text-amber-700 border-amber-200",

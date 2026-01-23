@@ -5,13 +5,13 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { UserForm } from "@/components/admin/users/user-form";
 import { Button } from "@/components/ui/button";
 import { useCreateUser } from "@/lib/hooks/admin/use-users";
-import type { UserFormData } from "@/lib/validations/auth";
+import type { CreateUserFormData } from "@/lib/validations/auth";
 
 export default function NewUserPage() {
   const router = useRouter();
   const createUser = useCreateUser();
 
-  const handleSubmit = async (data: UserFormData) => {
+  const handleSubmit = async (data: CreateUserFormData) => {
     await createUser.mutateAsync(data);
     router.push("/admin/users");
   };
@@ -28,6 +28,7 @@ export default function NewUserPage() {
         }
       />
       <UserForm
+        mode="create"
         onSubmit={handleSubmit}
         submitLabel={createUser.isPending ? "Saving..." : "Create User"}
         isLoading={createUser.isPending}

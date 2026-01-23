@@ -60,12 +60,29 @@ export const mfaCodeSchema = z.object({
   code: z.string().length(6, 'Code must be 6 digits').regex(/^\d+$/, 'Code must be numeric'),
 });
 
-export const userFormSchema = z.object({
+const optionalStringOrEmpty = z.union([z.string(), z.literal(''), z.null(), z.undefined()]);
+
+const optionalPassword = z.union([
+  z.string().min(8, 'Password must be at least 8 characters'),
+  z.literal(''),
+  z.undefined(),
+]);
+
+export const createUserFormSchema = z.object({
   email: z.string().email('Valid email is required'),
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
-  roleId: z.string().optional(),
-  status: z.enum(['ACTIVE', 'INACTIVE', 'PENDING', 'SUSPENDED', 'LOCKED']).optional(),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  roleId: optionalStringOrEmpty,
+});
+
+export const updateUserFormSchema = z.object({
+  email: z.string().email('Valid email is required'),
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+  password: optionalPassword,
+  roleId: optionalStringOrEmpty,
+  status: z.enum(['ACTIVE', 'INACTIVE', 'PENDING', 'SUSPENDED', 'LOCKED', 'INVITED']).optional(),
 });
 
 export const roleFormSchema = z.object({
@@ -81,5 +98,7 @@ export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 export type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 export type MFACodeFormData = z.infer<typeof mfaCodeSchema>;
-export type UserFormData = z.infer<typeof userFormSchema>;
+export type CreateUserFormData = z.infer<typeof createUserFormSchema>;
+export type UpdateUserFormData = z.infer<typeof updateUserFormSchema>;
+export type UserFormData = CreateUserFormData | UpdateUserFormData;
 export type RoleFormData = z.infer<typeof roleFormSchema>;

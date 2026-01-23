@@ -7,7 +7,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { leadFormSchema, type LeadFormData } from "@/lib/validations/crm";
-import { PhoneInput } from "@/components/crm/shared/phone-input";
+import { useCompanies } from "@/lib/hooks/crm/use-companies";
+import { useUsers } from "@/lib/hooks/admin/use-users";
+import { LoadingState } from "@/components/shared";
 
 interface LeadFormProps {
   defaultValues?: Partial<LeadFormData>;
@@ -16,14 +18,7 @@ interface LeadFormProps {
   isLoading?: boolean;
 }
 
-const stageOptions: LeadFormData["stage"][] = [
-  "NEW",
-  "QUALIFIED",
-  "PROPOSAL",
-  "NEGOTIATION",
-  "WON",
-  "LOST",
-];
+const stageOptions: LeadFormData["stage"][] = ["LEAD", "QUALIFIED", "PROPOSAL", "NEGOTIATION", "WON", "LOST"];
 
 export function LeadForm({
   defaultValues,
@@ -31,28 +26,45 @@ export function LeadForm({
   submitLabel = "Save Lead",
   isLoading = false,
 }: LeadFormProps) {
+  const companiesQuery = useCompanies({ limit: 50 });
+  const usersQuery = useUsers({ limit: 50 });
+  const companies = companiesQuery.data?.data || [];
+  const owners = usersQuery.data?.data || [];
+
   const form = useForm<LeadFormData>({
     resolver: zodResolver(leadFormSchema),
+    mode: "onSubmit",
+    reValidateMode: "onChange",
     defaultValues: {
-      title: "",
+      name: "",
+      companyId: "",
       description: "",
-      companyName: "",
-      contactName: "",
-      email: "",
-      phone: "",
-      stage: "NEW",
-      probability: 25,
+      stage: "LEAD",
+      probability: 0,
       estimatedValue: undefined,
       expectedCloseDate: "",
-      source: "",
       ownerId: "",
       ...defaultValues,
     },
   });
 
   const handleSubmit = form.handleSubmit(async (values) => {
-    await onSubmit(values);
+    const cleaned: LeadFormData = {
+      ...values,
+      name: values.name.trim(),
+      companyId: values.companyId.trim(),
+      probability: values.probability ?? 0,
+      estimatedValue: values.estimatedValue ?? undefined,
+      expectedCloseDate: values.expectedCloseDate || undefined,
+      ownerId: values.ownerId?.trim() || undefined,
+    };
+
+    await onSubmit(cleaned);
   });
+
+  if (companiesQuery.isLoading && companies.length === 0) {
+    return <LoadingState message="Loading companies..." />;
+  }
 
   return (
     <Form {...form}>
@@ -64,13 +76,37 @@ export function LeadForm({
           <CardContent className="grid gap-4 md:grid-cols-2">
             <FormField
               control={form.control}
-              name="title"
+              name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Title</FormLabel>
+                  <FormLabel>Name</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="companyId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Company</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange} disabled={companiesQuery.isLoading}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select company" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {companies.map((company) => (
+                        <SelectItem key={company.id} value={company.id}>
+                          {company.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -101,51 +137,12 @@ export function LeadForm({
             />
             <FormField
               control={form.control}
-              name="companyName"
+              name="description"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Company name</FormLabel>
+                <FormItem className="md:col-span-2">
+                  <FormLabel>Description</FormLabel>
                   <FormControl>
                     <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="contactName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Contact name</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input type="email" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Phone</FormLabel>
-                  <FormControl>
-                    <PhoneInput {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -224,13 +221,29 @@ export function LeadForm({
             />
             <FormField
               control={form.control}
-              name="source"
+              name="ownerId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Source</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
+                  <FormLabel>Owner (optional)</FormLabel>
+                  <Select
+                    value={field.value || "__unset__"}
+                    onValueChange={(val) => field.onChange(val === "__unset__" ? "" : val)}
+                    disabled={usersQuery.isLoading}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Unassigned" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="__unset__">Unassigned</SelectItem>
+                      {owners.map((user) => (
+                        <SelectItem key={user.id} value={user.id}>
+                          {`${user.firstName} ${user.lastName}`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

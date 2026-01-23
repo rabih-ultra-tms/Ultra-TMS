@@ -47,12 +47,12 @@ export function LeadsTable({
           <TableBody>
             {leads.map((lead) => (
               <TableRow key={lead.id}>
-                <TableCell className="font-medium">{lead.title}</TableCell>
-                <TableCell>{lead.companyName || "—"}</TableCell>
+                <TableCell className="font-medium">{lead.name}</TableCell>
+                <TableCell>{lead.company?.name || "—"}</TableCell>
                 <TableCell>
                   <LeadStageBadge stage={lead.stage} />
                 </TableCell>
-                <TableCell>{lead.owner?.name || "Unassigned"}</TableCell>
+                <TableCell>{lead.owner ? `${lead.owner.firstName} ${lead.owner.lastName}` : "Unassigned"}</TableCell>
                 <TableCell className="text-right">
                   <Button
                     variant="outline"

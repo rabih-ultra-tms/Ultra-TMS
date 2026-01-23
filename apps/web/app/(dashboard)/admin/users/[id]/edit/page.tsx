@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/button";
 import { UserForm } from "@/components/admin/users/user-form";
 import { useUser, useUpdateUser } from "@/lib/hooks/admin/use-users";
-import type { UserFormData } from "@/lib/validations/auth";
+import type { UpdateUserFormData } from "@/lib/validations/auth";
 import { LoadingState, ErrorState } from "@/components/shared";
 
 export default function EditUserPage() {
@@ -17,7 +17,7 @@ export default function EditUserPage() {
 
   const user = data?.data;
 
-  const handleSubmit = async (values: UserFormData) => {
+  const handleSubmit = async (values: UpdateUserFormData) => {
     await updateUser.mutateAsync({ id: userId, data: values });
     router.push(`/admin/users/${userId}`);
   };
@@ -52,6 +52,7 @@ export default function EditUserPage() {
         }
       />
       <UserForm
+        mode="edit"
         defaultValues={{
           email: user.email,
           firstName: user.firstName,

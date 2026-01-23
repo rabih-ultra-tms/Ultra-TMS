@@ -9,6 +9,8 @@ export interface JwtPayload {
   email: string;
   tenantId: string;
   roleId: string;
+  roleName?: string | null;
+  roles?: string[];
   type: 'access' | 'refresh';
   iat?: number;
   exp?: number;

@@ -14,14 +14,14 @@ export function LeadCard({ lead, onSelect }: LeadCardProps) {
       onClick={() => onSelect?.(lead.id)}
     >
       <CardHeader className="space-y-2">
-        <CardTitle className="text-base">{lead.title}</CardTitle>
+        <CardTitle className="text-base">{lead.name}</CardTitle>
         <LeadStageBadge stage={lead.stage} />
       </CardHeader>
       <CardContent className="space-y-2 text-sm">
-        <div className="text-muted-foreground">{lead.companyName || "No company"}</div>
+        <div className="text-muted-foreground">{lead.company?.name || "No company"}</div>
         <div className="flex items-center justify-between">
           <span>Probability</span>
-          <span className="font-medium">{lead.probability}%</span>
+          <span className="font-medium">{(lead.probability ?? 0)}%</span>
         </div>
         {lead.estimatedValue ? (
           <div className="flex items-center justify-between">

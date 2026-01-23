@@ -1,4 +1,5 @@
 "use client";
+import * as React from "react";
 import Link from "next/link";
 import { Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -8,6 +9,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarNav } from "./sidebar-nav";
 import { navigationConfig } from "@/lib/config/navigation";
 import { useUIStore } from "@/lib/stores/ui-store";
+import { useCurrentUser } from "@/lib/hooks/use-auth";
 
 interface AppSidebarProps {
   className?: string;
@@ -15,6 +17,42 @@ interface AppSidebarProps {
 
 export function AppSidebar({ className }: AppSidebarProps) {
   const { sidebarOpen, setSidebarOpen, sidebarCollapsed } = useUIStore();
+  const { data: currentUser } = useCurrentUser();
+
+  const userRoles = React.useMemo(() => {
+    const rolesFromArray = currentUser?.roles?.map((role) => role.name) ?? [];
+    const singleRole = (currentUser as { role?: { name?: string } })?.role?.name;
+    const normalize = (role: string) => role.replace(/-/g, "_").toUpperCase();
+    const collected = [...rolesFromArray, ...(singleRole ? [singleRole] : [])];
+    const normalized = Array.from(new Set(collected.filter(Boolean).map(normalize)));
+    console.log('[Sidebar] User roles:', normalized);
+    return normalized;
+  }, [currentUser]);
+
+  const canSeeItem = React.useCallback(
+    (requiredRoles?: string[]) => {
+      if (!requiredRoles || requiredRoles.length === 0) {
+        return true;
+      }
+      const normalized = requiredRoles.map((role) => role.replace(/-/g, "_").toUpperCase());
+      return userRoles.some((role) => normalized.includes(role));
+    },
+    [userRoles]
+  );
+
+  const filteredMainNav = React.useMemo(() =>
+    navigationConfig.mainNav
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) => canSeeItem(item.requiredRoles)),
+      }))
+      .filter((group) => group.items.length > 0),
+  [canSeeItem]);
+
+  const filteredBottomNav = React.useMemo(
+    () => navigationConfig.bottomNav.filter((item) => canSeeItem(item.requiredRoles)),
+    [canSeeItem]
+  );
 
   const sidebarContent = (
     <TooltipProvider delayDuration={0}>
@@ -34,12 +72,12 @@ export function AppSidebar({ className }: AppSidebarProps) {
         </div>
 
         <ScrollArea className="flex-1 px-3 py-4">
-          <SidebarNav groups={navigationConfig.mainNav} collapsed={sidebarCollapsed} />
+          <SidebarNav groups={filteredMainNav} collapsed={sidebarCollapsed} />
         </ScrollArea>
 
         <div className="mt-auto border-t p-3">
           <SidebarNav
-            groups={[{ title: "", items: navigationConfig.bottomNav }]}
+            groups={[{ title: "", items: filteredBottomNav }]}
             collapsed={sidebarCollapsed}
           />
         </div>
@@ -77,12 +115,12 @@ export function AppSidebar({ className }: AppSidebarProps) {
             </div>
 
             <ScrollArea className="flex-1 px-3 py-4">
-              <SidebarNav groups={navigationConfig.mainNav} onItemClick={() => setSidebarOpen(false)} />
+              <SidebarNav groups={filteredMainNav} onItemClick={() => setSidebarOpen(false)} />
             </ScrollArea>
 
             <div className="mt-auto border-t p-3">
               <SidebarNav
-                groups={[{ title: "", items: navigationConfig.bottomNav }]}
+                groups={[{ title: "", items: filteredBottomNav }]}
                 onItemClick={() => setSidebarOpen(false)}
               />
             </div>

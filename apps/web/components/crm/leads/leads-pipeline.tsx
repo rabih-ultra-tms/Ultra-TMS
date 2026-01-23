@@ -7,14 +7,7 @@ interface LeadsPipelineProps {
   onSelectLead?: (id: string) => void;
 }
 
-const stageOrder: LeadStage[] = [
-  "NEW",
-  "QUALIFIED",
-  "PROPOSAL",
-  "NEGOTIATION",
-  "WON",
-  "LOST",
-];
+const stageOrder: LeadStage[] = ["LEAD", "QUALIFIED", "PROPOSAL", "NEGOTIATION", "WON", "LOST"];
 
 export function LeadsPipeline({ pipeline, onSelectLead }: LeadsPipelineProps) {
   return (

@@ -14,7 +14,11 @@ export const customerKeys = {
 export function useCustomers(params: CustomerListParams = {}) {
   return useQuery({
     queryKey: customerKeys.list(params),
-    queryFn: () => apiClient.get<PaginatedResponse<Customer>>("/crm/companies", { ...params, companyType: "CUSTOMER" }),
+    queryFn: () => 
+      apiClient.get<PaginatedResponse<Customer>>("/crm/companies", {
+        ...params,
+        companyType: "CUSTOMER",
+      }),
   });
 }
 

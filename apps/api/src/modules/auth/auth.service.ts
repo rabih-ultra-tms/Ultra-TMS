@@ -377,18 +377,28 @@ export class AuthService {
    * Generate access and refresh token pair
    */
   private async generateTokenPair(
-    user: { id: string; email: string; tenantId: string | null; roleId: string | null },
+    user: {
+      id: string;
+      email: string;
+      tenantId: string | null;
+      roleId: string | null;
+      role?: { name?: string; permissions?: unknown } | null;
+    },
     userAgent?: string,
     ipAddress?: string,
     existingSessionId?: string,
   ): Promise<TokenPair> {
     const sessionId = existingSessionId || crypto.randomUUID();
+    const roleName = user.role?.name || null;
+    const roles = roleName ? [roleName] : [];
 
     const accessTokenPayload = {
       sub: user.id,
       email: user.email,
       tenantId: user.tenantId,
       roleId: user.roleId,
+      roleName,
+      roles,
       type: 'access',
     };
 
@@ -397,6 +407,8 @@ export class AuthService {
       email: user.email,
       tenantId: user.tenantId,
       roleId: user.roleId,
+      roleName,
+      roles,
       type: 'refresh',
       jti: sessionId,
       userAgent,

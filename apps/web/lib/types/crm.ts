@@ -1,11 +1,5 @@
 export type CustomerStatus = "ACTIVE" | "INACTIVE" | "PROSPECT" | "SUSPENDED";
-export type LeadStage =
-  | "NEW"
-  | "QUALIFIED"
-  | "PROPOSAL"
-  | "NEGOTIATION"
-  | "WON"
-  | "LOST";
+export type LeadStage = "LEAD" | "QUALIFIED" | "PROPOSAL" | "NEGOTIATION" | "WON" | "LOST";
 export type ActivityType = "CALL" | "EMAIL" | "MEETING" | "NOTE" | "TASK";
 
 export interface Address {
@@ -63,22 +57,18 @@ export interface Contact {
 
 export interface Lead {
   id: string;
-  title: string;
+  name: string;
   description?: string;
   stage: LeadStage;
-  probability: number;
+  probability?: number;
   estimatedValue?: number;
   expectedCloseDate?: string;
-  companyName?: string;
-  contactName?: string;
-  email?: string;
-  phone?: string;
+  companyId: string;
+  company?: { id: string; name: string };
+  primaryContactId?: string;
+  primaryContact?: { id: string; firstName: string; lastName: string };
   ownerId?: string;
-  owner?: { id: string; name: string };
-  source?: string;
-  campaign?: string;
-  convertedCustomerId?: string;
-  convertedAt?: string;
+  owner?: { id: string; firstName: string; lastName: string };
   createdAt: string;
   updatedAt: string;
 }
