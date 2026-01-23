@@ -41,6 +41,10 @@ export class CreateActivityDto {
   opportunityId?: string;
 
   @IsOptional()
+  @IsUUID()
+  leadId?: string;
+
+  @IsOptional()
   @IsDateString()
   dueDate?: string;
 
@@ -107,4 +111,8 @@ export class UpdateActivityDto {
   @IsOptional()
   @IsUUID()
   ownerId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  leadId?: string;
 }

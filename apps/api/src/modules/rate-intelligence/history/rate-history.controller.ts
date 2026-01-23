@@ -14,7 +14,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 export class RateHistoryController {
   constructor(private readonly service: RateHistoryService) {}
 
-  @Get('api/v1/rates/history')
+  @Get('rates/history')
   @ApiOperation({ summary: 'Get rate history' })
   @ApiQuery({ name: 'origin', required: false, type: String })
   @ApiQuery({ name: 'destination', required: false, type: String })
@@ -25,7 +25,7 @@ export class RateHistoryController {
     return this.service.history(tenantId, query);
   }
 
-  @Get('api/v1/rates/trends')
+  @Get('rates/trends')
   @ApiOperation({ summary: 'Get rate trends' })
   @ApiQuery({ name: 'origin', required: false, type: String })
   @ApiQuery({ name: 'destination', required: false, type: String })

@@ -15,7 +15,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 export class RateLookupController {
   constructor(private readonly service: RateLookupService) {}
 
-  @Post('api/v1/rates/lookup')
+  @Post('rates/lookup')
   @ApiOperation({ summary: 'Lookup current market rate' })
   @ApiStandardResponse('Rate lookup result')
   @ApiErrorResponses()
@@ -27,7 +27,7 @@ export class RateLookupController {
     return this.service.lookup(tenantId, userId, dto);
   }
 
-  @Post('api/v1/rates/lookup/batch')
+  @Post('rates/lookup/batch')
   @ApiOperation({ summary: 'Batch rate lookup' })
   @ApiStandardResponse('Batch rate lookup result')
   @ApiErrorResponses()

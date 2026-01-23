@@ -3,7 +3,9 @@ import { render, screen, waitFor } from "@/test/utils";
 import userEvent from "@testing-library/user-event";
 import type { UserNav as UserNavType } from "./user-nav";
 
-jest.unstable_mockModule("@/lib/hooks/use-auth", () => ({
+const jestMock = jest as typeof jest & { unstable_mockModule: typeof jest.mock };
+
+jestMock.unstable_mockModule("@/lib/hooks/use-auth", () => ({
   useCurrentUser: () => ({
     data: {
       id: "1",

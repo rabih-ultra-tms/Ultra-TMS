@@ -285,6 +285,16 @@ describe('Agent API E2E', () => {
     const rbacApp = setup.app;
     const rbacPrisma = setup.prisma;
 
+    await rbacPrisma.agentPortalUser.deleteMany({
+      where: { tenantId: 'tenant-agent-rbac', userId: 'user-agent-rbac' },
+    });
+    await rbacPrisma.agent.deleteMany({
+      where: {
+        tenantId: 'tenant-agent-rbac',
+        agentCode: { in: ['A-1001', 'A-1002'] },
+      },
+    });
+
     const ownAgent = await rbacPrisma.agent.create({
       data: {
         tenantId: 'tenant-agent-rbac',

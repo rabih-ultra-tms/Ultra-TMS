@@ -15,7 +15,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 export class RateAlertsController {
   constructor(private readonly service: RateAlertsService) {}
 
-  @Get('api/v1/rates/alerts')
+  @Get('rates/alerts')
   @ApiOperation({ summary: 'List rate alerts' })
   @ApiStandardResponse('Rate alerts list')
   @ApiErrorResponses()
@@ -24,7 +24,7 @@ export class RateAlertsController {
     return this.service.list(tenantId);
   }
 
-  @Post('api/v1/rates/alerts')
+  @Post('rates/alerts')
   @ApiOperation({ summary: 'Create rate alert' })
   @ApiStandardResponse('Rate alert created')
   @ApiErrorResponses()
@@ -36,7 +36,7 @@ export class RateAlertsController {
     return this.service.create(tenantId, userId, dto);
   }
 
-  @Patch('api/v1/rates/alerts/:id')
+  @Patch('rates/alerts/:id')
   @ApiOperation({ summary: 'Update rate alert' })
   @ApiParam({ name: 'id', description: 'Alert ID' })
   @ApiStandardResponse('Rate alert updated')
@@ -45,7 +45,7 @@ export class RateAlertsController {
     return this.service.update(tenantId, id, dto);
   }
 
-  @Delete('api/v1/rates/alerts/:id')
+  @Delete('rates/alerts/:id')
   @ApiOperation({ summary: 'Delete rate alert' })
   @ApiParam({ name: 'id', description: 'Alert ID' })
   @ApiStandardResponse('Rate alert deleted')
@@ -55,7 +55,7 @@ export class RateAlertsController {
     return this.service.remove(tenantId, id);
   }
 
-  @Get('api/v1/rates/alerts/:id/history')
+  @Get('rates/alerts/:id/history')
   @ApiOperation({ summary: 'Get rate alert history' })
   @ApiParam({ name: 'id', description: 'Alert ID' })
   @ApiStandardResponse('Rate alert history')

@@ -13,9 +13,10 @@ export const leadKeys = {
 };
 
 export function useLeads(params: LeadListParams = {}) {
+  const queryParams = params as Record<string, string | number | boolean | null | undefined>;
   return useQuery({
     queryKey: leadKeys.list(params),
-    queryFn: () => apiClient.get<PaginatedResponse<Lead>>("/crm/opportunities", params),
+    queryFn: () => apiClient.get<PaginatedResponse<Lead>>("/crm/opportunities", queryParams),
   });
 }
 

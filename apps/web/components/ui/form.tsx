@@ -1,5 +1,5 @@
 import * as React from "react";
-import type { FieldValues, FormProviderProps } from "react-hook-form";
+import type { FieldPath, FieldValues, FormProviderProps } from "react-hook-form";
 import {
   Controller,
   FormProvider,
@@ -32,21 +32,27 @@ const useFormField = () => {
   };
 };
 
-const Form = <TFieldValues extends FieldValues = FieldValues, TContext = unknown>(
-  props: FormProviderProps<TFieldValues, TContext>
+const Form = <
+  TFieldValues extends FieldValues = FieldValues,
+  TContext = unknown,
+  TTransformedValues extends FieldValues = TFieldValues
+>(
+  props: FormProviderProps<TFieldValues, TContext, TTransformedValues>
 ) => {
   const { children, ...rest } = props;
   return <FormProvider {...rest}>{children}</FormProvider>;
 };
 
-const FormField = <TFieldValues extends FieldValues = FieldValues>({
+const FormField = <
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
+>({
   name,
   ...props
-}: ControllerProps<TFieldValues>) => {
+}: ControllerProps<TFieldValues, TName>) => {
   return (
     <FormFieldContext.Provider value={{ name: name as string }}>
-      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-      <Controller name={name} {...(props as any)} />
+      <Controller name={name} {...props} />
     </FormFieldContext.Provider>
   );
 };
@@ -71,7 +77,15 @@ const FormControl = React.forwardRef<
   React.HTMLAttributes<HTMLDivElement> & { asChild?: boolean }
 >(({ className, asChild, ...props }, ref) => {
   const Comp = asChild ? Slot : "div";
-  return <Comp ref={ref} className={cn(className)} {...props} />;
+  const { error } = useFormField();
+  return (
+    <Comp
+      ref={ref}
+      className={cn(className)}
+      aria-invalid={Boolean(error)}
+      {...props}
+    />
+  );
 });
 FormControl.displayName = "FormControl";
 
@@ -103,7 +117,10 @@ const FormMessage = React.forwardRef<
 });
 FormMessage.displayName = "FormMessage";
 
-export type FormProps<TFieldValues extends FieldValues = FieldValues, TContext = unknown> =
-  UseFormReturn<TFieldValues, TContext>;
+export type FormProps<
+  TFieldValues extends FieldValues = FieldValues,
+  TContext = unknown,
+  TTransformedValues extends FieldValues = TFieldValues
+> = UseFormReturn<TFieldValues, TContext, TTransformedValues>;
 
 export { Form, FormItem, FormLabel, FormControl, FormDescription, FormMessage, FormField, useFormField };

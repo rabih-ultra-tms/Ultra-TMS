@@ -37,12 +37,17 @@ export default function ContactDetailPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={contact.fullName}
+        title={contact.fullName || `${contact.firstName} ${contact.lastName}`.trim()}
         description={contact.title || "Contact details"}
         actions={
-          <Button variant="outline" onClick={() => router.back()}>
-            Back
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => router.push(`/contacts/${contactId}/edit`)}>
+              Edit
+            </Button>
+            <Button variant="outline" onClick={() => router.back()}>
+              Back
+            </Button>
+          </div>
         }
       />
       <ContactCard contact={contact} />

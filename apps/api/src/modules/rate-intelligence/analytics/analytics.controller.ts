@@ -13,7 +13,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 export class AnalyticsController {
   constructor(private readonly service: AnalyticsService) {}
 
-  @Get('api/v1/rates/analytics/dashboard')
+  @Get('rates/analytics/dashboard')
   @ApiOperation({ summary: 'Get rate analytics dashboard' })
   @ApiStandardResponse('Analytics dashboard')
   @ApiErrorResponses()
@@ -22,7 +22,7 @@ export class AnalyticsController {
     return this.service.dashboard(tenantId);
   }
 
-  @Get('api/v1/rates/analytics/margins')
+  @Get('rates/analytics/margins')
   @ApiOperation({ summary: 'Get margin analytics' })
   @ApiStandardResponse('Margin analytics')
   @ApiErrorResponses()
@@ -31,7 +31,7 @@ export class AnalyticsController {
     return this.service.margins(tenantId);
   }
 
-  @Get('api/v1/rates/analytics/competitiveness')
+  @Get('rates/analytics/competitiveness')
   @ApiOperation({ summary: 'Get competitiveness analytics' })
   @ApiStandardResponse('Competitiveness analytics')
   @ApiErrorResponses()
@@ -40,7 +40,7 @@ export class AnalyticsController {
     return this.service.competitiveness(tenantId);
   }
 
-  @Get('api/v1/rates/analytics/market')
+  @Get('rates/analytics/market')
   @ApiOperation({ summary: 'Get market overview analytics' })
   @ApiStandardResponse('Market overview analytics')
   @ApiErrorResponses()

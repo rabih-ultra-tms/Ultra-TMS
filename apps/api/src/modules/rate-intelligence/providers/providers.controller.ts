@@ -15,7 +15,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 export class ProvidersController {
   constructor(private readonly service: ProvidersService) {}
 
-  @Get('api/v1/rates/providers')
+  @Get('rates/providers')
   @ApiOperation({ summary: 'List rate data providers' })
   @ApiStandardResponse('Provider list')
   @ApiErrorResponses()
@@ -24,7 +24,7 @@ export class ProvidersController {
     return this.service.list(tenantId);
   }
 
-  @Post('api/v1/rates/providers')
+  @Post('rates/providers')
   @ApiOperation({ summary: 'Create rate data provider' })
   @ApiStandardResponse('Provider created')
   @ApiErrorResponses()
@@ -37,7 +37,7 @@ export class ProvidersController {
     return this.service.create(tenantId, userId, dto);
   }
 
-  @Patch('api/v1/rates/providers/:id')
+  @Patch('rates/providers/:id')
   @ApiOperation({ summary: 'Update rate data provider' })
   @ApiParam({ name: 'id', description: 'Provider ID' })
   @ApiStandardResponse('Provider updated')
@@ -47,7 +47,7 @@ export class ProvidersController {
     return this.service.update(tenantId, id, dto);
   }
 
-  @Post('api/v1/rates/providers/:id/test')
+  @Post('rates/providers/:id/test')
   @ApiOperation({ summary: 'Test provider connection' })
   @ApiParam({ name: 'id', description: 'Provider ID' })
   @ApiStandardResponse('Provider connection tested')

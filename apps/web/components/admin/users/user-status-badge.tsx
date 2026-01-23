@@ -8,6 +8,7 @@ const statusStyles: Record<UserStatus, string> = {
   PENDING: "bg-amber-100 text-amber-700 border-amber-200",
   SUSPENDED: "bg-red-100 text-red-700 border-red-200",
   LOCKED: "bg-red-100 text-red-700 border-red-200",
+  INVITED: "bg-blue-100 text-blue-700 border-blue-200",
 };
 
 interface UserStatusBadgeProps {

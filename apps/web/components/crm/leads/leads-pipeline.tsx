@@ -23,7 +23,7 @@ export function LeadsPipeline({ pipeline, onSelectLead }: LeadsPipelineProps) {
             {(pipeline[stage] || []).length === 0 ? (
               <div className="text-sm text-muted-foreground">No leads</div>
             ) : (
-              pipeline[stage].map((lead) => (
+              (pipeline[stage] || []).map((lead) => (
                 <LeadCard key={lead.id} lead={lead} onSelect={onSelectLead} />
               ))
             )}

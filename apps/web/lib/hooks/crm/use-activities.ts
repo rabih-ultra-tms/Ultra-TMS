@@ -11,17 +11,101 @@ export const activityKeys = {
   detail: (id: string) => [...activityKeys.details(), id] as const,
 };
 
+function normalizeActivity(activity: Record<string, unknown>): Activity {
+  const activityType = (activity.activityType || activity.type) as Activity["type"];
+  const leadId = (activity.leadId || activity.opportunityId) as string | undefined;
+  const assignedToId = (activity.assignedToId || activity.ownerId) as string | undefined;
+  const assignedTo = (activity.assignedTo || activity.owner) as Activity["assignedTo"];
+
+  return {
+    ...(activity as unknown as Activity),
+    type: activityType,
+    leadId,
+    assignedToId,
+    assignedTo,
+  };
+}
+
+function mapActivityListParams(
+  params: ActivityListParams
+): Record<string, string | number | boolean | undefined | null> {
+  return {
+    ...params,
+    activityType: params.type,
+    opportunityId: params.leadId,
+  };
+}
+
+function mapActivityCreateInput(data: Partial<Activity>) {
+  const leadId = data.leadId;
+  const companyId = data.companyId;
+  const contactId = data.contactId;
+
+  const entityType = leadId
+    ? "OPPORTUNITY"
+    : companyId
+      ? "COMPANY"
+      : contactId
+        ? "CONTACT"
+        : undefined;
+
+  const entityId = leadId || companyId || contactId;
+
+  return {
+    activityType: data.type,
+    subject: data.subject,
+    description: data.description,
+    activityDate: data.activityDate,
+    dueDate: data.dueDate,
+    durationMinutes: data.durationMinutes,
+    companyId,
+    contactId,
+    opportunityId: leadId,
+    ownerId: data.assignedToId,
+    entityType,
+    entityId,
+  };
+}
+
+function mapActivityUpdateInput(data: Partial<Activity>) {
+  return {
+    subject: data.subject,
+    description: data.description,
+    activityDate: data.activityDate,
+    dueDate: data.dueDate,
+    durationMinutes: data.durationMinutes,
+    completedAt: data.completedAt,
+    priority: (data as { priority?: string }).priority,
+    status: (data as { status?: string }).status,
+    outcome: (data as { outcome?: string }).outcome,
+    ownerId: data.assignedToId,
+    leadId: data.leadId,
+  };
+}
+
 export function useActivities(params: ActivityListParams = {}) {
   return useQuery({
     queryKey: activityKeys.list(params),
-    queryFn: () => apiClient.get<PaginatedResponse<Activity>>("/crm/activities", params),
+    queryFn: async () => {
+      const response = await apiClient.get<PaginatedResponse<Activity>>(
+        "/crm/activities",
+        mapActivityListParams(params)
+      );
+      return {
+        ...response,
+        data: response.data.map((activity) => normalizeActivity(activity as unknown as Record<string, unknown>)),
+      };
+    },
   });
 }
 
 export function useActivity(id: string) {
   return useQuery({
     queryKey: activityKeys.detail(id),
-    queryFn: () => apiClient.get<{ data: Activity }>(`/crm/activities/${id}`),
+    queryFn: async () => {
+      const response = await apiClient.get<{ data: Activity }>(`/crm/activities/${id}`);
+      return { data: normalizeActivity(response.data as unknown as Record<string, unknown>) };
+    },
     enabled: !!id,
   });
 }
@@ -30,8 +114,13 @@ export function useCreateActivity() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: Partial<Activity>) =>
-      apiClient.post<{ data: Activity }>("/crm/activities", data),
+    mutationFn: async (data: Partial<Activity>) => {
+      const response = await apiClient.post<{ data: Activity }>(
+        "/crm/activities",
+        mapActivityCreateInput(data)
+      );
+      return { data: normalizeActivity(response.data as unknown as Record<string, unknown>) };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: activityKeys.lists() });
       toast.success("Activity logged");
@@ -46,8 +135,13 @@ export function useUpdateActivity() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Activity> }) =>
-      apiClient.patch<{ data: Activity }>(`/crm/activities/${id}`, data),
+    mutationFn: async ({ id, data }: { id: string; data: Partial<Activity> }) => {
+      const response = await apiClient.patch<{ data: Activity }>(
+        `/crm/activities/${id}`,
+        mapActivityUpdateInput(data)
+      );
+      return { data: normalizeActivity(response.data as unknown as Record<string, unknown>) };
+    },
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: activityKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: activityKeys.lists() });

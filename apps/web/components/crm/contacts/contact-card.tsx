@@ -11,7 +11,7 @@ export function ContactCard({ contact }: ContactCardProps) {
     <Card>
       <CardHeader className="flex flex-row items-start justify-between">
         <div>
-          <CardTitle>{contact.fullName}</CardTitle>
+          <CardTitle>{contact.fullName || `${contact.firstName} ${contact.lastName}`.trim()}</CardTitle>
           <p className="text-sm text-muted-foreground">
             {contact.title || "No title"}
           </p>
@@ -21,7 +21,7 @@ export function ContactCard({ contact }: ContactCardProps) {
       <CardContent className="space-y-2 text-sm">
         <div>Email: {contact.email || "—"}</div>
         <div>Phone: {contact.phone || contact.mobile || "—"}</div>
-        <div>Status: {contact.isActive ? "Active" : "Inactive"}</div>
+        <div>Status: {contact.status || (contact.isActive ? "ACTIVE" : "INACTIVE")}</div>
       </CardContent>
     </Card>
   );

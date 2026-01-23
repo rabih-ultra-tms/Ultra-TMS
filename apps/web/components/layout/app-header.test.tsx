@@ -1,7 +1,9 @@
 import { jest } from "@jest/globals";
 import { render, screen } from "@/test/utils";
 
-jest.unstable_mockModule("@/lib/stores/ui-store", () => ({
+const jestMock = jest as typeof jest & { unstable_mockModule: typeof jest.mock };
+
+jestMock.unstable_mockModule("@/lib/stores/ui-store", () => ({
   useUIStore: () => ({
     toggleSidebar: jest.fn(),
     toggleSidebarCollapsed: jest.fn(),
@@ -9,7 +11,7 @@ jest.unstable_mockModule("@/lib/stores/ui-store", () => ({
   }),
 }));
 
-jest.unstable_mockModule("./user-nav", () => ({
+jestMock.unstable_mockModule("./user-nav", () => ({
   UserNav: () => <div data-testid="user-nav">UserNav</div>,
 }));
 

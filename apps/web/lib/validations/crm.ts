@@ -62,7 +62,8 @@ export const activityFormSchema = z.object({
   type: z.enum(["CALL", "EMAIL", "MEETING", "NOTE", "TASK"]),
   subject: z.string().min(1, "Subject is required"),
   description: z.string().optional(),
-  scheduledAt: z.string().optional(),
+  activityDate: z.string().optional(),
+  dueDate: z.string().optional(),
   durationMinutes: z.number().min(0).optional(),
 });
 
@@ -70,3 +71,7 @@ export type CustomerFormData = z.infer<typeof customerFormSchema>;
 export type ContactFormData = z.infer<typeof contactFormSchema>;
 export type LeadFormData = z.infer<typeof leadFormSchema>;
 export type ActivityFormData = z.infer<typeof activityFormSchema>;
+export type CustomerFormInput = z.input<typeof customerFormSchema>;
+export type ContactFormInput = z.input<typeof contactFormSchema>;
+export type LeadFormInput = z.input<typeof leadFormSchema>;
+export type ActivityFormInput = z.input<typeof activityFormSchema>;

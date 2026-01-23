@@ -85,9 +85,13 @@ export interface Activity {
   companyId?: string;
   contactId?: string;
   leadId?: string;
-  scheduledAt?: string;
+  activityDate?: string;
+  dueDate?: string;
   completedAt?: string;
   durationMinutes?: number;
+  priority?: "LOW" | "MEDIUM" | "HIGH";
+  status?: string;
+  outcome?: string;
   assignedToId?: string;
   assignedTo?: { id: string; name: string };
   createdById: string;

@@ -10,16 +10,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     { className, type, error, ...props },
     ref
   ) => {
-    // Try to get error from FormField context if available
-    let hasError = error;
-    try {
-      // Dynamic import to avoid circular dependencies
-      const { useFormField } = require("@/components/ui/form");
-      const fieldState = useFormField();
-      hasError = hasError || !!fieldState.error;
-    } catch {
-      // Not in a form context, use prop
-    }
+    const hasError = Boolean(error || props["aria-invalid"] === "true");
     
     return (
       <input

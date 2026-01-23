@@ -7,13 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { customerFormSchema, type CustomerFormData } from "@/lib/validations/crm";
+import {
+  customerFormSchema,
+  type CustomerFormData,
+  type CustomerFormInput,
+} from "@/lib/validations/crm";
 import { AddressForm } from "@/components/crm/shared/address-form";
 import { PhoneInput } from "@/components/crm/shared/phone-input";
 import { Switch } from "@/components/ui/switch";
 
 interface CustomerFormProps {
-  defaultValues?: Partial<CustomerFormData>;
+  defaultValues?: Partial<CustomerFormInput>;
   onSubmit: (data: CustomerFormData) => Promise<void> | void;
   submitLabel?: string;
   isLoading?: boolean;
@@ -28,7 +32,7 @@ export function CustomerForm({
   const [includeAddress, setIncludeAddress] = React.useState(
     Boolean(defaultValues?.address)
   );
-  const form = useForm<CustomerFormData>({
+  const form = useForm<CustomerFormInput>({
     resolver: zodResolver(customerFormSchema),
     shouldUnregister: true,
     defaultValues: {
@@ -47,14 +51,11 @@ export function CustomerForm({
   });
 
   const handleSubmit = form.handleSubmit(async (values) => {
-    const normalized = {
+    const normalized: CustomerFormData = {
       ...values,
       address: includeAddress ? values.address : undefined,
-      tags:
-        typeof values.tags === "string"
-          ? values.tags.split(",").map((tag) => tag.trim()).filter(Boolean)
-          : values.tags,
-    } as CustomerFormData;
+      tags: values.tags ?? [],
+    };
 
     await onSubmit(normalized);
   });

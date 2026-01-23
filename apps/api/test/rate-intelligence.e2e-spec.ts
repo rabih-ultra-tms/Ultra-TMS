@@ -28,29 +28,29 @@ describe('Rate Intelligence API E2E', () => {
 
   it('returns rate analytics dashboard', async () => {
     await request(app.getHttpServer())
-      .get('/api/v1/api/v1/rates/analytics/dashboard')
+      .get('/api/v1/rates/analytics/dashboard')
       .expect(200);
   });
 
   it('manages rate alerts', async () => {
     const createRes = await request(app.getHttpServer())
-      .post('/api/v1/api/v1/rates/alerts')
+      .post('/api/v1/rates/alerts')
       .send({ name: 'Market spike', condition: 'RATE_INCREASE', originMarket: 'TX', destMarket: 'CA' })
       .expect(201);
 
     const alertId = createRes.body.data.id;
 
     await request(app.getHttpServer())
-      .patch(`/api/v1/api/v1/rates/alerts/${alertId}`)
+      .patch(`/api/v1/rates/alerts/${alertId}`)
       .send({ thresholdValue: 1.5 })
       .expect(200);
 
     await request(app.getHttpServer())
-      .get(`/api/v1/api/v1/rates/alerts/${alertId}/history`)
+      .get(`/api/v1/rates/alerts/${alertId}/history`)
       .expect(200);
 
     await request(app.getHttpServer())
-      .delete(`/api/v1/api/v1/rates/alerts/${alertId}`)
+      .delete(`/api/v1/rates/alerts/${alertId}`)
       .expect(200);
   });
 });

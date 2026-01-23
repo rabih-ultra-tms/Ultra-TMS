@@ -81,7 +81,7 @@ export class ActivitiesService {
         description: dto.description,
         companyId: dto.companyId,
         contactId: dto.contactId,
-        opportunityId: dto.opportunityId,
+        opportunityId: dto.opportunityId || dto.leadId,
         dueDate: dto.dueDate ? new Date(dto.dueDate) : null,
         completedAt: dto.completedAt ? new Date(dto.completedAt) : null,
         priority: dto.priority || 'MEDIUM',
@@ -111,6 +111,7 @@ export class ActivitiesService {
         completedAt: dto.completedAt ? new Date(dto.completedAt) : undefined,
         status: dto.status,
         ownerId: dto.ownerId,
+        opportunityId: dto.leadId ? dto.leadId : undefined,
         updatedById: userId,
       },
     });

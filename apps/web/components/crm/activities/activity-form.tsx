@@ -6,10 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { activityFormSchema, type ActivityFormData } from "@/lib/validations/crm";
+import {
+  activityFormSchema,
+  type ActivityFormData,
+  type ActivityFormInput,
+} from "@/lib/validations/crm";
 
 interface ActivityFormProps {
-  defaultValues?: Partial<ActivityFormData>;
+  defaultValues?: Partial<ActivityFormInput>;
   onSubmit: (data: ActivityFormData) => Promise<void> | void;
   submitLabel?: string;
   isLoading?: boolean;
@@ -23,20 +27,20 @@ export function ActivityForm({
   submitLabel = "Log Activity",
   isLoading = false,
 }: ActivityFormProps) {
-  const form = useForm<ActivityFormData>({
+  const form = useForm<ActivityFormInput>({
     resolver: zodResolver(activityFormSchema),
     defaultValues: {
       type: "CALL",
       subject: "",
       description: "",
-      scheduledAt: "",
+      dueDate: "",
       durationMinutes: undefined,
       ...defaultValues,
     },
   });
 
   const handleSubmit = form.handleSubmit(async (values) => {
-    await onSubmit(values);
+    await onSubmit(values as ActivityFormData);
   });
 
   return (
@@ -86,10 +90,10 @@ export function ActivityForm({
             />
             <FormField
               control={form.control}
-              name="scheduledAt"
+              name="dueDate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Scheduled at</FormLabel>
+                  <FormLabel>Due date</FormLabel>
                   <FormControl>
                     <Input type="datetime-local" {...field} />
                   </FormControl>

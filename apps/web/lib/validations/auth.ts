@@ -101,4 +101,7 @@ export type MFACodeFormData = z.infer<typeof mfaCodeSchema>;
 export type CreateUserFormData = z.infer<typeof createUserFormSchema>;
 export type UpdateUserFormData = z.infer<typeof updateUserFormSchema>;
 export type UserFormData = CreateUserFormData | UpdateUserFormData;
+export type CreateUserFormInput = z.input<typeof createUserFormSchema>;
+export type UpdateUserFormInput = z.input<typeof updateUserFormSchema>;
+export type UserFormInput = CreateUserFormInput | UpdateUserFormInput;
 export type RoleFormData = z.infer<typeof roleFormSchema>;

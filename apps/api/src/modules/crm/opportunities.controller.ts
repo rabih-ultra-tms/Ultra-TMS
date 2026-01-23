@@ -2,7 +2,6 @@ import {
   Controller,
   Get,
   Post,
-  Put,
   Delete,
   Patch,
   Body,
@@ -92,7 +91,7 @@ export class OpportunitiesController {
     return this.opportunitiesService.create(tenantId, userId, dto);
   }
 
-  @Put(':id')
+  @Patch(':id')
   @ApiOperation({ summary: 'Update opportunity' })
   @ApiParam({ name: 'id', description: 'Opportunity ID' })
   @ApiStandardResponse('Opportunity updated')

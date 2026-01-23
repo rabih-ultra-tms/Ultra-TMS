@@ -12,9 +12,10 @@ export const contactKeys = {
 };
 
 export function useContacts(params: ContactListParams = {}) {
+  const queryParams = params as Record<string, string | number | boolean | null | undefined>;
   return useQuery({
     queryKey: contactKeys.list(params),
-    queryFn: () => apiClient.get<PaginatedResponse<Contact>>("/crm/contacts", params),
+    queryFn: () => apiClient.get<PaginatedResponse<Contact>>("/crm/contacts", queryParams),
   });
 }
 

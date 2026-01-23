@@ -6,11 +6,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { contactFormSchema, type ContactFormData } from "@/lib/validations/crm";
+import {
+  contactFormSchema,
+  type ContactFormData,
+  type ContactFormInput,
+} from "@/lib/validations/crm";
 import { PhoneInput } from "@/components/crm/shared/phone-input";
 
 interface ContactFormProps {
-  defaultValues?: Partial<ContactFormData>;
+  defaultValues?: Partial<ContactFormInput>;
   onSubmit: (data: ContactFormData) => Promise<void> | void;
   submitLabel?: string;
   isLoading?: boolean;
@@ -22,7 +26,7 @@ export function ContactForm({
   submitLabel = "Save Contact",
   isLoading = false,
 }: ContactFormProps) {
-  const form = useForm<ContactFormData>({
+  const form = useForm<ContactFormInput>({
     resolver: zodResolver(contactFormSchema),
     defaultValues: {
       firstName: "",
@@ -39,7 +43,11 @@ export function ContactForm({
   });
 
   const handleSubmit = form.handleSubmit(async (values) => {
-    await onSubmit(values);
+    const normalized: ContactFormData = {
+      ...values,
+      isPrimary: values.isPrimary ?? false,
+    };
+    await onSubmit(normalized);
   });
 
   return (

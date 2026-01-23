@@ -38,7 +38,7 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-export default function LoginPage() {
+function LoginPageContent() {
   const searchParams = useSearchParams();
   const registered = searchParams?.get("registered") === "true";
   const reset = searchParams?.get("reset") === "true";
@@ -222,5 +222,15 @@ export default function LoginPage() {
         </CardFooter>
       </Card>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <React.Suspense
+      fallback={<div className="flex min-h-screen items-center justify-center p-4">Loading...</div>}
+    >
+      <LoginPageContent />
+    </React.Suspense>
   );
 }

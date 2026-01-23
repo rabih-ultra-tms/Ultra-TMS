@@ -78,6 +78,10 @@ describe('Contracts API E2E', () => {
       const rbacApp = setup.app;
       const rbacPrisma = setup.prisma;
 
+      await rbacPrisma.company.deleteMany({
+        where: { tenantId: 'tenant-contracts-rbac', name: 'RBAC Customer' },
+      });
+
       const customer = await rbacPrisma.company.create({
         data: {
           tenantId: 'tenant-contracts-rbac',
@@ -179,6 +183,9 @@ describe('Contracts API E2E', () => {
       const viewerApp = viewerSetup.app;
       const viewerPrisma = viewerSetup.prisma;
 
+      await viewerPrisma.company.deleteMany({
+        where: { tenantId: 'tenant-contracts-rbac2', name: 'RBAC Customer 2' },
+      });
       const customer = await viewerPrisma.company.create({
         data: {
           tenantId: 'tenant-contracts-rbac2',
@@ -187,6 +194,9 @@ describe('Contracts API E2E', () => {
         },
       });
 
+      await viewerPrisma.contract.deleteMany({
+        where: { tenantId: 'tenant-contracts-rbac2', contractNumber: 'C-TEST-5' },
+      });
       const contract = await viewerPrisma.contract.create({
         data: {
           tenantId: 'tenant-contracts-rbac2',
@@ -256,12 +266,19 @@ describe('Contracts API E2E', () => {
       const viewerApp = viewerSetup.app;
       const viewerPrisma = viewerSetup.prisma;
 
+      await viewerPrisma.company.deleteMany({
+        where: { tenantId: 'tenant-contracts-approve2', name: 'RBAC Customer 3' },
+      });
       const customer = await viewerPrisma.company.create({
         data: {
           tenantId: 'tenant-contracts-approve2',
           name: 'RBAC Customer 3',
           companyType: 'CUSTOMER',
         },
+      });
+
+      await viewerPrisma.contract.deleteMany({
+        where: { tenantId: 'tenant-contracts-approve2', contractNumber: 'C-TEST-9' },
       });
 
       const contract = await viewerPrisma.contract.create({
@@ -393,12 +410,19 @@ describe('Contracts API E2E', () => {
       const rbacApp = setup.app;
       const rbacPrisma = setup.prisma;
 
+      await rbacPrisma.company.deleteMany({
+        where: { tenantId: 'tenant-contracts-rbac3', name: 'RBAC Customer 3' },
+      });
       const customer = await rbacPrisma.company.create({
         data: {
           tenantId: 'tenant-contracts-rbac3',
           name: 'RBAC Customer 3',
           companyType: 'CUSTOMER',
         },
+      });
+
+      await rbacPrisma.contract.deleteMany({
+        where: { tenantId: 'tenant-contracts-rbac3', contractNumber: 'C-TEST-RBAC-1' },
       });
 
       const contract = await rbacPrisma.contract.create({

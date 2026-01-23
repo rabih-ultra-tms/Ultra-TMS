@@ -2,7 +2,6 @@ import {
   Controller,
   Get,
   Post,
-  Put,
   Delete,
   Patch,
   Body,
@@ -87,7 +86,7 @@ export class CompaniesController {
     return this.companiesService.create(tenantId, userId, dto);
   }
 
-  @Put(':id')
+  @Patch(':id')
   @ApiOperation({ summary: 'Update company' })
   @ApiParam({ name: 'id', description: 'Company ID' })
   @ApiStandardResponse('Company updated')

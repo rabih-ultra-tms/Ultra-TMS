@@ -14,7 +14,9 @@ const mockGroups: NavGroup[] = [
   },
 ];
 
-jest.unstable_mockModule("next/navigation", () => ({
+const jestMock = jest as typeof jest & { unstable_mockModule: typeof jest.mock };
+
+jestMock.unstable_mockModule("next/navigation", () => ({
   usePathname: () => "/dashboard",
 }));
 

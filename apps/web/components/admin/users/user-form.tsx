@@ -15,6 +15,7 @@ import {
   type CreateUserFormData,
   type UpdateUserFormData,
   type UserFormData,
+  type UserFormInput,
 } from "@/lib/validations/auth";
 import { useRoles } from "@/lib/hooks/admin/use-roles";
 import { LoadingState } from "@/components/shared";
@@ -28,7 +29,7 @@ function isUuid(value: string | undefined): value is string {
 
 interface UserFormProps {
   mode?: UserFormMode;
-  defaultValues?: Partial<UserFormData>;
+  defaultValues?: Partial<UserFormInput>;
   onSubmit: (data: UserFormData) => Promise<void> | void;
   submitLabel?: string;
   isLoading?: boolean;
@@ -74,30 +75,37 @@ export function UserForm({
 
   const resolver = mode === "create" ? createUserFormSchema : updateUserFormSchema;
 
-  const form = useForm<UserFormData>({
+  const form = useForm<UserFormInput>({
     resolver: zodResolver(resolver),
     defaultValues: mode === "create" ? defaultCreateValues : defaultEditValues,
   });
 
   const handleSubmit = form.handleSubmit(async (values) => {
-    const { roleId, password, status, ...rest } = values;
+    const cleanedRoleId = isUuid(values.roleId?.trim()) ? values.roleId?.trim() : undefined;
+    const cleanedPassword = values.password && values.password.trim() !== "" ? values.password : undefined;
+    const base = {
+      email: values.email,
+      firstName: values.firstName,
+      lastName: values.lastName,
+    };
 
-    const cleanedRoleId = isUuid(roleId?.trim()) ? roleId?.trim() : undefined;
-    const cleanedPassword = password && password.trim() !== "" ? password : undefined;
+    if (mode === "create") {
+      const payload: CreateUserFormData = {
+        ...base,
+        roleId: cleanedRoleId,
+        password: cleanedPassword ?? values.password ?? "",
+      };
+      await onSubmit(payload);
+      return;
+    }
 
-    const payload: UserFormData =
-      mode === "create"
-        ? {
-            ...rest,
-            ...(cleanedRoleId ? { roleId: cleanedRoleId } : {}),
-            password: cleanedPassword!,
-          }
-        : {
-            ...rest,
-            ...(cleanedRoleId ? { roleId: cleanedRoleId } : {}),
-            ...(status ? { status } : {}),
-            ...(cleanedPassword ? { password: cleanedPassword } : {}),
-          };
+    const status = "status" in values ? values.status : undefined;
+    const payload: UpdateUserFormData = {
+      ...base,
+      roleId: cleanedRoleId,
+      password: cleanedPassword,
+      ...(status ? { status } : {}),
+    };
 
     await onSubmit(payload);
   });
@@ -159,7 +167,7 @@ export function UserForm({
               render={({ field }) => (
                 <FormItem className="md:col-span-2">
                   <FormLabel>Role</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select value={field.value ?? ""} onValueChange={field.onChange}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a role" />

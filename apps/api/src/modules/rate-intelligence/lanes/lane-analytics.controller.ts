@@ -13,7 +13,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 export class LaneAnalyticsController {
   constructor(private readonly service: LaneAnalyticsService) {}
 
-  @Get('api/v1/rates/lanes')
+  @Get('rates/lanes')
   @ApiOperation({ summary: 'List lane analytics' })
   @ApiStandardResponse('Lane analytics list')
   @ApiErrorResponses()
@@ -22,7 +22,7 @@ export class LaneAnalyticsController {
     return this.service.list(tenantId);
   }
 
-  @Get('api/v1/rates/lanes/:id')
+  @Get('rates/lanes/:id')
   @ApiOperation({ summary: 'Get lane analytics by ID' })
   @ApiParam({ name: 'id', description: 'Lane ID' })
   @ApiStandardResponse('Lane analytics details')
@@ -32,7 +32,7 @@ export class LaneAnalyticsController {
     return this.service.findOne(tenantId, id);
   }
 
-  @Get('api/v1/rates/lanes/:id/history')
+  @Get('rates/lanes/:id/history')
   @ApiOperation({ summary: 'Get lane rate history' })
   @ApiParam({ name: 'id', description: 'Lane ID' })
   @ApiStandardResponse('Lane history')
@@ -42,7 +42,7 @@ export class LaneAnalyticsController {
     return this.service.historyForLane(tenantId, id);
   }
 
-  @Get('api/v1/rates/lanes/:id/forecast')
+  @Get('rates/lanes/:id/forecast')
   @ApiOperation({ summary: 'Get lane rate forecast' })
   @ApiParam({ name: 'id', description: 'Lane ID' })
   @ApiStandardResponse('Lane forecast')

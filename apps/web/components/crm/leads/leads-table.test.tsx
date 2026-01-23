@@ -7,8 +7,9 @@ import type { Lead } from "@/lib/types/crm";
 const mockLeads: Lead[] = [
   {
     id: "1",
-    title: "New opportunity",
-    stage: "NEW",
+    name: "New opportunity",
+    stage: "LEAD",
+    companyId: "company-1",
     probability: 20,
     createdAt: "2026-01-15T10:00:00Z",
     updatedAt: "2026-01-15T10:00:00Z",
@@ -24,7 +25,7 @@ describe("LeadsTable", () => {
     render(<LeadsTable leads={mockLeads} onView={mockOnView} />);
 
     expect(screen.getByText("New opportunity")).toBeInTheDocument();
-    expect(screen.getByText("NEW")).toBeInTheDocument();
+    expect(screen.getByText("LEAD")).toBeInTheDocument();
   });
 
   it("calls onView when action is clicked", async () => {

@@ -6,13 +6,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { leadFormSchema, type LeadFormData } from "@/lib/validations/crm";
+import {
+  leadFormSchema,
+  type LeadFormData,
+  type LeadFormInput,
+} from "@/lib/validations/crm";
 import { useCompanies } from "@/lib/hooks/crm/use-companies";
 import { useUsers } from "@/lib/hooks/admin/use-users";
 import { LoadingState } from "@/components/shared";
 
 interface LeadFormProps {
-  defaultValues?: Partial<LeadFormData>;
+  defaultValues?: Partial<LeadFormInput>;
   onSubmit: (data: LeadFormData) => Promise<void> | void;
   submitLabel?: string;
   isLoading?: boolean;
@@ -31,7 +35,7 @@ export function LeadForm({
   const companies = companiesQuery.data?.data || [];
   const owners = usersQuery.data?.data || [];
 
-  const form = useForm<LeadFormData>({
+  const form = useForm<LeadFormInput>({
     resolver: zodResolver(leadFormSchema),
     mode: "onSubmit",
     reValidateMode: "onChange",

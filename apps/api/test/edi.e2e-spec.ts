@@ -168,6 +168,10 @@ describe('EDI Service API E2E', () => {
       const rbacApp = setup.app;
       const rbacPrisma = setup.prisma;
 
+      await rbacPrisma.ediTradingPartner.deleteMany({
+        where: { isaId: 'ISA-RBAC-2' },
+      });
+
       const partner = await rbacPrisma.ediTradingPartner.create({
         data: {
           tenantId: 'tenant-edi-rbac',

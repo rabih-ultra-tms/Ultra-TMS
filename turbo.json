@@ -17,6 +17,7 @@
         "PORTAL_JWT_SECRET",
         "PORTAL_JWT_EXPIRES_IN",
         "JWT_SECRET",
+        "JEST_WORKER_ID",
         "ELASTIC_NODE",
         "ELASTIC_MAX_RETRIES",
         "ELASTIC_NAME_PREFIX",

@@ -47,11 +47,12 @@
   }
 
   * {
-    @apply border-border;
+    border-color: hsl(var(--border));
   }
 
   body {
-    @apply bg-background text-foreground;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
     font-feature-settings: "rlig" 1, "calt" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -60,15 +61,20 @@
 
 /* Compact & Consistent Utility Classes */
 .compact-card {
-  @apply bg-card rounded-md border border-border p-4;
+  @apply rounded-md border p-4;
+  background-color: hsl(var(--card));
+  border-color: hsl(var(--border));
 }
 
 .compact-header {
-  @apply pb-3 mb-4 border-b border-border;
+  @apply pb-3 mb-4 border-b;
+  border-color: hsl(var(--border));
 }
 
 .stat-card {
-  @apply bg-card rounded-md border border-border p-4;
+  @apply rounded-md border p-4;
+  background-color: hsl(var(--card));
+  border-color: hsl(var(--border));
 }
 
 .stat-icon {
@@ -76,23 +82,28 @@
 }
 
 .stat-value {
-  @apply text-xl font-semibold text-foreground;
+  @apply text-xl font-semibold;
+  color: hsl(var(--foreground));
 }
 
 .stat-label {
-  @apply text-xs font-medium text-muted-foreground;
+  @apply text-xs font-medium;
+  color: hsl(var(--muted-foreground));
 }
 
 .page-title {
-  @apply text-xl font-semibold text-foreground;
+  @apply text-xl font-semibold;
+  color: hsl(var(--foreground));
 }
 
 .page-subtitle {
-  @apply text-sm text-muted-foreground;
+  @apply text-sm;
+  color: hsl(var(--muted-foreground));
 }
 
 .section-title {
-  @apply text-base font-semibold text-foreground;
+  @apply text-base font-semibold;
+  color: hsl(var(--foreground));
 }
 
 .info-banner {
@@ -106,7 +117,16 @@ input[type="password"],
 input[type="search"],
 textarea,
 select {
-  @apply focus:ring-1 focus:ring-ring;
+  outline: none;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="search"]:focus,
+textarea:focus,
+select:focus {
+  box-shadow: 0 0 0 1px hsl(var(--ring));
 }
 
 /* Table consistency */
@@ -115,15 +135,20 @@ table {
 }
 
 thead {
-  @apply bg-muted border-b border-border;
+  @apply border-b;
+  background-color: hsl(var(--muted));
+  border-color: hsl(var(--border));
 }
 
 th {
-  @apply px-3 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider;
+  @apply px-3 py-2 text-left text-xs font-medium uppercase tracking-wider;
+  color: hsl(var(--muted-foreground));
 }
 
 td {
-  @apply px-3 py-2 text-sm text-foreground border-b border-border;
+  @apply px-3 py-2 text-sm border-b;
+  color: hsl(var(--foreground));
+  border-color: hsl(var(--border));
 }
 
 tr:last-child td {
@@ -131,5 +156,5 @@ tr:last-child td {
 }
 
 tbody tr:hover {
-  @apply bg-muted/50;
+  background-color: hsl(var(--muted) / 0.5);
 }

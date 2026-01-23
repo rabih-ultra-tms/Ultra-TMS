@@ -2,7 +2,6 @@ import {
   Controller,
   Get,
   Post,
-  Put,
   Delete,
   Patch,
   Body,
@@ -81,7 +80,7 @@ export class ContactsController {
     return this.contactsService.create(tenantId, userId, dto);
   }
 
-  @Put(':id')
+  @Patch(':id')
   @ApiOperation({ summary: 'Update contact' })
   @ApiParam({ name: 'id', description: 'Contact ID' })
   @ApiStandardResponse('Contact updated')
