@@ -14,7 +14,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
   const { sidebarCollapsed } = useUIStore();
 
   return (
-    <div className="relative min-h-screen bg-background">
+    <div className="relative isolate min-h-screen bg-background">
       <AppSidebar />
       <div
         className={cn(
@@ -23,7 +23,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
         )}
       >
         <AppHeader />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
+        <main className="flex-1 p-4 sm:p-6">{children}</main>
       </div>
     </div>
   );
