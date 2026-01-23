@@ -76,8 +76,8 @@ export default function ForgotPasswordPage() {
       <div className="flex min-h-screen items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-              <CheckCircle className="h-6 w-6 text-green-600" />
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+              <CheckCircle className="h-6 w-6 text-primary" />
             </div>
             <CardTitle className="text-2xl">Check Your Email</CardTitle>
             <CardDescription>
@@ -138,9 +138,8 @@ export default function ForgotPasswordPage() {
 
               <Button 
                 type="submit" 
-                className="w-full h-12 font-semibold text-base shadow-lg bg-blue-600 hover:bg-blue-700 hover:shadow-xl hover:scale-[1.005] text-white transition-all duration-300 ease-in-out active:scale-[0.995]" 
+                className="w-full h-12 font-semibold text-base" 
                 disabled={isLoading}
-                style={{ backgroundColor: isLoading ? undefined : '#2563eb' }}
               >
                 {isLoading ? (
                   <>

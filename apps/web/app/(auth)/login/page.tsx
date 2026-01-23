@@ -143,7 +143,7 @@ function LoginPageContent() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel htmlFor="login-email" className="text-sm font-semibold text-gray-900 dark:text-gray-100">Email</FormLabel>
+                    <FormLabel htmlFor="login-email" className="text-sm font-semibold">Email</FormLabel>
                     <FormControl>
                       <Input
                         id="login-email"
@@ -168,7 +168,7 @@ function LoginPageContent() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel htmlFor="login-password" className="text-sm font-semibold text-gray-900 dark:text-gray-100">Password</FormLabel>
+                    <FormLabel htmlFor="login-password" className="text-sm font-semibold">Password</FormLabel>
                     <FormControl>
                       <Input
                         id="login-password"
@@ -190,7 +190,7 @@ function LoginPageContent() {
               <div className="flex items-center justify-end">
                 <Link
                   href="/forgot-password"
-                  className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
+                  className="text-sm font-medium text-primary hover:underline"
                   tabIndex={isLoading ? -1 : 0}
                 >
                   Forgot password?
@@ -199,9 +199,8 @@ function LoginPageContent() {
 
               <Button 
                 type="submit" 
-                className="w-full h-12 font-semibold text-base shadow-lg bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 hover:shadow-xl hover:scale-[1.005] text-white transition-all duration-300 ease-in-out active:scale-[0.995]" 
+                className="w-full h-12 font-semibold text-base" 
                 disabled={isLoading}
-                style={{ backgroundColor: isLoading ? undefined : '#2563eb' }}
               >
                 {isLoading ? (
                   <>
@@ -220,9 +219,9 @@ function LoginPageContent() {
         </CardContent>
 
         <CardFooter className="justify-center">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-sm text-muted-foreground">
             Don&apos;t have an account?{" "}
-            <Link href="/register" className="font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:underline">
+            <Link href="/register" className="font-semibold text-primary hover:underline">
               Sign up
             </Link>
           </p>
@@ -235,7 +234,7 @@ function LoginPageContent() {
 export default function LoginPage() {
   return (
     <React.Suspense
-      fallback={<div className="flex min-h-screen items-center justify-center p-4 bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-gray-100">Loading...</div>}
+      fallback={<div className="flex min-h-screen items-center justify-center p-4">Loading...</div>}
     >
       <LoginPageContent />
     </React.Suspense>

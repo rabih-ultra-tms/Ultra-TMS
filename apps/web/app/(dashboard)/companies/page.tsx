@@ -67,20 +67,20 @@ export default function CompaniesPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Active</CardTitle>
-            <Users className="h-4 w-4 text-green-500" />
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{activeCount}</div>
+            <div className="text-2xl font-bold">{activeCount}</div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">This Month</CardTitle>
-            <TrendingUp className="h-4 w-4 text-blue-500" />
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">+5</div>
+            <div className="text-2xl font-bold">+5</div>
           </CardContent>
         </Card>
       </div>
