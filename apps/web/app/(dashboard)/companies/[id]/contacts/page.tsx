@@ -33,9 +33,14 @@ export default function CompanyContactsPage() {
         title={`${companyName} contacts`}
         description="Manage company contacts"
         actions={
-          <Button variant="outline" onClick={() => router.back()}>
-            Back
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => router.back()}>
+              Back
+            </Button>
+            <Button onClick={() => router.push(`/contacts/new?companyId=${companyId}`)}>
+              Add Contact
+            </Button>
+          </div>
         }
       />
 

@@ -8,13 +8,19 @@ import {
   Param,
   Query,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBearerAuth,
   ApiOperation,
   ApiParam,
   ApiQuery,
   ApiTags,
+  ApiConsumes,
+  ApiBody,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards';
 import { CompaniesService } from './companies.service';
@@ -27,6 +33,9 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
+import { getLocalStorageOptions } from '../../common/utils/file-upload.util';
+import { join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
 
 @Controller('crm/companies')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -226,5 +235,53 @@ export class CompaniesController {
     @Body() dto: { tier: string },
   ) {
     return this.companiesService.updateTier(tenantId, id, userId, dto.tier);
+  }
+
+  @Post('upload-logo')
+  @ApiOperation({ summary: 'Upload company logo' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @ApiStandardResponse('Logo uploaded')
+  @ApiErrorResponses()
+  @Roles('ADMIN', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
+  @UseInterceptors(FileInterceptor('file', (() => {
+    // Ensure uploads directory exists
+    const uploadPath = join(process.cwd(), 'uploads', 'logos');
+    if (!existsSync(uploadPath)) {
+      mkdirSync(uploadPath, { recursive: true });
+    }
+    return getLocalStorageOptions(uploadPath);
+  })()))
+  async uploadLogo(
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+
+    // In development, return local path
+    // In production, upload to cloud storage and return cloud URL
+    const isProduction = process.env.NODE_ENV === 'production';
+    
+    if (isProduction) {
+      // TODO: Implement cloud storage upload
+      // const cloudUrl = await cloudStorageService.uploadFile(file, 'logos');
+      // return { data: { logoUrl: cloudUrl } };
+      throw new BadRequestException('Cloud storage not configured. Please configure AWS S3, Azure Blob Storage, or GCS.');
+    }
+
+    // Development: return local file path
+    const logoUrl = `/uploads/logos/${file.filename}`;
+    return { data: { logoUrl } };
   }
 }

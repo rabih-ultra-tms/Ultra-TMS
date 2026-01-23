@@ -7,11 +7,33 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   contactFormSchema,
   type ContactFormData,
   type ContactFormInput,
 } from "@/lib/validations/crm";
 import { PhoneInput } from "@/components/crm/shared/phone-input";
+
+const DEPARTMENTS = [
+  "Sales",
+  "Marketing",
+  "Operations",
+  "Finance",
+  "Human Resources",
+  "IT",
+  "Customer Service",
+  "Logistics",
+  "Procurement",
+  "Administration",
+  "Executive",
+  "Other",
+];
 
 interface ContactFormProps {
   defaultValues?: Partial<ContactFormInput>;
@@ -29,6 +51,7 @@ export function ContactForm({
   const form = useForm<ContactFormInput>({
     resolver: zodResolver(contactFormSchema),
     defaultValues: {
+      companyId: "",
       firstName: "",
       lastName: "",
       title: "",
@@ -103,9 +126,20 @@ export function ContactForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Department</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
+                  <Select value={field.value || ""} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a department" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {DEPARTMENTS.map((dept) => (
+                        <SelectItem key={dept} value={dept}>
+                          {dept}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

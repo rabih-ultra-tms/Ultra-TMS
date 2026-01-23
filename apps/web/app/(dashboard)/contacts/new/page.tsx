@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { ContactForm } from "@/components/crm/contacts/contact-form";
 import { useCreateContact } from "@/lib/hooks/crm/use-contacts";
@@ -9,12 +9,18 @@ import { Button } from "@/components/ui/button";
 
 export default function NewContactPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const companyId = searchParams.get("companyId");
   const createContact = useCreateContact();
 
   const handleSubmit = async (data: ContactFormData) => {
     const response = await createContact.mutateAsync(data);
     const id = response.data.id;
-    router.push(`/contacts/${id}`);
+    if (companyId) {
+      router.push(`/companies/${companyId}/contacts`);
+    } else {
+      router.push(`/contacts/${id}`);
+    }
   };
 
   return (
@@ -29,6 +35,7 @@ export default function NewContactPage() {
         }
       />
       <ContactForm
+        defaultValues={companyId ? { companyId } : undefined}
         onSubmit={handleSubmit}
         submitLabel={createContact.isPending ? "Saving..." : "Create Contact"}
         isLoading={createContact.isPending}

@@ -81,6 +81,10 @@ export class CreateCompanyDto {
 
   @IsOptional()
   @IsString()
+  logoUrl?: string;
+
+  @IsOptional()
+  @IsString()
   dunsNumber?: string;
 
   @IsOptional()

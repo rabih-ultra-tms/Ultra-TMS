@@ -20,6 +20,7 @@ export interface Customer {
   email?: string;
   phone?: string;
   website?: string;
+  logoUrl?: string;
   address?: Address;
   billingAddress?: Address;
   industry?: string;

@@ -16,6 +16,10 @@ import {
 import { AddressForm } from "@/components/crm/shared/address-form";
 import { PhoneInput } from "@/components/crm/shared/phone-input";
 import { Switch } from "@/components/ui/switch";
+import { X, Building2 } from "lucide-react";
+import { apiClient } from "@/lib/api";
+import { toast } from "sonner";
+import Image from "next/image";
 
 interface CustomerFormProps {
   defaultValues?: Partial<CustomerFormInput>;
@@ -36,6 +40,49 @@ export function CustomerForm({
   const [includeAddress, setIncludeAddress] = React.useState(
     defaultValues?.address !== undefined ? Boolean(defaultValues?.address) : true
   );
+  const [logoPreview, setLogoPreview] = React.useState<string | null>(defaultValues?.logoUrl || null);
+  const [isUploadingLogo, setIsUploadingLogo] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  
+  // Sanitize defaultValues to convert null to empty string/undefined
+  const sanitizedDefaults = React.useMemo(() => {
+    if (!defaultValues) return undefined;
+    const result: Record<string, any> = {};
+    
+    for (const [key, value] of Object.entries(defaultValues)) {
+      if (value === null || value === undefined) {
+        if (key === 'address') {
+          // Always initialize address with proper strings
+          result[key] = {
+            street1: '',
+            street2: '',
+            city: '',
+            state: '',
+            postalCode: '',
+            country: '',
+          };
+        } else {
+          result[key] = typeof value === 'string' ? '' : undefined;
+        }
+      } else if (key === 'address' && typeof value === 'object' && !Array.isArray(value)) {
+        // Ensure all address fields are strings, never null/undefined
+        const addressObj = value as any;
+        result[key] = {
+          street1: addressObj.street1 ?? '',
+          street2: addressObj.street2 ?? '',
+          city: addressObj.city ?? '',
+          state: addressObj.state ?? '',
+          postalCode: addressObj.postalCode ?? '',
+          country: addressObj.country ?? '',
+        };
+      } else {
+        result[key] = value;
+      }
+    }
+    
+    return result;
+  }, [defaultValues]);
+
   const form = useForm<CustomerFormInput>({
     resolver: zodResolver(customerFormSchema),
     shouldUnregister: true,
@@ -49,107 +96,239 @@ export function CustomerForm({
       paymentTerms: "",
       creditLimit: undefined,
       tags: [],
-      address: undefined,
-      ...defaultValues,
+      logoUrl: "",
+      address: {
+        street1: "",
+        street2: "",
+        city: "",
+        state: "",
+        postalCode: "",
+        country: "",
+      },
+      ...(sanitizedDefaults || {}),
     },
   });
 
+  // Unregister address fields when includeAddress is false
+  React.useEffect(() => {
+    if (!includeAddress) {
+      form.unregister("address");
+    }
+  }, [includeAddress, form]);
+
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size should be less than 5MB');
+      return;
+    }
+
+    setIsUploadingLogo(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await apiClient.post<{ data: { logoUrl: string } }>(
+        '/crm/companies/upload-logo',
+        formData
+      );
+
+      const logoUrl = response.data.logoUrl;
+      form.setValue('logoUrl', logoUrl);
+      setLogoPreview(logoUrl);
+      toast.success('Logo uploaded successfully');
+    } catch (error) {
+      toast.error('Failed to upload logo');
+      console.error('Logo upload error:', error);
+    } finally {
+      setIsUploadingLogo(false);
+    }
+  };
+
+  const handleRemoveLogo = () => {
+    form.setValue('logoUrl', '');
+    setLogoPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleSubmit = form.handleSubmit(async (values) => {
-    const normalized: CustomerFormData = {
-      ...values,
-      address: includeAddress ? values.address : undefined,
+    // Build the payload explicitly to avoid sending address when not needed
+    const payload: Record<string, unknown> = {
+      name: values.name,
+      legalName: values.legalName,
+      email: values.email || undefined,
+      phone: values.phone,
+      website: values.website,
+      industry: values.industry,
+      paymentTerms: values.paymentTerms,
+      creditLimit: values.creditLimit,
       tags: values.tags ?? [],
+      logoUrl: values.logoUrl || undefined,
     };
 
-    await onSubmit(normalized);
+    // Only include address if the user opted in
+    if (includeAddress && values.address) {
+      payload.addressLine1 = values.address.street1 || undefined;
+      payload.addressLine2 = values.address.street2 || undefined;
+      payload.city = values.address.city || undefined;
+      payload.state = values.address.state || undefined;
+      payload.postalCode = values.address.postalCode || undefined;
+      payload.country = values.address.country || undefined;
+    }
+
+    await onSubmit(payload as CustomerFormData);
   });
 
   return (
     <Form {...form}>
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card>
-          <CardHeader>
-            <CardTitle>Company details</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-2">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Company name</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="legalName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Legal name</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input type="email" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Phone</FormLabel>
-                  <FormControl>
-                    <PhoneInput {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="website"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Website</FormLabel>
-                  <FormControl>
-                    <Input type="url" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="industry"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Industry</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <CardContent className="pt-6">
+            <div className="flex gap-6">
+              {/* Logo Section - Left Side */}
+              <div className="flex-shrink-0">
+                <div className="relative w-40 h-40 border-2 border-dashed border-border rounded-lg overflow-hidden bg-muted/20 flex items-center justify-center group">
+                  {logoPreview ? (
+                    <div className="relative w-full h-full flex items-center justify-center">
+                      <Image
+                        src={logoPreview.startsWith('http') ? logoPreview : `http://localhost:3001${logoPreview}`}
+                        alt="Company logo"
+                        fill
+                        className="object-contain"
+                        unoptimized
+                      />
+                    </div>
+                  ) : (
+                    <Building2 className="h-16 w-16 text-muted-foreground/40" />
+                  )}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploadingLogo || isLoading}
+                      className="px-3 py-1 bg-primary text-primary-foreground rounded text-xs font-medium hover:bg-primary/90 disabled:opacity-50"
+                    >
+                      {isUploadingLogo ? 'Uploading...' : 'Update'}
+                    </button>
+                    {logoPreview && (
+                      <button
+                        type="button"
+                        onClick={handleRemoveLogo}
+                        disabled={isLoading}
+                        className="p-1 bg-destructive text-destructive-foreground rounded hover:bg-destructive/90 disabled:opacity-50"
+                        aria-label="Remove logo"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                    disabled={isUploadingLogo || isLoading}
+                    className="hidden"
+                  />
+                </div>
+              </div>
+
+              {/* Company Details - Right Side */}
+              <div className="flex-1">
+                <h3 className="font-semibold text-lg mb-4">Company details</h3>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Company name</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="legalName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Legal name</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input type="email" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone</FormLabel>
+                        <FormControl>
+                          <PhoneInput {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="website"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Website</FormLabel>
+                        <FormControl>
+                          <Input type="url" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="industry"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Industry</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
 

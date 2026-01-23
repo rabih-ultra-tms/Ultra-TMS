@@ -20,7 +20,10 @@ export default function EditCompanyPage() {
 
   const handleSubmit = async (values: CustomerFormData) => {
     await updateCustomer.mutateAsync({ id: companyId, data: values });
-    router.push(`/companies/${companyId}`);
+    // Wait a moment for React Query to refetch, then navigate
+    setTimeout(() => {
+      router.push(`/companies/${companyId}`);
+    }, 500);
   };
 
   if (isLoading && !company) {
@@ -53,11 +56,19 @@ export default function EditCompanyPage() {
           email: company.email,
           phone: company.phone,
           website: company.website,
+          logoUrl: company.logoUrl,
           industry: company.industry,
           paymentTerms: company.paymentTerms,
           creditLimit: company.creditLimit,
           tags: company.tags,
-          address: company.address,
+          address: company.address || {
+            street1: "",
+            street2: "",
+            city: "",
+            state: "",
+            postalCode: "",
+            country: "",
+          },
         }}
         onSubmit={handleSubmit}
         submitLabel={updateCustomer.isPending ? "Saving..." : "Update Company"}

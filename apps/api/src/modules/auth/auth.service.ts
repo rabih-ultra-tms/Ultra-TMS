@@ -335,15 +335,7 @@ export class AuthService {
   /**
    * Get current authenticated user profile
    */
-  async getMe(userId: string): Promise<{
-    id: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-    status: string;
-    tenant: { id: string; name: string } | null;
-    role: { id: string; name: string; permissions: unknown } | null;
-  }> {
+  async getMe(userId: string): Promise<any> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -367,7 +359,7 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
 
-    // Remove sensitive fields (passwordHash not included in response)
+    // Remove sensitive fields
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash, ...userWithoutPassword } = user;
 
@@ -376,7 +368,28 @@ export class AuthService {
       userWithoutPassword.role.name = userWithoutPassword.role.name.replace(/-/g, '_').toUpperCase();
     }
 
-    return userWithoutPassword;
+    // Transform to match frontend User interface
+    const fullName = `${userWithoutPassword.firstName || ''} ${userWithoutPassword.lastName || ''}`.trim();
+    const roles = userWithoutPassword.role ? [userWithoutPassword.role] : [];
+
+    return {
+      id: userWithoutPassword.id,
+      email: userWithoutPassword.email,
+      firstName: userWithoutPassword.firstName,
+      lastName: userWithoutPassword.lastName,
+      fullName,
+      avatarUrl: userWithoutPassword.avatarUrl,
+      status: userWithoutPassword.status,
+      emailVerified: !!userWithoutPassword.emailVerifiedAt,
+      mfaEnabled: userWithoutPassword.mfaEnabled,
+      tenantId: userWithoutPassword.tenantId,
+      tenantName: userWithoutPassword.tenant?.name,
+      roles,
+      permissions: [],
+      lastLoginAt: userWithoutPassword.lastLoginAt?.toISOString(),
+      createdAt: userWithoutPassword.createdAt.toISOString(),
+      updatedAt: userWithoutPassword.updatedAt.toISOString(),
+    };
   }
 
   /**

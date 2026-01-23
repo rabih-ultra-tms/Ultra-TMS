@@ -20,9 +20,21 @@ export const customerFormSchema = z.object({
   creditLimit: z.number().min(0).optional(),
   tags: z.array(z.string()).default([]),
   address: addressSchema.optional(),
+  logoUrl: z.string().optional(),
 });
 
 export const contactFormSchema = z.object({
+  companyId: z.string()
+    .optional()
+    .refine((val) => {
+      if (!val || val.length === 0) return true;
+      // UUID regex pattern
+      return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+    }, {
+      message: "Invalid company selected",
+    })
+    .transform((val) => (val === "" ? undefined : val)) // Convert empty string to undefined
+    .optional(),
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   title: z.string().optional(),

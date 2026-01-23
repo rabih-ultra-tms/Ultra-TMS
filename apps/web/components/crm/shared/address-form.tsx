@@ -2,6 +2,13 @@ import * as React from "react";
 import type { Control, FieldValues, Path } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface AddressFormProps<TFieldValues extends FieldValues> {
   control: Control<TFieldValues>;
@@ -88,7 +95,28 @@ export function AddressForm<TFieldValues extends FieldValues>({
           <FormItem>
             <FormLabel>Country</FormLabel>
             <FormControl>
-              <Input {...field} />
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a country" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="US">United States</SelectItem>
+                  <SelectItem value="CA">Canada</SelectItem>
+                  <SelectItem value="MX">Mexico</SelectItem>
+                  <SelectItem value="GB">United Kingdom</SelectItem>
+                  <SelectItem value="AU">Australia</SelectItem>
+                  <SelectItem value="DE">Germany</SelectItem>
+                  <SelectItem value="FR">France</SelectItem>
+                  <SelectItem value="IT">Italy</SelectItem>
+                  <SelectItem value="ES">Spain</SelectItem>
+                  <SelectItem value="JP">Japan</SelectItem>
+                  <SelectItem value="CN">China</SelectItem>
+                  <SelectItem value="IN">India</SelectItem>
+                  <SelectItem value="BR">Brazil</SelectItem>
+                  <SelectItem value="ZA">South Africa</SelectItem>
+                  <SelectItem value="SG">Singapore</SelectItem>
+                </SelectContent>
+              </Select>
             </FormControl>
             <FormMessage />
           </FormItem>

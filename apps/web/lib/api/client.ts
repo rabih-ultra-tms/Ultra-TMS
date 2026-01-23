@@ -308,11 +308,17 @@ class ApiClient {
     const url = this.getFullUrl(endpoint);
     const { body, serverCookies, ...fetchOptions } = options;
 
-    const headers: HeadersInit = {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      ...(options.headers as Record<string, string>),
-    };
+    const headers: HeadersInit = {};
+    
+    // Only set Content-Type if body is not FormData
+    if (!(body instanceof FormData)) {
+      headers["Content-Type"] = "application/json";
+      headers["Accept"] = "application/json";
+    } else {
+      headers["Accept"] = "application/json";
+    }
+    
+    Object.assign(headers, options.headers as Record<string, string>);
 
     const hasAuthHeader =
       typeof (headers as Record<string, string>).Authorization === "string" ||
@@ -332,7 +338,7 @@ class ApiClient {
     const response = await fetch(url, {
       ...fetchOptions,
       headers,
-      body: body ? JSON.stringify(body) : undefined,
+      body: body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined),
       credentials: "include",
     });
 
