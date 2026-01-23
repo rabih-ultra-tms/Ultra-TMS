@@ -73,7 +73,7 @@ export default function RoleDetailPage() {
         displayName: role.displayName || role.name,
         description: role.description || "",
         permissionIds: permissionIds,
-      }, { shouldValidate: false });
+      }, { keepDirtyValues: false, keepErrors: false });
     }
   }, [role, form]);
 

@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useTheme } from "@/lib/theme/theme-provider";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Info, Shield, Users, Building2, DollarSign, Truck, FileText, BarChart3, Package, ChevronDown, ChevronRight } from "lucide-react";
 import {
   Tooltip,
@@ -79,18 +79,7 @@ export function RolePermissionsEditor({
     }
   };
 
-  const toggleModule = (moduleName: string, checked: boolean) => {
-    const modulePerms = permissions
-      .filter((p) => (p.group || p.code?.split(".")[0]) === moduleName)
-      .map((p) => p.code || p.name);
 
-    if (checked) {
-      const newSelected = [...new Set([...selectedIds, ...modulePerms])];
-      onChange(newSelected);
-    } else {
-      onChange(selectedIds.filter((id) => !modulePerms.includes(id)));
-    }
-  };
 
   const toggleResource = (moduleName: string, resourceName: string, checked: boolean) => {
     const resourcePerms = permissions
@@ -140,11 +129,14 @@ export function RolePermissionsEditor({
         groups[service][resource] = [];
       }
 
-      groups[service][resource].push({
-        ...permission,
-        name: permission.name || action,
-        code,
-      });
+      const resourceArray = groups[service][resource];
+      if (resourceArray) {
+        resourceArray.push({
+          ...permission,
+          name: permission.name || action,
+          code,
+        });
+      }
     });
     return groups;
   }, [permissions]);
@@ -154,7 +146,7 @@ export function RolePermissionsEditor({
     if (permissions.length > 0 && expandedModules.length === 0) {
       setExpandedModules(Object.keys(groupedPermissions)); 
     }
-  }, [permissions, groupedPermissions]);
+  }, [permissions, groupedPermissions, expandedModules.length]);
 
 
   const totalSelected = selectedIds.length;
@@ -201,8 +193,6 @@ export function RolePermissionsEditor({
           {Object.entries(groupedPermissions).map(([moduleName, resourceGroups]) => {
             const modulePermissions = Object.values(resourceGroups).flat();
             const modulePermissionIds = modulePermissions.map((p) => p.code || p.name);
-            const allSelected = modulePermissionIds.every((id) => selectedIds.includes(id));
-            const someSelected = modulePermissionIds.some((id) => selectedIds.includes(id));
             const selectedCount = modulePermissionIds.filter((id) => selectedIds.includes(id)).length;
             const isExpanded = expandedModules.includes(moduleName);
 
@@ -363,7 +353,4 @@ export function RolePermissionsEditor({
   );
 }
 
-function Badge({ children, variant, className }: { children: React.ReactNode, variant?: string, className?: string }) {
-    return <span className={cn("inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2", className)}>{children}</span>
-}
 

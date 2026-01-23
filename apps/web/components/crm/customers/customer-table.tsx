@@ -137,7 +137,7 @@ export function CustomerTable({
                       </div>
                       {hasContacts ? (
                         <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
-                          {customer.contacts.map((contact) => (
+                          {customer.contacts?.map((contact) => (
                             <div key={contact.id} className="rounded-md border bg-background p-2">
                               <p className="text-sm font-medium">
                                 {contact.fullName || `${contact.firstName} ${contact.lastName}`.trim()}

@@ -10,7 +10,7 @@ interface LeadCardProps {
   isDragging?: boolean;
 }
 
-export function LeadCard({ lead, onSelect, isDragging }: LeadCardProps) {
+export function LeadCard({ lead, onSelect }: LeadCardProps) {
   const { theme } = useTheme();
   const [isDragActive, setIsDragActive] = React.useState(false);
   

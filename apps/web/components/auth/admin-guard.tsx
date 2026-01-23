@@ -17,8 +17,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
 
   const isAdmin = React.useMemo(() => {
     const rolesFromArray = currentUser?.roles?.map((role) => role.name) ?? [];
-    const roleFromSingle = currentUser?.role?.name ? [currentUser.role.name] : [];
-    const roles = [...rolesFromArray, ...roleFromSingle]
+    const roles = [...rolesFromArray]
       .filter(Boolean)
       .map((role) => normalizeRole(role));
     return roles.some((role) => ADMIN_ROLES.has(role));

@@ -19,10 +19,26 @@ interface ThemeProviderProps {
 const ThemeContext = React.createContext<ThemeContextValue | undefined>(undefined);
 
 const THEME_STORAGE_KEY = "theme";
+const THEME_COOKIE_NAME = "theme-preference";
 
 function getSystemTheme() {
   if (typeof window === "undefined") return "light";
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+function getCookie(name: string): string | undefined {
+  if (typeof document === "undefined") return undefined;
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(";").shift();
+}
+
+function setCookie(name: string, value: string, days: number = 365): void {
+  if (typeof document === "undefined") return;
+  const date = new Date();
+  date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+  const expires = `expires=${date.toUTCString()}`;
+  document.cookie = `${name}=${value}; ${expires}; path=/`;
 }
 
 function applyTheme(theme: Theme) {
@@ -43,8 +59,10 @@ export function ThemeProvider({
   const [theme, setThemeState] = React.useState<Theme>(defaultTheme);
 
   React.useEffect(() => {
-    const stored = window.localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
-    const initial = stored || defaultTheme;
+    // Try to load from cookie first, then localStorage, then default
+    const fromCookie = getCookie(THEME_COOKIE_NAME) as Theme | undefined;
+    const fromStorage = window.localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
+    const initial = fromCookie || fromStorage || defaultTheme;
     setThemeState(initial);
     applyTheme(initial);
   }, [defaultTheme]);
@@ -61,7 +79,9 @@ export function ThemeProvider({
 
   const setTheme = React.useCallback((next: Theme) => {
     setThemeState(next);
+    // Save to both localStorage and cookie for better persistence
     window.localStorage.setItem(THEME_STORAGE_KEY, next);
+    setCookie(THEME_COOKIE_NAME, next);
     applyTheme(next);
   }, []);
 
