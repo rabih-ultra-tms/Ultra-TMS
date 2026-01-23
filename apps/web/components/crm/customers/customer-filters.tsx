@@ -5,8 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCRMStore } from "@/lib/stores/crm-store";
-import { useTheme } from "@/lib/theme/theme-provider";
-import { cn } from "@/lib/utils";
 
 const statusOptions = [
   { label: "All", value: "all" },

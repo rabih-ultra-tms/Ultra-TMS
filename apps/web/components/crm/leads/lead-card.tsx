@@ -2,7 +2,6 @@ import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Lead } from "@/lib/types/crm";
 import { LeadStageBadge } from "./lead-stage-badge";
-import { useTheme } from "@/lib/theme/theme-provider";
 
 interface LeadCardProps {
   lead: Lead;

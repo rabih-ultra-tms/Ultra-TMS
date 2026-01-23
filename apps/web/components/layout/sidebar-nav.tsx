@@ -17,12 +17,7 @@ interface SidebarNavProps {
 
 export function SidebarNav({ groups, collapsed = false, onItemClick }: SidebarNavProps) {
   const pathname = usePathname();
-  const [mounted, setMounted] = React.useState(false);
   const [openGroups, setOpenGroups] = React.useState<string[]>([]);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
 
   React.useEffect(() => {
     setOpenGroups(groups.map(g => g.title).filter(Boolean));

@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useTheme } from "@/lib/theme/theme-provider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Info, Shield, Users, Building2, DollarSign, Truck, FileText, BarChart3, Package, ChevronDown, ChevronRight } from "lucide-react";

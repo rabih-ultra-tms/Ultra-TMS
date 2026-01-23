@@ -16,21 +16,19 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
   const { data: currentUser, isLoading } = useCurrentUser();
 
   const isAdmin = React.useMemo(() => {
-    // Check both roles array and single role object
+    // Check both roles array
     const rolesFromArray = currentUser?.roles?.map((role) => {
       if (typeof role === 'string') return role;
-      return (role as any)?.name || '';
+      return (role as { name?: string })?.name || '';
     }) ?? [];
-    const roleFromObject = currentUser?.role?.name ? [currentUser.role.name] : [];
-    const roleName = (currentUser as any)?.roleName ? [(currentUser as any).roleName] : [];
+    const roleName = (currentUser as { roleName?: string })?.roleName ? [(currentUser as { roleName?: string }).roleName] : [];
     
-    const allRoles = [...rolesFromArray, ...roleFromObject, ...roleName]
+    const allRoles = [...rolesFromArray, ...roleName]
       .filter(Boolean)
       .map((role) => normalizeRole(role as string));
     
     console.log('[AdminGuard] isAdmin check:', { 
       rolesFromArray, 
-      roleFromObject, 
       roleName, 
       allRoles, 
       hasAdminRole: allRoles.some((role) => ADMIN_ROLES.has(role))

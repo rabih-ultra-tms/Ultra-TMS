@@ -1,7 +1,6 @@
 import * as React from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useTheme } from "@/lib/theme/theme-provider";
 import {
   Table,
   TableBody,
