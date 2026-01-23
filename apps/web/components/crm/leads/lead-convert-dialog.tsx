@@ -17,7 +17,7 @@ interface LeadConvertDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   customers: Customer[];
-  onConvert: (customerId?: string) => void | Promise<void>;
+  onConvert: (companyId?: string) => void | Promise<void>;
   isLoading?: boolean;
 }
 
@@ -34,14 +34,14 @@ export function LeadConvertDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Convert lead</DialogTitle>
+          <DialogTitle>Convert deal</DialogTitle>
           <DialogDescription>
-            Attach this lead to an existing customer or create a new customer record.
+            Attach this deal to an existing company or create a new company record.
           </DialogDescription>
         </DialogHeader>
         <Select value={selectedId} onValueChange={setSelectedId}>
           <SelectTrigger>
-            <SelectValue placeholder="Select a customer (optional)" />
+            <SelectValue placeholder="Select a company (optional)" />
           </SelectTrigger>
           <SelectContent>
             {customers.map((customer) => (

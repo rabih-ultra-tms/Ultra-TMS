@@ -18,7 +18,7 @@ const mockLeads = [
 const mockContacts = [
   {
     id: "1",
-    customerId: "1",
+    companyId: "1",
     firstName: "Taylor",
     lastName: "Smith",
     fullName: "Taylor Smith",
@@ -40,32 +40,32 @@ const mockActivities = [
 ];
 
 export const crmHandlers = [
-  http.get(apiUrl("/crm/customers"), () => {
+  http.get(apiUrl("/crm/companies"), () => {
     return HttpResponse.json({
       data: mockCustomers,
       pagination: { page: 1, limit: 20, total: 2, totalPages: 1 },
     });
   }),
 
-  http.get(apiUrl("/crm/customers/:id"), ({ params }) => {
+  http.get(apiUrl("/crm/companies/:id"), ({ params }) => {
     const customer = mockCustomers.find((c) => c.id === params.id);
     if (!customer) return HttpResponse.json({ message: "Not found" }, { status: 404 });
     return HttpResponse.json({ data: customer });
   }),
 
-  http.post(apiUrl("/crm/customers"), async ({ request }) => {
+  http.post(apiUrl("/crm/companies"), async ({ request }) => {
     const body = await request.json();
     return HttpResponse.json({ data: { id: "3", ...(body as object) } }, { status: 201 });
   }),
 
-  http.get(apiUrl("/crm/leads"), () => {
+  http.get(apiUrl("/crm/opportunities"), () => {
     return HttpResponse.json({
       data: mockLeads,
       pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
     });
   }),
 
-  http.get(apiUrl("/crm/leads/pipeline"), () => {
+  http.get(apiUrl("/crm/opportunities/pipeline"), () => {
     return HttpResponse.json({
       data: { NEW: mockLeads, QUALIFIED: [], PROPOSAL: [], NEGOTIATION: [], WON: [], LOST: [] },
     });

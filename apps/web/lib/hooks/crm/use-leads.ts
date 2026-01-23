@@ -42,10 +42,10 @@ export function useCreateLead() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: leadKeys.lists() });
       queryClient.invalidateQueries({ queryKey: leadKeys.pipeline() });
-      toast.success("Lead created");
+      toast.success("Deal created");
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to create lead");
+      toast.error(error.message || "Failed to create deal");
     },
   });
 }
@@ -75,10 +75,10 @@ export function useConvertLead() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: leadKeys.lists() });
       queryClient.invalidateQueries({ queryKey: leadKeys.pipeline() });
-      toast.success("Lead converted to customer");
+      toast.success("Deal converted to company");
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to convert lead");
+      toast.error(error.message || "Failed to convert deal");
     },
   });
 }

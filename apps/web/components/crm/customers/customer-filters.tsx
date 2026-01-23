@@ -20,7 +20,7 @@ export function CustomerFilters() {
   return (
     <div className="flex flex-col gap-3 rounded-md border bg-card p-4 md:flex-row md:items-center">
       <Input
-        placeholder="Search customers"
+        placeholder="Search companies"
         value={customerFilters.search}
         onChange={(event) => setCustomerFilter("search", event.target.value)}
         className="md:w-72"

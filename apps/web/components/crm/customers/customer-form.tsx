@@ -22,7 +22,7 @@ interface CustomerFormProps {
 export function CustomerForm({
   defaultValues,
   onSubmit,
-  submitLabel = "Save Customer",
+  submitLabel = "Save Company",
   isLoading = false,
 }: CustomerFormProps) {
   const [includeAddress, setIncludeAddress] = React.useState(
@@ -64,7 +64,7 @@ export function CustomerForm({
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Customer details</CardTitle>
+            <CardTitle>Company details</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
             <FormField

@@ -27,6 +27,8 @@ export interface Customer {
   annualRevenue?: number;
   primaryContactId?: string;
   primaryContact?: Contact;
+  contacts?: Contact[];
+  contactsCount?: number;
   accountManagerId?: string;
   accountManager?: { id: string; name: string };
   paymentTerms?: string;
@@ -39,17 +41,19 @@ export interface Customer {
 
 export interface Contact {
   id: string;
-  customerId: string;
+  companyId?: string;
   firstName: string;
   lastName: string;
-  fullName: string;
+  fullName?: string;
   title?: string;
   department?: string;
   email?: string;
   phone?: string;
   mobile?: string;
   isPrimary: boolean;
-  isActive: boolean;
+  isActive?: boolean;
+  status?: CustomerStatus;
+  company?: { id: string; name: string };
   notes?: string;
   createdAt: string;
   updatedAt: string;
@@ -78,7 +82,7 @@ export interface Activity {
   type: ActivityType;
   subject: string;
   description?: string;
-  customerId?: string;
+  companyId?: string;
   contactId?: string;
   leadId?: string;
   scheduledAt?: string;
@@ -116,7 +120,7 @@ export interface ContactListParams {
   page?: number;
   limit?: number;
   search?: string;
-  customerId?: string;
+  companyId?: string;
   isActive?: boolean;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
@@ -125,7 +129,7 @@ export interface ContactListParams {
 export interface ActivityListParams {
   page?: number;
   limit?: number;
-  customerId?: string;
+  companyId?: string;
   contactId?: string;
   leadId?: string;
   type?: ActivityType;

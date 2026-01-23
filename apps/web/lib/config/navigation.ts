@@ -14,6 +14,7 @@ import {
   ClipboardList,
   UserCog,
   TrendingUp,
+  ListChecks,
 } from "lucide-react";
 import type { NavConfig } from "@/lib/types/navigation";
 
@@ -50,23 +51,33 @@ export const navigationConfig: NavConfig = {
       ],
     },
     {
-      title: "Management",
+      title: "CRM",
       items: [
         {
-          title: "Customers",
-          href: "/customers",
+          title: "Companies",
+          href: "/companies",
           icon: Building2,
-        },
-        {
-          title: "Leads",
-          href: "/leads",
-          icon: TrendingUp,
         },
         {
           title: "Contacts",
           href: "/contacts",
           icon: Users,
         },
+        {
+          title: "Deals",
+          href: "/leads",
+          icon: TrendingUp,
+        },
+        {
+          title: "Activities",
+          href: "/activities",
+          icon: ListChecks,
+        },
+      ],
+    },
+    {
+      title: "Management",
+      items: [
         {
           title: "Carriers",
           href: "/carriers",

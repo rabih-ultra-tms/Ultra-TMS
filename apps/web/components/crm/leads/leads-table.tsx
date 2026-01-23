@@ -37,7 +37,7 @@ export function LeadsTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Lead</TableHead>
+              <TableHead>Deal</TableHead>
               <TableHead>Company</TableHead>
               <TableHead>Stage</TableHead>
               <TableHead>Owner</TableHead>

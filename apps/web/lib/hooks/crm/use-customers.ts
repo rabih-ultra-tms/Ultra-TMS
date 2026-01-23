@@ -38,7 +38,7 @@ export function useCreateCustomer() {
       apiClient.post<{ data: Customer }>("/crm/companies", { ...data, companyType: "CUSTOMER" }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: customerKeys.lists() });
-      toast.success("Customer created successfully");
+      toast.success("Company created successfully");
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to create customer");
@@ -55,7 +55,7 @@ export function useUpdateCustomer() {
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: customerKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: customerKeys.lists() });
-      toast.success("Customer updated");
+      toast.success("Company updated");
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to update customer");
@@ -70,7 +70,7 @@ export function useDeleteCustomer() {
     mutationFn: (id: string) => apiClient.delete(`/crm/companies/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: customerKeys.lists() });
-      toast.success("Customer deleted");
+      toast.success("Company deleted");
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to delete customer");

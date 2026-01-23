@@ -1,3 +1,4 @@
+import * as React from "react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -21,6 +22,7 @@ interface CustomerTableProps {
   };
   onPageChange?: (page: number) => void;
   onView: (id: string) => void;
+  onViewContacts?: (id: string) => void;
   isLoading?: boolean;
 }
 
@@ -29,6 +31,7 @@ export function CustomerTable({
   pagination,
   onPageChange,
   onView,
+  onViewContacts,
   isLoading,
 }: CustomerTableProps) {
   return (
@@ -38,7 +41,7 @@ export function CustomerTable({
           <TableHeader>
             <TableRow>
               <TableHead>Code</TableHead>
-              <TableHead>Customer</TableHead>
+              <TableHead>Company</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Phone</TableHead>
@@ -47,30 +50,69 @@ export function CustomerTable({
           </TableHeader>
           <TableBody>
             {customers.map((customer) => (
-              <TableRow key={customer.id}>
-                <TableCell className="font-medium">{customer.code}</TableCell>
-                <TableCell>
-                  <div className="font-medium text-foreground">{customer.name}</div>
-                  {customer.legalName && (
-                    <div className="text-sm text-muted-foreground">{customer.legalName}</div>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <CustomerStatusBadge status={customer.status} />
-                </TableCell>
-                <TableCell>{customer.email || "—"}</TableCell>
-                <TableCell>{customer.phone || "—"}</TableCell>
-                <TableCell className="text-right">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onView(customer.id)}
-                    disabled={isLoading}
-                  >
-                    View
-                  </Button>
-                </TableCell>
-              </TableRow>
+              <React.Fragment key={customer.id}>
+                <TableRow>
+                  <TableCell className="font-medium">{customer.code}</TableCell>
+                  <TableCell>
+                    <div className="font-medium text-foreground">{customer.name}</div>
+                    {customer.legalName && (
+                      <div className="text-sm text-muted-foreground">{customer.legalName}</div>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <CustomerStatusBadge status={customer.status} />
+                  </TableCell>
+                  <TableCell>{customer.email || "—"}</TableCell>
+                  <TableCell>{customer.phone || "—"}</TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onView(customer.id)}
+                      disabled={isLoading}
+                    >
+                      View
+                    </Button>
+                  </TableCell>
+                </TableRow>
+                <TableRow className="bg-muted/30">
+                  <TableCell colSpan={6} className="py-3">
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          Contacts
+                        </p>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => (onViewContacts ? onViewContacts(customer.id) : onView(customer.id))}
+                        >
+                          Manage contacts
+                        </Button>
+                      </div>
+                      {customer.contacts && customer.contacts.length > 0 ? (
+                        <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+                          {customer.contacts.map((contact) => (
+                            <div key={contact.id} className="rounded-md border bg-background p-2">
+                              <p className="text-sm font-medium">
+                                {contact.fullName || `${contact.firstName} ${contact.lastName}`.trim()}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {contact.title || contact.department || "Contact"}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {contact.email || contact.phone || contact.mobile || "—"}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No contacts added yet.</p>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              </React.Fragment>
             ))}
           </TableBody>
         </Table>

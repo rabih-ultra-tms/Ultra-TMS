@@ -52,7 +52,7 @@ export default function LeadsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Leads"
+        title="Deals"
         description="Track your sales pipeline"
         actions={
           <>
@@ -62,7 +62,7 @@ export default function LeadsPage() {
             </Button>
             <Button onClick={handleCreate}>
               <Plus className="mr-2 h-4 w-4" />
-              Add Lead
+              Add Deal
             </Button>
           </>
         }
@@ -70,7 +70,7 @@ export default function LeadsPage() {
 
       <div className="flex flex-col gap-3 rounded-md border bg-card p-4 md:flex-row md:items-center">
         <Input
-          placeholder="Search leads"
+          placeholder="Search deals"
           value={leadFilters.search}
           onChange={(event) => setLeadFilter("search", event.target.value)}
           className="md:w-72"
@@ -117,17 +117,17 @@ export default function LeadsPage() {
       </div>
 
       {leadsQuery.isLoading && !leadsQuery.data ? (
-        <LoadingState message="Loading leads..." />
+        <LoadingState message="Loading deals..." />
       ) : leadsQuery.error ? (
-        <ErrorState title="Failed to load leads" message={errorMessage} retry={() => leadsQuery.refetch()} />
+        <ErrorState title="Failed to load deals" message={errorMessage} retry={() => leadsQuery.refetch()} />
       ) : leads.length === 0 && leadsViewMode === "table" ? (
         <EmptyState
-          title="No leads found"
-          description="Create a lead to start tracking opportunities."
+          title="No deals found"
+          description="Create a deal to start tracking opportunities."
           action={
             <Button onClick={handleCreate}>
               <Plus className="mr-2 h-4 w-4" />
-              Add Lead
+              Add Deal
             </Button>
           }
         />

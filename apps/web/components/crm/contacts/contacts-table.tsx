@@ -46,7 +46,9 @@ export function ContactsTable({
           <TableBody>
             {contacts.map((contact) => (
               <TableRow key={contact.id}>
-                <TableCell className="font-medium">{contact.fullName}</TableCell>
+                <TableCell className="font-medium">
+                  {contact.fullName || `${contact.firstName} ${contact.lastName}`.trim()}
+                </TableCell>
                 <TableCell>{contact.title || "—"}</TableCell>
                 <TableCell>{contact.email || "—"}</TableCell>
                 <TableCell>{contact.phone || contact.mobile || "—"}</TableCell>

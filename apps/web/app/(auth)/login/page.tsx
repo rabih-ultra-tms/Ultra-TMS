@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AUTH_CONFIG } from "@/lib/config/auth";
+import { setAuthTokens } from "@/lib/api/client";
 
 // ✅ Define schema locally - no external imports that cause issues
 const loginSchema = z.object({
@@ -88,13 +89,11 @@ export default function LoginPage() {
       }
 
       const accessToken = result?.data?.accessToken as string | undefined;
+      const refreshToken = result?.data?.refreshToken as string | undefined;
       const expiresIn = result?.data?.expiresIn as number | undefined;
 
       if (accessToken) {
-        const maxAge = typeof expiresIn === "number" ? Math.max(expiresIn, 60) : 900;
-        const encodedToken = encodeURIComponent(accessToken);
-        document.cookie = `${AUTH_CONFIG.accessTokenCookie}=${encodedToken}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
-        localStorage.setItem("accessToken", accessToken);
+        setAuthTokens({ accessToken, refreshToken, expiresIn });
       }
 
       // ✅ Use window.location, NOT router.push()

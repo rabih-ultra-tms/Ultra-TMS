@@ -11,9 +11,12 @@ import { TenantService } from './tenant.service';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
+import { Roles } from '../../common/decorators';
+import { RolesGuard } from '../../common/guards/roles.guard';
 
 @Controller('tenant')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('ADMIN', 'SUPER_ADMIN')
 @ApiTags('Auth')
 @ApiBearerAuth('JWT-auth')
 export class TenantController {

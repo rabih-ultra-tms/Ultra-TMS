@@ -83,7 +83,7 @@ export class RolesService {
    */
   async getAvailablePermissions() {
     // Master permissions list for Ultra-TMS
-    const permissions = [
+    const rawPermissions = [
       // User Management
       { module: 'users', name: 'users.view', description: 'View users' },
       { module: 'users', name: 'users.create', description: 'Create users' },
@@ -159,6 +159,15 @@ export class RolesService {
       { module: 'commission', name: 'commission.calculate', description: 'Calculate commissions' },
       { module: 'commission', name: 'commission.approve', description: 'Approve commissions' },
     ];
+
+    const permissions = rawPermissions.map((permission) => ({
+      id: permission.name,
+      code: permission.name,
+      name: permission.description,
+      description: permission.description,
+      group: permission.module,
+      isSystem: true,
+    }));
 
     return {
       data: permissions,

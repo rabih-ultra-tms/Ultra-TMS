@@ -9,9 +9,9 @@ interface CustomerTabsProps {
 }
 
 const tabDefinitions = (id: string) => [
-  { label: "Overview", value: `/customers/${id}` },
-  { label: "Contacts", value: `/customers/${id}/contacts` },
-  { label: "Activities", value: `/customers/${id}/activities` },
+  { label: "Overview", value: `/companies/${id}` },
+  { label: "Contacts", value: `/companies/${id}/contacts` },
+  { label: "Activities", value: `/companies/${id}/activities` },
 ];
 
 export function CustomerTabs({ customerId }: CustomerTabsProps) {
@@ -21,7 +21,7 @@ export function CustomerTabs({ customerId }: CustomerTabsProps) {
 
   const current = React.useMemo(() => {
     const match = tabs.find((tab) => pathname === tab.value);
-    return match?.value ?? `/customers/${customerId}`;
+    return match?.value ?? `/companies/${customerId}`;
   }, [pathname, tabs, customerId]);
 
   return (

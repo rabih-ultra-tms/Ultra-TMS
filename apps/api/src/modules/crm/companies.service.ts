@@ -38,7 +38,11 @@ export class CompaniesService {
         take: safeLimit,
         orderBy: { createdAt: 'desc' },
         include: {
-          contacts: { where: { isPrimary: true }, take: 1 },
+          contacts: {
+            where: { status: 'ACTIVE' },
+            orderBy: [{ isPrimary: 'desc' }, { createdAt: 'desc' }],
+            take: 5,
+          },
           _count: { select: { contacts: true, opportunities: true } },
         },
       }),

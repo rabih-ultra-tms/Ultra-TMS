@@ -36,8 +36,8 @@ const moduleDisplayNames: Record<string, string> = {
   users: "User Management",
   roles: "Role Management",
   tenant: "Tenant Settings",
-  crm: "CRM & Contacts",
-  sales: "Sales & Quotes",
+  crm: "CRM",
+  sales: "Sales & Deals",
   tms: "Transportation (TMS)",
   carriers: "Carrier Management",
   accounting: "Accounting & Finance",
@@ -51,18 +51,18 @@ export function RolePermissionsEditor({
   selectedIds,
   onChange,
 }: RolePermissionsEditorProps) {
-  const togglePermission = (permissionName: string, checked: boolean) => {
+  const togglePermission = (permissionCode: string, checked: boolean) => {
     if (checked) {
-      onChange([...selectedIds, permissionName]);
+      onChange([...selectedIds, permissionCode]);
     } else {
-      onChange(selectedIds.filter((id) => id !== permissionName));
+      onChange(selectedIds.filter((id) => id !== permissionCode));
     }
   };
 
   const toggleModule = (moduleName: string, checked: boolean) => {
     const modulePerms = permissions
-      .filter((p) => p.group === moduleName)
-      .map((p) => p.name);
+      .filter((p) => (p.group || p.code?.split(".")[0]) === moduleName)
+      .map((p) => p.code || p.name);
 
     if (checked) {
       const newSelected = [...new Set([...selectedIds, ...modulePerms])];
@@ -72,15 +72,46 @@ export function RolePermissionsEditor({
     }
   };
 
+  const toggleResource = (moduleName: string, resourceName: string, checked: boolean) => {
+    const resourcePerms = permissions
+      .filter((p) => {
+        const code = p.code || p.name;
+        const [service, resource] = code.split(".");
+        const group = p.group || service;
+        return group === moduleName && (resource || "general") === resourceName;
+      })
+      .map((p) => p.code || p.name);
+
+    if (checked) {
+      const newSelected = [...new Set([...selectedIds, ...resourcePerms])];
+      onChange(newSelected);
+    } else {
+      onChange(selectedIds.filter((id) => !resourcePerms.includes(id)));
+    }
+  };
+
   // Group permissions by module
   const groupedPermissions = React.useMemo(() => {
-    const groups: Record<string, Permission[]> = {};
+    const groups: Record<string, Record<string, Permission[]>> = {};
     permissions.forEach((permission) => {
-      const moduleName = permission.group || "other";
-      if (!groups[moduleName]) {
-        groups[moduleName] = [];
+      const code = permission.code || permission.name;
+      const [serviceFromCode, resourceFromCode, actionFromCode] = code.split(".");
+      const service = permission.group || serviceFromCode || "other";
+      const resource = resourceFromCode || "general";
+      const action = actionFromCode || code;
+
+      if (!groups[service]) {
+        groups[service] = {};
       }
-      groups[moduleName].push(permission);
+      if (!groups[service][resource]) {
+        groups[service][resource] = [];
+      }
+
+      groups[service][resource].push({
+        ...permission,
+        name: permission.name || action,
+        code,
+      });
     });
     return groups;
   }, [permissions]);
@@ -126,10 +157,12 @@ export function RolePermissionsEditor({
       {/* Permission Groups */}
       <TooltipProvider>
         <div className="space-y-4">
-          {Object.entries(groupedPermissions).map(([moduleName, modulePermissions]) => {
-            const allSelected = modulePermissions.every((p) => selectedIds.includes(p.name));
-            const someSelected = modulePermissions.some((p) => selectedIds.includes(p.name));
-            const selectedCount = modulePermissions.filter((p) => selectedIds.includes(p.name)).length;
+          {Object.entries(groupedPermissions).map(([moduleName, resourceGroups]) => {
+            const modulePermissions = Object.values(resourceGroups).flat();
+            const modulePermissionIds = modulePermissions.map((p) => p.code || p.name);
+            const allSelected = modulePermissionIds.every((id) => selectedIds.includes(id));
+            const someSelected = modulePermissionIds.some((id) => selectedIds.includes(id));
+            const selectedCount = modulePermissionIds.filter((id) => selectedIds.includes(id)).length;
 
             return (
               <Card key={moduleName}>
@@ -165,37 +198,87 @@ export function RolePermissionsEditor({
                         </label>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Select or deselect all permissions in {moduleDisplayNames[moduleName]}</p>
+                        <p>
+                          Select or deselect all permissions in {moduleDisplayNames[moduleName] || moduleName}
+                        </p>
                       </TooltipContent>
                     </Tooltip>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                    {modulePermissions.map((permission) => (
-                      <Tooltip key={permission.name}>
-                        <TooltipTrigger asChild>
-                          <label className="flex items-start gap-2 rounded-md border p-3 cursor-pointer hover:bg-accent transition-colors">
-                            <Checkbox
-                              checked={selectedIds.includes(permission.name)}
-                              onCheckedChange={(value) => togglePermission(permission.name, Boolean(value))}
-                            />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">{permission.description || permission.name}</p>
-                              <p className="text-xs text-muted-foreground truncate">{permission.name}</p>
+                  <div className="space-y-3">
+                    {Object.entries(resourceGroups).map(([resourceName, resourcePermissions]) => {
+                      const resourcePermissionIds = resourcePermissions.map((p) => p.code || p.name);
+                      const resourceAllSelected = resourcePermissionIds.every((id) => selectedIds.includes(id));
+                      const resourceSomeSelected = resourcePermissionIds.some((id) => selectedIds.includes(id));
+
+                      return (
+                        <div key={`${moduleName}-${resourceName}`} className="rounded-md border">
+                          <div className="flex items-center justify-between border-b px-3 py-2">
+                            <div>
+                              <p className="text-sm font-medium">
+                                {resourceName === "general"
+                                  ? "General"
+                                  : resourceName.charAt(0).toUpperCase() + resourceName.slice(1)}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {resourcePermissions.length} permissions
+                              </p>
                             </div>
-                          </label>
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom" className="max-w-xs">
-                          <div className="space-y-1">
-                            <p className="font-semibold">{permission.description || permission.name}</p>
-                            <p className="text-xs opacity-80">
-                              Allows users to {permission.description?.toLowerCase() || permission.name.replace(/[._]/g, ' ')}
-                            </p>
+                            <label className="flex items-center gap-2 text-xs font-medium">
+                              Select All
+                              <Checkbox
+                                checked={resourceAllSelected}
+                                ref={(el) => {
+                                  if (el) {
+                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                    (el as any).indeterminate = resourceSomeSelected && !resourceAllSelected;
+                                  }
+                                }}
+                                onCheckedChange={(checked) =>
+                                  toggleResource(moduleName, resourceName, Boolean(checked))
+                                }
+                              />
+                            </label>
                           </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    ))}
+                          <div className="grid gap-2 p-3 sm:grid-cols-2 lg:grid-cols-3">
+                            {resourcePermissions.map((permission) => {
+                              const permissionId = permission.code || permission.name;
+                              return (
+                                <Tooltip key={permissionId}>
+                                  <TooltipTrigger asChild>
+                                    <label className="flex items-start gap-2 rounded-md border p-3 cursor-pointer hover:bg-accent transition-colors">
+                                      <Checkbox
+                                        checked={selectedIds.includes(permissionId)}
+                                        onCheckedChange={(value) => togglePermission(permissionId, Boolean(value))}
+                                      />
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium truncate">
+                                          {permission.name || permission.description || permissionId}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground truncate">
+                                          {permission.code || permissionId}
+                                        </p>
+                                      </div>
+                                    </label>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="bottom" className="max-w-xs">
+                                    <div className="space-y-1">
+                                      <p className="font-semibold">
+                                        {permission.name || permission.description || permissionId}
+                                      </p>
+                                      <p className="text-xs opacity-80">
+                                        {permission.description || permissionId.replace(/[._]/g, " ")}
+                                      </p>
+                                    </div>
+                                  </TooltipContent>
+                                </Tooltip>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
