@@ -106,16 +106,16 @@ function LoginPageContent() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+    <div className="flex min-h-screen items-center justify-center p-4 bg-gray-50 dark:bg-slate-900">
+      <Card className="w-full max-w-md border-gray-200 dark:border-slate-700 shadow-xl">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Welcome back</CardTitle>
-          <CardDescription>Sign in to your account</CardDescription>
+          <CardTitle className="text-2xl text-gray-900 dark:text-gray-100">Welcome back</CardTitle>
+          <CardDescription className="text-gray-600 dark:text-gray-400">Sign in to your account</CardDescription>
         </CardHeader>
 
         <CardContent>
           {registered && (
-            <Alert className="mb-4 border-green-200 bg-green-50 text-green-800">
+            <Alert className="mb-4 border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
               <AlertDescription>
                 Registration successful! Please check your email to verify your account.
               </AlertDescription>
@@ -123,7 +123,7 @@ function LoginPageContent() {
           )}
 
           {reset && (
-            <Alert className="mb-4 border-green-200 bg-green-50 text-green-800">
+            <Alert className="mb-4 border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
               <AlertDescription>
                 Password reset successfully! Please login with your new password.
               </AlertDescription>
@@ -143,7 +143,7 @@ function LoginPageContent() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel htmlFor="login-email">Email</FormLabel>
+                    <FormLabel htmlFor="login-email" className="text-sm font-semibold text-gray-900 dark:text-gray-100">Email</FormLabel>
                     <FormControl>
                       <Input
                         id="login-email"
@@ -151,6 +151,7 @@ function LoginPageContent() {
                         placeholder="you@company.com"
                         autoComplete="email"
                         disabled={isLoading}
+                        className="h-11 border-2 focus:border-primary"
                         value={field.value as string}
                         onChange={field.onChange}
                         onBlur={field.onBlur}
@@ -167,13 +168,14 @@ function LoginPageContent() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel htmlFor="login-password">Password</FormLabel>
+                    <FormLabel htmlFor="login-password" className="text-sm font-semibold text-gray-900 dark:text-gray-100">Password</FormLabel>
                     <FormControl>
                       <Input
                         id="login-password"
                         type="password"
                         autoComplete="current-password"
                         disabled={isLoading}
+                        className="h-11 border-2 focus:border-primary"
                         value={field.value as string}
                         onChange={field.onChange}
                         onBlur={field.onBlur}
@@ -188,22 +190,27 @@ function LoginPageContent() {
               <div className="flex items-center justify-end">
                 <Link
                   href="/forgot-password"
-                  className="text-sm text-primary hover:underline"
+                  className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
                   tabIndex={isLoading ? -1 : 0}
                 >
                   Forgot password?
                 </Link>
               </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button 
+                type="submit" 
+                className="w-full h-12 font-semibold text-base shadow-lg bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 hover:shadow-xl hover:scale-[1.005] text-white transition-all duration-300 ease-in-out active:scale-[0.995]" 
+                disabled={isLoading}
+                style={{ backgroundColor: isLoading ? undefined : '#2563eb' }}
+              >
                 {isLoading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                     Signing in...
                   </>
                 ) : (
                   <>
-                    <LogIn className="mr-2 h-4 w-4" />
+                    <LogIn className="mr-2 h-5 w-5" />
                     Sign in
                   </>
                 )}
@@ -213,9 +220,9 @@ function LoginPageContent() {
         </CardContent>
 
         <CardFooter className="justify-center">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             Don&apos;t have an account?{" "}
-            <Link href="/register" className="text-primary hover:underline">
+            <Link href="/register" className="font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:underline">
               Sign up
             </Link>
           </p>
@@ -228,7 +235,7 @@ function LoginPageContent() {
 export default function LoginPage() {
   return (
     <React.Suspense
-      fallback={<div className="flex min-h-screen items-center justify-center p-4">Loading...</div>}
+      fallback={<div className="flex min-h-screen items-center justify-center p-4 bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-gray-100">Loading...</div>}
     >
       <LoginPageContent />
     </React.Suspense>

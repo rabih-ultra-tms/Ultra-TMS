@@ -86,7 +86,7 @@ export const updateUserFormSchema = z.object({
 });
 
 export const roleFormSchema = z.object({
-  name: z.string().min(1, 'Role name is required').regex(/^[a-z_]+$/, 'Use lowercase letters and underscores only'),
+  name: z.string().min(1, 'Role name is required').regex(/^[a-zA-Z0-9_]+$/, 'Use letters, numbers, and underscores only'),
   displayName: z.string().min(1, 'Display name is required'),
   description: z.string().optional(),
   permissionIds: z.array(z.string()).min(1, 'At least one permission is required'),

@@ -106,7 +106,7 @@ export const navigationConfig: NavConfig = {
       ],
     },
     {
-      title: "Administration",
+      title: "User Management",
       items: [
         {
           title: "Users",
@@ -120,6 +120,11 @@ export const navigationConfig: NavConfig = {
           icon: Shield,
           requiredRoles: ["ADMIN", "SUPER_ADMIN"],
         },
+      ],
+    },
+    {
+      title: "System",
+      items: [
         {
           title: "Audit Logs",
           href: "/admin/audit-logs",

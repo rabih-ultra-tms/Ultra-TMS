@@ -1,5 +1,7 @@
 import * as React from "react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "@/lib/theme/theme-provider";
 import {
   Table,
   TableBody,
@@ -34,24 +36,66 @@ export function CustomerTable({
   onViewContacts,
   isLoading,
 }: CustomerTableProps) {
+  const [expandedRows, setExpandedRows] = React.useState<Set<string>>(new Set());
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
+  const getRowBg = (index: number) => {
+    const lightBg = index % 2 === 0 ? "bg-background" : "bg-slate-50";
+    const darkBg = index % 2 === 0 ? "bg-background" : "bg-slate-800";
+    return isDark ? darkBg : lightBg;
+  };
+
+  const toggleRow = (customerId: string) => {
+    setExpandedRows((prev) => {
+      const next = new Set(prev);
+      if (next.has(customerId)) {
+        next.delete(customerId);
+      } else {
+        next.add(customerId);
+      }
+      return next;
+    });
+  };
+
   return (
     <div className="space-y-4">
-      <div className="rounded-md border">
+      <div className="rounded-md border shadow-sm overflow-hidden">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-slate-100/80 dark:bg-slate-900/60">
             <TableRow>
-              <TableHead>Code</TableHead>
-              <TableHead>Company</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="w-12"></TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-200">Code</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-200">Company</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-200">Status</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-200">Email</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-200">Phone</TableHead>
+              <TableHead className="text-right text-xs font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-200">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {customers.map((customer) => (
+            {customers.map((customer, index) => {
+              const isExpanded = expandedRows.has(customer.id);
+              const hasContacts = customer.contacts && customer.contacts.length > 0;
+              
+              return (
               <React.Fragment key={customer.id}>
-                <TableRow>
+                <TableRow className={getRowBg(index)}>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => toggleRow(customer.id)}
+                      aria-label={isExpanded ? "Collapse contacts" : "Expand contacts"}
+                    >
+                      {isExpanded ? (
+                        <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </TableCell>
                   <TableCell className="font-medium">{customer.code}</TableCell>
                   <TableCell>
                     <div className="font-medium text-foreground">{customer.name}</div>
@@ -75,8 +119,9 @@ export function CustomerTable({
                     </Button>
                   </TableCell>
                 </TableRow>
-                <TableRow className="bg-muted/30">
-                  <TableCell colSpan={6} className="py-3">
+                {isExpanded && (
+                <TableRow className="bg-muted/30 dark:bg-slate-800/50">
+                  <TableCell colSpan={7} className="py-3">
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center justify-between">
                         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -90,7 +135,7 @@ export function CustomerTable({
                           Manage contacts
                         </Button>
                       </div>
-                      {customer.contacts && customer.contacts.length > 0 ? (
+                      {hasContacts ? (
                         <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
                           {customer.contacts.map((contact) => (
                             <div key={contact.id} className="rounded-md border bg-background p-2">
@@ -112,8 +157,9 @@ export function CustomerTable({
                     </div>
                   </TableCell>
                 </TableRow>
+                )}
               </React.Fragment>
-            ))}
+            )})}
           </TableBody>
         </Table>
       </div>

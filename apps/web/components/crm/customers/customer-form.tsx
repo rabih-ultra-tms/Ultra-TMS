@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation"; 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -21,6 +22,7 @@ interface CustomerFormProps {
   onSubmit: (data: CustomerFormData) => Promise<void> | void;
   submitLabel?: string;
   isLoading?: boolean;
+  onCancel?: () => void;
 }
 
 export function CustomerForm({
@@ -28,9 +30,11 @@ export function CustomerForm({
   onSubmit,
   submitLabel = "Save Company",
   isLoading = false,
+  onCancel,
 }: CustomerFormProps) {
+  const router = useRouter();
   const [includeAddress, setIncludeAddress] = React.useState(
-    Boolean(defaultValues?.address)
+    defaultValues?.address !== undefined ? Boolean(defaultValues?.address) : true
   );
   const form = useForm<CustomerFormInput>({
     resolver: zodResolver(customerFormSchema),
@@ -222,10 +226,19 @@ export function CustomerForm({
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Primary address</CardTitle>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>Add address</span>
-              <Switch checked={includeAddress} onCheckedChange={setIncludeAddress} />
+            <CardTitle className="flex items-center gap-2">
+              Primary address
+ 
+            </CardTitle>
+            <div className="flex items-center gap-3 px-3 py-2 rounded-md bg-muted/50 hover:bg-muted transition-colors">
+              <span className={`text-sm font-medium ${includeAddress ? "text-foreground" : "text-muted-foreground"}`}>
+                {includeAddress ? "Address enabled" : "Add address"}
+              </span>
+              <Switch 
+                checked={includeAddress} 
+                onCheckedChange={setIncludeAddress}
+                className="data-[state=checked]:bg-emerald-500 dark:data-[state=checked]:bg-emerald-600"
+              />
             </div>
           </CardHeader>
           {includeAddress ? (
@@ -235,7 +248,15 @@ export function CustomerForm({
           ) : null}
         </Card>
 
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-3 border-t pt-6">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={() => (onCancel ? onCancel() : router.back())}
+            disabled={isLoading}
+          >
+            Cancel
+          </Button>
           <Button type="submit" disabled={isLoading}>
             {submitLabel}
           </Button>

@@ -136,15 +136,20 @@ export default function ForgotPasswordPage() {
                 )}
               />
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button 
+                type="submit" 
+                className="w-full h-12 font-semibold text-base shadow-lg bg-blue-600 hover:bg-blue-700 hover:shadow-xl hover:scale-[1.005] text-white transition-all duration-300 ease-in-out active:scale-[0.995]" 
+                disabled={isLoading}
+                style={{ backgroundColor: isLoading ? undefined : '#2563eb' }}
+              >
                 {isLoading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                     Sending...
                   </>
                 ) : (
                   <>
-                    <Mail className="mr-2 h-4 w-4" />
+                    <Mail className="mr-2 h-5 w-5" />
                     Send reset link
                   </>
                 )}

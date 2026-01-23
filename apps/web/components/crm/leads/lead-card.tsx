@@ -1,17 +1,38 @@
+import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Lead } from "@/lib/types/crm";
 import { LeadStageBadge } from "./lead-stage-badge";
+import { useTheme } from "@/lib/theme/theme-provider";
 
 interface LeadCardProps {
   lead: Lead;
   onSelect?: (id: string) => void;
+  isDragging?: boolean;
 }
 
-export function LeadCard({ lead, onSelect }: LeadCardProps) {
+export function LeadCard({ lead, onSelect, isDragging }: LeadCardProps) {
+  const { theme } = useTheme();
+  const [isDragActive, setIsDragActive] = React.useState(false);
+  
+  const bgColor = theme === "dark" ? "bg-slate-900" : "bg-white";
+
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+    setIsDragActive(true);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("application/json", JSON.stringify({ id: lead.id, currentStage: lead.stage }));
+  };
+
+  const handleDragEnd = () => {
+    setIsDragActive(false);
+  };
+
   return (
     <Card
-      className="cursor-pointer transition-shadow hover:shadow-md"
+      draggable
+      className={`cursor-move transition-all border-l-4 border-l-primary ${bgColor} shadow-sm hover:shadow-lg hover:scale-102 hover:border-l-accent ${isDragActive ? "ring-2 ring-primary ring-offset-2 shadow-lg" : ""}`}
       onClick={() => onSelect?.(lead.id)}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
     >
       <CardHeader className="space-y-2">
         <CardTitle className="text-base">{lead.name}</CardTitle>
@@ -23,10 +44,10 @@ export function LeadCard({ lead, onSelect }: LeadCardProps) {
           <span>Probability</span>
           <span className="font-medium">{(lead.probability ?? 0)}%</span>
         </div>
-        {lead.estimatedValue ? (
+        {lead.estimatedValue && typeof lead.estimatedValue === "number" ? (
           <div className="flex items-center justify-between">
             <span>Est. value</span>
-            <span className="font-medium">${lead.estimatedValue.toLocaleString()}</span>
+            <span className="font-medium">${Number(lead.estimatedValue).toLocaleString()}</span>
           </div>
         ) : null}
       </CardContent>

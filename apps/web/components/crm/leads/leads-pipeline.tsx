@@ -1,6 +1,8 @@
+import * as React from "react";
 import type { Lead, LeadStage } from "@/lib/types/crm";
 import { LeadCard } from "./lead-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useUpdateLeadStage } from "@/lib/hooks/crm/use-leads";
 
 interface LeadsPipelineProps {
   pipeline: Record<string, Lead[]>;
@@ -10,16 +12,62 @@ interface LeadsPipelineProps {
 const stageOrder: LeadStage[] = ["LEAD", "QUALIFIED", "PROPOSAL", "NEGOTIATION", "WON", "LOST"];
 
 export function LeadsPipeline({ pipeline, onSelectLead }: LeadsPipelineProps) {
+  const updateLeadStageMutation = useUpdateLeadStage();
+  const [draggedOverStage, setDraggedOverStage] = React.useState<string | null>(null);
+  const [isDraggingCard, setIsDraggingCard] = React.useState(false);
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setIsDraggingCard(true);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>, targetStage: LeadStage) => {
+    e.preventDefault();
+    setDraggedOverStage(null);
+    setIsDraggingCard(false);
+
+    try {
+      const data = e.dataTransfer.getData("application/json");
+      if (!data) return;
+
+      const { id, currentStage } = JSON.parse(data);
+
+      if (currentStage !== targetStage) {
+        updateLeadStageMutation.mutate(
+          { id, stage: targetStage },
+          {
+            onSuccess: () => {
+              // The query will be invalidated automatically by the hook
+            },
+            onError: (error: Error) => {
+              console.error("Failed to update lead stage:", error);
+            },
+          }
+        );
+      }
+    } catch (error) {
+      console.error("Failed to parse drag data:", error);
+    }
+  };
+
   return (
     <div className="grid gap-4 lg:grid-cols-3">
       {stageOrder.map((stage) => (
-        <Card key={stage} className="bg-muted/30">
+        <Card
+          key={stage}
+          className={`transition-all duration-200 ${draggedOverStage === stage ? "bg-muted/60 ring-2 ring-primary ring-offset-2 shadow-lg scale-102" : "bg-muted/30"} ${isDraggingCard ? "cursor-copy" : ""}`}
+          onDragOver={handleDragOver}
+          onDragEnter={() => setDraggedOverStage(stage)}
+          onDragLeave={() => setDraggedOverStage(null)}
+          onDrop={(e) => handleDrop(e, stage)}
+        >
           <CardHeader>
             <CardTitle className="text-sm uppercase text-muted-foreground">
               {stage}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-3 min-h-[100px]">
             {(pipeline[stage] || []).length === 0 ? (
               <div className="text-sm text-muted-foreground">No leads</div>
             ) : (
