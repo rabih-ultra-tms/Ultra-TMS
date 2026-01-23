@@ -37,15 +37,6 @@ export function CustomerTable({
   isLoading,
 }: CustomerTableProps) {
   const [expandedRows, setExpandedRows] = React.useState<Set<string>>(new Set());
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-
-  const getRowBg = (index: number) => {
-    const lightBg = index % 2 === 0 ? "bg-background" : "bg-slate-50";
-    const darkBg = index % 2 === 0 ? "bg-background" : "bg-slate-800";
-    return isDark ? darkBg : lightBg;
-  };
-
   const toggleRow = (customerId: string) => {
     setExpandedRows((prev) => {
       const next = new Set(prev);
@@ -60,27 +51,27 @@ export function CustomerTable({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border shadow-sm overflow-hidden">
+      <div className="rounded-md border">
         <Table>
-          <TableHeader className="bg-slate-100/80 dark:bg-slate-900/60">
+          <TableHeader>
             <TableRow>
               <TableHead className="w-12"></TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-200">Code</TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-200">Company</TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-200">Status</TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-200">Email</TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-200">Phone</TableHead>
-              <TableHead className="text-right text-xs font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-200">Actions</TableHead>
+              <TableHead>Code</TableHead>
+              <TableHead>Company</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Phone</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {customers.map((customer, index) => {
+            {customers.map((customer) => {
               const isExpanded = expandedRows.has(customer.id);
               const hasContacts = customer.contacts && customer.contacts.length > 0;
               
               return (
               <React.Fragment key={customer.id}>
-                <TableRow className={getRowBg(index)}>
+                <TableRow>
                   <TableCell>
                     <Button
                       variant="ghost"
@@ -96,9 +87,9 @@ export function CustomerTable({
                       )}
                     </Button>
                   </TableCell>
-                  <TableCell className="font-medium">{customer.code}</TableCell>
+                  <TableCell>{customer.code}</TableCell>
                   <TableCell>
-                    <div className="font-medium text-foreground">{customer.name}</div>
+                    <div className="font-medium">{customer.name}</div>
                     {customer.legalName && (
                       <div className="text-sm text-muted-foreground">{customer.legalName}</div>
                     )}
@@ -120,7 +111,7 @@ export function CustomerTable({
                   </TableCell>
                 </TableRow>
                 {isExpanded && (
-                <TableRow className="bg-muted/30 dark:bg-slate-800/50">
+                <TableRow>
                   <TableCell colSpan={7} className="py-3">
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center justify-between">

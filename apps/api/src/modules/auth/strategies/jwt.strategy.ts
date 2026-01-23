@@ -66,14 +66,19 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('User account has been deleted');
     }
 
+    // Normalize role name to uppercase for consistency
+    const normalizedRoleName = user.role?.name 
+      ? user.role.name.replace(/-/g, '_').toUpperCase() 
+      : null;
+
     // Return user object that will be attached to request.user
     return {
       id: user.id,
       email: user.email,
       tenantId: user.tenantId,
       roleId: user.roleId,
-      roleName: user.role?.name,
-      role: user.role,
+      roleName: normalizedRoleName,
+      role: user.role ? { ...user.role, name: normalizedRoleName } : undefined,
       permissions: user.role?.permissions || [],
       firstName: user.firstName,
       lastName: user.lastName,
