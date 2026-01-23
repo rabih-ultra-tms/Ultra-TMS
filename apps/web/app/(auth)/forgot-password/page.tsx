@@ -79,7 +79,7 @@ export default function ForgotPasswordPage() {
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
               <CheckCircle className="h-6 w-6 text-primary" />
             </div>
-            <CardTitle className="text-2xl">Check Your Email</CardTitle>
+            <CardTitle>Check Your Email</CardTitle>
             <CardDescription>
               If an account exists with that email, you&apos;ll receive a password reset link shortly.
             </CardDescription>
@@ -101,7 +101,7 @@ export default function ForgotPasswordPage() {
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Reset your password</CardTitle>
+          <CardTitle>Reset your password</CardTitle>
           <CardDescription>
             Enter your email address and we&apos;ll send you a link to reset your password
           </CardDescription>
@@ -138,7 +138,7 @@ export default function ForgotPasswordPage() {
 
               <Button 
                 type="submit" 
-                className="w-full h-12 font-semibold text-base" 
+                className="w-full" 
                 disabled={isLoading}
               >
                 {isLoading ? (

@@ -24,15 +24,6 @@ export function RoleForm({
   submitLabel = "Save Role",
   isLoading = false,
 }: RoleFormProps) {
-  const { theme } = useTheme();
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const isDark = mounted && theme === "dark";
-  
   const form = useForm<RoleFormData>({
     resolver: zodResolver(roleFormSchema),
     defaultValues: {
@@ -51,30 +42,19 @@ export function RoleForm({
   return (
     <Form {...form}>
       <form onSubmit={handleSubmit} className="space-y-6">
-        <Card className={cn(
-          "border overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 rounded-lg",
-          isDark ? "border-gray-700 bg-gray-950" : "border-gray-200 bg-white"
-        )}>
-          <CardHeader className={cn(
-            "pb-4 border-b",
-            isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"
-          )}>
-            <CardTitle className={cn("text-lg font-semibold", isDark ? "text-gray-50" : "text-gray-900")}>Role details</CardTitle>
+        <Card>
+          <CardHeader>
+            <CardTitle>Role details</CardTitle>
           </CardHeader>
-          <CardContent className={cn("grid gap-5 pt-6 pb-6", isDark ? "bg-gray-950" : "bg-white")}>
+          <CardContent className="grid gap-5">
             <FormField
               control={form.control}
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className={cn("font-medium text-base", isDark ? "text-gray-50" : "text-gray-900")}>Role name</FormLabel>
+                  <FormLabel>Role name</FormLabel>
                   <FormControl>
-                    <Input placeholder="admin" {...field} className={cn(
-                      "transition-colors h-10 text-base",
-                      isDark 
-                        ? "border-gray-700 focus:border-gray-600 bg-gray-900 text-gray-50" 
-                        : "border-gray-300 focus:border-gray-400 bg-white text-gray-900"
-                    )} />
+                    <Input placeholder="admin" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -85,14 +65,9 @@ export function RoleForm({
               name="displayName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className={cn("font-medium text-base", isDark ? "text-gray-50" : "text-gray-900")}>Display name</FormLabel>
+                  <FormLabel>Display name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Administrator" {...field} className={cn(
-                      "transition-colors h-10 text-base",
-                      isDark 
-                        ? "border-gray-700 focus:border-gray-600 bg-gray-900 text-gray-50" 
-                        : "border-gray-300 focus:border-gray-400 bg-white text-gray-900"
-                    )} />
+                    <Input placeholder="Administrator" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -103,14 +78,9 @@ export function RoleForm({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className={cn("font-medium text-base", isDark ? "text-gray-50" : "text-gray-900")}>Description</FormLabel>
+                  <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Input placeholder="Full admin access" {...field} className={cn(
-                      "transition-colors h-10 text-base",
-                      isDark 
-                        ? "border-gray-700 focus:border-gray-600 bg-gray-900 text-gray-50" 
-                        : "border-gray-300 focus:border-gray-400 bg-white text-gray-900"
-                    )} />
+                    <Input placeholder="Full admin access" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -119,13 +89,8 @@ export function RoleForm({
           </CardContent>
         </Card>
 
-        <div className="flex justify-end pt-6">
-          <Button type="submit" disabled={isLoading} className={cn(
-            "font-medium transition-colors duration-200 rounded-lg px-8 py-2.5 text-base",
-            isDark
-              ? "bg-gray-100 hover:bg-gray-200 text-gray-900"
-              : "bg-gray-900 hover:bg-gray-800 text-white"
-          )}>
+        <div className="flex justify-end">
+          <Button type="submit" disabled={isLoading}>
             {submitLabel}
           </Button>
         </div>

@@ -115,7 +115,7 @@ export default function RegisterPage() {
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Create account</CardTitle>
+          <CardTitle>Create account</CardTitle>
           <CardDescription>Start managing your operations with Ultra TMS</CardDescription>
         </CardHeader>
 
@@ -232,7 +232,7 @@ export default function RegisterPage() {
 
               <Button 
                 type="submit" 
-                className="w-full h-12 font-semibold text-base" 
+                className="w-full" 
                 disabled={isLoading}
               >
                 {isLoading ? (

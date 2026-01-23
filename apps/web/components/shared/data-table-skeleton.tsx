@@ -8,7 +8,7 @@ interface DataTableSkeletonProps {
 
 export function DataTableSkeleton({ columns, rows = 10 }: DataTableSkeletonProps) {
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-card">
+    <div className="overflow-hidden rounded-lg border">
       <Table>
         <TableHeader>
           <TableRow>

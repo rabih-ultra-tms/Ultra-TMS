@@ -106,16 +106,16 @@ function LoginPageContent() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4 bg-gray-50 dark:bg-slate-900">
-      <Card className="w-full max-w-md border-gray-200 dark:border-slate-700 shadow-xl">
+    <div className="flex min-h-screen items-center justify-center p-4">
+      <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl text-gray-900 dark:text-gray-100">Welcome back</CardTitle>
-          <CardDescription className="text-gray-600 dark:text-gray-400">Sign in to your account</CardDescription>
+          <CardTitle>Welcome back</CardTitle>
+          <CardDescription>Sign in to your account</CardDescription>
         </CardHeader>
 
         <CardContent>
           {registered && (
-            <Alert className="mb-4 border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
+            <Alert className="mb-4">
               <AlertDescription>
                 Registration successful! Please check your email to verify your account.
               </AlertDescription>
@@ -123,7 +123,7 @@ function LoginPageContent() {
           )}
 
           {reset && (
-            <Alert className="mb-4 border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
+            <Alert className="mb-4">
               <AlertDescription>
                 Password reset successfully! Please login with your new password.
               </AlertDescription>
@@ -151,7 +151,7 @@ function LoginPageContent() {
                         placeholder="you@company.com"
                         autoComplete="email"
                         disabled={isLoading}
-                        className="h-11 border-2 focus:border-primary"
+                        
                         value={field.value as string}
                         onChange={field.onChange}
                         onBlur={field.onBlur}
@@ -175,7 +175,7 @@ function LoginPageContent() {
                         type="password"
                         autoComplete="current-password"
                         disabled={isLoading}
-                        className="h-11 border-2 focus:border-primary"
+                        
                         value={field.value as string}
                         onChange={field.onChange}
                         onBlur={field.onBlur}
@@ -199,7 +199,7 @@ function LoginPageContent() {
 
               <Button 
                 type="submit" 
-                className="w-full h-12 font-semibold text-base" 
+                className="w-full" 
                 disabled={isLoading}
               >
                 {isLoading ? (

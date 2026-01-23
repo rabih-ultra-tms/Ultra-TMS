@@ -12,15 +12,9 @@ Table.displayName = "Table";
 const TableHeader = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
->(({ className, ...props }, ref) => {
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-  const headerBg = isDark ? "bg-slate-900/60" : "bg-slate-100/80";
-
-  return (
-    <thead ref={ref} className={cn(`${headerBg} border-b-2 border-border`, className)} {...props} />
-  );
-});
+>(({ className, ...props }, ref) => (
+  <thead ref={ref} className={cn("[&_tr]:border-b", className)} {...props} />
+));
 TableHeader.displayName = "TableHeader";
 
 const TableBody = React.forwardRef<
@@ -35,29 +29,23 @@ const TableFooter = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
 >(({ className, ...props }, ref) => (
-  <tfoot ref={ref} className={cn("bg-muted font-medium text-foreground border-t-2 border-border", className)} {...props} />
+  <tfoot ref={ref} className={cn("bg-muted/50 font-medium [&>tr]:last:border-b-0", className)} {...props} />
 ));
 TableFooter.displayName = "TableFooter";
 
 const TableRow = React.forwardRef<
   HTMLTableRowElement,
   React.HTMLAttributes<HTMLTableRowElement>
->(({ className, ...props }, ref) => {
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-  const rowBg = isDark ? "[&:nth-child(even)]:bg-slate-800" : "[&:nth-child(even)]:bg-slate-50";
-
-  return (
-    <tr
-      ref={ref}
-      className={cn(
-        `border-b border-border transition-colors hover:bg-accent/20 data-[state=selected]:bg-accent/30 [&:nth-child(odd)]:bg-background ${rowBg}`,
-        className
-      )}
-      {...props}
-    />
-  );
-});
+>(({ className, ...props }, ref) => (
+  <tr
+    ref={ref}
+    className={cn(
+      "border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
+      className
+    )}
+    {...props}
+  />
+));
 TableRow.displayName = "TableRow";
 
 const TableHead = React.forwardRef<

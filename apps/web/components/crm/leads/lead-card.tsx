@@ -11,10 +11,7 @@ interface LeadCardProps {
 }
 
 export function LeadCard({ lead, onSelect }: LeadCardProps) {
-  const { theme } = useTheme();
   const [isDragActive, setIsDragActive] = React.useState(false);
-  
-  const bgColor = theme === "dark" ? "bg-slate-900" : "bg-white";
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
     setIsDragActive(true);
@@ -29,7 +26,7 @@ export function LeadCard({ lead, onSelect }: LeadCardProps) {
   return (
     <Card
       draggable
-      className={`cursor-move transition-all border-l-4 border-l-primary ${bgColor} shadow-sm hover:shadow-lg hover:scale-102 hover:border-l-accent ${isDragActive ? "ring-2 ring-primary ring-offset-2 shadow-lg" : ""}`}
+      className={`cursor-move transition-all border-l-4 border-l-primary hover:shadow-md ${isDragActive ? "ring-2 ring-primary ring-offset-2" : ""}`}
       onClick={() => onSelect?.(lead.id)}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}

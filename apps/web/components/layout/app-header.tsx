@@ -1,6 +1,6 @@
 "use client";
 import * as React from "react";
-import { Menu, Bell, Search } from "lucide-react";
+import { PanelLeft, Bell, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -29,7 +29,7 @@ export function AppHeader({ className }: AppHeaderProps) {
   return (
     <header
       className={cn(
-        "sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:px-6",
+        "sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6",
         className
       )}
     >
@@ -39,7 +39,7 @@ export function AppHeader({ className }: AppHeaderProps) {
         className="shrink-0 md:hidden"
         onClick={toggleSidebar}
       >
-        <Menu className="h-5 w-5" />
+        <PanelLeft className="h-5 w-5" />
         <span className="sr-only">Toggle navigation menu</span>
       </Button>
 
@@ -49,7 +49,7 @@ export function AppHeader({ className }: AppHeaderProps) {
         className="hidden shrink-0 md:flex"
         onClick={toggleSidebarCollapsed}
       >
-        <Menu className="h-5 w-5" />
+        <PanelLeft className="h-5 w-5" />
         <span className="sr-only">Toggle sidebar</span>
       </Button>
 
@@ -60,7 +60,7 @@ export function AppHeader({ className }: AppHeaderProps) {
             <Input
               type="search"
               placeholder="Search..."
-              className="w-full max-w-sm bg-muted pl-8 focus:bg-background"
+              className="w-full max-w-sm pl-8"
             />
           </div>
         </form>

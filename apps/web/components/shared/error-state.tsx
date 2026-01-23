@@ -18,7 +18,7 @@ export function ErrorState({
   backButton,
 }: ErrorStateProps) {
   return (
-    <div className="flex w-full flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-muted/40 p-6 text-center">
+    <div className="flex w-full flex-col items-center justify-center gap-3 rounded-lg border p-6 text-center">
       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
         <AlertCircle className="h-6 w-6" aria-hidden />
       </div>

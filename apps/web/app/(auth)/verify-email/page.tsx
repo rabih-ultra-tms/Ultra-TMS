@@ -80,7 +80,7 @@ function VerifyEmailContent() {
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
             </div>
-            <CardTitle className="text-2xl">Verifying your email</CardTitle>
+            <CardTitle>Verifying your email</CardTitle>
             <CardDescription>Please wait a moment...</CardDescription>
           </CardHeader>
         </Card>
@@ -96,7 +96,7 @@ function VerifyEmailContent() {
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
               <CheckCircle className="h-6 w-6 text-primary" />
             </div>
-            <CardTitle className="text-2xl">Email Verified!</CardTitle>
+            <CardTitle>Email Verified!</CardTitle>
             <CardDescription>
               Your email has been successfully verified. Redirecting to login...
             </CardDescription>
@@ -118,7 +118,7 @@ function VerifyEmailContent() {
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
             <XCircle className="h-6 w-6 text-destructive" />
           </div>
-          <CardTitle className="text-2xl">Verification Failed</CardTitle>
+          <CardTitle>Verification Failed</CardTitle>
           <CardDescription>
             We couldn&apos;t verify your email address.
           </CardDescription>
