@@ -45,10 +45,14 @@ export class AuthController {
     const userAgent = req.headers['user-agent'];
     const ipAddress = req.ip || req.connection.remoteAddress;
 
-    const tokens = await this.authService.login(loginDto, userAgent, ipAddress);
+    const result = await this.authService.login(loginDto, userAgent, ipAddress);
+    const user = result.userId ? await this.authService.getMe(result.userId) : null;
 
     return {
-      data: tokens,
+      data: {
+        ...result,
+        user,
+      },
       message: 'Login successful',
     };
   }

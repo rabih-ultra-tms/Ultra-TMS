@@ -17,6 +17,7 @@ export interface TokenPair {
   accessToken: string;
   refreshToken: string;
   expiresIn: number;
+  userId?: string;
 }
 
 export interface AuthenticatedUser {
@@ -370,6 +371,11 @@ export class AuthService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash, ...userWithoutPassword } = user;
 
+    // Normalize role name to uppercase for consistency
+    if (userWithoutPassword.role?.name) {
+      userWithoutPassword.role.name = userWithoutPassword.role.name.replace(/-/g, '_').toUpperCase();
+    }
+
     return userWithoutPassword;
   }
 
@@ -390,14 +396,16 @@ export class AuthService {
   ): Promise<TokenPair> {
     const sessionId = existingSessionId || crypto.randomUUID();
     const roleName = user.role?.name || null;
-    const roles = roleName ? [roleName] : [];
+    // Normalize role name to uppercase for consistency (e.g., "Admin" -> "ADMIN")
+    const normalizedRoleName = roleName ? roleName.replace(/-/g, '_').toUpperCase() : null;
+    const roles = normalizedRoleName ? [normalizedRoleName] : [];
 
     const accessTokenPayload = {
       sub: user.id,
       email: user.email,
       tenantId: user.tenantId,
       roleId: user.roleId,
-      roleName,
+      roleName: normalizedRoleName,
       roles,
       type: 'access',
     };
@@ -407,7 +415,7 @@ export class AuthService {
       email: user.email,
       tenantId: user.tenantId,
       roleId: user.roleId,
-      roleName,
+      roleName: normalizedRoleName,
       roles,
       type: 'refresh',
       jti: sessionId,
@@ -458,6 +466,7 @@ export class AuthService {
       accessToken,
       refreshToken,
       expiresIn: 15 * 60, // 15 minutes in seconds
+      userId: user.id,
     };
   }
 

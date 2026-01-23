@@ -42,12 +42,25 @@ export class UsersController {
     @Query('status') status?: string,
     @Query('search') search?: string,
   ) {
-    return this.usersService.findAll(tenantId, { 
+    console.log('📥 Users controller: findAll called for tenantId:', tenantId);
+    const result = await this.usersService.findAll(tenantId, { 
       page: page ? parseInt(page, 10) : undefined, 
       limit: limit ? parseInt(limit, 10) : undefined, 
       status, 
       search 
     });
+    console.log('📤 Users controller: returning', result.data.length, 'users');
+    const response = {
+      data: result.data,
+      pagination: {
+        page: result.page,
+        limit: result.limit,
+        total: result.total,
+        totalPages: result.totalPages,
+      },
+    };
+    console.log('📤 Response structure:', JSON.stringify(response, null, 2).substring(0, 500));
+    return response;
   }
 
   @Get(':id')
@@ -56,7 +69,8 @@ export class UsersController {
   @ApiStandardResponse('User details')
   @ApiErrorResponses()
   async findOne(@CurrentTenant() tenantId: string, @Param('id') id: string) {
-    return this.usersService.findOne(tenantId, id);
+    const user = await this.usersService.findOne(tenantId, id);
+    return { data: user };
   }
 
   @Post()
@@ -68,7 +82,8 @@ export class UsersController {
     @CurrentUser('id') userId: string,
     @Body() dto: CreateUserDto,
   ) {
-    return this.usersService.create(tenantId, userId, dto);
+    const user = await this.usersService.create(tenantId, userId, dto);
+    return { data: user };
   }
 
   @Put(':id')
@@ -82,7 +97,8 @@ export class UsersController {
     @Param('id') id: string,
     @Body() dto: UpdateUserDto,
   ) {
-    return this.usersService.update(tenantId, id, userId, dto);
+    const user = await this.usersService.update(tenantId, id, userId, dto);
+    return { data: user };
   }
 
   @Delete(':id')
@@ -95,7 +111,8 @@ export class UsersController {
     @CurrentUser('id') userId: string,
     @Param('id') id: string,
   ) {
-    return this.usersService.delete(tenantId, id, userId);
+    const result = await this.usersService.delete(tenantId, id, userId);
+    return { data: result };
   }
 
   /**
@@ -112,7 +129,8 @@ export class UsersController {
     @CurrentUser() inviter: any,
     @Param('id') id: string,
   ) {
-    return this.usersService.inviteUser(tenantId, id, inviter);
+    const result = await this.usersService.inviteUser(tenantId, id, inviter);
+    return { data: result };
   }
 
   /**
@@ -129,7 +147,8 @@ export class UsersController {
     @CurrentUser('id') userId: string,
     @Param('id') id: string,
   ) {
-    return this.usersService.activateUser(tenantId, id, userId);
+    const user = await this.usersService.activateUser(tenantId, id, userId);
+    return { data: user };
   }
 
   /**
@@ -146,7 +165,8 @@ export class UsersController {
     @CurrentUser('id') userId: string,
     @Param('id') id: string,
   ) {
-    return this.usersService.deactivateUser(tenantId, id, userId);
+    const user = await this.usersService.deactivateUser(tenantId, id, userId);
+    return { data: user };
   }
 
   /**
@@ -162,6 +182,7 @@ export class UsersController {
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
   ) {
-    return this.usersService.resetUserPassword(tenantId, id);
+    const result = await this.usersService.resetUserPassword(tenantId, id);
+    return { data: result };
   }
 }
