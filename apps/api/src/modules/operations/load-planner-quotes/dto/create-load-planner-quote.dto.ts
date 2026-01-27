@@ -151,10 +151,12 @@ export class ListLoadPlannerQuotesDto {
   @IsString()
   dateTo?: string;
 
+  @Type(() => Number)
   @IsNumber()
   @Min(1)
   page: number = 1;
 
+  @Type(() => Number)
   @IsNumber()
   @Min(10)
   limit: number = 25;

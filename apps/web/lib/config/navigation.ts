@@ -39,8 +39,8 @@ export const navigationConfig: NavConfig = {
           icon: Package,
         },
         {
-          title: "Quotes",
-          href: "/quotes",
+          title: "Quote History",
+          href: "/quote-history",
           icon: FileText,
         },
         {
