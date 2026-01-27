@@ -34,6 +34,26 @@ export const navigationConfig: NavConfig = {
       title: "Operations",
       items: [
         {
+          title: "Load Planner",
+          href: "/load-planner/new/edit",
+          icon: Package,
+        },
+        {
+          title: "Quotes",
+          href: "/quotes",
+          icon: FileText,
+        },
+        {
+          title: "Load History",
+          href: "/load-history",
+          icon: BarChart3,
+        },
+        {
+          title: "Carriers",
+          href: "/carriers",
+          icon: Truck,
+        },
+        {
           title: "Loads",
           href: "/loads",
           icon: Package,

@@ -333,6 +333,11 @@ model Tenant {
   scheduledTasks             ScheduledTask[]
   reminders                  Reminder[]
 
+  // Operations Module Relations
+  loadPlannerQuotes     LoadPlannerQuote[]
+  operationsCarriers    OperationsCarrier[]
+  operationsLoadHistory LoadHistory[]
+
   @@index([slug])
   @@index([status])
   @@index([externalId, sourceSystem])
@@ -1312,10 +1317,10 @@ model Load {
   totalCost        Decimal? @db.Decimal(10, 2)
 
   // Tracking
-  currentLocationLat Decimal? @db.Decimal(10, 7)
-  currentLocationLng Decimal? @db.Decimal(10, 7)
-  currentCity        String?  @db.VarChar(100)
-  currentState       String?  @db.VarChar(50)
+  currentLocationLat Decimal?  @db.Decimal(10, 7)
+  currentLocationLng Decimal?  @db.Decimal(10, 7)
+  currentCity        String?   @db.VarChar(100)
+  currentState       String?   @db.VarChar(50)
   lastTrackingUpdate DateTime?
   eta                DateTime?
 
@@ -1348,9 +1353,9 @@ model Load {
   updatedById String?
 
   // Relations
-  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  carrier       Carrier? @relation(fields: [carrierId], references: [id], onDelete: SetNull)
+  tenant        Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  order         Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  carrier       Carrier?        @relation(fields: [carrierId], references: [id], onDelete: SetNull)
   stops         Stop[]
   checkCalls    CheckCall[]
   statusHistory StatusHistory[]
@@ -8970,7 +8975,7 @@ model ScheduledJob {
   scheduleType ScheduleType
 
   // Handler
-  handler   String  @default("noop") @db.VarChar(255)
+  handler    String @default("noop") @db.VarChar(255)
   parameters Json   @default("{}")
 
   // Schedule
@@ -8980,26 +8985,26 @@ model ScheduledJob {
   timezone        String    @default("UTC") @db.VarChar(100)
 
   // Settings
-  timeoutSeconds    Int  @default(300)
-  maxRetries        Int  @default(3)
-  retryDelaySeconds Int  @default(60)
-  priority          Int  @default(5)
-  queue             String @default("default") @db.VarChar(100)
+  timeoutSeconds    Int     @default(300)
+  maxRetries        Int     @default(3)
+  retryDelaySeconds Int     @default(60)
+  priority          Int     @default(5)
+  queue             String  @default("default") @db.VarChar(100)
   allowConcurrent   Boolean @default(false)
   maxInstances      Int     @default(1)
 
   // Status
-  status     String  @default("ACTIVE") @db.VarChar(50)
-  isEnabled  Boolean @default(true)
-  lastRunAt  DateTime?
-  lastRunStatus     String? @db.VarChar(50)
+  status            String    @default("ACTIVE") @db.VarChar(50)
+  isEnabled         Boolean   @default(true)
+  lastRunAt         DateTime?
+  lastRunStatus     String?   @db.VarChar(50)
   lastRunDurationMs Int?
   nextRunAt         DateTime?
-  runCount          Int @default(0)
-  failureCount      Int @default(0)
+  runCount          Int       @default(0)
+  failureCount      Int       @default(0)
 
   // Legacy compatibility
-  handlerName     String?  @db.VarChar(255)
+  handlerName     String?   @db.VarChar(255)
   intervalMinutes Int?
   scheduledAt     DateTime?
   timeoutMinutes  Int?
@@ -9035,7 +9040,7 @@ model ScheduledJob {
 }
 
 model JobExecution {
-  id       String @id @default(cuid())
+  id       String  @id @default(cuid())
   jobId    String
   tenantId String?
 
@@ -9057,12 +9062,12 @@ model JobExecution {
   parameters Json?
 
   // Status
-  status      JobExecutionStatus @default(PENDING)
-  result      Json?
-  errorMessage String? @db.Text
+  status       JobExecutionStatus @default(PENDING)
+  result       Json?
+  errorMessage String?            @db.Text
 
   // Progress
-  progressPercent Int @default(0)
+  progressPercent Int     @default(0)
   progressMessage String?
 
   // Retry
@@ -9100,20 +9105,20 @@ model JobDependency {
 
   createdAt DateTime @default(now())
 
-  job         ScheduledJob @relation("JobDependencies", fields: [jobId], references: [id], onDelete: Cascade)
+  job          ScheduledJob @relation("JobDependencies", fields: [jobId], references: [id], onDelete: Cascade)
   dependsOnJob ScheduledJob @relation("DependentJobs", fields: [dependsOnJobId], references: [id], onDelete: Cascade)
 
   @@unique([jobId, dependsOnJobId])
 }
 
 model JobLock {
-  id       String @id @default(cuid())
-  jobId    String @unique
+  id       String  @id @default(cuid())
+  jobId    String  @unique
   tenantId String?
 
-  workerId   String @db.VarChar(100)
-  lockedAt   DateTime
-  expiresAt  DateTime
+  workerId      String    @db.VarChar(100)
+  lockedAt      DateTime
+  expiresAt     DateTime
   lastHeartbeat DateTime?
 
   job ScheduledJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
@@ -9122,28 +9127,28 @@ model JobLock {
 }
 
 model JobTemplate {
-  id                String @id @default(cuid())
-  code              String @unique @db.VarChar(100)
-  name              String
-  description       String? @db.Text
-  category          String? @db.VarChar(100)
-  handler           String
-  defaultSchedule   String?
-  defaultParameters Json              @default("{}")
-  isSystemRequired  Boolean           @default(false)
-  isTenantConfigurable Boolean        @default(true)
-  createdAt         DateTime          @default(now())
+  id                   String   @id @default(cuid())
+  code                 String   @unique @db.VarChar(100)
+  name                 String
+  description          String?  @db.Text
+  category             String?  @db.VarChar(100)
+  handler              String
+  defaultSchedule      String?
+  defaultParameters    Json     @default("{}")
+  isSystemRequired     Boolean  @default(false)
+  isTenantConfigurable Boolean  @default(true)
+  createdAt            DateTime @default(now())
 }
 
 model JobAlert {
-  id       String @id @default(cuid())
-  jobId    String
+  id    String @id @default(cuid())
+  jobId String
 
-  alertType         String @db.VarChar(50)
-  thresholdValue    Int?
+  alertType            String  @db.VarChar(50)
+  thresholdValue       Int?
   notificationChannels Json
-  recipients        Json
-  isEnabled         Boolean @default(true)
+  recipients           Json
+  isEnabled            Boolean @default(true)
 
   createdAt DateTime @default(now())
 
@@ -9163,7 +9168,7 @@ model ScheduledTask {
   tenantId String
 
   // Task details
-  taskType    String   @db.VarChar(100)
+  taskType      String  @db.VarChar(100)
   referenceType String? @db.VarChar(50)
   referenceId   String? @db.VarChar(255)
 
@@ -9172,18 +9177,18 @@ model ScheduledTask {
   timezone    String   @default("UTC") @db.VarChar(100)
 
   // Payload
-  payload Json @default("{}")
+  payload Json   @default("{}")
   handler String @db.VarChar(255)
 
   // Settings
-  priority       Int  @default(5)
-  timeoutSeconds Int  @default(60)
+  priority       Int @default(5)
+  timeoutSeconds Int @default(60)
 
   // Status
-  status      TaskStatus @default(PENDING)
-  processedAt DateTime?
-  errorMessage String? @db.Text
-  completedAt DateTime?
+  status       TaskStatus @default(PENDING)
+  processedAt  DateTime?
+  errorMessage String?    @db.Text
+  completedAt  DateTime?
 
   // Legacy compatibility
   taskName     String?   @db.VarChar(255)
@@ -9232,26 +9237,26 @@ model Reminder {
   referenceUrl  String? @db.VarChar(500)
 
   // Recurrence
-  isRecurring       Boolean  @default(false)
-  recurrenceRule    String?  @db.VarChar(255)
+  isRecurring       Boolean   @default(false)
+  recurrenceRule    String?   @db.VarChar(255)
   recurrenceEndDate DateTime?
 
   // Notifications
   notificationChannels Json @default("[\"in_app\"]")
 
   // Status
-  status        ReminderStatus @default(PENDING)
-  snoozedUntil  DateTime?      @db.Timestamp()
-  snoozeCount   Int            @default(0)
-  sentAt        DateTime?
-  dismissedAt   DateTime?
-  completedAt   DateTime?
+  status       ReminderStatus @default(PENDING)
+  snoozedUntil DateTime?      @db.Timestamp()
+  snoozeCount  Int            @default(0)
+  sentAt       DateTime?
+  dismissedAt  DateTime?
+  completedAt  DateTime?
 
   // Legacy compatibility
-  reminderType String?  @db.VarChar(100)
-  message      String?  @db.Text
-  entityType   String?  @db.VarChar(50)
-  entityId     String?  @db.VarChar(255)
+  reminderType String? @db.VarChar(100)
+  message      String? @db.Text
+  entityType   String? @db.VarChar(50)
+  entityId     String? @db.VarChar(255)
 
   // Migration support
   externalId   String? @db.VarChar(255)
@@ -12830,4 +12835,631 @@ model BoardMetric {
   @@index([periodType])
   @@index([periodStart])
   @@index([externalId, sourceSystem])
+}
+
+// ============================================================================
+// OPERATIONS MODULE
+// ============================================================================
+
+// ----------------------------------------------------------------------------
+// Truck Types Catalog
+// ----------------------------------------------------------------------------
+
+model TruckType {
+  id                String  @id @default(cuid())
+  name              String  @db.VarChar(100)
+  category          String  @db.VarChar(50) // FLATBED, STEP_DECK, RGN, etc.
+  deckLengthFt      Decimal @db.Decimal(5, 2)
+  deckWidthFt       Decimal @db.Decimal(5, 2)
+  deckHeightFt      Decimal @db.Decimal(5, 2)
+  wellLengthFt      Decimal @default(0) @db.Decimal(5, 2)
+  maxCargoWeightLbs Int
+  imageUrl          String? @db.VarChar(500)
+  description       String? @db.Text
+
+  // Audit
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relations
+  loadPlannerTrucks       LoadPlannerTruck[]
+  operationsCarrierTrucks OperationsCarrierTruck[]
+
+  @@index([category])
+}
+
+// ----------------------------------------------------------------------------
+// Load Planner (6 tables)
+// ----------------------------------------------------------------------------
+
+model LoadPlannerQuote {
+  id          String  @id @default(cuid())
+  tenantId    String
+  quoteNumber String  @unique @db.VarChar(50) // LP-XXXX
+  publicToken String  @unique @default(cuid())
+  status      String  @default("DRAFT") @db.VarChar(20) // DRAFT, SENT, VIEWED, ACCEPTED, REJECTED, EXPIRED
+  isActive    Boolean @default(true)
+
+  // Customer Info
+  customerName    String  @db.VarChar(255)
+  customerEmail   String? @db.VarChar(255)
+  customerPhone   String? @db.VarChar(20)
+  customerCompany String? @db.VarChar(255)
+
+  // Pickup Location
+  pickupAddress String  @db.VarChar(500)
+  pickupCity    String  @db.VarChar(100)
+  pickupState   String  @db.VarChar(2)
+  pickupZip     String  @db.VarChar(10)
+  pickupLat     Decimal @db.Decimal(10, 8)
+  pickupLng     Decimal @db.Decimal(11, 8)
+
+  // Dropoff Location
+  dropoffAddress String  @db.VarChar(500)
+  dropoffCity    String  @db.VarChar(100)
+  dropoffState   String  @db.VarChar(2)
+  dropoffZip     String  @db.VarChar(10)
+  dropoffLat     Decimal @db.Decimal(10, 8)
+  dropoffLng     Decimal @db.Decimal(11, 8)
+
+  // Route Metrics
+  distanceMiles   Decimal @db.Decimal(8, 2)
+  durationMinutes Int
+  routePolyline   String? @db.Text
+
+  // Pricing (in cents)
+  subtotalCents Int @default(0)
+  totalCents    Int @default(0)
+
+  // Timestamps
+  sentAt    DateTime?
+  viewedAt  DateTime?
+  expiresAt DateTime?
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant           Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  cargoItems       LoadPlannerCargoItem[]
+  trucks           LoadPlannerTruck[]
+  serviceItems     LoadPlannerServiceItem[]
+  accessorials     LoadPlannerAccessorial[]
+  permits          LoadPlannerPermit[]
+  loadHistoryItems LoadHistory[]
+
+  @@index([tenantId])
+  @@index([quoteNumber])
+  @@index([publicToken])
+  @@index([status])
+  @@index([pickupState])
+  @@index([dropoffState])
+  @@index([createdAt])
+  @@index([isActive])
+}
+
+model LoadPlannerCargoItem {
+  id      String @id @default(cuid())
+  quoteId String
+
+  // Identification
+  description String  @db.VarChar(500)
+  sku         String? @db.VarChar(100)
+  quantity    Int     @default(1)
+
+  // Dimensions
+  lengthIn  Decimal @db.Decimal(8, 2)
+  widthIn   Decimal @db.Decimal(8, 2)
+  heightIn  Decimal @db.Decimal(8, 2)
+  weightLbs Decimal @db.Decimal(10, 2)
+
+  // Properties
+  stackable  Boolean @default(false)
+  bottomOnly Boolean @default(false)
+  maxLayers  Int?
+  fragile    Boolean @default(false)
+  hazmat     Boolean @default(false)
+
+  // Orientation & Geometry
+  orientation  String? @db.VarChar(20) // PORTRAIT, LANDSCAPE, ANY
+  geometryType String? @db.VarChar(50)
+  geometryData Json?
+
+  // Equipment Link
+  equipmentMakeId  String? @db.VarChar(100)
+  equipmentModelId String? @db.VarChar(100)
+  dimensionsSource String? @db.VarChar(50) // MANUAL, EQUIPMENT_DATABASE
+
+  // Images
+  imageUrl1 String? @db.VarChar(500)
+  imageUrl2 String? @db.VarChar(500)
+  imageUrl3 String? @db.VarChar(500)
+  imageUrl4 String? @db.VarChar(500)
+
+  // Load Assignment
+  assignedTruckIndex Int?
+  placementX         Decimal? @db.Decimal(8, 2)
+  placementY         Decimal? @db.Decimal(8, 2)
+  placementZ         Decimal? @db.Decimal(8, 2)
+  rotation           Decimal? @db.Decimal(5, 2)
+
+  // Ordering
+  sortOrder Int @default(0)
+
+  // Audit
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relations
+  quote LoadPlannerQuote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  @@unique([quoteId, sortOrder])
+  @@index([quoteId])
+  @@index([assignedTruckIndex])
+}
+
+model LoadPlannerTruck {
+  id         String @id @default(cuid())
+  quoteId    String
+  truckIndex Int    @default(0)
+
+  // Truck Info
+  truckTypeId   String? // FK to TruckType
+  truckName     String  @db.VarChar(100)
+  truckCategory String  @db.VarChar(50)
+
+  // Specs
+  deckLengthFt      Decimal @db.Decimal(5, 2)
+  deckWidthFt       Decimal @db.Decimal(5, 2)
+  deckHeightFt      Decimal @db.Decimal(5, 2)
+  wellLengthFt      Decimal @default(0) @db.Decimal(5, 2)
+  maxCargoWeightLbs Int
+
+  // Load Stats
+  totalWeightLbs Decimal @default(0) @db.Decimal(10, 2)
+  totalItems     Int     @default(0)
+  isLegal        Boolean @default(true)
+
+  // Permits & Warnings
+  permitsRequired Json @default("[]") // Array of state codes
+  warnings        Json @default("[]") // Array of warning strings
+  truckScore      Int  @default(100)
+
+  // Audit
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relations
+  quote     LoadPlannerQuote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  truckType TruckType?       @relation(fields: [truckTypeId], references: [id], onDelete: SetNull)
+
+  @@unique([quoteId, truckIndex])
+  @@index([quoteId])
+  @@index([truckTypeId])
+}
+
+model LoadPlannerServiceItem {
+  id      String @id @default(cuid())
+  quoteId String
+
+  // Service Info
+  serviceTypeId String @db.VarChar(100)
+  name          String @db.VarChar(255)
+
+  // Pricing (in cents)
+  rateCents  Int
+  quantity   Decimal @default(1) @db.Decimal(10, 2)
+  totalCents Int
+
+  // Assignment
+  truckIndex Int? // null = applies to all trucks
+
+  // Ordering
+  sortOrder Int @default(0)
+
+  // Audit
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relations
+  quote LoadPlannerQuote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  @@unique([quoteId, sortOrder])
+  @@index([quoteId])
+  @@index([serviceTypeId])
+}
+
+model LoadPlannerAccessorial {
+  id      String @id @default(cuid())
+  quoteId String
+
+  // Accessorial Info
+  accessorialTypeId String @db.VarChar(100)
+  name              String @db.VarChar(255)
+  billingUnit       String @db.VarChar(50) // FLAT, PER_MILE, PER_UNIT, etc.
+
+  // Pricing (in cents)
+  rateCents  Int
+  quantity   Decimal @default(1) @db.Decimal(10, 2)
+  totalCents Int
+
+  // Notes
+  notes String? @db.Text
+
+  // Ordering
+  sortOrder Int @default(0)
+
+  // Audit
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relations
+  quote LoadPlannerQuote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  @@unique([quoteId, sortOrder])
+  @@index([quoteId])
+  @@index([accessorialTypeId])
+}
+
+model LoadPlannerPermit {
+  id      String @id @default(cuid())
+  quoteId String
+
+  // State Info
+  stateCode String @db.VarChar(2)
+  stateName String @db.VarChar(100)
+
+  // Calculated Values (in cents)
+  calculatedPermitFeeCents    Int
+  calculatedEscortFeeCents    Int
+  calculatedPoleCarFeeCents   Int
+  calculatedSuperLoadFeeCents Int
+  calculatedTotalCents        Int
+
+  // Override Values (in cents, nullable means use calculated)
+  permitFeeCents    Int?
+  escortFeeCents    Int?
+  poleCarFeeCents   Int?
+  superLoadFeeCents Int?
+  totalCents        Int?
+
+  // Route Info
+  distanceMiles   Decimal @db.Decimal(8, 2)
+  escortCount     Int     @default(0)
+  poleCarRequired Boolean @default(false)
+
+  // Audit
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relations
+  quote LoadPlannerQuote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  @@unique([quoteId, stateCode])
+  @@index([quoteId])
+  @@index([stateCode])
+}
+
+// ----------------------------------------------------------------------------
+// Carriers (3 tables)
+// ----------------------------------------------------------------------------
+
+model OperationsCarrier {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Type
+  carrierType String @db.VarChar(50) // COMPANY, OWNER_OPERATOR
+
+  // Company Info
+  companyName String  @db.VarChar(255)
+  mcNumber    String? @db.VarChar(20)
+  dotNumber   String? @db.VarChar(20)
+  einTaxId    String? @db.VarChar(20)
+
+  // Address
+  address String? @db.VarChar(500)
+  city    String? @db.VarChar(100)
+  state   String? @db.VarChar(2)
+  zip     String? @db.VarChar(10)
+
+  // Contact
+  phone          String? @db.VarChar(20)
+  phoneSecondary String? @db.VarChar(20)
+  email          String? @db.VarChar(255)
+  website        String? @db.VarChar(255)
+
+  // Billing
+  billingEmail           String? @db.VarChar(255)
+  paymentTermsDays       Int     @default(30)
+  preferredPaymentMethod String? @db.VarChar(50) // CHECK, ACH, WIRE, QUICK_PAY
+
+  // Factoring
+  factoringCompanyName  String? @db.VarChar(255)
+  factoringCompanyPhone String? @db.VarChar(20)
+  factoringCompanyEmail String? @db.VarChar(255)
+
+  // Insurance
+  insuranceCompany         String?   @db.VarChar(255)
+  insurancePolicyNumber    String?   @db.VarChar(100)
+  insuranceExpiryDate      DateTime? @db.Date
+  cargoInsuranceLimitCents Int?
+
+  // Status
+  status String @default("ACTIVE") @db.VarChar(50) // ACTIVE, INACTIVE, PREFERRED, ON_HOLD, BLACKLISTED
+
+  // Notes
+  notes String? @db.Text
+
+  // Soft Delete
+  isActive Boolean @default(true)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant      Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  drivers     OperationsCarrierDriver[]
+  trucks      OperationsCarrierTruck[]
+  loadHistory LoadHistory[]
+
+  @@index([tenantId])
+  @@index([mcNumber])
+  @@index([dotNumber])
+  @@index([status])
+  @@index([isActive])
+}
+
+model OperationsCarrierDriver {
+  id        String @id @default(cuid())
+  carrierId String
+
+  // Personal Info
+  firstName String  @db.VarChar(100)
+  lastName  String  @db.VarChar(100)
+  nickname  String? @db.VarChar(100)
+  isOwner   Boolean @default(false)
+
+  // Contact
+  phone          String? @db.VarChar(20)
+  phoneSecondary String? @db.VarChar(20)
+  email          String? @db.VarChar(255)
+
+  // Address
+  address String? @db.VarChar(500)
+  city    String? @db.VarChar(100)
+  state   String? @db.VarChar(2)
+  zip     String? @db.VarChar(10)
+
+  // CDL Info
+  cdlNumber         String?   @db.VarChar(50)
+  cdlState          String?   @db.VarChar(2)
+  cdlClass          String?   @db.VarChar(10) // A, B, C
+  cdlExpiry         DateTime? @db.Date
+  cdlEndorsements   String?   @db.VarChar(100) // H, N, T, X, etc.
+  medicalCardExpiry DateTime? @db.Date
+
+  // Emergency Contact
+  emergencyContactName  String? @db.VarChar(255)
+  emergencyContactPhone String? @db.VarChar(20)
+
+  // Status
+  status String @default("ACTIVE") @db.VarChar(50) // ACTIVE, INACTIVE, ON_LEAVE
+
+  // Notes
+  notes String? @db.Text
+
+  // Soft Delete
+  isActive Boolean @default(true)
+
+  // Audit
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relations
+  carrier     OperationsCarrier        @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+  trucks      OperationsCarrierTruck[]
+  loadHistory LoadHistory[]
+
+  @@index([carrierId])
+  @@index([cdlNumber])
+  @@index([status])
+  @@index([isActive])
+}
+
+model OperationsCarrierTruck {
+  id        String @id @default(cuid())
+  carrierId String
+
+  // Identification
+  unitNumber        String  @db.VarChar(50)
+  vin               String? @db.VarChar(17)
+  licensePlate      String? @db.VarChar(20)
+  licensePlateState String? @db.VarChar(2)
+
+  // Vehicle Info
+  year  Int?
+  make  String? @db.VarChar(100)
+  model String? @db.VarChar(100)
+
+  // Type
+  truckTypeId           String? // FK to TruckType
+  category              String  @db.VarChar(50)
+  customTypeDescription String? @db.VarChar(255)
+
+  // Specs
+  deckLengthFt      Decimal? @db.Decimal(5, 2)
+  deckWidthFt       Decimal? @db.Decimal(5, 2)
+  deckHeightFt      Decimal? @db.Decimal(5, 2)
+  maxCargoWeightLbs Int?
+  axleCount         Int?
+
+  // Equipment
+  hasTarps  Boolean @default(false)
+  hasChains Boolean @default(false)
+  hasStraps Boolean @default(false)
+  coilRacks Boolean @default(false)
+  loadBars  Boolean @default(false)
+  ramps     Boolean @default(false)
+
+  // Compliance
+  registrationExpiry   DateTime? @db.Date
+  annualInspectionDate DateTime? @db.Date
+
+  // Status
+  status String @default("ACTIVE") @db.VarChar(50) // ACTIVE, INACTIVE, OUT_OF_SERVICE, SOLD
+
+  // Assignment
+  assignedDriverId String? // FK to CarrierDriver
+
+  // Notes
+  notes String? @db.Text
+
+  // Soft Delete
+  isActive Boolean @default(true)
+
+  // Audit
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relations
+  carrier        OperationsCarrier        @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+  truckType      TruckType?               @relation(fields: [truckTypeId], references: [id], onDelete: SetNull)
+  assignedDriver OperationsCarrierDriver? @relation(fields: [assignedDriverId], references: [id], onDelete: SetNull)
+  loadHistory    LoadHistory[]
+
+  @@index([carrierId])
+  @@index([truckTypeId])
+  @@index([assignedDriverId])
+  @@index([unitNumber])
+  @@index([vin])
+  @@index([status])
+  @@index([isActive])
+}
+
+// ----------------------------------------------------------------------------
+// Load History (1 table)
+// ----------------------------------------------------------------------------
+
+model LoadHistory {
+  id       String @id @default(cuid())
+  tenantId String
+
+  // Quote Links
+  loadPlannerQuoteId String? // FK to LoadPlannerQuote
+  inlandQuoteId      String? // Legacy quote ID
+  quoteNumber        String? @db.VarChar(50)
+
+  // Customer (Denormalized)
+  customerName    String? @db.VarChar(255)
+  customerCompany String? @db.VarChar(255)
+
+  // Carrier Assignment
+  carrierId String? // FK to Carrier
+  driverId  String? // FK to CarrierDriver
+  truckId   String? // FK to CarrierTruck
+
+  // Route
+  originCity       String?  @db.VarChar(100)
+  originState      String?  @db.VarChar(2)
+  originZip        String?  @db.VarChar(10)
+  destinationCity  String?  @db.VarChar(100)
+  destinationState String?  @db.VarChar(2)
+  destinationZip   String?  @db.VarChar(10)
+  totalMiles       Decimal? @db.Decimal(8, 2)
+
+  // Cargo
+  cargoDescription String?  @db.Text
+  pieces           Int?
+  totalLengthIn    Decimal? @db.Decimal(8, 2)
+  totalWidthIn     Decimal? @db.Decimal(8, 2)
+  totalHeightIn    Decimal? @db.Decimal(8, 2)
+  totalWeightLbs   Decimal? @db.Decimal(10, 2)
+  isOversize       Boolean  @default(false)
+  isOverweight     Boolean  @default(false)
+
+  // Equipment
+  equipmentTypeUsed String? @db.VarChar(100)
+
+  // Financials (in cents)
+  customerRateCents        Int
+  carrierRateCents         Int
+  marginCents              Int     @default(0) // Calculated by trigger
+  marginPercentage         Decimal @default(0) @db.Decimal(5, 2) // Calculated by trigger
+  ratePerMileCustomerCents Int     @default(0) // Calculated by trigger
+  ratePerMileCarrierCents  Int     @default(0) // Calculated by trigger
+
+  // Dates
+  quoteDate    DateTime? @db.Date
+  bookedDate   DateTime? @db.Date
+  pickupDate   DateTime? @db.Date
+  deliveryDate DateTime? @db.Date
+  invoiceDate  DateTime? @db.Date
+  paidDate     DateTime? @db.Date
+
+  // Status
+  status String @default("BOOKED") @db.VarChar(50) // BOOKED, IN_TRANSIT, DELIVERED, COMPLETED, CANCELLED
+
+  // Notes
+  notes String? @db.Text
+
+  // Soft Delete
+  isActive Boolean @default(true)
+
+  // Migration support
+  externalId   String? @db.VarChar(255)
+  sourceSystem String? @db.VarChar(100)
+  customFields Json    @default("{}")
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+
+  // Relations
+  tenant           Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  loadPlannerQuote LoadPlannerQuote?        @relation(fields: [loadPlannerQuoteId], references: [id], onDelete: SetNull)
+  carrier          OperationsCarrier?       @relation(fields: [carrierId], references: [id], onDelete: SetNull)
+  driver           OperationsCarrierDriver? @relation(fields: [driverId], references: [id], onDelete: SetNull)
+  truck            OperationsCarrierTruck?  @relation(fields: [truckId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([loadPlannerQuoteId])
+  @@index([carrierId])
+  @@index([driverId])
+  @@index([truckId])
+  @@index([quoteNumber])
+  @@index([originState, destinationState])
+  @@index([pickupDate])
+  @@index([deliveryDate])
+  @@index([status])
+  @@index([isActive])
 }

@@ -50,6 +50,7 @@ import { CacheModule } from './modules/cache/cache.module';
 import { HrModule } from './modules/hr/hr.module';
 import { FeedbackModule } from './modules/feedback/feedback.module';
 import { HealthModule } from './modules/health/health.module';
+import { OperationsModule } from './modules/operations/operations.module';
 
 // Support services - commented out until schemas are added
 // import { AnalyticsModule } from './modules/analytics/analytics.module';
@@ -134,6 +135,7 @@ const isTestEnv = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID 
     HelpDeskModule,
     FeedbackModule,
     HealthModule,
+    OperationsModule,
   ],
   providers: [
     PrismaService,
