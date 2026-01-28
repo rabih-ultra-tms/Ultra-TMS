@@ -3,12 +3,8 @@ import {
   IsNumber,
   IsOptional,
   IsBoolean,
-  IsArray,
   Min,
-  Max,
-  ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
 
 export class CreateCargoItemDto {
   @IsString()

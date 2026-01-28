@@ -10,9 +10,9 @@ export const useTruckTypes = (category?: string) => {
     queryFn: async () => {
       const response = await apiClient.get<TruckType[]>(
         '/operations/truck-types',
-        { params: category ? { category } : undefined }
+        category ? { category } : undefined
       );
-      return response.data;
+      return response;
     },
   });
 };
@@ -24,7 +24,7 @@ export const useTruckType = (id: string) => {
       const response = await apiClient.get<TruckType>(
         `/operations/truck-types/${id}`
       );
-      return response.data;
+      return response;
     },
     enabled: !!id,
   });
@@ -37,7 +37,7 @@ export const useTruckTypeCategories = () => {
       const response = await apiClient.get<string[]>(
         '/operations/truck-types/categories'
       );
-      return response.data;
+      return response;
     },
   });
 };

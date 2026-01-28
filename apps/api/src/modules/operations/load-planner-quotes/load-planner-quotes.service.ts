@@ -10,11 +10,6 @@ import {
   UpdateLoadPlannerQuoteDto,
   UpdateQuoteStatusDto,
   ListLoadPlannerQuotesDto,
-  CreateCargoItemDto,
-  CreateTruckDto,
-  CreateServiceItemDto,
-  CreateAccessorialDto,
-  CreatePermitDto,
 } from './dto';
 
 @Injectable()
@@ -358,7 +353,7 @@ export class LoadPlannerQuotesService {
     quoteId: string,
     dto: UpdateLoadPlannerQuoteDto
   ) {
-    const existing = await this.getById(tenantId, quoteId);
+    const _existing = await this.getById(tenantId, quoteId);
 
     try {
       await this.prisma.$transaction(async (tx: any) => {
@@ -568,7 +563,7 @@ export class LoadPlannerQuotesService {
     quoteId: string,
     dto: UpdateQuoteStatusDto
   ) {
-    const quote = await this.getById(tenantId, quoteId);
+    const _quote = await this.getById(tenantId, quoteId);
 
     const updateData: any = {
       status: dto.status,
@@ -592,7 +587,7 @@ export class LoadPlannerQuotesService {
    * Soft delete quote
    */
   async delete(tenantId: string, quoteId: string) {
-    const quote = await this.getById(tenantId, quoteId);
+    const _quote = await this.getById(tenantId, quoteId);
 
     await this.prisma.loadPlannerQuote.update({
       where: { id: quoteId },

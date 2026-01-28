@@ -3,8 +3,6 @@ import {
   IsOptional,
   IsEmail,
   IsBoolean,
-  IsNumber,
-  Min,
 } from 'class-validator';
 
 export class CreateOperationsCarrierDriverDto {

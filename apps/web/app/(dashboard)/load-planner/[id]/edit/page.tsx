@@ -31,6 +31,27 @@ import { SearchableSelect, type SearchableSelectOption } from '@/components/ui/s
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 
+interface ServiceItem {
+  id: string;
+  name: string;
+  billing_unit?: string;
+  quantity: number;
+  rate: number;
+  total: number;
+  notes?: string;
+  showNotes?: boolean;
+  [key: string]: unknown;
+}
+
+interface AccessorialItem {
+  id: string;
+  name: string;
+  billing_unit: string;
+  quantity: number;
+  rate: number;
+  total: number;
+}
+
 export default function LoadPlannerEditPage() {
   const router = useRouter();
   const params = useParams();
@@ -86,7 +107,7 @@ export default function LoadPlannerEditPage() {
   // Cargo entry mode
   const [cargoEntryMode, setCargoEntryMode] = useState<'ai' | 'manual'>('ai');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [, setAnalysisError] = useState<string | null>(null);
   const [parsingStatus, setParsingStatus] = useState<string>('');
 
   // Manual cargo entry
@@ -97,8 +118,8 @@ export default function LoadPlannerEditPage() {
   const [manualWeight, setManualWeight] = useState('');
   const [manualQuantity, setManualQuantity] = useState('1');
   const [isEquipmentMode, setIsEquipmentMode] = useState(false);
-  const [selectedMakeId, setSelectedMakeId] = useState<string | null>(null);
-  const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
+  const [, setSelectedMakeId] = useState<string | null>(null);
+  const [, setSelectedModelId] = useState<string | null>(null);
   const [lengthUnit, setLengthUnit] = useState('feet');
   const [weightUnit, setWeightUnit] = useState('lbs');
   const [selectedCargoTypeId, setSelectedCargoTypeId] = useState<string | null>(null);
@@ -111,10 +132,11 @@ export default function LoadPlannerEditPage() {
   const [subtotalCents, setSubtotalCents] = useState(0);
   const [totalCents, setTotalCents] = useState(0);
   const [pricingPerTruck, setPricingPerTruck] = useState(false);
-  const [serviceItems, setServiceItems] = useState<any[]>([]);
-  const [accessorialItems, setAccessorialItems] = useState<any[]>([]);
+  const [serviceItems, setServiceItems] = useState<ServiceItem[]>([]);
+  const [accessorialItems, setAccessorialItems] = useState<AccessorialItem[]>([]);
   const [accessorialsExpanded, setAccessorialsExpanded] = useState(false);
   const [quoteNotes, setQuoteNotes] = useState('');
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
   // Computed totals
   const servicesTotal = serviceItems.reduce((sum, item) => sum + (item.total || 0), 0);
@@ -178,17 +200,22 @@ export default function LoadPlannerEditPage() {
     }
   }, [quote, isEdit]);
 
-  const handleAnalyzed = (result: { items: any[] }) => {
+  const handleAnalyzed = (result: { items: unknown[] }) => {
     // Convert analyzed items to CargoItem format
-    const newCargoItems: CargoItem[] = result.items.map((item, index) => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const newCargoItems: CargoItem[] = (result.items as any[]).map((item, index) => ({
       id: item.id || `cargo-${Date.now()}-${index}`,
       description: item.description,
       quantity: item.quantity,
-      lengthFeet: item.length,
-      widthFeet: item.width,
-      heightFeet: item.height,
+      lengthIn: (item.length || 0) * 12,
+      widthIn: (item.width || 0) * 12,
+      heightIn: (item.height || 0) * 12,
       weightLbs: item.weight,
-      notes: '',
+      stackable: false,
+      bottomOnly: false,
+      fragile: false,
+      hazmat: false,
+      sortOrder: index,
     }));
     
     setCargoItems([...cargoItems, ...newCargoItems]);
@@ -247,11 +274,15 @@ export default function LoadPlannerEditPage() {
       id: `cargo-${Date.now()}`,
       description: manualDescription,
       quantity: parseInt(manualQuantity) || 1,
-      lengthFeet,
-      widthFeet,
-      heightFeet,
+      lengthIn: lengthFeet * 12,
+      widthIn: widthFeet * 12,
+      heightIn: heightFeet * 12,
       weightLbs,
-      notes: '',
+      stackable: false,
+      bottomOnly: false,
+      fragile: false,
+      hazmat: false,
+      sortOrder: cargoItems.length,
     };
 
     setCargoItems([...cargoItems, newItem]);
@@ -283,18 +314,18 @@ export default function LoadPlannerEditPage() {
     setServiceItems([...serviceItems, newItem]);
   };
 
-  const updateServiceItem = (index: number, field: string, value: any) => {
+  const updateServiceItem = (index: number, field: string, value: unknown) => {
     const updated = [...serviceItems];
     if (field === 'rate') {
-      const cents = typeof value === 'string' ? parseWholeDollarsToCents(value) : value;
-      updated[index].rate = cents;
-      updated[index].total = cents * updated[index].quantity;
+      const cents = typeof value === 'string' ? parseWholeDollarsToCents(value) : (value as number);
+      updated[index]!.rate = cents;
+      updated[index]!.total = cents * updated[index]!.quantity;
     } else if (field === 'quantity') {
-      const qty = parseInt(value) || 1;
-      updated[index].quantity = qty;
-      updated[index].total = updated[index].rate * qty;
+      const qty = parseInt(String(value)) || 1;
+      updated[index]!.quantity = qty;
+      updated[index]!.total = updated[index]!.rate * qty;
     } else {
-      updated[index][field] = value;
+      updated[index]![field] = value;
     }
     setServiceItems(updated);
   };
@@ -304,17 +335,17 @@ export default function LoadPlannerEditPage() {
   };
 
   const duplicateServiceItem = (index: number) => {
-    const item = { ...serviceItems[index], id: `service-${Date.now()}` };
+    const item = { ...serviceItems[index]!, id: `service-${Date.now()}` };
     setServiceItems([...serviceItems, item]);
   };
 
   const toggleServiceNotes = (index: number) => {
     const updated = [...serviceItems];
-    updated[index].showNotes = !updated[index].showNotes;
+    updated[index]!.showNotes = !updated[index]!.showNotes;
     setServiceItems(updated);
   };
 
-  const addServiceBundle = (bundleName: string, truckIndex?: number) => {
+  const addServiceBundle = () => {
     // Placeholder for service bundles
     toast.info('Service bundles coming soon');
   };
@@ -331,18 +362,19 @@ export default function LoadPlannerEditPage() {
     setAccessorialItems([...accessorialItems, newItem]);
   };
 
-  const updateAccessorialItem = (index: number, field: string, value: any) => {
+  const updateAccessorialItem = (index: number, field: string, value: unknown) => {
     const updated = [...accessorialItems];
     if (field === 'rate') {
-      const cents = typeof value === 'string' ? parseWholeDollarsToCents(value) : value;
-      updated[index].rate = cents;
-      updated[index].total = cents * updated[index].quantity;
+      const cents = typeof value === 'string' ? parseWholeDollarsToCents(value) : (value as number);
+      updated[index]!.rate = cents;
+      updated[index]!.total = cents * updated[index]!.quantity;
     } else if (field === 'quantity') {
-      const qty = parseInt(value) || 1;
-      updated[index].quantity = qty;
-      updated[index].total = updated[index].rate * qty;
+      const qty = parseInt(String(value)) || 1;
+      updated[index]!.quantity = qty;
+      updated[index]!.total = updated[index]!.rate * qty;
     } else {
-      updated[index][field] = value;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (updated[index]! as any)[field] = value;
     }
     setAccessorialItems(updated);
   };
@@ -438,6 +470,20 @@ export default function LoadPlannerEditPage() {
     } catch (error) {
       toast.error('Failed to save quote');
       console.error('Failed to save quote:', error);
+    }
+  };
+
+  const handleDownloadPdf = async () => {
+    setIsDownloadingPdf(true);
+    try {
+      // Use browser's print functionality to generate PDF
+      window.print();
+      toast.success('PDF download ready');
+    } catch (error) {
+      toast.error('Failed to generate PDF');
+      console.error('PDF generation error:', error);
+    } finally {
+      setIsDownloadingPdf(false);
     }
   };
 
@@ -906,9 +952,9 @@ export default function LoadPlannerEditPage() {
                             variant="outline"
                             onClick={() => {
                               setManualDescription(lastAddedItem.description);
-                              setManualLength(String(lastAddedItem.lengthFeet));
-                              setManualWidth(String(lastAddedItem.widthFeet));
-                              setManualHeight(String(lastAddedItem.heightFeet));
+                              setManualLength(String(lastAddedItem.lengthIn / 12));
+                              setManualWidth(String(lastAddedItem.widthIn / 12));
+                              setManualHeight(String(lastAddedItem.heightIn / 12));
                               setManualWeight(String(lastAddedItem.weightLbs));
                               setManualQuantity(String(lastAddedItem.quantity));
                             }}
@@ -1011,7 +1057,7 @@ export default function LoadPlannerEditPage() {
                         <div className="flex items-center gap-2">
                           <SearchableSelect
                             value=""
-                            onChange={(value) => addServiceBundle(value)}
+                            onChange={() => addServiceBundle()}
                             options={SERVICE_BUNDLES.map(b => ({ value: b.name, label: b.name }))}
                             placeholder="Add Bundle"
                             className="w-[140px]"
@@ -1029,7 +1075,7 @@ export default function LoadPlannerEditPage() {
                           <p className="text-muted-foreground font-medium">No services added yet</p>
                           <p className="text-sm text-muted-foreground/70 mt-1 mb-4">Add services like Line Haul, Fuel Surcharge, and other charges</p>
                           <div className="flex justify-center gap-2">
-                            <Button variant="outline" size="sm" onClick={() => addServiceBundle('Standard Flatbed')}>
+                            <Button variant="outline" size="sm" onClick={() => addServiceBundle()}>
                               <Layers className="h-3 w-3 mr-1" />
                               Standard Flatbed
                             </Button>
@@ -1361,7 +1407,7 @@ export default function LoadPlannerEditPage() {
                             </div>
                           </div>
                           <Badge variant="secondary">
-                            Max: {Math.max(...cargoItems.map(i => i.lengthFeet)).toFixed(1)}' × {Math.max(...cargoItems.map(i => i.widthFeet)).toFixed(1)}' × {Math.max(...cargoItems.map(i => i.heightFeet)).toFixed(1)}'
+                            Max: {Math.max(...cargoItems.map(i => i.lengthIn / 12)).toFixed(1)}&apos; × {Math.max(...cargoItems.map(i => i.widthIn / 12)).toFixed(1)}&apos; × {Math.max(...cargoItems.map(i => i.heightIn / 12)).toFixed(1)}&apos;
                           </Badge>
                         </div>
 
@@ -1442,9 +1488,14 @@ export default function LoadPlannerEditPage() {
                       </SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button size="sm" disabled className="bg-blue-600 text-white hover:bg-blue-700">
+                  <Button 
+                    size="sm" 
+                    onClick={handleDownloadPdf} 
+                    disabled={isDownloadingPdf}
+                    className="bg-blue-600 text-white hover:bg-blue-700"
+                  >
                     <Download className="w-4 h-4 mr-2" />
-                    Download PDF
+                    {isDownloadingPdf ? 'Generating...' : 'Download PDF'}
                   </Button>
                 </div>
               </div>

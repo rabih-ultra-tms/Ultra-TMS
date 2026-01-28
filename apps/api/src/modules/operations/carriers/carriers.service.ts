@@ -188,7 +188,7 @@ export class CarriersService {
     carrierId: string,
     dto: UpdateOperationsCarrierDto
   ) {
-    const existing = await this.getCarrierById(tenantId, carrierId);
+    const _existing = await this.getCarrierById(tenantId, carrierId);
 
     try {
       return await this.prisma.operationsCarrier.update({
@@ -232,7 +232,7 @@ export class CarriersService {
   }
 
   async deleteCarrier(tenantId: string, carrierId: string) {
-    const existing = await this.getCarrierById(tenantId, carrierId);
+    const _existing = await this.getCarrierById(tenantId, carrierId);
 
     await this.prisma.operationsCarrier.update({
       where: { id: carrierId },
@@ -254,7 +254,7 @@ export class CarriersService {
     carrierId: string,
     dto: CreateOperationsCarrierDriverDto
   ) {
-    const carrier = await this.getCarrierById(tenantId, carrierId);
+    const _carrier = await this.getCarrierById(tenantId, carrierId);
 
     try {
       return await this.prisma.operationsCarrierDriver.create({
@@ -294,7 +294,7 @@ export class CarriersService {
   }
 
   async listDrivers(tenantId: string, carrierId: string) {
-    const carrier = await this.getCarrierById(tenantId, carrierId);
+    const _carrier = await this.getCarrierById(tenantId, carrierId);
 
     return this.prisma.operationsCarrierDriver.findMany({
       where: { carrierId, isActive: true },
@@ -315,7 +315,7 @@ export class CarriersService {
       throw new NotFoundException('Driver not found');
     }
 
-    const carrier = await this.getCarrierById(tenantId, carrierId);
+    const _carrier = await this.getCarrierById(tenantId, carrierId);
 
     return driver;
   }
@@ -326,7 +326,7 @@ export class CarriersService {
     driverId: string,
     dto: UpdateOperationsCarrierDriverDto
   ) {
-    const existing = await this.getDriverById(tenantId, carrierId, driverId);
+    const _existing = await this.getDriverById(tenantId, carrierId, driverId);
 
     try {
       return await this.prisma.operationsCarrierDriver.update({
@@ -366,7 +366,7 @@ export class CarriersService {
   }
 
   async deleteDriver(tenantId: string, carrierId: string, driverId: string) {
-    const existing = await this.getDriverById(tenantId, carrierId, driverId);
+    const _existing = await this.getDriverById(tenantId, carrierId, driverId);
 
     await this.prisma.operationsCarrierDriver.update({
       where: { id: driverId },
@@ -388,7 +388,7 @@ export class CarriersService {
     carrierId: string,
     dto: CreateOperationsCarrierTruckDto
   ) {
-    const carrier = await this.getCarrierById(tenantId, carrierId);
+    const _carrier = await this.getCarrierById(tenantId, carrierId);
 
     try {
       return await this.prisma.operationsCarrierTruck.create({
@@ -441,7 +441,7 @@ export class CarriersService {
   }
 
   async listTrucks(tenantId: string, carrierId: string) {
-    const carrier = await this.getCarrierById(tenantId, carrierId);
+    const _carrier = await this.getCarrierById(tenantId, carrierId);
 
     return this.prisma.operationsCarrierTruck.findMany({
       where: { carrierId, isActive: true },
@@ -467,7 +467,7 @@ export class CarriersService {
       throw new NotFoundException('Truck not found');
     }
 
-    const carrier = await this.getCarrierById(tenantId, carrierId);
+    const _carrier = await this.getCarrierById(tenantId, carrierId);
 
     return truck;
   }
@@ -478,7 +478,7 @@ export class CarriersService {
     truckId: string,
     dto: UpdateOperationsCarrierTruckDto
   ) {
-    const existing = await this.getTruckById(tenantId, carrierId, truckId);
+    const _existing = await this.getTruckById(tenantId, carrierId, truckId);
 
     try {
       return await this.prisma.operationsCarrierTruck.update({
@@ -531,7 +531,7 @@ export class CarriersService {
   }
 
   async deleteTruck(tenantId: string, carrierId: string, truckId: string) {
-    const existing = await this.getTruckById(tenantId, carrierId, truckId);
+    const _existing = await this.getTruckById(tenantId, carrierId, truckId);
 
     await this.prisma.operationsCarrierTruck.update({
       where: { id: truckId },

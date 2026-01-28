@@ -182,7 +182,7 @@ export class LoadHistoryService {
     loadId: string,
     dto: UpdateLoadHistoryDto
   ) {
-    const existing = await this.getById(tenantId, loadId);
+    const _existing = await this.getById(tenantId, loadId);
 
     try {
       return await this.prisma.loadHistory.update({
@@ -243,7 +243,7 @@ export class LoadHistoryService {
   }
 
   async delete(tenantId: string, loadId: string) {
-    const existing = await this.getById(tenantId, loadId);
+    const _existing = await this.getById(tenantId, loadId);
 
     await this.prisma.loadHistory.update({
       where: { id: loadId },

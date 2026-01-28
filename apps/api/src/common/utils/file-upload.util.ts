@@ -33,7 +33,7 @@ export interface CloudStorageService {
 // Placeholder for cloud storage implementation
 // In production, implement this with AWS S3, Azure Blob Storage, or GCS
 export class CloudStorageAdapter implements CloudStorageService {
-  async uploadFile(file: Express.Multer.File, folder: string): Promise<string> {
+  async uploadFile(_file: Express.Multer.File, _folder: string): Promise<string> {
     // TODO: Implement cloud storage upload
     // For AWS S3:
     // const key = `${folder}/${Date.now()}-${file.originalname}`;
@@ -43,7 +43,7 @@ export class CloudStorageAdapter implements CloudStorageService {
     throw new Error('Cloud storage not configured. Please set up AWS S3, Azure Blob, or GCS.');
   }
 
-  async deleteFile(fileUrl: string): Promise<void> {
+  async deleteFile(_fileUrl: string): Promise<void> {
     // TODO: Implement cloud storage deletion
     throw new Error('Cloud storage not configured.');
   }

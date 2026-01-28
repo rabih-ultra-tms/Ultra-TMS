@@ -15,12 +15,10 @@ import {
   ApiTags,
   ApiBearerAuth,
   ApiOperation,
-  ApiResponse,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { CurrentTenant } from '../../../common/decorators/current-tenant.decorator';
-import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { CarriersService } from './carriers.service';
 import {

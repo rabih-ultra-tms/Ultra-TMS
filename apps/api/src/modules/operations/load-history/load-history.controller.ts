@@ -26,7 +26,6 @@ import {
   CreateLoadHistoryDto,
   UpdateLoadHistoryDto,
   ListLoadHistoryDto,
-  LoadHistoryResponseDto,
 } from './dto';
 
 @ApiTags('Operations - Load History')

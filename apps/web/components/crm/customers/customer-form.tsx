@@ -47,7 +47,7 @@ export function CustomerForm({
   // Sanitize defaultValues to convert null to empty string/undefined
   const sanitizedDefaults = React.useMemo(() => {
     if (!defaultValues) return undefined;
-    const result: Record<string, any> = {};
+    const result: Record<string, unknown> = {};
     
     for (const [key, value] of Object.entries(defaultValues)) {
       if (value === null || value === undefined) {
@@ -66,7 +66,7 @@ export function CustomerForm({
         }
       } else if (key === 'address' && typeof value === 'object' && !Array.isArray(value)) {
         // Ensure all address fields are strings, never null/undefined
-        const addressObj = value as any;
+        const addressObj = value as Record<string, any>;
         result[key] = {
           street1: addressObj.street1 ?? '',
           street2: addressObj.street2 ?? '',

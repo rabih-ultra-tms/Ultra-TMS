@@ -79,6 +79,7 @@ export const useUpdateCarrier = (id?: string) => {
     mutationFn: async (data: Partial<OperationsCarrier> & { id?: string }) => {
       const targetId = data.id || id;
       if (!targetId) throw new Error('Carrier ID is required for update');
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { id: _, ...updateData } = data;
       return await apiClient.patch<OperationsCarrier>(
         `/operations/carriers/${targetId}`,

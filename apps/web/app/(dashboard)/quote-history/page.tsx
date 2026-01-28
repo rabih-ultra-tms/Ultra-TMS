@@ -44,7 +44,6 @@ import {
   Plus,
   Search,
   Truck,
-  Eye,
   Trash2,
   ChevronLeft,
   ChevronRight,
@@ -52,7 +51,6 @@ import {
   Send,
   CheckCircle2,
   XCircle,
-  Download,
   Copy,
   Pencil,
   Clock,
@@ -123,8 +121,8 @@ export default function QuoteHistoryPage() {
     try {
       await deleteQuoteMutation.mutateAsync(id)
       toast.success('Quote deleted')
-    } catch (error: any) {
-      toast.error('Failed to delete quote', { description: error.message })
+    } catch (error: unknown) {
+      toast.error('Failed to delete quote', { description: (error as Error).message })
     }
   }
 
@@ -138,8 +136,8 @@ export default function QuoteHistoryPage() {
           onClick: () => router.push(`/load-planner/${duplicated.id}/edit`),
         },
       })
-    } catch (error: any) {
-      toast.error('Failed to duplicate quote', { description: error.message })
+    } catch (error: unknown) {
+      toast.error('Failed to duplicate quote', { description: (error as Error).message })
     }
   }
 
@@ -152,8 +150,8 @@ export default function QuoteHistoryPage() {
       // Invalidate queries to refetch data
       queryClient.invalidateQueries({ queryKey: ['load-planner-quotes'] })
       toast.success('Quote status updated')
-    } catch (error: any) {
-      toast.error('Failed to update status', { description: error.message })
+    } catch (error: unknown) {
+      toast.error('Failed to update status', { description: (error as Error).message })
     }
   }
 
@@ -196,8 +194,8 @@ export default function QuoteHistoryPage() {
         await Promise.all(ids.map((id) => deleteQuoteMutation.mutateAsync(id)))
         setSelectedIds(new Set())
         toast.success(`Deleted ${ids.length} quotes`)
-      } catch (error: any) {
-        toast.error('Failed to delete some quotes', { description: error.message })
+      } catch (error: unknown) {
+        toast.error('Failed to delete some quotes', { description: (error as Error).message })
       }
     }
   }

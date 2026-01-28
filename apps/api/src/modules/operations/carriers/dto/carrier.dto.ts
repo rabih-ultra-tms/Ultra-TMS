@@ -3,8 +3,6 @@ import {
   IsOptional,
   IsEmail,
   IsNumber,
-  IsBoolean,
-  IsArray,
   Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';

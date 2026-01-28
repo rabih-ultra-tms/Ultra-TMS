@@ -9,7 +9,6 @@ import {
 import {
   LoadHistory,
   LoadHistoryListParams,
-  LaneStats,
 } from '@/types/load-history';
 import {
   Table,

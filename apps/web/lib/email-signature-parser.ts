@@ -58,6 +58,7 @@ export function parseEmailSignature(signature: string): ParsedSignature {
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
+    if (!line) continue;
     const lowerLine = line.toLowerCase()
 
     const emailMatches = line.match(EMAIL_PATTERN)
@@ -70,7 +71,7 @@ export function parseEmailSignature(signature: string): ParsedSignature {
       for (const pattern of PHONE_PATTERNS) {
         const phoneMatches = line.match(pattern)
         if (phoneMatches) {
-          let phone = phoneMatches[0].replace(LABEL_PATTERN, '').trim()
+          const phone = phoneMatches[0].replace(LABEL_PATTERN, '').trim()
 
           if (!foundMobile && /(?:cell|mobile)/i.test(lowerLine)) {
             result.mobile = phone
@@ -94,7 +95,7 @@ export function parseEmailSignature(signature: string): ParsedSignature {
       let company = line
         .replace(/^(?:at|@|\||-|–|—)\s*/i, '')
         .replace(EMAIL_PATTERN, '')
-        .replace(PHONE_PATTERNS[0], '')
+        .replace(PHONE_PATTERNS[0] || /\d{3}[-.]?\d{3}[-.]?\d{4}/, '')
         .replace(WEBSITE_PATTERN, '')
         .trim()
 
@@ -106,14 +107,14 @@ export function parseEmailSignature(signature: string): ParsedSignature {
     }
 
     const cityStateZipMatch = line.match(CITY_STATE_ZIP_PATTERN)
-    if (cityStateZipMatch && !result.city) {
+    if (cityStateZipMatch && cityStateZipMatch[1] && cityStateZipMatch[2] && !result.city) {
       result.city = cityStateZipMatch[1].trim()
       result.state = cityStateZipMatch[2].toUpperCase()
       result.zip = cityStateZipMatch[3]
 
       if (i > 0) {
         const prevLine = lines[i - 1]
-        if (/\d/.test(prevLine) && /\b(?:st|street|ave|avenue|rd|road|blvd|boulevard|dr|drive|ln|lane|way|ct|court|pl|place|pkwy|parkway|hwy|highway|suite|ste|floor|fl)\b/i.test(prevLine)) {
+        if (prevLine && /\d/.test(prevLine) && /\b(?:st|street|ave|avenue|rd|road|blvd|boulevard|dr|drive|ln|lane|way|ct|court|pl|place|pkwy|parkway|hwy|highway|suite|ste|floor|fl)\b/i.test(prevLine)) {
           result.address = `${prevLine}, ${line}`
         } else {
           result.address = line
@@ -125,7 +126,7 @@ export function parseEmailSignature(signature: string): ParsedSignature {
 
     if (!result.city) {
       const cityStateMatch = line.match(CITY_STATE_PATTERN)
-      if (cityStateMatch) {
+      if (cityStateMatch && cityStateMatch[1] && cityStateMatch[2]) {
         result.city = cityStateMatch[1].trim()
         result.state = cityStateMatch[2].toUpperCase()
       }
@@ -138,8 +139,9 @@ export function parseEmailSignature(signature: string): ParsedSignature {
 
   if (!result.fullName) {
     for (const line of lines) {
+      if (!line) continue;
       if (EMAIL_PATTERN.test(line)) continue
-      if (PHONE_PATTERNS[0].test(line)) continue
+      if (PHONE_PATTERNS[0] && PHONE_PATTERNS[0].test(line)) continue
       if (COMPANY_INDICATORS.test(line)) continue
       if (WEBSITE_PATTERN.test(line)) continue
       if (CITY_STATE_ZIP_PATTERN.test(line)) continue

@@ -6,11 +6,8 @@ import {
   IsArray,
   Min,
   Max,
-  ValidateNested,
-  IsEmail,
   IsDecimal,
 } from 'class-validator';
-import { Type } from 'class-transformer';
 
 export class CreateTruckDto {
   @IsOptional()

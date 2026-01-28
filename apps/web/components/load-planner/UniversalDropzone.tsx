@@ -78,6 +78,7 @@ export function UniversalDropzone({ onAnalyzed, onLoading, onError, onStatusChan
 
         for (let i = 0; i < files.length; i++) {
           const file = files[i]
+          if (!file) continue;
           const fileName = file.name.toLowerCase()
           const fileSize = (file.size / 1024).toFixed(1)
           const fileNum = i + 1

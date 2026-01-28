@@ -2,8 +2,6 @@ import {
   LayoutDashboard,
   Users,
   Building2,
-  Truck,
-  Package,
   FileText,
   Settings,
   HelpCircle,
