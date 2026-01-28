@@ -114,4 +114,5 @@ export interface CarrierListParams {
   search?: string;
   status?: string;
   carrierType?: string;
+  state?: string;
 }

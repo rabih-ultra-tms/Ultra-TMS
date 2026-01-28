@@ -10,7 +10,6 @@ import {
   BarChart3,
   Shield,
   Wallet,
-  MapPin,
   ClipboardList,
   UserCog,
   TrendingUp,
@@ -36,7 +35,7 @@ export const navigationConfig: NavConfig = {
         {
           title: "Load Planner",
           href: "/load-planner/new/edit",
-          icon: Package,
+          icon: ClipboardList,
         },
         {
           title: "Quote History",
@@ -44,29 +43,14 @@ export const navigationConfig: NavConfig = {
           icon: FileText,
         },
         {
+          title: "Carriers",
+          href: "/carriers",
+          icon: Users,
+        },
+        {
           title: "Load History",
           href: "/load-history",
           icon: BarChart3,
-        },
-        {
-          title: "Carriers",
-          href: "/carriers",
-          icon: Truck,
-        },
-        {
-          title: "Loads",
-          href: "/loads",
-          icon: Package,
-        },
-        {
-          title: "Dispatch",
-          href: "/dispatch",
-          icon: MapPin,
-        },
-        {
-          title: "Tracking",
-          href: "/tracking",
-          icon: Truck,
         },
       ],
     },
@@ -92,16 +76,6 @@ export const navigationConfig: NavConfig = {
           title: "Activities",
           href: "/activities",
           icon: ListChecks,
-        },
-      ],
-    },
-    {
-      title: "Management",
-      items: [
-        {
-          title: "Carriers",
-          href: "/carriers",
-          icon: Truck,
         },
       ],
     },

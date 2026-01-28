@@ -64,6 +64,13 @@ export class CarriersController {
     return this.carriersService.listCarriers(tenantId, query);
   }
 
+  @Get('stats')
+  @Roles('ADMIN', 'MANAGER', 'SALES_REP', 'SALES_MANAGER')
+  @ApiOperation({ summary: 'Get carrier statistics' })
+  async getCarrierStats(@CurrentTenant() tenantId: string) {
+    return this.carriersService.getCarrierStats(tenantId);
+  }
+
   @Get(':carrierId')
   @Roles('ADMIN', 'MANAGER', 'SALES_REP', 'SALES_MANAGER')
   @ApiOperation({ summary: 'Get carrier by ID' })

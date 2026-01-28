@@ -127,6 +127,40 @@ export class CarriersService {
     };
   }
 
+  async getCarrierStats(tenantId: string) {
+    const where: Prisma.OperationsCarrierWhereInput = {
+      tenantId,
+      isActive: true,
+      deletedAt: null,
+    };
+
+    const [total, byType, byStatus] = await Promise.all([
+      this.prisma.operationsCarrier.count({ where }),
+      this.prisma.operationsCarrier.groupBy({
+        by: ['carrierType'],
+        where,
+        _count: true,
+      }),
+      this.prisma.operationsCarrier.groupBy({
+        by: ['status'],
+        where,
+        _count: true,
+      }),
+    ]);
+
+    return {
+      total,
+      byType: byType.reduce((acc, item) => {
+        acc[item.carrierType] = item._count;
+        return acc;
+      }, {} as Record<string, number>),
+      byStatus: byStatus.reduce((acc, item) => {
+        acc[item.status] = item._count;
+        return acc;
+      }, {} as Record<string, number>),
+    };
+  }
+
   async getCarrierById(tenantId: string, carrierId: string) {
     const carrier = await this.prisma.operationsCarrier.findUnique({
       where: { id: carrierId },

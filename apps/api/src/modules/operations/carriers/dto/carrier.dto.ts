@@ -7,6 +7,7 @@ import {
   IsArray,
   Min,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateOperationsCarrierDto {
   @IsString()
@@ -158,10 +159,16 @@ export class ListOperationsCarriersDto {
   @IsString()
   carrierType?: string;
 
+  @IsOptional()
+  @IsString()
+  state?: string;
+
+  @Type(() => Number)
   @IsNumber()
   @Min(1)
   page: number = 1;
 
+  @Type(() => Number)
   @IsNumber()
   @Min(10)
   limit: number = 25;

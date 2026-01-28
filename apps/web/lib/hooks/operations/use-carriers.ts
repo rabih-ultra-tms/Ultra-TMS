@@ -18,14 +18,26 @@ export const useCarriers = (params: CarrierListParams) => {
   return useQuery({
     queryKey: [CARRIERS_KEY, 'list', params],
     queryFn: async () => {
-      const response = await apiClient.get<{
+      // Filter out undefined values and ensure page/limit are numbers
+      const cleanParams: Record<string, string | number | boolean> = {
+        page: Number(params.page) || 1,
+        limit: Number(params.limit) || 10,
+      };
+      
+      if (params.search) cleanParams.search = params.search;
+      if (params.status) cleanParams.status = params.status;
+      if (params.carrierType) cleanParams.carrierType = params.carrierType;
+      if (params.state) cleanParams.state = params.state;
+      if (params.sortBy) cleanParams.sortBy = params.sortBy;
+      if (params.sortOrder) cleanParams.sortOrder = params.sortOrder;
+      
+      return await apiClient.get<{
         data: OperationsCarrierListItem[];
         total: number;
         page: number;
         limit: number;
         totalPages: number;
-      }>('/operations/carriers', { params });
-      return response.data;
+      }>('/operations/carriers', cleanParams);
     },
   });
 };
@@ -34,10 +46,9 @@ export const useCarrier = (id: string) => {
   return useQuery({
     queryKey: [CARRIERS_KEY, id],
     queryFn: async () => {
-      const response = await apiClient.get<OperationsCarrier>(
+      return await apiClient.get<OperationsCarrier>(
         `/operations/carriers/${id}`
       );
-      return response.data;
     },
     enabled: !!id,
   });
@@ -48,11 +59,10 @@ export const useCreateCarrier = () => {
 
   return useMutation({
     mutationFn: async (data: Partial<OperationsCarrier>) => {
-      const response = await apiClient.post<OperationsCarrier>(
+      return await apiClient.post<OperationsCarrier>(
         '/operations/carriers',
         data
       );
-      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -62,23 +72,29 @@ export const useCreateCarrier = () => {
   });
 };
 
-export const useUpdateCarrier = (id: string) => {
+export const useUpdateCarrier = (id?: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: Partial<OperationsCarrier>) => {
-      const response = await apiClient.patch<OperationsCarrier>(
-        `/operations/carriers/${id}`,
-        data
+    mutationFn: async (data: Partial<OperationsCarrier> & { id?: string }) => {
+      const targetId = data.id || id;
+      if (!targetId) throw new Error('Carrier ID is required for update');
+      const { id: _, ...updateData } = data;
+      return await apiClient.patch<OperationsCarrier>(
+        `/operations/carriers/${targetId}`,
+        updateData
       );
-      return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      const targetId = variables.id || id;
       queryClient.invalidateQueries({
-        queryKey: [CARRIERS_KEY, id],
+        queryKey: [CARRIERS_KEY, targetId],
       });
       queryClient.invalidateQueries({
         queryKey: [CARRIERS_KEY, 'list'],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [CARRIERS_KEY, 'stats'],
       });
     },
   });
@@ -100,6 +116,23 @@ export const useDeleteCarrier = (id?: string) => {
       queryClient.invalidateQueries({
         queryKey: [CARRIERS_KEY, 'list'],
       });
+      queryClient.invalidateQueries({
+        queryKey: [CARRIERS_KEY, 'stats'],
+      });
+    },
+  });
+};
+
+// Carrier stats
+export const useCarrierStats = () => {
+  return useQuery({
+    queryKey: [CARRIERS_KEY, 'stats'],
+    queryFn: async () => {
+      return await apiClient.get<{
+        total: number;
+        byType: Record<string, number>;
+        byStatus: Record<string, number>;
+      }>('/operations/carriers/stats');
     },
   });
 };
@@ -112,10 +145,9 @@ export const useCarrierDrivers = (carrierId: string) => {
   return useQuery({
     queryKey: [CARRIERS_KEY, carrierId, 'drivers'],
     queryFn: async () => {
-      const response = await apiClient.get<OperationsCarrierDriver[]>(
+      return await apiClient.get<OperationsCarrierDriver[]>(
         `/operations/carriers/${carrierId}/drivers`
       );
-      return response.data;
     },
     enabled: !!carrierId,
   });
@@ -125,10 +157,9 @@ export const useCarrierDriver = (carrierId: string, driverId: string) => {
   return useQuery({
     queryKey: [CARRIERS_KEY, carrierId, 'drivers', driverId],
     queryFn: async () => {
-      const response = await apiClient.get<OperationsCarrierDriver>(
+      return await apiClient.get<OperationsCarrierDriver>(
         `/operations/carriers/${carrierId}/drivers/${driverId}`
       );
-      return response.data;
     },
     enabled: !!carrierId && !!driverId,
   });
@@ -139,11 +170,10 @@ export const useCreateDriver = (carrierId: string) => {
 
   return useMutation({
     mutationFn: async (data: Partial<OperationsCarrierDriver>) => {
-      const response = await apiClient.post<OperationsCarrierDriver>(
+      return await apiClient.post<OperationsCarrierDriver>(
         `/operations/carriers/${carrierId}/drivers`,
         data
       );
-      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -161,11 +191,10 @@ export const useUpdateDriver = (carrierId: string, driverId: string) => {
 
   return useMutation({
     mutationFn: async (data: Partial<OperationsCarrierDriver>) => {
-      const response = await apiClient.patch<OperationsCarrierDriver>(
+      return await apiClient.patch<OperationsCarrierDriver>(
         `/operations/carriers/${carrierId}/drivers/${driverId}`,
         data
       );
-      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -212,10 +241,9 @@ export const useCarrierTrucks = (carrierId: string) => {
   return useQuery({
     queryKey: [CARRIERS_KEY, carrierId, 'trucks'],
     queryFn: async () => {
-      const response = await apiClient.get<OperationsCarrierTruck[]>(
+      return await apiClient.get<OperationsCarrierTruck[]>(
         `/operations/carriers/${carrierId}/trucks`
       );
-      return response.data;
     },
     enabled: !!carrierId,
   });
@@ -225,10 +253,9 @@ export const useCarrierTruck = (carrierId: string, truckId: string) => {
   return useQuery({
     queryKey: [CARRIERS_KEY, carrierId, 'trucks', truckId],
     queryFn: async () => {
-      const response = await apiClient.get<OperationsCarrierTruck>(
+      return await apiClient.get<OperationsCarrierTruck>(
         `/operations/carriers/${carrierId}/trucks/${truckId}`
       );
-      return response.data;
     },
     enabled: !!carrierId && !!truckId,
   });
@@ -239,11 +266,10 @@ export const useCreateTruck = (carrierId: string) => {
 
   return useMutation({
     mutationFn: async (data: Partial<OperationsCarrierTruck>) => {
-      const response = await apiClient.post<OperationsCarrierTruck>(
+      return await apiClient.post<OperationsCarrierTruck>(
         `/operations/carriers/${carrierId}/trucks`,
         data
       );
-      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -261,11 +287,10 @@ export const useUpdateTruck = (carrierId: string, truckId: string) => {
 
   return useMutation({
     mutationFn: async (data: Partial<OperationsCarrierTruck>) => {
-      const response = await apiClient.patch<OperationsCarrierTruck>(
+      return await apiClient.patch<OperationsCarrierTruck>(
         `/operations/carriers/${carrierId}/trucks/${truckId}`,
         data
       );
-      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -286,10 +311,9 @@ export const useAssignDriverToTruck = (carrierId: string, truckId: string) => {
 
   return useMutation({
     mutationFn: async (driverId: string) => {
-      const response = await apiClient.patch<OperationsCarrierTruck>(
+      return await apiClient.patch<OperationsCarrierTruck>(
         `/operations/carriers/${carrierId}/trucks/${truckId}/assign-driver/${driverId}`
       );
-      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
