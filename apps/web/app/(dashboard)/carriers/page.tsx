@@ -576,14 +576,14 @@ export default function CarriersPage() {
                             >
                               {carrier.companyName || 'Unnamed Carrier'}
                             </Link>
-                            <p className="text-sm">
+                            <div className="text-sm mt-1">
                               <Badge
                                 variant="outline"
                                 className={`text-xs ${TYPE_COLORS[carrier.carrierType]}`}
                               >
                                 {TYPE_LABELS[carrier.carrierType]}
                               </Badge>
-                            </p>
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell>

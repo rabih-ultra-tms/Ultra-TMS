@@ -12,6 +12,7 @@ import {
   UserCog,
   TrendingUp,
   ListChecks,
+  Truck,
 } from "lucide-react";
 import type { NavConfig } from "@/lib/types/navigation";
 
@@ -24,6 +25,31 @@ export const navigationConfig: NavConfig = {
           title: "Dashboard",
           href: "/dashboard",
           icon: LayoutDashboard,
+        },
+      ],
+    },
+    {
+      title: "CRM",
+      items: [
+        {
+          title: "Companies",
+          href: "/companies",
+          icon: Building2,
+        },
+        {
+          title: "Contacts",
+          href: "/contacts",
+          icon: Users,
+        },
+        {
+          title: "Deals",
+          href: "/leads",
+          icon: TrendingUp,
+        },
+        {
+          title: "Activities",
+          href: "/activities",
+          icon: ListChecks,
         },
       ],
     },
@@ -50,30 +76,11 @@ export const navigationConfig: NavConfig = {
           href: "/load-history",
           icon: BarChart3,
         },
-      ],
-    },
-    {
-      title: "CRM",
-      items: [
         {
-          title: "Companies",
-          href: "/companies",
-          icon: Building2,
-        },
-        {
-          title: "Contacts",
-          href: "/contacts",
-          icon: Users,
-        },
-        {
-          title: "Deals",
-          href: "/leads",
-          icon: TrendingUp,
-        },
-        {
-          title: "Activities",
-          href: "/activities",
-          icon: ListChecks,
+          title: "Truck Types",
+          href: "/truck-types",
+          icon: Truck,
+          requiredRoles: ["ADMIN", "SUPER_ADMIN", "OPERATIONS_MANAGER"],
         },
       ],
     },
