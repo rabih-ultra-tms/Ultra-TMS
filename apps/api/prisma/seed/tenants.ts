@@ -1,9 +1,11 @@
 import { PrismaClient } from '@prisma/client';
 import { faker } from '@faker-js/faker';
+import { randomUUID } from 'crypto';
 
 export async function seedTenants(prisma: any): Promise<string[]> {
   const tenants = [
     {
+      id: randomUUID(),
       name: 'Acme Logistics',
       slug: 'acme-logistics',
       domain: 'acme.ultra-tms.local',
@@ -32,6 +34,7 @@ export async function seedTenants(prisma: any): Promise<string[]> {
       status: 'ACTIVE',
     },
     {
+      id: randomUUID(),
       name: 'Global Freight Solutions',
       slug: 'global-freight',
       domain: 'global.ultra-tms.local',
@@ -60,6 +63,7 @@ export async function seedTenants(prisma: any): Promise<string[]> {
       status: 'ACTIVE',
     },
     {
+      id: randomUUID(),
       name: 'Premier Transportation',
       slug: 'premier-transport',
       domain: 'premier.ultra-tms.local',
@@ -88,6 +92,7 @@ export async function seedTenants(prisma: any): Promise<string[]> {
       status: 'ACTIVE',
     },
     {
+      id: randomUUID(),
       name: 'Express Carriers Inc',
       slug: 'express-carriers',
       domain: 'express.ultra-tms.local',
@@ -116,6 +121,7 @@ export async function seedTenants(prisma: any): Promise<string[]> {
       status: 'ACTIVE',
     },
     {
+      id: randomUUID(),
       name: 'Nationwide Logistics',
       slug: 'nationwide-logistics',
       domain: 'nationwide.ultra-tms.local',
@@ -155,6 +161,7 @@ export async function seedTenants(prisma: any): Promise<string[]> {
         ...tenantData,
         externalId: `SEED-TENANT-${tenants.indexOf(tenantData) + 1}`,
         sourceSystem: 'FAKER_SEED',
+        updatedAt: new Date(),
       },
     });
 

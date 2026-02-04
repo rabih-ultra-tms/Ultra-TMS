@@ -103,7 +103,10 @@ export class InvoicesController {
   @Header('Content-Disposition', 'inline; filename="invoice.pdf"')
   async getInvoicePdf(@Param('id') id: string, @CurrentTenant() tenantId: string) {
     const invoice = await this.invoicesService.findOne(id, tenantId);
-    return this.pdfService.generateInvoicePdf(invoice);
+    if (!invoice.company) {
+      throw new Error('Invoice has no associated company');
+    }
+    return this.pdfService.generateInvoicePdf(invoice as typeof invoice & { company: NonNullable<typeof invoice.company> });
   }
 
   @Get(':id')

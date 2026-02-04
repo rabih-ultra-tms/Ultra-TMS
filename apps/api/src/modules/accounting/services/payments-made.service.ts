@@ -200,13 +200,13 @@ export class PaymentsMadeService {
     });
 
     const quickPaySettlements = approvedSettlements.filter(
-      (s) => s.carrier.paymentTerms === 'QUICK_PAY',
+      (s) => s.carrier?.paymentTerms === 'QUICK_PAY',
     );
     const factoringSettlements = approvedSettlements.filter(
-      (s) => s.payToFactoring || s.carrier.factoringCompany,
+      (s) => s.payToFactoring || s.carrier?.factoringCompany,
     );
     const regularSettlements = approvedSettlements.filter(
-      (s) => !s.payToFactoring && s.carrier.paymentTerms !== 'QUICK_PAY',
+      (s) => !s.payToFactoring && s.carrier?.paymentTerms !== 'QUICK_PAY',
     );
 
     return {

@@ -114,7 +114,7 @@ describe('LoadsService', () => {
     const result = await service.findOne('tenant-1', 'load-1');
 
     expect(result.id).toBe('load-1');
-    expect(result.order.id).toBe('order-1');
+    expect(result.order?.id).toBe('order-1');
     expect(result.carrier?.id).toBe('car-1');
   });
 

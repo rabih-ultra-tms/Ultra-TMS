@@ -44,6 +44,10 @@ export class LoadPostingsService {
       throw new NotFoundException('Load not found');
     }
 
+    if (!load.order) {
+      throw new NotFoundException('Load has no associated order');
+    }
+
     const pickup = load.order.stops.find((s: any) => s.stopType === 'PICKUP');
     const delivery = load.order.stops[load.order.stops.length - 1];
 

@@ -9,15 +9,24 @@ export async function seedAgent(prisma: any, tenantIds: string[]): Promise<void>
 
     // Agents (20 per tenant = 100 total)
     for (let i = 0; i < 20; i++) {
+      const firstName = faker.person.firstName();
+      const lastName = faker.person.lastName();
       await prisma.agent.create({
         data: {
           tenantId,
-          name: faker.person.fullName(),
+          companyName: faker.company.name(),
+          contactFirstName: firstName,
+          contactLastName: lastName,
+          contactEmail: faker.internet.email({ firstName, lastName }),
+          contactPhone: faker.string.numeric(10),
           agentCode: `AGT-${total + i + 1}`,
           agentType: faker.helpers.arrayElement(['REFERRING', 'SELLING', 'HYBRID']),
-          email: faker.internet.email(),
-          phone: faker.string.numeric(10),
           status: faker.helpers.arrayElement(['ACTIVE', 'ACTIVE', 'ACTIVE', 'SUSPENDED']),
+          addressLine1: faker.location.streetAddress(),
+          city: faker.location.city(),
+          state: faker.location.state({ abbreviated: true }),
+          zip: faker.location.zipCode(),
+          country: 'USA',
           createdById: users[Math.floor(Math.random() * users.length)]?.id,
           externalId: `SEED-AGENT-${total + i + 1}`,
           sourceSystem: 'FAKER_SEED',
