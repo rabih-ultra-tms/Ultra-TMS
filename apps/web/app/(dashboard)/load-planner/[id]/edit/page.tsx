@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
   useLoadPlannerQuote,
@@ -27,9 +27,17 @@ import { toast } from 'sonner';
 import { CustomerForm } from '@/components/quotes/customer-form';
 import { RouteMap } from '@/components/load-planner/route-map';
 import { UniversalDropzone } from '@/components/load-planner/UniversalDropzone';
+import { TruckSelector } from '@/components/load-planner/TruckSelector';
+import { LoadPlanVisualizer } from '@/components/load-planner/LoadPlanVisualizer';
+import { ExtractedItemsList } from '@/components/load-planner/ExtractedItemsList';
+import { RouteIntelligence } from '@/components/load-planner/RouteIntelligence';
+import { RouteComparisonTab } from '@/components/load-planner/RouteComparisonTab';
 import { SearchableSelect, type SearchableSelectOption } from '@/components/ui/searchable-select';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
+import { buildLoadPlan } from '@/lib/load-planner/load-plan';
+import { trucks as defaultTrucks } from '@/lib/load-planner/trucks';
+import type { LoadItem, TruckType } from '@/lib/load-planner/types';
 
 interface ServiceItem {
   id: string;
@@ -104,6 +112,24 @@ export default function LoadPlannerEditPage() {
   // Cargo items
   const [cargoItems, setCargoItems] = useState<CargoItem[]>([]);
 
+  const fallbackTruck: TruckType = defaultTrucks[0] || {
+    id: 'fallback-truck',
+    name: 'Standard Flatbed',
+    category: 'FLATBED',
+    description: 'Default flatbed configuration',
+    deckHeight: 5,
+    deckLength: 48,
+    deckWidth: 8.5,
+    maxCargoWeight: 48000,
+    maxLegalCargoHeight: 8.5,
+    maxLegalCargoWidth: 8.5,
+    features: [],
+    bestFor: [],
+    loadingMethod: 'forklift',
+  };
+
+  const [selectedTruck, setSelectedTruck] = useState<TruckType>(fallbackTruck);
+
   // Cargo entry mode
   const [cargoEntryMode, setCargoEntryMode] = useState<'ai' | 'manual'>('ai');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -142,6 +168,90 @@ export default function LoadPlannerEditPage() {
   const servicesTotal = serviceItems.reduce((sum, item) => sum + (item.total || 0), 0);
   const accessorialsTotal = accessorialItems.reduce((sum, item) => sum + (item.total || 0), 0);
   const grandTotal = servicesTotal + accessorialsTotal;
+
+  const loadItems = useMemo<LoadItem[]>(() => (
+    cargoItems.map((item) => ({
+      id: item.id,
+      description: item.description,
+      quantity: item.quantity,
+      length: (item.lengthIn || 0) / 12,
+      width: (item.widthIn || 0) / 12,
+      height: (item.heightIn || 0) / 12,
+      weight: item.weightLbs || 0,
+      stackable: item.stackable,
+      bottomOnly: item.bottomOnly,
+      fragile: item.fragile,
+      hazmat: item.hazmat,
+      maxLayers: item.maxLayers,
+      orientation: item.orientation ? Number(item.orientation) : undefined,
+      geometry: (item.geometryType as LoadItem['geometry']) || 'box',
+    }))
+  ), [cargoItems]);
+
+  const totalCargoWeight = useMemo(
+    () => cargoItems.reduce((sum, item) => sum + (item.weightLbs || 0) * (item.quantity || 1), 0),
+    [cargoItems]
+  );
+
+  const maxItemLength = useMemo(() => (
+    cargoItems.length === 0 ? 0 : Math.max(...cargoItems.map(i => (i.lengthIn || 0) / 12))
+  ), [cargoItems]);
+
+  const maxItemWidth = useMemo(() => (
+    cargoItems.length === 0 ? 0 : Math.max(...cargoItems.map(i => (i.widthIn || 0) / 12))
+  ), [cargoItems]);
+
+  const maxItemHeight = useMemo(() => (
+    cargoItems.length === 0 ? 0 : Math.max(...cargoItems.map(i => (i.heightIn || 0) / 12))
+  ), [cargoItems]);
+
+  const itemDescriptions = useMemo(() => loadItems.map(item => item.description), [loadItems]);
+
+  const loadPlan = useMemo(() => buildLoadPlan(loadItems, selectedTruck), [loadItems, selectedTruck]);
+
+  const perTruckCargoSpecs = useMemo(() => (
+    loadPlan.loads.map((load, index) => {
+      const weight = load.items.reduce((sum, i) => sum + (i.weight * i.quantity), 0);
+      const length = load.items.length ? Math.max(...load.items.map(i => i.length)) : 0;
+      const width = load.items.length ? Math.max(...load.items.map(i => i.width)) : 0;
+      const height = load.items.length ? Math.max(...load.items.map(i => i.height)) : 0;
+      return {
+        truckIndex: index,
+        truckName: load.recommendedTruck.name,
+        truckId: load.recommendedTruck.id,
+        length,
+        width,
+        height,
+        grossWeight: weight,
+        isOversize: width > 8.5 || height > 13.5 || length > 53,
+        isOverweight: weight > 80000,
+      };
+    })
+  ), [loadPlan.loads]);
+
+  const handleCargoItemsChange = (items: LoadItem[]) => {
+    setCargoItems(items.map((item, index) => {
+      const existing = cargoItems.find(c => c.id === item.id);
+      return {
+        ...(existing || {}),
+        id: item.id,
+        description: item.description,
+        quantity: item.quantity,
+        lengthIn: item.length * 12,
+        widthIn: item.width * 12,
+        heightIn: item.height * 12,
+        weightLbs: item.weight,
+        stackable: item.stackable ?? false,
+        bottomOnly: item.bottomOnly ?? false,
+        fragile: item.fragile ?? false,
+        hazmat: item.hazmat ?? false,
+        maxLayers: item.maxLayers,
+        orientation: item.orientation ? String(item.orientation) : existing?.orientation,
+        geometryType: item.geometry || existing?.geometryType,
+        sortOrder: existing?.sortOrder ?? index,
+      } as CargoItem;
+    }));
+  };
 
   // Current date for display (stable to avoid hydration issues)
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
@@ -970,6 +1080,19 @@ export default function LoadPlannerEditPage() {
                 </Card>
               )}
 
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Package className="h-5 w-5" />
+                    Cargo Items
+                  </CardTitle>
+                  <CardDescription>Review and edit extracted cargo details</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ExtractedItemsList items={loadItems} onChange={handleCargoItemsChange} />
+                </CardContent>
+              </Card>
+
               <div className="flex gap-4">
                 <Button variant="outline" onClick={() => setActiveTab('route')}>
                   Back
@@ -1003,14 +1126,20 @@ export default function LoadPlannerEditPage() {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      <p className="text-sm text-muted-foreground">
-                        Truck selection and load planning will be available once you add cargo items.
-                      </p>
-                      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                        <p className="text-sm text-blue-700">
-                          💡 Smart truck recommendation engine will automatically suggest the best trucks based on your cargo specifications, route distance, and permit requirements.
-                        </p>
-                      </div>
+                      <TruckSelector
+                        currentTruck={selectedTruck}
+                        onChange={setSelectedTruck}
+                        itemsWeight={totalCargoWeight}
+                        maxItemLength={maxItemLength}
+                        maxItemWidth={maxItemWidth}
+                        maxItemHeight={maxItemHeight}
+                        itemDescriptions={itemDescriptions}
+                      />
+                      <LoadPlanVisualizer
+                        loadPlan={loadPlan}
+                        items={loadItems}
+                        onTruckChange={(_, truck) => setSelectedTruck(truck)}
+                      />
                     </div>
                   )}
                 </CardContent>
@@ -1364,66 +1493,46 @@ export default function LoadPlannerEditPage() {
                   </CardContent>
                 </Card>
               ) : (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <FileWarning className="h-5 w-5" />
-                      Permit Requirements
-                    </CardTitle>
-                    <CardDescription>
-                      Permit calculations based on route and cargo dimensions
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                        <div className="flex items-center gap-2 text-blue-700 mb-2">
-                          <AlertTriangle className="h-4 w-4" />
-                          <span className="font-medium text-sm">Permit Intelligence</span>
-                        </div>
-                        <p className="text-sm text-blue-600">
-                          Advanced permit calculation will automatically analyze your route and cargo to determine required permits for each state, including oversized/overweight permits and escort requirements.
-                        </p>
-                      </div>
+                <>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <FileWarning className="h-5 w-5" />
+                        Permit Requirements
+                      </CardTitle>
+                      <CardDescription>
+                        Permit calculations based on route and cargo dimensions
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <RouteIntelligence
+                        origin={`${pickupAddress}, ${pickupCity}, ${pickupState} ${pickupZip}`.trim()}
+                        destination={`${dropoffAddress}, ${dropoffCity}, ${dropoffState} ${dropoffZip}`.trim()}
+                        cargoSpecs={{
+                          length: maxItemLength,
+                          width: maxItemWidth,
+                          height: maxItemHeight,
+                          grossWeight: totalCargoWeight,
+                        }}
+                        perTruckCargoSpecs={perTruckCargoSpecs}
+                      />
+                    </CardContent>
+                  </Card>
 
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between p-3 border rounded-lg">
-                          <div>
-                            <div className="font-medium">Route</div>
-                            <div className="text-sm text-muted-foreground">
-                              {pickupCity && pickupState ? `${pickupCity}, ${pickupState}` : pickupAddress} → {dropoffCity && dropoffState ? `${dropoffCity}, ${dropoffState}` : dropoffAddress}
-                            </div>
-                          </div>
-                          {distanceMiles > 0 && (
-                            <Badge variant="secondary">{distanceMiles.toFixed(0)} miles</Badge>
-                          )}
-                        </div>
-
-                        <div className="flex items-center justify-between p-3 border rounded-lg">
-                          <div>
-                            <div className="font-medium">Cargo Items</div>
-                            <div className="text-sm text-muted-foreground">
-                              {cargoItems.length} item{cargoItems.length !== 1 ? 's' : ''} added
-                            </div>
-                          </div>
-                          <Badge variant="secondary">
-                            Max: {Math.max(...cargoItems.map(i => i.lengthIn / 12)).toFixed(1)}&apos; × {Math.max(...cargoItems.map(i => i.widthIn / 12)).toFixed(1)}&apos; × {Math.max(...cargoItems.map(i => i.heightIn / 12)).toFixed(1)}&apos;
-                          </Badge>
-                        </div>
-
-                        <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                          <div className="flex items-center gap-2 text-amber-700 mb-2">
-                            <FileWarning className="h-4 w-4" />
-                            <span className="font-medium text-sm">Manual Review Required</span>
-                          </div>
-                          <p className="text-sm text-amber-600">
-                            Detailed permit requirements and state-by-state analysis will be available in the full implementation. Contact your permit specialist for accurate permit costs.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                  <RouteComparisonTab
+                    pickupAddress={`${pickupAddress}, ${pickupCity}, ${pickupState} ${pickupZip}`.trim()}
+                    dropoffAddress={`${dropoffAddress}, ${dropoffCity}, ${dropoffState} ${dropoffZip}`.trim()}
+                    cargoItems={loadItems}
+                    currentTruck={selectedTruck}
+                    routeResult={null}
+                    onApplyScenario={(scenario) => {
+                      setSelectedTruck(scenario.truck)
+                      setDistanceMiles(scenario.routeAlternative.totalDistanceMiles)
+                      setDurationMinutes(scenario.routeAlternative.totalDurationMinutes)
+                      toast.success('Scenario applied to quote')
+                    }}
+                  />
+                </>
               )}
 
               <div className="flex gap-4">

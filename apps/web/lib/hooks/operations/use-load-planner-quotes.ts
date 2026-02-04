@@ -28,6 +28,8 @@ export const useLoadPlannerQuotes = (params: LoadPlannerQuoteListParams) => {
       if (params.status) queryParams.status = params.status;
       if (params.pickupState) queryParams.pickupState = params.pickupState;
       if (params.dropoffState) queryParams.dropoffState = params.dropoffState;
+      if (params.dateFrom) queryParams.dateFrom = params.dateFrom;
+      if (params.dateTo) queryParams.dateTo = params.dateTo;
       if (params.sortBy) queryParams.sortBy = params.sortBy;
       if (params.sortOrder) queryParams.sortOrder = params.sortOrder;
       
