@@ -32,6 +32,7 @@ import { seedSafety } from './seed/safety';
 import { seedLoadBoardExternal } from './seed/load-board-external';
 import { seedRateIntelligence } from './seed/rate-intelligence';
 import { seedClaims } from './seed/claims';
+import { seedEquipment } from './seed/equipment';
 import seedTruckTypes from './seeds/truck-types.seed';
 
 const prisma = new PrismaClient() as any;
@@ -204,6 +205,11 @@ async function main() {
     console.log('🚛 Seeding Truck Types...');
     await seedTruckTypes();
     console.log('✅ Truck Types seeded\n');
+
+    // 34. Equipment (Operations Module - uses raw tables)
+    console.log('🛠️ Seeding Equipment...');
+    await seedEquipment(prisma);
+    console.log('✅ Equipment seeded\n');
 
     console.log('\n✨ Database seeding completed successfully!');
     console.log('📊 Total records created: Check individual service logs above');

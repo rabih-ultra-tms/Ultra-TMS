@@ -12,16 +12,26 @@ export async function seedFactoring(prisma: any, tenantIds: string[]): Promise<v
     const factoringCompanies = [];
     for (let i = 0; i < 5; i++) {
       total++;
-      const company = await prisma.factoringCompany.create({
-        data: {
+      const companyCode = `FACT-${tenantId.slice(0, 6)}-${i + 1}`;
+      const company = await prisma.factoringCompany.upsert({
+        where: { companyCode },
+        create: {
           tenantId,
           name: (faker.company.name() + ' Factoring').substring(0, 200),
-          companyCode: `FACT-${total}`,
+          companyCode,
           email: faker.internet.email().substring(0, 100),
           phone: '555-' + faker.string.numeric(3) + '-' + faker.string.numeric(4),
           verificationMethod: faker.helpers.arrayElement(['PHONE', 'EMAIL', 'FAX', 'API']),
           status: 'ACTIVE',
           externalId: `SEED-FACTORING-${total}`,
+          sourceSystem: 'FAKER_SEED',
+        },
+        update: {
+          name: (faker.company.name() + ' Factoring').substring(0, 200),
+          email: faker.internet.email().substring(0, 100),
+          phone: '555-' + faker.string.numeric(3) + '-' + faker.string.numeric(4),
+          verificationMethod: faker.helpers.arrayElement(['PHONE', 'EMAIL', 'FAX', 'API']),
+          status: 'ACTIVE',
           sourceSystem: 'FAKER_SEED',
         },
       });

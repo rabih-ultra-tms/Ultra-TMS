@@ -1,12 +1,17 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
   useLoadPlannerQuote,
   useCreateLoadPlannerQuote,
   useUpdateLoadPlannerQuote,
+  useEquipmentMakes,
+  useEquipmentModels,
+  useEquipmentDimensions,
+  useInlandServiceTypes,
 } from '@/lib/hooks/operations';
+import type { InlandServiceType } from '@/lib/hooks/operations/use-inland-service-types';
 import type { LoadPlannerQuote, CargoItem, LoadPlannerTruck } from '@/types/load-planner-quotes';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,44 +20,151 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Save, Trash2, User, MapPin, Package, Truck, DollarSign, FileWarning, FileText, Upload, Plus, Copy, MessageSquare, ChevronDown, ChevronUp, Layers, Download, EyeOff } from 'lucide-react';
+import { Save, Trash2, User, MapPin, Package, Truck, DollarSign, FileWarning, FileText, Upload, Plus, Copy, MessageSquare, ChevronDown, ChevronUp, Layers, Download, EyeOff, Image, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { CustomerForm } from '@/components/quotes/customer-form';
 import { RouteMap } from '@/components/load-planner/route-map';
 import { UniversalDropzone } from '@/components/load-planner/UniversalDropzone';
+import { AddressAutocomplete } from '@/components/ui/address-autocomplete';
 import { TruckSelector } from '@/components/load-planner/TruckSelector';
-import { LoadPlanVisualizer } from '@/components/load-planner/LoadPlanVisualizer';
 import { TrailerDiagram } from '@/components/load-planner/TrailerDiagram';
 import { ExtractedItemsList } from '@/components/load-planner/ExtractedItemsList';
 import { RouteIntelligence } from '@/components/load-planner/RouteIntelligence';
 import { RouteComparisonTab } from '@/components/load-planner/RouteComparisonTab';
+import { PlanComparisonPanel, type SmartPlanOption } from '@/components/load-planner/PlanComparisonPanel';
 import { SearchableSelect, type SearchableSelectOption } from '@/components/ui/searchable-select';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { buildLoadPlan } from '@/lib/load-planner/load-plan';
 import { trucks as defaultTrucks } from '@/lib/load-planner/trucks';
-import type { LoadItem, TruckType } from '@/lib/load-planner/types';
+import { generateSmartPlans, type ParsedLoad } from '@/lib/load-planner/legacy-smart-plans';
+import type { LoadItem, LoadPlan, TrailerCategory, TruckType } from '@/lib/load-planner/types';
+
+interface StandardCargoType {
+  id: string;
+  name: string;
+  description?: string;
+  length: number;
+  width: number;
+  height: number;
+  weight: number;
+}
+
+const STANDARD_CARGO_TYPES: StandardCargoType[] = [
+  { id: 'std-20ft-container', name: '20ft Shipping Container', length: 20, width: 8, height: 8.5, weight: 5000 },
+  { id: 'std-40ft-container', name: '40ft Shipping Container', length: 40, width: 8, height: 8.5, weight: 8500 },
+  { id: 'std-40ft-hc-container', name: '40ft High Cube Container', length: 40, width: 8, height: 9.5, weight: 8750 },
+  { id: 'std-45ft-container', name: '45ft Shipping Container', length: 45, width: 8, height: 9.5, weight: 10500 },
+  { id: 'std-mini-excavator', name: 'Mini Excavator (1-3 ton)', length: 12, width: 5, height: 7, weight: 6000 },
+  { id: 'std-small-excavator', name: 'Small Excavator (5-8 ton)', length: 18, width: 7, height: 8, weight: 16000 },
+  { id: 'std-medium-excavator', name: 'Medium Excavator (15-20 ton)', length: 25, width: 9, height: 10, weight: 42000 },
+  { id: 'std-large-excavator', name: 'Large Excavator (30-40 ton)', length: 32, width: 10.5, height: 11, weight: 75000 },
+  { id: 'std-skid-steer', name: 'Skid Steer Loader', length: 10, width: 6, height: 6.5, weight: 7500 },
+  { id: 'std-compact-loader', name: 'Compact Wheel Loader', length: 16, width: 7, height: 8, weight: 12000 },
+  { id: 'std-wheel-loader', name: 'Wheel Loader (3-4 yd)', length: 24, width: 9, height: 10.5, weight: 35000 },
+  { id: 'std-large-wheel-loader', name: 'Large Wheel Loader (5+ yd)', length: 30, width: 10, height: 11.5, weight: 55000 },
+  { id: 'std-small-dozer', name: 'Small Dozer (D3-D4)', length: 14, width: 7.5, height: 8, weight: 18000 },
+  { id: 'std-medium-dozer', name: 'Medium Dozer (D5-D6)', length: 18, width: 9, height: 9, weight: 35000 },
+  { id: 'std-large-dozer', name: 'Large Dozer (D7-D8)', length: 22, width: 11, height: 10.5, weight: 65000 },
+  { id: 'std-warehouse-forklift', name: 'Warehouse Forklift (5000 lb)', length: 8, width: 4, height: 7, weight: 9000 },
+  { id: 'std-rough-terrain-forklift', name: 'Rough Terrain Forklift', length: 14, width: 7, height: 8, weight: 18000 },
+  { id: 'std-telehandler', name: 'Telehandler', length: 20, width: 8, height: 8.5, weight: 24000 },
+  { id: 'std-carry-deck-crane', name: 'Carry Deck Crane (8-15 ton)', length: 20, width: 8, height: 9, weight: 28000 },
+  { id: 'std-rt-crane-small', name: 'RT Crane (30-50 ton)', length: 35, width: 10, height: 11, weight: 70000 },
+  { id: 'std-tractor-small', name: 'Farm Tractor (50-100 HP)', length: 12, width: 6.5, height: 8, weight: 8000 },
+  { id: 'std-tractor-large', name: 'Farm Tractor (150+ HP)', length: 18, width: 8, height: 10, weight: 20000 },
+  { id: 'std-combine', name: 'Combine Harvester', length: 28, width: 12, height: 13, weight: 35000 },
+  { id: 'std-pickup-truck', name: 'Pickup Truck', length: 19, width: 6.5, height: 6, weight: 5500 },
+  { id: 'std-suv', name: 'SUV', length: 16, width: 6.5, height: 6, weight: 5000 },
+  { id: 'std-sedan', name: 'Sedan/Car', length: 15, width: 6, height: 5, weight: 3500 },
+  { id: 'std-van', name: 'Cargo Van', length: 20, width: 7, height: 8, weight: 6000 },
+  { id: 'std-box-truck', name: 'Box Truck (26ft)', length: 26, width: 8, height: 10, weight: 12000 },
+  { id: 'std-generator-small', name: 'Generator (50-100 kW)', length: 8, width: 4, height: 5, weight: 4000 },
+  { id: 'std-generator-large', name: 'Generator (500+ kW)', length: 16, width: 6, height: 8, weight: 15000 },
+  { id: 'std-compressor', name: 'Air Compressor (Industrial)', length: 12, width: 6, height: 7, weight: 8000 },
+  { id: 'std-transformer', name: 'Electrical Transformer', length: 10, width: 8, height: 10, weight: 25000 },
+  { id: 'std-boat-small', name: 'Small Boat (16-20ft)', length: 20, width: 8, height: 6, weight: 3000 },
+  { id: 'std-boat-medium', name: 'Medium Boat (24-30ft)', length: 30, width: 10, height: 9, weight: 8000 },
+  { id: 'std-boat-large', name: 'Large Boat (35-45ft)', length: 45, width: 14, height: 12, weight: 20000 },
+  { id: 'std-modular-office', name: 'Modular Office (12x60)', length: 60, width: 12, height: 10, weight: 20000 },
+  { id: 'std-storage-container', name: 'Storage Container (8x20)', length: 20, width: 8, height: 8, weight: 4000 },
+  { id: 'std-pallet', name: 'Standard Pallet', length: 4, width: 3.3, height: 4, weight: 1500 },
+  { id: 'std-crate-small', name: 'Small Crate', length: 4, width: 4, height: 4, weight: 500 },
+  { id: 'std-crate-large', name: 'Large Crate', length: 8, width: 6, height: 6, weight: 2000 },
+];
+
 
 interface ServiceItem {
   id: string;
+  serviceTypeId?: string;
   name: string;
   billing_unit?: string;
   quantity: number;
   rate: number;
   total: number;
+  rateInput?: string;
   notes?: string;
   showNotes?: boolean;
+  truckIndex?: number;
   [key: string]: unknown;
 }
 
 interface AccessorialItem {
   id: string;
+  accessorial_type_id?: string;
   name: string;
-  billing_unit: string;
+  billing_unit: AccessorialBillingUnit;
   quantity: number;
   rate: number;
   total: number;
+  rateInput?: string;
+  notes?: string;
 }
+
+type AccessorialBillingUnit =
+  | 'flat'
+  | 'hour'
+  | 'day'
+  | 'way'
+  | 'week'
+  | 'month'
+  | 'stop'
+  | 'mile';
+
+const ACCESSORIAL_BILLING_UNITS: AccessorialBillingUnit[] = [
+  'flat',
+  'hour',
+  'day',
+  'way',
+  'week',
+  'month',
+  'stop',
+  'mile',
+];
+
+const DEFAULT_ACCESSORIAL_TYPES: Array<{ name: string; description?: string; default_rate: number; billing_unit: AccessorialBillingUnit }> = [
+  { name: 'Detention', description: 'Waiting time at pickup/delivery', default_rate: 7500, billing_unit: 'hour' },
+  { name: 'Layover', description: 'Overnight stay required', default_rate: 35000, billing_unit: 'day' },
+  { name: 'TONU (Truck Ordered Not Used)', description: 'Cancellation fee', default_rate: 50000, billing_unit: 'flat' },
+  { name: 'Fuel Surcharge', description: 'Variable fuel cost adjustment', default_rate: 0, billing_unit: 'flat' },
+  { name: 'Tolls', description: 'Highway toll charges', default_rate: 0, billing_unit: 'way' },
+  { name: 'Permits', description: 'Oversize/overweight permits', default_rate: 0, billing_unit: 'flat' },
+  { name: 'Escort', description: 'Pilot car escort', default_rate: 0, billing_unit: 'way' },
+  { name: 'Crane Service', description: 'Crane rental', default_rate: 0, billing_unit: 'flat' },
+  { name: 'Storage', description: 'Temporary storage', default_rate: 15000, billing_unit: 'day' },
+];
+
+const mapAccessorialBillingUnitFromApi = (unit?: string): AccessorialBillingUnit => {
+  switch ((unit || '').toUpperCase()) {
+    case 'PER_MILE':
+      return 'mile';
+    case 'PER_UNIT':
+      return 'way';
+    case 'FLAT':
+    default:
+      return 'flat';
+  }
+};
 
 export default function LoadPlannerEditPage() {
   const router = useRouter();
@@ -65,6 +177,8 @@ export default function LoadPlannerEditPage() {
   );
   const createMutation = useCreateLoadPlannerQuote();
   const updateMutation = useUpdateLoadPlannerQuote(isEdit ? id : '');
+  const { data: inlandServiceTypesData } = useInlandServiceTypes();
+  const inlandServiceTypes = inlandServiceTypesData || [];
 
   // Tab state
   const [activeTab, setActiveTab] = useState('customer');
@@ -106,7 +220,7 @@ export default function LoadPlannerEditPage() {
   // Cargo items
   const [cargoItems, setCargoItems] = useState<CargoItem[]>([]);
 
-  const fallbackTruck: TruckType = defaultTrucks[0] || {
+  const fallbackTruck: TruckType = defaultTrucks[0] ?? ({
     id: 'fallback-truck',
     name: 'Standard Flatbed',
     category: 'FLATBED',
@@ -117,17 +231,47 @@ export default function LoadPlannerEditPage() {
     maxCargoWeight: 48000,
     maxLegalCargoHeight: 8.5,
     maxLegalCargoWidth: 8.5,
+    tareWeight: 12000,
+    powerUnitWeight: 17000,
     features: [],
     bestFor: [],
     loadingMethod: 'forklift',
-  };
+  } as TruckType);
 
   const [selectedTruck, setSelectedTruck] = useState<TruckType>(fallbackTruck);
+  const [selectedPlanOption, setSelectedPlanOption] = useState<SmartPlanOption | null>(null);
+  const [useSavedTruckPlan, setUseSavedTruckPlan] = useState(false);
+
+  const mapSavedTruckToType = useCallback((truck: LoadPlannerTruck): TruckType => {
+    const matching = defaultTrucks.find((item) =>
+      (truck.truckTypeId && item.id === truck.truckTypeId) || item.name === truck.truckName
+    );
+    const base = matching || fallbackTruck;
+    const deckHeight = truck.deckHeightFt ?? base.deckHeight;
+    return {
+      ...base,
+      id: truck.truckTypeId || base.id,
+      name: truck.truckName || base.name,
+      category: (truck.truckCategory as TrailerCategory) || base.category,
+      deckLength: truck.deckLengthFt || base.deckLength,
+      deckWidth: truck.deckWidthFt || base.deckWidth,
+      deckHeight,
+      wellLength: truck.wellLengthFt ?? base.wellLength,
+      maxCargoWeight: truck.maxCargoWeightLbs || base.maxCargoWeight,
+      maxLegalCargoHeight: base.maxLegalCargoHeight || Math.max(0, 13.5 - deckHeight),
+      maxLegalCargoWidth: base.maxLegalCargoWidth || 8.5,
+      description: base.description || 'Custom truck configuration',
+      features: base.features || [],
+      bestFor: base.bestFor || [],
+      loadingMethod: base.loadingMethod,
+    };
+  }, [fallbackTruck]);
 
   // Cargo entry mode
   const [cargoEntryMode, setCargoEntryMode] = useState<'ai' | 'manual'>('ai');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [, setAnalysisError] = useState<string | null>(null);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [analysisWarning, setAnalysisWarning] = useState<string | null>(null);
   const [parsingStatus, setParsingStatus] = useState<string>('');
 
   // Manual cargo entry
@@ -138,12 +282,61 @@ export default function LoadPlannerEditPage() {
   const [manualWeight, setManualWeight] = useState('');
   const [manualQuantity, setManualQuantity] = useState('1');
   const [isEquipmentMode, setIsEquipmentMode] = useState(false);
-  const [, setSelectedMakeId] = useState<string | null>(null);
-  const [, setSelectedModelId] = useState<string | null>(null);
+  const [selectedMakeId, setSelectedMakeId] = useState<string>('');
+  const [selectedModelId, setSelectedModelId] = useState<string>('');
+  const [manualImageUrl1, setManualImageUrl1] = useState('');
+  const [manualImageUrl2, setManualImageUrl2] = useState('');
+  const [manualImageUrl3, setManualImageUrl3] = useState('');
+  const [manualImageUrl4, setManualImageUrl4] = useState('');
+  const [customCargoTypes, setCustomCargoTypes] = useState<SearchableSelectOption[]>([]);
+  const [manualValidation, setManualValidation] = useState<{ description?: string; dimensions?: string; weightWarning?: string }>({});
+
+  const { data: equipmentMakes } = useEquipmentMakes();
+  const { data: equipmentModels } = useEquipmentModels(selectedMakeId);
+  const { data: equipmentDimensions } = useEquipmentDimensions(selectedModelId);
+
+  useEffect(() => {
+    if (!isEquipmentMode || !equipmentDimensions) return;
+    const lengthIn = typeof equipmentDimensions.length === 'number' ? equipmentDimensions.length : 0;
+    const widthIn = typeof equipmentDimensions.width === 'number' ? equipmentDimensions.width : 0;
+    const heightIn = typeof equipmentDimensions.height === 'number' ? equipmentDimensions.height : 0;
+    const weightLbs = typeof equipmentDimensions.weight === 'number' ? equipmentDimensions.weight : 0;
+
+    if (lengthIn) setManualLength(String(lengthIn / 12));
+    if (widthIn) setManualWidth(String(widthIn / 12));
+    if (heightIn) setManualHeight(String(heightIn / 12));
+    if (weightLbs) setManualWeight(String(weightLbs));
+  }, [equipmentDimensions, isEquipmentMode]);
   const [lengthUnit, setLengthUnit] = useState('feet');
   const [weightUnit, setWeightUnit] = useState('lbs');
   const [selectedCargoTypeId, setSelectedCargoTypeId] = useState<string | null>(null);
   const [lastAddedItem, setLastAddedItem] = useState<CargoItem | null>(null);
+
+  const feetToLengthUnit = (feet: number): number => {
+    switch (lengthUnit) {
+      case 'inches':
+        return feet * 12;
+      case 'centimeters':
+        return feet * 30.48;
+      case 'millimeters':
+        return feet * 304.8;
+      case 'meters':
+        return feet / 3.28084;
+      default:
+        return feet;
+    }
+  };
+
+  const lbsToWeightUnit = (lbs: number): number => {
+    switch (weightUnit) {
+      case 'kg':
+        return lbs / 2.20462;
+      case 'ton':
+        return lbs / 2000;
+      default:
+        return lbs;
+    }
+  };
 
   // Trucks
   const [trucks, setTrucks] = useState<LoadPlannerTruck[]>([]);
@@ -185,7 +378,16 @@ export default function LoadPlannerEditPage() {
   // Computed totals
   const servicesTotal = serviceItems.reduce((sum, item) => sum + (item.total || 0), 0);
   const accessorialsTotal = accessorialItems.reduce((sum, item) => sum + (item.total || 0), 0);
-  const grandTotal = servicesTotal + accessorialsTotal;
+  const grandTotal = servicesTotal;
+
+  const computeAccessorialTotal = useCallback((item: AccessorialItem) => {
+    const quantity = item.quantity || 1;
+    if (item.billing_unit === 'mile') {
+      const miles = Math.max(0, distanceMiles || 0);
+      return item.rate * quantity * miles;
+    }
+    return item.rate * quantity;
+  }, [distanceMiles]);
 
   const loadItems = useMemo<LoadItem[]>(() => (
     cargoItems.map((item) => ({
@@ -223,12 +425,120 @@ export default function LoadPlannerEditPage() {
     cargoItems.length === 0 ? 0 : Math.max(...cargoItems.map(i => (i.heightIn || 0) / 12))
   ), [cargoItems]);
 
-  const itemDescriptions = useMemo(() => loadItems.map(item => item.description), [loadItems]);
-
   const loadPlan = useMemo(() => buildLoadPlan(loadItems, selectedTruck), [loadItems, selectedTruck]);
+  const activePlan = useMemo<LoadPlan>(() => {
+    if (useSavedTruckPlan) return loadPlan;
+    return (selectedPlanOption?.plan as LoadPlan) || loadPlan;
+  }, [loadPlan, selectedPlanOption, useSavedTruckPlan]);
+
+  const getLoadPermitCount = useCallback((truck: TruckType, items: LoadItem[]) => {
+    if (items.length === 0) return 0;
+    const maxHeight = truck.maxLegalCargoHeight || Math.max(0, 13.5 - truck.deckHeight);
+    const maxWidth = truck.maxLegalCargoWidth || 8.5;
+    const totalWeight = items.reduce((sum, item) => sum + item.weight * (item.quantity || 1), 0);
+    const oversize = items.some((item) =>
+      item.width > maxWidth || item.height > maxHeight || item.length > truck.deckLength
+    );
+    const overweight = totalWeight > truck.maxCargoWeight;
+    return oversize || overweight ? 1 : 0;
+  }, []);
+
+  const computeFitScore = useCallback((truck: TruckType) => {
+    let score = 100;
+    if (totalCargoWeight > truck.maxCargoWeight) score -= 40;
+    if (maxItemLength > truck.deckLength) score -= 30;
+    if (maxItemWidth > truck.deckWidth) score -= 15;
+    if (maxItemHeight > truck.maxLegalCargoHeight) score -= 15;
+    return Math.max(0, score);
+  }, [totalCargoWeight, maxItemLength, maxItemWidth, maxItemHeight]);
+
+  const smartPlanOptions = useMemo<SmartPlanOption[]>(() => {
+    if (loadItems.length === 0) return [];
+
+    const parsedLoad: ParsedLoad = {
+      length: maxItemLength,
+      width: maxItemWidth,
+      height: maxItemHeight,
+      weight: loadItems.length ? Math.max(...loadItems.map((item) => item.weight * (item.quantity || 1))) : 0,
+      totalWeight: totalCargoWeight,
+      items: loadItems,
+      origin: `${pickupAddress}, ${pickupCity}, ${pickupState} ${pickupZip}`.trim(),
+      destination: `${dropoffAddress}, ${dropoffCity}, ${dropoffState} ${dropoffZip}`.trim(),
+      confidence: 80,
+    };
+
+    const legacyOptions = generateSmartPlans(parsedLoad, {
+      routeStates: [pickupState, dropoffState].filter(Boolean),
+      routeDistance: distanceMiles > 0 ? distanceMiles : 500,
+    });
+
+    const order: SmartPlanOption['strategy'][] = [
+      'recommended',
+      'max-safety',
+      'fastest',
+      'best-placement',
+      'legal-only',
+    ];
+
+    const normalized = legacyOptions.map((option) => {
+      const strategy = option.strategy as SmartPlanOption['strategy'];
+      const perTruckCostCents = strategy === 'recommended' ? 70_000 : 250_000;
+      const permitCostCents = 15_000;
+      return {
+        ...option,
+        totalCost: option.totalTrucks * perTruckCostCents + option.permitCount * permitCostCents,
+        escortRequired: false,
+      };
+    });
+
+    return ([...normalized]
+      .sort((a, b) => order.indexOf(a.strategy as SmartPlanOption['strategy']) - order.indexOf(b.strategy as SmartPlanOption['strategy']))
+    ) as unknown as SmartPlanOption[];
+  }, [
+    loadItems,
+    maxItemLength,
+    maxItemWidth,
+    maxItemHeight,
+    totalCargoWeight,
+    pickupAddress,
+    pickupCity,
+    pickupState,
+    pickupZip,
+    dropoffAddress,
+    dropoffCity,
+    dropoffState,
+    dropoffZip,
+    distanceMiles,
+  ]);
+
+  const handlePlanOptionSelect = useCallback((plan: SmartPlanOption) => {
+    setSelectedPlanOption(plan);
+    setUseSavedTruckPlan(false);
+    const firstTruck = (plan.plan as LoadPlan).loads[0]?.recommendedTruck;
+    if (firstTruck) {
+      setSelectedTruck(firstTruck);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (useSavedTruckPlan) return;
+    if (smartPlanOptions.length === 0) {
+      setSelectedPlanOption(null);
+      return;
+    }
+
+    setSelectedPlanOption((current) => {
+      if (!current) {
+        return smartPlanOptions.find((plan) => plan.strategy === 'recommended') || smartPlanOptions[0] || null;
+      }
+
+      const stillExists = smartPlanOptions.find((plan) => plan.strategy === current.strategy);
+      return stillExists || smartPlanOptions[0] || null;
+    });
+  }, [smartPlanOptions, useSavedTruckPlan]);
 
   const perTruckCargoSpecs = useMemo(() => (
-    loadPlan.loads.map((load, index) => {
+    activePlan.loads.map((load, index) => {
       const weight = load.items.reduce((sum, i) => sum + (i.weight * i.quantity), 0);
       const length = load.items.length ? Math.max(...load.items.map(i => i.length)) : 0;
       const width = load.items.length ? Math.max(...load.items.map(i => i.width)) : 0;
@@ -245,7 +555,48 @@ export default function LoadPlannerEditPage() {
         isOverweight: weight > 80000,
       };
     })
-  ), [loadPlan.loads]);
+  ), [activePlan.loads]);
+
+  const hasPermitRisk = useMemo(() => (
+    loadItems.some((item) =>
+      item.width > 8.5 || item.height > 13.5 || item.length > 53 || item.weight * item.quantity > 80000
+    )
+  ), [loadItems]);
+
+  useEffect(() => {
+    if (activePlan.loads.length === 0) {
+      setTrucks([]);
+      return;
+    }
+
+    setTrucks(activePlan.loads.map((load, index) => {
+      const truck = load.recommendedTruck;
+      const totalWeightLbs = load.items.reduce((sum, item) => sum + item.weight * (item.quantity || 1), 0);
+      const totalItems = load.items.reduce((sum, item) => sum + (item.quantity || 1), 0);
+      const permitCount = getLoadPermitCount(truck, load.items);
+      const isLegal = permitCount === 0;
+
+      return {
+        id: load.id,
+        truckIndex: index,
+        truckTypeId: truck.id,
+        truckName: truck.name,
+        truckCategory: truck.category,
+        deckLengthFt: truck.deckLength,
+        deckWidthFt: truck.deckWidth,
+        deckHeightFt: truck.deckHeight,
+        wellLengthFt: truck.wellLength,
+        maxCargoWeightLbs: truck.maxCargoWeight,
+        totalWeightLbs,
+        totalItems,
+        isLegal,
+        permitsRequired: isLegal ? [] : ['PERMIT_REQUIRED'],
+        warnings: load.warnings,
+        truckScore: computeFitScore(truck),
+        sortOrder: index,
+      };
+    }));
+  }, [activePlan.loads, computeFitScore, getLoadPermitCount]);
 
   const handleCargoItemsChange = (items: LoadItem[]) => {
     setCargoItems(items.map((item, index) => {
@@ -322,13 +673,62 @@ export default function LoadPlannerEditPage() {
       
       setCargoItems(quote.cargoItems || []);
       setTrucks(quote.trucks || []);
+      if (quote.trucks && quote.trucks.length > 0) {
+        const firstSavedTruck = quote.trucks[0];
+        if (firstSavedTruck) {
+          setSelectedTruck(mapSavedTruckToType(firstSavedTruck));
+        }
+        setSelectedPlanOption(null);
+        setUseSavedTruckPlan(true);
+      } else {
+        setUseSavedTruckPlan(false);
+      }
+
+      const mappedServiceItems = (quote.serviceItems || []).map((item, index) => ({
+        id: item.id || `service-${Date.now()}-${index}`,
+        serviceTypeId: item.serviceTypeId || undefined,
+        name: item.name,
+        quantity: Number(item.quantity ?? 1),
+        rate: Number(item.rateCents ?? 0),
+        total: Number(item.totalCents ?? 0),
+        rateInput: undefined,
+        truckIndex: item.truckIndex ?? undefined,
+        showNotes: false,
+      }));
+      setServiceItems(mappedServiceItems);
+      setPricingPerTruck(mappedServiceItems.some((item) => item.truckIndex !== undefined));
+
+      const mappedAccessorialItems = (quote.accessorials || []).map((item, index) => {
+        const defaultType = DEFAULT_ACCESSORIAL_TYPES.find((type) => type.name === item.name);
+        return {
+          id: item.id || `accessorial-${Date.now()}-${index}`,
+          accessorial_type_id: item.accessorialTypeId || undefined,
+          name: item.name,
+          billing_unit: defaultType?.billing_unit || mapAccessorialBillingUnitFromApi(item.billingUnit),
+          quantity: Number(item.quantity ?? 1),
+          rate: Number(item.rateCents ?? 0),
+          total: Number(item.totalCents ?? 0),
+          rateInput: undefined,
+          notes: item.notes || '',
+        } as AccessorialItem;
+      });
+      setAccessorialItems(mappedAccessorialItems);
       
       setSubtotalCents(quote.subtotalCents);
       setTotalCents(quote.totalCents);
     }
-  }, [quote, isEdit]);
+  }, [quote, isEdit, mapSavedTruckToType]);
+
+  useEffect(() => {
+    setAccessorialItems((prev) => prev.map((item) => ({
+      ...item,
+      total: computeAccessorialTotal(item),
+    })));
+  }, [computeAccessorialTotal]);
 
   const handleAnalyzed = (result: { items: unknown[] }) => {
+    setAnalysisError(null);
+    setAnalysisWarning(null);
     // Convert analyzed items to CargoItem format
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const newCargoItems: CargoItem[] = (result.items as any[]).map((item, index) => ({
@@ -347,7 +747,6 @@ export default function LoadPlannerEditPage() {
     }));
     
     setCargoItems([...cargoItems, ...newCargoItems]);
-    toast.success(`Added ${newCargoItems.length} cargo items`);
   };
 
   // Unit conversion utilities
@@ -382,21 +781,33 @@ export default function LoadPlannerEditPage() {
   };
 
   const handleAddManualItem = () => {
-    // Validate inputs
+    const rawLength = parseFloat(manualLength) || 0;
+    const rawWidth = parseFloat(manualWidth) || 0;
+    const rawHeight = parseFloat(manualHeight) || 0;
+    const rawWeight = parseFloat(manualWeight) || 0;
+
+    const nextValidation: { description?: string; dimensions?: string; weightWarning?: string } = {};
     if (!manualDescription.trim()) {
-      toast.error('Please enter a description');
-      return;
+      nextValidation.description = 'Please enter a description.';
     }
-    if (!manualLength || !manualWidth || !manualHeight || !manualWeight) {
-      toast.error('Please enter all dimensions and weight');
+    if (rawLength <= 0 || rawWidth <= 0 || rawHeight <= 0) {
+      nextValidation.dimensions = 'Please enter valid dimensions.';
+    }
+    if (rawWeight <= 0) {
+      nextValidation.weightWarning = 'No weight entered — automatic truck recommendations won\'t work. You can manually select a truck.';
+    }
+
+    setManualValidation(nextValidation);
+
+    if (nextValidation.description || nextValidation.dimensions) {
       return;
     }
 
     // Convert units to feet/lbs for storage
-    const lengthFeet = convertLengthToFeet(parseFloat(manualLength), lengthUnit);
-    const widthFeet = convertLengthToFeet(parseFloat(manualWidth), lengthUnit);
-    const heightFeet = convertLengthToFeet(parseFloat(manualHeight), lengthUnit);
-    const weightLbs = convertWeightToLbs(parseFloat(manualWeight), weightUnit);
+    const lengthFeet = convertLengthToFeet(rawLength, lengthUnit);
+    const widthFeet = convertLengthToFeet(rawWidth, lengthUnit);
+    const heightFeet = convertLengthToFeet(rawHeight, lengthUnit);
+    const weightLbs = convertWeightToLbs(rawWeight, weightUnit);
 
     const newItem: CargoItem = {
       id: `cargo-${Date.now()}`,
@@ -410,11 +821,19 @@ export default function LoadPlannerEditPage() {
       bottomOnly: false,
       fragile: false,
       hazmat: false,
+      dimensionsSource: isEquipmentMode && selectedModelId ? 'database' : 'manual',
+      equipmentMakeId: isEquipmentMode && selectedMakeId ? selectedMakeId : undefined,
+      equipmentModelId: isEquipmentMode && selectedModelId ? selectedModelId : undefined,
+      imageUrl1: manualImageUrl1 || undefined,
+      imageUrl2: manualImageUrl2 || undefined,
+      imageUrl3: manualImageUrl3 || undefined,
+      imageUrl4: manualImageUrl4 || undefined,
       sortOrder: cargoItems.length,
     };
 
     setCargoItems([...cargoItems, newItem]);
     setLastAddedItem(newItem);
+    setManualValidation({});
     
     // Clear form
     setManualDescription('');
@@ -423,8 +842,13 @@ export default function LoadPlannerEditPage() {
     setManualHeight('');
     setManualWeight('');
     setManualQuantity('1');
+    setSelectedMakeId('');
+    setSelectedModelId('');
+    setManualImageUrl1('');
+    setManualImageUrl2('');
+    setManualImageUrl3('');
+    setManualImageUrl4('');
     
-    toast.success('Cargo item added');
   };
 
   // Pricing helper functions
@@ -435,7 +859,8 @@ export default function LoadPlannerEditPage() {
       quantity: 1,
       rate: 0,
       total: 0,
-      truckIndex: truckIndex ?? null,
+      rateInput: undefined,
+      truckIndex: pricingPerTruck ? truckIndex : undefined,
       showNotes: false,
       notes: '',
     };
@@ -445,9 +870,14 @@ export default function LoadPlannerEditPage() {
   const updateServiceItem = (index: number, field: string, value: unknown) => {
     const updated = [...serviceItems];
     if (field === 'rate') {
-      const cents = typeof value === 'string' ? parseWholeDollarsToCents(value) : (value as number);
+      const raw = typeof value === 'string' ? value : String(value ?? '');
+      const cents = parseWholeDollarsToCents(raw);
       updated[index]!.rate = cents;
       updated[index]!.total = cents * updated[index]!.quantity;
+      updated[index]!.rateInput = raw;
+    } else if (field === 'name') {
+      updated[index]!.name = String(value);
+      updated[index]!.serviceTypeId = undefined;
     } else if (field === 'quantity') {
       const qty = parseInt(String(value)) || 1;
       updated[index]!.quantity = qty;
@@ -458,12 +888,44 @@ export default function LoadPlannerEditPage() {
     setServiceItems(updated);
   };
 
+  const applyServiceTypeSelection = (index: number, serviceType?: InlandServiceType) => {
+    if (!serviceType) return;
+    setServiceItems((prev) => {
+      const updated = [...prev];
+      const current = updated[index];
+      if (!current) return prev;
+      const quantity = current.quantity || 1;
+      const rate = serviceType.defaultRateCents ?? 0;
+      updated[index] = {
+        ...current,
+        name: serviceType.name,
+        serviceTypeId: serviceType.id,
+        rate,
+        total: rate * quantity,
+        rateInput: undefined,
+      };
+      return updated;
+    });
+  };
+
+  const finalizeServiceRateInput = (index: number) => {
+    const updated = [...serviceItems];
+    const raw = updated[index]?.rateInput;
+    if (raw !== undefined) {
+      const cents = parseWholeDollarsToCents(raw);
+      updated[index]!.rate = cents;
+      updated[index]!.total = cents * updated[index]!.quantity;
+      updated[index]!.rateInput = undefined;
+      setServiceItems(updated);
+    }
+  };
+
   const removeServiceItem = (index: number) => {
     setServiceItems(serviceItems.filter((_, i) => i !== index));
   };
 
   const duplicateServiceItem = (index: number) => {
-    const item = { ...serviceItems[index]!, id: `service-${Date.now()}` };
+    const item = { ...serviceItems[index]!, id: `service-${Date.now()}`, rateInput: undefined };
     setServiceItems([...serviceItems, item]);
   };
 
@@ -473,19 +935,41 @@ export default function LoadPlannerEditPage() {
     setServiceItems(updated);
   };
 
-  const addServiceBundle = () => {
-    // Placeholder for service bundles
-    toast.info('Service bundles coming soon');
+  const addServiceBundle = (bundleName?: string, truckIndex?: number) => {
+    const name = bundleName || SERVICE_BUNDLES[0]?.name;
+    const bundle = SERVICE_BUNDLES.find((b) => b.name === name);
+    if (!bundle) {
+      toast.info('Select a service bundle');
+      return;
+    }
+
+    const newItems = bundle.services.map((service) => ({
+      id: `service-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      name: service.name,
+      serviceTypeId: service.serviceTypeId,
+      quantity: 1,
+      rate: service.rate || 0,
+      total: service.rate || 0,
+      rateInput: undefined,
+      truckIndex: pricingPerTruck ? truckIndex : undefined,
+      showNotes: false,
+      notes: '',
+    }));
+
+    setServiceItems([...serviceItems, ...newItems]);
   };
 
   const addAccessorialItem = () => {
+    const defaultType = DEFAULT_ACCESSORIAL_TYPES[0];
     const newItem = {
       id: `accessorial-${Date.now()}`,
-      name: 'Detention',
-      billing_unit: 'Flat',
+      accessorial_type_id: '',
+      name: defaultType?.name || 'Detention',
+      billing_unit: defaultType?.billing_unit || 'flat',
       quantity: 1,
-      rate: 0,
-      total: 0,
+      rate: defaultType?.default_rate || 0,
+      total: defaultType?.default_rate || 0,
+      rateInput: undefined,
     };
     setAccessorialItems([...accessorialItems, newItem]);
   };
@@ -493,18 +977,45 @@ export default function LoadPlannerEditPage() {
   const updateAccessorialItem = (index: number, field: string, value: unknown) => {
     const updated = [...accessorialItems];
     if (field === 'rate') {
-      const cents = typeof value === 'string' ? parseWholeDollarsToCents(value) : (value as number);
+      const raw = typeof value === 'string' ? value : String(value ?? '');
+      const cents = parseWholeDollarsToCents(raw);
       updated[index]!.rate = cents;
-      updated[index]!.total = cents * updated[index]!.quantity;
+      updated[index]!.total = computeAccessorialTotal(updated[index]!);
+      updated[index]!.rateInput = raw;
+    } else if (field === 'name') {
+      const name = String(value);
+      updated[index]!.name = name;
+      const matchingType = DEFAULT_ACCESSORIAL_TYPES.find((t) => t.name === name);
+      if (matchingType) {
+        updated[index]!.billing_unit = matchingType.billing_unit;
+        updated[index]!.rate = matchingType.default_rate;
+        updated[index]!.total = computeAccessorialTotal(updated[index]!);
+      }
     } else if (field === 'quantity') {
       const qty = parseInt(String(value)) || 1;
       updated[index]!.quantity = qty;
-      updated[index]!.total = updated[index]!.rate * qty;
+      updated[index]!.total = computeAccessorialTotal(updated[index]!);
+    } else if (field === 'billing_unit') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (updated[index]! as any)[field] = value;
+      updated[index]!.total = computeAccessorialTotal(updated[index]!);
     } else {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (updated[index]! as any)[field] = value;
     }
     setAccessorialItems(updated);
+  };
+
+  const finalizeAccessorialRateInput = (index: number) => {
+    const updated = [...accessorialItems];
+    const raw = updated[index]?.rateInput;
+    if (raw !== undefined) {
+      const cents = parseWholeDollarsToCents(raw);
+      updated[index]!.rate = cents;
+      updated[index]!.total = computeAccessorialTotal(updated[index]!);
+      updated[index]!.rateInput = undefined;
+      setAccessorialItems(updated);
+    }
   };
 
   const removeAccessorialItem = (index: number) => {
@@ -522,38 +1033,77 @@ export default function LoadPlannerEditPage() {
   };
 
   // Service and accessorial options
-  const serviceOptions = [
+  const fallbackServiceOptions = [
     { value: 'line-haul', label: 'Line Haul' },
     { value: 'fuel-surcharge', label: 'Fuel Surcharge' },
     { value: 'loading', label: 'Loading/Unloading' },
     { value: 'tarping', label: 'Tarping' },
     { value: 'escort', label: 'Escort' },
     { value: 'permit', label: 'Permit' },
-    { value: 'custom', label: 'Custom Service' },
   ];
 
-  const accessorialOptions = [
-    { value: 'Detention', label: 'Detention' },
-    { value: 'Layover', label: 'Layover' },
-    { value: 'Tolls', label: 'Tolls' },
-    { value: 'TONU', label: 'TONU (Truck Ordered Not Used)' },
-    { value: 'Weekend Delivery', label: 'Weekend Delivery' },
-    { value: 'After Hours', label: 'After Hours' },
-  ];
+  const serviceTypeByName = useMemo(() => {
+    return new Map(inlandServiceTypes.map((type) => [type.name, type]));
+  }, [inlandServiceTypes]);
 
-  const billingUnitOptions = [
-    { value: 'Flat', label: 'Flat' },
-    { value: 'Per Hour', label: 'Per Hour' },
-    { value: 'Per Day', label: 'Per Day' },
-    { value: 'Per Mile', label: 'Per Mile' },
-  ];
+  const serviceOptions = useMemo(() => {
+    if (inlandServiceTypes.length === 0) return fallbackServiceOptions;
+    return inlandServiceTypes.map((type) => ({
+      value: type.id,
+      label: type.name,
+      serviceType: type,
+    }));
+  }, [inlandServiceTypes]);
 
-  const SERVICE_BUNDLES = [
-    { name: 'Standard Flatbed', services: [{ name: 'Line Haul', rate: 0 }, { name: 'Fuel Surcharge', rate: 0 }] },
-    { name: 'Oversized Load', services: [{ name: 'Line Haul', rate: 0 }, { name: 'Fuel Surcharge', rate: 0 }, { name: 'Permit', rate: 0 }] },
-  ];
+  const serviceOptionsWithCustom = useMemo(() => (
+    [...serviceOptions, { value: 'custom', label: 'Custom Service' }]
+  ), [serviceOptions]);
+
+  const accessorialOptions = DEFAULT_ACCESSORIAL_TYPES.map((t) => ({
+    value: t.name,
+    label: t.name,
+  }));
+
+  const billingUnitOptions = ACCESSORIAL_BILLING_UNITS.map((unit) => ({
+    value: unit,
+    label: unit === 'flat' ? 'Flat Rate'
+      : unit === 'hour' ? 'Per Hour'
+      : unit === 'day' ? 'Per Day'
+      : unit === 'way' ? 'Per Way'
+      : unit === 'week' ? 'Per Week'
+      : unit === 'month' ? 'Per Month'
+      : unit === 'stop' ? 'Per Stop'
+      : 'Per Mile',
+  }));
+
+  const SERVICE_BUNDLES = useMemo(() => {
+    const bundles = [
+      { name: 'Standard Flatbed', serviceNames: ['Line Haul', 'Fuel Surcharge'] },
+      { name: 'Oversized Load', serviceNames: ['Line Haul', 'Fuel Surcharge', 'Permit'] },
+    ];
+
+    return bundles.map((bundle) => ({
+      name: bundle.name,
+      services: bundle.serviceNames.map((serviceName) => {
+        const type = serviceTypeByName.get(serviceName);
+        return {
+          name: serviceName,
+          rate: type?.defaultRateCents ?? 0,
+          serviceTypeId: type?.id,
+        };
+      }),
+    }));
+  }, [serviceTypeByName]);
 
   const handleSaveQuote = async () => {
+    const normalizeBillingUnit = (unit?: string): 'FLAT' | 'PER_MILE' | 'PER_UNIT' => {
+      if (!unit) return 'FLAT';
+      const normalized = unit.toLowerCase();
+      if (normalized === 'mile') return 'PER_MILE';
+      if (normalized === 'flat') return 'FLAT';
+      return 'PER_UNIT';
+    };
+
     const quoteData: Partial<LoadPlannerQuote> = {
       quoteNumber,
       status,
@@ -582,6 +1132,27 @@ export default function LoadPlannerEditPage() {
       durationMinutes,
       cargoItems,
       trucks,
+      serviceItems: serviceItems.map((item, index) => ({
+        id: item.id,
+        serviceTypeId: item.serviceTypeId || item.name,
+        name: item.name,
+        rateCents: item.rate,
+        quantity: item.quantity,
+        totalCents: item.total,
+        truckIndex: item.truckIndex,
+        sortOrder: index,
+      })),
+      accessorials: accessorialItems.map((item, index) => ({
+        id: item.id,
+        accessorialTypeId: item.accessorial_type_id || item.name,
+        name: item.name,
+        billingUnit: normalizeBillingUnit(item.billing_unit),
+        rateCents: item.rate,
+        quantity: item.quantity,
+        totalCents: item.total,
+        notes: item.notes,
+        sortOrder: index,
+      })),
       subtotalCents,
       totalCents,
     };
@@ -748,10 +1319,18 @@ export default function LoadPlannerEditPage() {
                 <CardContent className="space-y-4">
                   <div>
                     <Label htmlFor="pickupAddress">Street Address *</Label>
-                    <Input
+                    <AddressAutocomplete
                       id="pickupAddress"
                       value={pickupAddress}
-                      onChange={(e) => setPickupAddress(e.target.value)}
+                      onChange={setPickupAddress}
+                      onSelect={(components) => {
+                        setPickupAddress(components.address || pickupAddress);
+                        setPickupCity(components.city || '');
+                        setPickupState(components.state || '');
+                        setPickupZip(components.zip || '');
+                        setPickupLat(components.lat || 0);
+                        setPickupLng(components.lng || 0);
+                      }}
                       placeholder="Enter pickup address..."
                     />
                   </div>
@@ -795,10 +1374,18 @@ export default function LoadPlannerEditPage() {
                 <CardContent className="space-y-4">
                   <div>
                     <Label htmlFor="dropoffAddress">Street Address *</Label>
-                    <Input
+                    <AddressAutocomplete
                       id="dropoffAddress"
                       value={dropoffAddress}
-                      onChange={(e) => setDropoffAddress(e.target.value)}
+                      onChange={setDropoffAddress}
+                      onSelect={(components) => {
+                        setDropoffAddress(components.address || dropoffAddress);
+                        setDropoffCity(components.city || '');
+                        setDropoffState(components.state || '');
+                        setDropoffZip(components.zip || '');
+                        setDropoffLat(components.lat || 0);
+                        setDropoffLng(components.lng || 0);
+                      }}
                       placeholder="Enter dropoff address..."
                     />
                   </div>
@@ -898,12 +1485,31 @@ export default function LoadPlannerEditPage() {
                     <UniversalDropzone
                       onAnalyzed={handleAnalyzed}
                       onLoading={setIsAnalyzing}
-                      onError={setAnalysisError}
+                      onError={(error) => {
+                        setAnalysisError(error);
+                        if (error) setAnalysisWarning(null);
+                      }}
+                      onWarning={(warning) => {
+                        setAnalysisWarning(warning);
+                        if (warning) setAnalysisError(null);
+                      }}
                       onStatusChange={setParsingStatus}
                     />
+                    {analysisWarning && (
+                      <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                        <AlertTriangle className="mt-0.5 h-4 w-4" />
+                        <span>{analysisWarning}</span>
+                      </div>
+                    )}
+                    {analysisError && (
+                      <div className="mt-4 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                        <AlertTriangle className="mt-0.5 h-4 w-4" />
+                        <span>{analysisError}</span>
+                      </div>
+                    )}
                     {/* Parsing Status Indicator */}
                     {isAnalyzing && parsingStatus && (
-                      <div className="p-4 border rounded-lg bg-muted">
+                      <div className="mt-4 p-4 border rounded-lg bg-muted">
                         <p className="text-sm">{parsingStatus}</p>
                       </div>
                     )}
@@ -925,27 +1531,73 @@ export default function LoadPlannerEditPage() {
                   </CardHeader>
                   <CardContent className="space-y-6">
                     {/* Equipment Mode Toggle */}
-                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                    <div className="flex items-center justify-between p-3 bg-muted/60 border border-border/60 rounded-lg shadow-sm">
                       <div className="flex items-center gap-2">
                         <Truck className="h-4 w-4 text-muted-foreground" />
                         <div>
                           <span className="text-sm font-medium">Equipment Mode</span>
                           <p className="text-xs text-muted-foreground">
-                            Select equipment from database to auto-fill dimensions
+                            Select a preset to auto-fill dimensions and weight
                           </p>
                         </div>
                       </div>
                       <Switch
+                        className="bg-background/70 data-[state=checked]:bg-primary/90 shadow-inner ring-1 ring-border/60"
                         checked={isEquipmentMode}
                         onCheckedChange={(checked) => {
                           setIsEquipmentMode(checked);
                           if (!checked) {
-                            setSelectedMakeId(null);
-                            setSelectedModelId(null);
+                            setSelectedMakeId('');
+                            setSelectedModelId('');
                           }
                         }}
                       />
                     </div>
+
+                    {isEquipmentMode && (
+                      <div className="grid grid-cols-2 gap-3 p-3 border rounded-lg bg-blue-50/50">
+                        <div>
+                          <Label className="text-xs">Make</Label>
+                          <SearchableSelect
+                            value={selectedMakeId}
+                            onChange={(value) => {
+                              const makeId = value || '';
+                              setSelectedMakeId(makeId);
+                              setSelectedModelId('');
+                            }}
+                            options={(equipmentMakes || []).map((make) => ({
+                              value: make.id,
+                              label: make.name,
+                            }))}
+                            placeholder="Select make..."
+                            className="w-full"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Model</Label>
+                          <SearchableSelect
+                            value={selectedModelId}
+                            onChange={(value) => {
+                              const modelId = value || '';
+                              setSelectedModelId(modelId);
+                              const model = (equipmentModels || []).find((item) => item.id === modelId);
+                              if (model) {
+                                setManualDescription(`${model.name}`);
+                              }
+                            }}
+                            options={(equipmentModels || []).map((model) => ({
+                              value: model.id,
+                              label: model.name,
+                            }))}
+                            placeholder={selectedMakeId ? 'Select model...' : 'Select make first'}
+                            className="w-full"
+                          />
+                        </div>
+                        <div className="col-span-2 text-xs text-muted-foreground">
+                          Auto-fills dimensions and weight. You can still adjust values below.
+                        </div>
+                      </div>
+                    )}
 
                     {/* Unit System Selectors */}
                     <div className="p-3 bg-muted/50 rounded-lg space-y-3">
@@ -985,19 +1637,51 @@ export default function LoadPlannerEditPage() {
 
                     {/* Cargo Type Selector */}
                     <div>
-                      <Label className="text-xs font-medium">Cargo Type</Label>
-                      <select
+                      <Label className="text-xs font-medium">Cargo Type (with standard dimensions)</Label>
+                      <SearchableSelect
                         value={selectedCargoTypeId || ''}
-                        onChange={(e) => setSelectedCargoTypeId(e.target.value || null)}
-                        className="w-full px-3 py-2 border rounded-md bg-background text-sm"
-                      >
-                        <option value="">Select cargo type for auto-fill...</option>
-                        <option value="general">General Cargo</option>
-                        <option value="machinery">Machinery</option>
-                        <option value="vehicles">Vehicles</option>
-                        <option value="livestock">Livestock</option>
-                        <option value="hazmat">Hazardous Materials</option>
-                      </select>
+                        onChange={(value) => {
+                          setSelectedCargoTypeId(value || null);
+                          if (!value) return;
+
+                          const stdType = STANDARD_CARGO_TYPES.find((item) => item.id === value);
+                          if (stdType) {
+                            setManualDescription(stdType.name);
+                            setManualLength(feetToLengthUnit(stdType.length).toFixed(2));
+                            setManualWidth(feetToLengthUnit(stdType.width).toFixed(2));
+                            setManualHeight(feetToLengthUnit(stdType.height).toFixed(2));
+                            setManualWeight(lbsToWeightUnit(stdType.weight).toFixed(0));
+                            return;
+                          }
+
+                          const customType = customCargoTypes.find((item) => item.value === value);
+                          if (customType) {
+                            setManualDescription(customType.label);
+                          }
+                        }}
+                        options={[
+                          ...STANDARD_CARGO_TYPES.map((st) => ({
+                            value: st.id,
+                            label: `📦 ${st.name}`,
+                            description: `${st.length}×${st.width}×${st.height} ft, ${(st.weight / 1000).toFixed(1)}k lbs`,
+                          })),
+                          ...customCargoTypes,
+                        ]}
+                        placeholder="Select cargo type for auto-fill..."
+                        allowCustom={true}
+                        customPlaceholder="Enter custom cargo type name..."
+                        onCustomAdd={(customName) => {
+                          const customId = `custom-${customName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now()}`;
+                          const newOption: SearchableSelectOption = {
+                            value: customId,
+                            label: customName,
+                            description: 'Custom cargo type',
+                          };
+                          setCustomCargoTypes((prev) => [...prev, newOption]);
+                          setSelectedCargoTypeId(customId);
+                          setManualDescription(customName);
+                        }}
+                      />
                     </div>
 
                     {/* Manual Entry Form */}
@@ -1009,6 +1693,9 @@ export default function LoadPlannerEditPage() {
                           onChange={(e) => setManualDescription(e.target.value)}
                           placeholder="e.g., CAT 320 Excavator"
                         />
+                        {manualValidation.description && (
+                          <p className="text-xs text-red-600 mt-1">{manualValidation.description}</p>
+                        )}
                       </div>
 
                       <div className="grid grid-cols-4 gap-3">
@@ -1060,6 +1747,53 @@ export default function LoadPlannerEditPage() {
                           />
                         </div>
                       </div>
+                      {manualValidation.dimensions && (
+                        <p className="text-xs text-red-600">{manualValidation.dimensions}</p>
+                      )}
+                      {manualValidation.weightWarning && (
+                        <p className="text-xs text-amber-600">{manualValidation.weightWarning}</p>
+                      )}
+
+                      <div className="space-y-3 rounded-lg border bg-muted/20 p-4">
+                        <div className="flex items-center gap-2">
+                          <Image className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm font-medium">Cargo Images (optional)</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-xs font-medium">Image URL 1</Label>
+                            <Input
+                              value={manualImageUrl1}
+                              onChange={(e) => setManualImageUrl1(e.target.value)}
+                              placeholder="https://..."
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs font-medium">Image URL 2</Label>
+                            <Input
+                              value={manualImageUrl2}
+                              onChange={(e) => setManualImageUrl2(e.target.value)}
+                              placeholder="https://..."
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs font-medium">Image URL 3</Label>
+                            <Input
+                              value={manualImageUrl3}
+                              onChange={(e) => setManualImageUrl3(e.target.value)}
+                              placeholder="https://..."
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs font-medium">Image URL 4</Label>
+                            <Input
+                              value={manualImageUrl4}
+                              onChange={(e) => setManualImageUrl4(e.target.value)}
+                              placeholder="https://..."
+                            />
+                          </div>
+                        </div>
+                      </div>
 
                       <div className="flex items-end gap-3">
                         <div className="w-24">
@@ -1098,18 +1832,77 @@ export default function LoadPlannerEditPage() {
                 </Card>
               )}
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Package className="h-5 w-5" />
-                    Cargo Items
-                  </CardTitle>
-                  <CardDescription>Review and edit extracted cargo details</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ExtractedItemsList items={loadItems} onChange={handleCargoItemsChange} />
-                </CardContent>
-              </Card>
+              {/* Cargo Items List - shown in both modes */}
+              {cargoItems.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Package className="h-5 w-5" />
+                      Cargo Items ({cargoItems.length})
+                    </CardTitle>
+                    <CardDescription>
+                      Review and edit the cargo items. All dimensions are in feet.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ExtractedItemsList items={loadItems} onChange={handleCargoItemsChange} />
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Smart Truck Recommendation - Shows automatically calculated load plan */}
+              {activePlan && activePlan.loads.length > 0 && (
+                <Card className="border-l-4 border-l-green-500">
+                  <CardContent className="py-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                          <Truck className="h-5 w-5 text-green-600" />
+                        </div>
+                        <div>
+                          <div className="font-medium text-green-700">
+                            Smart Recommendation: {activePlan.totalTrucks} {activePlan.loads[0]?.recommendedTruck?.name || 'truck'}{activePlan.totalTrucks > 1 ? 's' : ''}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            Total Items: {activePlan.totalItems}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            Total Weight: {(activePlan.totalWeight / 1000).toFixed(1)}k lbs
+                          </div>
+                        </div>
+                      </div>
+                      <Button variant="outline" size="sm" onClick={() => setActiveTab('trucks')}>
+                        Customize
+                      </Button>
+                    </div>
+                    {activePlan.warnings.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {activePlan.warnings.slice(0, 3).map((warning, i) => (
+                          <Badge key={i} variant="outline" className="text-yellow-600 border-yellow-300">
+                            <AlertTriangle className="w-3 h-3 mr-1" />
+                            {warning}
+                          </Badge>
+                        ))}
+                        {activePlan.warnings.length > 3 && (
+                          <Badge variant="outline" className="text-yellow-600 border-yellow-300">
+                            +{activePlan.warnings.length - 3} more
+                          </Badge>
+                        )}
+                      </div>
+                    )}
+                    {activePlan.totalTrucks > 1 && (
+                      <div className="mt-2 text-xs text-slate-600">
+                        Load requires {activePlan.totalTrucks} trucks to transport all items
+                      </div>
+                    )}
+                    {hasPermitRisk && (
+                      <div className="mt-2 text-xs text-orange-600">
+                        Permits may be required - see Trucks tab for details
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
 
               <div className="flex gap-4">
                 <Button variant="outline" onClick={() => setActiveTab('route')}>
@@ -1142,22 +1935,95 @@ export default function LoadPlannerEditPage() {
                         Go to Cargo
                       </Button>
                     </div>
-                  ) : (
+                  ) : (activePlan.loads.length) ? (
                     <div className="space-y-4">
-                      <TruckSelector
-                        currentTruck={selectedTruck}
-                        onChange={setSelectedTruck}
-                        itemsWeight={totalCargoWeight}
-                        maxItemLength={maxItemLength}
-                        maxItemWidth={maxItemWidth}
-                        maxItemHeight={maxItemHeight}
-                        itemDescriptions={itemDescriptions}
-                      />
-                      <LoadPlanVisualizer
-                        loadPlan={loadPlan}
-                        items={loadItems}
-                        onTruckChange={(_, truck) => setSelectedTruck(truck)}
-                      />
+                      {smartPlanOptions.length > 1 && (
+                        <PlanComparisonPanel
+                          plans={smartPlanOptions}
+                          selectedPlan={selectedPlanOption}
+                          onSelectPlan={handlePlanOptionSelect}
+                          className="mb-4"
+                        />
+                      )}
+
+                      {activePlan.warnings.length > 0 && (
+                        <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <div className="flex items-center gap-2 text-yellow-800 mb-1">
+                            <AlertTriangle className="w-4 h-4" />
+                            <span className="text-sm font-medium">Warnings</span>
+                          </div>
+                          <ul className="text-sm text-yellow-700 list-disc list-inside">
+                            {activePlan.warnings.map((warning, i) => (
+                              <li key={i}>{warning}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {activePlan.loads.map((load, index) => {
+                        if (!load.recommendedTruck) return null
+                        const permitCount = getLoadPermitCount(load.recommendedTruck, load.items)
+                        const isLegal = permitCount === 0
+                        const cardBorderColor = isLegal ? 'border-l-green-500' : 'border-l-orange-500'
+                        const numberBgColor = isLegal ? 'bg-green-500' : 'bg-orange-500'
+                        const loadWeight = load.items.reduce((sum, item) => sum + item.weight * (item.quantity || 1), 0)
+
+                        return (
+                          <Card key={load.id} className={`border-l-4 ${cardBorderColor}`}>
+                            <CardHeader className="pb-2">
+                              <div className="flex items-center justify-between gap-4 flex-wrap">
+                                <div className="flex items-center gap-3">
+                                  <div className={`w-8 h-8 rounded-lg ${numberBgColor} flex items-center justify-center text-white font-bold text-sm`}>
+                                    {index + 1}
+                                  </div>
+                                  <div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium">{load.recommendedTruck.name}</span>
+                                      {isLegal ? (
+                                        <span className="px-1.5 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded border border-green-200">
+                                          Legal Load
+                                        </span>
+                                      ) : (
+                                        <span className="px-1.5 py-0.5 text-xs font-medium bg-orange-100 text-orange-700 rounded border border-orange-200">
+                                          {permitCount} Permit{permitCount > 1 ? 's' : ''}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="text-sm text-muted-foreground">
+                                      {load.items.length} items &bull; {(loadWeight / 1000).toFixed(1)}k lbs
+                                    </div>
+                                  </div>
+                                </div>
+                                <TruckSelector
+                                  currentTruck={load.recommendedTruck}
+                                  onChange={(truck) => {
+                                    setSelectedTruck(truck);
+                                    setSelectedPlanOption(null);
+                                    setUseSavedTruckPlan(false);
+                                  }}
+                                  itemsWeight={loadWeight}
+                                  maxItemLength={Math.max(...load.items.map((item) => item.length), 0)}
+                                  maxItemWidth={Math.max(...load.items.map((item) => item.width), 0)}
+                                  maxItemHeight={Math.max(...load.items.map((item) => item.height), 0)}
+                                  itemDescriptions={load.items.map((item) => item.description || '')}
+                                />
+                              </div>
+                            </CardHeader>
+                            <CardContent>
+                              <TrailerDiagram
+                                truck={load.recommendedTruck}
+                                items={load.items}
+                                placements={load.placements}
+                              />
+                            </CardContent>
+                          </Card>
+                        )
+                      })}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center py-10 text-muted-foreground">
+                      <Truck className="h-12 w-12 mb-4 opacity-50" />
+                      <p>No load plan available</p>
                     </div>
                   )}
                 </CardContent>
@@ -1204,7 +2070,7 @@ export default function LoadPlannerEditPage() {
                         <div className="flex items-center gap-2">
                           <SearchableSelect
                             value=""
-                            onChange={() => addServiceBundle()}
+                            onChange={(value) => addServiceBundle(value)}
                             options={SERVICE_BUNDLES.map(b => ({ value: b.name, label: b.name }))}
                             placeholder="Add Bundle"
                             className="w-[140px]"
@@ -1222,7 +2088,7 @@ export default function LoadPlannerEditPage() {
                           <p className="text-muted-foreground font-medium">No services added yet</p>
                           <p className="text-sm text-muted-foreground/70 mt-1 mb-4">Add services like Line Haul, Fuel Surcharge, and other charges</p>
                           <div className="flex justify-center gap-2">
-                            <Button variant="outline" size="sm" onClick={() => addServiceBundle()}>
+                            <Button variant="outline" size="sm" onClick={() => addServiceBundle('Standard Flatbed')}>
                               <Layers className="h-3 w-3 mr-1" />
                               Standard Flatbed
                             </Button>
@@ -1234,94 +2100,264 @@ export default function LoadPlannerEditPage() {
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          {serviceItems.map((service, index) => (
-                            <div key={service.id} className="space-y-1">
-                              <div className="flex flex-wrap items-center gap-2 p-2 rounded bg-muted/30">
-                                <SearchableSelect
-                                  value={service.name}
-                                  onChange={(value) => {
-                                    const selected = serviceOptions.find(s => s.label === value);
-                                    if (selected) {
-                                      updateServiceItem(index, 'name', selected.label);
-                                    }
-                                  }}
-                                  options={serviceOptions.map((s): SearchableSelectOption => ({
-                                    value: s.label,
-                                    label: s.label,
-                                  }))}
-                                  placeholder="Select service"
-                                  searchPlaceholder="Search services..."
-                                  className="w-full sm:w-[180px]"
-                                />
-                                <Input
-                                  className="w-16 sm:w-20"
-                                  type="number"
-                                  min={1}
-                                  value={service.quantity}
-                                  onChange={(e) => updateServiceItem(index, 'quantity', e.target.value)}
-                                  placeholder="Qty"
-                                />
-                                <div className="relative w-24 sm:w-28">
-                                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                                  <Input
-                                    className="pl-5 text-right font-mono"
-                                    placeholder="0"
-                                    value={formatWholeDollars(service.rate)}
-                                    onChange={(e) => updateServiceItem(index, 'rate', e.target.value)}
+                          {serviceItems.map((service, index) => {
+                            const matchedService = service.serviceTypeId
+                              ? serviceOptions.find((s) => s.value === service.serviceTypeId)
+                              : serviceOptions.find((s) => s.label === service.name)
+                            const dropdownValue = matchedService?.value || 'custom'
+                            const isCustomService = dropdownValue === 'custom'
+
+                            return (
+                              <div key={service.id} className="space-y-1">
+                                <div className="flex flex-wrap items-center gap-2 p-2 rounded bg-muted/30">
+                                  <SearchableSelect
+                                    value={dropdownValue}
+                                    onChange={(value) => {
+                                      const selected = serviceOptionsWithCustom.find((s) => s.value === value)
+                                      if (!selected || selected.value === 'custom') {
+                                        updateServiceItem(index, 'name', 'Custom Service')
+                                        return
+                                      }
+                                      const selectedType = (selected as { serviceType?: InlandServiceType }).serviceType
+                                      if (selectedType) {
+                                        applyServiceTypeSelection(index, selectedType)
+                                      } else {
+                                        updateServiceItem(index, 'name', selected.label)
+                                      }
+                                    }}
+                                    options={serviceOptionsWithCustom.map((s): SearchableSelectOption => ({
+                                      value: s.value,
+                                      label: s.label,
+                                    }))}
+                                    placeholder="Select service"
+                                    searchPlaceholder="Search services..."
+                                    className="w-full sm:w-[180px]"
                                   />
+                                  {isCustomService && (
+                                    <Input
+                                      className="flex-1 min-w-[120px]"
+                                      placeholder="Enter custom service name"
+                                      value={service.name === 'Custom Service' ? '' : service.name}
+                                      onChange={(e) => updateServiceItem(index, 'name', e.target.value || 'Custom Service')}
+                                    />
+                                  )}
+                                  <Input
+                                    className="w-16 sm:w-20"
+                                    type="number"
+                                    min={1}
+                                    value={service.quantity}
+                                    onChange={(e) => updateServiceItem(index, 'quantity', e.target.value)}
+                                    placeholder="Qty"
+                                  />
+                                  <div className="relative w-24 sm:w-28">
+                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                                    <Input
+                                      className="pl-5 text-right font-mono"
+                                      placeholder="0"
+                                      value={service.rateInput ?? formatWholeDollars(service.rate)}
+                                      onChange={(e) => updateServiceItem(index, 'rate', e.target.value)}
+                                      onBlur={() => finalizeServiceRateInput(index)}
+                                    />
+                                  </div>
+                                  <span className="w-20 sm:w-24 text-right font-mono text-sm">
+                                    ${formatWholeDollars(service.total)}
+                                  </span>
+                                  <div className="flex items-center gap-0.5 shrink-0">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => toggleServiceNotes(index)}
+                                      className={service.notes ? 'text-blue-500' : ''}
+                                      title="Add notes"
+                                    >
+                                      <MessageSquare className="h-3 w-3" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => duplicateServiceItem(index)}
+                                      title="Duplicate"
+                                    >
+                                      <Copy className="h-3 w-3" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => removeServiceItem(index)}
+                                      title="Delete"
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  </div>
                                 </div>
-                                <span className="w-20 sm:w-24 text-right font-mono text-sm">
-                                  ${formatWholeDollars(service.total)}
-                                </span>
-                                <div className="flex items-center gap-0.5 shrink-0">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => toggleServiceNotes(index)}
-                                    className={service.notes ? 'text-blue-500' : ''}
-                                    title="Add notes"
-                                  >
-                                    <MessageSquare className="h-3 w-3" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => duplicateServiceItem(index)}
-                                    title="Duplicate"
-                                  >
-                                    <Copy className="h-3 w-3" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => removeServiceItem(index)}
-                                    title="Delete"
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
-                                </div>
+                                {service.showNotes && (
+                                  <div className="pl-2 pb-1">
+                                    <Input
+                                      className="text-sm"
+                                      placeholder="Add notes for this service..."
+                                      value={service.notes || ''}
+                                      onChange={(e) => updateServiceItem(index, 'notes', e.target.value)}
+                                    />
+                                  </div>
+                                )}
                               </div>
-                              {service.showNotes && (
-                                <div className="pl-2 pb-1">
-                                  <Input
-                                    className="text-sm"
-                                    placeholder="Add notes for this service..."
-                                    value={service.notes || ''}
-                                    onChange={(e) => updateServiceItem(index, 'notes', e.target.value)}
-                                  />
-                                </div>
-                              )}
-                            </div>
-                          ))}
+                            )
+                          })}
                         </div>
                       )}
                     </div>
                   ) : (
                     // Per-truck pricing
                     <div className="space-y-6">
-                      <div className="text-center py-6 text-muted-foreground text-sm border rounded-lg bg-muted/30">
-                        Per-truck pricing requires load planning first. Add cargo and complete truck selection.
-                      </div>
+                      {activePlan && activePlan.loads.length > 0 ? (
+                        activePlan.loads.map((load, truckIndex) => (
+                          <div key={load.id} className="space-y-3 p-4 border rounded-lg">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 rounded bg-blue-500 flex items-center justify-center text-white text-xs font-bold">
+                                  {truckIndex + 1}
+                                </div>
+                                <Label className="font-medium">{load.recommendedTruck.name}</Label>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <SearchableSelect
+                                  value=""
+                                  onChange={(value) => addServiceBundle(value, truckIndex)}
+                                  options={SERVICE_BUNDLES.map(b => ({ value: b.name, label: b.name }))}
+                                  placeholder="Bundle"
+                                  className="w-[100px]"
+                                />
+                                <Button variant="outline" size="sm" onClick={() => addServiceItem(truckIndex)}>
+                                  <Plus className="h-3 w-3 mr-1" />
+                                  Add
+                                </Button>
+                              </div>
+                            </div>
+
+                            <div className="space-y-2">
+                              {serviceItems
+                                .map((service, index) => ({ service, index }))
+                                .filter(({ service }) => service.truckIndex === truckIndex)
+                                .map(({ service, index }) => {
+                                  const matchedService = service.serviceTypeId
+                                    ? serviceOptions.find((s) => s.value === service.serviceTypeId)
+                                    : serviceOptions.find((s) => s.label === service.name)
+                                  const dropdownValue = matchedService?.value || 'custom'
+                                  const isCustomService = dropdownValue === 'custom'
+
+                                  return (
+                                    <div key={service.id} className="space-y-1">
+                                      <div className="flex flex-wrap items-center gap-2 p-2 rounded bg-muted/30">
+                                        <SearchableSelect
+                                          value={dropdownValue}
+                                          onChange={(value) => {
+                                            const selected = serviceOptionsWithCustom.find((s) => s.value === value)
+                                            if (!selected || selected.value === 'custom') {
+                                              updateServiceItem(index, 'name', 'Custom Service')
+                                              return
+                                            }
+                                            const selectedType = (selected as { serviceType?: InlandServiceType }).serviceType
+                                            if (selectedType) {
+                                              applyServiceTypeSelection(index, selectedType)
+                                            } else {
+                                              updateServiceItem(index, 'name', selected.label)
+                                            }
+                                          }}
+                                          options={serviceOptionsWithCustom.map((s): SearchableSelectOption => ({
+                                            value: s.value,
+                                            label: s.label,
+                                          }))}
+                                          placeholder="Select service"
+                                          searchPlaceholder="Search services..."
+                                          className="w-full sm:w-[180px]"
+                                        />
+                                        {isCustomService && (
+                                          <Input
+                                            className="flex-1 min-w-[120px]"
+                                            placeholder="Custom service name"
+                                            value={service.name === 'Custom Service' ? '' : service.name}
+                                            onChange={(e) => updateServiceItem(index, 'name', e.target.value || 'Custom Service')}
+                                          />
+                                        )}
+                                        <Input
+                                          className="w-16"
+                                          type="number"
+                                          min={1}
+                                          value={service.quantity}
+                                          onChange={(e) => updateServiceItem(index, 'quantity', e.target.value)}
+                                        />
+                                        <div className="relative w-24">
+                                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                                          <Input
+                                            className="pl-5 text-right font-mono"
+                                            value={service.rateInput ?? formatWholeDollars(service.rate)}
+                                            onChange={(e) => updateServiceItem(index, 'rate', e.target.value)}
+                                            onBlur={() => finalizeServiceRateInput(index)}
+                                          />
+                                        </div>
+                                        <span className="w-20 text-right font-mono text-sm">
+                                          ${formatWholeDollars(service.total)}
+                                        </span>
+                                        <div className="flex items-center gap-0.5 shrink-0">
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => toggleServiceNotes(index)}
+                                            className={service.notes ? 'text-blue-500' : ''}
+                                            title="Add notes"
+                                          >
+                                            <MessageSquare className="h-3 w-3" />
+                                          </Button>
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => duplicateServiceItem(index)}
+                                            title="Duplicate"
+                                          >
+                                            <Copy className="h-3 w-3" />
+                                          </Button>
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => removeServiceItem(index)}
+                                            title="Delete"
+                                          >
+                                            <Trash2 className="h-3 w-3" />
+                                          </Button>
+                                        </div>
+                                      </div>
+                                      {service.showNotes && (
+                                        <div className="pl-2 pb-1">
+                                          <Input
+                                            className="text-sm"
+                                            placeholder="Add notes for this service..."
+                                            value={service.notes || ''}
+                                            onChange={(e) => updateServiceItem(index, 'notes', e.target.value)}
+                                          />
+                                        </div>
+                                      )}
+                                    </div>
+                                  )
+                                })}
+                            </div>
+
+                            <div className="flex justify-between text-sm pt-2 border-t">
+                              <span>Truck {truckIndex + 1} Total</span>
+                              <span className="font-mono font-medium">
+                                {formatCurrency(
+                                  serviceItems
+                                    .filter(s => s.truckIndex === truckIndex)
+                                    .reduce((sum, s) => sum + s.total, 0)
+                                )}
+                              </span>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-6 text-muted-foreground text-sm border rounded-lg bg-muted/30">
+                          Add cargo and trucks first to enable per-truck pricing.
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -1402,8 +2438,9 @@ export default function LoadPlannerEditPage() {
                                   <Input
                                     className="pl-5 text-right font-mono"
                                     placeholder="0"
-                                    value={formatWholeDollars(accessorial.rate)}
+                                    value={accessorial.rateInput ?? formatWholeDollars(accessorial.rate)}
                                     onChange={(e) => updateAccessorialItem(index, 'rate', e.target.value)}
+                                    onBlur={() => finalizeAccessorialRateInput(index)}
                                   />
                                 </div>
                                 <span className="w-20 sm:w-24 text-right font-mono text-sm">
@@ -1441,7 +2478,7 @@ export default function LoadPlannerEditPage() {
                       <span className="text-lg font-medium">Grand Total</span>
                       {accessorialItems.length > 0 && (
                         <div className="text-xs text-muted-foreground">
-                          Services: {formatCurrency(servicesTotal)} + Accessorials: {formatCurrency(accessorialsTotal)}
+                          Accessorials not included in grand total
                         </div>
                       )}
                     </div>
@@ -1876,9 +2913,9 @@ export default function LoadPlannerEditPage() {
                           </svg>
                           Load Arrangement Diagrams
                         </h3>
-                        {loadPlan.loads.length > 0 ? (
+                        {activePlan.loads.length > 0 ? (
                           <div className="space-y-4">
-                            {loadPlan.loads.slice(0, 1).map((load, index) => (
+                            {activePlan.loads.slice(0, 1).map((load, index) => (
                               <div key={load.id} className="border border-slate-200 rounded-lg p-4">
                                 <div className="text-sm font-semibold text-slate-800 mb-3">
                                   Load {index + 1}: {load.recommendedTruck.name}
@@ -1909,9 +2946,9 @@ export default function LoadPlannerEditPage() {
                         <div className="space-y-2 text-sm text-slate-600">
                           <div>Max Dimensions: {maxItemLength.toFixed(1)}&apos; L × {maxItemWidth.toFixed(1)}&apos; W × {maxItemHeight.toFixed(1)}&apos; H</div>
                           <div>Total Weight: {totalCargoWeight.toLocaleString()} lbs</div>
-                          {loadPlan.warnings.length > 0 ? (
+                          {activePlan.warnings.length > 0 ? (
                             <ul className="list-disc list-inside text-amber-600">
-                              {loadPlan.warnings.map((warning, idx) => (
+                              {activePlan.warnings.map((warning, idx) => (
                                 <li key={idx}>{warning}</li>
                               ))}
                             </ul>
@@ -2098,10 +3135,82 @@ export default function LoadPlannerEditPage() {
               <CardTitle>Quote Summary</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Route Summary */}
+              {(pickupAddress || dropoffAddress) && (
+                <div className="space-y-2">
+                  {pickupAddress && (
+                    <div className="text-sm">
+                      <span className="text-green-600 font-medium">From:</span>{' '}
+                      {pickupCity || pickupAddress}
+                      {pickupState && `, ${pickupState}`}
+                    </div>
+                  )}
+                  {dropoffAddress && (
+                    <div className="text-sm">
+                      <span className="text-red-600 font-medium">To:</span>{' '}
+                      {dropoffCity || dropoffAddress}
+                      {dropoffState && `, ${dropoffState}`}
+                    </div>
+                  )}
+                  {distanceMiles ? (
+                    <div className="text-sm text-muted-foreground">
+                      Distance: {distanceMiles.toLocaleString()} miles
+                    </div>
+                  ) : null}
+                </div>
+              )}
+
+              {/* Cargo Summary */}
+              {cargoItems.length > 0 && (
+                <>
+                  <Separator />
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium">Cargo</div>
+                    <div className="text-sm text-muted-foreground">
+                      {cargoItems.reduce((sum, i) => sum + i.quantity, 0)} items
+                      {activePlan && (
+                        <>
+                          {' '}
+                          &bull; {(activePlan.totalWeight / 1000).toFixed(1)}k lbs
+                        </>
+                      )}
+                    </div>
+                    {activePlan && (
+                      <Badge variant="outline">
+                        {activePlan.totalTrucks} truck{activePlan.totalTrucks > 1 ? 's' : ''} needed
+                      </Badge>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* Services Summary */}
+              {serviceItems.length > 0 && (
+                <>
+                  <Separator />
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium">Services ({serviceItems.length})</div>
+                    {serviceItems.slice(0, 4).map((service) => (
+                      <div key={service.id} className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">{service.name}</span>
+                        <span className="font-mono">{formatCurrency(service.total || 0)}</span>
+                      </div>
+                    ))}
+                    {serviceItems.length > 4 && (
+                      <div className="text-sm text-muted-foreground">
+                        +{serviceItems.length - 4} more...
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+
+              <Separator />
+
               <div className="flex justify-between items-center">
                 <span className="font-medium">Total</span>
-                <span className="text-2xl font-bold font-mono text-primary">
-                  {formatCurrency(totalCents)}
+                <span className="text-xl font-bold font-mono text-primary">
+                  {formatCurrency(grandTotal)}
                 </span>
               </div>
 

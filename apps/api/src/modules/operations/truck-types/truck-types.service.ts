@@ -16,6 +16,21 @@ interface ListParams {
 export class TruckTypesService {
   constructor(private prisma: PrismaService) {}
 
+  private mapTruckType(record: any) {
+    if (!record) return record;
+
+    return {
+      ...record,
+      deckLengthFt: Number(record.deckLengthFt),
+      deckWidthFt: Number(record.deckWidthFt),
+      deckHeightFt: Number(record.deckHeightFt),
+      wellLengthFt: record.wellLengthFt == null ? null : Number(record.wellLengthFt),
+      wellHeightFt: record.wellHeightFt == null ? null : Number(record.wellHeightFt),
+      maxLegalCargoHeightFt: record.maxLegalCargoHeightFt == null ? null : Number(record.maxLegalCargoHeightFt),
+      maxLegalCargoWidthFt: record.maxLegalCargoWidthFt == null ? null : Number(record.maxLegalCargoWidthFt),
+    };
+  }
+
   async list(params?: ListParams) {
     const {
       category,
@@ -64,7 +79,7 @@ export class TruckTypesService {
     ]);
 
     return {
-      data,
+      data: data.map((record) => this.mapTruckType(record)),
       total,
       page,
       limit,
@@ -80,7 +95,7 @@ export class TruckTypesService {
       throw new NotFoundException('Truck type not found');
     }
 
-    return truckType;
+    return this.mapTruckType(truckType);
   }
 
   async getCategories() {
@@ -115,7 +130,7 @@ export class TruckTypesService {
   }
 
   async create(data: CreateTruckTypeDto) {
-    return this.prisma.truckType.create({
+    const created = await this.prisma.truckType.create({
       data: {
         name: data.name,
         category: data.category,
@@ -139,6 +154,8 @@ export class TruckTypesService {
         sortOrder: data.sortOrder ?? 0,
       },
     });
+
+    return this.mapTruckType(created);
   }
 
   async update(id: string, data: UpdateTruckTypeDto) {
@@ -174,10 +191,12 @@ export class TruckTypesService {
     if (data.loadingMethod !== undefined) updateData.loadingMethod = data.loadingMethod ?? null;
     if (data.isActive !== undefined) updateData.isActive = data.isActive;
 
-    return this.prisma.truckType.update({
+    const updated = await this.prisma.truckType.update({
       where: { id },
       data: updateData,
     });
+
+    return this.mapTruckType(updated);
   }
 
   async delete(id: string) {

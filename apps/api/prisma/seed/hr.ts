@@ -10,21 +10,28 @@ export async function seedHR(prisma: any, tenantIds: string[]): Promise<void> {
 
     // Employees (20 per tenant = 100 total)
     for (let i = 0; i < 20; i++) {
-      await prisma.employee.create({
-        data: {
-          tenantId,
-          userId: users[i]?.id ?? null,
-          employeeNumber: `EMP${faker.string.numeric(7)}`,
-          firstName: faker.person.firstName(),
-          lastName: faker.person.lastName(),
-          email: faker.internet.email(),
-          phone: faker.phone.number({ style: 'international' }),
-          employmentType: faker.helpers.arrayElement(['FULL_TIME', 'PART_TIME', 'CONTRACT', 'TEMP']),
-          hireDate: faker.date.past({ years: 5 }),
-          annualSalary: parseFloat(faker.commerce.price({ min: 45000, max: 160000 })),
-          externalId: `SEED-EMPLOYEE-${total + i + 1}`,
-          sourceSystem: 'FAKER_SEED',
-        },
+      const userId = users[i]?.id;
+      if (!userId) continue;
+
+      const data = {
+        tenantId,
+        userId,
+        employeeNumber: `EMP-${tenantId.slice(0, 6)}-${i + 1}`,
+        firstName: faker.person.firstName(),
+        lastName: faker.person.lastName(),
+        email: faker.internet.email(),
+        phone: faker.phone.number({ style: 'international' }),
+        employmentType: faker.helpers.arrayElement(['FULL_TIME', 'PART_TIME', 'CONTRACT', 'TEMP']),
+        hireDate: faker.date.past({ years: 5 }),
+        annualSalary: parseFloat(faker.commerce.price({ min: 45000, max: 160000 })),
+        externalId: `SEED-EMPLOYEE-${total + i + 1}`,
+        sourceSystem: 'FAKER_SEED',
+      };
+
+      await prisma.employee.upsert({
+        where: { userId },
+        create: data,
+        update: data,
       });
       total++;
     }

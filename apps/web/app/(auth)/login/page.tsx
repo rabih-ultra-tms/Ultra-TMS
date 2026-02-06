@@ -7,9 +7,10 @@ import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader2, LogIn } from "lucide-react";
+import { Loader2, LogIn, User, Lock, Eye, EyeOff, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -47,6 +48,8 @@ function LoginPageContent() {
   // ✅ Use local state instead of useMutation
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [rememberMe, setRememberMe] = React.useState(false);
 
   const form = useForm({
     resolver: zodResolver(loginSchema),
@@ -107,10 +110,12 @@ function LoginPageContent() {
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle>Welcome back</CardTitle>
-          <CardDescription>Sign in to your account</CardDescription>
+      <Card className="w-full max-w-md shadow-xl shadow-black/[0.04] border-0 dark:border dark:border-border/50">
+        <CardHeader className="space-y-1 pb-6">
+          <CardTitle className="text-2xl font-bold tracking-tight">Sign In</CardTitle>
+          <CardDescription className="text-muted-foreground">
+            Access your transportation management dashboard
+          </CardDescription>
         </CardHeader>
 
         <CardContent>
@@ -137,26 +142,31 @@ function LoginPageContent() {
           )}
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
               <FormField
                 control={form.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel htmlFor="login-email" className="text-sm font-semibold">Email</FormLabel>
+                    <FormLabel htmlFor="login-email" className="text-sm font-semibold">
+                      Email Address
+                    </FormLabel>
                     <FormControl>
-                      <Input
-                        id="login-email"
-                        type="email"
-                        placeholder="you@company.com"
-                        autoComplete="email"
-                        disabled={isLoading}
-                        
-                        value={field.value as string}
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        name={field.name}
-                      />
+                      <div className="relative group">
+                        <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
+                        <Input
+                          id="login-email"
+                          type="email"
+                          placeholder="name@company.com"
+                          autoComplete="email"
+                          disabled={isLoading}
+                          className="pl-10 h-12"
+                          value={field.value as string}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                        />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -168,64 +178,99 @@ function LoginPageContent() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel htmlFor="login-password" className="text-sm font-semibold">Password</FormLabel>
+                    <div className="flex items-center justify-between">
+                      <FormLabel htmlFor="login-password" className="text-sm font-semibold">
+                        Password
+                      </FormLabel>
+                      <Link
+                        href="/forgot-password"
+                        className="text-xs font-semibold text-primary hover:underline"
+                        tabIndex={isLoading ? -1 : 0}
+                      >
+                        Forgot Password?
+                      </Link>
+                    </div>
                     <FormControl>
-                      <Input
-                        id="login-password"
-                        type="password"
-                        autoComplete="current-password"
-                        disabled={isLoading}
-                        
-                        value={field.value as string}
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        name={field.name}
-                      />
+                      <div className="relative group">
+                        <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
+                        <Input
+                          id="login-password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Enter your password"
+                          autoComplete="current-password"
+                          disabled={isLoading}
+                          className="pl-10 pr-10 h-12"
+                          value={field.value as string}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
+                          tabIndex={-1}
+                          aria-label={showPassword ? "Hide password" : "Show password"}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <div className="flex items-center justify-end">
-                <Link
-                  href="/forgot-password"
-                  className="text-sm font-medium text-primary hover:underline"
-                  tabIndex={isLoading ? -1 : 0}
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="remember"
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                />
+                <label
+                  htmlFor="remember"
+                  className="text-sm text-muted-foreground font-medium cursor-pointer"
                 >
-                  Forgot password?
-                </Link>
+                  Remember this session
+                </label>
               </div>
 
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  <>
-                    <LogIn className="mr-2 h-5 w-5" />
-                    Sign in
-                  </>
-                )}
-              </Button>
+              <div className="pt-2">
+                <Button type="submit" className="w-full h-12 font-semibold shadow-lg shadow-primary/25" disabled={isLoading}>
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Signing in...
+                    </>
+                  ) : (
+                    <>
+                      Sign In to Dashboard
+                      <LogIn className="ml-2 h-4 w-4" />
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-border">
+                <div className="flex items-start gap-3 bg-primary/5 dark:bg-primary/10 p-4 rounded-lg border border-primary/10">
+                  <Info className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    <span className="block font-semibold text-foreground mb-1">
+                      Restricted Access
+                    </span>
+                    Self-registration is disabled. If you require access, please contact your system administrator.
+                  </p>
+                </div>
+              </div>
             </form>
           </Form>
         </CardContent>
 
-        <CardFooter className="justify-center">
-          <p className="text-sm text-muted-foreground">
-            Don&apos;t have an account?{" "}
-            <Link href="/register" className="font-semibold text-primary hover:underline">
-              Sign up
-            </Link>
-          </p>
-        </CardFooter>
+        <CardFooter className="justify-center" />
       </Card>
     </div>
   );
@@ -234,7 +279,16 @@ function LoginPageContent() {
 export default function LoginPage() {
   return (
     <React.Suspense
-      fallback={<div className="flex min-h-screen items-center justify-center p-4">Loading...</div>}
+      fallback={
+        <div className="flex min-h-screen items-center justify-center p-4">
+          <Card className="w-full max-w-md shadow-xl shadow-black/[0.04] border-0 dark:border dark:border-border/50">
+            <CardHeader className="space-y-1 pb-6">
+              <CardTitle className="text-2xl font-bold tracking-tight">Sign In</CardTitle>
+              <CardDescription>Loading...</CardDescription>
+            </CardHeader>
+          </Card>
+        </div>
+      }
     >
       <LoginPageContent />
     </React.Suspense>

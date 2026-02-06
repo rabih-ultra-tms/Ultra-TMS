@@ -435,8 +435,25 @@ export function ExtractedItemsList({ items, onChange }: ExtractedItemsListProps)
 
       <Button variant="outline" size="sm" onClick={handleAddItem} className="mt-2">
         <Plus className="w-4 h-4 mr-1" />
-        Add Item
+        Add Item Manually
       </Button>
+
+      {items.length > 0 && (
+        <div className="pt-3 border-t border-gray-200 text-sm text-gray-500">
+          <div className="flex justify-between">
+            <span>Total Items:</span>
+            <span className="font-medium text-gray-700">
+              {items.reduce((sum, i) => sum + i.quantity, 0)}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span>Total Weight:</span>
+            <span className="font-medium text-gray-700">
+              {formatWeight(items.reduce((sum, i) => sum + (i.weight * i.quantity), 0))}
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

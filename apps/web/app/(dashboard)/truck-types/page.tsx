@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -97,6 +97,36 @@ const QUICK_FILTERS = [
 // Format number with commas
 function formatNumber(num: number): string {
   return num.toLocaleString()
+}
+
+function formatFeet(value: unknown): string {
+  if (value === null || value === undefined) return '-'
+
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value)) return '-'
+    return `${value}'`
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (!trimmed || trimmed.toLowerCase() === 'null') return '-'
+    return `${trimmed}'`
+  }
+
+  if (typeof value === 'object') {
+    const asNumber = (value as { toNumber?: () => number }).toNumber?.()
+    if (typeof asNumber === 'number' && Number.isFinite(asNumber)) {
+      return `${asNumber}'`
+    }
+
+    const asString = (value as { toString?: () => string }).toString?.()
+    if (typeof asString === 'string' && asString !== '[object Object]') {
+      const trimmed = asString.trim()
+      if (trimmed && trimmed.toLowerCase() !== 'null') return `${trimmed}'`
+    }
+  }
+
+  return '-'
 }
 
 export default function TruckTypesPage() {
@@ -267,7 +297,7 @@ export default function TruckTypesPage() {
   }
 
   // Update form when editing truck is loaded
-  useMemo(() => {
+  useEffect(() => {
     if (editingTruck && editingTruckId) {
       setFormData({
         name: editingTruck.name,
@@ -762,7 +792,7 @@ export default function TruckTypesPage() {
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-1 text-sm">
                         <Ruler className="h-3 w-3 text-muted-foreground" />
-                        {Number(truck.deckLengthFt).toFixed(1)}&apos; × {Number(truck.deckWidthFt).toFixed(1)}&apos; × {Number(truck.deckHeightFt).toFixed(1)}&apos;
+                        {formatFeet(truck.deckLengthFt)} × {formatFeet(truck.deckWidthFt)} × {formatFeet(truck.deckHeightFt)}
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
@@ -772,11 +802,15 @@ export default function TruckTypesPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
-                      {truck.maxLegalCargoHeightFt ? (
-                        <span className="text-sm">{Number(truck.maxLegalCargoHeightFt).toFixed(1)}&apos;</span>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
+                      {(() => {
+                        const deckHeight = Number(truck.deckHeightFt)
+                        const maxLegalHeight = truck.maxLegalCargoHeightFt ?? (Number.isFinite(deckHeight) ? 13.5 - deckHeight : null)
+                        return maxLegalHeight ? (
+                          <span className="text-sm">{formatFeet(maxLegalHeight)}</span>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )
+                      })()}
                     </TableCell>
                     <TableCell className="text-center">
                       {truck.loadingMethod ? (

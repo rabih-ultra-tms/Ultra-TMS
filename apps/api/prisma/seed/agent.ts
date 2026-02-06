@@ -11,26 +11,31 @@ export async function seedAgent(prisma: any, tenantIds: string[]): Promise<void>
     for (let i = 0; i < 20; i++) {
       const firstName = faker.person.firstName();
       const lastName = faker.person.lastName();
-      await prisma.agent.create({
-        data: {
-          tenantId,
-          companyName: faker.company.name(),
-          contactFirstName: firstName,
-          contactLastName: lastName,
-          contactEmail: faker.internet.email({ firstName, lastName }),
-          contactPhone: faker.string.numeric(10),
-          agentCode: `AGT-${total + i + 1}`,
-          agentType: faker.helpers.arrayElement(['REFERRING', 'SELLING', 'HYBRID']),
-          status: faker.helpers.arrayElement(['ACTIVE', 'ACTIVE', 'ACTIVE', 'SUSPENDED']),
-          addressLine1: faker.location.streetAddress(),
-          city: faker.location.city(),
-          state: faker.location.state({ abbreviated: true }),
-          zip: faker.location.zipCode(),
-          country: 'USA',
-          createdById: users[Math.floor(Math.random() * users.length)]?.id,
-          externalId: `SEED-AGENT-${total + i + 1}`,
-          sourceSystem: 'FAKER_SEED',
-        },
+      const agentCode = `AGT-${total + i + 1}`;
+      const data = {
+        tenantId,
+        companyName: faker.company.name(),
+        contactFirstName: firstName,
+        contactLastName: lastName,
+        contactEmail: faker.internet.email({ firstName, lastName }),
+        contactPhone: faker.string.numeric(10),
+        agentCode,
+        agentType: faker.helpers.arrayElement(['REFERRING', 'SELLING', 'HYBRID']),
+        status: faker.helpers.arrayElement(['ACTIVE', 'ACTIVE', 'ACTIVE', 'SUSPENDED']),
+        addressLine1: faker.location.streetAddress(),
+        city: faker.location.city(),
+        state: faker.location.state({ abbreviated: true }),
+        zip: faker.location.zipCode(),
+        country: 'USA',
+        createdById: users[Math.floor(Math.random() * users.length)]?.id,
+        externalId: `SEED-AGENT-${total + i + 1}`,
+        sourceSystem: 'FAKER_SEED',
+      };
+
+      await prisma.agent.upsert({
+        where: { tenantId_agentCode: { tenantId, agentCode } },
+        create: data,
+        update: data,
       });
     }
     total += 20;

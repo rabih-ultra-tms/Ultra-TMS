@@ -24,10 +24,11 @@ interface UniversalDropzoneProps {
   }) => void
   onLoading: (loading: boolean) => void
   onError: (error: string | null) => void
+  onWarning?: (warning: string | null) => void
   onStatusChange?: (status: string) => void
 }
 
-export function UniversalDropzone({ onAnalyzed, onLoading, onError, onStatusChange }: UniversalDropzoneProps) {
+export function UniversalDropzone({ onAnalyzed, onLoading, onError, onWarning, onStatusChange }: UniversalDropzoneProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [mode, setMode] = useState<'drop' | 'text'>('drop')
   const [textInput, setTextInput] = useState('')
@@ -37,8 +38,33 @@ export function UniversalDropzone({ onAnalyzed, onLoading, onError, onStatusChan
     onStatusChange?.(status)
   }, [onStatusChange])
 
+  const isSupportedFile = useCallback((file: File) => {
+    const name = file.name.toLowerCase()
+    const ext = name.includes('.') ? name.split('.').pop() : ''
+    const mime = (file.type || '').toLowerCase()
+
+    const allowedExtensions = new Set(['csv', 'xlsx', 'xls', 'pdf', 'txt', 'md', 'rtf', 'json', 'jpg', 'jpeg', 'png', 'gif', 'webp'])
+    const allowedMimes = new Set([
+      'text/plain',
+      'text/csv',
+      'application/pdf',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/json',
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+    ])
+
+    if (mime && allowedMimes.has(mime)) return true
+    if (ext && allowedExtensions.has(ext)) return true
+
+    return false
+  }, [])
+
   // Process a single file and return its items
-  const processFile = useCallback(async (file: File): Promise<LoadItem[]> => {
+  const processFile = useCallback(async (file: File): Promise<{ items: LoadItem[]; warning?: string }> => {
     const formData = new FormData()
     formData.append('file', file)
     const response = await fetch('/api/load-planner/analyze', {
@@ -49,11 +75,14 @@ export function UniversalDropzone({ onAnalyzed, onLoading, onError, onStatusChan
     if (!data.success) {
       throw new Error(data.error || `Failed to parse ${file.name}`)
     }
-    return data.parsedLoad?.items || []
+    return {
+      items: data.parsedLoad?.items || [],
+      warning: data.warning,
+    }
   }, [])
 
   // Process text and return items
-  const processText = useCallback(async (text: string): Promise<LoadItem[]> => {
+  const processText = useCallback(async (text: string): Promise<{ items: LoadItem[]; warning?: string }> => {
     const response = await fetch('/api/load-planner/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -63,15 +92,20 @@ export function UniversalDropzone({ onAnalyzed, onLoading, onError, onStatusChan
     if (!data.success) {
       throw new Error(data.error || 'Failed to parse text')
     }
-    return data.parsedLoad?.items || []
+    return {
+      items: data.parsedLoad?.items || [],
+      warning: data.warning,
+    }
   }, [])
 
   const analyzeContent = useCallback(async (files?: File[], text?: string) => {
     onLoading(true)
     onError(null)
+    onWarning?.(null)
 
     try {
       let allItems: LoadItem[] = []
+      const warnings: string[] = []
 
       if (files && files.length > 0) {
         const totalFiles = files.length
@@ -79,6 +113,14 @@ export function UniversalDropzone({ onAnalyzed, onLoading, onError, onStatusChan
         for (let i = 0; i < files.length; i++) {
           const file = files[i]
           if (!file) continue;
+          if (!isSupportedFile(file)) {
+            const reason = file.type ? ` (${file.type})` : ''
+            const message = `Unsupported file type for ${file.name}${reason}. Supported: images, Excel (.xlsx/.xls), CSV, PDF, text files.`
+            warnings.push(message)
+            updateStatus(`⚠️ ${message}`)
+            await new Promise(r => setTimeout(r, 400))
+            continue
+          }
           const fileName = file.name.toLowerCase()
           const fileSize = (file.size / 1024).toFixed(1)
           const fileNum = i + 1
@@ -103,7 +145,11 @@ export function UniversalDropzone({ onAnalyzed, onLoading, onError, onStatusChan
           updateStatus(`${prefix}Step 3/4: Parsing cargo data... (this may take 10-30 seconds)`)
 
           try {
-            const fileItems = await processFile(file)
+            const { items: fileItems, warning } = await processFile(file)
+            if (warning) {
+              const message = totalFiles > 1 ? `${file.name}: ${warning}` : warning
+              warnings.push(message)
+            }
             // Re-ID items to avoid conflicts across files
             const reIdItems = fileItems.map((item, idx) => ({
               ...item,
@@ -121,6 +167,10 @@ export function UniversalDropzone({ onAnalyzed, onLoading, onError, onStatusChan
         }
 
         if (allItems.length === 0) {
+          if (warnings.length > 0) {
+            onWarning?.(warnings.join(' '))
+            return
+          }
           throw new Error('No cargo items could be extracted from any files. Try different formats or add more details.')
         }
 
@@ -129,7 +179,12 @@ export function UniversalDropzone({ onAnalyzed, onLoading, onError, onStatusChan
         await new Promise(r => setTimeout(r, 300))
         updateStatus('Step 2/4: Parsing cargo data... (this may take 10-30 seconds)')
 
-        allItems = await processText(text)
+        const { items: textItems, warning } = await processText(text)
+        if (warning && textItems.length === 0) {
+          onWarning?.(warning)
+          return
+        }
+        allItems = textItems
 
         if (allItems.length === 0) {
           throw new Error('No cargo items could be extracted. Try a different format or add more details.')

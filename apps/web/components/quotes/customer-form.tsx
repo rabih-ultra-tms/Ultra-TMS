@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import { AddressAutocomplete } from '@/components/ui/address-autocomplete'
 import { Search, Building2, ClipboardPaste, Trash2, Users } from 'lucide-react'
 import { EmailSignatureDialog } from './email-signature-dialog'
 import type { ParsedSignature } from '@/lib/email-signature-parser'
@@ -443,11 +444,21 @@ export function CustomerForm({
             <>
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="customerAddress">Street Address</Label>
-                <Input
+                <AddressAutocomplete
                   id="customerAddress"
                   placeholder="123 Main St"
                   value={addressObj.address}
-                  onChange={(e) => updateCustomerAddressField('address', e.target.value)}
+                  onChange={(value) => updateCustomerAddressField('address', value)}
+                  onSelect={(components) => {
+                    if (onCustomerAddressChange) {
+                      onCustomerAddressChange({
+                        address: components.address || '',
+                        city: components.city || '',
+                        state: components.state || '',
+                        zip: components.zip || '',
+                      })
+                    }
+                  }}
                 />
               </div>
 

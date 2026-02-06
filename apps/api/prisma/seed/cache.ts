@@ -9,16 +9,22 @@ export async function seedCache(prisma: any, tenantIds: string[]): Promise<void>
     // Cache Configs (5 per tenant = 25 total)
     const cacheTypes = ['ENTITY', 'QUERY', 'SESSION', 'CONFIG'];
     for (let i = 0; i < 5; i++) {
-      await prisma.cacheConfig.create({
-        data: {
-          tenantId,
-          cacheType: faker.helpers.arrayElement(cacheTypes),
-          key: `config:${faker.string.alphanumeric(16)}`,
-          ttlSeconds: faker.number.int({ min: 60, max: 3600 }),
-          tags: [faker.lorem.word(), faker.lorem.word()],
-          externalId: `SEED-CACHE-CONFIG-${total + i + 1}`,
-          sourceSystem: 'FAKER_SEED',
-        },
+      const cacheType = cacheTypes[i % cacheTypes.length];
+      const key = `config:${tenantId.slice(0, 6)}:${cacheType.toLowerCase()}:${i + 1}`;
+      const data = {
+        tenantId,
+        cacheType,
+        key,
+        ttlSeconds: faker.number.int({ min: 60, max: 3600 }),
+        tags: [faker.lorem.word(), faker.lorem.word()],
+        externalId: `SEED-CACHE-CONFIG-${total + i + 1}`,
+        sourceSystem: 'FAKER_SEED',
+      };
+
+      await prisma.cacheConfig.upsert({
+        where: { tenantId_cacheType_key: { tenantId, cacheType, key } },
+        create: data,
+        update: data,
       });
     }
     total += 5;
@@ -32,22 +38,33 @@ export async function seedCache(prisma: any, tenantIds: string[]): Promise<void>
     const hours = [0, 6, 12, 18];
     for (const hour of hours) {
       for (const cacheType of cacheTypesForStats) {
-        await prisma.cacheStats.create({
-          data: {
-            tenantId,
-            statDate: baseDate,
-            statHour: hour,
-            cacheType,
-            hits: faker.number.int({ min: 100, max: 10000 }),
-            misses: faker.number.int({ min: 10, max: 1000 }),
-            sets: faker.number.int({ min: 50, max: 500 }),
-            deletes: faker.number.int({ min: 0, max: 100 }),
-            expirations: faker.number.int({ min: 0, max: 500 }),
-            keysCount: faker.number.int({ min: 100, max: 10000 }),
-            memoryBytes: BigInt(faker.number.int({ min: 1000000, max: 100000000 })),
-            externalId: `SEED-CACHE-STATS-${total + 1}`,
-            sourceSystem: 'FAKER_SEED',
+        const data = {
+          tenantId,
+          statDate: baseDate,
+          statHour: hour,
+          cacheType,
+          hits: faker.number.int({ min: 100, max: 10000 }),
+          misses: faker.number.int({ min: 10, max: 1000 }),
+          sets: faker.number.int({ min: 50, max: 500 }),
+          deletes: faker.number.int({ min: 0, max: 100 }),
+          expirations: faker.number.int({ min: 0, max: 500 }),
+          keysCount: faker.number.int({ min: 100, max: 10000 }),
+          memoryBytes: BigInt(faker.number.int({ min: 1000000, max: 100000000 })),
+          externalId: `SEED-CACHE-STATS-${total + 1}`,
+          sourceSystem: 'FAKER_SEED',
+        };
+
+        await prisma.cacheStats.upsert({
+          where: {
+            tenantId_statDate_statHour_cacheType: {
+              tenantId,
+              statDate: baseDate,
+              statHour: hour,
+              cacheType,
+            },
           },
+          create: data,
+          update: data,
         });
         total++;
       }

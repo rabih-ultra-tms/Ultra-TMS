@@ -22,7 +22,6 @@ const createPlacements = (items: LoadItem[], truck: TruckType): ItemPlacement[] 
       placements.push({
         itemId: item.id,
         x: 0,
-        y: 0,
         z: 0,
         rotated: false,
         failed: true,
@@ -33,7 +32,6 @@ const createPlacements = (items: LoadItem[], truck: TruckType): ItemPlacement[] 
     placements.push({
       itemId: item.id,
       x: cursorX,
-      y: 0,
       z: cursorZ,
       rotated: false,
     })
@@ -74,7 +72,7 @@ const splitItemsIntoLoads = (items: LoadItem[], truck: TruckType): LoadItem[][] 
 
 export function buildLoadPlan(items: LoadItem[], truck: TruckType): LoadPlan {
   if (items.length === 0) {
-    return { loads: [], totalTrucks: 0, totalItems: 0, totalWeight: 0, warnings: [] }
+    return { loads: [], totalTrucks: 0, totalItems: 0, totalWeight: 0, unassignedItems: [], warnings: [] }
   }
 
   const splitLoads = splitItemsIntoLoads(items, truck)
@@ -87,17 +85,32 @@ export function buildLoadPlan(items: LoadItem[], truck: TruckType): LoadPlan {
       warnings.push(`${failedCount} item${failedCount > 1 ? 's' : ''} need manual placement`) 
     }
 
-    const totalWeight = loadItems.reduce((sum, item) => sum + item.weight * (item.quantity || 1), 0)
-    if (totalWeight > truck.maxCargoWeight) {
+    const loadWeight = loadItems.reduce((sum, item) => sum + item.weight * (item.quantity || 1), 0)
+    if (loadWeight > truck.maxCargoWeight) {
       warnings.push('Load exceeds truck weight capacity')
     }
 
+    const loadLength = loadItems.length ? Math.max(...loadItems.map(item => item.length)) : 0
+    const loadWidth = loadItems.length ? Math.max(...loadItems.map(item => item.width)) : 0
+    const loadHeight = loadItems.length ? Math.max(...loadItems.map(item => item.height)) : 0
+    const totalWeight = loadWeight
+    const maxLegalHeight = truck.maxLegalCargoHeight || Math.max(0, 13.5 - truck.deckHeight)
+    const maxLegalWidth = truck.maxLegalCargoWidth || 8.5
+    const isLegal = loadLength <= truck.deckLength && loadWidth <= maxLegalWidth && loadHeight <= maxLegalHeight && totalWeight <= truck.maxCargoWeight
+
     return {
       id: `load-${index + 1}`,
-      recommendedTruck: truck,
       items: loadItems,
+      length: loadLength,
+      width: loadWidth,
+      height: loadHeight,
+      weight: totalWeight,
+      recommendedTruck: truck,
+      truckScore: 100,
       placements,
+      permitsRequired: isLegal ? [] : ['PERMIT_REQUIRED'],
       warnings,
+      isLegal,
     }
   })
 
@@ -112,6 +125,7 @@ export function buildLoadPlan(items: LoadItem[], truck: TruckType): LoadPlan {
     totalTrucks: loads.length,
     totalItems: items.length,
     totalWeight,
+    unassignedItems: [],
     warnings,
   }
 }
