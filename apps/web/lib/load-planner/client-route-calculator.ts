@@ -100,6 +100,7 @@ export async function calculateMultipleRoutes(
   destination: string,
   cargo: TruckCargoSpecs | { width: number; height: number; length: number; grossWeight: number }
 ): Promise<MultipleRoutesResult> {
+  void cargo
   const base = await calculateRouteClientSide(origin, destination)
 
   const baseRoute: RouteAlternative = {

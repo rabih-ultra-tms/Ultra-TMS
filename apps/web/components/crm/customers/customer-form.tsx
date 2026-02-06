@@ -66,14 +66,14 @@ export function CustomerForm({
         }
       } else if (key === 'address' && typeof value === 'object' && !Array.isArray(value)) {
         // Ensure all address fields are strings, never null/undefined
-        const addressObj = value as Record<string, any>;
+        const addressObj = value as Record<string, unknown>;
         result[key] = {
-          street1: addressObj.street1 ?? '',
-          street2: addressObj.street2 ?? '',
-          city: addressObj.city ?? '',
-          state: addressObj.state ?? '',
-          postalCode: addressObj.postalCode ?? '',
-          country: addressObj.country ?? '',
+          street1: typeof addressObj.street1 === 'string' ? addressObj.street1 : '',
+          street2: typeof addressObj.street2 === 'string' ? addressObj.street2 : '',
+          city: typeof addressObj.city === 'string' ? addressObj.city : '',
+          state: typeof addressObj.state === 'string' ? addressObj.state : '',
+          postalCode: typeof addressObj.postalCode === 'string' ? addressObj.postalCode : '',
+          country: typeof addressObj.country === 'string' ? addressObj.country : '',
         };
       } else {
         result[key] = value;

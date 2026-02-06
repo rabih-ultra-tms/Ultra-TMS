@@ -121,7 +121,7 @@ export function calculateDetailedRoutePermits(
         agency: `${state} DOT`,
         phone: '1-800-DOT-INFO',
         website: 'https://www.transportation.gov',
-        lastUpdated: new Date().toISOString().split('T')[0],
+        lastUpdated: new Date().toISOString().split('T')[0] ?? new Date().toISOString(),
       },
     }
   })

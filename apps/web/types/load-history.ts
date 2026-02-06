@@ -172,6 +172,14 @@ export interface LoadHistoryListItem {
   status: LoadHistoryStatus
 }
 
+export interface LoadHistoryListResponse {
+  data: LoadHistoryListItem[]
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+}
+
 // =============================================================================
 // FULL DETAIL TYPE (with related data)
 // =============================================================================

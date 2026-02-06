@@ -97,7 +97,7 @@ export function TrailerDiagram({ truck, items, placements }: TrailerDiagramProps
                     {isFailed && <span className="ml-1 text-red-600">(not placed)</span>}
                   </span>
                   <div className="flex items-center gap-2 text-gray-500">
-                    <span>{item.length}' × {item.width}' × {item.height}'</span>
+                    <span>{item.length}&apos; × {item.width}&apos; × {item.height}&apos;</span>
                     <span className="text-gray-300">•</span>
                     <span>{item.weight.toLocaleString()} lbs</span>
                   </div>
@@ -196,7 +196,7 @@ export function TrailerDiagram({ truck, items, placements }: TrailerDiagramProps
                     fill="#9ca3af"
                     fontSize="8"
                   >
-                    {i * 5}'
+                      {i * 5}&apos;
                   </text>
                 )}
               </g>

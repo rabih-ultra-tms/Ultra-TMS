@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useRef, useEffect } from 'react'
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import type { TruckType, TrailerCategory } from '@/lib/load-planner/types'
 import { trucks } from '@/lib/load-planner/trucks'
 import { useTruckTypes } from '@/lib/hooks/operations/use-truck-types'
@@ -163,7 +163,7 @@ export function TruckSelector({
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [isOpen])
 
-  const canHandle = (truck: TruckType) => {
+  const canHandle = useCallback((truck: TruckType) => {
     const fitsWeight = itemsWeight <= truck.maxCargoWeight
     const fitsLength = maxItemLength <= truck.deckLength
     const fitsWidth = maxItemWidth <= truck.deckWidth
@@ -176,7 +176,7 @@ export function TruckSelector({
       fitsWidth,
       fitsHeight
     }
-  }
+  }, [itemsWeight, maxItemLength, maxItemWidth, maxItemHeight])
 
   const categorizedTrucks = useMemo(() => {
     const categories: Record<string, TruckType[]> = {}
@@ -208,22 +208,25 @@ export function TruckSelector({
     })
 
     Object.keys(categories).forEach(cat => {
-      categories[cat].sort((a, b) => {
+      const bucket = categories[cat] ?? []
+      bucket.sort((a, b) => {
         if (sortMode === 'score') return (truckScores.get(b.id) || 0) - (truckScores.get(a.id) || 0)
         if (sortMode === 'weight') return b.maxCargoWeight - a.maxCargoWeight
         return a.deckLength - b.deckLength
       })
 
-      categories[cat].sort((a, b) => {
+      bucket.sort((a, b) => {
         const aFav = favoriteIds.has(a.id)
         const bFav = favoriteIds.has(b.id)
         if (aFav === bFav) return 0
         return aFav ? -1 : 1
       })
+
+      categories[cat] = bucket
     })
 
     return categories
-  }, [searchQuery, showOnlyFitting, categoryFilter, sortMode, allTrucks, truckScores, favoriteIds, itemsWeight, maxItemLength, maxItemWidth, maxItemHeight])
+  }, [searchQuery, showOnlyFitting, categoryFilter, sortMode, allTrucks, truckScores, favoriteIds, canHandle])
 
   const matchingTruckCount = useMemo(() => {
     return Object.values(categorizedTrucks).reduce((sum, trucks) => sum + trucks.length, 0)

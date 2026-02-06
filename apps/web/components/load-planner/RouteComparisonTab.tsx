@@ -30,7 +30,7 @@ import type {
   TruckType,
   LoadItem,
 } from '@/lib/load-planner/types'
-import { formatDuration, type RouteResult } from '@/lib/load-planner/route-calculator'
+import { formatDuration } from '@/lib/load-planner/route-calculator'
 import { trucks as allTrucks } from '@/lib/load-planner/trucks'
 import { formatCurrency } from '@/lib/utils'
 import { SearchableSelect, type SearchableSelectOption } from '@/components/ui/searchable-select'
@@ -51,7 +51,6 @@ interface RouteComparisonTabProps {
   dropoffAddress: string
   cargoItems: LoadItem[]
   currentTruck: TruckType | null
-  routeResult: RouteResult | null
   onApplyScenario: (scenario: ComparisonScenario) => void
 }
 
@@ -276,7 +275,6 @@ export function RouteComparisonTab({
   dropoffAddress,
   cargoItems,
   currentTruck,
-  routeResult,
   onApplyScenario,
 }: RouteComparisonTabProps) {
   const [scenarios, setScenarios] = useState<ComparisonScenario[]>([])
@@ -327,7 +325,15 @@ export function RouteComparisonTab({
       const newScenarios: ComparisonScenario[] = []
       const trucksToTry = currentTruck
         ? [currentTruck, ...getAlternativeTrucks(currentTruck, cargo).slice(0, 1)]
-        : [allTrucks[0]]
+        : allTrucks[0]
+          ? [allTrucks[0]]
+          : []
+
+      if (trucksToTry.length === 0) {
+        setError('No trucks available to evaluate routes.')
+        setIsGenerating(false)
+        return
+      }
 
       for (const route of result.routes) {
         for (const truck of trucksToTry) {
@@ -362,9 +368,7 @@ export function RouteComparisonTab({
       newScenarios.sort((a, b) => a.totalEstimate - b.totalEstimate)
       setScenarios(newScenarios)
 
-      if (newScenarios.length > 0) {
-        setSelectedScenarioId(newScenarios[0].id)
-      }
+      setSelectedScenarioId(newScenarios[0]?.id ?? null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to calculate routes')
     } finally {
@@ -433,7 +437,7 @@ export function RouteComparisonTab({
   )
 
   const selectedScenario = scenarios.find((s) => s.id === selectedScenarioId) || null
-  const winnerId = scenarios.length > 0 ? scenarios[0].id : null
+  const winnerId = scenarios[0]?.id ?? null
 
   const canGenerate = pickupAddress && dropoffAddress && cargoItems.some((i) => i.length > 0)
 
@@ -486,7 +490,7 @@ export function RouteComparisonTab({
             <GitCompareArrows className="w-12 h-12 text-gray-300 mb-3" />
             <h3 className="font-medium text-gray-600 mb-1">No scenarios generated yet</h3>
             <p className="text-sm text-gray-500 max-w-md mb-4">
-              Click "Auto-Generate" to calculate multiple route alternatives with different truck types and
+              Click &quot;Auto-Generate&quot; to calculate multiple route alternatives with different truck types and
               see which combination gives you the best price.
             </p>
             {!canGenerate && (

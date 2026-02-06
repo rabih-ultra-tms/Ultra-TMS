@@ -17,7 +17,7 @@ interface LoadPlanVisualizerProps {
 
 export function LoadPlanVisualizer({ loadPlan, items, onTruckChange }: LoadPlanVisualizerProps) {
   const [expandedLoadId, setExpandedLoadId] = useState<string | null>(
-    loadPlan.loads.length > 0 ? loadPlan.loads[0].id : null
+    loadPlan.loads[0]?.id ?? null
   )
 
   if (loadPlan.loads.length === 0) {
@@ -261,7 +261,7 @@ function LoadCard({ load, loadIndex, isExpanded, onToggle, onTruckChange }: Load
                       )}
                     </div>
                     <span className="text-gray-500">
-                      {item.length.toFixed(1)}' x {item.width.toFixed(1)}' x {item.height.toFixed(1)}'
+                      {item.length.toFixed(1)}&apos; x {item.width.toFixed(1)}&apos; x {item.height.toFixed(1)}&apos;
                     </span>
                   </div>
                 )
@@ -286,9 +286,17 @@ export const ITEM_COLOR_CONFIG = [
 ]
 
 export function getItemColor(index: number): string {
-  return ITEM_COLOR_CONFIG[index % ITEM_COLOR_CONFIG.length].base
+  const config =
+    ITEM_COLOR_CONFIG[index % ITEM_COLOR_CONFIG.length] ??
+    ITEM_COLOR_CONFIG[0] ??
+    { base: '#3B82F6', light: '#60A5FA', dark: '#2563EB' }
+  return config.base
 }
 
 export function getItemColorConfig(index: number) {
-  return ITEM_COLOR_CONFIG[index % ITEM_COLOR_CONFIG.length]
+  return (
+    ITEM_COLOR_CONFIG[index % ITEM_COLOR_CONFIG.length] ??
+    ITEM_COLOR_CONFIG[0] ??
+    { base: '#3B82F6', light: '#60A5FA', dark: '#2563EB' }
+  )
 }

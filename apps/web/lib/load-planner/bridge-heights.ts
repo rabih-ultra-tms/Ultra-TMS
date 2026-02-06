@@ -9,6 +9,23 @@ export interface LowClearanceBridge {
   location: LatLng
 }
 
+export type ClearanceSeverity = 'ok' | 'caution' | 'warning' | 'danger'
+
+export interface RouteBridgeClearanceSummary {
+  hasIssues: boolean
+  bridges: Array<{
+    bridge: LowClearanceBridge
+    clearanceResult: {
+      clears: boolean
+      clearance: number
+      deficit: number
+      severity: ClearanceSeverity
+    }
+  }>
+  warnings: string[]
+  recommendations: string[]
+}
+
 const SAMPLE_BRIDGES: LowClearanceBridge[] = [
   {
     id: 'bridge-1',
@@ -28,7 +45,10 @@ const SAMPLE_BRIDGES: LowClearanceBridge[] = [
   },
 ]
 
-export function checkRouteBridgeClearances(waypoints: LatLng[], totalHeight: number) {
+export function checkRouteBridgeClearances(
+  waypoints: LatLng[],
+  totalHeight: number
+): RouteBridgeClearanceSummary {
   if (!totalHeight) {
     return {
       hasIssues: false,
@@ -41,7 +61,7 @@ export function checkRouteBridgeClearances(waypoints: LatLng[], totalHeight: num
   const bridges = SAMPLE_BRIDGES.map((bridge) => {
     const deficit = Math.max(0, totalHeight - bridge.clearance)
     const clears = deficit <= 0
-    const severity = deficit <= 0
+    const severity: ClearanceSeverity = deficit <= 0
       ? 'ok'
       : deficit < 0.5
         ? 'caution'

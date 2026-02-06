@@ -54,14 +54,11 @@ import {
   Pencil,
   CheckSquare,
   X,
-  Package,
   MapPin,
   ArrowRight,
   DollarSign,
   TrendingUp,
   FileText,
-  AlertTriangle,
-  Calendar,
   Building2,
 } from 'lucide-react'
 import type {
@@ -132,6 +129,9 @@ export default function LoadHistoryPage() {
   const createLoad = useCreateLoadHistory()
   const deleteLoadMutation = useDeleteLoadHistory()
 
+  const getErrorMessage = (error: unknown) =>
+    error instanceof Error ? error.message : 'Unknown error'
+
   const resetNewLoadForm = () => {
     setNewLoadForm({
       customerName: '',
@@ -193,8 +193,8 @@ export default function LoadHistoryPage() {
         setShowNewLoadDialog(false)
         resetNewLoadForm()
       },
-      onError: (error: any) => {
-        toast.error('Failed to record load', { description: error.message })
+      onError: (error: unknown) => {
+        toast.error('Failed to record load', { description: getErrorMessage(error) })
       },
     })
   }
@@ -244,8 +244,8 @@ export default function LoadHistoryPage() {
       })).then(() => {
         setSelectedIds(new Set())
         toast.success('Loads deleted')
-      }).catch((error: any) => {
-        toast.error('Failed to delete some loads', { description: error.message })
+      }).catch((error: unknown) => {
+        toast.error('Failed to delete some loads', { description: getErrorMessage(error) })
       })
     }
   }
@@ -530,8 +530,8 @@ export default function LoadHistoryPage() {
                             onSuccess: () => {
                               toast.success('Load deleted')
                             },
-                            onError: (error: any) => {
-                              toast.error('Failed to delete load', { description: error.message })
+                            onError: (error: unknown) => {
+                              toast.error('Failed to delete load', { description: getErrorMessage(error) })
                             },
                           })
                         }}
@@ -671,8 +671,8 @@ export default function LoadHistoryPage() {
                                 onSuccess: () => {
                                   toast.success('Load deleted')
                                 },
-                                onError: (error: any) => {
-                                  toast.error('Failed to delete load', { description: error.message })
+                                onError: (error: unknown) => {
+                                  toast.error('Failed to delete load', { description: getErrorMessage(error) })
                                 },
                               })
                             }}

@@ -103,7 +103,7 @@ export default function LoadPlannerHistoryPage() {
     ...(dateTo ? { dateTo } : {}),
     sortBy: 'createdAt',
     sortOrder: 'desc',
-  } as any)
+  })
 
   const { data: stats } = useLoadPlannerQuoteStats()
 

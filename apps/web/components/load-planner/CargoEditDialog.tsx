@@ -59,8 +59,8 @@ export function CargoEditDialog({
       setFragile(item.fragile ?? false)
       setHazmat(item.hazmat ?? false)
       setNotes('')
-      setImageUrl((item as any).imageUrl || '')
-      setImageUrl2((item as any).imageUrl2 || '')
+      setImageUrl(item.imageUrl || '')
+      setImageUrl2(item.imageUrl2 || '')
     } else {
       setDescription('')
       setLength('')

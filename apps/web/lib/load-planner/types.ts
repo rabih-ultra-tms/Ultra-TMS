@@ -41,6 +41,8 @@ export interface LoadItem {
   maxLayers?: number
   orientation?: OrientationMode
   geometry?: ItemGeometry
+  imageUrl?: string
+  imageUrl2?: string
 }
 
 export interface ItemPlacement {

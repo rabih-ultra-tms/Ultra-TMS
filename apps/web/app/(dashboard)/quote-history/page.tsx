@@ -104,7 +104,7 @@ export default function QuoteHistoryPage() {
     ...(dropoffStateFilter ? { dropoffState: dropoffStateFilter } : {}),
     sortBy: 'createdAt',
     sortOrder: 'desc',
-  } as any)
+  })
 
   // Fetch stats
   const { data: stats } = useLoadPlannerQuoteStats()

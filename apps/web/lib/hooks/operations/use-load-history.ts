@@ -2,10 +2,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   LoadHistory,
   LoadHistoryListResponse,
-  LoadHistoryListParams,
   LaneStats,
-  SimilarLoadsParams,
+  CreateLoadHistoryInput,
 } from '@/types/load-history';
+import type { LoadHistoryListParams, SimilarLoadsParams } from '@/lib/types/operations';
 import { apiClient } from '@/lib/api-client';
 
 const LOAD_HISTORY_KEY = 'load-history';
@@ -140,7 +140,7 @@ export const useCreateLoadHistory = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: Partial<LoadHistory>) => {
+    mutationFn: async (data: CreateLoadHistoryInput) => {
       const response = await apiClient.post<{ data: LoadHistory }>(
         '/operations/load-history',
         data

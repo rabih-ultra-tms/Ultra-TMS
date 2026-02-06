@@ -13,20 +13,15 @@ import {
   ChevronUp,
   Loader2,
   AlertCircle,
-  CheckCircle2,
   Snowflake,
   Building2,
   DollarSign,
-  Info,
-  Moon,
-  Car,
   Ruler,
-  Siren,
 } from 'lucide-react'
-import type { LatLng, StateSegment, RouteResult } from '@/lib/load-planner/route-calculator'
+import type { RouteResult } from '@/lib/load-planner/route-calculator'
 import type { SeasonalRestriction } from '@/lib/load-planner/seasonal-restrictions'
 import type { LowClearanceBridge } from '@/lib/load-planner/bridge-heights'
-import type { CargoSpecs, RoutePermitSummary, DetailedPermitRequirement, DetailedRoutePermitSummary, EscortCostBreakdown, RouteRecommendation, TruckRouteRecommendation } from '@/lib/load-planner/types'
+import type { CargoSpecs, RoutePermitSummary, DetailedPermitRequirement, DetailedRoutePermitSummary, RouteRecommendation, TruckRouteRecommendation } from '@/lib/load-planner/types'
 import { ExternalLink, Truck, Sparkles, ThumbsUp, ArrowRight } from 'lucide-react'
 import { PermitSummaryCard } from './PermitSummaryCard'
 
@@ -312,19 +307,21 @@ export function RouteIntelligence({
           }
         } else if (perTruckCargoSpecs && perTruckCargoSpecs.length === 1) {
           const truck = perTruckCargoSpecs[0]
-          perTruckRecommendations = [{
-            truckIndex: truck.truckIndex,
-            truckId: truck.truckId,
-            truckName: truck.truckName,
-            cargoDescription: `${truck.width.toFixed(1)}'W × ${truck.height.toFixed(1)}'H × ${(truck.grossWeight / 1000).toFixed(0)}k lbs`,
-            isOversize: truck.isOversize,
-            isOverweight: truck.isOverweight,
-            recommendedRouteId: 'route-0',
-            recommendedRouteName: routeRecommendation.recommendedRouteName,
-            reasoning: truck.isOversize || truck.isOverweight
-              ? ['Requires oversize/overweight permits', 'Using primary route for permit consistency']
-              : ['Legal load dimensions', 'Can use any route'],
-          }]
+          if (truck) {
+            perTruckRecommendations = [{
+              truckIndex: truck.truckIndex,
+              truckId: truck.truckId,
+              truckName: truck.truckName,
+              cargoDescription: `${truck.width.toFixed(1)}'W × ${truck.height.toFixed(1)}'H × ${(truck.grossWeight / 1000).toFixed(0)}k lbs`,
+              isOversize: truck.isOversize,
+              isOverweight: truck.isOverweight,
+              recommendedRouteId: 'route-0',
+              recommendedRouteName: routeRecommendation.recommendedRouteName,
+              reasoning: truck.isOversize || truck.isOverweight
+                ? ['Requires oversize/overweight permits', 'Using primary route for permit consistency']
+                : ['Legal load dimensions', 'Can use any route'],
+            }]
+          }
         }
 
         setState((prev) => ({
@@ -599,7 +596,7 @@ export function RouteIntelligence({
                             </Badge>
                           </div>
                           <div className="text-xs text-muted-foreground mt-1">
-                            Clearance: {bridge.clearance.toFixed(1)}' • Required: {cargoSpecs.height.toFixed(1)}'
+                            Clearance: {bridge.clearance.toFixed(1)}&apos; • Required: {cargoSpecs.height.toFixed(1)}&apos;
                           </div>
                         </div>
                       ))}

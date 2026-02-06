@@ -24,7 +24,9 @@ export function truckTypeRecordToTruckType(record: ApiTruckType | TruckTypeListI
     maxCargoWeight: record.maxCargoWeightLbs ?? 0,
     tareWeight: 'tareWeightLbs' in record ? record.tareWeightLbs ?? undefined : undefined,
     maxLegalCargoHeight,
-    maxLegalCargoWidth: record.maxLegalCargoWidthFt ?? DEFAULT_LEGAL_WIDTH,
+    maxLegalCargoWidth: 'maxLegalCargoWidthFt' in record
+      ? record.maxLegalCargoWidthFt ?? DEFAULT_LEGAL_WIDTH
+      : DEFAULT_LEGAL_WIDTH,
     features: 'features' in record ? (record.features || []) : [],
     bestFor: normalizeBestFor('bestFor' in record ? record.bestFor : []),
     loadingMethod: 'loadingMethod' in record ? record.loadingMethod || undefined : undefined,

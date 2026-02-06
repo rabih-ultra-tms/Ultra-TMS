@@ -15,14 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Save, Trash2, User, MapPin, Package, Truck, DollarSign, FileWarning, FileText, Upload, Plus, Copy, MessageSquare, ChevronDown, ChevronUp, Layers, AlertTriangle, Download, EyeOff } from 'lucide-react';
+import { Save, Trash2, User, MapPin, Package, Truck, DollarSign, FileWarning, FileText, Upload, Plus, Copy, MessageSquare, ChevronDown, ChevronUp, Layers, Download, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { CustomerForm } from '@/components/quotes/customer-form';
 import { RouteMap } from '@/components/load-planner/route-map';
@@ -1549,7 +1542,6 @@ export default function LoadPlannerEditPage() {
                     dropoffAddress={`${dropoffAddress}, ${dropoffCity}, ${dropoffState} ${dropoffZip}`.trim()}
                     cargoItems={loadItems}
                     currentTruck={selectedTruck}
-                    routeResult={null}
                     onApplyScenario={(scenario) => {
                       setSelectedTruck(scenario.truck)
                       setDistanceMiles(scenario.routeAlternative.totalDistanceMiles)
@@ -1915,7 +1907,7 @@ export default function LoadPlannerEditPage() {
                           Load Compliance (Warnings & Permits)
                         </h3>
                         <div className="space-y-2 text-sm text-slate-600">
-                          <div>Max Dimensions: {maxItemLength.toFixed(1)}' L × {maxItemWidth.toFixed(1)}' W × {maxItemHeight.toFixed(1)}' H</div>
+                          <div>Max Dimensions: {maxItemLength.toFixed(1)}&apos; L × {maxItemWidth.toFixed(1)}&apos; W × {maxItemHeight.toFixed(1)}&apos; H</div>
                           <div>Total Weight: {totalCargoWeight.toLocaleString()} lbs</div>
                           {loadPlan.warnings.length > 0 ? (
                             <ul className="list-disc list-inside text-amber-600">
