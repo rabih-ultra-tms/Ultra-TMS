@@ -22,13 +22,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Save, Trash2, User, MapPin, Package, Truck, DollarSign, FileWarning, FileText, Upload, Plus, Copy, MessageSquare, ChevronDown, ChevronUp, Layers, AlertTriangle, Download } from 'lucide-react';
+import { Save, Trash2, User, MapPin, Package, Truck, DollarSign, FileWarning, FileText, Upload, Plus, Copy, MessageSquare, ChevronDown, ChevronUp, Layers, AlertTriangle, Download, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { CustomerForm } from '@/components/quotes/customer-form';
 import { RouteMap } from '@/components/load-planner/route-map';
 import { UniversalDropzone } from '@/components/load-planner/UniversalDropzone';
 import { TruckSelector } from '@/components/load-planner/TruckSelector';
 import { LoadPlanVisualizer } from '@/components/load-planner/LoadPlanVisualizer';
+import { TrailerDiagram } from '@/components/load-planner/TrailerDiagram';
 import { ExtractedItemsList } from '@/components/load-planner/ExtractedItemsList';
 import { RouteIntelligence } from '@/components/load-planner/RouteIntelligence';
 import { RouteComparisonTab } from '@/components/load-planner/RouteComparisonTab';
@@ -163,6 +164,30 @@ export default function LoadPlannerEditPage() {
   const [accessorialsExpanded, setAccessorialsExpanded] = useState(false);
   const [quoteNotes, setQuoteNotes] = useState('');
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const [isPdfSectionsOpen, setIsPdfSectionsOpen] = useState(false);
+  const [pdfSections, setPdfSections] = useState({
+    companyHeader: true,
+    clientInformation: true,
+    pickupDropoffLocations: true,
+    routeMap: true,
+    cargoDetails: true,
+    loadArrangementDiagrams: true,
+    loadCompliance: true,
+    servicesTable: true,
+    accessorialCharges: true,
+    permitEscortCosts: true,
+    pricingSummary: true,
+    termsNotes: true,
+  });
+  const setAllPdfSections = (value: boolean) => {
+    setPdfSections((prev) => {
+      const next = { ...prev };
+      (Object.keys(next) as Array<keyof typeof next>).forEach((key) => {
+        next[key] = value;
+      });
+      return next;
+    });
+  };
 
   // Computed totals
   const servicesTotal = serviceItems.reduce((sum, item) => sum + (item.total || 0), 0);
@@ -1548,138 +1573,201 @@ export default function LoadPlannerEditPage() {
             {/* PDF Tab */}
             <TabsContent value="pdf" className="mt-4 space-y-4">
               {/* Controls */}
-              <div className="flex items-center justify-between gap-4 p-4 bg-slate-200 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-slate-900">Quote Preview</h3>
+              <div className="mb-6 no-print space-y-3">
+                <div className="flex items-center justify-between gap-4 p-4 bg-slate-50 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-slate-900">Quote Preview</h3>
+                    {isDownloadingPdf && (
+                      <span className="text-sm text-slate-500">Generating PDF...</span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => setIsPdfSectionsOpen((prev) => !prev)}
+                    >
+                      <EyeOff className="h-4 w-4" />
+                      Sections
+                      {isPdfSectionsOpen ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                    </Button>
+                    <Button size="sm" onClick={handleDownloadPdf} disabled={isDownloadingPdf}>
+                      <Download className="w-4 h-4 mr-2" />
+                      {isDownloadingPdf ? 'Generating...' : 'Download PDF'}
+                    </Button>
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <Select defaultValue="all">
-                    <SelectTrigger className="w-[180px] h-9 bg-white text-slate-900 border-slate-200">
-                      <SelectValue placeholder="Select sections" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">
-                        <div className="flex items-center gap-2">
-                          <Layers className="h-4 w-4" />
-                          All Sections
+                {isPdfSectionsOpen && (
+                  <Card>
+                    <CardContent className="pt-5">
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="text-sm font-semibold text-slate-900">Show / Hide PDF Sections</h4>
+                        <div className="flex items-center gap-4">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-xs"
+                            onClick={() => setAllPdfSections(true)}
+                          >
+                            Show All
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-xs"
+                            onClick={() => setAllPdfSections(false)}
+                          >
+                            Hide All
+                          </Button>
                         </div>
-                      </SelectItem>
-                      <SelectItem value="customer">
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4" />
-                          Customer Info
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-3">
+                            <Switch checked={pdfSections.companyHeader} onCheckedChange={(checked) => setPdfSections((prev) => ({ ...prev, companyHeader: checked }))} />
+                            <span className="text-sm">Company Header</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Switch checked={pdfSections.routeMap} onCheckedChange={(checked) => setPdfSections((prev) => ({ ...prev, routeMap: checked }))} />
+                            <span className="text-sm">Route Map</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Switch checked={pdfSections.loadCompliance} onCheckedChange={(checked) => setPdfSections((prev) => ({ ...prev, loadCompliance: checked }))} />
+                            <span className="text-sm">Load Compliance (Warnings & Permits)</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Switch checked={pdfSections.permitEscortCosts} onCheckedChange={(checked) => setPdfSections((prev) => ({ ...prev, permitEscortCosts: checked }))} />
+                            <span className="text-sm">Permit & Escort Costs</span>
+                          </div>
                         </div>
-                      </SelectItem>
-                      <SelectItem value="route">
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4" />
-                          Route Details
+
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-3">
+                            <Switch checked={pdfSections.clientInformation} onCheckedChange={(checked) => setPdfSections((prev) => ({ ...prev, clientInformation: checked }))} />
+                            <span className="text-sm">Client Information</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Switch checked={pdfSections.cargoDetails} onCheckedChange={(checked) => setPdfSections((prev) => ({ ...prev, cargoDetails: checked }))} />
+                            <span className="text-sm">Cargo Details</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Switch checked={pdfSections.servicesTable} onCheckedChange={(checked) => setPdfSections((prev) => ({ ...prev, servicesTable: checked }))} />
+                            <span className="text-sm">Services Table</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Switch checked={pdfSections.pricingSummary} onCheckedChange={(checked) => setPdfSections((prev) => ({ ...prev, pricingSummary: checked }))} />
+                            <span className="text-sm">Pricing Summary / Grand Total</span>
+                          </div>
                         </div>
-                      </SelectItem>
-                      <SelectItem value="cargo">
-                        <div className="flex items-center gap-2">
-                          <Package className="h-4 w-4" />
-                          Cargo Items
+
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-3">
+                            <Switch checked={pdfSections.pickupDropoffLocations} onCheckedChange={(checked) => setPdfSections((prev) => ({ ...prev, pickupDropoffLocations: checked }))} />
+                            <span className="text-sm">Pickup / Dropoff Locations</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Switch checked={pdfSections.loadArrangementDiagrams} onCheckedChange={(checked) => setPdfSections((prev) => ({ ...prev, loadArrangementDiagrams: checked }))} />
+                            <span className="text-sm">Load Arrangement Diagrams</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Switch checked={pdfSections.accessorialCharges} onCheckedChange={(checked) => setPdfSections((prev) => ({ ...prev, accessorialCharges: checked }))} />
+                            <span className="text-sm">Accessorial Charges</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Switch checked={pdfSections.termsNotes} onCheckedChange={(checked) => setPdfSections((prev) => ({ ...prev, termsNotes: checked }))} />
+                            <span className="text-sm">Terms & Notes</span>
+                          </div>
                         </div>
-                      </SelectItem>
-                      <SelectItem value="pricing">
-                        <div className="flex items-center gap-2">
-                          <DollarSign className="h-4 w-4" />
-                          Pricing
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="permits">
-                        <div className="flex items-center gap-2">
-                          <FileWarning className="h-4 w-4" />
-                          Permits
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button 
-                    size="sm" 
-                    onClick={handleDownloadPdf} 
-                    disabled={isDownloadingPdf}
-                    className="bg-blue-600 text-white hover:bg-blue-700"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    {isDownloadingPdf ? 'Generating...' : 'Download PDF'}
-                  </Button>
-                </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
 
               {/* PDF Content */}
-              <div className="bg-white rounded-lg overflow-auto" style={{ maxHeight: '70vh' }}>
+              <div className="bg-slate-100 rounded-lg overflow-auto" style={{ maxHeight: '70vh' }}>
                 {/* Main Card */}
                 <div className="max-w-5xl mx-auto px-6 py-2">
                   <div className="bg-white shadow-xl rounded-xl overflow-hidden border border-slate-200">
                     {/* Header Section */}
-                    <div className="p-8 border-b border-slate-100 flex justify-between items-start" style={{ backgroundColor: 'rgba(248, 250, 252, 0.5)' }}>
-                      <div className="flex flex-col gap-4">
-                        <div className="flex items-center gap-3">
-                          <div className="text-2xl font-extrabold tracking-tighter uppercase text-slate-900">
-                            SEAHORSE EXPRESS
+                    {pdfSections.companyHeader && (
+                      <div className="p-8 border-b border-slate-100 flex justify-between items-start" style={{ backgroundColor: 'rgba(248, 250, 252, 0.5)' }}>
+                        <div className="flex flex-col gap-4">
+                          <div className="flex items-center gap-3">
+                            <div className="text-2xl font-extrabold tracking-tighter uppercase text-slate-900">
+                              SEAHORSE EXPRESS
+                            </div>
+                          </div>
+                          <div className="text-sm space-y-1 text-slate-500">
+                            <p>110 Vintage Park Blvd, Houston, TX, 77070</p>
+                            <p>Danny@seahorseexpress.com</p>
+                            <p>(201) 955-1199</p>
                           </div>
                         </div>
-                        <div className="text-sm space-y-1 text-slate-500">
-                          <p>110 Vintage Park Blvd, Houston, TX, 77070</p>
-                          <p>Danny@seahorseexpress.com</p>
-                          <p>(201) 955-1199</p>
+                        <div className="text-right">
+                          <h1 className="text-3xl font-extrabold mb-2 text-blue-600">
+                            QUOTATION
+                          </h1>
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                            <span className="text-slate-500 font-medium">Quote ID</span>
+                            <span className="font-bold text-slate-900">#{quoteNumber || tempQuoteNumber}</span>
+                            <span className="text-slate-500 font-medium">Issue Date</span>
+                            <span className="text-slate-900">{currentDate ? formatDate(currentDate) : '—'}</span>
+                            <span className="text-slate-500 font-medium">Valid Until</span>
+                            <span className="text-slate-900">Feb 27, 2026</span>
+                          </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <h1 className="text-3xl font-extrabold mb-2 text-blue-600">
-                          QUOTATION
-                        </h1>
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-                          <span className="text-slate-500 font-medium">Quote ID</span>
-                          <span className="font-bold text-slate-900">#{quoteNumber || tempQuoteNumber}</span>
-                          <span className="text-slate-500 font-medium">Issue Date</span>
-                          <span className="text-slate-900">{currentDate ? formatDate(currentDate) : '—'}</span>
-                          <span className="text-slate-500 font-medium">Valid Until</span>
-                          <span className="text-slate-900">Feb 27, 2026</span>
-                        </div>
-                      </div>
-                    </div>
+                    )}
 
                     {/* Client Information */}
-                    <div className="p-8 border-b border-slate-100">
-                      <h3 className="text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2 text-blue-600">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                        Client Information
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
-                        <div>
-                          <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Company Name</p>
-                          <p className="text-sm font-bold text-slate-900 leading-tight">{customerCompany || '-'}</p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Contact Person</p>
-                          <p className="text-sm font-bold text-slate-900">{customerName || 'N/A'}</p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Phone Number</p>
-                          <p className="text-sm font-bold text-slate-900">{customerPhone || '-'}</p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Email Address</p>
-                          <p className="text-sm font-bold text-slate-900 break-words">{customerEmail || '-'}</p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Address</p>
-                          <p className="text-sm font-bold text-slate-900 leading-tight">
-                            {customerAddress || '-'}
-                            {customerCity && customerState && <><br />{customerCity}, {customerState} {customerZip}</>}
-                          </p>
+                    {pdfSections.clientInformation && (
+                      <div className="p-8 border-b border-slate-100">
+                        <h3 className="text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2 text-blue-600">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                          Client Information
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+                          <div>
+                            <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Company Name</p>
+                            <p className="text-sm font-bold text-slate-900 leading-tight">{customerCompany || '-'}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Contact Person</p>
+                            <p className="text-sm font-bold text-slate-900">{customerName || 'N/A'}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Phone Number</p>
+                            <p className="text-sm font-bold text-slate-900">{customerPhone || '-'}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Email Address</p>
+                            <p className="text-sm font-bold text-slate-900 break-words">{customerEmail || '-'}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Address</p>
+                            <p className="text-sm font-bold text-slate-900 leading-tight">
+                              {customerAddress || '-'}
+                              {customerCity && customerState && <><br />{customerCity}, {customerState} {customerZip}</>}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Transport Distance */}
-                    <div className="grid grid-cols-3 gap-0 border-b border-slate-100">
+                    {pdfSections.pickupDropoffLocations && (
+                      <div className="grid grid-cols-3 gap-0 border-b border-slate-100">
                         <div className="p-8 border-r border-slate-100">
                           <h3 className="text-xs font-bold uppercase tracking-widest mb-3 flex items-center gap-2 text-blue-600">
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1723,9 +1811,143 @@ export default function LoadPlannerEditPage() {
                           </div>
                         </div>
                       </div>
+                    )}
+
+                    {/* Route Map */}
+                    {pdfSections.routeMap && (
+                      <div className="p-8 border-b border-slate-100">
+                        <h3 className="text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2 text-blue-600">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A2 2 0 013 15.382V5.618a2 2 0 011.553-1.894L9 2m0 18l6-3m-6 3V2m6 15l5.447-2.724A2 2 0 0021 12.382V2.618a2 2 0 00-1.553-1.894L15 0m0 17V2" />
+                          </svg>
+                          Route Map
+                        </h3>
+                        <div className="rounded-lg border border-slate-200 bg-slate-50 p-6 text-sm text-slate-600">
+                          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                            <span>From: {pickupCity ? `${pickupCity}, ${pickupState}` : pickupAddress || '-'}</span>
+                            <span>To: {dropoffCity ? `${dropoffCity}, ${dropoffState}` : dropoffAddress || '-'}</span>
+                            <span>Distance: {distanceMiles ? `${Math.round(distanceMiles).toLocaleString()} miles` : '—'}</span>
+                          </div>
+                          <div className="mt-4 h-32 rounded-md border border-dashed border-slate-300 bg-white flex items-center justify-center text-xs text-slate-400">
+                            Route map preview appears here
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Cargo Details */}
+                    {pdfSections.cargoDetails && (
+                      <div className="p-8 border-b border-slate-100">
+                        <h3 className="text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2 text-blue-600">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-14l-8-4m8 4v14m-8-4V7" />
+                          </svg>
+                          Cargo Details
+                        </h3>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm border-collapse">
+                            <thead>
+                              <tr className="border-b-2 border-slate-200">
+                                <th className="text-left py-2 px-3 text-xs uppercase font-bold text-slate-500 tracking-widest">Description</th>
+                                <th className="text-center py-2 px-3 text-xs uppercase font-bold text-slate-500 tracking-widest">Qty</th>
+                                <th className="text-right py-2 px-3 text-xs uppercase font-bold text-slate-500 tracking-widest">Dims (ft)</th>
+                                <th className="text-right py-2 px-3 text-xs uppercase font-bold text-slate-500 tracking-widest">Weight</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {loadItems.length > 0 ? loadItems.map((item) => (
+                                <tr key={item.id} className="border-b border-slate-100">
+                                  <td className="py-2 px-3 font-medium text-slate-900">{item.description}</td>
+                                  <td className="text-center py-2 px-3 text-slate-600">{item.quantity}</td>
+                                  <td className="text-right py-2 px-3 text-slate-600">
+                                    {item.length.toFixed(1)} x {item.width.toFixed(1)} x {item.height.toFixed(1)}
+                                  </td>
+                                  <td className="text-right py-2 px-3 text-slate-600">{item.weight.toLocaleString()} lbs</td>
+                                </tr>
+                              )) : (
+                                <tr className="border-b border-slate-100">
+                                  <td className="py-3 px-3 font-medium text-slate-400" colSpan={4}>No cargo items added</td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Load Arrangement Diagrams */}
+                    {pdfSections.loadArrangementDiagrams && (
+                      <div className="p-8 border-b border-slate-100">
+                        <h3 className="text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2 text-blue-600">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7h18M3 12h18M3 17h18" />
+                          </svg>
+                          Load Arrangement Diagrams
+                        </h3>
+                        {loadPlan.loads.length > 0 ? (
+                          <div className="space-y-4">
+                            {loadPlan.loads.slice(0, 1).map((load, index) => (
+                              <div key={load.id} className="border border-slate-200 rounded-lg p-4">
+                                <div className="text-sm font-semibold text-slate-800 mb-3">
+                                  Load {index + 1}: {load.recommendedTruck.name}
+                                </div>
+                                <TrailerDiagram
+                                  truck={load.recommendedTruck}
+                                  items={load.items}
+                                  placements={load.placements}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-slate-500">Add cargo items to generate load diagrams.</p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Load Compliance (Warnings & Permits) */}
+                    {pdfSections.loadCompliance && (
+                      <div className="p-8 border-b border-slate-100">
+                        <h3 className="text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2 text-blue-600">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86l-8.1 14.02A1 1 0 003.01 19h17.98a1 1 0 00.86-1.5l-8.1-14.02a1 1 0 00-1.72 0z" />
+                          </svg>
+                          Load Compliance (Warnings & Permits)
+                        </h3>
+                        <div className="space-y-2 text-sm text-slate-600">
+                          <div>Max Dimensions: {maxItemLength.toFixed(1)}' L × {maxItemWidth.toFixed(1)}' W × {maxItemHeight.toFixed(1)}' H</div>
+                          <div>Total Weight: {totalCargoWeight.toLocaleString()} lbs</div>
+                          {loadPlan.warnings.length > 0 ? (
+                            <ul className="list-disc list-inside text-amber-600">
+                              {loadPlan.warnings.map((warning, idx) => (
+                                <li key={idx}>{warning}</li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <div className="text-emerald-600">No compliance warnings detected.</div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Permit & Escort Costs */}
+                    {pdfSections.permitEscortCosts && (
+                      <div className="p-8 border-b border-slate-100">
+                        <h3 className="text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2 text-blue-600">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Permit & Escort Costs
+                        </h3>
+                        <div className="text-sm text-slate-600">
+                          Permit calculations are available in the Permits tab. Add route and truck details to see permit and escort cost breakdowns.
+                        </div>
+                      </div>
+                    )}
 
                     {/* Services Section */}
-                    <div className="border-b border-slate-100">
+                    {pdfSections.servicesTable && (
+                      <div className="border-b border-slate-100">
                         <div className="p-8 pb-4">
                           <h3 className="text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2 text-blue-600">
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1765,13 +1987,105 @@ export default function LoadPlannerEditPage() {
                                   Subtotal (Services)
                                 </td>
                                 <td className="py-4 px-4 text-right text-xl font-bold text-slate-900">
-                                  {formatCurrency(grandTotal)}
+                                  {formatCurrency(servicesTotal)}
                                 </td>
                               </tr>
                             </tfoot>
                           </table>
                         </div>
                       </div>
+                    )}
+
+                    {/* Accessorial Charges */}
+                    {pdfSections.accessorialCharges && (
+                      <div className="border-b border-slate-100">
+                        <div className="p-8 pb-4">
+                          <h3 className="text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2 text-blue-600">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V6m0 12v-2" />
+                            </svg>
+                            Accessorial Charges
+                          </h3>
+                        </div>
+                        <div className="px-8 pb-8">
+                          <table className="w-full text-sm border-collapse">
+                            <thead>
+                              <tr className="border-b-2 border-slate-200">
+                                <th className="text-left py-3 px-4 text-xs uppercase font-bold text-slate-500 tracking-widest">Charge</th>
+                                <th className="text-center py-3 px-4 text-xs uppercase font-bold text-slate-500 tracking-widest">Qty</th>
+                                <th className="text-right py-3 px-4 text-xs uppercase font-bold text-slate-500 tracking-widest">Unit Rate</th>
+                                <th className="text-right py-3 px-4 text-xs uppercase font-bold text-slate-500 tracking-widest">Line Total</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {accessorialItems.length > 0 ? accessorialItems.map((item) => (
+                                <tr key={item.id} className="border-b border-slate-100">
+                                  <td className="py-3 px-4 font-medium text-slate-900">{item.name}</td>
+                                  <td className="text-center py-3 px-4 text-slate-600">{item.quantity}</td>
+                                  <td className="text-right py-3 px-4 text-slate-600">{formatCurrency(item.rate)}</td>
+                                  <td className="text-right py-3 px-4 font-semibold text-slate-900">{formatCurrency(item.total)}</td>
+                                </tr>
+                              )) : (
+                                <tr className="border-b border-slate-100">
+                                  <td className="py-3 px-4 font-medium text-slate-400" colSpan={4}>No accessorial charges added</td>
+                                </tr>
+                              )}
+                            </tbody>
+                            <tfoot>
+                              <tr className="border-t-2 border-slate-300">
+                                <td colSpan={3} className="py-4 px-4 text-right text-base font-bold text-slate-900 uppercase tracking-wide">
+                                  Subtotal (Accessorials)
+                                </td>
+                                <td className="py-4 px-4 text-right text-xl font-bold text-slate-900">
+                                  {formatCurrency(accessorialsTotal)}
+                                </td>
+                              </tr>
+                            </tfoot>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Pricing Summary / Grand Total */}
+                    {pdfSections.pricingSummary && (
+                      <div className="p-8 border-b border-slate-100">
+                        <h3 className="text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2 text-blue-600">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V6m0 12v-2" />
+                          </svg>
+                          Pricing Summary / Grand Total
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                          <div className="p-4 border border-slate-200 rounded-lg">
+                            <div className="text-slate-500">Services</div>
+                            <div className="text-lg font-semibold text-slate-900">{formatCurrency(servicesTotal)}</div>
+                          </div>
+                          <div className="p-4 border border-slate-200 rounded-lg">
+                            <div className="text-slate-500">Accessorials</div>
+                            <div className="text-lg font-semibold text-slate-900">{formatCurrency(accessorialsTotal)}</div>
+                          </div>
+                          <div className="p-4 border border-slate-200 rounded-lg bg-slate-50">
+                            <div className="text-slate-500">Grand Total</div>
+                            <div className="text-xl font-bold text-slate-900">{formatCurrency(grandTotal)}</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Terms & Notes */}
+                    {pdfSections.termsNotes && (
+                      <div className="p-8">
+                        <h3 className="text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2 text-blue-600">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 4H7a2 2 0 01-2-2V6a2 2 0 012-2h6l6 6v10a2 2 0 01-2 2z" />
+                          </svg>
+                          Terms & Notes
+                        </h3>
+                        <div className="text-sm text-slate-600 whitespace-pre-line">
+                          {quoteNotes || 'No additional terms or notes provided.'}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
