@@ -1,4 +1,6 @@
-# Phase C - SaaS + Verticals (Weeks 105-128)
+# Phase C - SaaS + Verticals (Weeks 105-128) — FUTURE
+
+> **STATUS (Feb 2026):** This phase is deferred until after the 16-week P0 MVP is complete. See `52-roadmap-overview.md` for the current working plan.
 
 **Duration**: 24 weeks  
 **Team**: 3-4 engineers Ã— 30 hours/week  

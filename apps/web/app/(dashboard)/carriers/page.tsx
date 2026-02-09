@@ -73,6 +73,7 @@ import {
   Mail,
 } from 'lucide-react';
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
+import { useDebounce } from '@/lib/hooks';
 
 type CarrierType = 'COMPANY' | 'OWNER_OPERATOR';
 type CarrierStatus = 'ACTIVE' | 'INACTIVE' | 'PREFERRED' | 'ON_HOLD' | 'BLACKLISTED';
@@ -116,12 +117,13 @@ export default function CarriersPage() {
   const [newCarrierName, setNewCarrierName] = useState('');
   const pageSize = 25;
   const [showBatchDeleteDialog, setShowBatchDeleteDialog] = useState(false);
+  const debouncedSearch = useDebounce(searchQuery, 300);
 
   // Fetch carriers
   const { data, isLoading, error } = useCarriers({
     page,
     limit: pageSize,
-    search: searchQuery || undefined,
+    search: debouncedSearch || undefined,
     status: statusFilter === 'all' ? undefined : statusFilter,
     carrierType: typeFilter === 'all' ? undefined : typeFilter,
     state: stateFilter || undefined,

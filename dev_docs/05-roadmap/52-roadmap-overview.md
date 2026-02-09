@@ -1,79 +1,51 @@
 # Development Roadmap
 
-Week-by-week breakdown of the 162-week development plan.
+> **UPDATED Feb 2026:** The original 162-week plan has been replaced by a **16-week P0 MVP sprint**. The canonical action plan is at `dev_docs/Claude-review-v1/00-executive-summary/prioritized-action-plan.md`.
 
 ---
 
-## Phase Navigation
+## Current Plan: 16-Week P0 MVP
 
-| Phase                          | Name         | Weeks   | Duration | Status     |
-| ------------------------------ | ------------ | ------- | -------- | ---------- |
-| [Phase A](./phase-a/README.md) | Internal MVP | 1-78    | 78 weeks | 🔨 Active  |
-| [Phase B](./phase-b/README.md) | Enhancement  | 79-104  | 26 weeks | 📋 Planned |
-| [Phase C](./phase-c/README.md) | SaaS Launch  | 105-128 | 24 weeks | 📋 Planned |
-| [Phase D](./phase-d/README.md) | Expansion    | 129-146 | 18 weeks | 📋 Planned |
-| [Phase E](./phase-e/README.md) | Specialty    | 147-162 | 16 weeks | 📋 Planned |
+**Team:** 2 engineers @ 30 hrs/week = 60 hrs/week | **Total:** 636 hours
 
----
+| Phase | Week(s) | Hours | Deliverables |
+| --- | --- | --- | --- |
+| **0: Emergency Fixes** | 1 | 34h | Fix carrier 404s, replace confirm() dialogs, shared status constants, skeleton loading |
+| **1: Design Foundation** | 2 | 47h | Design tokens, StatusBadge, KPICard, FilterBar, DataGrid, ESLint enforcement |
+| **2: Patterns + Refactor** | 3-4 | 87h | List/Detail/Form page patterns, carrier page refactor (template), tests |
+| **3: TMS Core - Orders** | 5-7 | 126h | Order backend+frontend: entry, list, detail, stop management |
+| **4: TMS Core - Loads** | 8-10 | 152h | Load backend→frontend wiring, loads list/detail, dispatch board, carrier assignment |
+| **5: Operations** | 11-13 | 98h | Rate confirmation PDFs, FMCSA SAFER API, tracking map, quote builder |
+| **6: Financial** | 14-16 | 92h | Invoice generation, carrier settlements, AR aging, QuickBooks sync |
 
-## Timeline Overview
+### Key Milestones
 
-```
-2025                                2026                                2027
-├────────────────────────┼────────────────────────┼──────────────────────┤
-
-Phase A (MVP)                                      Phase B
-█████████████████████████████████████████████████████████████████████████
-Week 1────────────────────────────────────Week 78  Week 79─────Week 104
-
-                                                   Phase C (SaaS)
-                                                   ████████████████████
-                                                   Week 105───Week 128
-
-                                                              Phase D
-                                                              ███████████
-                                                              W129──W146
-
-                                                                    Phase E
-                                                                    ██████
-                                                                    W147─162
-```
+| Week | Milestone |
+| --- | --- |
+| 1 | All critical bugs fixed, no more 404s |
+| 4 | Design system operational, carrier page refactored as template |
+| 7 | Orders can be created and managed end-to-end |
+| 10 | Dispatch board live, loads assigned to carriers |
+| 13 | Rate confirmations generated, FMCSA verification working |
+| 16 | Invoices generated, broker-usable MVP complete |
 
 ---
 
-## Team Capacity
+## Long-Term Vision (Original 162-Week Plan)
 
-### Phase A
+> The phases below are the original aspirational roadmap. They are NOT the current working plan.
 
-- **Engineers:** 2 @ 30 hrs/week = 60 hrs/week
-- **AI Tools:** Claude for code assistance
-- **Total Phase:** 4,680 engineering hours
-
-### Phase B+
-
-- Scale team based on revenue
-- Target: 4-6 engineers by Phase C
-
----
-
-## Go-Live Schedule
-
-| #     | Week | Module     | Description             |
-| ----- | ---- | ---------- | ----------------------- |
-| GL-1  | 6    | Auth/Admin | User management live    |
-| GL-2  | 12   | CRM        | HubSpot sync working    |
-| GL-3  | 20   | Sales      | Quoting live            |
-| GL-4  | 28   | TMS        | Order management live   |
-| GL-5  | 36   | Carrier    | Carrier onboarding live |
-| GL-6  | 44   | Accounting | Invoicing live          |
-| GL-7  | 56   | Operations | Full workflow live      |
-| GL-8  | 64   | EDI        | EDI processing live     |
-| GL-9  | 74   | Analytics  | Dashboards live         |
-| GL-10 | 78   | Portal     | Customer portal live    |
+| Phase | Name | Weeks | Duration | Status |
+| --- | --- | --- | --- | --- |
+| Phase A | Internal MVP | 1-78 | 78 weeks | Replaced by 16-week MVP above |
+| Phase B | Enhancement | 79-104 | 26 weeks | Future |
+| Phase C | SaaS Launch | 105-128 | 24 weeks | Future |
+| Phase D | Expansion | 129-146 | 18 weeks | Future |
+| Phase E | Specialty | 147-162 | 16 weeks | Future |
 
 ---
 
-## Phase A Detail (Weeks 1-78)
+## Original Phase A Detail (Weeks 1-78) — FOR REFERENCE ONLY
 
 ### Section 1: Foundation (Weeks 1-6)
 

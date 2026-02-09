@@ -27,6 +27,7 @@ import { toast } from 'sonner';
 import { CustomerForm } from '@/components/quotes/customer-form';
 import { RouteMap } from '@/components/load-planner/route-map';
 import { UniversalDropzone } from '@/components/load-planner/UniversalDropzone';
+import { AddressAutocomplete, type AddressComponents } from '@/components/ui/address-autocomplete';
 import { SearchableSelect, type SearchableSelectOption } from '@/components/ui/searchable-select';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
@@ -620,11 +621,19 @@ export default function LoadPlannerEditPage() {
                 <CardContent className="space-y-4">
                   <div>
                     <Label htmlFor="pickupAddress">Street Address *</Label>
-                    <Input
+                    <AddressAutocomplete
                       id="pickupAddress"
                       value={pickupAddress}
-                      onChange={(e) => setPickupAddress(e.target.value)}
-                      placeholder="Enter pickup address..."
+                      onChange={setPickupAddress}
+                      onAddressSelect={(components: AddressComponents) => {
+                        setPickupAddress(components.address);
+                        setPickupCity(components.city);
+                        setPickupState(components.state);
+                        setPickupZip(components.zip);
+                        if (components.lat) setPickupLat(components.lat);
+                        if (components.lng) setPickupLng(components.lng);
+                      }}
+                      placeholder="Start typing address..."
                     />
                   </div>
                   <div className="grid grid-cols-3 gap-3">
@@ -667,11 +676,19 @@ export default function LoadPlannerEditPage() {
                 <CardContent className="space-y-4">
                   <div>
                     <Label htmlFor="dropoffAddress">Street Address *</Label>
-                    <Input
+                    <AddressAutocomplete
                       id="dropoffAddress"
                       value={dropoffAddress}
-                      onChange={(e) => setDropoffAddress(e.target.value)}
-                      placeholder="Enter dropoff address..."
+                      onChange={setDropoffAddress}
+                      onAddressSelect={(components: AddressComponents) => {
+                        setDropoffAddress(components.address);
+                        setDropoffCity(components.city);
+                        setDropoffState(components.state);
+                        setDropoffZip(components.zip);
+                        if (components.lat) setDropoffLat(components.lat);
+                        if (components.lng) setDropoffLng(components.lng);
+                      }}
+                      placeholder="Start typing address..."
                     />
                   </div>
                   <div className="grid grid-cols-3 gap-3">
@@ -965,6 +982,81 @@ export default function LoadPlannerEditPage() {
                           </Button>
                         )}
                       </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Cargo Items List */}
+              {cargoItems.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center gap-2">
+                        <Package className="h-5 w-5" />
+                        Cargo Items ({cargoItems.length})
+                      </CardTitle>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCargoItems([])}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Clear All
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {cargoItems.map((item, index) => (
+                        <div
+                          key={item.id}
+                          className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                        >
+                          <div className="flex-1">
+                            <div className="font-medium">{item.description}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {(item.lengthIn / 12).toFixed(1)}&apos; × {(item.widthIn / 12).toFixed(1)}&apos; × {(item.heightIn / 12).toFixed(1)}&apos; • {item.weightLbs.toLocaleString()} lbs
+                              {item.quantity > 1 && ` • Qty: ${item.quantity}`}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setManualDescription(item.description);
+                                setManualLength(String(item.lengthIn / 12));
+                                setManualWidth(String(item.widthIn / 12));
+                                setManualHeight(String(item.heightIn / 12));
+                                setManualWeight(String(item.weightLbs));
+                                setManualQuantity(String(item.quantity));
+                                setCargoEntryMode('manual');
+                              }}
+                              title="Edit item"
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setCargoItems(cargoItems.filter((_, i) => i !== index));
+                              }}
+                              title="Remove item"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-4 pt-4 border-t flex justify-between text-sm">
+                      <span className="text-muted-foreground">Total Weight</span>
+                      <span className="font-medium">
+                        {cargoItems.reduce((sum, item) => sum + (item.weightLbs * item.quantity), 0).toLocaleString()} lbs
+                      </span>
                     </div>
                   </CardContent>
                 </Card>

@@ -1,5 +1,7 @@
 # 47 - Complete Screen Catalog
 
+> **SUPERSEDED (Feb 2026):** For current screen specs, see `dev_docs/12-Rabih-design-Process/00-global/00-master-screen-catalog.md` (detailed catalog with 15-section specs for 89 priority screens). For MVP scope, only ~30 screens are in the P0 plan — see `dev_docs/Claude-review-v1/04-screen-integration/03-screen-priority-matrix.md`.
+
 **Total Screens: 362** across 38 services organized by module and user role access.
 
 ---

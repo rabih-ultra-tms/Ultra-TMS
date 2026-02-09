@@ -2,6 +2,8 @@
 
 **How to effectively use Claude Code for 3PL Platform development**
 
+> **UPDATED Feb 2026:** Added Backend-First Discovery, Design-to-Code Workflow, and Quality Gates sections. MVP scope is 8 services / ~30 screens / 16 weeks. See `00-MVP-PROMPTS-INDEX.md` for which prompts are in scope.
+
 ---
 
 ## Purpose
@@ -12,6 +14,114 @@ This playbook ensures Claude Code (or any AI assistant) can efficiently build fe
 - Prompt templates for common tasks
 - Decision trees for complex situations
 - Verification steps
+
+---
+
+## Backend-First Discovery (NEW — ALWAYS DO THIS)
+
+The Gemini Review (Feb 2026) found that backend services exist but are disconnected from the frontend. **Before building anything, check if the backend already exists.**
+
+### Step 1: Check for existing backend service
+
+```bash
+# Search for the service class
+grep -r "class.*Service" apps/api/src/modules/{service-name}/
+
+# Check file sizes (large files = substantial implementation)
+ls -la apps/api/src/modules/{service-name}/*.service.ts
+```
+
+### Step 2: If backend EXISTS → Wire it up, don't rebuild
+
+```
+1. Read the service file — understand all methods
+2. Read the controller — understand all endpoints
+3. Read the DTOs — understand request/response shapes
+4. Build frontend hooks that call the existing endpoints
+5. Build UI components that use those hooks
+```
+
+### Step 3: If backend does NOT exist → Build API first
+
+```
+1. Check schema.prisma for the data model
+2. Create service with CRUD methods
+3. Create controller with REST endpoints
+4. Create DTOs with Zod/class-validator
+5. Test endpoints with curl
+6. THEN build frontend
+```
+
+### Known Backend Services (DO NOT REBUILD)
+
+| Service | Location | Methods |
+|---------|----------|---------|
+| LoadsService (19KB) | `apps/api/src/modules/load/` | Full CRUD, status mgmt, filtering, pagination |
+| OrdersService (22KB) | `apps/api/src/modules/order/` | Full CRUD, multi-stop, status workflow |
+| RateConfirmationService | `apps/api/src/modules/rate-confirmation/` | PDF generation |
+| Check Calls | `apps/api/src/modules/check-call/` | Fully implemented |
+| Dispatch (assignCarrier) | Inside LoadsService | Carrier assignment logic |
+
+---
+
+## Design-to-Code Workflow (NEW)
+
+Every screen must go through this pipeline. Reference: `Claude-review-v1/04-screen-integration/01-design-to-code-workflow.md`
+
+```
+1. READ design spec  → dev_docs/12-Rabih-design-Process/{service}/{screen}.md
+2. CHECK priority    → Claude-review-v1/04-screen-integration/03-screen-priority-matrix.md
+3. CHECK backend     → Does the API exist? (see Backend-First Discovery above)
+4. BUILD             → Follow the design spec's component inventory and data fields
+5. VERIFY            → Run through quality gates (see below)
+```
+
+### Design Spec Structure (each screen file has 15 sections)
+
+1. Purpose & context
+2. ASCII wireframe layout
+3. Component inventory (shadcn/ui components to use)
+4. Data field mappings (API field → UI label)
+5. Status state machine (all valid transitions)
+6. Role-based feature matrix (who sees what)
+7. Real-time WebSocket events
+8. Bulk operations
+9. Keyboard shortcuts
+10. Empty/error/loading states
+11. Print/export layouts
+12. Responsive breakpoints
+13. Accessibility requirements
+14. Stitch design prompt
+15. Implementation notes
+
+---
+
+## Quality Gates (NEW)
+
+Before shipping ANY screen, verify all 4 levels pass. Reference: `Claude-review-v1/03-design-strategy/05-quality-gates.md`
+
+| Gate | Check | Fail = Block? |
+|------|-------|---------------|
+| **L1: Functional** | All buttons work, no `onClick={() => {}}`, no `window.confirm()`, no bare "Loading..." | Yes |
+| **L2: Data** | Real API data (not mocked), proper loading/error/empty states, pagination works | Yes |
+| **L3: Design** | Uses design tokens (not hardcoded colors), follows spec layout, responsive | Yes |
+| **L4: Polish** | Animations, keyboard shortcuts, print layout, accessibility | No (nice-to-have) |
+
+### Anti-Patterns to Check For
+
+```bash
+# Find hardcoded colors (should use design tokens)
+grep -rn "text-red-\|text-green-\|text-yellow-\|bg-red-\|bg-green-" apps/web/app/ --include="*.tsx"
+
+# Find window.confirm (should use dialog component)
+grep -rn "window.confirm" apps/web/ --include="*.tsx"
+
+# Find bare loading text (should use skeleton/spinner)
+grep -rn '"Loading..."' apps/web/ --include="*.tsx"
+
+# Find empty handlers (should have real logic)
+grep -rn "onClick={() => {}}" apps/web/ --include="*.tsx"
+```
 
 ---
 

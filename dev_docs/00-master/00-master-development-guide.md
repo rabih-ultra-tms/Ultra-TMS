@@ -2,7 +2,9 @@
 
 **The Definitive Entry Point for the 3PL Platform**
 
-> This document is the single source of truth for navigating all 93 documentation files.
+> This document is the single source of truth for navigating all documentation.
+
+> **IMPORTANT (Feb 2026):** This project has been rescoped from a 162-week/38-service vision to a **16-week/8-service MVP**. See `CLAUDE.md` at project root for current state, known bugs, and MVP scope. See `dev_docs/Claude-review-v1/` for the comprehensive review that drove this change.
 
 ---
 
@@ -10,37 +12,39 @@
 
 ### What This Project Is
 
-A comprehensive multi-vertical logistics platform replacing fragmented TMS + CRM + Accounting tools with a unified, modern system. Built with a **migration-first architecture** that makes switching from legacy systems painless.
+A 3PL freight brokerage platform replacing fragmented TMS + CRM + Accounting tools with a unified, modern system. Built with a **migration-first architecture** that makes switching from legacy systems painless.
 
 ### Current Status
 
-| Metric                  | Value                                  |
-| ----------------------- | -------------------------------------- |
-| **Current Phase**       | Phase A (MVP)                          |
-| **Team**                | 2 engineers @ 30 hrs/week each         |
-| **Timeline**            | 162 weeks total (78 weeks for Phase A) |
-| **Go-Lives in Phase A** | 10 continuous deployments              |
+| Metric | Value |
+| --- | --- |
+| **Current Phase** | P0 MVP (16-week sprint) |
+| **Overall Score** | 6.2/10 (C+) — strong foundation, weak execution |
+| **Team** | 2 engineers @ 30 hrs/week each |
+| **MVP Timeline** | 16 weeks (8 services, ~30 screens) |
+| **Long-term Vision** | 162 weeks, 38 services, 362 screens (Phase B-E, future) |
+| **Critical Bugs** | 29 total (4 critical — carrier detail 404s) |
 
 ### What to Work on Next
 
-1. Start with **Week 1 tasks** in doc `53-roadmap-phase-a.md`
-2. First service to build: **Auth & Admin** (doc `08-service-auth-admin.md`)
-3. Use the checklist in doc `49-master-checklist.md` to track progress
+1. **Fix critical bugs first** — See `dev_docs/Claude-review-v1/01-code-review/05-bug-inventory.md`
+2. **Follow the 16-week action plan** — See `dev_docs/Claude-review-v1/00-executive-summary/prioritized-action-plan.md`
+3. **Before building anything** — Check if backend already exists (LoadsService, OrdersService are implemented but disconnected from frontend)
 
 ---
 
 ## Key Numbers (Single Source of Truth)
 
-| Category            | Count | Source Document                      |
-| ------------------- | ----- | ------------------------------------ |
-| **Services**        | 38    | `07-services-overview.md`            |
-| **Screens**         | 362   | `47-screen-catalog.md`               |
-| **Verticals**       | 10    | `61-verticals-10-segments.md`        |
-| **Total Weeks**     | 162   | `52-roadmap-overview.md`             |
-| **Checklist Tasks** | 400+  | `49-master-checklist.md`             |
-| **UI Components**   | 111   | `46-design-system-components.md`     |
-| **User Personas**   | 6     | `04-user-personas.md`                |
-| **API Endpoints**   | 700+  | `76-screen-api-contract-registry.md` |
+| Category | Count | Source Document |
+| --- | --- | --- |
+| **MVP Services** | 8 | `CLAUDE.md` (P0 MVP Scope section) |
+| **MVP Screens** | ~30 | `Claude-review-v1/04-screen-integration/03-screen-priority-matrix.md` |
+| **Total Services (long-term)** | 38 | `07-services-overview.md` |
+| **Total Screens (long-term)** | 362 | `47-screen-catalog.md` |
+| **Design Specs (15-section)** | 89 | `12-Rabih-design-Process/` |
+| **Known Bugs** | 29 | `Claude-review-v1/01-code-review/05-bug-inventory.md` |
+| **UI Components** | 111 | `46-design-system-components.md` |
+| **User Personas** | 6 | `04-user-personas.md` |
 
 ---
 
@@ -370,16 +374,16 @@ All buttons work, API calls succeed, states handled.
 
 ## Tech Stack
 
-| Layer              | Technology                                   |
-| ------------------ | -------------------------------------------- |
-| **Frontend**       | React 18, TypeScript, TailwindCSS, shadcn/ui |
-| **State**          | React Query (server), Zustand (client)       |
-| **Forms**          | React Hook Form + Zod                        |
-| **Backend**        | NestJS, Prisma ORM                           |
-| **Database**       | PostgreSQL 15, Redis 7                       |
-| **Real-time**      | Socket.io                                    |
-| **Jobs**           | Bull queues                                  |
-| **Infrastructure** | Docker, GitHub Actions                       |
+| Layer | Technology |
+| --- | --- |
+| **Frontend** | Next.js 16 (App Router), React 19, TypeScript, Tailwind 4, shadcn/ui |
+| **State** | React Query (server), Zustand (client) |
+| **Forms** | React Hook Form + Zod |
+| **Backend** | NestJS 10, Prisma 6 ORM |
+| **Database** | PostgreSQL 15, Redis 7, Elasticsearch 8.13 |
+| **Real-time** | Socket.io |
+| **Jobs** | Bull queues |
+| **Infrastructure** | Docker, pnpm + Turborepo monorepo |
 
 ---
 
@@ -435,16 +439,17 @@ npm run test:cov
 
 ## Need Help?
 
-| Question                          | Go To                                  |
-| --------------------------------- | -------------------------------------- |
-| "What should I build next?"       | `53-roadmap-phase-a.md`                |
-| "How do I build this screen?"     | `76-screen-api-contract-registry.md`   |
-| "What are the field validations?" | `91-entity-data-dictionary.md`         |
-| "What's the business logic?"      | `92-business-rules-reference.md`       |
-| "How do I set up my environment?" | `50-development-setup-guide.md`        |
-| "What are the coding standards?"  | `65-development-standards-overview.md` |
+| Question | Go To |
+| --- | --- |
+| "What should I build next?" | `Claude-review-v1/00-executive-summary/prioritized-action-plan.md` |
+| "What are the known bugs?" | `Claude-review-v1/01-code-review/05-bug-inventory.md` |
+| "How do I build this screen?" | `12-Rabih-design-Process/{service}/{screen}.md` + `08-standards/74-pre-feature-checklist.md` |
+| "What are the field validations?" | `91-entity-data-dictionary.md` |
+| "What's the business logic?" | `92-business-rules-reference.md` |
+| "What are the quality gates?" | `Claude-review-v1/03-design-strategy/05-quality-gates.md` |
+| "What are the coding standards?" | `65-development-standards-overview.md` |
 
 ---
 
-_Document Version: 3.0.0_
-_Last Updated: January 2025_
+_Document Version: 4.0.0_
+_Last Updated: February 2026_

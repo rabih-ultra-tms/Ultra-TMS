@@ -198,7 +198,7 @@ model Agent {
   AgentAgreement          AgentAgreement[]
   AgentCommission         AgentCommission[]
   AgentContact            AgentContact[]
-  AgentCustomerAssignment AgentCustomerAssignment[]
+  AgentCustomerAssignment  AgentCustomerAssignment[]
   AgentDrawBalance        AgentDrawBalance[]
   AgentLead               AgentLead[]
   AgentPayout             AgentPayout[]
@@ -309,7 +309,7 @@ model AgentContact {
   isActive        Boolean           @default(true)
   Agent           Agent             @relation(fields: [agentId], references: [id], onDelete: Cascade)
   Tenant          Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  AgentPortalUser AgentPortalUser[]
+  AgentPortalUser  AgentPortalUser[]
 
   @@index([agentId])
   @@index([isPrimary])
@@ -406,7 +406,7 @@ model AgentLead {
   assignedAt              DateTime?
   assignedTo              String?
   city                    String?                   @db.VarChar(100)
-  AgentCustomerAssignment AgentCustomerAssignment[]
+  AgentCustomerAssignment  AgentCustomerAssignment[]
   Agent                   Agent                     @relation(fields: [agentId], references: [id], onDelete: Cascade)
   Company                 Company?                  @relation(fields: [convertedCustomerId], references: [id])
   Tenant                  Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -544,7 +544,7 @@ model AuditAlert {
   createdById        String?
   updatedById        String?
   Tenant             Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  AuditAlertIncident AuditAlertIncident[]
+  AuditAlertIncident  AuditAlertIncident[]
 
   @@index([externalId, sourceSystem])
   @@index([isActive])
@@ -905,7 +905,7 @@ model CapacitySearch {
   deletedAt      DateTime?
   createdById    String?
   updatedById    String?
-  CapacityResult CapacityResult[]
+  CapacityResult  CapacityResult[]
   Tenant         Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([availableDate])
@@ -995,7 +995,7 @@ model Carrier {
   CarrierInsurance          CarrierInsurance[]
   CarrierInvoiceSubmission  CarrierInvoiceSubmission[]
   CarrierLoadView           CarrierLoadView[]
-  CarrierPerformanceHistory CarrierPerformanceHistory[]
+  CarrierPerformanceHistory   CarrierPerformanceHistory[]
   CarrierPortalActivityLog  CarrierPortalActivityLog[]
   CarrierPortalDocument     CarrierPortalDocument[]
   CarrierPortalSession      CarrierPortalSession[]
@@ -1468,7 +1468,7 @@ model CarrierPortalUser {
   CarrierInvoiceSubmission  CarrierInvoiceSubmission[]
   CarrierPortalActivityLog  CarrierPortalActivityLog[]
   CarrierPortalDocument     CarrierPortalDocument[]
-  CarrierPortalNotification CarrierPortalNotification[]
+  CarrierPortalNotification  CarrierPortalNotification[]
   CarrierPortalSession      CarrierPortalSession[]
   Carrier                   Carrier                     @relation(fields: [carrierId], references: [id], onDelete: Cascade)
   Tenant                    Tenant                      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -2079,7 +2079,7 @@ model CommissionPlan {
   CommissionEntry          CommissionEntry[]
   Tenant                   Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   CommissionPlanTier       CommissionPlanTier[]
-  UserCommissionAssignment UserCommissionAssignment[]
+  UserCommissionAssignment  UserCommissionAssignment[]
 
   @@unique([tenantId, name, effectiveDate])
   @@index([externalId, sourceSystem])
@@ -2189,7 +2189,7 @@ model CommunicationTemplate {
   externalId       String?            @db.VarChar(255)
   sourceSystem     String?            @db.VarChar(100)
   updatedById      String?
-  CommunicationLog CommunicationLog[]
+  CommunicationLog  CommunicationLog[]
   Tenant           Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, code, channel])
@@ -2445,7 +2445,7 @@ model Contract {
   ContractMetric     ContractMetric[]
   ContractRateTable  ContractRateTable[]
   ContractSLA        ContractSLA[]
-  FuelSurchargeTable FuelSurchargeTable[]
+  FuelSurchargeTable  FuelSurchargeTable[]
   VolumeCommitment   VolumeCommitment[]
 
   @@index([carrierId])
@@ -2644,7 +2644,7 @@ model ContractRateTable {
   deletedAt        DateTime?
   createdById      String?
   updatedById      String?
-  ContractRateLane ContractRateLane[]
+  ContractRateLane  ContractRateLane[]
   Contract         Contract           @relation(fields: [contractId], references: [id], onDelete: Cascade)
   Tenant           Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -2912,7 +2912,7 @@ model Dashboard {
   createdById     String?
   updatedById     String?
   Tenant          Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  DashboardWidget DashboardWidget[]
+  DashboardWidget  DashboardWidget[]
 
   @@index([externalId, sourceSystem])
   @@index([ownerId])
@@ -2971,7 +2971,7 @@ model Department {
   other_Department   Department[]        @relation("DepartmentToDepartment")
   Tenant             Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   Employee           Employee[]
-  EmploymentHistory  EmploymentHistory[]
+  EmploymentHistory   EmploymentHistory[]
 
   @@unique([tenantId, code])
   @@index([externalId, sourceSystem])
@@ -3057,7 +3057,7 @@ model Document {
   Tenant                Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   User                  User?                   @relation(fields: [uploadedBy], references: [id])
   DocumentShare         DocumentShare[]
-  FactoringVerification FactoringVerification[]
+  FactoringVerification  FactoringVerification[]
   FolderDocument        FolderDocument[]
   GeneratedDocument     GeneratedDocument[]
 
@@ -3164,7 +3164,7 @@ model DocumentTemplate {
   updatedById       String?
   User              User?               @relation(fields: [createdById], references: [id])
   Tenant            Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  GeneratedDocument GeneratedDocument[]
+  GeneratedDocument  GeneratedDocument[]
 
   @@unique([tenantId, name, templateType])
   @@index([externalId, sourceSystem])
@@ -3206,7 +3206,7 @@ model Driver {
   updatedById             String?
   Carrier                 Carrier                   @relation(fields: [carrierId], references: [id], onDelete: Cascade)
   Tenant                  Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  DriverQualificationFile DriverQualificationFile[]
+  DriverQualificationFile  DriverQualificationFile[]
   SafetyIncident          SafetyIncident[]
   SafetyInspection        SafetyInspection[]
 
@@ -3301,7 +3301,7 @@ model EdiBatch {
   createdById     String?
   updatedById     String?
   Tenant          Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  EdiBatchMessage EdiBatchMessage[]
+  EdiBatchMessage  EdiBatchMessage[]
 
   @@index([batchNumber])
   @@index([createdAt])
@@ -3510,7 +3510,7 @@ model EdiMessage {
   deletedAt         DateTime?
   createdById       String?
   updatedById       String?
-  EdiAcknowledgment EdiAcknowledgment[]
+  EdiAcknowledgment  EdiAcknowledgment[]
   EdiBatchMessage   EdiBatchMessage[]
   EdiError          EdiError[]
   Tenant            Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -3561,7 +3561,7 @@ model EdiTradingPartner {
   EdiCommunicationLog   EdiCommunicationLog[]
   EdiMessage            EdiMessage[]
   Tenant                Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  EdiTransactionMapping EdiTransactionMapping[]
+  EdiTransactionMapping  EdiTransactionMapping[]
 
   @@index([externalId, sourceSystem])
   @@index([isActive])
@@ -3635,7 +3635,7 @@ model Employee {
   Position          Position?           @relation(fields: [positionId], references: [id])
   Tenant            Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   User              User?               @relation(fields: [userId], references: [id])
-  EmploymentHistory EmploymentHistory[]
+  EmploymentHistory   EmploymentHistory[]
   OnboardingTask    OnboardingTask[]
   TimeEntry         TimeEntry[]
   TimeOffBalance    TimeOffBalance[]
@@ -3761,7 +3761,7 @@ model FactoringCompany {
   deletedAt              DateTime?
   createdById            String?
   updatedById            String?
-  CarrierFactoringStatus CarrierFactoringStatus[]
+  CarrierFactoringStatus   CarrierFactoringStatus[]
   FactoredPayment        FactoredPayment[]
   Tenant                 Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   NOARecord              NOARecord[]
@@ -3821,7 +3821,7 @@ model FeatureFlag {
   deletedAt           DateTime?
   createdById         String?
   updatedById         String?
-  FeatureFlagOverride FeatureFlagOverride[]
+  FeatureFlagOverride  FeatureFlagOverride[]
 
   @@index([enabled])
   @@index([externalId, sourceSystem])
@@ -3876,7 +3876,7 @@ model FeatureRequest {
   createdById           String?
   updatedById           String?
   Tenant                Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  FeatureRequestComment FeatureRequestComment[]
+  FeatureRequestComment  FeatureRequestComment[]
   FeatureRequestVote    FeatureRequestVote[]
 
   @@index([createdAt])
@@ -4087,7 +4087,7 @@ model FuelSurchargeTable {
   ContractRateLane  ContractRateLane[]
   Contract          Contract?           @relation(fields: [contractId], references: [id])
   Tenant            Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  FuelSurchargeTier FuelSurchargeTier[]
+  FuelSurchargeTier  FuelSurchargeTier[]
 
   @@index([contractId])
   @@index([effectiveDate])
@@ -4545,7 +4545,7 @@ model JournalEntry {
   updatedAt        DateTime
   createdById      String?
   Tenant           Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  JournalEntryLine JournalEntryLine[]
+  JournalEntryLine  JournalEntryLine[]
 
   @@unique([tenantId, entryNumber])
   @@index([entryDate])
@@ -4667,7 +4667,7 @@ model KPIDefinition {
   deletedAt       DateTime?
   createdById     String?
   updatedById     String?
-  DashboardWidget DashboardWidget[]
+  DashboardWidget  DashboardWidget[]
   KPIAlert        KPIAlert[]
   Tenant          Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   KPISnapshot     KPISnapshot[]
@@ -4781,7 +4781,7 @@ model Load {
   updatedById              String?
   deletedAt                DateTime?
   AgentCommission          AgentCommission[]
-  CarrierInvoiceSubmission CarrierInvoiceSubmission[]
+  CarrierInvoiceSubmission  CarrierInvoiceSubmission[]
   CarrierPortalDocument    CarrierPortalDocument[]
   CarrierQuickPayRequest   CarrierQuickPayRequest[]
   CarrierSavedLoad         CarrierSavedLoad[]
@@ -4917,7 +4917,7 @@ model LoadBoardProvider {
   deletedAt        DateTime?
   createdById      String?
   updatedById      String?
-  LoadBoardAccount LoadBoardAccount[]
+  LoadBoardAccount  LoadBoardAccount[]
   Tenant           Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([externalId, sourceSystem])
@@ -5125,11 +5125,11 @@ model LoadPlannerQuote {
   createdById            String?
   updatedById            String?
   LoadHistory            LoadHistory[]
-  LoadPlannerAccessorial LoadPlannerAccessorial[]
+  LoadPlannerAccessorial  LoadPlannerAccessorial[]
   LoadPlannerCargoItem   LoadPlannerCargoItem[]
   LoadPlannerPermit      LoadPlannerPermit[]
   Tenant                 Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  LoadPlannerServiceItem LoadPlannerServiceItem[]
+  LoadPlannerServiceItem  LoadPlannerServiceItem[]
   LoadPlannerTruck       LoadPlannerTruck[]
 
   @@index([createdAt])
@@ -5370,7 +5370,7 @@ model Location {
   deletedAt      DateTime?
   createdById    String?
   updatedById    String?
-  BusinessHours  BusinessHours[]
+  BusinessHours   BusinessHours[]
   Employee       Employee[]
   Tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   TimeEntry      TimeEntry[]
@@ -5432,7 +5432,7 @@ model NOARecord {
   deletedAt             DateTime?
   createdById           String?
   updatedById           String?
-  FactoringVerification FactoringVerification[]
+  FactoringVerification  FactoringVerification[]
   Carrier               Carrier                 @relation(fields: [carrierId], references: [id], onDelete: Cascade)
   FactoringCompany      FactoringCompany        @relation(fields: [factoringCompanyId], references: [id], onDelete: Cascade)
   Tenant                Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -5584,7 +5584,7 @@ model OnboardingChecklist {
   updatedById    String?
   Position       Position?        @relation(fields: [positionId], references: [id])
   Tenant         Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  OnboardingTask OnboardingTask[]
+  OnboardingTask  OnboardingTask[]
 
   @@index([externalId, sourceSystem])
   @@index([isActive])
@@ -5702,7 +5702,7 @@ model OperationsCarrierDriver {
   deletedAt              DateTime?
   LoadHistory            LoadHistory[]
   OperationsCarrier      OperationsCarrier        @relation(fields: [carrierId], references: [id], onDelete: Cascade)
-  OperationsCarrierTruck OperationsCarrierTruck[]
+  OperationsCarrierTruck  OperationsCarrierTruck[]
 
   @@index([carrierId])
   @@index([cdlNumber])
@@ -6053,7 +6053,7 @@ model PaymentReceived {
   createdById        String?
   deletedAt          DateTime?
   updatedById        String?
-  PaymentApplication PaymentApplication[]
+  PaymentApplication  PaymentApplication[]
   ChartOfAccount     ChartOfAccount?      @relation(fields: [bankAccountId], references: [id])
   Company            Company              @relation(fields: [companyId], references: [id])
   Tenant             Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -6283,7 +6283,7 @@ model PortalUser {
   PortalActivityLog        PortalActivityLog[]
   PortalNotification       PortalNotification[]
   PortalPayment            PortalPayment[]
-  PortalSavedPaymentMethod PortalSavedPaymentMethod[]
+  PortalSavedPaymentMethod  PortalSavedPaymentMethod[]
   PortalSession            PortalSession[]
   Company                  Company                    @relation(fields: [companyId], references: [id], onDelete: Cascade)
   Tenant                   Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -6316,7 +6316,7 @@ model Position {
   updatedById         String?
   Employee            Employee[]
   EmploymentHistory   EmploymentHistory[]
-  OnboardingChecklist OnboardingChecklist[]
+  OnboardingChecklist  OnboardingChecklist[]
   Tenant              Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, code])
@@ -6676,7 +6676,7 @@ model RateAlert {
   createdById      String?
   updatedById      String?
   Tenant           Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  RateAlertHistory RateAlertHistory[]
+  RateAlertHistory   RateAlertHistory[]
 
   @@index([destState])
   @@index([equipmentType])
@@ -7918,7 +7918,7 @@ model SupportTeam {
   createdById       String?
   updatedById       String?
   Tenant            Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  SupportTeamMember SupportTeamMember[]
+  SupportTeamMember  SupportTeamMember[]
 
   @@index([externalId, sourceSystem])
   @@index([isActive])
@@ -8167,7 +8167,7 @@ model Tenant {
   CarrierInsurance           CarrierInsurance[]
   CarrierInvoiceSubmission   CarrierInvoiceSubmission[]
   CarrierLoadView            CarrierLoadView[]
-  CarrierPerformanceHistory  CarrierPerformanceHistory[]
+  CarrierPerformanceHistory   CarrierPerformanceHistory[]
   CarrierPortalActivityLog   CarrierPortalActivityLog[]
   CarrierPortalDocument      CarrierPortalDocument[]
   CarrierPortalNotification  CarrierPortalNotification[]
@@ -8211,7 +8211,7 @@ model Tenant {
   CreditHold                 CreditHold[]
   CreditLimit                CreditLimit[]
   CsaScore                   CsaScore[]
-  CustomerCommissionOverride CustomerCommissionOverride[]
+  CustomerCommissionOverride  CustomerCommissionOverride[]
   Dashboard                  Dashboard[]
   DashboardWidget            DashboardWidget[]
   Department                 Department[]
@@ -8593,7 +8593,7 @@ model TruckType {
   tareWeightLbs          Int?
   wellHeightFt           Decimal?                 @db.Decimal(5, 2)
   LoadPlannerTruck       LoadPlannerTruck[]
-  OperationsCarrierTruck OperationsCarrierTruck[]
+  OperationsCarrierTruck  OperationsCarrierTruck[]
 
   @@index([category])
   @@index([isActive])
@@ -8817,7 +8817,7 @@ model WebhookEndpoint {
   updatedById         String?
   WebhookDelivery     WebhookDelivery[]
   Tenant              Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  WebhookSubscription WebhookSubscription[]
+  WebhookSubscription  WebhookSubscription[]
 
   @@index([externalId, sourceSystem])
   @@index([status])
@@ -8869,7 +8869,7 @@ model Workflow {
   deletedAt            DateTime?
   createdById          String?
   updatedById          String?
-  ScheduledWorkflowRun ScheduledWorkflowRun[]
+  ScheduledWorkflowRun  ScheduledWorkflowRun[]
   Tenant               Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   WorkflowExecution    WorkflowExecution[]
   WorkflowStep         WorkflowStep[]
@@ -8898,7 +8898,7 @@ model WorkflowExecution {
   deletedAt     DateTime?
   createdById   String?
   updatedById   String?
-  StepExecution StepExecution[]
+  StepExecution  StepExecution[]
   Tenant        Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   Workflow      Workflow                @relation(fields: [workflowId], references: [id], onDelete: Cascade)
 

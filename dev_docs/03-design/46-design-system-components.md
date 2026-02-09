@@ -1,5 +1,7 @@
 # Design System
 
+> **SUPERSEDED (Feb 2026):** For current design specifications, see `dev_docs/12-Rabih-design-Process/` which contains 89 screen specs with full 15-section detail, status color system, and component inventories. This file is preserved for reference but the newer docs are more comprehensive.
+
 Comprehensive design system for the 3PL Platform, providing consistent UI components, patterns, and guidelines for all applications.
 
 ---
