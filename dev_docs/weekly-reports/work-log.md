@@ -688,4 +688,42 @@ Replaced 6 native browser `confirm()` calls with the existing `ConfirmDialog` co
 
 ---
 
+## Session: 2026-02-09 (Sunday)
+
+### Design System Foundation — Session 1 of 7
+
+**What was done:**
+Planned and built the design system foundation for Ultra TMS. The dispatch board v5 design (`superdesign/design_iterations/dispatch_v5_final.html`) was analyzed as the visual reference. Created a 7-session plan to extract all 43 UI patterns into a component library with Storybook.
+
+**Files created/modified:** 9 files
+
+| Area | File | Action | Purpose |
+|------|------|--------|---------|
+| Font | `apps/web/app/layout.tsx` | Modified | Replaced Geist Sans with Inter (via `next/font/google`) |
+| Tokens | `apps/web/app/globals.css` | Rewritten | 3-layer token system: brand (--brand-hue) → semantic (60+ CSS vars) → Tailwind @theme inline |
+| Tokens | `apps/web/lib/design-tokens/status.ts` | New | TypeScript enums for Load/Order/Carrier/Doc/Insurance/Priority statuses |
+| Tokens | `apps/web/lib/design-tokens/typography.ts` | New | Font scale constants + 9 semantic text presets |
+| Tokens | `apps/web/lib/design-tokens/index.ts` | New | Barrel export |
+| Storybook | `apps/web/.storybook/main.ts` | New | Config: React + Vite framework, path aliases, PostCSS |
+| Storybook | `apps/web/.storybook/preview.tsx` | New | Decorators, dark mode toggle, globals.css import |
+| Story | `apps/web/stories/foundations/DesignTokens.stories.tsx` | New | Visual swatch reference page |
+| Scripts | `apps/web/package.json` | Modified | Added `storybook` and `build-storybook` scripts |
+
+**Key decisions:**
+- Inter font (matches v5 design, excellent at 11-13px data-dense sizes)
+- OKLCH color space with configurable `--brand-hue` for easy rebranding
+- `@storybook/react-vite` (NOT `@storybook/nextjs` — Next.js 16 broke `next/config`)
+- Components will live in `components/tms/` (separate from shadcn `ui/`)
+
+**Verified:**
+- [x] Next.js dev server starts (1.4s)
+- [x] TypeScript compiles (0 new errors, 4 pre-existing in load-history)
+- [x] Storybook launches on port 6006 (1.3s)
+
+**Plan file:** `~/.claude/plans/staged-sniffing-stardust.md`
+
+**Next session:** Session 2 — Primitives (StatusBadge, StatusDot, Checkbox, Avatar, SearchInput, Badge/Button extensions)
+
+---
+
 <!-- NEXT SESSION ENTRY GOES HERE -->

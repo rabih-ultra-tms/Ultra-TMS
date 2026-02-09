@@ -1,106 +1,279 @@
 @import "tailwindcss";
 
+/* ============================================================================
+   ULTRA TMS DESIGN SYSTEM — CSS Custom Properties
+   Three-Layer Token Architecture:
+     Layer 1: Brand Tokens (edit to rebrand)
+     Layer 2: Semantic Tokens (purpose-driven)
+     Layer 3: Tailwind Registration (@theme inline)
+   ========================================================================== */
+
 @layer base {
+  /* ==========================================================================
+     LAYER 1: BRAND TOKENS
+     Change these lines to rebrand the entire application.
+     ========================================================================== */
   :root {
-    /* Professional Enterprise Theme - Light */
-    --radius: 0.5rem;
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.2 0.015 264);
+    /* Brand Color: Sapphire Blue
+       Change --brand-hue to shift entire color palette.
+       264 = Blue, 142 = Green, 25 = Red, 320 = Purple */
+    --brand-hue: 264;
+    --brand-chroma: 0.22;
+    --brand-l-light: 0.48;
+    --brand-l-dark: 0.65;
+
+    /* Font Family: Inter
+       Change --font-sans to switch entire app font */
+    --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-mono: "Geist Mono", "SF Mono", ui-monospace, monospace;
+  }
+
+  /* ==========================================================================
+     LAYER 2: SEMANTIC TOKENS — LIGHT MODE
+     ========================================================================== */
+  :root {
+    --radius: 0.375rem; /* 6px — v5 design standard */
+
+    /* --- Core (shadcn compatible) --- */
+    --background: oklch(0.985 0.002 264);
+    --foreground: oklch(0.23 0.02 264);
     --card: oklch(1 0 0);
-    --card-foreground: oklch(0.2 0.015 264);
+    --card-foreground: oklch(0.23 0.02 264);
     --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.2 0.015 264);
-    
-    /* Primary: Professional Blue */
-    --primary: oklch(0.55 0.22 264);
+    --popover-foreground: oklch(0.23 0.02 264);
+
+    /* Primary: Derived from brand tokens */
+    --primary: oklch(var(--brand-l-light) var(--brand-chroma) var(--brand-hue));
     --primary-foreground: oklch(1 0 0);
-    
-    /* Secondary: Professional Gray-Blue */
-    --secondary: oklch(0.42 0.03 264);
-    --secondary-foreground: oklch(1 0 0);
-    
-    /* Muted: Light Gray */
-    --muted: oklch(0.92 0.005 264);
-    --muted-foreground: oklch(0.5 0.02 264);
-    
-    /* Accent: Vibrant Blue-Green */
+    --primary-hover: oklch(calc(var(--brand-l-light) - 0.05) var(--brand-chroma) var(--brand-hue));
+    --primary-light: oklch(0.95 0.03 var(--brand-hue));
+    --primary-border: oklch(0.82 0.1 var(--brand-hue));
+
+    /* Secondary */
+    --secondary: oklch(0.96 0.003 264);
+    --secondary-foreground: oklch(0.35 0.02 264);
+
+    /* Muted */
+    --muted: oklch(0.96 0.003 264);
+    --muted-foreground: oklch(0.55 0.015 264);
+
+    /* Accent */
     --accent: oklch(0.55 0.15 220);
     --accent-foreground: oklch(1 0 0);
-    
-    /* Destructive: Solid Red */
-    --destructive: oklch(0.6 0.22 25);
+
+    /* Destructive */
+    --destructive: oklch(0.58 0.22 25);
     --destructive-foreground: oklch(1 0 0);
 
-    /* Borders & Input */
-    --border: oklch(0.92 0.005 264);
-    --input: oklch(0.96 0.003 264);
-    --ring: oklch(0.55 0.22 264);
-    
-    /* Chart Colors */
-    --chart-1: oklch(0.55 0.22 264);
+    /* --- Extended Surfaces --- */
+    --surface: oklch(1 0 0);
+    --surface-hover: oklch(0.97 0.003 264);
+    --surface-selected: oklch(0.95 0.015 var(--brand-hue));
+    --surface-filter: oklch(0.965 0.003 264);
+
+    /* --- Extended Text --- */
+    --text-primary: oklch(0.23 0.015 264);
+    --text-secondary: oklch(0.48 0.01 264);
+    --text-muted: oklch(0.68 0.008 264);
+
+    /* --- Borders --- */
+    --border: oklch(0.91 0.005 264);
+    --border-soft: oklch(0.87 0.005 264);
+    --input: oklch(0.91 0.005 264);
+    --ring: var(--primary);
+
+    /* --- Status Colors (6 statuses × 3 variants) --- */
+    /* In Transit — Blue */
+    --status-transit: oklch(0.58 0.2 260);
+    --status-transit-bg: oklch(0.96 0.03 260);
+    --status-transit-border: oklch(0.85 0.08 260);
+
+    /* Unassigned — Amber */
+    --status-unassigned: oklch(0.65 0.18 75);
+    --status-unassigned-bg: oklch(0.96 0.04 75);
+    --status-unassigned-border: oklch(0.87 0.1 75);
+
+    /* Tendered — Purple */
+    --status-tendered: oklch(0.55 0.2 295);
+    --status-tendered-bg: oklch(0.96 0.03 295);
+    --status-tendered-border: oklch(0.85 0.08 295);
+
+    /* Dispatched — Cyan */
+    --status-dispatched: oklch(0.62 0.14 200);
+    --status-dispatched-bg: oklch(0.96 0.03 200);
+    --status-dispatched-border: oklch(0.85 0.07 200);
+
+    /* Delivered — Green */
+    --status-delivered: oklch(0.58 0.17 155);
+    --status-delivered-bg: oklch(0.96 0.04 155);
+    --status-delivered-border: oklch(0.85 0.08 155);
+
+    /* At Risk — Red */
+    --status-atrisk: oklch(0.58 0.22 25);
+    --status-atrisk-bg: oklch(0.97 0.03 25);
+    --status-atrisk-border: oklch(0.87 0.12 25);
+
+    /* --- Intent Colors (4 intents × 3 variants) --- */
+    --success: oklch(0.58 0.17 155);
+    --success-bg: oklch(0.96 0.04 155);
+    --success-border: oklch(0.85 0.08 155);
+
+    --warning: oklch(0.65 0.18 75);
+    --warning-bg: oklch(0.96 0.04 75);
+    --warning-border: oklch(0.87 0.1 75);
+
+    --danger: oklch(0.58 0.22 25);
+    --danger-bg: oklch(0.97 0.03 25);
+    --danger-border: oklch(0.87 0.12 25);
+
+    --info: oklch(0.58 0.2 260);
+    --info-bg: oklch(0.96 0.03 260);
+    --info-border: oklch(0.85 0.08 260);
+
+    /* --- Shadows --- */
+    --shadow-sm: 0 1px 2px oklch(0 0 0 / 5%);
+    --shadow-md: 0 4px 6px -1px oklch(0 0 0 / 7%);
+    --shadow-lg: 0 10px 15px -3px oklch(0 0 0 / 10%);
+    --shadow-drawer: -4px 0 20px oklch(0 0 0 / 10%);
+
+    /* --- Transitions --- */
+    --transition-fast: 150ms ease;
+    --transition-base: 200ms ease;
+    --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* --- Chart Colors --- */
+    --chart-1: var(--primary);
     --chart-2: oklch(0.55 0.15 220);
     --chart-3: oklch(0.65 0.18 140);
     --chart-4: oklch(0.75 0.15 85);
     --chart-5: oklch(0.7 0.2 45);
-    
-    /* Sidebar theming */
+
+    /* --- Sidebar --- */
     --sidebar: oklch(0.18 0.03 264);
     --sidebar-foreground: oklch(1 0 0);
-    --sidebar-primary: oklch(0.55 0.22 264);
+    --sidebar-primary: var(--primary);
     --sidebar-primary-foreground: oklch(1 0 0);
     --sidebar-accent: oklch(0.25 0.035 264);
     --sidebar-accent-foreground: oklch(1 0 0);
     --sidebar-border: oklch(0.25 0.035 264);
-    --sidebar-ring: oklch(0.55 0.22 264);
+    --sidebar-ring: var(--primary);
   }
 
+  /* ==========================================================================
+     LAYER 2: SEMANTIC TOKENS — DARK MODE
+     ========================================================================== */
   .dark {
-    /* Professional Enterprise Theme - Dark */
-    --background: oklch(0.18 0.015 264);
+    --background: oklch(0.14 0.01 264);
     --foreground: oklch(0.98 0 0);
-    
-    --card: oklch(0.22 0.015 264);
+    --card: oklch(0.18 0.012 264);
     --card-foreground: oklch(0.98 0 0);
-    
-    --popover: oklch(0.2 0.015 264);
+    --popover: oklch(0.16 0.012 264);
     --popover-foreground: oklch(0.98 0 0);
-    
-    --primary: oklch(0.65 0.22 264);
-    --primary-foreground: oklch(0.18 0.015 264);
-    
-    --secondary: oklch(0.6 0.04 264);
+
+    --primary: oklch(var(--brand-l-dark) var(--brand-chroma) var(--brand-hue));
+    --primary-foreground: oklch(0.14 0.01 264);
+    --primary-hover: oklch(calc(var(--brand-l-dark) - 0.05) var(--brand-chroma) var(--brand-hue));
+    --primary-light: oklch(0.25 0.06 var(--brand-hue));
+    --primary-border: oklch(0.35 0.1 var(--brand-hue));
+
+    --secondary: oklch(0.25 0.015 264);
     --secondary-foreground: oklch(0.98 0 0);
-    
-    --muted: oklch(0.3 0.02 264);
-    --muted-foreground: oklch(0.72 0.015 264);
-    
+
+    --muted: oklch(0.25 0.015 264);
+    --muted-foreground: oklch(0.65 0.012 264);
+
     --accent: oklch(0.6 0.15 220);
     --accent-foreground: oklch(0.98 0 0);
-    
+
     --destructive: oklch(0.65 0.22 25);
     --destructive-foreground: oklch(1 0 0);
-    
+
+    /* Extended Surfaces */
+    --surface: oklch(0.18 0.012 264);
+    --surface-hover: oklch(0.22 0.015 264);
+    --surface-selected: oklch(0.26 0.03 var(--brand-hue));
+    --surface-filter: oklch(0.15 0.008 264);
+
+    /* Extended Text */
+    --text-primary: oklch(0.95 0 0);
+    --text-secondary: oklch(0.68 0.01 264);
+    --text-muted: oklch(0.5 0.008 264);
+
+    /* Borders */
     --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.65 0.22 264);
-    
-    /* Chart Colors - Dark */
+    --border-soft: oklch(1 0 0 / 15%);
+    --input: oklch(1 0 0 / 12%);
+    --ring: var(--primary);
+
+    /* Status Colors — Dark */
+    --status-transit: oklch(0.7 0.2 260);
+    --status-transit-bg: oklch(0.22 0.06 260);
+    --status-transit-border: oklch(0.35 0.1 260);
+
+    --status-unassigned: oklch(0.75 0.17 75);
+    --status-unassigned-bg: oklch(0.24 0.05 75);
+    --status-unassigned-border: oklch(0.38 0.09 75);
+
+    --status-tendered: oklch(0.7 0.18 295);
+    --status-tendered-bg: oklch(0.22 0.06 295);
+    --status-tendered-border: oklch(0.35 0.1 295);
+
+    --status-dispatched: oklch(0.7 0.13 200);
+    --status-dispatched-bg: oklch(0.22 0.05 200);
+    --status-dispatched-border: oklch(0.35 0.08 200);
+
+    --status-delivered: oklch(0.65 0.15 155);
+    --status-delivered-bg: oklch(0.22 0.05 155);
+    --status-delivered-border: oklch(0.35 0.08 155);
+
+    --status-atrisk: oklch(0.7 0.22 25);
+    --status-atrisk-bg: oklch(0.24 0.06 25);
+    --status-atrisk-border: oklch(0.38 0.12 25);
+
+    /* Intent Colors — Dark */
+    --success: oklch(0.65 0.15 155);
+    --success-bg: oklch(0.22 0.05 155);
+    --success-border: oklch(0.35 0.08 155);
+
+    --warning: oklch(0.75 0.17 75);
+    --warning-bg: oklch(0.24 0.05 75);
+    --warning-border: oklch(0.38 0.09 75);
+
+    --danger: oklch(0.7 0.22 25);
+    --danger-bg: oklch(0.24 0.06 25);
+    --danger-border: oklch(0.38 0.12 25);
+
+    --info: oklch(0.7 0.2 260);
+    --info-bg: oklch(0.22 0.06 260);
+    --info-border: oklch(0.35 0.1 260);
+
+    /* Shadows — Dark */
+    --shadow-sm: 0 1px 2px oklch(0 0 0 / 25%);
+    --shadow-md: 0 4px 6px -1px oklch(0 0 0 / 35%);
+    --shadow-lg: 0 10px 15px -3px oklch(0 0 0 / 45%);
+    --shadow-drawer: -4px 0 20px oklch(0 0 0 / 30%);
+
+    /* Charts — Dark */
     --chart-1: oklch(0.55 0.24 264);
     --chart-2: oklch(0.65 0.17 200);
     --chart-3: oklch(0.75 0.19 140);
     --chart-4: oklch(0.7 0.22 85);
     --chart-5: oklch(0.68 0.24 35);
 
-    --sidebar: oklch(0.18 0.015 264);
+    /* Sidebar — Dark */
+    --sidebar: oklch(0.12 0.01 264);
     --sidebar-foreground: oklch(0.98 0 0);
-    --sidebar-primary: oklch(0.55 0.24 264);
+    --sidebar-primary: var(--primary);
     --sidebar-primary-foreground: oklch(0.98 0 0);
-    --sidebar-accent: oklch(0.3 0.02 264);
+    --sidebar-accent: oklch(0.22 0.015 264);
     --sidebar-accent-foreground: oklch(0.98 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.6 0.02 264);
+    --sidebar-ring: var(--primary);
   }
 
+  /* ==========================================================================
+     BASE STYLES
+     ========================================================================== */
   * {
     border-color: var(--border);
   }
@@ -108,13 +281,20 @@
   body {
     background-color: var(--background);
     color: var(--foreground);
+    font-family: var(--font-sans);
     font-feature-settings: "rlig" 1, "calt" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 }
 
+/* ============================================================================
+   LAYER 3: TAILWIND 4 THEME REGISTRATION
+   Maps semantic tokens → Tailwind utility classes.
+   Usage: bg-surface, text-text-primary, bg-status-transit-bg, etc.
+   ========================================================================== */
 @theme inline {
+  /* Core (shadcn) */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -123,6 +303,9 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-light: var(--primary-light);
+  --color-primary-border: var(--primary-border);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -134,11 +317,63 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+
+  /* Extended Surfaces */
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-selected: var(--surface-selected);
+  --color-surface-filter: var(--surface-filter);
+
+  /* Extended Text */
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+
+  /* Extended Borders */
+  --color-border-soft: var(--border-soft);
+
+  /* Status Colors */
+  --color-status-transit: var(--status-transit);
+  --color-status-transit-bg: var(--status-transit-bg);
+  --color-status-transit-border: var(--status-transit-border);
+  --color-status-unassigned: var(--status-unassigned);
+  --color-status-unassigned-bg: var(--status-unassigned-bg);
+  --color-status-unassigned-border: var(--status-unassigned-border);
+  --color-status-tendered: var(--status-tendered);
+  --color-status-tendered-bg: var(--status-tendered-bg);
+  --color-status-tendered-border: var(--status-tendered-border);
+  --color-status-dispatched: var(--status-dispatched);
+  --color-status-dispatched-bg: var(--status-dispatched-bg);
+  --color-status-dispatched-border: var(--status-dispatched-border);
+  --color-status-delivered: var(--status-delivered);
+  --color-status-delivered-bg: var(--status-delivered-bg);
+  --color-status-delivered-border: var(--status-delivered-border);
+  --color-status-atrisk: var(--status-atrisk);
+  --color-status-atrisk-bg: var(--status-atrisk-bg);
+  --color-status-atrisk-border: var(--status-atrisk-border);
+
+  /* Intent Colors */
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-success-border: var(--success-border);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-warning-border: var(--warning-border);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --color-danger-border: var(--danger-border);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
+  --color-info-border: var(--info-border);
+
+  /* Chart Colors */
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+
+  /* Sidebar Colors */
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -147,12 +382,45 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Font Families */
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
 }
-/* Utility to hide scrollbars */
+
+/* ============================================================================
+   UTILITY CLASSES
+   ========================================================================== */
+
+/* Hide scrollbar */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Thin scrollbar (matches v5 design: 4px) */
+.thin-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.thin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--border-soft);
+  border-radius: 4px;
+}
+.thin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Pulse animation for live indicators */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.animate-pulse-dot {
+  animation: pulse-dot 2s infinite;
 }
