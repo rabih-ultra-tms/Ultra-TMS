@@ -1,8 +1,126 @@
 # Ultra TMS - 3PL Logistics Platform
 
+> **Multi-AI Project:** This project supports multiple AI tools (Claude Code, Gemini, Codex, Copilot).
+> If you're NOT using Claude Code, read `AGENTS.md` instead — it's the universal entry point.
+> If you ARE using Claude Code, this file auto-loads — continue below.
+
 **Monorepo:** Next.js 16 + React 19 + NestJS 10 + PostgreSQL + Prisma 6 + Redis + Elasticsearch
-**Architecture:** Migration-first, multi-tenant, modular monolith (40 modules, 362+ screens planned)
+**Architecture:** Migration-first, multi-tenant, modular monolith (40 modules)
 **Repo:** `rabih-ultra-tms/Ultra-TMS` | Contributor: `primovera12`
+**MVP Focus:** 8 services, ~30 screens, 16-week timeline (not 38 services / 362 screens)
+
+## Current State (as of 2026-02-08)
+
+**Overall Score: 6.2/10 (C+)** — Strong foundation, excellent documentation, weak execution.
+
+| Area | Grade | Status |
+|------|-------|--------|
+| Architecture & Infra | B+ | Solid monorepo, modern stack, well-structured modules |
+| Code Quality | C+ | 29 bugs (4 critical), 858-line monoliths, 8.7% frontend test coverage |
+| Design Quality | D+ | Great docs but implementation uses hardcoded colors, browser confirm(), bare "Loading..." |
+| Planning & Docs | A | 504 doc files, 89 screen specs with 15-section detail |
+| Industry Readiness | D | 28 feature gaps vs competitors. TMS Core frontend not wired up |
+
+**What works:** Auth, CRM (basic CRUD), Sales (basic CRUD), Carrier list (buggy)
+**What exists but is disconnected from frontend:** LoadsService (19KB), OrdersService (22KB), RateConfirmationService, Check Calls, dispatch/assignCarrier logic — **do NOT rebuild these, wire them up**
+**What's not built:** TMS Core frontend pages, Dispatch Board, Accounting, Operations dashboards
+
+Reviews: `dev_docs/Claude-review-v1/` (37 files) | `dev_docs/gemini-review-v2/` (2 files — corrects Claude's backend assessment)
+
+## UI Strategy: Rebuild from Design Specs
+
+**All frontend screens are being rebuilt from the 89 design specs.** Existing UI code is reference only (for API call patterns), not code to patch.
+
+**PROTECT LIST — Do NOT rebuild these pages (they work):**
+- **Load Planner** (`/load-planner/[id]/edit`) — 1,825 LOC, AI cargo extraction, Google Maps, full quote lifecycle. Production-ready.
+- **Truck Types** (`/truck-types`) — 8/10 quality, clean CRUD with inline editing. Gold standard.
+- **Login** (`/login`) — 8/10 quality, working auth flow.
+
+**ALWAYS fix regardless of rebuild:**
+- Security bugs (JWT console logs, localStorage tokens) — apply to shared code, not page-specific
+- Sidebar 404 links — navigation config, not page code
+
+**For every other screen:** Build fresh from design spec. Don't patch old code.
+
+## P0 MVP Scope
+
+**Only these 8 services are in scope for the 16-week MVP:**
+
+| # | Service | Status | Priority |
+|---|---------|--------|----------|
+| 1 | Auth & Admin | Existing UI | Rebuild from spec |
+| 2 | CRM / Customers | Existing UI | Rebuild from spec |
+| 3 | Sales / Quotes + Load Planner | Load Planner works, quotes basic | Rebuild quotes, PROTECT Load Planner |
+| 4 | TMS Core (Orders, Loads, Dispatch) | Backend exists, no frontend | Build from spec |
+| 5 | Carrier Management | Existing UI (buggy, 404s) | Rebuild from spec, PROTECT Truck Types |
+| 6 | Accounting (Invoices, Settlements) | Not built | Build from spec |
+| 7 | Load Board | Not built | Build from spec |
+| 8 | Commission | Not built | Build from spec |
+
+All other services (Compliance, Safety, Fleet, Warehousing, etc.) are **future — do not build**.
+
+**16-week phases:** See `dev_docs/Claude-review-v1/00-executive-summary/prioritized-action-plan.md`
+
+## Known Critical Issues
+
+**Must fix before building new features:**
+
+| Bug | File | Impact |
+|-----|------|--------|
+| Carrier detail 404 | `carriers/page.tsx` → no `carriers/[id]/page.tsx` | Core CRUD broken |
+| Load history detail 404 | `load-history/page.tsx` → no `load-history/[id]/page.tsx` | Core CRUD broken |
+| 5 sidebar links to 404 | `lib/config/navigation.ts` → invoices, settlements, reports, help, settings | Broken navigation |
+| `useMemo` side effect | `truck-types/page.tsx:270` | Form data won't populate in React 19 |
+| JWT logged to console | `admin/layout.tsx` (10 console.logs) | Security vulnerability |
+| localStorage tokens | `lib/api/client.ts:59,77` | Contradicts XSS-safe cookie policy |
+| `window.confirm()` x7 | carriers, load-history, quote-history, truck-types | Should use ConfirmDialog |
+| No search debounce x3 | carriers, load-history, quote-history | API hammered on every keystroke |
+
+Full inventory: `dev_docs/Claude-review-v1/01-code-review/05-bug-inventory.md` (29 bugs total)
+
+## Starting Any Work Session
+
+1. **Read the service hub file** → `dev_docs_v2/03-services/{service}.md` — single source of truth (status, screens, API, components, bugs, tasks, design links)
+2. Read `dev_docs_v2/STATUS.md` → find your specific task and check assignments
+3. Read the task file in `dev_docs_v2/01-tasks/{current-phase}/` → detailed acceptance criteria
+4. Maximum 6 files before coding — see `dev_docs_v2/00-foundations/session-kickoff.md`
+
+**Hub files (source of truth):** `dev_docs_v2/03-services/` — one file per MVP service with everything consolidated.
+**Execution layer:** `dev_docs_v2/` has bite-size tasks, audit results, design tokens, and quality gates.
+**Spec layer:** `dev_docs/` has design specs, dev prompts, service definitions, and reviews.
+
+## Before Building: Discovery Checklist
+
+Before starting any feature, verify:
+
+1. **Read the service hub file** in `dev_docs_v2/03-services/` — has screens, API, components, bugs, tasks, and design links all in one place.
+2. **Check dev_docs_v2/STATUS.md** — Is there already a task file for this work? Use it.
+3. **Does the backend already exist?** Search `apps/api/src/modules/` for existing services — LoadsService, OrdersService, RateConfirmationService, etc. are already implemented. Don't rebuild.
+4. **Is there a design spec?** Check `dev_docs/12-Rabih-design-Process/` for the screen's 15-section spec file
+5. **What's the screen priority?** Check `dev_docs/Claude-review-v1/04-screen-integration/03-screen-priority-matrix.md`
+6. **Read the quality gates:** `dev_docs_v2/00-foundations/quality-gates.md` (quick ref) or `dev_docs/Claude-review-v1/03-design-strategy/05-quality-gates.md` (full)
+7. **Read the design-to-code workflow:** `dev_docs/Claude-review-v1/04-screen-integration/01-design-to-code-workflow.md`
+
+## Essential Reading Order
+
+Pick the list that matches your task:
+
+**Fixing bugs:**
+1. `dev_docs/Claude-review-v1/01-code-review/05-bug-inventory.md` — All 29 bugs with file paths and line numbers
+
+**Building a new screen:**
+1. Design spec in `dev_docs/12-Rabih-design-Process/{service-folder}/{screen}.md`
+2. `dev_docs/08-standards/74-pre-feature-checklist.md`
+3. `dev_docs/Claude-review-v1/04-screen-integration/01-design-to-code-workflow.md`
+4. `dev_docs/Claude-review-v1/03-design-strategy/05-quality-gates.md`
+
+**Refactoring existing pages:**
+1. `dev_docs/Claude-review-v1/03-design-strategy/01-current-state-diagnosis.md` — Root cause analysis
+2. `dev_docs/Claude-review-v1/03-design-strategy/02-design-system-enforcement.md` — Token system, ESLint rules
+
+**Understanding scope & priorities:**
+1. `dev_docs/Claude-review-v1/02-plan-review/03-mvp-reprioritization.md` — P0/P1/P2/P3 tiers
+2. `dev_docs/Claude-review-v1/00-executive-summary/prioritized-action-plan.md` — 16-week plan
 
 ## Commands
 

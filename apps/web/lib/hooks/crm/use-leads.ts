@@ -67,6 +67,22 @@ export function useUpdateLeadStage() {
   });
 }
 
+export function useDeleteLead() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => apiClient.delete(`/crm/opportunities/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: leadKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: leadKeys.pipeline() });
+      toast.success("Deal deleted");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to delete deal");
+    },
+  });
+}
+
 export function useConvertLead() {
   const queryClient = useQueryClient();
 

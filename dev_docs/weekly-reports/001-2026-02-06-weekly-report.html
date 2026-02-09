@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ultra-TMS Weekly Progress Report #001 - Feb 6, 2026</title>
+  <style>
+    :root {
+      --green: #10b981;
+      --green-bg: #d1fae5;
+      --yellow: #f59e0b;
+      --yellow-bg: #fef3c7;
+      --red: #ef4444;
+      --red-bg: #fee2e2;
+      --blue: #3b82f6;
+      --blue-bg: #dbeafe;
+      --gray: #6b7280;
+      --gray-bg: #f3f4f6;
+      --purple: #8b5cf6;
+      --purple-bg: #ede9fe;
+      --orange: #f97316;
+      --orange-bg: #ffedd5;
+      --cyan: #06b6d4;
+      --cyan-bg: #cffafe;
+      --pink: #ec4899;
+      --pink-bg: #fce7f3;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; max-width: 1400px; margin: 0 auto; padding: 20px; background: #f9fafb; }
+    h1 { color: #111827; border-bottom: 3px solid var(--purple); padding-bottom: 10px; }
+    h2 { color: #374151; margin-top: 30px; border-left: 4px solid var(--blue); padding-left: 12px; }
+    h3 { color: #4b5563; margin-top: 20px; }
+    h4 { color: #6b7280; margin-top: 16px; }
+
+    /* Header Banner */
+    .header-banner { background: linear-gradient(135deg, #6366f1 0%, #3b82f6 50%, #06b6d4 100%); color: white; padding: 36px; border-radius: 16px; margin-bottom: 24px; }
+    .header-banner h1 { color: white; border: none; margin: 0 0 12px 0; padding: 0; font-size: 2.2em; }
+    .header-banner .subtitle { font-size: 1.2em; opacity: 0.9; }
+    .header-banner .last-updated { margin-top: 16px; font-size: 0.9em; opacity: 0.75; }
+    .header-banner .report-meta { display: flex; gap: 24px; margin-top: 12px; flex-wrap: wrap; }
+    .header-banner .meta-item { background: rgba(255,255,255,0.15); padding: 6px 14px; border-radius: 8px; font-size: 0.85em; }
+
+    /* Navigation */
+    .nav-tabs { background: white; padding: 16px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; flex-wrap: wrap; gap: 8px; position: sticky; top: 0; z-index: 100; }
+    .nav-tabs a { color: var(--blue); text-decoration: none; padding: 8px 16px; border-radius: 6px; font-weight: 500; font-size: 14px; background: var(--gray-bg); transition: all 0.2s; }
+    .nav-tabs a:hover { background: var(--blue-bg); }
+
+    /* Summary & Layout */
+    .summary-box { background: white; border-radius: 12px; padding: 24px; margin: 20px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+
+    /* Score Cards */
+    .score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin: 20px 0; }
+    .score-card { background: white; border-radius: 8px; padding: 20px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid var(--gray); }
+    .score-card.green { border-left-color: var(--green); }
+    .score-card.yellow { border-left-color: var(--yellow); }
+    .score-card.blue { border-left-color: var(--blue); }
+    .score-card.purple { border-left-color: var(--purple); }
+    .score-card.cyan { border-left-color: var(--cyan); }
+    .score-card.pink { border-left-color: var(--pink); }
+    .score-card.orange { border-left-color: var(--orange); }
+    .score-card .score { font-size: 32px; font-weight: bold; }
+    .score-card .label { color: var(--gray); font-size: 13px; margin-top: 4px; }
+    .score-high { color: var(--green); }
+
+    /* Status Badges */
+    .status-done { background: var(--green-bg); color: #065f46; padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; font-weight: 500; }
+    .status-progress { background: var(--yellow-bg); color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; font-weight: 500; }
+    .status-pending { background: var(--gray-bg); color: #374151; padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; font-weight: 500; }
+    .status-future { background: var(--blue-bg); color: #1e40af; padding: 4px 12px; border-radius: 20px; font-size: 13px; display: inline-block; font-weight: 500; }
+
+    /* Priority */
+    .priority-p0 { background: var(--red-bg); color: #991b1b; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+    .priority-p1 { background: var(--orange-bg); color: #c2410c; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+    .priority-p2 { background: var(--yellow-bg); color: #92400e; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    th { background: #f9fafb; font-weight: 600; color: #374151; }
+    tr:hover { background: #f9fafb; }
+
+    /* Boxes */
+    .success-box { background: var(--green-bg); border: 2px solid var(--green); border-radius: 12px; padding: 20px; margin: 20px 0; }
+    .success-box h3 { color: #065f46; margin-top: 0; }
+    .warning-box { background: var(--yellow-bg); border: 2px solid var(--yellow); border-radius: 12px; padding: 20px; margin: 20px 0; }
+    .warning-box h3 { color: #92400e; margin-top: 0; }
+    .info-box { background: var(--blue-bg); border: 2px solid var(--blue); border-radius: 12px; padding: 20px; margin: 20px 0; }
+    .info-box h3 { color: #1e40af; margin-top: 0; }
+
+    /* Progress Bars */
+    .metric-bar { height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden; margin-top: 8px; }
+    .metric-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+    .fill-green { background: var(--green); }
+    .fill-blue { background: var(--blue); }
+    .fill-purple { background: var(--purple); }
+    .fill-yellow { background: var(--yellow); }
+
+    /* Expandable Details */
+    details { background: white; border-radius: 8px; margin: 10px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    details summary { padding: 16px; cursor: pointer; font-weight: 600; background: #f9fafb; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+    details[open] summary { border-radius: 8px 8px 0 0; border-bottom: 1px solid #e5e7eb; }
+    details > div { padding: 16px; }
+
+    /* Code Path */
+    .code-path { font-family: 'Monaco', 'Menlo', monospace; background: #f3f4f6; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+
+    /* Checklists */
+    ul.checklist { list-style: none; padding-left: 0; }
+    ul.checklist li { padding: 8px 0; border-bottom: 1px solid #e5e7eb; }
+    ul.checklist li:last-child { border-bottom: none; }
+    ul.checklist li.done { color: #065f46; }
+
+    /* Milestones */
+    .milestone-track { display: flex; align-items: center; margin: 16px 0; padding: 12px; background: #f9fafb; border-radius: 8px; }
+    .milestone-marker { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; margin-right: 16px; flex-shrink: 0; }
+    .milestone-marker.done { background: var(--green); color: white; }
+    .milestone-marker.current { background: var(--yellow); color: white; animation: pulse 2s infinite; }
+    .milestone-marker.pending { background: var(--gray-bg); color: var(--gray); border: 2px dashed var(--gray); }
+    .milestone-content { flex: 1; }
+    .milestone-title { font-weight: 600; }
+    .milestone-detail { font-size: 13px; color: var(--gray); }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+      50% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+    }
+
+    /* Week Highlight */
+    .week-highlight { background: linear-gradient(135deg, var(--green-bg) 0%, var(--cyan-bg) 100%); border: 2px solid var(--green); border-radius: 12px; padding: 24px; margin: 20px 0; text-align: center; }
+    .week-highlight .big-number { font-size: 48px; font-weight: bold; color: var(--green); }
+    .week-highlight .big-label { font-size: 15px; color: var(--gray); margin-top: 4px; }
+    .highlight-stats { display: flex; justify-content: center; gap: 40px; margin-top: 16px; flex-wrap: wrap; }
+    .highlight-stat { text-align: center; }
+    .highlight-stat .stat-num { font-size: 28px; font-weight: bold; color: #374151; }
+    .highlight-stat .stat-label { font-size: 12px; color: var(--gray); }
+
+    /* Accomplishment Cards */
+    .accomplishment-card { background: white; border-radius: 12px; padding: 20px; margin: 16px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid var(--blue); }
+    .accomplishment-card.backend { border-left-color: var(--green); }
+    .accomplishment-card.frontend { border-left-color: var(--purple); }
+    .accomplishment-card.design { border-left-color: var(--pink); }
+    .accomplishment-card.infra { border-left-color: var(--cyan); }
+    .accomplishment-card.docs { border-left-color: var(--orange); }
+    .accomplishment-card.fullstack { border-left-color: var(--blue); }
+    .accomplishment-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .accomplishment-title { font-size: 16px; font-weight: 600; color: #1f2937; }
+
+    /* Impact Grid */
+    .impact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 12px; margin: 16px 0; }
+    .impact-item { text-align: center; padding: 14px 8px; background: #f9fafb; border-radius: 8px; }
+    .impact-item .impact-number { font-size: 24px; font-weight: bold; color: var(--purple); }
+    .impact-item .impact-label { font-size: 11px; color: var(--gray); margin-top: 4px; }
+
+    /* Commit Badge */
+    .commit-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; font-family: 'Monaco', 'Menlo', monospace; font-size: 11px; background: #f3f4f6; color: var(--gray); }
+
+    /* Commit Timeline */
+    .commit-timeline { margin: 16px 0; }
+    .commit-row { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f3f4f6; }
+    .commit-row:last-child { border-bottom: none; }
+    .commit-date { width: 80px; font-size: 12px; color: var(--gray); font-weight: 500; flex-shrink: 0; padding-top: 2px; }
+    .commit-hash { font-family: 'Monaco', 'Menlo', monospace; font-size: 11px; background: var(--purple-bg); color: var(--purple); padding: 2px 6px; border-radius: 4px; flex-shrink: 0; }
+    .commit-msg { flex: 1; font-size: 13px; }
+    .commit-stat { font-size: 11px; color: var(--gray); flex-shrink: 0; text-align: right; min-width: 100px; }
+    .commit-stat .added { color: var(--green); }
+    .commit-stat .removed { color: var(--red); }
+
+    /* Architecture diagram */
+    .arch-flow { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 20px 0; flex-wrap: wrap; }
+    .arch-box { background: white; border: 2px solid var(--blue); border-radius: 8px; padding: 12px 18px; text-align: center; font-size: 13px; font-weight: 500; }
+    .arch-box.types { border-color: var(--cyan); background: var(--cyan-bg); }
+    .arch-box.hooks { border-color: var(--purple); background: var(--purple-bg); }
+    .arch-box.pages { border-color: var(--green); background: var(--green-bg); }
+    .arch-arrow { font-size: 20px; color: var(--gray); }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .two-col, .three-col { grid-template-columns: 1fr; }
+      .score-grid { grid-template-columns: 1fr 1fr; }
+      .highlight-stats { gap: 20px; }
+      .header-banner .report-meta { flex-direction: column; gap: 8px; }
+    }
+
+    /* Print */
+    @media print {
+      body { background: white; }
+      .nav-tabs { display: none; }
+      details { break-inside: avoid; }
+      details[open] { break-inside: avoid; }
+      .header-banner { background: #374151 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ======================================================================== -->
+<!-- HEADER BANNER                                                            -->
+<!-- ======================================================================== -->
+<div class="header-banner">
+  <h1>Ultra-TMS Weekly Progress Report</h1>
+  <div class="subtitle">Report #001 &mdash; January 23 - February 6, 2026</div>
+  <div class="report-meta">
+    <span class="meta-item">Reporting Period: 2 Weeks</span>
+    <span class="meta-item">18 Commits</span>
+    <span class="meta-item">139+ Files Changed</span>
+    <span class="meta-item">Phase A: Internal MVP</span>
+  </div>
+  <div class="last-updated">Generated: February 6, 2026 | Development Team</div>
+</div>
+
+<!-- ======================================================================== -->
+<!-- NAVIGATION TABS                                                          -->
+<!-- ======================================================================== -->
+<div class="nav-tabs">
+  <a href="#summary">Executive Summary</a>
+  <a href="#metrics">Key Metrics</a>
+  <a href="#accomplishments">Accomplishments</a>
+  <a href="#commits">Commit Log</a>
+  <a href="#milestones">Milestones</a>
+  <a href="#architecture">Architecture</a>
+  <a href="#next-week">Next Week</a>
+</div>
+
+<!-- ======================================================================== -->
+<!-- SECTION 1: EXECUTIVE SUMMARY                                             -->
+<!-- ======================================================================== -->
+<h2 id="summary">Executive Summary</h2>
+
+<div class="week-highlight">
+  <div class="big-number">42,215+</div>
+  <div class="big-label">Lines of Code Delivered This Period</div>
+  <div class="highlight-stats">
+    <div class="highlight-stat">
+      <div class="stat-num">18</div>
+      <div class="stat-label">Commits</div>
+    </div>
+    <div class="highlight-stat">
+      <div class="stat-num">139+</div>
+      <div class="stat-label">Files Changed</div>
+    </div>
+    <div class="highlight-stat">
+      <div class="stat-num">9</div>
+      <div class="stat-label">Major Features</div>
+    </div>
+    <div class="highlight-stat">
+      <div class="stat-num">5</div>
+      <div class="stat-label">New UI Pages</div>
+    </div>
+    <div class="highlight-stat">
+      <div class="stat-num">4</div>
+      <div class="stat-label">Backend Modules</div>
+    </div>
+  </div>
+</div>
+
+<div class="score-grid">
+  <div class="score-card blue">
+    <div class="score" style="color: var(--blue);">18</div>
+    <div class="label">Commits Merged</div>
+    <div class="metric-bar"><div class="metric-fill fill-blue" style="width: 100%"></div></div>
+  </div>
+  <div class="score-card green">
+    <div class="score score-high">4</div>
+    <div class="label">New Backend Modules</div>
+    <div class="metric-bar"><div class="metric-fill fill-green" style="width: 100%"></div></div>
+  </div>
+  <div class="score-card purple">
+    <div class="score" style="color: var(--purple);">5</div>
+    <div class="label">New Frontend Pages</div>
+    <div class="metric-bar"><div class="metric-fill fill-purple" style="width: 100%"></div></div>
+  </div>
+  <div class="score-card pink">
+    <div class="score" style="color: var(--pink);">10+</div>
+    <div class="label">UI Components Restyled</div>
+    <div class="metric-bar"><div class="metric-fill" style="width: 100%; background: var(--pink);"></div></div>
+  </div>
+  <div class="score-card cyan">
+    <div class="score" style="color: var(--cyan);">5</div>
+    <div class="label">Custom React Hooks</div>
+    <div class="metric-bar"><div class="metric-fill" style="width: 100%; background: var(--cyan);"></div></div>
+  </div>
+  <div class="score-card orange">
+    <div class="score" style="color: var(--orange);">6,858</div>
+    <div class="label">Lines of Documentation</div>
+    <div class="metric-bar"><div class="metric-fill" style="width: 100%; background: var(--orange);"></div></div>
+  </div>
+</div>
+
+<div class="two-col">
+  <div class="success-box">
+    <h3>Key Achievements</h3>
+    <ul class="checklist">
+      <li class="done">&#10003; Operations Module backend complete &mdash; 4 sub-modules (Carriers, Truck Types, Load History, Load Planner Quotes)</li>
+      <li class="done">&#10003; 5 new Operations frontend pages launched (Carriers, Truck Types, Load History, Load Planner Editor, Quote History)</li>
+      <li class="done">&#10003; Company logo upload feature delivered (full-stack: backend + API + database + frontend UI)</li>
+      <li class="done">&#10003; Professional theme overhaul across 10+ UI components with consistent light/dark mode</li>
+      <li class="done">&#10003; Navigation restructured with collapsible Operations section</li>
+      <li class="done">&#10003; CRM forms enhanced with new activity fields and improved validation</li>
+      <li class="done">&#10003; Authentication flow improved with role normalization and better UX</li>
+      <li class="done">&#10003; Comprehensive project status documentation (290KB executive dashboard)</li>
+      <li class="done">&#10003; Google Maps API integration configured for location features</li>
+    </ul>
+  </div>
+  <div class="info-box">
+    <h3>Strategic Alignment</h3>
+    <p>This period's work directly advances two critical milestones:</p>
+    <p><strong>GL4 &mdash; Order Management (Week 28):</strong> The Operations backend is now complete, including Load History and Load Planner Quotes modules. The Load Planner editor and Quote History pages give us working frontend screens for order-adjacent operations. The 602-line database migration established the full data foundation.</p>
+    <p><strong>GL5 &mdash; Carrier Onboarding (Week 36):</strong> The Carriers module (backend + frontend) is now functional with a management UI page. Driver and truck DTOs are in place. This brings GL5 from "API only" to "API + Working UI".</p>
+    <p style="margin-top: 16px;"><strong>Additionally:</strong> The theme overhaul and navigation restructuring establish the visual and UX foundation that all future screens will build upon &mdash; an investment that pays dividends across the remaining 400+ screens.</p>
+  </div>
+</div>
+
+<div class="summary-box">
+  <h3>Executive Narrative</h3>
+  <p>This reporting period delivered significant full-stack progress across multiple workstreams. The team completed the entire <strong>Operations Module backend</strong> (Carriers, Truck Types, Load History, and Load Planner Quotes) with 4 new NestJS sub-modules, while simultaneously building <strong>5 new frontend pages</strong> with corresponding React Query hooks and TypeScript type definitions. A <strong>602-line database migration</strong> established new tables for the Operations domain including TruckType, LoadPlannerQuote, LoadPlannerCargoItem, Carrier, and Driver.</p>
+  <p>In parallel, the team delivered a <strong>complete Company Logo Upload feature</strong> (backend file handling, API endpoint, database field, and frontend UI with preview), <strong>overhauled the theme</strong> across 10+ UI components for a consistent professional look, <strong>enhanced the CRM forms</strong> with new activity fields and better validation, and <strong>improved the authentication flow</strong> with role normalization. The navigation was restructured with collapsible sections and a new Operations menu. Google Maps API integration was configured for upcoming location-based features.</p>
+  <p>The period concluded with a <strong>comprehensive 6,858-line project status documentation</strong> dashboard that serves as the single source of truth for project tracking. This breadth of work &mdash; spanning backend, frontend, UX/design, infrastructure, and documentation &mdash; demonstrates strong execution velocity and positions us well for the upcoming TMS core screen buildout.</p>
+</div>
+
+
+<!-- ======================================================================== -->
+<!-- SECTION 2: KEY METRICS                                                   -->
+<!-- ======================================================================== -->
+<h2 id="metrics">Key Metrics Dashboard</h2>
+
+<div class="summary-box">
+  <h3>Before vs. After This Period</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Metric</th>
+        <th>Start of Period</th>
+        <th>End of Period</th>
+        <th>Change</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Frontend Pages</strong></td>
+        <td>7 pages</td>
+        <td>12 pages</td>
+        <td><span class="status-done">+5 pages (+71%)</span></td>
+      </tr>
+      <tr>
+        <td><strong>Backend Modules (Operations)</strong></td>
+        <td>0 operations modules</td>
+        <td>4 operations modules</td>
+        <td><span class="status-done">+4 new modules</span></td>
+      </tr>
+      <tr>
+        <td><strong>Custom React Hooks</strong></td>
+        <td>0 operations hooks</td>
+        <td>5 operations hooks</td>
+        <td><span class="status-done">+5 new hooks</span></td>
+      </tr>
+      <tr>
+        <td><strong>TypeScript Type Files</strong></td>
+        <td>0 operations types</td>
+        <td>5 operations types</td>
+        <td><span class="status-done">+5 new files</span></td>
+      </tr>
+      <tr>
+        <td><strong>Database Tables</strong></td>
+        <td>~238 tables</td>
+        <td>244+ tables</td>
+        <td><span class="status-done">+6 new tables</span></td>
+      </tr>
+      <tr>
+        <td><strong>UI Components Restyled</strong></td>
+        <td>0 restyled</td>
+        <td>10+ components</td>
+        <td><span class="status-done">Full overhaul</span></td>
+      </tr>
+      <tr>
+        <td><strong>Navigation Sections</strong></td>
+        <td>Basic flat nav</td>
+        <td>Collapsible with Operations</td>
+        <td><span class="status-done">+1 new section</span></td>
+      </tr>
+      <tr>
+        <td><strong>Documentation</strong></td>
+        <td>Scattered docs</td>
+        <td>290KB executive dashboard</td>
+        <td><span class="status-done">+6,858 lines</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="summary-box">
+  <h3>Code Impact Summary</h3>
+  <div class="impact-grid">
+    <div class="impact-item">
+      <div class="impact-number" style="color: var(--blue);">18</div>
+      <div class="impact-label">Commits</div>
+    </div>
+    <div class="impact-item">
+      <div class="impact-number" style="color: var(--green);">42,215</div>
+      <div class="impact-label">Lines Added</div>
+    </div>
+    <div class="impact-item">
+      <div class="impact-number" style="color: var(--red);">17,367</div>
+      <div class="impact-label">Lines Removed/Refactored</div>
+    </div>
+    <div class="impact-item">
+      <div class="impact-number" style="color: var(--purple);">139+</div>
+      <div class="impact-label">Files Changed</div>
+    </div>
+    <div class="impact-item">
+      <div class="impact-number" style="color: var(--cyan);">602</div>
+      <div class="impact-label">SQL Migration Lines</div>
+    </div>
+    <div class="impact-item">
+      <div class="impact-number" style="color: var(--orange);">61</div>
+      <div class="impact-label">Files in Largest Commit</div>
+    </div>
+  </div>
+</div>
+
+<div class="summary-box">
+  <h3>Phase A Progress</h3>
+  <div class="two-col">
+    <div>
+      <h4>Overall Phase A Completion</h4>
+      <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px;">
+        <span>Progress</span>
+        <strong style="color: var(--green);">73.7%</strong>
+      </div>
+      <div class="metric-bar" style="height: 12px;">
+        <div class="metric-fill fill-green" style="width: 73.7%"></div>
+      </div>
+
+      <h4 style="margin-top: 24px;">Backend API</h4>
+      <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px;">
+        <span>27+ services, 830+ endpoints</span>
+        <strong style="color: var(--green);">100%</strong>
+      </div>
+      <div class="metric-bar" style="height: 12px;">
+        <div class="metric-fill fill-green" style="width: 100%"></div>
+      </div>
+
+      <h4 style="margin-top: 24px;">RBAC Security</h4>
+      <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px;">
+        <span>62 controllers covered</span>
+        <strong style="color: var(--green);">100%</strong>
+      </div>
+      <div class="metric-bar" style="height: 12px;">
+        <div class="metric-fill fill-green" style="width: 100%"></div>
+      </div>
+    </div>
+    <div>
+      <h4>Frontend Screen Velocity</h4>
+      <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px;">
+        <span>Pages built this period</span>
+        <strong style="color: var(--purple);">+5 pages</strong>
+      </div>
+      <div class="metric-bar" style="height: 12px;">
+        <div class="metric-fill fill-purple" style="width: 100%"></div>
+      </div>
+
+      <h4 style="margin-top: 24px;">Week-over-Week Growth</h4>
+      <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px;">
+        <span>Frontend pages: 7 &rarr; 12</span>
+        <strong style="color: var(--purple);">+71%</strong>
+      </div>
+      <div class="metric-bar" style="height: 12px;">
+        <div class="metric-fill fill-purple" style="width: 71%"></div>
+      </div>
+
+      <h4 style="margin-top: 24px;">Projected Monthly Velocity</h4>
+      <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px;">
+        <span>At current pace: ~10 screens/month</span>
+        <strong style="color: var(--blue);">Accelerating</strong>
+      </div>
+      <div class="metric-bar" style="height: 12px;">
+        <div class="metric-fill fill-blue" style="width: 60%"></div>
+      </div>
+
+      <p style="font-size: 12px; color: var(--gray); margin-top: 8px;"><em>Note: Frontend velocity is expected to accelerate significantly now that reusable hooks, types, and design patterns are established.</em></p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ======================================================================== -->
+<!-- SECTION 3: DETAILED ACCOMPLISHMENTS                                      -->
+<!-- ======================================================================== -->
+<h2 id="accomplishments">Detailed Accomplishments</h2>
+
+<p style="color: var(--gray); font-size: 14px;">Click each section to expand for full details including file paths, line counts, and technical specifics.</p>
+
+<!-- Accomplishment 1: Theme Overhaul -->
+<details open>
+  <summary>
+    <span>1. Professional Theme & UI Overhaul</span>
+    <span class="status-done">COMPLETE</span>
+  </summary>
+  <div>
+    <div class="accomplishment-card design">
+      <div class="accomplishment-header">
+        <div class="accomplishment-title">Complete Visual Redesign Across 10+ Components</div>
+        <span class="commit-badge">Jan 23 &mdash; 3 commits</span>
+      </div>
+      <div class="impact-grid">
+        <div class="impact-item">
+          <div class="impact-number" style="color: var(--pink);">10+</div>
+          <div class="impact-label">Components Restyled</div>
+        </div>
+        <div class="impact-item">
+          <div class="impact-number" style="color: var(--pink);">59</div>
+          <div class="impact-label">Files Changed</div>
+        </div>
+        <div class="impact-item">
+          <div class="impact-number" style="color: var(--pink);">2,434</div>
+          <div class="impact-label">Lines Added</div>
+        </div>
+      </div>
+      <p>Overhauled the entire application's visual design system for a professional, production-ready look:</p>
+      <table>
+        <thead>
+          <tr><th>Component</th><th>Changes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Button</strong></td><td>Enhanced shadows, new "muted" variant, improved outline variant</td></tr>
+          <tr><td><strong>Dropdown Menu</strong></td><td>Removed transparency, 2px borders, shadow-lg, hover effects</td></tr>
+          <tr><td><strong>Popover</strong></td><td>Solid colors, enhanced shadows for clarity</td></tr>
+          <tr><td><strong>Select</strong></td><td>Improved content styling with borders</td></tr>
+          <tr><td><strong>Table</strong></td><td>Enhanced headers with 2px borders, row hover states</td></tr>
+          <tr><td><strong>Dialog</strong></td><td>2px borders, improved shadows</td></tr>
+          <tr><td><strong>Alert</strong></td><td>New variants with destructive styling</td></tr>
+          <tr><td><strong>Badge</strong></td><td>2px borders, accent variant, hover states</td></tr>
+          <tr><td><strong>Color System</strong></td><td>Migrated to oklch format for improved theming consistency</td></tr>
+          <tr><td><strong>Global Styles</strong></td><td>New utility classes: <span class="code-path">.stat-card</span>, <span class="code-path">.stat-icon</span>, <span class="code-path">.stat-value</span>, <span class="code-path">.stat-label</span></td></tr>
+        </tbody>
+      </table>
+      <p><strong>Impact:</strong> Eliminated all transparency issues that caused readability problems. Established a consistent color palette for both light and dark modes. Every future screen benefits from this foundation.</p>
+    </div>
+  </div>
+</details>
+
+<!-- Accomplishment 2: CRM Enhancement -->
+<details>
+  <summary>
+    <span>2. CRM Forms & Hooks Enhancement</span>
+    <span class="status-done">COMPLETE</span>
+  </summary>
+  <div>
+    <div class="accomplishment-card frontend">
+      <div class="accomplishment-header">
+        <div class="accomplishment-title">Activity Fields, Validation & Customer-to-Company Rename</div>
+        <span class="commit-badge">Jan 23 &mdash; 2 commits</span>
+      </div>
+      <div class="impact-grid">
+        <div class="impact-item">
+          <div class="impact-number" style="color: var(--purple);">96</div>
+          <div class="impact-label">Files Changed</div>
+        </div>
+        <div class="impact-item">
+          <div class="impact-number" style="color: var(--purple);">1,964</div>
+          <div class="impact-label">Lines Added</div>
+        </div>
+      </div>
+      <p><strong>CRM Forms Update:</strong> Enhanced 57 files to support new activity fields and improve user experience. Updated React hooks for better data flow and validation.</p>
+      <p><strong>Customer &rarr; Company Rename:</strong> Refactored 39 files to rename all "customer" references to "company" across CRM components for consistent domain language throughout the codebase.</p>
+      <p><strong>User & Lead Forms:</strong> Refactored 23 files to improve validation with Zod schemas and better error handling patterns.</p>
+    </div>
+  </div>
+</details>
+
+<!-- Accomplishment 3: Auth Enhancement -->
+<details>
+  <summary>
+    <span>3. Authentication Flow Enhancement</span>
+    <span class="status-done">COMPLETE</span>
+  </summary>
+  <div>
+    <div class="accomplishment-card infra">
+      <div class="accomplishment-header">
+        <div class="accomplishment-title">Role Normalization & Admin Layout UX Improvements</div>
+        <span class="commit-badge">Jan 23 &mdash; 2 commits</span>
+      </div>
+      <div class="impact-grid">
+        <div class="impact-item">
+          <div class="impact-number" style="color: var(--cyan);">15</div>
+          <div class="impact-label">Files Changed</div>
+        </div>
+        <div class="impact-item">
+          <div class="impact-number" style="color: var(--cyan);">553</div>
+          <div class="impact-label">Lines Added</div>
+        </div>
+      </div>
+      <p>Enhanced the authentication flow with improved user role normalization, ensuring consistent role handling across the application. Improved the admin layout UX for better navigation and user experience.</p>
+    </div>
+  </div>
+</details>
+
+<!-- Accomplishment 4: Code Refactoring -->
+<details>
+  <summary>
+    <span>4. Code Quality & Refactoring</span>
+    <span class="status-done">COMPLETE</span>
+  </summary>
+  <div>
+    <div class="accomplishment-card infra">
+      <div class="accomplishment-header">
+        <div class="accomplishment-title">Readability, Performance & Maintainability Improvements</div>
+        <span class="commit-badge">Jan 23 &mdash; 2 commits</span>
+      </div>
+      <div class="impact-grid">
+        <div class="impact-item">
+          <div class="impact-number" style="color: var(--cyan);">41</div>
+          <div class="impact-label">Files Changed</div>
+        </div>
+        <div class="impact-item">
+          <div class="impact-number" style="color: var(--cyan);">2,544</div>
+          <div class="impact-label">Lines Refactored</div>
+        </div>
+      </div>
+      <p>Systematic code refactoring for improved readability and maintainability across 12 files (code structure) and 29 files (UI component performance). Cleaned up patterns and established consistent coding standards across the codebase.</p>
+    </div>
+  </div>
+</details>
+
+<!-- Accomplishment 5: Company Logo Upload -->
+<details open>
+  <summary>
+    <span>5. Company Logo Upload Feature (Full-Stack)</span>
+    <span class="status-done">COMPLETE</span>
+  </summary>
+  <div>
+    <div class="accomplishment-card fullstack">
+      <div class="accomplishment-header">
+        <div class="accomplishment-title">End-to-End Image Upload: Backend + API + Database + Frontend</div>
+        <span class="commit-badge">Jan 24 &mdash; 1e566e6</span>
+      </div>
+      <div class="impact-grid">
+        <div class="impact-item">
+          <div class="impact-number" style="color: var(--blue);">19</div>
+          <div class="impact-label">Files Changed</div>
+        </div>
+        <div class="impact-item">
+          <div class="impact-number" style="color: var(--blue);">764</div>
+          <div class="impact-label">Lines Added</div>
+        </div>
+        <div class="impact-item">
+          <div class="impact-number" style="color: var(--blue);">4</div>
+          <div class="impact-label">Layers (DB, API, Service, UI)</div>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Layer</th><th>Implementation</th><th>Details</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Database</strong></td>
+            <td><span class="code-path">schema.prisma</span></td>
+            <td>Added <code>logoUrl</code> field to Company model</td>
+          </tr>
+          <tr>
+            <td><strong>Backend Utility</strong></td>
+            <td><span class="code-path">file-upload.util.ts</span></td>
+            <td>Image validation (JPG, PNG, GIF, WebP), 5MB size limit, local storage with cloud adapter interface</td>
+          </tr>
+          <tr>
+            <td><strong>API Endpoint</strong></td>
+            <td><span class="code-path">POST /api/v1/crm/companies/upload-logo</span></td>
+            <td>Multer-powered upload with static file serving on <code>/uploads</code> prefix</td>
+          </tr>
+          <tr>
+            <td><strong>Frontend UI</strong></td>
+            <td><span class="code-path">Customer form component</span></td>
+            <td>Logo upload card with file selection, real-time image preview, remove button, progress indicator, toast notifications</td>
+          </tr>
+        </tbody>
+      </table>
+      <p><strong>Architecture Note:</strong> Built with a cloud storage adapter interface &mdash; migrating from local storage to AWS S3, Azure Blob, or GCS is a configuration change, not a code rewrite.</p>
+    </div>
+  </div>
+</details>
+
+<!-- Accomplishment 6: Operations Module (Truck Types) -->
+<details open>
+  <summary>
+    <span>6. Operations Module &mdash; Full-Stack (Largest Deliverable)</span>
+    <span class="status-done">COMPLETE</span>
+  </summary>
+  <div>
+    <div class="accomplishment-card backend">
+      <div class="accomplishment-header">
+        <div class="accomplishment-title">4 Backend Sub-Modules + 5 Frontend Pages + Hooks + Types</div>
+        <span class="commit-badge">Jan 28 &mdash; 9ebea19 (61 files)</span>
+      </div>
+      <div class="impact-grid">
+        <div class="impact-item">
+          <div class="impact-number" style="color: var(--green);">61</div>
+          <div class="impact-label">Files Changed</div>
+        </div>
+        <div class="impact-item">
+          <div class="impact-number" style="color: var(--green);">11,656</div>
+          <div class="impact-label">Lines Added</div>
+        </div>
+        <div class="impact-item">
+          <div class="impact-number" style="color: var(--green);">4</div>
+          <div class="impact-label">Backend Modules</div>
+        </div>
+        <div class="impact-item">
+          <div class="impact-number" style="color: var(--green);">5</div>
+          <div class="impact-label">Frontend Pages</div>
+        </div>
+        <div class="impact-item">
+          <div class="impact-number" style="color: var(--green);">602</div>
+          <div class="impact-label">SQL Migration Lines</div>
+        </div>
+      </div>
+
+      <h4>Backend: 4 NestJS Sub-Modules</h4>
+      <table>
+        <thead>
+          <tr><th>Sub-Module</th><th>Files</th><th>Key Capabilities</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Carriers</strong></td>
+            <td>Controller, Service, 3 DTOs <span class="code-path">carriers/</span></td>
+            <td>Carrier CRUD, Driver management, Truck assignment with tenant isolation</td>
+            <td><span class="status-done">Complete</span></td>
+          </tr>
+          <tr>
+            <td><strong>Truck Types</strong></td>
+            <td>Controller, Service, DTO <span class="code-path">truck-types/</span></td>
+            <td>Truck type management with dimensions, capacity, specifications</td>
+            <td><span class="status-done">Complete</span></td>
+          </tr>
+          <tr>
+            <td><strong>Load History</strong></td>
+            <td>Controller, Service, DTO <span class="code-path">load-history/</span></td>
+            <td>Full CRUD with filtering, pagination, and audit trail</td>
+            <td><span class="status-done">Complete</span></td>
+          </tr>
+          <tr>
+            <td><strong>Load Planner Quotes</strong></td>
+            <td>Controller, Service, 6 DTOs <span class="code-path">load-planner-quotes/</span></td>
+            <td>Quote CRUD with cargo items, accessorials, permits, service items, truck selection</td>
+            <td><span class="status-done">Complete</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4>Database Migration (602 lines SQL)</h4>
+      <table>
+        <thead>
+          <tr><th>New Table</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>TruckType</strong></td><td>Truck specifications, dimensions, capacity</td></tr>
+          <tr><td><strong>LoadPlannerQuote</strong></td><td>Quote data with locations, routing, and geographic coordinates</td></tr>
+          <tr><td><strong>LoadPlannerCargoItem</strong></td><td>Cargo specs: dimensions, weight, stackability, hazmat flags</td></tr>
+          <tr><td><strong>Carrier</strong></td><td>Carrier information with tenant isolation</td></tr>
+          <tr><td><strong>Driver</strong></td><td>Driver details and assignments</td></tr>
+          <tr><td><strong>+ Supporting Tables</strong></td><td>Junction tables, references, and indexes</td></tr>
+        </tbody>
+      </table>
+
+      <h4>Frontend: 5 New Pages</h4>
+      <table>
+        <thead>
+          <tr><th>Page</th><th>Path</th><th>Key Features</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Carriers</strong></td>
+            <td><span class="code-path">/carriers/page.tsx</span></td>
+            <td>Full carriers management with list view, search, filtering</td>
+          </tr>
+          <tr>
+            <td><strong>Truck Types</strong></td>
+            <td><span class="code-path">/truck-types/page.tsx</span></td>
+            <td>Truck types listing and management interface</td>
+          </tr>
+          <tr>
+            <td><strong>Load History</strong></td>
+            <td><span class="code-path">/load-history/page.tsx</span></td>
+            <td>Load history view with sorting and filtering</td>
+          </tr>
+          <tr>
+            <td><strong>Load Planner Editor</strong></td>
+            <td><span class="code-path">/load-planner/[id]/edit/page.tsx</span></td>
+            <td>Complex multi-tab load planner editor</td>
+          </tr>
+          <tr>
+            <td><strong>Quote History</strong></td>
+            <td><span class="code-path">/quote-history/page.tsx</span></td>
+            <td>Quote history listing with status tracking</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4>Custom React Hooks (5 New)</h4>
+      <table>
+        <thead>
+          <tr><th>Hook</th><th>Capabilities</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="code-path">use-truck-types.ts</span></td><td>CRUD operations, pagination, React Query caching</td></tr>
+          <tr><td><span class="code-path">use-carriers.ts</span></td><td>Carrier management with driver/truck sub-operations</td></tr>
+          <tr><td><span class="code-path">use-load-history.ts</span></td><td>Load history queries and filtering</td></tr>
+          <tr><td><span class="code-path">use-load-planner-quotes.ts</span></td><td>Quote CRUD with complex nested data structures</td></tr>
+          <tr><td><span class="code-path">index.ts</span></td><td>Barrel export for clean imports</td></tr>
+        </tbody>
+      </table>
+
+      <h4>TypeScript Type Definitions (5 New)</h4>
+      <p>Full TypeScript type coverage for all Operations domain entities: <span class="code-path">truck-types.ts</span>, <span class="code-path">carriers.ts</span>, <span class="code-path">load-history.ts</span>, <span class="code-path">load-planner-quotes.ts</span>, <span class="code-path">index.ts</span>. Ensures compile-time error detection and IntelliSense support.</p>
+
+      <div class="info-box" style="margin-top: 16px;">
+        <h3>Reusability Impact</h3>
+        <p>These hooks and types create a <strong>reusable template pattern</strong> (Type &rarr; Hook &rarr; Page) that accelerates all future Operations screen development. Each new page can follow the same architecture, dramatically reducing development time.</p>
+      </div>
+    </div>
+  </div>
+</details>
+
+<!-- Accomplishment 7: Navigation Overhaul -->
+<details>
+  <summary>
+    <span>7. Navigation Restructuring</span>
+    <span class="status-done">COMPLETE</span>
+  </summary>
+  <div>
+    <div class="accomplishment-card frontend">
+      <div class="accomplishment-header">
+        <div class="accomplishment-title">Collapsible Sections, Operations Menu, Icon Updates</div>
+        <span class="commit-badge">Jan 28-29 &mdash; 3 commits</span>
+      </div>
+      <div class="impact-grid">
+        <div class="impact-item">
+          <div class="impact-number" style="color: var(--purple);">28</div>
+          <div class="impact-label">Files Changed</div>
+        </div>
+        <div class="impact-item">
+          <div class="impact-number" style="color: var(--purple);">13,795</div>
+          <div class="impact-label">Lines Added</div>
+        </div>
+      </div>
+      <ul>
+        <li><strong>Collapsible Component:</strong> Added <span class="code-path">@radix-ui/react-collapsible</span> for expandable navigation sections</li>
+        <li><strong>Operations Section:</strong> New collapsible menu grouping Load Planner, Quote History, Carriers, Load History, and Truck Types</li>
+        <li><strong>CRM Section:</strong> Enhanced with dedicated section in sidebar</li>
+        <li><strong>Icon Updates:</strong> Streamlined icon assignments across all navigation items</li>
+        <li><strong>Consolidation:</strong> Removed duplicate "Load Planner History" page, consolidated into single "Quote History" for cleaner UX</li>
+      </ul>
+    </div>
+  </div>
+</details>
+
+<!-- Accomplishment 8: Google Maps -->
+<details>
+  <summary>
+    <span>8. Google Maps API Integration</span>
+    <span class="status-done">COMPLETE</span>
+  </summary>
+  <div>
+    <div class="accomplishment-card infra">
+      <div class="accomplishment-header">
+        <div class="accomplishment-title">Location Services Configuration</div>
+        <span class="commit-badge">Jan 28 &mdash; c5eadde</span>
+      </div>
+      <p>Configured Google Maps API key in environment files (<span class="code-path">.env.example</span>) to enable location-based features including:</p>
+      <ul>
+        <li>Geocoding for pickup/dropoff locations in Load Planner</li>
+        <li>Route visualization on map views</li>
+        <li>Distance and travel time calculations</li>
+        <li>Address autocomplete in forms</li>
+      </ul>
+      <p>Environment files synchronized (<span class="code-path">.env</span> and <span class="code-path">.env.example</span>) for team consistency.</p>
+    </div>
+  </div>
+</details>
+
+<!-- Accomplishment 9: Documentation -->
+<details>
+  <summary>
+    <span>9. Comprehensive Project Documentation</span>
+    <span class="status-done">COMPLETE</span>
+  </summary>
+  <div>
+    <div class="accomplishment-card docs">
+      <div class="accomplishment-header">
+        <div class="accomplishment-title">290KB Executive Dashboard &mdash; Single Source of Truth</div>
+        <span class="commit-badge">Jan 30 &mdash; f615bde</span>
+      </div>
+      <div class="impact-grid">
+        <div class="impact-item">
+          <div class="impact-number" style="color: var(--orange);">6,858</div>
+          <div class="impact-label">Lines of HTML</div>
+        </div>
+        <div class="impact-item">
+          <div class="impact-number" style="color: var(--orange);">290</div>
+          <div class="impact-label">KB File Size</div>
+        </div>
+        <div class="impact-item">
+          <div class="impact-number" style="color: var(--orange);">1</div>
+          <div class="impact-label">Source of Truth</div>
+        </div>
+      </div>
+      <p>Created <span class="code-path">dev_docs/00-ultimate-project-status.html</span> &mdash; a comprehensive project status dashboard including:</p>
+      <ul>
+        <li>Complete 5-phase timeline with 162-week roadmap</li>
+        <li>Module completion breakdown for all 27+ services</li>
+        <li>Detailed screens development roadmap with 8 waves (458 screens mapped)</li>
+        <li>Specifications for 60+ screens with components, sections, features, and tabs</li>
+        <li>API review achievements and RBAC coverage status</li>
+        <li>Go-Live milestone tracking (GL1 through GL10)</li>
+        <li>Daily development planning templates</li>
+      </ul>
+      <p><strong>Impact:</strong> Provides complete visibility into project status for all stakeholders. Eliminates ambiguity about what's done, what's in progress, and what's planned.</p>
+    </div>
+  </div>
+</details>
+
+
+<!-- ======================================================================== -->
+<!-- SECTION 4: COMMIT LOG                                                    -->
+<!-- ======================================================================== -->
+<h2 id="commits">Commit Log</h2>
+
+<div class="summary-box">
+  <h3>Full Commit History (18 commits)</h3>
+  <div class="commit-timeline">
+    <div class="commit-row">
+      <div class="commit-date">Jan 30</div>
+      <div class="commit-hash">f615bde</div>
+      <div class="commit-msg"><strong>docs:</strong> add comprehensive project status dashboard with detailed screens roadmap</div>
+      <div class="commit-stat"><span class="added">+6,858</span></div>
+    </div>
+    <div class="commit-row">
+      <div class="commit-date">Jan 29</div>
+      <div class="commit-hash">d8c1548</div>
+      <div class="commit-msg"><strong>feat:</strong> add collapsible component and enhance navigation with CRM section</div>
+      <div class="commit-stat"><span class="added">+12,104</span> / <span class="removed">-12,941</span></div>
+    </div>
+    <div class="commit-row">
+      <div class="commit-date">Jan 28</div>
+      <div class="commit-hash">c5eadde</div>
+      <div class="commit-msg"><strong>feat:</strong> add Google Maps API key to .env.example</div>
+      <div class="commit-stat"><span class="added">+272</span> / <span class="removed">-107</span></div>
+    </div>
+    <div class="commit-row">
+      <div class="commit-date">Jan 28</div>
+      <div class="commit-hash">570221b</div>
+      <div class="commit-msg"><strong>refactor(navigation):</strong> streamline navigation items and update icons</div>
+      <div class="commit-stat"><span class="added">+888</span> / <span class="removed">-301</span></div>
+    </div>
+    <div class="commit-row">
+      <div class="commit-date">Jan 28</div>
+      <div class="commit-hash">e816efc</div>
+      <div class="commit-msg"><strong>refactor:</strong> remove Load Planner History page and update navigation to Quote History</div>
+      <div class="commit-stat"><span class="added">+803</span> / <span class="removed">-395</span></div>
+    </div>
+    <div class="commit-row">
+      <div class="commit-date">Jan 28</div>
+      <div class="commit-hash">9ebea19</div>
+      <div class="commit-msg"><strong>feat:</strong> add truck types management with hooks and types</div>
+      <div class="commit-stat"><span class="added">+11,656</span> / <span class="removed">-68</span></div>
+    </div>
+    <div class="commit-row">
+      <div class="commit-date">Jan 24</div>
+      <div class="commit-hash">1e566e6</div>
+      <div class="commit-msg"><strong>feat:</strong> add company logo upload feature with backend and frontend integration</div>
+      <div class="commit-stat"><span class="added">+764</span> / <span class="removed">-117</span></div>
+    </div>
+    <div class="commit-row">
+      <div class="commit-date">Jan 23</div>
+      <div class="commit-hash">b48e9cf</div>
+      <div class="commit-msg"><strong>refactor:</strong> code structure for improved readability and maintainability</div>
+      <div class="commit-stat"><span class="added">+2,346</span> / <span class="removed">-764</span></div>
+    </div>
+    <div class="commit-row">
+      <div class="commit-date">Jan 23</div>
+      <div class="commit-hash">5ab7fa2</div>
+      <div class="commit-msg"><strong>refactor:</strong> UI components for improved styling and performance</div>
+      <div class="commit-stat"><span class="added">+198</span> / <span class="removed">-347</span></div>
+    </div>
+    <div class="commit-row">
+      <div class="commit-date">Jan 23</div>
+      <div class="commit-hash">38212bc</div>
+      <div class="commit-msg"><strong>feat:</strong> update color variables to use oklch format for improved theming consistency</div>
+      <div class="commit-stat"><span class="added">+436</span> / <span class="removed">-380</span></div>
+    </div>
+    <div class="commit-row">
+      <div class="commit-date">Jan 23</div>
+      <div class="commit-hash">e17c70d</div>
+      <div class="commit-msg"><strong>feat:</strong> enhance authentication flow and user role normalization</div>
+      <div class="commit-stat"><span class="added">+283</span> / <span class="removed">-47</span></div>
+    </div>
+    <div class="commit-row">
+      <div class="commit-date">Jan 23</div>
+      <div class="commit-hash">afac8b6</div>
+      <div class="commit-msg"><strong>feat:</strong> enhance authentication flow and admin layout UX</div>
+      <div class="commit-stat"><span class="added">+270</span> / <span class="removed">-25</span></div>
+    </div>
+    <div class="commit-row">
+      <div class="commit-date">Jan 23</div>
+      <div class="commit-hash">aeffd5f</div>
+      <div class="commit-msg"><strong>feat:</strong> overhaul theme and styling for a professional look</div>
+      <div class="commit-stat"><span class="added">+1,386</span> / <span class="removed">-557</span></div>
+    </div>
+    <div class="commit-row">
+      <div class="commit-date">Jan 23</div>
+      <div class="commit-hash">68e187a</div>
+      <div class="commit-msg"><strong>feat:</strong> overhaul theme and styling for a professional look</div>
+      <div class="commit-stat"><span class="added">+1,048</span> / <span class="removed">-371</span></div>
+    </div>
+    <div class="commit-row">
+      <div class="commit-date">Jan 23</div>
+      <div class="commit-hash">271ce17</div>
+      <div class="commit-msg"><strong>feat:</strong> update CRM forms and hooks to support new activity fields</div>
+      <div class="commit-stat"><span class="added">+874</span> / <span class="removed">-176</span></div>
+    </div>
+    <div class="commit-row">
+      <div class="commit-date">Jan 23</div>
+      <div class="commit-hash">3d168c0</div>
+      <div class="commit-msg"><strong>refactor:</strong> rename customer references to company across CRM components</div>
+      <div class="commit-stat"><span class="added">+1,090</span> / <span class="removed">-570</span></div>
+    </div>
+    <div class="commit-row">
+      <div class="commit-date">Jan 23</div>
+      <div class="commit-hash">c8f505a</div>
+      <div class="commit-msg"><strong>feat:</strong> refactor user and lead forms for improved validation and handling</div>
+      <div class="commit-stat"><span class="added">+739</span> / <span class="removed">-168</span></div>
+    </div>
+    <div class="commit-row">
+      <div class="commit-date">Jan 22</div>
+      <div class="commit-hash">43440e4</div>
+      <div class="commit-msg"><strong>feat:</strong> add mock handlers for auth and CRM APIs; implement dashboard shell UI</div>
+      <div class="commit-stat">(base commit)</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ======================================================================== -->
+<!-- SECTION 5: MILESTONE TRACKING                                            -->
+<!-- ======================================================================== -->
+<h2 id="milestones">Milestone Tracking</h2>
+
+<div class="summary-box">
+  <h3>Go-Live Milestone Status</h3>
+
+  <div class="milestone-track">
+    <div class="milestone-marker done">GL1</div>
+    <div class="milestone-content">
+      <div class="milestone-title">Admin & User Management (Week 6)</div>
+      <div class="milestone-detail">Authentication, RBAC, tenant management, user CRUD &mdash; all complete</div>
+    </div>
+    <span class="status-done">COMPLETE</span>
+  </div>
+
+  <div class="milestone-track">
+    <div class="milestone-marker done">GL2</div>
+    <div class="milestone-content">
+      <div class="milestone-title">HubSpot CRM Sync Working (Week 12)</div>
+      <div class="milestone-detail">Company/Contact sync, activities, webhooks &mdash; all complete</div>
+    </div>
+    <span class="status-done">COMPLETE</span>
+  </div>
+
+  <div class="milestone-track">
+    <div class="milestone-marker done">GL3</div>
+    <div class="milestone-content">
+      <div class="milestone-title">Quoting System Live (Week 20)</div>
+      <div class="milestone-detail">Quote builder, rate tables, accessorials &mdash; 97% complete</div>
+    </div>
+    <span class="status-done">COMPLETE</span>
+  </div>
+
+  <div class="milestone-track">
+    <div class="milestone-marker current">GL4</div>
+    <div class="milestone-content">
+      <div class="milestone-title">Order Management Live (Week 28)</div>
+      <div class="milestone-detail">API 100% complete. Load History page, Load Planner Editor, and Quote History UI now built. Order List/Detail UI next priority.</div>
+    </div>
+    <span class="status-progress">IN PROGRESS</span>
+  </div>
+
+  <div class="milestone-track">
+    <div class="milestone-marker current">GL5</div>
+    <div class="milestone-content">
+      <div class="milestone-title">Carrier Onboarding (Week 36)</div>
+      <div class="milestone-detail">API 100% complete. Carriers management page and Truck Types page now built. Carrier detail/edit wizard next.</div>
+    </div>
+    <span class="status-progress">IN PROGRESS</span>
+  </div>
+
+  <div class="milestone-track">
+    <div class="milestone-marker pending">GL6</div>
+    <div class="milestone-content">
+      <div class="milestone-title">Accounting Core (Week 50)</div>
+      <div class="milestone-detail">API complete. UI screens pending (45 screens). Blocked by GL4/GL5 completion.</div>
+    </div>
+    <span class="status-pending">PENDING</span>
+  </div>
+
+  <div class="milestone-track">
+    <div class="milestone-marker pending">GL7</div>
+    <div class="milestone-content">
+      <div class="milestone-title">Operations Support (Week 56)</div>
+      <div class="milestone-detail">Dispatch, tracking, exception management screens. Backend ready.</div>
+    </div>
+    <span class="status-pending">PLANNED</span>
+  </div>
+</div>
+
+<div class="info-box">
+  <h3>This Period's Milestone Impact</h3>
+  <div class="two-col">
+    <div>
+      <h4>GL4 &mdash; Order Management</h4>
+      <table>
+        <tr><th>Component</th><th>Before</th><th>After</th></tr>
+        <tr><td>Backend API</td><td><span class="status-done">100%</span></td><td><span class="status-done">100%</span></td></tr>
+        <tr><td>Load History Page</td><td><span class="status-pending">Not Started</span></td><td><span class="status-done">Built</span></td></tr>
+        <tr><td>Load Planner Editor</td><td><span class="status-pending">Not Started</span></td><td><span class="status-done">Built</span></td></tr>
+        <tr><td>Quote History Page</td><td><span class="status-pending">Not Started</span></td><td><span class="status-done">Built</span></td></tr>
+        <tr><td>Order List/Detail UI</td><td><span class="status-pending">Not Started</span></td><td><span class="status-future">Next Priority</span></td></tr>
+      </table>
+    </div>
+    <div>
+      <h4>GL5 &mdash; Carrier Onboarding</h4>
+      <table>
+        <tr><th>Component</th><th>Before</th><th>After</th></tr>
+        <tr><td>Backend API</td><td><span class="status-done">100%</span></td><td><span class="status-done">100%</span></td></tr>
+        <tr><td>Carriers Page</td><td><span class="status-pending">Not Started</span></td><td><span class="status-done">Built</span></td></tr>
+        <tr><td>Truck Types Page</td><td><span class="status-pending">Not Started</span></td><td><span class="status-done">Built</span></td></tr>
+        <tr><td>Carrier Detail/Edit</td><td><span class="status-pending">Not Started</span></td><td><span class="status-future">Next Priority</span></td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+
+<!-- ======================================================================== -->
+<!-- SECTION 6: ARCHITECTURE IMPACT                                           -->
+<!-- ======================================================================== -->
+<h2 id="architecture">Architecture & Code Impact</h2>
+
+<div class="summary-box">
+  <h3>New Database Tables Added</h3>
+  <p>602-line SQL migration (<span class="code-path">20260127185246_operations_module</span>) established the Operations data layer:</p>
+  <table>
+    <thead>
+      <tr><th>Table</th><th>Key Fields</th><th>Purpose</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>TruckType</strong></td>
+        <td>name, dimensions, capacity, specifications</td>
+        <td>Standardized truck type catalog</td>
+      </tr>
+      <tr>
+        <td><strong>LoadPlannerQuote</strong></td>
+        <td>pickup/dropoff coords, route polyline, pricing</td>
+        <td>Full quote data with geographic routing</td>
+      </tr>
+      <tr>
+        <td><strong>LoadPlannerCargoItem</strong></td>
+        <td>dimensions, weight, stackable, hazmat</td>
+        <td>Individual cargo item specifications</td>
+      </tr>
+      <tr>
+        <td><strong>Carrier</strong></td>
+        <td>name, MC#, DOT#, contact info, tenantId</td>
+        <td>Carrier company records with multi-tenant isolation</td>
+      </tr>
+      <tr>
+        <td><strong>Driver</strong></td>
+        <td>name, license, carrier assignment</td>
+        <td>Driver records linked to carriers</td>
+      </tr>
+    </tbody>
+  </table>
+  <p style="font-size: 13px; color: var(--gray);">All tables include full audit fields (createdAt, updatedAt, deletedAt, createdById, updatedById) and tenant isolation.</p>
+</div>
+
+<div class="summary-box">
+  <h3>Frontend Architecture Pattern Established</h3>
+  <p>A clean, reusable three-layer architecture was established for the Operations domain:</p>
+
+  <div class="arch-flow">
+    <div class="arch-box types">
+      <strong>Types</strong><br>
+      <span style="font-size: 11px; color: var(--gray);">TypeScript Interfaces</span><br>
+      <span class="code-path">types/*.ts</span>
+    </div>
+    <div class="arch-arrow">&rarr;</div>
+    <div class="arch-box hooks">
+      <strong>Hooks</strong><br>
+      <span style="font-size: 11px; color: var(--gray);">React Query + API</span><br>
+      <span class="code-path">hooks/operations/*.ts</span>
+    </div>
+    <div class="arch-arrow">&rarr;</div>
+    <div class="arch-box pages">
+      <strong>Pages</strong><br>
+      <span style="font-size: 11px; color: var(--gray);">Next.js Components</span><br>
+      <span class="code-path">app/(dashboard)/*.tsx</span>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Domain</th><th>Type File</th><th>Hook File</th><th>Page</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Truck Types</td>
+        <td><span class="code-path">truck-types.ts</span></td>
+        <td><span class="code-path">use-truck-types.ts</span></td>
+        <td><span class="code-path">/truck-types/page.tsx</span></td>
+      </tr>
+      <tr>
+        <td>Carriers</td>
+        <td><span class="code-path">carriers.ts</span></td>
+        <td><span class="code-path">use-carriers.ts</span></td>
+        <td><span class="code-path">/carriers/page.tsx</span></td>
+      </tr>
+      <tr>
+        <td>Load History</td>
+        <td><span class="code-path">load-history.ts</span></td>
+        <td><span class="code-path">use-load-history.ts</span></td>
+        <td><span class="code-path">/load-history/page.tsx</span></td>
+      </tr>
+      <tr>
+        <td>Quotes</td>
+        <td><span class="code-path">load-planner-quotes.ts</span></td>
+        <td><span class="code-path">use-load-planner-quotes.ts</span></td>
+        <td><span class="code-path">/quote-history/page.tsx</span></td>
+      </tr>
+    </tbody>
+  </table>
+  <p><strong>Benefit:</strong> This pattern serves as a template. Any new Operations screen can follow the same Type &rarr; Hook &rarr; Page architecture, dramatically reducing development time for the remaining screens.</p>
+</div>
+
+<div class="summary-box">
+  <h3>Overall System Architecture (Current State)</h3>
+  <table>
+    <thead>
+      <tr><th>Layer</th><th>Technology</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Frontend</strong></td><td>Next.js 16.1.4, React 19.2.3, TailwindCSS 4.1.18, Radix UI</td><td><span class="status-progress">In Progress</span></td></tr>
+      <tr><td><strong>Backend</strong></td><td>NestJS 10.x, 27+ services, 830+ endpoints</td><td><span class="status-done">100% Complete</span></td></tr>
+      <tr><td><strong>Database</strong></td><td>PostgreSQL + Prisma ORM, 244+ models</td><td><span class="status-done">100% Complete</span></td></tr>
+      <tr><td><strong>Auth</strong></td><td>JWT + MFA, RBAC on 62 controllers</td><td><span class="status-done">100% Complete</span></td></tr>
+      <tr><td><strong>Testing</strong></td><td>Jest, 207 E2E test cases across 32 files</td><td><span class="status-done">Complete</span></td></tr>
+      <tr><td><strong>API Docs</strong></td><td>Swagger/OpenAPI, 175/196 controllers documented</td><td><span class="status-done">89% Coverage</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ======================================================================== -->
+<!-- SECTION 7: NEXT WEEK PRIORITIES                                          -->
+<!-- ======================================================================== -->
+<h2 id="next-week">Next Week Priorities</h2>
+
+<div class="summary-box">
+  <h3>Planned Focus Areas</h3>
+  <table>
+    <thead>
+      <tr><th>Priority</th><th>Task</th><th>Milestone</th><th>Target</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="priority-p0">P0</span></td>
+        <td><strong>Order List & Detail screens</strong></td>
+        <td>GL4</td>
+        <td>2-3 screens</td>
+      </tr>
+      <tr>
+        <td><span class="priority-p0">P0</span></td>
+        <td><strong>Create/Edit Order form</strong></td>
+        <td>GL4</td>
+        <td>1 screen (multi-step)</td>
+      </tr>
+      <tr>
+        <td><span class="priority-p1">P1</span></td>
+        <td><strong>Carrier Detail view (multi-tab profile)</strong></td>
+        <td>GL5</td>
+        <td>1 screen (9 tabs)</td>
+      </tr>
+      <tr>
+        <td><span class="priority-p1">P1</span></td>
+        <td><strong>Load List & Detail screens</strong></td>
+        <td>GL4</td>
+        <td>2 screens</td>
+      </tr>
+      <tr>
+        <td><span class="priority-p2">P2</span></td>
+        <td><strong>Dispatch Board initial layout</strong></td>
+        <td>GL4</td>
+        <td>1 screen (shell)</td>
+      </tr>
+      <tr>
+        <td><span class="priority-p2">P2</span></td>
+        <td><strong>Load Planner remaining enhancements</strong></td>
+        <td>GL3</td>
+        <td>Ongoing</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="success-box">
+  <h3>Velocity Projection</h3>
+  <p>Based on this period's velocity of <strong>5 new screens in 2 weeks</strong>, plus the now-established reusable patterns (hooks, types, navigation, theme), frontend development velocity is expected to <strong>accelerate</strong> in the coming weeks.</p>
+  <p><strong>Key enablers for acceleration:</strong></p>
+  <ul>
+    <li>Reusable Type &rarr; Hook &rarr; Page template reduces per-screen development time</li>
+    <li>Theme overhaul eliminates per-component styling decisions</li>
+    <li>Collapsible navigation pattern handles any number of new sections</li>
+    <li>All backend APIs are production-ready &mdash; frontend can proceed with full confidence</li>
+    <li>207 E2E tests provide a safety net for rapid iteration</li>
+  </ul>
+</div>
+
+<div class="warning-box">
+  <h3>Risks & Mitigations</h3>
+  <table>
+    <thead>
+      <tr><th>Risk</th><th>Impact</th><th>Mitigation</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Frontend screen volume (400+ remaining)</td>
+        <td>Medium</td>
+        <td>Reusable patterns established this period. Each new screen leverages existing hooks/types. Velocity will increase as patterns mature.</td>
+      </tr>
+      <tr>
+        <td>Complex UI screens (Dispatch Board, Load Planner 3D)</td>
+        <td>Medium</td>
+        <td>Decompose into iterative releases. Ship functional versions first, enhance progressively.</td>
+      </tr>
+      <tr>
+        <td>Design consistency across 400+ screens</td>
+        <td>Low</td>
+        <td>Mitigated by this period's theme overhaul. Consistent component library now in place.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ======================================================================== -->
+<!-- FOOTER                                                                   -->
+<!-- ======================================================================== -->
+<div style="text-align: center; padding: 32px 24px; color: var(--gray); font-size: 13px; border-top: 2px solid #e5e7eb; margin-top: 40px;">
+  <p style="margin: 0;"><strong>Ultra-TMS Weekly Progress Report #001</strong></p>
+  <p style="margin: 4px 0;">Reporting Period: January 23 &ndash; February 6, 2026</p>
+  <p style="margin: 4px 0;">Generated: February 6, 2026</p>
+  <p style="margin: 16px 0 0 0; font-size: 12px; color: #9ca3af;">Next Report: February 13, 2026 | Report #002</p>
+</div>
+
+</body>
+</html>

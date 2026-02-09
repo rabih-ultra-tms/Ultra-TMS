@@ -72,6 +72,8 @@ import {
   Pause,
   Mail,
 } from 'lucide-react';
+import { ConfirmDialog } from '@/components/shared/confirm-dialog';
+import { useDebounce } from '@/lib/hooks';
 
 type CarrierType = 'COMPANY' | 'OWNER_OPERATOR';
 type CarrierStatus = 'ACTIVE' | 'INACTIVE' | 'PREFERRED' | 'ON_HOLD' | 'BLACKLISTED';
@@ -114,12 +116,14 @@ export default function CarriersPage() {
   const [newCarrierType, setNewCarrierType] = useState<CarrierType>('COMPANY');
   const [newCarrierName, setNewCarrierName] = useState('');
   const pageSize = 25;
+  const [showBatchDeleteDialog, setShowBatchDeleteDialog] = useState(false);
+  const debouncedSearch = useDebounce(searchQuery, 300);
 
   // Fetch carriers
   const { data, isLoading, error } = useCarriers({
     page,
     limit: pageSize,
-    search: searchQuery || undefined,
+    search: debouncedSearch || undefined,
     status: statusFilter === 'all' ? undefined : statusFilter,
     carrierType: typeFilter === 'all' ? undefined : typeFilter,
     state: stateFilter || undefined,
@@ -164,16 +168,18 @@ export default function CarriersPage() {
 
   const handleBatchDelete = () => {
     if (selectedIds.size === 0) return;
-    if (
-      confirm(
-        `Are you sure you want to delete ${selectedIds.size} carriers? This cannot be undone.`
-      )
-    ) {
-      const ids = Array.from(selectedIds);
-      Promise.all(ids.map((id) => deleteMutation.mutateAsync(id))).then(() => {
-        setSelectedIds(new Set());
-      });
+    setShowBatchDeleteDialog(true);
+  };
+
+  const confirmBatchDelete = async () => {
+    const ids = Array.from(selectedIds);
+    try {
+      await Promise.all(ids.map((id) => deleteMutation.mutateAsync(id)));
+      setSelectedIds(new Set());
+    } catch {
+      // Errors handled by React Query
     }
+    setShowBatchDeleteDialog(false);
   };
 
   const clearFilters = () => {
@@ -772,6 +778,17 @@ export default function CarriersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={showBatchDeleteDialog}
+        title="Delete Carriers"
+        description={`Are you sure you want to delete ${selectedIds.size} carriers? This cannot be undone.`}
+        confirmLabel="Delete"
+        destructive
+        isLoading={deleteMutation.isPending}
+        onConfirm={confirmBatchDelete}
+        onCancel={() => setShowBatchDeleteDialog(false)}
+      />
     </div>
   );
 }
@@ -789,8 +806,11 @@ function CarrierActionsMenu({
   onStatusChange,
   isDeleting,
 }: CarrierActionsMenuProps) {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   return (
-    <DropdownMenu>
+    <>
+      <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="shrink-0">
           <MoreHorizontal className="h-4 w-4" />
@@ -841,18 +861,27 @@ function CarrierActionsMenu({
         )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={() => {
-            if (confirm('Are you sure you want to delete this carrier?')) {
-              onDelete();
-            }
-          }}
+          onClick={() => setShowDeleteConfirm(true)}
           className="text-red-600"
           disabled={isDeleting}
         >
           <Trash2 className="h-4 w-4 mr-2" />
-          {isDeleting ? 'Deleting...' : 'Delete Carrier'}
+          Delete Carrier
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+    <ConfirmDialog
+      open={showDeleteConfirm}
+      title="Delete Carrier"
+      description="Are you sure you want to delete this carrier? This cannot be undone."
+      confirmLabel="Delete"
+      destructive
+      onConfirm={() => {
+        onDelete();
+        setShowDeleteConfirm(false);
+      }}
+      onCancel={() => setShowDeleteConfirm(false)}
+    />
+    </>
   );
 }

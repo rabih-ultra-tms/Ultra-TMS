@@ -1,49 +1,51 @@
 # Development Phases
 
-The platform is built across **5 phases spanning 162 weeks** (approximately 3 years).
+> **UPDATED Feb 2026:** The original 162-week/38-service plan has been replaced by a **16-week P0 MVP** focused on 8 core services. This change was driven by the comprehensive review (score: 6.2/10) which found the original scope was unrealistic for a 2-person team. See `dev_docs/Claude-review-v1/00-executive-summary/prioritized-action-plan.md` for the current working plan.
 
 ---
 
-## Phase Overview
+## Current Plan: 16-Week P0 MVP
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         162-WEEK DEVELOPMENT TIMELINE                        │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  PHASE A (78 weeks)                                                         │
-│  ████████████████████████████████████████████████████████████               │
-│  Internal MVP - Your Brokerage Operations                                   │
-│  Weeks 1-78                                                                 │
-│                                                                              │
-│  PHASE B (26 weeks)                                                         │
-│  ████████████████████                                                       │
-│  Enhancement - Internal CRM, Mobile, Advanced                               │
-│  Weeks 79-104                                                               │
-│                                                                              │
-│  PHASE C (24 weeks)                                                         │
-│  ██████████████████                                                         │
-│  SaaS Launch - Multi-tenant, Fleet/Trucking/Drayage                        │
-│  Weeks 105-128                                                              │
-│                                                                              │
-│  PHASE D (18 weeks)                                                         │
-│  ██████████████                                                             │
-│  Expansion - Forwarding, Warehouse, Last-Mile                              │
-│  Weeks 129-146                                                              │
-│                                                                              │
-│  PHASE E (16 weeks)                                                         │
-│  ████████████                                                               │
-│  Specialty - Cold Chain, Heavy Haul, Marketplace                           │
-│  Weeks 147-162                                                              │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+**Goal:** Broker-usable 3PL TMS in 16 weeks. 8 services, ~30 screens.
+
+**Team:** 2 engineers @ 30 hrs/week each = 60 hrs/week (636 hours total)
+
+### Phase Breakdown
+
+| Phase | Weeks | Hours | Focus |
+| --- | --- | --- | --- |
+| **Phase 0: Emergency Fixes** | Week 1 | 34h | Fix carrier 404s, replace confirm() dialogs, create shared status constants |
+| **Phase 1: Design Foundation** | Week 2 | 47h | Design tokens, StatusBadge/KPICard/FilterBar/DataGrid components, ESLint rules |
+| **Phase 2: Patterns + Refactor** | Weeks 3-4 | 87h | List/Detail/Form page patterns, refactor carrier page, add tests |
+| **Phase 3: TMS Core - Orders** | Weeks 5-7 | 126h | Order service (backend+frontend), order entry/list/detail, stop management |
+| **Phase 4: TMS Core - Loads & Dispatch** | Weeks 8-10 | 152h | Load service, loads list/detail, dispatch board, carrier assignment |
+| **Phase 5: Operations Essentials** | Weeks 11-13 | 98h | Rate confirmation PDFs, FMCSA integration, tracking map, operations dashboard |
+| **Phase 6: Financial Core** | Weeks 14-16 | 92h | Invoice generation, carrier settlements, AR aging, QuickBooks sync |
+
+### MVP Services (8 only)
+
+| # | Service | Current State |
+| --- | --- | --- |
+| 1 | Auth & Admin | Built (buggy — 29 bugs, 4 critical) |
+| 2 | CRM / Customers | Built (basic CRUD) |
+| 3 | Sales / Quotes | Built (basic CRUD) |
+| 4 | TMS Core | **Backend exists** (LoadsService 19KB, OrdersService 22KB) — needs frontend |
+| 5 | Carrier Management | Built (buggy — 404s, 858-line monolith) |
+| 6 | Accounting | Not built |
+| 7 | Load Board | Not built |
+| 8 | Commission | Not built |
+
+**All other services (9-38) are deferred to post-MVP.**
 
 ---
 
-## Phase A: Internal MVP (78 Weeks)
+## Long-Term Vision: 162-Week Plan (Original, Deferred)
 
-**Goal:** Replace all manual brokerage processes with a working system that you use daily.
+> The phases below represent the original aspirational plan. They remain valid as a long-term vision but are NOT the current working plan.
+
+### Phase A: Internal MVP (78 Weeks) — NOW REPLACED BY 16-WEEK MVP ABOVE
+
+**Original Goal:** Replace all manual brokerage processes with a working system.
 
 **Team:** 2 engineers @ 30 hrs/week each
 

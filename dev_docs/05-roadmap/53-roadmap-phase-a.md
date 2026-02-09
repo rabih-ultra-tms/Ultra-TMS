@@ -1,4 +1,6 @@
-# Phase A - MVP (Weeks 1-78)
+# Phase A - MVP (Weeks 1-78) — REPLACED BY 16-WEEK MVP
+
+> **SUPERSEDED (Feb 2026):** This 78-week Phase A has been replaced by a focused 16-week MVP plan. See `dev_docs/Claude-review-v1/00-executive-summary/prioritized-action-plan.md` for the current working plan. Content below is preserved for reference only.
 
 **Duration**: 78 weeks  
 **Team**: 2 engineers Ã— 30 hours/week  

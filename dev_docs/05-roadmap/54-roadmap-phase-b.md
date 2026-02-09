@@ -1,4 +1,6 @@
-# Phase B - Enhancement (Weeks 79-104)
+# Phase B - Enhancement (Weeks 79-104) — FUTURE
+
+> **STATUS (Feb 2026):** This phase is deferred until after the 16-week P0 MVP is complete. See `52-roadmap-overview.md` for the current working plan.
 
 **Duration**: 26 weeks  
 **Team**: 2-3 engineers Ã— 30 hours/week  

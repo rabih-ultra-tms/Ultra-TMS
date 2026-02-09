@@ -2,33 +2,35 @@
 
 Complete specification of all technologies, packages, configurations, and infrastructure for the 3PL Platform.
 
+> **NOTE (Feb 2026):** The actual project now uses **Next.js 16 + React 19 + Tailwind 4 + Prisma 6** (pnpm + Turborepo monorepo). The package versions listed below were written as a planning document in Jan 2026 and show older planned versions. For the actual current stack, see `CLAUDE.md` at the project root. The architecture patterns, Docker configs, CI/CD templates, and cost estimates below remain useful as reference.
+
 ---
 
-## Stack Overview
+## Stack Overview (Actual)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                                 FRONTEND                                     │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│  React 18 │ TypeScript │ TailwindCSS │ shadcn/ui │ React Query │ Zustand   │
+│  Next.js 16 │ React 19 │ TypeScript │ Tailwind 4 │ shadcn/ui │ Zustand    │
 └─────────────────────────────────────────────────────────────────────────────┘
                                       │
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                                 BACKEND                                      │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│   NestJS │ TypeScript │ Prisma │ Bull │ Socket.io │ Passport │ Swagger     │
+│   NestJS 10 │ TypeScript │ Prisma 6 │ Bull │ Socket.io │ Passport │ Swagger│
 └─────────────────────────────────────────────────────────────────────────────┘
                                       │
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                                 DATA                                         │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│       PostgreSQL 15 │ Redis 7 │ S3/MinIO │ OpenSearch (future)              │
+│   PostgreSQL 15 │ Redis 7 │ Elasticsearch 8.13 │ S3/MinIO                  │
 └─────────────────────────────────────────────────────────────────────────────┘
                                       │
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                              INFRASTRUCTURE                                  │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│    Docker │ GitHub Actions │ AWS/Railway │ CloudFlare │ Sentry │ DataDog   │
+│    Docker │ pnpm + Turborepo │ GitHub Actions │ AWS/Railway │ CloudFlare   │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 

@@ -42,6 +42,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { toast } from 'sonner'
+import { ConfirmDialog } from '@/components/shared/confirm-dialog'
 import {
   Plus,
   Search,
@@ -90,6 +91,7 @@ export default function LoadHistoryPage() {
   const [showNewLoadDialog, setShowNewLoadDialog] = useState(false)
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
   const pageSize = 25
+  const [showBatchDeleteDialog, setShowBatchDeleteDialog] = useState(false)
 
   // New load form state
   const [newLoadForm, setNewLoadForm] = useState({
@@ -232,9 +234,13 @@ export default function LoadHistoryPage() {
 
   const handleBatchDelete = () => {
     if (selectedIds.size === 0) return
-    if (confirm(`Are you sure you want to delete ${selectedIds.size} loads? This cannot be undone.`)) {
-      const ids = Array.from(selectedIds)
-      Promise.all(ids.map((id) => {
+    setShowBatchDeleteDialog(true)
+  }
+
+  const confirmBatchDelete = async () => {
+    const ids = Array.from(selectedIds)
+    try {
+      await Promise.all(ids.map((id) => {
         return new Promise((resolve, reject) => {
           deleteLoadMutation.mutate(id, {
             onSuccess: resolve,
@@ -248,6 +254,7 @@ export default function LoadHistoryPage() {
         toast.error('Failed to delete some loads', { description: getErrorMessage(error) })
       })
     }
+    setShowBatchDeleteDialog(false)
   }
 
   const clearFilters = () => {
@@ -960,6 +967,17 @@ export default function LoadHistoryPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={showBatchDeleteDialog}
+        title="Delete Loads"
+        description={`Are you sure you want to delete ${selectedIds.size} loads? This cannot be undone.`}
+        confirmLabel="Delete"
+        destructive
+        isLoading={deleteLoadMutation.isPending}
+        onConfirm={confirmBatchDelete}
+        onCancel={() => setShowBatchDeleteDialog(false)}
+      />
     </div>
   )
 }
@@ -972,8 +990,11 @@ interface LoadActionsMenuProps {
 }
 
 function LoadActionsMenu({ load, onDelete, isDeleting }: LoadActionsMenuProps) {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
   return (
-    <DropdownMenu>
+    <>
+      <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="shrink-0">
           <MoreHorizontal className="h-4 w-4" />
@@ -995,18 +1016,27 @@ function LoadActionsMenu({ load, onDelete, isDeleting }: LoadActionsMenuProps) {
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={() => {
-            if (confirm('Are you sure you want to delete this load?')) {
-              onDelete()
-            }
-          }}
+          onClick={() => setShowDeleteConfirm(true)}
           className="text-red-600"
           disabled={isDeleting}
         >
           <Trash2 className="h-4 w-4 mr-2" />
-          {isDeleting ? 'Deleting...' : 'Delete Load'}
+          Delete Load
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+    <ConfirmDialog
+      open={showDeleteConfirm}
+      title="Delete Load"
+      description="Are you sure you want to delete this load? This cannot be undone."
+      confirmLabel="Delete"
+      destructive
+      onConfirm={() => {
+        onDelete()
+        setShowDeleteConfirm(false)
+      }}
+      onCancel={() => setShowDeleteConfirm(false)}
+    />
+    </>
   )
 }

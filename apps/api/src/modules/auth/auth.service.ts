@@ -446,13 +446,13 @@ export class AuthService {
     const refreshToken = this.jwtService.sign(
       Object.assign({}, refreshTokenPayload),
       {
-        expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRATION', '7d'),
+        expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRATION', '30d'),
       } as any
     );
 
     // Store refresh token hash in Redis
     const refreshTokenHash = this.hashToken(refreshToken);
-    const expiresInSeconds = 7 * 24 * 60 * 60; // 7 days
+    const expiresInSeconds = 30 * 24 * 60 * 60; // 30 days
 
     await this.redisService.storeSession(user.id, sessionId, refreshTokenHash, expiresInSeconds);
 

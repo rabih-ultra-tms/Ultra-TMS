@@ -1,4 +1,6 @@
-# Phase E - Specialty + Marketplace (Weeks 147-162)
+# Phase E - Specialty + Marketplace (Weeks 147-162) — FUTURE
+
+> **STATUS (Feb 2026):** This phase is deferred until after the 16-week P0 MVP is complete. See `52-roadmap-overview.md` for the current working plan.
 
 **Duration**: 16 weeks  
 **Team**: 4+ engineers Ã— 30 hours/week  

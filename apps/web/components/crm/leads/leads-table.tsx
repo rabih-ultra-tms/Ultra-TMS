@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -8,6 +11,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Pagination } from "@/components/ui/pagination";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { Trash2 } from "lucide-react";
 import type { Lead } from "@/lib/types/crm";
 import { LeadStageBadge } from "./lead-stage-badge";
 
@@ -21,7 +26,9 @@ interface LeadsTableProps {
   };
   onPageChange?: (page: number) => void;
   onView: (id: string) => void;
+  onDelete?: (id: string) => Promise<void>;
   isLoading?: boolean;
+  isDeleting?: boolean;
 }
 
 export function LeadsTable({
@@ -29,8 +36,19 @@ export function LeadsTable({
   pagination,
   onPageChange,
   onView,
+  onDelete,
   isLoading,
+  isDeleting,
 }: LeadsTableProps) {
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const handleDelete = async () => {
+    if (deleteId && onDelete) {
+      await onDelete(deleteId);
+      setDeleteId(null);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="rounded-md border">
@@ -54,14 +72,26 @@ export function LeadsTable({
                 </TableCell>
                 <TableCell>{lead.owner ? `${lead.owner.firstName} ${lead.owner.lastName}` : "Unassigned"}</TableCell>
                 <TableCell className="text-right">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onView(lead.id)}
-                    disabled={isLoading}
-                  >
-                    View
-                  </Button>
+                  <div className="flex items-center justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onView(lead.id)}
+                      disabled={isLoading}
+                    >
+                      View
+                    </Button>
+                    {onDelete ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setDeleteId(lead.id)}
+                        disabled={isLoading || isDeleting}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    ) : null}
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -76,6 +106,16 @@ export function LeadsTable({
           onPageChange={onPageChange}
         />
       ) : null}
+      <ConfirmDialog
+        open={!!deleteId}
+        title="Delete deal"
+        description="This action cannot be undone. The deal will be permanently removed."
+        confirmLabel="Delete"
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteId(null)}
+        isLoading={isDeleting}
+        destructive
+      />
     </div>
   );
 }

@@ -1,4 +1,6 @@
-# Phase D - Forwarding & Warehouse (Weeks 129-146)
+# Phase D - Forwarding & Warehouse (Weeks 129-146) — FUTURE
+
+> **STATUS (Feb 2026):** This phase is deferred until after the 16-week P0 MVP is complete. See `52-roadmap-overview.md` for the current working plan.
 
 **Duration**: 18 weeks  
 **Team**: 3-4 engineers Ã— 30 hours/week  

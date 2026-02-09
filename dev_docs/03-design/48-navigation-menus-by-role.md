@@ -1,5 +1,7 @@
 # Navigation Structure
 
+> **NOTE (Feb 2026):** This navigation assumes the full 38-service suite. The P0 MVP only includes 8 services. See `CLAUDE.md` for MVP scope. 5 sidebar links currently point to 404 pages — see BUG-003 in `dev_docs/Claude-review-v1/01-code-review/05-bug-inventory.md`.
+
 Menu structure and navigation hierarchy for each user role in the 3PL Platform.
 
 ---

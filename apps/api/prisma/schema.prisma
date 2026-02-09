@@ -198,7 +198,7 @@ model Agent {
   AgentAgreement          AgentAgreement[]
   commissions         AgentCommission[]
   AgentContact            AgentContact[]
-  AgentCustomerAssignment AgentCustomerAssignment[]
+  AgentCustomerAssignment  AgentCustomerAssignment[]
   AgentDrawBalance        AgentDrawBalance[]
   AgentLead               AgentLead[]
   AgentPayout             AgentPayout[]
@@ -995,7 +995,7 @@ model Carrier {
   CarrierInsurance          CarrierInsurance[]
   CarrierInvoiceSubmission  CarrierInvoiceSubmission[]
   CarrierLoadView           CarrierLoadView[]
-  CarrierPerformanceHistory CarrierPerformanceHistory[]
+  CarrierPerformanceHistory   CarrierPerformanceHistory[]
   CarrierPortalActivityLog  CarrierPortalActivityLog[]
   CarrierPortalDocument     CarrierPortalDocument[]
   CarrierPortalSession      CarrierPortalSession[]
@@ -1468,7 +1468,7 @@ model CarrierPortalUser {
   CarrierInvoiceSubmission  CarrierInvoiceSubmission[]
   CarrierPortalActivityLog  CarrierPortalActivityLog[]
   CarrierPortalDocument     CarrierPortalDocument[]
-  CarrierPortalNotification CarrierPortalNotification[]
+  CarrierPortalNotification  CarrierPortalNotification[]
   CarrierPortalSession      CarrierPortalSession[]
   carrier             Carrier?           @relation(fields: [carrierId], references: [id], onDelete: Cascade)
   tenant                    Tenant                      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -2445,7 +2445,7 @@ model Contract {
   ContractMetric     ContractMetric[]
   ContractRateTable  ContractRateTable[]
   ContractSLA        ContractSLA[]
-  FuelSurchargeTable FuelSurchargeTable[]
+  FuelSurchargeTable  FuelSurchargeTable[]
   VolumeCommitment   VolumeCommitment[]
 
   @@index([carrierId])
@@ -2971,7 +2971,7 @@ model Department {
   other_Department   Department[]        @relation("DepartmentToDepartment")
   tenant             Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   Employee           Employee[]
-  EmploymentHistory  EmploymentHistory[]
+  EmploymentHistory   EmploymentHistory[]
 
   @@unique([tenantId, code])
   @@index([externalId, sourceSystem])
@@ -3057,7 +3057,7 @@ model Document {
   tenant                Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   uploader                User?              @relation(fields: [uploadedBy], references: [id])
   DocumentShare         DocumentShare[]
-  FactoringVerification FactoringVerification[]
+  FactoringVerification  FactoringVerification[]
   FolderDocument        FolderDocument[]
   GeneratedDocument     GeneratedDocument[]
 
@@ -3510,7 +3510,7 @@ model EdiMessage {
   deletedAt         DateTime?
   createdById       String?
   updatedById       String?
-  EdiAcknowledgment EdiAcknowledgment[]
+  EdiAcknowledgment  EdiAcknowledgment[]
   EdiBatchMessage   EdiBatchMessage[]
   EdiError          EdiError[]
   tenant            Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -3761,7 +3761,7 @@ model FactoringCompany {
   deletedAt              DateTime?
   createdById            String?
   updatedById            String?
-  CarrierFactoringStatus CarrierFactoringStatus[]
+  CarrierFactoringStatus   CarrierFactoringStatus[]
   FactoredPayment        FactoredPayment[]
   tenant                 Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   NOARecord              NOARecord[]
@@ -3821,7 +3821,7 @@ model FeatureFlag {
   deletedAt           DateTime?
   createdById         String?
   updatedById         String?
-  FeatureFlagOverride FeatureFlagOverride[]
+  FeatureFlagOverride  FeatureFlagOverride[]
 
   @@index([enabled])
   @@index([externalId, sourceSystem])
@@ -5370,7 +5370,7 @@ model Location {
   deletedAt      DateTime?
   createdById    String?
   updatedById    String?
-  BusinessHours  BusinessHours[]
+  BusinessHours   BusinessHours[]
   Employee       Employee[]
   tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   TimeEntry      TimeEntry[]
@@ -6283,7 +6283,7 @@ model PortalUser {
   PortalActivityLog        PortalActivityLog[]
   PortalNotification       PortalNotification[]
   PortalPayment            PortalPayment[]
-  PortalSavedPaymentMethod PortalSavedPaymentMethod[]
+  PortalSavedPaymentMethod  PortalSavedPaymentMethod[]
   PortalSession            PortalSession[]
   company             Company?           @relation(fields: [companyId], references: [id], onDelete: Cascade)
   tenant                   Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -8167,7 +8167,7 @@ model Tenant {
   CarrierInsurance           CarrierInsurance[]
   CarrierInvoiceSubmission   CarrierInvoiceSubmission[]
   CarrierLoadView            CarrierLoadView[]
-  CarrierPerformanceHistory  CarrierPerformanceHistory[]
+  CarrierPerformanceHistory   CarrierPerformanceHistory[]
   CarrierPortalActivityLog   CarrierPortalActivityLog[]
   CarrierPortalDocument      CarrierPortalDocument[]
   CarrierPortalNotification  CarrierPortalNotification[]
@@ -8211,7 +8211,7 @@ model Tenant {
   CreditHold                 CreditHold[]
   CreditLimit                CreditLimit[]
   CsaScore                   CsaScore[]
-  CustomerCommissionOverride CustomerCommissionOverride[]
+  CustomerCommissionOverride  CustomerCommissionOverride[]
   Dashboard                  Dashboard[]
   dashboardWidgets            DashboardWidget[]
   Department                 Department[]
@@ -8593,7 +8593,7 @@ model TruckType {
   tareWeightLbs          Int?
   wellHeightFt           Decimal?                 @db.Decimal(5, 2)
   LoadPlannerTruck       LoadPlannerTruck[]
-  OperationsCarrierTruck OperationsCarrierTruck[]
+  OperationsCarrierTruck  OperationsCarrierTruck[]
 
   @@index([category])
   @@index([isActive])

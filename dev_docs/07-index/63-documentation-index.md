@@ -1,22 +1,41 @@
 # 63 - Documentation Index
 
-**Complete inventory of all 93 documentation files for the 3PL Platform.**
+**Complete inventory of all documentation for the Ultra TMS Platform.**
+
+> **UPDATED Feb 2026:** Three major doc additions since Jan 2026. Start with `CLAUDE.md` at the project root for current state, MVP scope, and reading order.
 
 ---
 
 ## Quick Stats
 
-| Category                  | Count |
-| ------------------------- | ----- |
-| **Total Documents**       | 93    |
-| **Services Documented**   | 38    |
-| **Screens Cataloged**     | 362   |
-| **API Endpoints**         | 700+  |
-| **Development Standards** | 11    |
+| Category | Count |
+| --- | --- |
+| **Total Documents** | 540+ |
+| **Original Docs (00-92)** | 93 |
+| **Design Specs (12-Rabih)** | 411 |
+| **Review Files (Claude + Gemini)** | 39 |
+| **MVP Services** | 8 |
+| **MVP Screens** | ~30 |
+| **Development Standards** | 11 |
 
 ---
 
-## Document Categories
+## New Documentation (Feb 2026) — READ THESE FIRST
+
+| Folder | Files | Description |
+| --- | --- | --- |
+| `CLAUDE.md` (project root) | 1 | **START HERE** — Current state, MVP scope, bugs, reading order |
+| `CURRENT-STATE.md` | 1 | Consolidated status from both reviews |
+| `Claude-review-v1/` | 37 | Comprehensive review (6.2/10) — bugs, gaps, 16-week action plan |
+| `gemini-review-v2/` | 2 | Independent review — corrects backend assessment |
+| `12-Rabih-design-Process/` | 411 | UX/UI design specs — 89 screens with 15-section detail |
+| `weekly-reports/` | 2 | Work log + weekly report template |
+
+---
+
+## Original Documentation (Jan 2026)
+
+### Document Categories
 
 ### 1. Master Guide (1 doc)
 
@@ -240,27 +259,27 @@
 
 ## Reading Order Recommendations
 
-### For New Team Members
+### For AI Agents (Claude Code sessions)
 
-1. `00-master-development-guide.md`
-2. `01-project-overview.md`
-3. `04-user-personas.md`
-4. `50-development-setup-guide.md`
+1. `CLAUDE.md` (project root) — current state, MVP scope, known bugs, commands
+2. `CURRENT-STATE.md` — what's built, broken, and missing
+3. `Claude-review-v1/00-executive-summary/prioritized-action-plan.md` — the 16-week plan
+4. Relevant design spec in `12-Rabih-design-Process/`
 
 ### For Developers Starting a Feature
 
-1. `00-master-development-guide.md` (quick reference)
-2. `74-pre-feature-checklist.md`
-3. `76-screen-api-contract-registry.md`
-4. Relevant service doc (08-45)
+1. `CLAUDE.md` — "Before Building: Discovery Checklist" section
+2. `08-standards/74-pre-feature-checklist.md`
+3. Design spec in `12-Rabih-design-Process/{service}/{screen}.md`
+4. `Claude-review-v1/03-design-strategy/05-quality-gates.md`
 
 ### For Understanding the System
 
-1. `05-system-architecture.md`
-2. `07-services-overview.md`
-3. `47-screen-catalog.md`
+1. `CURRENT-STATE.md` — consolidated status
+2. `05-system-architecture.md`
+3. `07-services-overview.md` (note: only 8 of 38 are in MVP)
 4. `91-entity-data-dictionary.md`
 
 ---
 
-_Last Updated: January 2025_
+_Last Updated: February 2026_

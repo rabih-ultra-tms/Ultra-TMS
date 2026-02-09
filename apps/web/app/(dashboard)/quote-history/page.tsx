@@ -40,6 +40,7 @@ import {
 } from '@/lib/hooks/operations'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { toast } from 'sonner'
+import { ConfirmDialog } from '@/components/shared/confirm-dialog'
 import {
   Plus,
   Search,
@@ -93,6 +94,7 @@ export default function QuoteHistoryPage() {
   const [page, setPage] = useState(1)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const pageSize = 25
+  const [showBatchDeleteDialog, setShowBatchDeleteDialog] = useState(false)
 
   // Fetch quotes - only pass defined values to avoid undefined params
   const { data, isLoading, error } = useLoadPlannerQuotes({
@@ -185,19 +187,21 @@ export default function QuoteHistoryPage() {
     setSelectedIds(new Set())
   }
 
-  const handleBatchDelete = async () => {
+  const handleBatchDelete = () => {
     if (selectedIds.size === 0) return
-    if (confirm(`Are you sure you want to delete ${selectedIds.size} quotes? This cannot be undone.`)) {
-      // Delete each quote individually
-      const ids = Array.from(selectedIds)
-      try {
-        await Promise.all(ids.map((id) => deleteQuoteMutation.mutateAsync(id)))
-        setSelectedIds(new Set())
-        toast.success(`Deleted ${ids.length} quotes`)
-      } catch (error: unknown) {
-        toast.error('Failed to delete some quotes', { description: (error as Error).message })
-      }
+    setShowBatchDeleteDialog(true)
+  }
+
+  const confirmBatchDelete = async () => {
+    const ids = Array.from(selectedIds)
+    try {
+      await Promise.all(ids.map((id) => deleteQuoteMutation.mutateAsync(id)))
+      setSelectedIds(new Set())
+      toast.success(`Deleted ${ids.length} quotes`)
+    } catch (error: unknown) {
+      toast.error('Failed to delete some quotes', { description: (error as Error).message })
     }
+    setShowBatchDeleteDialog(false)
   }
 
   const clearFilters = () => {
@@ -635,6 +639,17 @@ export default function QuoteHistoryPage() {
           )}
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={showBatchDeleteDialog}
+        title="Delete Quotes"
+        description={`Are you sure you want to delete ${selectedIds.size} quotes? This cannot be undone.`}
+        confirmLabel="Delete"
+        destructive
+        isLoading={deleteQuoteMutation.isPending}
+        onConfirm={confirmBatchDelete}
+        onCancel={() => setShowBatchDeleteDialog(false)}
+      />
     </div>
   )
 }
@@ -656,8 +671,11 @@ function QuoteActionsMenu({
   isDeleting,
   isDuplicating,
 }: QuoteActionsMenuProps) {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
   return (
-    <DropdownMenu>
+    <>
+      <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="shrink-0">
           <MoreHorizontal className="h-4 w-4" />
@@ -697,18 +715,28 @@ function QuoteActionsMenu({
         )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={() => {
-            if (confirm('Are you sure you want to delete this quote?')) {
-              onDelete()
-            }
-          }}
+          onClick={() => setShowDeleteConfirm(true)}
           className="text-red-600"
           disabled={isDeleting}
         >
           <Trash2 className="h-4 w-4 mr-2" />
-          {isDeleting ? 'Deleting...' : 'Delete Quote'}
+          Delete Quote
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+    <ConfirmDialog
+      open={showDeleteConfirm}
+      title="Delete Quote"
+      description="Are you sure you want to delete this quote? This cannot be undone."
+      confirmLabel="Delete"
+      destructive
+      isLoading={isDeleting}
+      onConfirm={async () => {
+        await onDelete()
+        setShowDeleteConfirm(false)
+      }}
+      onCancel={() => setShowDeleteConfirm(false)}
+    />
+    </>
   )
 }
