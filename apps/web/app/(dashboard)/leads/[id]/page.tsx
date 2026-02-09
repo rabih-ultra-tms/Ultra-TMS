@@ -1,20 +1,30 @@
 "use client";
 
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LeadStageBadge } from "@/components/crm/leads/lead-stage-badge";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { EmptyState, ErrorState, LoadingState } from "@/components/shared";
-import { useLead } from "@/lib/hooks/crm/use-leads";
+import { useLead, useDeleteLead, useConvertLead } from "@/lib/hooks/crm/use-leads";
 import { useContacts } from "@/lib/hooks/crm/use-contacts";
+import { useCustomers } from "@/lib/hooks/crm/use-customers";
 import { useActivities } from "@/lib/hooks/crm/use-activities";
+import { LeadConvertDialog } from "@/components/crm/leads/lead-convert-dialog";
+import { Trash2, ArrowRightLeft } from "lucide-react";
 
 export default function LeadDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const leadId = params.id;
   const { data, isLoading, error, refetch } = useLead(leadId);
+  const deleteLead = useDeleteLead();
+  const convertLead = useConvertLead();
+  const customersQuery = useCustomers({ limit: 100 });
+  const [showDelete, setShowDelete] = useState(false);
+  const [showConvert, setShowConvert] = useState(false);
 
   const lead = data?.data;
   const errorMessage = error instanceof Error ? error.message : "Failed to load lead";
@@ -30,6 +40,18 @@ export default function LeadDetailPage() {
     limit: 3,
     leadId,
   });
+
+  const handleDelete = async () => {
+    await deleteLead.mutateAsync(leadId);
+    setShowDelete(false);
+    router.push("/leads");
+  };
+
+  const handleConvert = async (customerId?: string) => {
+    await convertLead.mutateAsync({ id: leadId, data: { customerId } });
+    setShowConvert(false);
+    router.push("/companies");
+  };
 
   if (isLoading && !lead) {
     return <LoadingState message="Loading lead..." />;
@@ -55,9 +77,26 @@ export default function LeadDetailPage() {
         title={lead.name}
         description={lead.company?.name || "Lead details"}
         actions={
-          <Button variant="outline" onClick={() => router.back()}>
-            Back
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setShowConvert(true)}
+              disabled={convertLead.isPending}
+            >
+              <ArrowRightLeft className="mr-2 h-4 w-4" />
+              Convert to Customer
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowDelete(true)}
+              disabled={deleteLead.isPending}
+            >
+              <Trash2 className="mr-2 h-4 w-4 text-destructive" />
+              Delete
+            </Button>
+            <Button variant="outline" onClick={() => router.back()}>
+              Back
+            </Button>
+          </div>
         }
       />
 
@@ -161,6 +200,24 @@ export default function LeadDetailPage() {
           </CardContent>
         </Card>
       </div>
+
+      <ConfirmDialog
+        open={showDelete}
+        title="Delete deal"
+        description={`Are you sure you want to delete "${lead.name}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        onConfirm={handleDelete}
+        onCancel={() => setShowDelete(false)}
+        isLoading={deleteLead.isPending}
+        destructive
+      />
+      <LeadConvertDialog
+        open={showConvert}
+        onOpenChange={setShowConvert}
+        customers={customersQuery.data?.data || []}
+        onConvert={handleConvert}
+        isLoading={convertLead.isPending}
+      />
     </div>
   );
 }

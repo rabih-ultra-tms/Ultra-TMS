@@ -6,13 +6,14 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/button";
 import { ContactsTable } from "@/components/crm/contacts/contacts-table";
 import { EmptyState, ErrorState, LoadingState } from "@/components/shared";
-import { useContacts } from "@/lib/hooks/crm/use-contacts";
+import { useContacts, useDeleteContact } from "@/lib/hooks/crm/use-contacts";
 
 export default function ContactsPage() {
   const router = useRouter();
   const [page, setPage] = React.useState(1);
 
   const { data, isLoading, error, refetch } = useContacts({ page, limit: 20 });
+  const deleteContact = useDeleteContact();
 
   const contacts = data?.data || [];
   const errorMessage = error instanceof Error ? error.message : "Failed to load contacts";
@@ -44,7 +45,9 @@ export default function ContactsPage() {
           pagination={data?.pagination}
           onPageChange={setPage}
           onView={(id) => router.push(`/contacts/${id}`)}
+          onDelete={async (id) => { await deleteContact.mutateAsync(id); }}
           isLoading={isLoading}
+          isDeleting={deleteContact.isPending}
         />
       )}
     </div>

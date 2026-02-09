@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { LeadsTable } from "@/components/crm/leads/leads-table";
 import { LeadsPipeline } from "@/components/crm/leads/leads-pipeline";
 import { EmptyState, ErrorState, LoadingState } from "@/components/shared";
-import { useLeads, useLeadsPipeline } from "@/lib/hooks/crm/use-leads";
+import { useLeads, useLeadsPipeline, useDeleteLead } from "@/lib/hooks/crm/use-leads";
+import { useUsers } from "@/lib/hooks/admin/use-users";
 import { useCRMStore } from "@/lib/stores/crm-store";
 import { useDebounce } from "@/lib/hooks";
 
@@ -39,6 +40,9 @@ export default function LeadsPage() {
   });
 
   const pipelineQuery = useLeadsPipeline();
+  const deleteLead = useDeleteLead();
+  const usersQuery = useUsers({ limit: 100 });
+  const users = usersQuery.data?.data || [];
 
   const handleCreate = () => router.push("/leads/new");
   const handleView = (id: string) => router.push(`/leads/${id}`);
@@ -90,12 +94,22 @@ export default function LeadsPage() {
             ))}
           </SelectContent>
         </Select>
-        <Input
-          placeholder="Owner ID"
-          value={leadFilters.ownerId}
-          onChange={(event) => setLeadFilter("ownerId", event.target.value)}
-          className="md:w-48"
-        />
+        <Select
+          value={leadFilters.ownerId || "all"}
+          onValueChange={(value) => setLeadFilter("ownerId", value === "all" ? "" : value)}
+        >
+          <SelectTrigger className="md:w-48">
+            <SelectValue placeholder="Owner" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Owners</SelectItem>
+            {users.map((user) => (
+              <SelectItem key={user.id} value={user.id}>
+                {user.firstName} {user.lastName}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <div className="ml-auto flex items-center gap-2">
           <Button
             variant={leadsViewMode === "table" ? "default" : "outline"}
@@ -137,7 +151,9 @@ export default function LeadsPage() {
           pagination={leadsQuery.data?.pagination}
           onPageChange={setPage}
           onView={handleView}
+          onDelete={async (id) => { await deleteLead.mutateAsync(id); }}
           isLoading={leadsQuery.isLoading}
+          isDeleting={deleteLead.isPending}
         />
       ) : pipelineQuery.isLoading && !pipelineQuery.data ? (
         <LoadingState message="Loading pipeline..." />

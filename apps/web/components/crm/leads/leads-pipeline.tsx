@@ -1,7 +1,10 @@
+"use client";
+
 import * as React from "react";
 import type { Lead, LeadStage } from "@/lib/types/crm";
 import { LeadCard } from "./lead-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { useUpdateLeadStage } from "@/lib/hooks/crm/use-leads";
 import { toast } from "sonner";
 
@@ -12,10 +15,25 @@ interface LeadsPipelineProps {
 
 const stageOrder: LeadStage[] = ["LEAD", "QUALIFIED", "PROPOSAL", "NEGOTIATION", "WON", "LOST"];
 
+const stageLabels: Record<string, string> = {
+  LEAD: "Lead",
+  QUALIFIED: "Qualified",
+  PROPOSAL: "Proposal",
+  NEGOTIATION: "Negotiation",
+  WON: "Won",
+  LOST: "Lost",
+};
+
 export function LeadsPipeline({ pipeline, onSelectLead }: LeadsPipelineProps) {
   const updateLeadStageMutation = useUpdateLeadStage();
   const [draggedOverStage, setDraggedOverStage] = React.useState<string | null>(null);
   const [isDraggingCard, setIsDraggingCard] = React.useState(false);
+  const [pendingMove, setPendingMove] = React.useState<{
+    id: string;
+    leadName: string;
+    fromStage: string;
+    toStage: LeadStage;
+  } | null>(null);
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -35,21 +53,33 @@ export function LeadsPipeline({ pipeline, onSelectLead }: LeadsPipelineProps) {
       const { id, currentStage } = JSON.parse(data);
 
       if (currentStage !== targetStage) {
-        updateLeadStageMutation.mutate(
-          { id, stage: targetStage },
-          {
-            onSuccess: () => {
-              // The query will be invalidated automatically by the hook
-            },
-            onError: () => {
-              toast.error("Failed to update lead stage");
-            },
-          }
-        );
+        const allLeads = Object.values(pipeline).flat();
+        const lead = allLeads.find((l) => l.id === id);
+        setPendingMove({
+          id,
+          leadName: lead?.name || "this deal",
+          fromStage: currentStage,
+          toStage: targetStage,
+        });
       }
     } catch {
       toast.error("Failed to move lead");
     }
+  };
+
+  const handleConfirmMove = async () => {
+    if (!pendingMove) return;
+
+    try {
+      await updateLeadStageMutation.mutateAsync({
+        id: pendingMove.id,
+        stage: pendingMove.toStage,
+      });
+      toast.success(`Lead moved to ${stageLabels[pendingMove.toStage] || pendingMove.toStage}`);
+    } catch {
+      // Error toast handled by hook's onError
+    }
+    setPendingMove(null);
   };
 
   return (
@@ -79,6 +109,19 @@ export function LeadsPipeline({ pipeline, onSelectLead }: LeadsPipelineProps) {
           </CardContent>
         </Card>
       ))}
+      <ConfirmDialog
+        open={!!pendingMove}
+        title="Move deal"
+        description={
+          pendingMove
+            ? `Move "${pendingMove.leadName}" from ${stageLabels[pendingMove.fromStage] || pendingMove.fromStage} to ${stageLabels[pendingMove.toStage] || pendingMove.toStage}?`
+            : ""
+        }
+        confirmLabel="Move"
+        onConfirm={handleConfirmMove}
+        onCancel={() => setPendingMove(null)}
+        isLoading={updateLeadStageMutation.isPending}
+      />
     </div>
   );
 }
