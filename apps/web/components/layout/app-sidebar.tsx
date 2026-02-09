@@ -25,7 +25,6 @@ export function AppSidebar({ className }: AppSidebarProps) {
     const normalize = (role: string) => role.replace(/-/g, "_").toUpperCase();
     const collected = [...rolesFromArray, ...(singleRole ? [singleRole] : [])];
     const normalized = Array.from(new Set(collected.filter(Boolean).map(normalize)));
-    console.log('[Sidebar] User roles:', normalized);
     return normalized;
   }, [currentUser]);
 

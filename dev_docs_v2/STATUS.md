@@ -60,8 +60,8 @@
 | Task | Title | Status | Assigned | Effort | Updated |
 |------|-------|--------|----------|--------|---------|
 | BUG-001 | Carrier detail page 404 | DONE | Claude Code | L (4-6h) | Feb 8 |
-| BUG-002 | Load history detail page 404 | NOT STARTED | — | M (3-4h) | — |
-| BUG-003 | Sidebar has 404 links | NOT STARTED | — | S (1-2h) | — |
+| BUG-002 | Load history detail page 404 | DONE | Claude Code | M (3-4h) | Feb 8 |
+| BUG-003 | Sidebar has 404 links | DONE | Claude Code | S (1-2h) | Feb 8 |
 | BUG-004 | Security: JWT & roles in console | NOT STARTED | — | S (1h) | — |
 | BUG-005 | Security: localStorage tokens | NOT STARTED | — | M (3h) | — |
 | BUG-006 | Replace window.confirm × 7 | NOT STARTED | — | S (1-2h) | — |
