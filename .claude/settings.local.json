@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm --filter web build:*)",
+      "Bash(git mv:*)",
+      "Bash(pnpm --filter web check-types:*)",
+      "Bash(pnpm --filter web dev:*)",
+      "Bash(curl:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(pnpm check-types:*)",
+      "Bash(pnpm --filter api test:*)",
+      "Bash(pnpm --filter web test:*)",
+      "Bash(pnpm build:*)"
+    ]
+  }
+}

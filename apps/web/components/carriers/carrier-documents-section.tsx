@@ -7,7 +7,8 @@ interface CarrierDocumentsSectionProps {
   carrierId: string;
 }
 
-export function CarrierDocumentsSection({ carrierId: _carrierId }: CarrierDocumentsSectionProps) {
+export function CarrierDocumentsSection({ carrierId }: CarrierDocumentsSectionProps) {
+  void carrierId;
   // Documents endpoint hooks will be added in CARR-002 (Phase 2)
   // For now, show empty state to eliminate the 404
   return (

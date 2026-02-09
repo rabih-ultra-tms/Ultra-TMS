@@ -34,7 +34,7 @@ export const DisabledChecked: Story = {
 };
 
 export const Interactive: Story = {
-  render: () => {
+  render: function Render() {
     const [items, setItems] = useState([
       { id: 1, label: "LD-001 — Chicago → Dallas", checked: false },
       { id: 2, label: "LD-002 — Miami → Atlanta", checked: true },

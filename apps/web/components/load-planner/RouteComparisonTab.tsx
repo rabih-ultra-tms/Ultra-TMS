@@ -255,9 +255,9 @@ function ScenarioCard({
           </div>
         )}
 
-        {permits.statePermits.some((p) => p.warnings.length > 0) && (
+        {permits.statePermits.some((p) => (p.warnings?.length ?? 0) > 0) && (
           <div className="space-y-1">
-            {permits.statePermits.flatMap(p => p.warnings).slice(0, 2).map((w, i) => (
+            {permits.statePermits.flatMap(p => p.warnings ?? []).slice(0, 2).map((w, i) => (
               <div key={i} className="flex items-start gap-1 text-xs text-amber-600">
                 <AlertTriangle className="w-3 h-3 mt-0.5 flex-shrink-0" />
                 <span>{w}</span>

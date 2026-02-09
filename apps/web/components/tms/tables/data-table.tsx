@@ -3,7 +3,6 @@
 import * as React from "react";
 import {
   flexRender,
-  type ColumnDef,
   type Table as TanStackTable,
   type Row,
   type SortDirection,

@@ -192,6 +192,7 @@ export function PlanComparisonPanel({
   }
 
   if (plans.length === 1) {
+    const plan = plans[0]!
     return (
       <div className={`bg-blue-50 border border-blue-200 rounded-lg p-4 ${className}`}>
         <div className="flex items-center gap-2 text-blue-800">
@@ -199,8 +200,8 @@ export function PlanComparisonPanel({
           <span className="font-medium">Smart Plan Generated</span>
         </div>
         <p className="text-sm text-blue-700 mt-1">
-          {plans[0].totalTrucks} truck{plans[0].totalTrucks !== 1 ? 's' : ''} recommended for your cargo
-          {plans[0].permitCount > 0 ? ` (${plans[0].permitCount} permit${plans[0].permitCount !== 1 ? 's' : ''} needed)` : ' - no permits required'}
+          {plan.totalTrucks} truck{plan.totalTrucks !== 1 ? 's' : ''} recommended for your cargo
+          {plan.permitCount > 0 ? ` (${plan.permitCount} permit${plan.permitCount !== 1 ? 's' : ''} needed)` : ' - no permits required'}
         </p>
       </div>
     )

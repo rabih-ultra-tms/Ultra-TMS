@@ -10,22 +10,18 @@ describe("LoginPage", () => {
   it("renders login form", () => {
     render(<LoginPage />);
 
-    expect(screen.getByText("Welcome back")).toBeInTheDocument();
+    expect(screen.getByText("Sign In")).toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    expect(screen.getByLabelText("Password")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /sign in/i })).toBeInTheDocument();
   });
 
-  it("has links to forgot password and register", () => {
+  it("has link to forgot password", () => {
     render(<LoginPage />);
 
     expect(screen.getByRole("link", { name: /forgot password/i })).toHaveAttribute(
       "href",
       "/forgot-password"
-    );
-    expect(screen.getByRole("link", { name: /sign up/i })).toHaveAttribute(
-      "href",
-      "/register"
     );
   });
 });

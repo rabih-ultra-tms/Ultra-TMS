@@ -37,13 +37,13 @@ export function truckTypeRecordToTruckType(record: ApiTruckType | TruckTypeListI
     wellLength: 'wellLengthFt' in record ? record.wellLengthFt ?? undefined : undefined,
     wellHeight: 'wellHeightFt' in record ? record.wellHeightFt ?? undefined : undefined,
     maxCargoWeight: record.maxCargoWeightLbs ?? 0,
-    tareWeight: 'tareWeightLbs' in record ? record.tareWeightLbs ?? undefined : undefined,
+    ...('tareWeightLbs' in record && record.tareWeightLbs != null ? { tareWeight: record.tareWeightLbs } : {}),
     maxLegalCargoHeight,
     maxLegalCargoWidth: 'maxLegalCargoWidthFt' in record
       ? record.maxLegalCargoWidthFt ?? DEFAULT_LEGAL_WIDTH
       : DEFAULT_LEGAL_WIDTH,
     features: 'features' in record ? normalizeStringArray(record.features) : [],
     bestFor: normalizeStringArray('bestFor' in record ? record.bestFor : []),
-    loadingMethod: 'loadingMethod' in record ? record.loadingMethod || undefined : undefined,
+    ...('loadingMethod' in record && record.loadingMethod ? { loadingMethod: record.loadingMethod } : {}),
   }
 }

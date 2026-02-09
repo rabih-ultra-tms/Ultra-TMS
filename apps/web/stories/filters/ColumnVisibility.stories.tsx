@@ -29,7 +29,7 @@ const columns = [
 ];
 
 export const Interactive: Story = {
-  render: () => {
+  render: function Render() {
     const [open, setOpen] = useState(true);
     const [visible, setVisible] = useState(
       columns.slice(0, 8).map((c) => c.id)

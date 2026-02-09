@@ -25,7 +25,7 @@ export default meta;
 type Story = StoryObj<typeof FilterBar>;
 
 export const Default: Story = {
-  render: () => {
+  render: function Render() {
     const [active, setActive] = useState<Set<string>>(new Set());
 
     function toggle(id: string) {

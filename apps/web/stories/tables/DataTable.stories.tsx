@@ -20,7 +20,7 @@ import {
   DensityToggle,
   type Density,
 } from "@/components/tms/tables";
-import { StatusBadge, StatusDot } from "@/components/tms/primitives";
+import { StatusBadge } from "@/components/tms/primitives";
 import {
   LOAD_STATUSES,
   type LoadStatus,
@@ -284,7 +284,7 @@ export default meta;
 // ---------------------------------------------------------------------------
 
 export const DispatchBoard: StoryObj = {
-  render: () => {
+  render: function Render() {
     const [sorting, setSorting] = useState<SortingState>([]);
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
     const [density, setDensity] = useState<Density>("default");
@@ -420,7 +420,6 @@ export const DispatchBoard: StoryObj = {
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
                     const canSort = header.column.getCanSort();
-                    const sorted = header.column.getIsSorted();
                     return (
                       <th
                         key={header.id}
@@ -519,7 +518,7 @@ export const DispatchBoard: StoryObj = {
 // ---------------------------------------------------------------------------
 
 export const FlatWithPagination: StoryObj = {
-  render: () => {
+  render: function Render() {
     const [sorting, setSorting] = useState<SortingState>([]);
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
     const [density, setDensity] = useState<Density>("default");
@@ -583,7 +582,7 @@ export const FlatWithPagination: StoryObj = {
 
 export const GroupHeaderStates: StoryObj = {
   name: "GroupHeader States",
-  render: () => {
+  render: function Render() {
     const [expanded, setExpanded] = useState({
       transit: true,
       unassigned: false,
@@ -701,7 +700,7 @@ export const BulkActionBarStory: StoryObj = {
 
 export const PaginationStory: StoryObj = {
   name: "TablePagination",
-  render: () => {
+  render: function Render() {
     const [page, setPage] = useState(0);
     const totalPages = 5;
 

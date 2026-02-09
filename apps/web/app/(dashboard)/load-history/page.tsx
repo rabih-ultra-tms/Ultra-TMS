@@ -239,21 +239,19 @@ export default function LoadHistoryPage() {
 
   const confirmBatchDelete = async () => {
     const ids = Array.from(selectedIds)
-    try {
-      await Promise.all(ids.map((id) => {
-        return new Promise((resolve, reject) => {
-          deleteLoadMutation.mutate(id, {
-            onSuccess: resolve,
-            onError: reject,
-          })
+    await Promise.all(ids.map((id) => {
+      return new Promise((resolve, reject) => {
+        deleteLoadMutation.mutate(id, {
+          onSuccess: resolve,
+          onError: reject,
         })
-      })).then(() => {
-        setSelectedIds(new Set())
-        toast.success('Loads deleted')
-      }).catch((error: unknown) => {
-        toast.error('Failed to delete some loads', { description: getErrorMessage(error) })
       })
-    }
+    })).then(() => {
+      setSelectedIds(new Set())
+      toast.success('Loads deleted')
+    }).catch((error: unknown) => {
+      toast.error('Failed to delete some loads', { description: getErrorMessage(error) })
+    })
     setShowBatchDeleteDialog(false)
   }
 

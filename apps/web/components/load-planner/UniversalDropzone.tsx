@@ -209,6 +209,7 @@ export function UniversalDropzone({ onAnalyzed, onLoading, onError, onWarning, o
       onLoading(false)
       updateStatus('')
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- isSupportedFile and onWarning are stable callbacks
   }, [onAnalyzed, onLoading, onError, updateStatus, processFile, processText])
 
   const handleDrop = useCallback((e: React.DragEvent) => {

@@ -22,6 +22,7 @@ const createPlacements = (items: LoadItem[], truck: TruckType): ItemPlacement[] 
       placements.push({
         itemId: item.id,
         x: 0,
+        y: 0,
         z: 0,
         rotated: false,
         failed: true,
@@ -32,6 +33,7 @@ const createPlacements = (items: LoadItem[], truck: TruckType): ItemPlacement[] 
     placements.push({
       itemId: item.id,
       x: cursorX,
+      y: 0,
       z: cursorZ,
       rotated: false,
     })
@@ -72,7 +74,7 @@ const splitItemsIntoLoads = (items: LoadItem[], truck: TruckType): LoadItem[][] 
 
 export function buildLoadPlan(items: LoadItem[], truck: TruckType): LoadPlan {
   if (items.length === 0) {
-    return { loads: [], totalTrucks: 0, totalItems: 0, totalWeight: 0, unassignedItems: [], warnings: [] }
+    return { loads: [], totalTrucks: 0, totalItems: 0, totalWeight: 0, warnings: [] }
   }
 
   const splitLoads = splitItemsIntoLoads(items, truck)
@@ -125,7 +127,6 @@ export function buildLoadPlan(items: LoadItem[], truck: TruckType): LoadPlan {
     totalTrucks: loads.length,
     totalItems: items.length,
     totalWeight,
-    unassignedItems: [],
     warnings,
   }
 }

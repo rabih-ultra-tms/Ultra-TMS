@@ -159,7 +159,7 @@ export class TruckTypesService {
   }
 
   async update(id: string, data: UpdateTruckTypeDto) {
-    const existing = await this.getById(id);
+    await this.getById(id);
 
     const updateData: any = {};
     
@@ -200,7 +200,7 @@ export class TruckTypesService {
   }
 
   async delete(id: string) {
-    const existing = await this.getById(id);
+    await this.getById(id);
 
     // Soft delete
     return this.prisma.truckType.update({

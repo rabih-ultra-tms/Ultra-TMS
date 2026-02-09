@@ -23,7 +23,7 @@ const statusOptions: StatusOption[] = [
 ];
 
 export const Interactive: Story = {
-  render: () => {
+  render: function Render() {
     const [open, setOpen] = useState(true);
     const [selected, setSelected] = useState<string[]>(["transit", "atrisk"]);
 

@@ -178,6 +178,7 @@ export default function LoadPlannerEditPage() {
   const createMutation = useCreateLoadPlannerQuote();
   const updateMutation = useUpdateLoadPlannerQuote(isEdit ? id : '');
   const { data: inlandServiceTypesData } = useInlandServiceTypes();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- stable fallback, intentionally omitted from deps
   const inlandServiceTypes = inlandServiceTypesData || [];
 
   // Tab state
@@ -220,6 +221,7 @@ export default function LoadPlannerEditPage() {
   // Cargo items
   const [cargoItems, setCargoItems] = useState<CargoItem[]>([]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- stable fallback, intentionally omitted from deps
   const fallbackTruck: TruckType = defaultTrucks[0] ?? ({
     id: 'fallback-truck',
     name: 'Standard Flatbed',
@@ -1053,6 +1055,7 @@ export default function LoadPlannerEditPage() {
       label: type.name,
       serviceType: type,
     }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- fallbackServiceOptions is stable
   }, [inlandServiceTypes]);
 
   const serviceOptionsWithCustom = useMemo(() => (

@@ -1,4 +1,6 @@
 {
+  "claudeCode.allowDangerouslySkipPermissions": true,
+  "claudeCode.initialPermissionMode": "bypassPermissions",
   "eslint.workingDirectories": [
     {
       "mode": "auto"

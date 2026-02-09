@@ -41,7 +41,7 @@ export const WithShortcut: Story = {
 };
 
 export const Controlled: Story = {
-  render: () => {
+  render: function Render() {
     const [value, setValue] = useState("");
     return (
       <div className="flex flex-col gap-2">

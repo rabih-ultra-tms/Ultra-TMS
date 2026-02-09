@@ -57,6 +57,7 @@ export function UserAvatar({
       {...props}
     >
       {src ? (
+        // eslint-disable-next-line @next/next/no-img-element -- avatar src is an arbitrary external URL
         <img
           src={src}
           alt={name}

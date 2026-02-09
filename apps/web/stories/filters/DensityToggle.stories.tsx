@@ -12,7 +12,7 @@ export default meta;
 type Story = StoryObj<typeof DensityToggle>;
 
 export const Interactive: Story = {
-  render: () => {
+  render: function Render() {
     const [density, setDensity] = useState<Density>("default");
     return (
       <div className="flex flex-col items-start gap-3">
@@ -26,7 +26,7 @@ export const Interactive: Story = {
 };
 
 export const InToolbar: Story = {
-  render: () => {
+  render: function Render() {
     const [density, setDensity] = useState<Density>("default");
     return (
       <div className="flex items-center justify-between bg-surface border border-border rounded-lg px-4 py-2 w-[500px]">
