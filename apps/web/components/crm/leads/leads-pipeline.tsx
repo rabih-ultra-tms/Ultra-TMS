@@ -3,6 +3,7 @@ import type { Lead, LeadStage } from "@/lib/types/crm";
 import { LeadCard } from "./lead-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUpdateLeadStage } from "@/lib/hooks/crm/use-leads";
+import { toast } from "sonner";
 
 interface LeadsPipelineProps {
   pipeline: Record<string, Lead[]>;
@@ -40,14 +41,14 @@ export function LeadsPipeline({ pipeline, onSelectLead }: LeadsPipelineProps) {
             onSuccess: () => {
               // The query will be invalidated automatically by the hook
             },
-            onError: (error: Error) => {
-              console.error("Failed to update lead stage:", error);
+            onError: () => {
+              toast.error("Failed to update lead stage");
             },
           }
         );
       }
-    } catch (error) {
-      console.error("Failed to parse drag data:", error);
+    } catch {
+      toast.error("Failed to move lead");
     }
   };
 

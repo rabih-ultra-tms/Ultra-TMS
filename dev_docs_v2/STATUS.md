@@ -62,8 +62,8 @@
 | BUG-001 | Carrier detail page 404 | DONE | Claude Code | L (4-6h) | Feb 8 |
 | BUG-002 | Load history detail page 404 | DONE | Claude Code | M (3-4h) | Feb 8 |
 | BUG-003 | Sidebar has 404 links | DONE | Claude Code | S (1-2h) | Feb 8 |
-| BUG-004 | Security: JWT & roles in console | NOT STARTED | — | S (1h) | — |
-| BUG-005 | Security: localStorage tokens | NOT STARTED | — | M (3h) | — |
+| BUG-004 | Security: JWT & roles in console | DONE | Claude Code | S (1h) | Feb 8 |
+| BUG-005 | Security: localStorage tokens | DONE | Claude Code | M (3h) | Feb 8 |
 | BUG-006 | Replace window.confirm × 7 | NOT STARTED | — | S (1-2h) | — |
 | BUG-007 | Add search debounce × 3 | NOT STARTED | — | S (1h) | — |
 | BUG-008 | Dashboard hardcoded to zeros | NOT STARTED | — | M (4h) ⬆️ | — |

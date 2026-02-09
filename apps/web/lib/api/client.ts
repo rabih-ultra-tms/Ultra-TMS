@@ -18,7 +18,7 @@ const REFRESH_COOKIE_NAME =
   process.env.NEXT_PUBLIC_REFRESH_COOKIE_NAME || "refreshToken";
 
 const DEFAULT_ACCESS_MAX_AGE = 15 * 60;
-const DEFAULT_REFRESH_MAX_AGE = 7 * 24 * 60 * 60;
+const DEFAULT_REFRESH_MAX_AGE = 30 * 24 * 60 * 60;
 
 interface TokenPair {
   accessToken: string;
@@ -50,16 +50,7 @@ function getClientAccessToken(): string | undefined {
     return undefined;
   }
 
-  const fromCookie = readCookie(document.cookie || "", AUTH_COOKIE_NAME);
-  if (fromCookie) {
-    return fromCookie;
-  }
-
-  try {
-    return localStorage.getItem("accessToken") || undefined;
-  } catch {
-    return undefined;
-  }
+  return readCookie(document.cookie || "", AUTH_COOKIE_NAME);
 }
 
 function getClientRefreshToken(): string | undefined {
@@ -67,16 +58,7 @@ function getClientRefreshToken(): string | undefined {
     return undefined;
   }
 
-  const fromCookie = readCookie(document.cookie || "", REFRESH_COOKIE_NAME);
-  if (fromCookie) {
-    return fromCookie;
-  }
-
-  try {
-    return localStorage.getItem("refreshToken") || undefined;
-  } catch {
-    return undefined;
-  }
+  return readCookie(document.cookie || "", REFRESH_COOKIE_NAME);
 }
 
 function decodeJwtPayload(token: string): Record<string, unknown> | null {
@@ -113,20 +95,10 @@ export function setAuthTokens(tokens: TokenPair): void {
       ? Math.max(tokens.expiresIn, 60)
       : DEFAULT_ACCESS_MAX_AGE;
     writeCookie(AUTH_CONFIG.accessTokenCookie, tokens.accessToken, accessMaxAge);
-    try {
-      localStorage.setItem("accessToken", tokens.accessToken);
-    } catch {
-      // ignore storage errors
-    }
   }
 
   if (tokens.refreshToken) {
     writeCookie(AUTH_CONFIG.refreshTokenCookie, tokens.refreshToken, DEFAULT_REFRESH_MAX_AGE);
-    try {
-      localStorage.setItem("refreshToken", tokens.refreshToken);
-    } catch {
-      // ignore storage errors
-    }
   }
 }
 
@@ -134,12 +106,6 @@ export function clearAuthTokens(): void {
   if (typeof window === "undefined") return;
   deleteCookie(AUTH_CONFIG.accessTokenCookie);
   deleteCookie(AUTH_CONFIG.refreshTokenCookie);
-  try {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-  } catch {
-    // ignore storage errors
-  }
 }
 
 function redirectToLogin(): void {
