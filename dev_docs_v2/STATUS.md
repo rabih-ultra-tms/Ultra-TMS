@@ -64,7 +64,7 @@
 | BUG-003 | Sidebar has 404 links | DONE | Claude Code | S (1-2h) | Feb 8 |
 | BUG-004 | Security: JWT & roles in console | DONE | Claude Code | S (1h) | Feb 8 |
 | BUG-005 | Security: localStorage tokens | DONE | Claude Code | M (3h) | Feb 8 |
-| BUG-006 | Replace window.confirm × 7 | NOT STARTED | — | S (1-2h) | — |
+| BUG-006 | Replace window.confirm × 7 | DONE | Claude Code | S (1-2h) | Feb 8 |
 | BUG-007 | Add search debounce × 3 | NOT STARTED | — | S (1h) | — |
 | BUG-008 | Dashboard hardcoded to zeros | NOT STARTED | — | M (4h) ⬆️ | — |
 | BUG-009 | CRM delete buttons missing | NOT STARTED | — | M (2-3h) | — |
