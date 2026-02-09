@@ -726,4 +726,79 @@ Planned and built the design system foundation for Ultra TMS. The dispatch board
 
 ---
 
+## Session: 2026-02-09 (Sunday) — Continued
+
+### Design System Sessions 2-4 (Primitives, Filters, Tables)
+
+**What was done:**
+Completed Sessions 2, 3, and 4 of the 7-session design system build. Built 20 components across 4 component groups (`primitives/`, `filters/`, `stats/`, `tables/`), wrote 14 Storybook stories, and fixed a pre-existing Storybook JSX runtime bug that caused "React is not defined" errors.
+
+**Files created:** 26 new files (~2,500 lines)
+**Files modified:** 5 existing files
+
+**Session 2 — Primitives (`components/tms/primitives/`):**
+
+| File | Lines | Component |
+|------|-------|-----------|
+| `status-badge.tsx` | 97 | CVA variants: 6 statuses + 4 intents, sm/md/lg sizes, withDot option |
+| `status-dot.tsx` | 51 | Colored dot, 3 sizes, optional pulse animation |
+| `custom-checkbox.tsx` | 57 | Radix-based, sapphire checked state, indeterminate support |
+| `user-avatar.tsx` | ~60 | Gradient bg, initials, sm/md/lg/xl sizes |
+| `search-input.tsx` | ~70 | Search icon, shortcut badge, clear button, sm/md sizes |
+| `index.ts` | 15 | Barrel export |
+
+Extended existing shadcn components:
+- `ui/button.tsx` — added `xs`, `icon-sm`, `icon-xs` size variants
+- `ui/badge.tsx` — added priority/equipment/mode variants
+
+**Session 3 — Filters & Stats (`components/tms/filters/`, `stats/`, `tables/`):**
+
+| File | Lines | Component |
+|------|-------|-----------|
+| `filter-chip.tsx` | ~70 | Pill with icon, label, count badge, active state |
+| `filter-bar.tsx` | ~60 | 44px scrollable container, dividers, clear button |
+| `status-dropdown.tsx` | ~90 | Dropdown with colored dots, counts, multi-select |
+| `column-visibility.tsx` | ~80 | Checkbox list dropdown for table columns |
+| `stat-item.tsx` | ~50 | Label (10px uppercase) + value (13px bold) + trend arrow |
+| `stats-bar.tsx` | ~40 | 40px horizontal container |
+| `kpi-card.tsx` | ~60 | Dashboard card: icon, label, value, trend, subtext |
+| `density-toggle.tsx` | 65 | 3-way segmented: compact/default/spacious |
+
+**Session 4 — Table System (`components/tms/tables/`):**
+
+| File | Lines | Component |
+|------|-------|-----------|
+| `data-table.tsx` | 243 | TanStack Table renderer: sticky header, sort arrows, density, row selection, at-risk highlight |
+| `group-header.tsx` | 88 | Collapsible group: colored dot, uppercase label, count pill, rotating chevron |
+| `bulk-action-bar.tsx` | 99 | Selection count + action buttons + close, animate-in on selection |
+| `table-pagination.tsx` | 181 | Page info + number buttons + ellipsis logic + prev/next |
+| `index.ts` | 14 | Updated barrel export (+ SelectAllCheckbox, RowCheckbox helpers) |
+
+**Storybook stories (14 total):**
+- `stories/primitives/` — 7 stories (StatusBadge, StatusDot, Checkbox, Avatar, SearchInput, BadgeVariants, ButtonSizes)
+- `stories/filters/` — 4 stories (FilterBar, StatusDropdown, ColumnVisibility, DensityToggle)
+- `stories/stats/` — 2 stories (StatsBar, KpiCard)
+- `stories/tables/` — 1 story file with 5 stories (DispatchBoard grouped table with 25 loads, FlatWithPagination, GroupHeaderStates, BulkActionBar, Pagination)
+
+**Bug fixed — Storybook "React is not defined":**
+- Root cause: tsconfig `"jsx":"preserve"` caused Vite's React plugin to fall back to classic `React.createElement` mode instead of automatic JSX runtime
+- Fix: In `.storybook/main.ts` `viteFinal`, remove Storybook's auto-added react plugin and re-add with `react({ jsxRuntime: "automatic" })`
+- This was a pre-existing bug affecting ALL component stories (not just Session 4)
+
+**Verified after each session:**
+- [x] TypeScript: 0 new errors (only 4 pre-existing in load-history)
+- [x] Storybook: launches clean on port 6006
+- [x] All stories render in both light and dark themes
+
+**Impact metrics for report:**
+- 26 files created (~2,500 lines)
+- 5 files modified
+- 20 components built across 4 groups
+- 14 Storybook stories (5 interactive with state)
+- 1 pre-existing Storybook bug fixed
+- Design system progress: 4/7 sessions complete (57%)
+- Next: Session 5 — Panels & Cards
+
+---
+
 <!-- NEXT SESSION ENTRY GOES HERE -->
