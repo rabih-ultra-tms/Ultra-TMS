@@ -2,6 +2,14 @@ import type { TruckCategory } from '@/types/truck-types'
 
 export type TrailerCategory = TruckCategory
 
+export interface DeckZone {
+  name: string
+  startX: number
+  endX: number
+  deckHeight: number
+  maxCargoHeight: number
+}
+
 export interface TruckType {
   id: string
   name: string
@@ -12,8 +20,10 @@ export interface TruckType {
   deckWidth: number
   wellLength?: number
   wellHeight?: number
+  deckZones?: DeckZone[]
   maxCargoWeight: number
   tareWeight?: number
+  powerUnitWeight?: number
   maxLegalCargoHeight: number
   maxLegalCargoWidth: number
   features: string[]
@@ -21,6 +31,20 @@ export interface TruckType {
   loadingMethod?: string
   imageUrl?: string
 }
+
+export const LEGAL_LIMITS = {
+  HEIGHT: 13.5,
+  WIDTH: 8.5,
+  LENGTH: 75,
+  GROSS_WEIGHT: 80000,
+} as const
+
+export const SUPERLOAD_THRESHOLDS = {
+  WIDTH: 16,
+  HEIGHT: 16,
+  LENGTH: 125,
+  WEIGHT: 200000,
+} as const
 
 export type ItemGeometry = 'box' | 'cylinder' | 'hollow-cylinder'
 export type OrientationMode = 1 | 3 | 63 | number

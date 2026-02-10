@@ -1,21 +1,29 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import type { TruckType, LoadItem, ItemPlacement } from '@/lib/load-planner/types'
+import { createPlacements } from '@/lib/load-planner/load-plan'
 import { getItemColor, getItemColorConfig, ITEM_COLOR_CONFIG } from './LoadPlanVisualizer'
 import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
 
 interface TrailerDiagramProps {
   truck: TruckType
   items: LoadItem[]
-  placements: ItemPlacement[]
+  placements?: ItemPlacement[]
 }
 
-export function TrailerDiagram({ truck, items, placements }: TrailerDiagramProps) {
+export function TrailerDiagram({ truck, items, placements: externalPlacements }: TrailerDiagramProps) {
   const [scale, setScale] = useState(10)
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
   const SCALE = scale
   const PADDING = 20
+
+  // Auto-generate placements when none are provided
+  const placements = useMemo(() => {
+    if (externalPlacements && externalPlacements.length > 0) return externalPlacements
+    if (items.length === 0) return []
+    return createPlacements(items, truck)
+  }, [externalPlacements, items, truck])
 
   const deckLength = truck.deckLength
   const deckWidth = truck.deckWidth
@@ -373,84 +381,301 @@ export function TrailerDiagram({ truck, items, placements }: TrailerDiagramProps
                 </g>
               )
             })}
+
+            <g>
+              <rect
+                x={PADDING - 42}
+                y={PADDING + deckWidth * SCALE / 2 - 10}
+                width="28"
+                height="20"
+                fill="#374151"
+                rx="4"
+              />
+              <text
+                x={PADDING - 28}
+                y={PADDING + deckWidth * SCALE / 2 + 4}
+                textAnchor="middle"
+                fill="white"
+                fontSize="9"
+                fontWeight="600"
+              >
+                FRONT
+              </text>
+            </g>
+
+            <g>
+              <rect
+                x={PADDING + deckLength * SCALE + 8}
+                y={PADDING + deckWidth * SCALE / 2 - 10}
+                width="28"
+                height="20"
+                fill="#6b7280"
+                rx="4"
+              />
+              <text
+                x={PADDING + deckLength * SCALE + 22}
+                y={PADDING + deckWidth * SCALE / 2 + 4}
+                textAnchor="middle"
+                fill="white"
+                fontSize="9"
+                fontWeight="600"
+              >
+                REAR
+              </text>
+            </g>
+
+            <text
+              x={PADDING + deckLength * SCALE / 2}
+              y={topViewHeight - 5}
+              textAnchor="middle"
+              fill="#6b7280"
+              fontSize="10"
+              fontWeight="500"
+            >
+              {deckLength}&apos; × {deckWidth}&apos;
+            </text>
           </svg>
         </div>
       </div>
 
       <div>
-        <h4 className="text-sm font-medium text-gray-600 mb-2">Side View (Height Profile)</h4>
+        <h4 className="text-sm font-medium text-gray-600 mb-2">Side View</h4>
         <div className="bg-gray-100 rounded-lg p-2 overflow-x-auto">
           <svg
-            width={sideViewWidth + 40}
-            height={sideViewHeight}
-            viewBox={`0 0 ${sideViewWidth + 40} ${sideViewHeight}`}
+            width={sideViewWidth + 20}
+            height={sideViewHeight + 15}
+            viewBox={`0 0 ${sideViewWidth + 20} ${sideViewHeight + 15}`}
             className="mx-auto"
           >
-            <rect
-              x={PADDING}
-              y={PADDING}
-              width={deckLength * SCALE}
-              height={maxLegalHeight * SCALE}
-              fill="#f8fafc"
-              stroke="#e2e8f0"
+            <defs>
+              <linearGradient id="sideMetalGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#9ca3af" />
+                <stop offset="50%" stopColor="#6b7280" />
+                <stop offset="100%" stopColor="#4b5563" />
+              </linearGradient>
+              <radialGradient id="wheelGradient" cx="30%" cy="30%">
+                <stop offset="0%" stopColor="#4b5563" />
+                <stop offset="70%" stopColor="#1f2937" />
+                <stop offset="100%" stopColor="#111827" />
+              </radialGradient>
+              {ITEM_COLOR_CONFIG.map((color, i) => (
+                <linearGradient key={`sideItemGrad-${i}`} id={`sideItemGradient-${i}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor={color.light} />
+                  <stop offset="50%" stopColor={color.base} />
+                  <stop offset="100%" stopColor={color.dark} />
+                </linearGradient>
+              ))}
+              <pattern id="sideFailedHatch" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45)">
+                <line x1="0" y1="0" x2="0" y2="8" stroke="#dc2626" strokeWidth="2" opacity="0.4" />
+              </pattern>
+            </defs>
+
+            <line
+              x1={PADDING - 30}
+              y1={PADDING + maxLegalHeight * SCALE + 12}
+              x2={PADDING + deckLength * SCALE + 30}
+              y2={PADDING + maxLegalHeight * SCALE + 12}
+              stroke="#d1d5db"
+              strokeWidth="2"
             />
 
             <line
               x1={PADDING}
-              y1={PADDING + (maxLegalHeight - truck.maxLegalCargoHeight) * SCALE}
+              y1={PADDING}
               x2={PADDING + deckLength * SCALE}
-              y2={PADDING + (maxLegalHeight - truck.maxLegalCargoHeight) * SCALE}
-              stroke="#94a3b8"
-              strokeDasharray="4,4"
+              y2={PADDING}
+              stroke="#ef4444"
+              strokeWidth="1.5"
+              strokeDasharray="6,4"
             />
-            <text
-              x={PADDING + deckLength * SCALE - 5}
-              y={PADDING + (maxLegalHeight - truck.maxLegalCargoHeight) * SCALE - 4}
-              textAnchor="end"
-              fill="#94a3b8"
-              fontSize="8"
-            >
-              Legal height limit
-            </text>
+            <g>
+              <rect
+                x={PADDING + deckLength * SCALE + 8}
+                y={PADDING - 8}
+                width="50"
+                height="16"
+                fill="#fef2f2"
+                stroke="#fecaca"
+                strokeWidth="1"
+                rx="3"
+              />
+              <text
+                x={PADDING + deckLength * SCALE + 33}
+                y={PADDING + 4}
+                textAnchor="middle"
+                fill="#dc2626"
+                fontSize="9"
+                fontWeight="500"
+              >
+                13.5&apos; Legal
+              </text>
+            </g>
 
-            <rect
-              x={PADDING}
-              y={PADDING + maxLegalHeight * SCALE - truck.deckHeight * SCALE}
-              width={deckLength * SCALE}
-              height={truck.deckHeight * SCALE}
-              fill="#94a3b8"
-              opacity={0.6}
+            <g>
+              <rect
+                x={PADDING}
+                y={PADDING + (maxLegalHeight - truck.deckHeight) * SCALE}
+                width={deckLength * SCALE}
+                height={truck.deckHeight * SCALE}
+                fill="url(#sideMetalGradient)"
+                stroke="#4b5563"
+                strokeWidth="1.5"
+              />
+              <line
+                x1={PADDING}
+                y1={PADDING + (maxLegalHeight - truck.deckHeight) * SCALE + 2}
+                x2={PADDING + deckLength * SCALE}
+                y2={PADDING + (maxLegalHeight - truck.deckHeight) * SCALE + 2}
+                stroke="#d1d5db"
+                strokeWidth="1"
+                opacity="0.6"
+              />
+            </g>
+
+            {[25, 50, deckLength * SCALE - 50, deckLength * SCALE - 25].map((offset, i) => (
+              <g key={`wheel-${i}`}>
+                <circle
+                  cx={PADDING + offset}
+                  cy={PADDING + maxLegalHeight * SCALE + 2}
+                  r={10}
+                  fill="url(#wheelGradient)"
+                  stroke="#111827"
+                  strokeWidth="2"
+                />
+                <circle
+                  cx={PADDING + offset}
+                  cy={PADDING + maxLegalHeight * SCALE + 2}
+                  r={4}
+                  fill="#6b7280"
+                  stroke="#4b5563"
+                  strokeWidth="1"
+                />
+                <circle
+                  cx={PADDING + offset}
+                  cy={PADDING + maxLegalHeight * SCALE + 2}
+                  r={1.5}
+                  fill="#9ca3af"
+                />
+              </g>
+            ))}
+
+            <path
+              d={`
+                M ${PADDING} ${PADDING + (maxLegalHeight - truck.deckHeight) * SCALE}
+                L ${PADDING - 18} ${PADDING + (maxLegalHeight - truck.deckHeight) * SCALE}
+                L ${PADDING - 25} ${PADDING + maxLegalHeight * SCALE - 8}
+                L ${PADDING - 8} ${PADDING + maxLegalHeight * SCALE - 8}
+                L ${PADDING} ${PADDING + maxLegalHeight * SCALE}
+              `}
+              fill="url(#sideMetalGradient)"
+              stroke="#4b5563"
+              strokeWidth="1"
             />
 
             {items.map((item, index) => {
               const placement = getPlacement(item.id)
               if (!placement) return null
 
-              const itemLength = placement.rotated ? item.width : item.length
-              const x = PADDING + placement.x * SCALE
-              const w = itemLength * SCALE
-              const h = item.height * SCALE
-              const y = PADDING + maxLegalHeight * SCALE - truck.deckHeight * SCALE - h
               const isFailed = placement.failed === true
+              const itemLength = placement.rotated ? item.width : item.length
+              const itemHeight = item.height
+              const isHovered = hoveredItem === item.id
+              const colorConfig = getItemColorConfig(index)
+              const x = PADDING + placement.x * SCALE
+              const y = PADDING + (maxLegalHeight - truck.deckHeight - itemHeight) * SCALE
+              const w = itemLength * SCALE
+              const h = itemHeight * SCALE
+              const exceedsHeight = item.height + truck.deckHeight > maxLegalHeight
 
               return (
-                <g key={item.id}>
+                <g
+                  key={item.id}
+                  onMouseEnter={() => setHoveredItem(item.id)}
+                  onMouseLeave={() => setHoveredItem(null)}
+                  className="cursor-pointer"
+                >
+                  <rect
+                    x={x + 2}
+                    y={y + 2}
+                    width={w}
+                    height={h}
+                    fill="rgba(0,0,0,0.15)"
+                    rx="3"
+                  />
+
                   <rect
                     x={x}
                     y={y}
                     width={w}
                     height={h}
-                    fill={isFailed ? '#fecaca' : getItemColor(index)}
-                    opacity={isFailed ? 0.4 : 0.8}
-                    stroke={isFailed ? '#dc2626' : getItemColorConfig(index).dark}
-                    strokeWidth={1}
+                    fill={isFailed ? '#f87171' : `url(#sideItemGradient-${index % ITEM_COLOR_CONFIG.length})`}
+                    stroke={isFailed ? '#991b1b' : isHovered ? '#1f2937' : exceedsHeight ? '#dc2626' : colorConfig.dark}
+                    strokeWidth={isHovered ? 2.5 : (isFailed || exceedsHeight) ? 2 : 1.5}
+                    rx="3"
+                    opacity={isFailed ? 0.7 : 1}
+                    strokeDasharray={isFailed ? '4,3' : undefined}
+                    style={{ transition: 'all 0.15s ease' }}
                   />
+
+                  {!isFailed && (
+                    <rect
+                      x={x + 2}
+                      y={y + 2}
+                      width={w - 4}
+                      height={Math.min(h * 0.2, 6)}
+                      fill="rgba(255,255,255,0.3)"
+                      rx="2"
+                    />
+                  )}
+
+                  {exceedsHeight && !isFailed && (
+                    <line
+                      x1={x}
+                      y1={PADDING}
+                      x2={x + w}
+                      y2={PADDING}
+                      stroke="#dc2626"
+                      strokeWidth="3"
+                    />
+                  )}
+
+                  {w > 35 && h > 18 && (
+                    <text
+                      x={x + w / 2}
+                      y={y + h / 2 + 3}
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      fill="white"
+                      fontSize="9"
+                      fontWeight="600"
+                      style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
+                    >
+                      {isFailed ? 'NOT PLACED' : `${itemHeight.toFixed(1)}' H`}
+                    </text>
+                  )}
                 </g>
               )
             })}
+
+            <text
+              x={PADDING + deckLength * SCALE / 2}
+              y={sideViewHeight + 8}
+              textAnchor="middle"
+              fill="#6b7280"
+              fontSize="10"
+              fontWeight="500"
+            >
+              {deckLength}&apos; Length · {truck.deckHeight}&apos; Deck Height
+            </text>
           </svg>
         </div>
       </div>
+
+      {items.some(item => item.height + truck.deckHeight > maxLegalHeight) && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          Warning: Some items exceed the legal height limit of {maxLegalHeight} feet
+        </div>
+      )}
     </div>
   )
 }

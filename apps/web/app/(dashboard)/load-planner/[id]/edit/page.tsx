@@ -40,6 +40,7 @@ import { trucks as defaultTrucks } from '@/lib/load-planner/trucks';
 import { generateSmartPlans, type ParsedLoad } from '@/lib/load-planner/legacy-smart-plans';
 import type { LoadItem, LoadPlan, TrailerCategory, TruckType, DetailedRoutePermitSummary } from '@/lib/load-planner/types';
 import { downloadQuotePDF } from '@/lib/pdf/quote-pdf-generator';
+import { GOOGLE_MAPS_API_KEY } from '@/lib/google-maps';
 
 interface StandardCargoType {
   id: string;
@@ -218,6 +219,7 @@ export default function LoadPlannerEditPage() {
 
   const [distanceMiles, setDistanceMiles] = useState(0);
   const [durationMinutes, setDurationMinutes] = useState(0);
+  const [routePolyline, setRoutePolyline] = useState('');
 
   // Cargo items
   const [cargoItems, setCargoItems] = useState<CargoItem[]>([]);
@@ -1188,7 +1190,11 @@ export default function LoadPlannerEditPage() {
         totalCost: p.totalCost,
       }));
 
-      downloadQuotePDF({
+      const routeMapUrl = GOOGLE_MAPS_API_KEY && pickupCity && dropoffCity
+        ? `https://maps.googleapis.com/maps/api/staticmap?size=640x300&maptype=roadmap&markers=color:green%7Clabel:P%7C${encodeURIComponent(`${pickupAddress}, ${pickupCity}, ${pickupState} ${pickupZip}`)}&markers=color:red%7Clabel:D%7C${encodeURIComponent(`${dropoffAddress}, ${dropoffCity}, ${dropoffState} ${dropoffZip}`)}${routePolyline ? `&path=enc:${encodeURIComponent(routePolyline)}` : ''}&key=${GOOGLE_MAPS_API_KEY}`
+        : undefined;
+
+      await downloadQuotePDF({
         quoteNumber: quoteNumber || 'DRAFT',
         quoteDate: new Date().toLocaleDateString('en-US'),
         validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US'),
@@ -1209,6 +1215,7 @@ export default function LoadPlannerEditPage() {
         dropoff: { address: dropoffAddress, city: dropoffCity, state: dropoffState, zip: dropoffZip },
         distance: distanceMiles,
         duration: durationMinutes,
+        routeMapUrl,
         cargoItems: cargoItems.map((item) => ({
           description: item.description || 'Cargo Item',
           quantity: item.quantity || 1,
@@ -2957,9 +2964,17 @@ export default function LoadPlannerEditPage() {
                             <span>To: {dropoffCity ? `${dropoffCity}, ${dropoffState}` : dropoffAddress || '-'}</span>
                             <span>Distance: {distanceMiles ? `${Math.round(distanceMiles).toLocaleString()} miles` : '—'}</span>
                           </div>
-                          <div className="mt-4 h-32 rounded-md border border-dashed border-slate-300 bg-white flex items-center justify-center text-xs text-slate-400">
-                            Route map preview appears here
-                          </div>
+                          {GOOGLE_MAPS_API_KEY && pickupCity && dropoffCity ? (
+                            <img
+                              src={`https://maps.googleapis.com/maps/api/staticmap?size=640x300&maptype=roadmap&markers=color:green%7Clabel:P%7C${encodeURIComponent(`${pickupAddress}, ${pickupCity}, ${pickupState} ${pickupZip}`)}&markers=color:red%7Clabel:D%7C${encodeURIComponent(`${dropoffAddress}, ${dropoffCity}, ${dropoffState} ${dropoffZip}`)}${routePolyline ? `&path=enc:${encodeURIComponent(routePolyline)}` : ''}&key=${GOOGLE_MAPS_API_KEY}`}
+                              alt="Route map"
+                              className="mt-4 w-full h-auto rounded-md border border-slate-200"
+                            />
+                          ) : (
+                            <div className="mt-4 h-32 rounded-md border border-dashed border-slate-300 bg-white flex items-center justify-center text-xs text-slate-400">
+                              {!GOOGLE_MAPS_API_KEY ? 'Google Maps API key not configured' : 'Enter pickup and dropoff addresses to see route map'}
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
@@ -3377,6 +3392,7 @@ export default function LoadPlannerEditPage() {
             onRouteCalculated={(data) => {
               setDistanceMiles(data.distance_miles);
               setDurationMinutes(data.duration_minutes);
+              setRoutePolyline(data.polyline);
               toast.success('Route calculated successfully');
             }}
             className="mt-4"

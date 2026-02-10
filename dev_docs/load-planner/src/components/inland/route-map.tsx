@@ -1,0 +1,336 @@
+'use client'
+
+import { useCallback, useEffect, useState, useMemo, useRef } from 'react'
+import {
+  GoogleMap,
+  useJsApiLoader,
+  Marker,
+  DirectionsRenderer,
+} from '@react-google-maps/api'
+import { GOOGLE_MAPS_LIBRARIES, GOOGLE_MAPS_API_KEY } from '@/lib/google-maps'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Loader2, MapPin, Route, Maximize2, Minimize2, RefreshCw } from 'lucide-react'
+import type { InlandDestinationBlock } from '@/types/inland'
+
+const containerStyle = {
+  width: '100%',
+  height: '100%',
+}
+
+const defaultCenter = {
+  lat: 39.8283,
+  lng: -98.5795, // Center of US
+}
+
+const mapOptions: google.maps.MapOptions = {
+  disableDefaultUI: false,
+  zoomControl: true,
+  mapTypeControl: false,
+  streetViewControl: false,
+  fullscreenControl: true,
+}
+
+// Marker colors for destinations A-F
+const MARKER_COLORS = [
+  '#6366F1', // Indigo (A)
+  '#F59E0B', // Amber (B)
+  '#10B981', // Emerald (C)
+  '#EF4444', // Red (D)
+  '#8B5CF6', // Violet (E)
+  '#EC4899', // Pink (F)
+]
+
+interface RouteCalculatedData {
+  destinationId: string
+  polyline: string
+  distance_miles: number
+  duration_minutes: number
+}
+
+interface RouteMapProps {
+  destinationBlocks: InlandDestinationBlock[]
+  className?: string
+  onRouteCalculated?: (data: RouteCalculatedData) => void
+}
+
+interface RouteInfo {
+  distance: string
+  duration: string
+}
+
+export function RouteMap({ destinationBlocks, className, onRouteCalculated }: RouteMapProps) {
+  const [map, setMap] = useState<google.maps.Map | null>(null)
+  const [directions, setDirections] = useState<google.maps.DirectionsResult[]>([])
+  const [routeInfos, setRouteInfos] = useState<Map<string, RouteInfo>>(new Map())
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [isCalculating, setIsCalculating] = useState(false)
+
+  // Track what we've already calculated to prevent duplicate API calls
+  const lastCalculatedRef = useRef<string>('')
+  const isCalculatingRef = useRef(false)
+
+  const { isLoaded, loadError } = useJsApiLoader({
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    libraries: GOOGLE_MAPS_LIBRARIES,
+  })
+
+  // Filter destinations with valid addresses
+  const validDestinations = useMemo(() => {
+    return destinationBlocks.filter(
+      (d) => d.pickup_address.trim() && d.dropoff_address.trim()
+    )
+  }, [destinationBlocks])
+
+  // Create a stable hash of destinations to detect actual changes
+  const destinationsHash = useMemo(() => {
+    return validDestinations.map(d =>
+      `${d.id}|${d.pickup_address}|${d.dropoff_address}|${d.waypoints?.map(w => w.address).join(',') || ''}`
+    ).join('||')
+  }, [validDestinations])
+
+  // Calculate routes for all valid destinations - now manually triggered
+  const calculateRoutes = useCallback(async () => {
+    if (!isLoaded || validDestinations.length === 0) return
+
+    // Prevent duplicate calculations
+    if (isCalculatingRef.current) return
+    if (lastCalculatedRef.current === destinationsHash && directions.length > 0) {
+      return // Already calculated these exact destinations
+    }
+
+    isCalculatingRef.current = true
+    setIsCalculating(true)
+
+    const directionsService = new google.maps.DirectionsService()
+    const newDirections: google.maps.DirectionsResult[] = []
+    const newRouteInfos = new Map<string, RouteInfo>()
+
+    for (const dest of validDestinations) {
+      try {
+        // Build waypoints if they exist
+        const waypointLocations = dest.waypoints?.filter(w => w.address.trim())?.map(w => ({
+          location: w.address,
+          stopover: true,
+        })) || []
+
+        const result = await directionsService.route({
+          origin: dest.pickup_address,
+          destination: dest.dropoff_address,
+          waypoints: waypointLocations,
+          travelMode: google.maps.TravelMode.DRIVING,
+        })
+
+        newDirections.push(result)
+
+        // Extract route info and polyline
+        const route = result.routes[0]
+        const leg = route?.legs[0]
+        if (leg && route) {
+          newRouteInfos.set(dest.id, {
+            distance: leg.distance?.text || 'N/A',
+            duration: leg.duration?.text || 'N/A',
+          })
+
+          // Extract total distance and duration across all legs
+          const totalDistanceMeters = route.legs.reduce((sum, l) => sum + (l.distance?.value || 0), 0)
+          const totalDurationSeconds = route.legs.reduce((sum, l) => sum + (l.duration?.value || 0), 0)
+          const totalDistanceMiles = Math.round(totalDistanceMeters * 0.000621371 * 10) / 10
+          const totalDurationMinutes = Math.round(totalDurationSeconds / 60)
+
+          // Pass the polyline back via callback
+          // overview_polyline can be a string or object with points property depending on Google Maps version
+          const overviewPolyline = route.overview_polyline as unknown
+          const polylineString = typeof overviewPolyline === 'string'
+            ? overviewPolyline
+            : (overviewPolyline as { points?: string })?.points
+          if (onRouteCalculated && polylineString) {
+            onRouteCalculated({
+              destinationId: dest.id,
+              polyline: polylineString,
+              distance_miles: totalDistanceMiles,
+              duration_minutes: totalDurationMinutes,
+            })
+          }
+        }
+      } catch (error) {
+        console.error(`Failed to calculate route for destination ${dest.label}:`, error)
+      }
+    }
+
+    setDirections(newDirections)
+    setRouteInfos(newRouteInfos)
+    lastCalculatedRef.current = destinationsHash
+    isCalculatingRef.current = false
+    setIsCalculating(false)
+
+    // Fit bounds to show all routes
+    if (map && newDirections.length > 0) {
+      const bounds = new google.maps.LatLngBounds()
+      newDirections.forEach((dir) => {
+        dir.routes[0]?.legs[0]?.steps.forEach((step) => {
+          bounds.extend(step.start_location)
+          bounds.extend(step.end_location)
+        })
+      })
+      map.fitBounds(bounds, 50)
+    }
+  }, [isLoaded, validDestinations, destinationsHash, map, onRouteCalculated, directions.length])
+
+  // Check if routes need recalculation (destinations changed since last calculation)
+  const needsRecalculation = destinationsHash !== lastCalculatedRef.current && validDestinations.length > 0
+
+  const onLoad = useCallback((map: google.maps.Map) => {
+    setMap(map)
+  }, [])
+
+  const onUnmount = useCallback(() => {
+    setMap(null)
+  }, [])
+
+  if (loadError) {
+    return (
+      <Card className={className}>
+        <CardContent className="flex items-center justify-center h-[300px] text-muted-foreground">
+          <p>Failed to load Google Maps</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (!isLoaded) {
+    return (
+      <Card className={className}>
+        <CardContent className="flex items-center justify-center h-[300px]">
+          <Loader2 className="h-6 w-6 animate-spin mr-2" />
+          <span>Loading map...</span>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <Card className={className}>
+      <CardHeader className="py-3 px-4 border-b">
+        <CardTitle className="text-sm font-medium flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <Route className="h-4 w-4" />
+            Route Map
+            {validDestinations.length > 0 && (
+              <span className="text-xs text-muted-foreground">
+                ({validDestinations.length} route{validDestinations.length > 1 ? 's' : ''})
+              </span>
+            )}
+          </span>
+          <div className="flex items-center gap-2">
+            {isCalculating && (
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Calculating...
+              </span>
+            )}
+            {needsRecalculation && !isCalculating && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-6 text-xs"
+                onClick={calculateRoutes}
+              >
+                <RefreshCw className="h-3 w-3 mr-1" />
+                Calculate
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => setIsExpanded(!isExpanded)}
+            >
+              {isExpanded ? (
+                <Minimize2 className="h-4 w-4" />
+              ) : (
+                <Maximize2 className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        </CardTitle>
+      </CardHeader>
+      <div className={isExpanded ? 'h-[500px]' : 'h-[300px]'}>
+        {validDestinations.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-muted-foreground bg-muted/30">
+            <MapPin className="h-8 w-8 mb-2 opacity-50" />
+            <p className="text-sm">Enter pickup and dropoff addresses</p>
+            <p className="text-xs">to see routes on the map</p>
+          </div>
+        ) : directions.length === 0 && !isCalculating ? (
+          <div className="flex flex-col items-center justify-center h-full text-muted-foreground bg-muted/30">
+            <Route className="h-8 w-8 mb-2 opacity-50" />
+            <p className="text-sm">Click &quot;Calculate&quot; to show routes</p>
+            <p className="text-xs">{validDestinations.length} route{validDestinations.length > 1 ? 's' : ''} ready to calculate</p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-3"
+              onClick={calculateRoutes}
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Calculate Routes
+            </Button>
+          </div>
+        ) : (
+          <GoogleMap
+            mapContainerStyle={containerStyle}
+            center={defaultCenter}
+            zoom={4}
+            onLoad={onLoad}
+            onUnmount={onUnmount}
+            options={mapOptions}
+          >
+            {directions.map((direction, index) => (
+              <DirectionsRenderer
+                key={index}
+                directions={direction}
+                options={{
+                  suppressMarkers: false,
+                  polylineOptions: {
+                    strokeColor: MARKER_COLORS[index % MARKER_COLORS.length],
+                    strokeWeight: 4,
+                    strokeOpacity: 0.8,
+                  },
+                }}
+              />
+            ))}
+          </GoogleMap>
+        )}
+      </div>
+      {/* Route info summary */}
+      {routeInfos.size > 0 && (
+        <div className="p-3 border-t bg-muted/20">
+          <div className="grid gap-2">
+            {validDestinations.map((dest, index) => {
+              const info = routeInfos.get(dest.id)
+              if (!info) return null
+              return (
+                <div
+                  key={dest.id}
+                  className="flex items-center justify-between text-sm"
+                >
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: MARKER_COLORS[index % MARKER_COLORS.length] }}
+                    />
+                    <span className="font-medium">Destination {dest.label}</span>
+                  </div>
+                  <div className="text-muted-foreground">
+                    {info.distance} • {info.duration}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </Card>
+  )
+}

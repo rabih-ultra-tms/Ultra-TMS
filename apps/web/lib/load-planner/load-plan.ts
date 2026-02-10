@@ -1,6 +1,6 @@
 import type { LoadItem, TruckType, LoadPlan, ItemPlacement, PlannedLoad } from './types'
 
-const createPlacements = (items: LoadItem[], truck: TruckType): ItemPlacement[] => {
+export const createPlacements = (items: LoadItem[], truck: TruckType): ItemPlacement[] => {
   const placements: ItemPlacement[] = []
   let cursorX = 0
   let cursorZ = 0

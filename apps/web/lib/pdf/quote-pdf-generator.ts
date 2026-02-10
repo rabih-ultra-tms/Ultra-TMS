@@ -54,6 +54,7 @@ export interface PDFQuoteData {
     truckName: string
     items: string[]
   }>
+  routeMapUrl?: string
   servicesTotal: number
   accessorialsTotal: number
   grandTotal: number
@@ -90,7 +91,22 @@ function formatCurrency(cents: number): string {
   return `$${(cents / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
-export function generateQuotePDF(data: PDFQuoteData): jsPDF {
+async function fetchImageAsDataUrl(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url)
+    const blob = await response.blob()
+    return new Promise((resolve) => {
+      const reader = new FileReader()
+      reader.onloadend = () => resolve(reader.result as string)
+      reader.onerror = () => resolve(null)
+      reader.readAsDataURL(blob)
+    })
+  } catch {
+    return null
+  }
+}
+
+export async function generateQuotePDF(data: PDFQuoteData): Promise<jsPDF> {
   const doc = new jsPDF('p', 'mm', 'a4')
   const pageWidth = doc.internal.pageSize.getWidth()
   const margin = 15
@@ -235,6 +251,29 @@ export function generateQuotePDF(data: PDFQuoteData): jsPDF {
     doc.text(data.distance ? `${Math.round(data.distance).toLocaleString()} miles` : '-', col3X, y + 5)
 
     y += 18
+  }
+
+  // ─── ROUTE MAP ───
+  if (data.sections.routeMap && data.routeMapUrl) {
+    checkPageBreak(70)
+    drawSectionHeader('Route Map')
+
+    const mapDataUrl = await fetchImageAsDataUrl(data.routeMapUrl)
+    if (mapDataUrl) {
+      const imgWidth = contentWidth
+      const imgHeight = imgWidth * (300 / 640) // Match the 640x300 static map ratio
+      doc.addImage(mapDataUrl, 'PNG', margin, y, imgWidth, imgHeight)
+      y += imgHeight + 4
+
+      // Route summary below map
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(...COLORS.textMuted)
+      const fromText = data.pickup.city ? `${data.pickup.city}, ${data.pickup.state}` : data.pickup.address || '-'
+      const toText = data.dropoff.city ? `${data.dropoff.city}, ${data.dropoff.state}` : data.dropoff.address || '-'
+      doc.text(`${fromText}  →  ${toText}  •  ${data.distance ? `${Math.round(data.distance).toLocaleString()} miles` : '-'}`, margin, y)
+      y += 8
+    }
   }
 
   // ─── CARGO DETAILS ───
@@ -498,7 +537,7 @@ export function generateQuotePDF(data: PDFQuoteData): jsPDF {
   return doc
 }
 
-export function downloadQuotePDF(data: PDFQuoteData): void {
-  const doc = generateQuotePDF(data)
+export async function downloadQuotePDF(data: PDFQuoteData): Promise<void> {
+  const doc = await generateQuotePDF(data)
   doc.save(`quote-${data.quoteNumber}.pdf`)
 }
