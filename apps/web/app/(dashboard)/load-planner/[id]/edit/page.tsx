@@ -20,7 +20,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Save, Trash2, User, MapPin, Package, Truck, DollarSign, FileWarning, FileText, Upload, Plus, Copy, MessageSquare, ChevronDown, ChevronUp, Layers, Download, EyeOff, Image, AlertTriangle } from 'lucide-react';
+import { Save, Trash2, User, MapPin, Package, Truck, DollarSign, FileWarning, FileText, Upload, Plus, Copy, MessageSquare, ChevronDown, ChevronUp, Layers, Download, EyeOff, Image, AlertTriangle, GitCompareArrows } from 'lucide-react';
 import { toast } from 'sonner';
 import { CustomerForm } from '@/components/quotes/customer-form';
 import { RouteMap } from '@/components/load-planner/route-map';
@@ -38,7 +38,8 @@ import { Separator } from '@/components/ui/separator';
 import { buildLoadPlan } from '@/lib/load-planner/load-plan';
 import { trucks as defaultTrucks } from '@/lib/load-planner/trucks';
 import { generateSmartPlans, type ParsedLoad } from '@/lib/load-planner/legacy-smart-plans';
-import type { LoadItem, LoadPlan, TrailerCategory, TruckType } from '@/lib/load-planner/types';
+import type { LoadItem, LoadPlan, TrailerCategory, TruckType, DetailedRoutePermitSummary } from '@/lib/load-planner/types';
+import { downloadQuotePDF } from '@/lib/pdf/quote-pdf-generator';
 
 interface StandardCargoType {
   id: string;
@@ -353,6 +354,7 @@ export default function LoadPlannerEditPage() {
   const [quoteNotes, setQuoteNotes] = useState('');
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [isPdfSectionsOpen, setIsPdfSectionsOpen] = useState(false);
+  const [capturedPermitData, setCapturedPermitData] = useState<DetailedRoutePermitSummary | null>(null);
   const [pdfSections, setPdfSections] = useState({
     companyHeader: true,
     clientInformation: true,
@@ -1178,9 +1180,63 @@ export default function LoadPlannerEditPage() {
   const handleDownloadPdf = async () => {
     setIsDownloadingPdf(true);
     try {
-      // Use browser's print functionality to generate PDF
-      window.print();
-      toast.success('PDF download ready');
+      const permitStates = (capturedPermitData?.statePermits ?? []).map((p) => ({
+        stateCode: p.stateCode,
+        stateName: p.stateName,
+        permitFees: p.permitFees,
+        escortFees: p.escortFees,
+        totalCost: p.totalCost,
+      }));
+
+      downloadQuotePDF({
+        quoteNumber: quoteNumber || 'DRAFT',
+        quoteDate: new Date().toLocaleDateString('en-US'),
+        validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US'),
+        company: {
+          name: 'Ultra TMS',
+          address: '',
+          email: '',
+          phone: '',
+        },
+        customer: {
+          company: customerCompany,
+          name: customerName,
+          email: customerEmail,
+          phone: customerPhone,
+          address: customerAddress ? `${customerAddress}, ${customerCity}, ${customerState} ${customerZip}`.trim() : '',
+        },
+        pickup: { address: pickupAddress, city: pickupCity, state: pickupState, zip: pickupZip },
+        dropoff: { address: dropoffAddress, city: dropoffCity, state: dropoffState, zip: dropoffZip },
+        distance: distanceMiles,
+        duration: durationMinutes,
+        cargoItems: cargoItems.map((item) => ({
+          description: item.description || 'Cargo Item',
+          quantity: item.quantity || 1,
+          length: (item.lengthIn || 0) / 12,
+          width: (item.widthIn || 0) / 12,
+          height: (item.heightIn || 0) / 12,
+          weight: item.weightLbs || 0,
+        })),
+        serviceItems: serviceItems.map((item) => ({
+          name: item.name,
+          quantity: item.quantity,
+          rate: item.rate,
+          total: item.total,
+        })),
+        accessorialItems: accessorialItems.map((item) => ({
+          name: item.name,
+          quantity: item.quantity,
+          rate: item.rate,
+          total: item.total,
+        })),
+        permitStates,
+        servicesTotal,
+        accessorialsTotal,
+        grandTotal,
+        notes: quoteNotes,
+        sections: pdfSections,
+      });
+      toast.success('PDF downloaded successfully');
     } catch (error) {
       toast.error('Failed to generate PDF');
       console.error('PDF generation error:', error);
@@ -1259,6 +1315,10 @@ export default function LoadPlannerEditPage() {
               <TabsTrigger value="permits" className="flex-1 min-w-[80px] flex items-center justify-center gap-1">
                 <FileWarning className="h-3 w-3 hidden sm:inline" />
                 <span>Permits</span>
+              </TabsTrigger>
+              <TabsTrigger value="compare" className="flex-1 min-w-[80px] flex items-center justify-center gap-1">
+                <GitCompareArrows className="h-3 w-3 hidden sm:inline" />
+                <span>Compare</span>
               </TabsTrigger>
               <TabsTrigger value="pdf" className="flex-1 min-w-[80px] flex items-center justify-center gap-1">
                 <FileText className="h-3 w-3 hidden sm:inline" />
@@ -2573,27 +2633,64 @@ export default function LoadPlannerEditPage() {
                           grossWeight: totalCargoWeight,
                         }}
                         perTruckCargoSpecs={perTruckCargoSpecs}
+                        onPermitDataCalculated={setCapturedPermitData}
                       />
                     </CardContent>
                   </Card>
 
-                  <RouteComparisonTab
-                    pickupAddress={`${pickupAddress}, ${pickupCity}, ${pickupState} ${pickupZip}`.trim()}
-                    dropoffAddress={`${dropoffAddress}, ${dropoffCity}, ${dropoffState} ${dropoffZip}`.trim()}
-                    cargoItems={loadItems}
-                    currentTruck={selectedTruck}
-                    onApplyScenario={(scenario) => {
-                      setSelectedTruck(scenario.truck)
-                      setDistanceMiles(scenario.routeAlternative.totalDistanceMiles)
-                      setDurationMinutes(scenario.routeAlternative.totalDurationMinutes)
-                      toast.success('Scenario applied to quote')
-                    }}
-                  />
                 </>
               )}
 
               <div className="flex gap-4">
                 <Button variant="outline" onClick={() => setActiveTab('pricing')}>
+                  Back
+                </Button>
+                <Button onClick={() => setActiveTab('compare')} className="flex-1">
+                  Continue to Compare
+                </Button>
+              </div>
+            </TabsContent>
+
+            {/* Compare Tab */}
+            <TabsContent value="compare" className="mt-4 space-y-4">
+              {!pickupAddress || !dropoffAddress ? (
+                <Card>
+                  <CardContent className="flex flex-col items-center py-10 text-muted-foreground">
+                    <MapPin className="h-12 w-12 mb-4 opacity-50" />
+                    <p className="text-center">Enter pickup and dropoff addresses to compare routes</p>
+                    <Button variant="outline" className="mt-4" onClick={() => setActiveTab('route')}>
+                      Go to Route
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : cargoItems.length === 0 ? (
+                <Card>
+                  <CardContent className="flex flex-col items-center py-10 text-muted-foreground">
+                    <Package className="h-12 w-12 mb-4 opacity-50" />
+                    <p className="text-center">Add cargo items to compare route and truck scenarios</p>
+                    <Button variant="outline" className="mt-4" onClick={() => setActiveTab('cargo')}>
+                      Go to Cargo
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <RouteComparisonTab
+                  pickupAddress={`${pickupAddress}, ${pickupCity}, ${pickupState} ${pickupZip}`.trim()}
+                  dropoffAddress={`${dropoffAddress}, ${dropoffCity}, ${dropoffState} ${dropoffZip}`.trim()}
+                  cargoItems={loadItems}
+                  currentTruck={selectedTruck}
+                  routeResult={null}
+                  onApplyScenario={(scenario) => {
+                    setSelectedTruck(scenario.truck)
+                    setDistanceMiles(scenario.routeAlternative.totalDistanceMiles)
+                    setDurationMinutes(scenario.routeAlternative.totalDurationMinutes)
+                    toast.success('Scenario applied to quote')
+                  }}
+                />
+              )}
+
+              <div className="flex gap-4">
+                <Button variant="outline" onClick={() => setActiveTab('permits')}>
                   Back
                 </Button>
                 <Button onClick={() => setActiveTab('pdf')} className="flex-1">
@@ -2971,9 +3068,40 @@ export default function LoadPlannerEditPage() {
                           </svg>
                           Permit & Escort Costs
                         </h3>
-                        <div className="text-sm text-slate-600">
-                          Permit calculations are available in the Permits tab. Add route and truck details to see permit and escort cost breakdowns.
-                        </div>
+                        {capturedPermitData && capturedPermitData.statePermits.length > 0 ? (
+                          <div>
+                            <table className="w-full text-sm border-collapse mb-4">
+                              <thead>
+                                <tr className="border-b-2 border-slate-200">
+                                  <th className="text-left py-2 px-3 text-xs uppercase font-bold text-slate-500">State</th>
+                                  <th className="text-right py-2 px-3 text-xs uppercase font-bold text-slate-500">Permit Fee</th>
+                                  <th className="text-right py-2 px-3 text-xs uppercase font-bold text-slate-500">Escort Cost</th>
+                                  <th className="text-right py-2 px-3 text-xs uppercase font-bold text-slate-500">Total</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {capturedPermitData.statePermits.map((p) => (
+                                  <tr key={p.stateCode} className="border-b border-slate-100">
+                                    <td className="py-2 px-3 text-slate-900">{p.stateName} ({p.stateCode})</td>
+                                    <td className="text-right py-2 px-3 text-slate-600">{formatCurrency(p.permitFees)}</td>
+                                    <td className="text-right py-2 px-3 text-slate-600">{formatCurrency(p.escortFees)}</td>
+                                    <td className="text-right py-2 px-3 font-semibold text-slate-900">{formatCurrency(p.totalCost)}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                              <tfoot>
+                                <tr className="border-t-2 border-slate-300">
+                                  <td className="py-3 px-3 text-right font-bold text-slate-900" colSpan={3}>Total Permit & Escort Costs</td>
+                                  <td className="py-3 px-3 text-right font-bold text-slate-900">{formatCurrency(capturedPermitData.totalCost)}</td>
+                                </tr>
+                              </tfoot>
+                            </table>
+                          </div>
+                        ) : (
+                          <div className="text-sm text-slate-600">
+                            No permit data available. Visit the Permits tab with route and cargo details to calculate permit costs.
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -3123,8 +3251,8 @@ export default function LoadPlannerEditPage() {
               </div>
 
               <div className="flex gap-4">
-                <Button variant="outline" onClick={() => setActiveTab('permits')}>
-                  Back to Permits
+                <Button variant="outline" onClick={() => setActiveTab('compare')}>
+                  Back to Compare
                 </Button>
               </div>
             </TabsContent>

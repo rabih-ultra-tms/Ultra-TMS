@@ -90,8 +90,14 @@ export interface RouteRecommendation {
   recommendedRouteId: string
   recommendedRouteName: string
   reasoning: string[]
+  costSavings?: { amount: number; comparedTo: string }
   warnings: string[]
-  alternativeConsiderations: string[]
+  alternativeConsiderations: Array<{
+    routeId: string
+    routeName: string
+    pros: string[]
+    cons: string[]
+  }>
 }
 
 export interface TruckRouteRecommendation {
@@ -115,6 +121,13 @@ export interface RouteAlternative {
   totalDurationMinutes: number
   statesTraversed: string[]
   stateDistances: Record<string, number>
+  routePolyline?: string
+  permitSummary?: DetailedRoutePermitSummary
+  estimatedCosts?: {
+    permits: number
+    escorts: number
+    total: number
+  }
 }
 
 export interface RoutePermitStateSummary {
@@ -148,17 +161,22 @@ export interface PermitSourceInfo {
 export interface DetailedPermitRequirement {
   stateCode: string
   stateName: string
+  state?: string // alias for stateName (used by old RouteIntelligence)
+  distanceInState?: number // miles in this state
   oversizeRequired: boolean
   overweightRequired: boolean
   isSuperload: boolean
   permitFees: number
   escortFees: number
+  estimatedFee?: number // total fee in dollars (for display)
   totalCost: number
   escortsRequired: number
   poleCarRequired: boolean
   policeEscortRequired: boolean
   travelRestrictions: string[]
   warnings: string[]
+  reasons?: string[] // why permit is required
+  calculationDetails?: string[] // fee breakdown details
   source?: PermitSourceInfo
 }
 
@@ -195,4 +213,9 @@ export interface DetailedRoutePermitSummary {
   totalEscortCost: number
   totalCost: number
   escortBreakdown?: EscortCostBreakdown
+}
+
+export interface MultiRouteResult {
+  routes: RouteAlternative[]
+  selectedRouteId: string
 }
