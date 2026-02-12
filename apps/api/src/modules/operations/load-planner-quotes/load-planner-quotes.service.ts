@@ -3,6 +3,7 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma.service';
 import {
@@ -50,6 +51,7 @@ export class LoadPlannerQuotesService {
           data: {
             tenantId,
             quoteNumber,
+            publicToken: randomUUID(),
             status: 'DRAFT',
             isActive: true,
             customerName: dto.customerName,
@@ -615,6 +617,7 @@ export class LoadPlannerQuotesService {
           data: {
             tenantId,
             quoteNumber,
+            publicToken: randomUUID(),
             status: 'DRAFT',
             isActive: true,
             customerName: existing.customerName,

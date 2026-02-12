@@ -220,7 +220,6 @@ export function RouteIntelligence({
       if (routeToAnalyze) {
         setState((prev) => ({
           ...prev,
-          isLoading: false,
           routeResult: routeToAnalyze,
         }))
 
@@ -329,6 +328,7 @@ export function RouteIntelligence({
 
         setState((prev) => ({
           ...prev,
+          isLoading: false,
           permitSummary,
           detailedPermitSummary,
           seasonalWarnings,

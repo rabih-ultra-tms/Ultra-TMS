@@ -25,6 +25,8 @@ export interface EquipmentDimensions {
   width?: number;
   height?: number;
   weight?: number;
+  front_image_url?: string | null;
+  side_image_url?: string | null;
 }
 
 export const useEquipmentMakes = () => {
@@ -36,6 +38,7 @@ export const useEquipmentMakes = () => {
       );
       return response.data || [];
     },
+    retry: false,
   });
 };
 
@@ -50,6 +53,7 @@ export const useEquipmentModels = (makeId: string) => {
       return response.data || [];
     },
     enabled: !!makeId,
+    retry: false,
   });
 };
 
@@ -64,5 +68,6 @@ export const useEquipmentDimensions = (modelId: string) => {
       return response.data || null;
     },
     enabled: !!modelId,
+    retry: false,
   });
 };

@@ -11,7 +11,8 @@
       "Bash(pnpm --filter api test:*)",
       "Bash(pnpm --filter web test:*)",
       "Bash(pnpm build:*)",
-      "Bash(find \"e:\\\\Work\\\\Ultra-TMS\\\\dev_docs\\\\11-ai-dev\\\\operations\\\\tmp_ops_src\"\" -type f -name \"*.tsx\" -o -name \"*.ts \")"
+      "Bash(find \"e:\\\\Work\\\\Ultra-TMS\\\\dev_docs\\\\11-ai-dev\\\\operations\\\\tmp_ops_src\"\" -type f -name \"*.tsx\" -o -name \"*.ts \")",
+      "Bash(pnpm dev:*)"
     ]
   }
 }

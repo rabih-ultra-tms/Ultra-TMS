@@ -61,7 +61,7 @@ export function CustomerForm({
   onCompanySelect,
   onContactSelect,
 }: CustomerFormProps) {
-  const [selectionMode, setSelectionMode] = useState<SelectionMode>('manual')
+  const [selectionMode, setSelectionMode] = useState<SelectionMode>('browse')
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('')
   const [selectedContactId, setSelectedContactId] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState('')

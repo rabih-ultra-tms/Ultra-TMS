@@ -293,29 +293,60 @@ export default function LoadPlannerEditPage() {
   const [manualImageUrl2, setManualImageUrl2] = useState('');
   const [manualImageUrl3, setManualImageUrl3] = useState('');
   const [manualImageUrl4, setManualImageUrl4] = useState('');
+  const [manualFrontImage, setManualFrontImage] = useState<string | null>(null);
+  const [manualSideImage, setManualSideImage] = useState<string | null>(null);
   const [customCargoTypes, setCustomCargoTypes] = useState<SearchableSelectOption[]>([]);
   const [manualValidation, setManualValidation] = useState<{ description?: string; dimensions?: string; weightWarning?: string }>({});
 
-  const { data: equipmentMakes } = useEquipmentMakes();
-  const { data: equipmentModels } = useEquipmentModels(selectedMakeId);
-  const { data: equipmentDimensions } = useEquipmentDimensions(selectedModelId);
+  const { data: equipmentMakes, isLoading: makesLoading } = useEquipmentMakes();
+  const { data: equipmentModels, isLoading: modelsLoading } = useEquipmentModels(selectedMakeId);
+  const { data: equipmentDimensions, isLoading: dimensionsLoading } = useEquipmentDimensions(selectedModelId);
 
   useEffect(() => {
-    if (!isEquipmentMode || !equipmentDimensions) return;
-    const lengthIn = typeof equipmentDimensions.length === 'number' ? equipmentDimensions.length : 0;
-    const widthIn = typeof equipmentDimensions.width === 'number' ? equipmentDimensions.width : 0;
-    const heightIn = typeof equipmentDimensions.height === 'number' ? equipmentDimensions.height : 0;
-    const weightLbs = typeof equipmentDimensions.weight === 'number' ? equipmentDimensions.weight : 0;
+    if (!isEquipmentMode || !selectedModelId || !equipmentDimensions) return;
+    const lengthIn = typeof equipmentDimensions.length === 'number' ? equipmentDimensions.length : null;
+    const widthIn = typeof equipmentDimensions.width === 'number' ? equipmentDimensions.width : null;
+    const heightIn = typeof equipmentDimensions.height === 'number' ? equipmentDimensions.height : null;
+    const weightLbs = typeof equipmentDimensions.weight === 'number' ? equipmentDimensions.weight : null;
 
-    if (lengthIn) setManualLength(String(lengthIn / 12));
-    if (widthIn) setManualWidth(String(widthIn / 12));
-    if (heightIn) setManualHeight(String(heightIn / 12));
-    if (weightLbs) setManualWeight(String(weightLbs));
-  }, [equipmentDimensions, isEquipmentMode]);
+    if (lengthIn !== null) setManualLength((lengthIn / 12).toFixed(2));
+    if (widthIn !== null) setManualWidth((widthIn / 12).toFixed(2));
+    if (heightIn !== null) setManualHeight((heightIn / 12).toFixed(2));
+    if (weightLbs !== null) setManualWeight(String(weightLbs));
+    // Auto-populate images from equipment database
+    setManualFrontImage(equipmentDimensions.front_image_url || null);
+    setManualSideImage(equipmentDimensions.side_image_url || null);
+  }, [equipmentDimensions, isEquipmentMode, selectedModelId]);
   const [lengthUnit, setLengthUnit] = useState('feet');
   const [weightUnit, setWeightUnit] = useState('lbs');
   const [selectedCargoTypeId, setSelectedCargoTypeId] = useState<string | null>(null);
   const [lastAddedItem, setLastAddedItem] = useState<CargoItem | null>(null);
+
+  // Recent items quick-add (stored in localStorage)
+  interface RecentCargoItem {
+    id: string;
+    description: string;
+    length: number; // feet
+    width: number; // feet
+    height: number; // feet
+    weight: number; // lbs
+  }
+  const [recentItems, setRecentItems] = useState<RecentCargoItem[]>([]);
+
+  // Load recent items from localStorage on mount
+  useEffect(() => {
+    try {
+      const savedRecent = localStorage.getItem('recentCargoItems');
+      if (savedRecent) {
+        const parsed = JSON.parse(savedRecent);
+        if (Array.isArray(parsed)) {
+          setRecentItems(parsed.slice(0, 5));
+        }
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }, []);
 
   const feetToLengthUnit = (feet: number): number => {
     switch (lengthUnit) {
@@ -786,6 +817,16 @@ export default function LoadPlannerEditPage() {
     }
   };
 
+  const handleQuickAddRecent = (item: RecentCargoItem) => {
+    setManualLength(feetToLengthUnit(item.length).toFixed(2));
+    setManualWidth(feetToLengthUnit(item.width).toFixed(2));
+    setManualHeight(feetToLengthUnit(item.height).toFixed(2));
+    setManualWeight(lbsToWeightUnit(item.weight).toFixed(2));
+    setManualDescription(item.description);
+    setManualQuantity('1');
+    toast.success(`Loaded "${item.description}" — adjust quantity and add`);
+  };
+
   const handleAddManualItem = () => {
     const rawLength = parseFloat(manualLength) || 0;
     const rawWidth = parseFloat(manualWidth) || 0;
@@ -830,17 +871,33 @@ export default function LoadPlannerEditPage() {
       dimensionsSource: isEquipmentMode && selectedModelId ? 'database' : 'manual',
       equipmentMakeId: isEquipmentMode && selectedMakeId ? selectedMakeId : undefined,
       equipmentModelId: isEquipmentMode && selectedModelId ? selectedModelId : undefined,
-      imageUrl1: manualImageUrl1 || undefined,
-      imageUrl2: manualImageUrl2 || undefined,
-      imageUrl3: manualImageUrl3 || undefined,
-      imageUrl4: manualImageUrl4 || undefined,
+      imageUrl1: isEquipmentMode ? (manualFrontImage || undefined) : (manualImageUrl1 || undefined),
+      imageUrl2: isEquipmentMode ? (manualSideImage || undefined) : (manualImageUrl2 || undefined),
+      imageUrl3: !isEquipmentMode ? (manualImageUrl3 || undefined) : undefined,
+      imageUrl4: !isEquipmentMode ? (manualImageUrl4 || undefined) : undefined,
       sortOrder: cargoItems.length,
     };
 
     setCargoItems([...cargoItems, newItem]);
     setLastAddedItem(newItem);
     setManualValidation({});
-    
+
+    // Track recent items for quick-add
+    const newRecentItem: RecentCargoItem = {
+      id: `recent-${Date.now()}`,
+      description: manualDescription.trim(),
+      length: lengthFeet,
+      width: widthFeet,
+      height: heightFeet,
+      weight: weightLbs,
+    };
+    setRecentItems(prev => {
+      const filtered = prev.filter(item => item.description.toLowerCase() !== newRecentItem.description.toLowerCase());
+      const updated = [newRecentItem, ...filtered].slice(0, 5);
+      localStorage.setItem('recentCargoItems', JSON.stringify(updated));
+      return updated;
+    });
+
     // Clear form
     setManualDescription('');
     setManualLength('');
@@ -854,6 +911,8 @@ export default function LoadPlannerEditPage() {
     setManualImageUrl2('');
     setManualImageUrl3('');
     setManualImageUrl4('');
+    setManualFrontImage(null);
+    setManualSideImage(null);
     
   };
 
@@ -1111,53 +1170,62 @@ export default function LoadPlannerEditPage() {
       return 'PER_UNIT';
     };
 
-    const quoteData: Partial<LoadPlannerQuote> = {
-      quoteNumber,
-      status,
+    // Build payload matching the API CreateLoadPlannerQuoteDto
+    // - Server auto-generates: quoteNumber, status, id fields
+    // - @IsDecimal() fields must be strings (e.g. "32.77570000")
+    // - Omit customerEmail when empty (fails @IsEmail())
+    const toDecimal = (n: number, digits: number) => n.toFixed(digits);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const quoteData: Record<string, any> = {
       customerName,
-      customerEmail,
-      customerPhone,
-      customerCompany,
-      customerAddress,
-      customerCity,
-      customerState,
-      customerZip,
-      internalNotes,
+      ...(customerEmail ? { customerEmail } : {}),
+      ...(customerPhone ? { customerPhone } : {}),
+      ...(customerCompany ? { customerCompany } : {}),
+      ...(routePolyline ? { routePolyline } : {}),
       pickupAddress,
       pickupCity,
       pickupState,
       pickupZip,
-      pickupLat,
-      pickupLng,
+      pickupLat: toDecimal(pickupLat, 8),
+      pickupLng: toDecimal(pickupLng, 8),
       dropoffAddress,
       dropoffCity,
       dropoffState,
       dropoffZip,
-      dropoffLat,
-      dropoffLng,
-      distanceMiles,
+      dropoffLat: toDecimal(dropoffLat, 8),
+      dropoffLng: toDecimal(dropoffLng, 8),
+      distanceMiles: toDecimal(distanceMiles, 2),
       durationMinutes,
-      cargoItems,
-      trucks,
+      cargoItems: cargoItems.map(({ id: _id, ...item }, index) => ({
+        ...item,
+        sortOrder: index,
+      })),
+      trucks: trucks.map(({ id: _id, truckIndex: _ti, truckTypeId: _ttid, ...truck }, index) => ({
+        ...truck,
+        deckLengthFt: toDecimal(truck.deckLengthFt, 2),
+        deckWidthFt: toDecimal(truck.deckWidthFt, 2),
+        deckHeightFt: toDecimal(truck.deckHeightFt, 2),
+        ...(truck.wellLengthFt != null ? { wellLengthFt: toDecimal(truck.wellLengthFt, 2) } : {}),
+        sortOrder: index,
+      })),
       serviceItems: serviceItems.map((item, index) => ({
-        id: item.id,
         serviceTypeId: item.serviceTypeId || item.name,
         name: item.name,
         rateCents: item.rate,
-        quantity: item.quantity,
+        quantity: toDecimal(item.quantity, 2),
         totalCents: item.total,
-        truckIndex: item.truckIndex,
+        ...(item.truckIndex != null ? { truckIndex: item.truckIndex } : {}),
         sortOrder: index,
       })),
       accessorials: accessorialItems.map((item, index) => ({
-        id: item.id,
         accessorialTypeId: item.accessorial_type_id || item.name,
         name: item.name,
         billingUnit: normalizeBillingUnit(item.billing_unit),
         rateCents: item.rate,
-        quantity: item.quantity,
+        quantity: toDecimal(item.quantity, 2),
         totalCents: item.total,
-        notes: item.notes,
+        ...(item.notes ? { notes: item.notes } : {}),
         sortOrder: index,
       })),
       subtotalCents,
@@ -1172,7 +1240,7 @@ export default function LoadPlannerEditPage() {
         await createMutation.mutateAsync(quoteData);
         toast.success('Quote created successfully');
       }
-      router.push('/quotes');
+      router.push('/quote-history');
     } catch (error) {
       toast.error('Failed to save quote');
       console.error('Failed to save quote:', error);
@@ -1287,7 +1355,7 @@ export default function LoadPlannerEditPage() {
                   ? 'Update Quote'
                   : 'Save Quote'}
             </Button>
-            <Button variant="outline" onClick={() => router.push('/quotes')}>
+            <Button variant="outline" onClick={() => router.push('/quote-history')}>
               <Trash2 className="h-4 w-4 mr-2" />
               Cancel
             </Button>
@@ -1596,10 +1664,32 @@ export default function LoadPlannerEditPage() {
                       Add Cargo Item
                     </CardTitle>
                     <CardDescription>
-                      Enter cargo details manually
+                      Enter cargo details manually. Toggle Equipment Mode to select from the database.
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-6">
+                  <CardContent className="space-y-4">
+                    {/* Recent Items Quick-Add */}
+                    {recentItems.length > 0 && (
+                      <div className="p-3 bg-muted/30 rounded-lg border border-dashed">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-xs font-medium text-muted-foreground">Quick Add Recent:</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {recentItems.map((item) => (
+                            <button
+                              key={item.id}
+                              type="button"
+                              onClick={() => handleQuickAddRecent(item)}
+                              className="px-3 py-1.5 text-xs bg-background border rounded-full hover:bg-accent hover:border-primary transition-colors truncate max-w-[200px]"
+                              title={`${item.description} (${item.length.toFixed(1)}×${item.width.toFixed(1)}×${item.height.toFixed(1)} ft, ${item.weight.toFixed(0)} lbs)`}
+                            >
+                              {item.description}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Equipment Mode Toggle */}
                     <div className="flex items-center justify-between p-3 bg-muted/60 border border-border/60 rounded-lg shadow-sm">
                       <div className="flex items-center gap-2">
@@ -1607,7 +1697,7 @@ export default function LoadPlannerEditPage() {
                         <div>
                           <span className="text-sm font-medium">Equipment Mode</span>
                           <p className="text-xs text-muted-foreground">
-                            Select a preset to auto-fill dimensions and weight
+                            Select equipment from database to auto-fill dimensions
                           </p>
                         </div>
                       </div>
@@ -1619,53 +1709,154 @@ export default function LoadPlannerEditPage() {
                           if (!checked) {
                             setSelectedMakeId('');
                             setSelectedModelId('');
+                            setManualFrontImage(null);
+                            setManualSideImage(null);
                           }
                         }}
                       />
                     </div>
 
                     {isEquipmentMode && (
-                      <div className="grid grid-cols-2 gap-3 p-3 border rounded-lg bg-blue-50/50">
+                      <div className="grid grid-cols-2 gap-4 p-4 border rounded-lg bg-blue-50/50">
                         <div>
-                          <Label className="text-xs">Make</Label>
+                          <Label className="text-xs font-medium">Make</Label>
                           <SearchableSelect
                             value={selectedMakeId}
                             onChange={(value) => {
                               const makeId = value || '';
                               setSelectedMakeId(makeId);
                               setSelectedModelId('');
+                              setManualFrontImage(null);
+                              setManualSideImage(null);
                             }}
                             options={(equipmentMakes || []).map((make) => ({
                               value: make.id,
                               label: make.name,
                             }))}
-                            placeholder="Select make..."
+                            placeholder={makesLoading ? 'Loading makes...' : 'Select make...'}
                             className="w-full"
                           />
                         </div>
                         <div>
-                          <Label className="text-xs">Model</Label>
+                          <Label className="text-xs font-medium">Model</Label>
                           <SearchableSelect
                             value={selectedModelId}
                             onChange={(value) => {
                               const modelId = value || '';
                               setSelectedModelId(modelId);
-                              const model = (equipmentModels || []).find((item) => item.id === modelId);
-                              if (model) {
-                                setManualDescription(`${model.name}`);
+                              if (modelId) {
+                                const make = (equipmentMakes || []).find((item) => item.id === selectedMakeId);
+                                const model = (equipmentModels || []).find((item) => item.id === modelId);
+                                if (make && model) {
+                                  setManualDescription(`${make.name} ${model.name}`);
+                                } else if (model) {
+                                  setManualDescription(model.name);
+                                }
                               }
                             }}
                             options={(equipmentModels || []).map((model) => ({
                               value: model.id,
                               label: model.name,
                             }))}
-                            placeholder={selectedMakeId ? 'Select model...' : 'Select make first'}
+                            placeholder={!selectedMakeId ? 'Select make first' : modelsLoading ? 'Loading models...' : 'Select model...'}
                             className="w-full"
                           />
                         </div>
-                        <div className="col-span-2 text-xs text-muted-foreground">
-                          Auto-fills dimensions and weight. You can still adjust values below.
-                        </div>
+
+                        {/* Loading feedback */}
+                        {dimensionsLoading && selectedModelId && (
+                          <div className="col-span-2 text-xs text-blue-600 bg-blue-50 p-2 rounded animate-pulse">
+                            Loading dimensions...
+                          </div>
+                        )}
+
+                        {/* Success feedback */}
+                        {equipmentDimensions && !dimensionsLoading && selectedModelId && (
+                          <div className={`col-span-2 text-xs p-2 rounded ${
+                            !equipmentDimensions.weight
+                              ? 'text-amber-600 bg-amber-50'
+                              : 'text-green-600 bg-green-50'
+                          }`}>
+                            {!equipmentDimensions.weight
+                              ? 'Dimensions loaded but weight is missing — please enter weight below'
+                              : 'Dimensions loaded from database — you can still modify them below'}
+                          </div>
+                        )}
+
+                        {/* No dimensions warning */}
+                        {selectedModelId && !dimensionsLoading && !equipmentDimensions && (
+                          <div className="col-span-2 text-xs text-yellow-600 bg-yellow-50 p-2 rounded">
+                            No dimensions in database for this model — please enter manually
+                          </div>
+                        )}
+
+                        {/* Equipment Images - Front & Side */}
+                        {selectedModelId && (
+                          <div className="col-span-2 space-y-2">
+                            <Label className="text-xs font-medium flex items-center gap-1">
+                              <Image className="h-3 w-3" />
+                              Equipment Images
+                            </Label>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <Label className="text-[10px] text-muted-foreground mb-1 block">Front View</Label>
+                                {manualFrontImage ? (
+                                  <div className="relative aspect-video rounded-md overflow-hidden border bg-muted">
+                                    <img
+                                      src={manualFrontImage}
+                                      alt="Front view"
+                                      className="w-full h-full object-contain"
+                                      onError={(e) => {
+                                        (e.target as HTMLImageElement).style.display = 'none';
+                                      }}
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="aspect-video rounded-md border border-dashed bg-muted/30 flex items-center justify-center">
+                                    <div className="text-center text-muted-foreground">
+                                      <Image className="h-6 w-6 mx-auto mb-1 opacity-40" />
+                                      <span className="text-[10px]">No front image</span>
+                                    </div>
+                                  </div>
+                                )}
+                                <Input
+                                  value={manualFrontImage || ''}
+                                  onChange={(e) => setManualFrontImage(e.target.value || null)}
+                                  placeholder="Front image URL..."
+                                  className="mt-1 text-xs h-7"
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-[10px] text-muted-foreground mb-1 block">Side View</Label>
+                                {manualSideImage ? (
+                                  <div className="relative aspect-video rounded-md overflow-hidden border bg-muted">
+                                    <img
+                                      src={manualSideImage}
+                                      alt="Side view"
+                                      className="w-full h-full object-contain"
+                                      onError={(e) => {
+                                        (e.target as HTMLImageElement).style.display = 'none';
+                                      }}
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="aspect-video rounded-md border border-dashed bg-muted/30 flex items-center justify-center">
+                                    <div className="text-center text-muted-foreground">
+                                      <Image className="h-6 w-6 mx-auto mb-1 opacity-40" />
+                                      <span className="text-[10px]">No side image</span>
+                                    </div>
+                                  </div>
+                                )}
+                                <Input
+                                  value={manualSideImage || ''}
+                                  onChange={(e) => setManualSideImage(e.target.value || null)}
+                                  placeholder="Side image URL..."
+                                  className="mt-1 text-xs h-7"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -1705,8 +1896,8 @@ export default function LoadPlannerEditPage() {
                       </div>
                     </div>
 
-                    {/* Cargo Type Selector */}
-                    <div>
+                    {/* Cargo Type Selector - only when not in equipment mode */}
+                    {!isEquipmentMode && <div>
                       <Label className="text-xs font-medium">Cargo Type (with standard dimensions)</Label>
                       <SearchableSelect
                         value={selectedCargoTypeId || ''}
@@ -1752,7 +1943,7 @@ export default function LoadPlannerEditPage() {
                           setManualDescription(customName);
                         }}
                       />
-                    </div>
+                    </div>}
 
                     {/* Manual Entry Form */}
                     <div className="space-y-4">
@@ -1824,46 +2015,55 @@ export default function LoadPlannerEditPage() {
                         <p className="text-xs text-amber-600">{manualValidation.weightWarning}</p>
                       )}
 
-                      <div className="space-y-3 rounded-lg border bg-muted/20 p-4">
-                        <div className="flex items-center gap-2">
-                          <Image className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm font-medium">Cargo Images (optional)</span>
+                      {/* Cargo Images - only shown when NOT in equipment mode */}
+                      {!isEquipmentMode && (
+                        <div className="space-y-2">
+                          <Label className="text-xs font-medium flex items-center gap-1">
+                            <Image className="h-3 w-3" />
+                            Cargo Images (optional)
+                          </Label>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <Label className="text-[10px] text-muted-foreground mb-1 block">Image 1</Label>
+                              {manualImageUrl1 && (
+                                <div className="relative aspect-video rounded-md overflow-hidden border bg-muted mb-1">
+                                  <img
+                                    src={manualImageUrl1}
+                                    alt="Cargo image 1"
+                                    className="w-full h-full object-contain"
+                                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                  />
+                                </div>
+                              )}
+                              <Input
+                                value={manualImageUrl1}
+                                onChange={(e) => setManualImageUrl1(e.target.value)}
+                                placeholder="https://..."
+                                className="text-xs"
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-[10px] text-muted-foreground mb-1 block">Image 2</Label>
+                              {manualImageUrl2 && (
+                                <div className="relative aspect-video rounded-md overflow-hidden border bg-muted mb-1">
+                                  <img
+                                    src={manualImageUrl2}
+                                    alt="Cargo image 2"
+                                    className="w-full h-full object-contain"
+                                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                  />
+                                </div>
+                              )}
+                              <Input
+                                value={manualImageUrl2}
+                                onChange={(e) => setManualImageUrl2(e.target.value)}
+                                placeholder="https://..."
+                                className="text-xs"
+                              />
+                            </div>
+                          </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <Label className="text-xs font-medium">Image URL 1</Label>
-                            <Input
-                              value={manualImageUrl1}
-                              onChange={(e) => setManualImageUrl1(e.target.value)}
-                              placeholder="https://..."
-                            />
-                          </div>
-                          <div>
-                            <Label className="text-xs font-medium">Image URL 2</Label>
-                            <Input
-                              value={manualImageUrl2}
-                              onChange={(e) => setManualImageUrl2(e.target.value)}
-                              placeholder="https://..."
-                            />
-                          </div>
-                          <div>
-                            <Label className="text-xs font-medium">Image URL 3</Label>
-                            <Input
-                              value={manualImageUrl3}
-                              onChange={(e) => setManualImageUrl3(e.target.value)}
-                              placeholder="https://..."
-                            />
-                          </div>
-                          <div>
-                            <Label className="text-xs font-medium">Image URL 4</Label>
-                            <Input
-                              value={manualImageUrl4}
-                              onChange={(e) => setManualImageUrl4(e.target.value)}
-                              placeholder="https://..."
-                            />
-                          </div>
-                        </div>
-                      </div>
+                      )}
 
                       <div className="flex items-end gap-3">
                         <div className="w-24">

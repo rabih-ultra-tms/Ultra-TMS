@@ -97,13 +97,37 @@ const readSqlIfPresent = async (filePath: string): Promise<string> => {
   }
 };
 
+const ensureEquipmentTables = async (prisma: PrismaClient): Promise<void> => {
+  const repoRoot = path.resolve(__dirname, '..', '..', '..', '..');
+  const migrationPath = path.join(
+    repoRoot, 'apps', 'api', 'prisma', 'migrations',
+    '20260206123000_add_equipment_tables', 'migration.sql'
+  );
+  const migrationSql = await readSqlIfPresent(migrationPath);
+  if (migrationSql) {
+    // Split on semicolons and execute each statement (CREATE TABLE IF NOT EXISTS is idempotent)
+    const statements = migrationSql
+      .split(';')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    for (const stmt of statements) {
+      await prisma.$executeRawUnsafe(`${stmt};`);
+    }
+  }
+};
+
 export async function seedEquipment(prisma: PrismaClient): Promise<void> {
+  // Ensure equipment tables exist (idempotent — uses CREATE TABLE IF NOT EXISTS)
+  await ensureEquipmentTables(prisma);
+
   const repoRoot = path.resolve(__dirname, '..', '..', '..', '..');
   const makesSqlPath = path.join(repoRoot, 'dev_docs', 'makes_rows.sql');
   const modelsSqlPath = path.join(repoRoot, 'dev_docs', 'models_rows.sql');
+  const dimensionsSqlPath = path.join(repoRoot, 'dev_docs', 'equipment_dimensions_rows.sql');
 
   const makesSqlRaw = await readSqlIfPresent(makesSqlPath);
   const modelsSqlRaw = await readSqlIfPresent(modelsSqlPath);
+  const dimensionsSqlRaw = await readSqlIfPresent(dimensionsSqlPath);
 
   if (makesSqlRaw && modelsSqlRaw) {
     await prisma.$executeRawUnsafe(
@@ -111,12 +135,21 @@ export async function seedEquipment(prisma: PrismaClient): Promise<void> {
     );
     await prisma.$executeRawUnsafe(makesSqlRaw);
     await prisma.$executeRawUnsafe(modelsSqlRaw);
+
+    // Load equipment dimensions from SQL dump (must come after models)
+    if (dimensionsSqlRaw) {
+      await prisma.$executeRawUnsafe(dimensionsSqlRaw);
+    }
   } else if (makesSqlRaw) {
     const makesSql = ensureOnConflictDoNothing(makesSqlRaw, 'makes');
     await prisma.$executeRawUnsafe(makesSql);
   } else if (modelsSqlRaw) {
     const modelsSql = ensureOnConflictDoNothing(modelsSqlRaw, 'models');
     await prisma.$executeRawUnsafe(modelsSql);
+    if (dimensionsSqlRaw) {
+      const dimensionsSql = ensureOnConflictDoNothing(dimensionsSqlRaw, 'equipment_dimensions');
+      await prisma.$executeRawUnsafe(dimensionsSql);
+    }
   }
 
   for (const make of makeSeeds) {

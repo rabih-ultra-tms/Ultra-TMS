@@ -45,8 +45,12 @@ export class EquipmentService {
           ORDER BY popularity_rank ASC NULLS LAST, name ASC
         `
       );
-      return rows;
-    } catch (_error) {
+      return (rows || []).map((row: any) => ({
+        ...row,
+        popularity_rank: row.popularity_rank != null ? Number(row.popularity_rank) : null,
+      }));
+    } catch (error) {
+      if (this.isMissingTableError(error)) return [];
       throw new InternalServerErrorException('Failed to load equipment makes');
     }
   }
@@ -63,7 +67,8 @@ export class EquipmentService {
         `
       );
       return rows;
-    } catch (_error) {
+    } catch (error) {
+      if (this.isMissingTableError(error)) return [];
       throw new InternalServerErrorException('Failed to load equipment models');
     }
   }
@@ -110,21 +115,44 @@ export class EquipmentService {
         has_dimensions: dimensionModelIds.has(model.id),
         has_rates: rateModelIds.has(model.id),
       }));
-    } catch (_error) {
+    } catch (error) {
+      if (this.isMissingTableError(error)) return [];
       throw new InternalServerErrorException('Failed to load equipment models availability');
     }
+  }
+
+  private toNumber(val: unknown): number | null {
+    if (val === null || val === undefined) return null;
+    return Number(val);
   }
 
   async getDimensions(modelId: string) {
     try {
       const rows = await this.prisma.$queryRaw<unknown[]>(Prisma.sql`
-        SELECT *
+        SELECT
+          id,
+          model_id,
+          length_inches AS length,
+          width_inches AS width,
+          height_inches AS height,
+          weight_lbs AS weight,
+          front_image_url,
+          side_image_url
         FROM equipment_dimensions
-        WHERE model_id = ${modelId}
+        WHERE model_id::text = ${modelId}
         LIMIT 1
       `);
-      return rows[0] ?? null;
-    } catch (_error) {
+      const row = rows[0] as Record<string, unknown> | undefined;
+      if (!row) return null;
+      return {
+        ...row,
+        length: this.toNumber(row.length),
+        width: this.toNumber(row.width),
+        height: this.toNumber(row.height),
+        weight: this.toNumber(row.weight),
+      };
+    } catch (error) {
+      if (this.isMissingTableError(error)) return null;
       throw new InternalServerErrorException('Failed to load equipment dimensions');
     }
   }
@@ -134,11 +162,12 @@ export class EquipmentService {
       const rows = await this.prisma.$queryRaw<unknown[]>(Prisma.sql`
         SELECT *
         FROM rates
-        WHERE model_id = ${modelId} AND location = ${location}
+        WHERE model_id::text = ${modelId} AND location = ${location}
         LIMIT 1
       `);
       return rows[0] ?? null;
-    } catch (_error) {
+    } catch (error) {
+      if (this.isMissingTableError(error)) return null;
       throw new InternalServerErrorException('Failed to load equipment rates');
     }
   }
@@ -148,9 +177,10 @@ export class EquipmentService {
       return await this.prisma.$queryRaw<unknown[]>(Prisma.sql`
         SELECT *
         FROM rates
-        WHERE model_id = ${modelId}
+        WHERE model_id::text = ${modelId}
       `);
-    } catch (_error) {
+    } catch (error) {
+      if (this.isMissingTableError(error)) return [];
       throw new InternalServerErrorException('Failed to load equipment rates');
     }
   }
@@ -190,8 +220,10 @@ export class EquipmentService {
         }
       }
 
+      if (this.isMissingTableError(lastError)) return { makes: [], models: [] };
       throw lastError;
-    } catch (_error) {
+    } catch (error) {
+      if (this.isMissingTableError(error)) return { makes: [], models: [] };
       throw new InternalServerErrorException('Failed to search equipment');
     }
   }
@@ -215,7 +247,7 @@ export class EquipmentService {
       await this.prisma.$executeRaw(Prisma.sql`
         UPDATE equipment_dimensions
         SET ${updateSet}
-        WHERE model_id = ${modelId}
+        WHERE model_id::text = ${modelId}
       `);
 
       return { success: true };
