@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultra TMS - Project Status</title>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --primary-color: #0f172a;
+            /* Navy */
+            --accent-color: #3b82f6;
+            /* Blue */
+            --success-color: #22c55e;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --neutral-color: #94a3b8;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            margin: 0;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1.5rem;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-pill {
+            background-color: #dcfce7;
+            color: #166534;
+            padding: 0.25rem 0.75rem;
+            border-radius: 99px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .meta-info {
+            text-align: right;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-title {
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-stat {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .timeline-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .timeline-header {
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        .timeline-header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+        }
+
+        .week-row {
+            display: flex;
+            gap: 1.5rem;
+            padding: 1.5rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .week-row:last-child {
+            border-bottom: none;
+        }
+
+        .week-indicator {
+            width: 140px;
+            flex-shrink: 0;
+        }
+
+        .week-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .week-badge.done {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .week-badge.current {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .week-badge.planned {
+            background-color: #f1f5f9;
+            color: #64748b;
+        }
+
+        .week-dates {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .week-content {
+            flex: 1;
+        }
+
+        .week-title {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+            color: var(--primary-color);
+        }
+
+        .week-goal {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            font-style: italic;
+        }
+
+        .deliverables-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+
+        .deliverables-column h4 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 4px;
+        }
+
+        .check-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .check-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            margin-bottom: 0.4rem;
+            font-size: 0.9rem;
+        }
+
+        .check-item.done {
+            color: var(--text-primary);
+        }
+
+        .check-item.pending {
+            color: var(--text-secondary);
+        }
+
+        .icon {
+            margin-top: 3px;
+        }
+
+        .vs-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+
+        .vs-table th,
+        .vs-table td {
+            text-align: left;
+            padding: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .vs-table th {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .tag {
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: #f1f5f9;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div>
+                <h1>📦 Ultra TMS <span style="font-weight: 300; margin: 0 10px; color: #cbd5e1;">|</span> Project Status
+                </h1>
+            </div>
+            <div class="meta-info">
+                <div><strong>Sprint:</strong> 12-Week MVP Delivery</div>
+                <div style="margin-top: 4px;">Last Updated: Feb 13, 2026</div>
+            </div>
+        </header>
+
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">Current Phase</div>
+                <div class="card-stat">Week 2</div>
+                <div style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                    Transitioning to Phase 2 (Patterns)
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">Overall Health</div>
+                <div class="card-stat" style="color: var(--success-color);">On Track</div>
+                <div style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                    100% of planned deliverables met.
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">Next Major Release</div>
+                <div class="card-stat" style="font-size: 1.5rem;">Carrier Module</div>
+                <div style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                    Target: End of Week 4 (Feb 28)
+                </div>
+            </div>
+        </div>
+
+        <div class="timeline-section">
+            <div class="timeline-header">
+                <h2>📊 Planned vs. Actual Performance</h2>
+            </div>
+            <table class="vs-table">
+                <thead>
+                    <tr>
+                        <th>Week</th>
+                        <th>Planned Focus</th>
+                        <th>Actual Delivery</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Week 1</strong><br><span style="font-size:0.8em; color:#64748b">Feb 1-7</span></td>
+                        <td>
+                            • Fix 10 Critical Bugs<br>
+                            • Resolve 404 Errors<br>
+                            • Security Patching
+                        </td>
+                        <td>
+                            • 10/10 Bugs Fixed<br>
+                            • Zero critical errors remaining<br>
+                            • Security audit passed
+                        </td>
+                        <td><span class="status-pill">100% Complete</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Week 2</strong><br><span style="font-size:0.8em; color:#64748b">Feb 8-14</span></td>
+                        <td>
+                            • Design System Foundation<br>
+                            • 8 Core Components<br>
+                            • UI Standardization
+                        </td>
+                        <td>
+                            • Design Tokens Implemented<br>
+                            • All 8 components built<br>
+                            • "Rabih V1" UI Approved
+                        </td>
+                        <td><span class="status-pill">100% Complete</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="timeline-section">
+            <div class="timeline-header">
+                <h2>🗓️ Detailed 12-Week Roadmap & Deliverables</h2>
+            </div>
+
+            <!-- WEEK 1 -->
+            <div class="week-row">
+                <div class="week-indicator">
+                    <div class="week-badge done">Week 1</div>
+                    <div class="week-dates">Feb 1 - Feb 7</div>
+                </div>
+                <div class="week-content">
+                    <div class="week-title">Phase 0: Emergency Fixes</div>
+                    <div class="week-goal">Goal: Stabilize the platform and fix critical routing/security issues.</div>
+
+                    <div class="deliverables-grid">
+                        <div class="deliverables-column">
+                            <h4>🛡️ Key Deliverables</h4>
+                            <ul class="check-list">
+                                <li class="check-item done"><span class="icon">✅</span> Fixed Carrier/Load Detail 404s
+                                </li>
+                                <li class="check-item done"><span class="icon">✅</span> Removed JWT/Roles from Console
+                                </li>
+                                <li class="check-item done"><span class="icon">✅</span> Secured LocalStorage Tokens</li>
+                                <li class="check-item done"><span class="icon">✅</span> Replaced Window.Confirm Dialogs
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="deliverables-column">
+                            <h4>💻 Screens / UI</h4>
+                            <ul class="check-list">
+                                <li class="check-item done"><span class="icon">🖥️</span> Carrier Detail Page (Fix)</li>
+                                <li class="check-item done"><span class="icon">🖥️</span> Load History Page (Fix)</li>
+                                <li class="check-item done"><span class="icon">🧩</span> ConfirmDialog Component</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WEEK 2 -->
+            <div class="week-row">
+                <div class="week-indicator">
+                    <div class="week-badge done">Week 2</div>
+                    <div class="week-dates">Feb 8 - Feb 14</div>
+                </div>
+                <div class="week-content">
+                    <div class="week-title">Phase 1: Design Foundation</div>
+                    <div class="week-goal">Goal: Establish visual consistency and core UI components.</div>
+
+                    <div class="deliverables-grid">
+                        <div class="deliverables-column">
+                            <h4>🎨 Key Deliverables</h4>
+                            <ul class="check-list">
+                                <li class="check-item done"><span class="icon">✅</span> Design Tokens (Colors, Type)
+                                </li>
+                                <li class="check-item done"><span class="icon">✅</span> Tailwind Configuration</li>
+                                <li class="check-item done"><span class="icon">✅</span> DataGrid (Sort, Filter, Page)
+                                </li>
+                                <li class="check-item done"><span class="icon">✅</span> KPI Card & Filter Bar</li>
+                            </ul>
+                        </div>
+                        <div class="deliverables-column">
+                            <h4>💻 Screens / UI</h4>
+                            <ul class="check-list">
+                                <li class="check-item done"><span class="icon">🧩</span> StatusBadge Component</li>
+                                <li class="check-item done"><span class="icon">🧩</span> KPICard Component</li>
+                                <li class="check-item done"><span class="icon">🧩</span> FilterBar Component</li>
+                                <li class="check-item done"><span class="icon">🧩</span> Loading Skeletons</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WEEK 3-4 (PHASE 2) -->
+            <div class="week-row">
+                <div class="week-indicator">
+                    <div class="week-badge current">Week 3-4</div>
+                    <div class="week-dates">Feb 15 - Feb 28</div>
+                </div>
+                <div class="week-content">
+                    <div class="week-title">Phase 2: Patterns & Carrier Refactor</div>
+                    <div class="week-goal">Goal: Standardize layouts and rebuild the Carrier module.</div>
+
+                    <div class="deliverables-grid">
+                        <div class="deliverables-column">
+                            <h4>🔨 Key Deliverables</h4>
+                            <ul class="check-list">
+                                <li class="check-item pending"><span class="icon">⬜</span> List Page Pattern Template
+                                </li>
+                                <li class="check-item pending"><span class="icon">⬜</span> Detail Page Pattern Template
+                                </li>
+                                <li class="check-item pending"><span class="icon">⬜</span> Form Page Pattern Template
+                                </li>
+                                <li class="check-item pending"><span class="icon">⬜</span> Carrier Module Upgrade</li>
+                            </ul>
+                        </div>
+                        <div class="deliverables-column">
+                            <h4>💻 Screens / UI</h4>
+                            <ul class="check-list">
+                                <li class="check-item pending"><span class="icon">🖥️</span> Carrier List (New Grid)
+                                </li>
+                                <li class="check-item pending"><span class="icon">🖥️</span> Carrier Detail
+                                    (Tabs/Header)</li>
+                                <li class="check-item pending"><span class="icon">🧩</span> DateRangePicker</li>
+                                <li class="check-item pending"><span class="icon">🧩</span> StopList Component</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WEEK 5-6 (PHASE 3) -->
+            <div class="week-row" style="opacity: 0.8;">
+                <div class="week-indicator">
+                    <div class="week-badge planned">Week 5-6</div>
+                    <div class="week-dates">Mar 1 - Mar 14</div>
+                </div>
+                <div class="week-content">
+                    <div class="week-title">Phase 3: TMS Viewing & Sales</div>
+                    <div class="week-goal">Goal: Core TMS read-only views and Sales/Quoting modules.</div>
+
+                    <div class="deliverables-grid">
+                        <div class="deliverables-column">
+                            <h4>🔨 Key Deliverables</h4>
+                            <ul class="check-list">
+                                <li class="check-item pending"><span class="icon">⬜</span> Order Management (Read)</li>
+                                <li class="check-item pending"><span class="icon">⬜</span> Load Management (Read)</li>
+                                <li class="check-item pending"><span class="icon">⬜</span> Quotes & Sales Workflow</li>
+                                <li class="check-item pending"><span class="icon">⬜</span> Public Tracking Page</li>
+                            </ul>
+                        </div>
+                        <div class="deliverables-column">
+                            <h4>💻 Screens / UI</h4>
+                            <ul class="check-list">
+                                <li class="check-item pending"><span class="icon">🖥️</span> Orders List & Detail</li>
+                                <li class="check-item pending"><span class="icon">🖥️</span> Loads List & Detail</li>
+                                <li class="check-item pending"><span class="icon">🖥️</span> Quote Builder</li>
+                                <li class="check-item pending"><span class="icon">🖥️</span> Tracking Portal</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WEEK 7-8 (PHASE 4) -->
+            <div class="week-row" style="opacity: 0.6;">
+                <div class="week-indicator">
+                    <div class="week-badge planned">Week 7-8</div>
+                    <div class="week-dates">Mar 15 - Mar 28</div>
+                </div>
+                <div class="week-content">
+                    <div class="week-title">Phase 4: TMS Forms & Operations</div>
+                    <div class="week-goal">Goal: Complex data entry, dispatching, and stop management.</div>
+
+                    <div class="deliverables-grid">
+                        <div class="deliverables-column">
+                            <h4>🔨 Key Deliverables</h4>
+                            <ul class="check-list">
+                                <li class="check-item pending"><span class="icon">⬜</span> Multi-step Order Entry</li>
+                                <li class="check-item pending"><span class="icon">⬜</span> Load Dispatching</li>
+                                <li class="check-item pending"><span class="icon">⬜</span> WebSocket Infrastructure</li>
+                                <li class="check-item pending"><span class="icon">⬜</span> Operations Dashboard</li>
+                            </ul>
+                        </div>
+                        <div class="deliverables-column">
+                            <h4>💻 Screens / UI</h4>
+                            <ul class="check-list">
+                                <li class="check-item pending"><span class="icon">🖥️</span> Create Order Wizard</li>
+                                <li class="check-item pending"><span class="icon">🖥️</span> Dispatch Board (Kanban)
+                                </li>
+                                <li class="check-item pending"><span class="icon">🖥️</span> Check Call Log</li>
+                                <li class="check-item pending"><span class="icon">🖥️</span> Stop Management UI</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WEEK 9-10 (PHASE 5) -->
+            <div class="week-row" style="opacity: 0.5;">
+                <div class="week-indicator">
+                    <div class="week-badge planned">Week 9-10</div>
+                    <div class="week-dates">Mar 29 - Apr 11</div>
+                </div>
+                <div class="week-content">
+                    <div class="week-title">Phase 5: Messaging & Testing</div>
+                    <div class="week-goal">Goal: Automation, maps, and rigorous testing.</div>
+                    <ul class="check-list">
+                        <li class="check-item pending"><span class="icon">⬜</span> Automated Emails (Rate Con, POD)</li>
+                        <li class="check-item pending"><span class="icon">⬜</span> Live Tracking Map</li>
+                        <li class="check-item pending"><span class="icon">⬜</span> Business Rules Engine</li>
+                        <li class="check-item pending"><span class="icon">⬜</span> End-to-End Testing Suite</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- WEEK 11-12 (PHASE 6) -->
+            <div class="week-row" style="opacity: 0.5;">
+                <div class="week-indicator">
+                    <div class="week-badge planned">Week 11-12</div>
+                    <div class="week-dates">Apr 12 - Apr 25</div>
+                </div>
+                <div class="week-content">
+                    <div class="week-title">Phase 6: Financials & Go-Live</div>
+                    <div class="week-goal">Goal: Accounting, commissions, and production launch.</div>
+                    <ul class="check-list">
+                        <li class="check-item pending"><span class="icon">⬜</span> Invoicing & Settlements</li>
+                        <li class="check-item pending"><span class="icon">⬜</span> Commission Dashboard</li>
+                        <li class="check-item pending"><span class="icon">⬜</span> FMCSA Integration</li>
+                        <li class="check-item pending"><span class="icon">🚀</span> <strong>GO LIVE</strong></li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+
+</html>
