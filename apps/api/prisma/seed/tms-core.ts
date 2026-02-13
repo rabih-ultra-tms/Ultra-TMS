@@ -66,26 +66,79 @@ export async function seedTMSCore(prisma: any, tenantIds: string[]): Promise<voi
     const users = await prisma.user.findMany({ where: { tenantId }, take: 5 });
     if (companies.length === 0) continue;
 
-    // Orders (20 per tenant = 100 total)
-    for (let i = 0; i < 20; i++) {
+    // Orders (10 per tenant - down from 20 for lighter dev datasets)
+    for (let i = 0; i < 10; i++) {
+      const cityPair = faker.helpers.arrayElement(CITY_PAIRS);
+      const equipmentType = getEquipmentType();
+      const orderStatus = getOrderStatus();
+      const baseRate = faker.number.float({ min: 1500, max: 5000, fractionDigits: 2 });
+      const accessorialCharges = faker.number.float({ min: 0, max: 500, fractionDigits: 2 });
+      const fuelSurcharge = baseRate * faker.number.float({ min: 0.05, max: 0.10, fractionDigits: 4 });
+      const totalCharges = baseRate + accessorialCharges + fuelSurcharge;
+      const weightLbs = faker.number.int({ min: 1000, max: 45000 });
+      const isHeavy = weightLbs > 20000;
+      const isLongDistance = cityPair.distance > 1000;
+      const createdDaysAgo = faker.number.int({ min: 0, max: 30 });
+      const createdAt = new Date(Date.now() - createdDaysAgo * 24 * 60 * 60 * 1000);
+      const requiredDeliveryDate = new Date(createdAt.getTime() + faker.number.int({ min: 3, max: 7 }) * 24 * 60 * 60 * 1000);
+
       const order = await prisma.order.create({
         data: {
           tenantId,
-          orderNumber: `ORD-${Date.now()}-${i}`,
+          orderNumber: `ORD-${Date.now()}-${String(i + 1).padStart(3, '0')}`,
+          customerReference: `CUST-${faker.string.alphanumeric(8).toUpperCase()}`,
+          poNumber: `PO-${faker.string.alphanumeric(6).toUpperCase()}`,
+          bolNumber: faker.datatype.boolean(0.7) ? `BOL-${faker.string.alphanumeric(6).toUpperCase()}` : null,
           customerId: companies[Math.floor(Math.random() * companies.length)].id,
-          status: faker.helpers.arrayElement(['QUOTED', 'BOOKED', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED']),
-          equipmentType: faker.helpers.arrayElement(['DRY_VAN', 'REEFER', 'FLATBED', 'STEP_DECK']),
-          customerRate: parseFloat(faker.commerce.price({ min: 1000, max: 5000 })),
-          totalCharges: parseFloat(faker.commerce.price({ min: 1000, max: 5000 })),
-          commodity: faker.commerce.product(),
+          customerContactId: null, // TODO: Add contacts seeding
           salesRepId: users[Math.floor(Math.random() * users.length)].id,
-          createdById: users[Math.floor(Math.random() * users.length)].id,
-          externalId: `SEED-ORDER-${total + i + 1}`,
+          quoteId: null,
+
+          // Status
+          status: orderStatus,
+
+          // Financial
+          customerRate: baseRate,
+          accessorialCharges,
+          fuelSurcharge,
+          totalCharges,
+          currency: 'USD',
+
+          // Freight details
+          commodity: cityPair.commodity,
+          commodityClass: faker.helpers.arrayElement(COMMODITY_CLASSES),
+          weightLbs,
+          pieceCount: faker.number.int({ min: 1, max: 50 }),
+          palletCount: Math.ceil(weightLbs / 1500), // Rough calc: 1500 lbs per pallet
+          equipmentType,
+          isHeavy,
+          isLongDistance,
+
+          // Special handling (10% chance each)
+          isHazmat: faker.datatype.boolean(0.10),
+          hazmatClass: faker.datatype.boolean(0.10) ? faker.helpers.arrayElement(['3', '8', '2.1', '1.4']) : null,
+          temperatureMin: equipmentType === 'REEFER' ? faker.number.int({ min: 34, max: 38 }) : null,
+          temperatureMax: equipmentType === 'REEFER' ? faker.number.int({ min: 38, max: 42 }) : null,
+          isHot: faker.datatype.boolean(0.10),
+          isTeam: isLongDistance ? faker.datatype.boolean(0.15) : false,
+          isExpedited: faker.datatype.boolean(0.05),
+
+          // Dates
+          orderDate: createdAt,
+          requiredDeliveryDate,
+          actualDeliveryDate: orderStatus === 'DELIVERED' ? new Date(requiredDeliveryDate.getTime() + faker.number.int({ min: -2, max: 2 }) * 24 * 60 * 60 * 1000) : null,
+
+          // Notes
+          specialInstructions: faker.datatype.boolean(0.6) ? faker.lorem.sentence() : null,
+          internalNotes: faker.datatype.boolean(0.4) ? faker.lorem.sentence() : null,
+
+          // Metadata
+          externalId: `SEED-ORDER-${String(total + i + 1).padStart(4, '0')}`,
           sourceSystem: 'FAKER_SEED',
-          customFields: {
-            poNumber: faker.string.alphanumeric(8).toUpperCase(),
-            specialInstructions: faker.lorem.sentence(),
-          },
+          customFields: {},
+          createdById: users[Math.floor(Math.random() * users.length)].id,
+          createdAt,
+          updatedAt: new Date(),
         },
       });
       total++;
