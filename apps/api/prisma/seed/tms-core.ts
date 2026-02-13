@@ -145,19 +145,49 @@ export async function seedTMSCore(prisma: any, tenantIds: string[]): Promise<voi
 
       // Create stops for order (2-4 stops per order)
       const stopCount = faker.number.int({ min: 2, max: 4 });
+      const transitDays = Math.ceil(cityPair.distance / 500);
+
       for (let j = 0; j < stopCount; j++) {
+        const isFirst = j === 0;
+        const isLast = j === stopCount - 1;
+
+        // Determine location
+        const location = isFirst
+          ? cityPair.origin
+          : isLast
+            ? cityPair.destination
+            : { city: faker.location.city(), state: faker.location.state({ abbreviated: true }), zip: faker.location.zipCode() };
+
+        // Calculate scheduled appointment
+        const daysOffset = isFirst ? 1 : isLast ? transitDays + 1 : Math.ceil((transitDays + 1) * (j / (stopCount - 1)));
+        const scheduledAppointment = new Date(createdAt.getTime() + daysOffset * 24 * 60 * 60 * 1000);
+
+        // Determine stop status based on order status
+        let stopStatus = 'PENDING';
+        if (orderStatus === 'DELIVERED') {
+          stopStatus = 'DEPARTED';
+        } else if (orderStatus === 'IN_TRANSIT' && isFirst) {
+          stopStatus = 'DEPARTED';
+        }
+
         await prisma.stop.create({
           data: {
             tenantId,
             orderId: order.id,
-            stopType: j === 0 ? 'PICKUP' : j === stopCount - 1 ? 'DELIVERY' : faker.helpers.arrayElement(['PICKUP', 'DELIVERY']),
+            stopType: isFirst ? 'PICKUP' : isLast ? 'DELIVERY' : faker.helpers.arrayElement(['PICKUP', 'DELIVERY']),
             stopSequence: j + 1,
             addressLine1: faker.location.streetAddress(),
-            city: faker.location.city(),
-            state: faker.location.state({ abbreviated: true }),
-            postalCode: faker.location.zipCode(),
+            city: location.city,
+            state: location.state,
+            postalCode: location.zip,
             country: 'USA',
-            status: faker.helpers.arrayElement(['PENDING', 'ARRIVED', 'DEPARTED', 'CANCELLED']),
+            status: stopStatus,
+            contactName: faker.person.fullName(),
+            contactPhone: faker.phone.number(),
+            contactEmail: faker.internet.email(),
+            appointmentRequired: faker.datatype.boolean(0.6),
+            scheduledAppointment,
+            specialInstructions: faker.datatype.boolean(0.4) ? faker.lorem.sentence() : null,
             externalId: `SEED-STOP-${total}-${j}`,
             sourceSystem: 'FAKER_SEED',
           },
