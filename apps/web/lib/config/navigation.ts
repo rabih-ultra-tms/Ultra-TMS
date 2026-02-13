@@ -13,6 +13,7 @@ import {
   TrendingUp,
   ListChecks,
   Truck,
+  ToggleRight,
 } from "lucide-react";
 import type { NavConfig } from "@/lib/types/navigation";
 
@@ -135,6 +136,12 @@ export const navigationConfig: NavConfig = {
           href: "/admin/audit-logs",
           icon: ClipboardList,
           requiredRoles: ["ADMIN", "SUPER_ADMIN"],
+        },
+        {
+          title: "Services",
+          href: "/admin/tenant-services",
+          icon: ToggleRight,
+          requiredRoles: ["SUPER_ADMIN"],
         },
         {
           title: "Settings",

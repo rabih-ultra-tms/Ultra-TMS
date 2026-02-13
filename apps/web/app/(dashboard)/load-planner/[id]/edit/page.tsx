@@ -10,6 +10,7 @@ import {
   useEquipmentModels,
   useEquipmentDimensions,
   useInlandServiceTypes,
+  useEnabledServices,
 } from '@/lib/hooks/operations';
 import type { InlandServiceType } from '@/lib/hooks/operations/use-inland-service-types';
 import type { LoadPlannerQuote, CargoItem, LoadPlannerTruck } from '@/types/load-planner-quotes';
@@ -51,6 +52,22 @@ interface StandardCargoType {
   height: number;
   weight: number;
 }
+
+const LOAD_TYPES = [
+  'Pallet',
+  'Box',
+  'Crate',
+  'Drum',
+  'Bundle',
+  'Roll',
+  'Container',
+  'Equipment',
+  'Furniture',
+  'Electronics',
+  'Machinery',
+  'Vehicle',
+  'Other',
+];
 
 const STANDARD_CARGO_TYPES: StandardCargoType[] = [
   { id: 'std-20ft-container', name: '20ft Shipping Container', length: 20, width: 8, height: 8.5, weight: 5000 },
@@ -121,6 +138,7 @@ interface AccessorialItem {
   total: number;
   rateInput?: string;
   notes?: string;
+  showNotes?: boolean;
 }
 
 type AccessorialBillingUnit =
@@ -183,8 +201,57 @@ export default function LoadPlannerEditPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps -- stable fallback, intentionally omitted from deps
   const inlandServiceTypes = inlandServiceTypesData || [];
 
+  // Tenant services (tab visibility)
+  const { data: enabledServices } = useEnabledServices();
+  const ALL_TABS = useMemo(() => ['customer', 'route', 'cargo', 'trucks', 'pricing', 'permits', 'compare', 'pdf'] as const, []);
+  const TAB_CONFIG = useMemo(() => [
+    { value: 'customer' as const, label: 'Customer', icon: User },
+    { value: 'route' as const, label: 'Route', icon: MapPin },
+    { value: 'cargo' as const, label: 'Cargo', icon: Package },
+    { value: 'trucks' as const, label: 'Trucks', icon: Truck },
+    { value: 'pricing' as const, label: 'Pricing', icon: DollarSign },
+    { value: 'permits' as const, label: 'Permits', icon: FileWarning },
+    { value: 'compare' as const, label: 'Compare', icon: GitCompareArrows },
+    { value: 'pdf' as const, label: 'PDF', icon: FileText },
+  ], []);
+  const enabledTabs: string[] = useMemo(() => {
+    if (!enabledServices) return [...ALL_TABS] as string[];
+    return ALL_TABS.filter((tab) => enabledServices.includes(tab)) as string[];
+  }, [enabledServices, ALL_TABS]);
+  const isTabEnabled = useCallback(
+    (tab: string) => enabledTabs.includes(tab),
+    [enabledTabs],
+  );
+  const getNextTab = useCallback(
+    (current: string): string | null => {
+      const idx = enabledTabs.indexOf(current);
+      if (idx === -1 || idx >= enabledTabs.length - 1) return null;
+      return enabledTabs[idx + 1] ?? null;
+    },
+    [enabledTabs],
+  );
+  const getPrevTab = useCallback(
+    (current: string): string | null => {
+      const idx = enabledTabs.indexOf(current);
+      if (idx <= 0) return null;
+      return enabledTabs[idx - 1] ?? null;
+    },
+    [enabledTabs],
+  );
+  const getTabLabel = useCallback(
+    (tab: string) => TAB_CONFIG.find((t) => t.value === tab)?.label ?? tab,
+    [TAB_CONFIG],
+  );
+
   // Tab state
   const [activeTab, setActiveTab] = useState('customer');
+
+  // Fall back to first enabled tab if current tab is disabled
+  useEffect(() => {
+    if (enabledServices && !enabledTabs.includes(activeTab)) {
+      setActiveTab(enabledTabs[0] ?? 'customer');
+    }
+  }, [enabledServices, enabledTabs, activeTab]);
 
   // Quote basics
   const [quoteNumber, setQuoteNumber] = useState('');
@@ -297,6 +364,23 @@ export default function LoadPlannerEditPage() {
   const [manualSideImage, setManualSideImage] = useState<string | null>(null);
   const [customCargoTypes, setCustomCargoTypes] = useState<SearchableSelectOption[]>([]);
   const [manualValidation, setManualValidation] = useState<{ description?: string; dimensions?: string; weightWarning?: string }>({});
+
+  // Contains Items feature - for items inside cargo
+  const [containsItems, setContainsItems] = useState(false);
+  const [innerCargoItems, setInnerCargoItems] = useState<CargoItem[]>([]);
+  const [innerItemLoadType, setInnerItemLoadType] = useState('');
+  const [innerItemDescription, setInnerItemDescription] = useState('');
+  const [innerItemLength, setInnerItemLength] = useState('');
+  const [innerItemWidth, setInnerItemWidth] = useState('');
+  const [innerItemHeight, setInnerItemHeight] = useState('');
+  const [innerItemWeight, setInnerItemWeight] = useState('');
+  const [innerItemValidation, setInnerItemValidation] = useState<{
+    description?: string;
+    length?: string;
+    width?: string;
+    height?: string;
+    weight?: string;
+  }>({});
 
   const { data: equipmentMakes, isLoading: makesLoading } = useEquipmentMakes();
   const { data: equipmentModels, isLoading: modelsLoading } = useEquipmentModels(selectedMakeId);
@@ -430,6 +514,7 @@ export default function LoadPlannerEditPage() {
     cargoItems.map((item) => ({
       id: item.id,
       description: item.description,
+      loadType: item.loadType,
       quantity: item.quantity,
       length: (item.lengthIn || 0) / 12,
       width: (item.widthIn || 0) / 12,
@@ -442,6 +527,8 @@ export default function LoadPlannerEditPage() {
       maxLayers: item.maxLayers,
       orientation: item.orientation ? Number(item.orientation) : undefined,
       geometry: (item.geometryType as LoadItem['geometry']) || 'box',
+      notes: item.notes,
+      parentCargoId: item.parentCargoId,
     }))
   ), [cargoItems]);
 
@@ -681,9 +768,9 @@ export default function LoadPlannerEditPage() {
     if (quote && isEdit) {
       setQuoteNumber(quote.quoteNumber);
       setStatus(quote.status);
-      setCustomerName(quote.customerName);
-      setCustomerEmail(quote.customerEmail);
-      setCustomerPhone(quote.customerPhone);
+      setCustomerName(quote.customerName || '');
+      setCustomerEmail(quote.customerEmail || '');
+      setCustomerPhone(quote.customerPhone || '');
       setCustomerCompany(quote.customerCompany || '');
       setCustomerAddress(quote.customerAddress || '');
       setCustomerCity(quote.customerCity || '');
@@ -747,6 +834,7 @@ export default function LoadPlannerEditPage() {
           total: Number(item.totalCents ?? 0),
           rateInput: undefined,
           notes: item.notes || '',
+          showNotes: false,
         } as AccessorialItem;
       });
       setAccessorialItems(mappedAccessorialItems);
@@ -876,9 +964,24 @@ export default function LoadPlannerEditPage() {
       imageUrl3: !isEquipmentMode ? (manualImageUrl3 || undefined) : undefined,
       imageUrl4: !isEquipmentMode ? (manualImageUrl4 || undefined) : undefined,
       sortOrder: cargoItems.length,
+      notes: containsItems && innerCargoItems.length > 0
+        ? `Contains ${innerCargoItems.length} item${innerCargoItems.length > 1 ? 's' : ''}`
+        : undefined,
     };
 
-    setCargoItems([...cargoItems, newItem]);
+    // Add main cargo item and inner cargo items to the list
+    const itemsToAdd = [newItem];
+    if (containsItems && innerCargoItems.length > 0) {
+      // Update sort order and set parent ID for inner items
+      const innerItemsWithUpdatedSort = innerCargoItems.map((item, index) => ({
+        ...item,
+        sortOrder: cargoItems.length + 1 + index,
+        parentCargoId: newItem.id, // Link to parent cargo
+      }));
+      itemsToAdd.push(...innerItemsWithUpdatedSort);
+    }
+
+    setCargoItems([...cargoItems, ...itemsToAdd]);
     setLastAddedItem(newItem);
     setManualValidation({});
 
@@ -913,7 +1016,105 @@ export default function LoadPlannerEditPage() {
     setManualImageUrl4('');
     setManualFrontImage(null);
     setManualSideImage(null);
-    
+
+    // Clear inner cargo items if they were added
+    if (containsItems && innerCargoItems.length > 0) {
+      setInnerCargoItems([]);
+      setInnerItemLoadType('');
+      setInnerItemDescription('');
+      setInnerItemLength('');
+      setInnerItemWidth('');
+      setInnerItemHeight('');
+      setInnerItemWeight('');
+      setInnerItemValidation({});
+      toast.success(`Cargo added with ${innerCargoItems.length} item${innerCargoItems.length > 1 ? 's' : ''}`);
+    }
+  };
+
+  // Handler for adding inner cargo items (items inside cargo)
+  const handleAddInnerCargoItem = () => {
+    // Validate all fields
+    const validation: {
+      description?: string;
+      length?: string;
+      width?: string;
+      height?: string;
+      weight?: string;
+    } = {};
+
+    if (!innerItemDescription.trim()) {
+      validation.description = 'Description is required';
+    }
+
+    const rawLength = parseFloat(innerItemLength);
+    if (!innerItemLength || isNaN(rawLength) || rawLength <= 0) {
+      validation.length = 'Enter a valid length greater than 0';
+    }
+
+    const rawWidth = parseFloat(innerItemWidth);
+    if (!innerItemWidth || isNaN(rawWidth) || rawWidth <= 0) {
+      validation.width = 'Enter a valid width greater than 0';
+    }
+
+    const rawHeight = parseFloat(innerItemHeight);
+    if (!innerItemHeight || isNaN(rawHeight) || rawHeight <= 0) {
+      validation.height = 'Enter a valid height greater than 0';
+    }
+
+    const rawWeight = parseFloat(innerItemWeight);
+    if (!innerItemWeight || isNaN(rawWeight) || rawWeight <= 0) {
+      validation.weight = 'Enter a valid weight greater than 0';
+    }
+
+    setInnerItemValidation(validation);
+
+    // Stop if there are validation errors
+    if (Object.keys(validation).length > 0) {
+      return;
+    }
+
+    // Convert dimensions from feet to inches
+    const newInnerItem: CargoItem = {
+      id: `inner-cargo-${Date.now()}`,
+      description: innerItemDescription,
+      loadType: innerItemLoadType || undefined,
+      quantity: 1,
+      lengthIn: rawLength * 12,
+      widthIn: rawWidth * 12,
+      heightIn: rawHeight * 12,
+      weightLbs: rawWeight,
+      stackable: false,
+      bottomOnly: false,
+      fragile: false,
+      hazmat: false,
+      sortOrder: innerCargoItems.length,
+    };
+
+    setInnerCargoItems([...innerCargoItems, newInnerItem]);
+
+    // Clear form and validation
+    setInnerItemLoadType('');
+    setInnerItemDescription('');
+    setInnerItemLength('');
+    setInnerItemWidth('');
+    setInnerItemHeight('');
+    setInnerItemWeight('');
+    setInnerItemValidation({});
+
+    toast.success('Item added successfully');
+  };
+
+  // Handler for deleting inner cargo item
+  const handleDeleteInnerCargoItem = (id: string) => {
+    setInnerCargoItems(prevItems => {
+      // Filter out the deleted item and recalculate sortOrder
+      const filteredItems = prevItems.filter(item => item.id !== id);
+      return filteredItems.map((item, index) => ({
+        ...item,
+        sortOrder: index,
+      }));
+    });
+    toast.success('Item removed');
   };
 
   // Pricing helper functions
@@ -1035,6 +1236,8 @@ export default function LoadPlannerEditPage() {
       rate: defaultType?.default_rate || 0,
       total: defaultType?.default_rate || 0,
       rateInput: undefined,
+      showNotes: false,
+      notes: '',
     };
     setAccessorialItems([...accessorialItems, newItem]);
   };
@@ -1085,6 +1288,12 @@ export default function LoadPlannerEditPage() {
 
   const removeAccessorialItem = (index: number) => {
     setAccessorialItems(accessorialItems.filter((_, i) => i !== index));
+  };
+
+  const toggleAccessorialNotes = (index: number) => {
+    const updated = [...accessorialItems];
+    updated[index]!.showNotes = !updated[index]!.showNotes;
+    setAccessorialItems(updated);
   };
 
   // Utility functions from utils
@@ -1367,42 +1576,23 @@ export default function LoadPlannerEditPage() {
         <div className="lg:col-span-2">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="w-full flex overflow-x-auto no-scrollbar">
-              <TabsTrigger value="customer" className="flex-1 min-w-[80px] flex items-center justify-center gap-1">
-                <User className="h-3 w-3 hidden sm:inline" />
-                <span>Customer</span>
-              </TabsTrigger>
-              <TabsTrigger value="route" className="flex-1 min-w-[80px] flex items-center justify-center gap-1">
-                <MapPin className="h-3 w-3 hidden sm:inline" />
-                <span>Route</span>
-              </TabsTrigger>
-              <TabsTrigger value="cargo" className="flex-1 min-w-[80px] flex items-center justify-center gap-1">
-                <Package className="h-3 w-3 hidden sm:inline" />
-                <span>Cargo</span>
-              </TabsTrigger>
-              <TabsTrigger value="trucks" className="flex-1 min-w-[80px] flex items-center justify-center gap-1">
-                <Truck className="h-3 w-3 hidden sm:inline" />
-                <span>Trucks</span>
-              </TabsTrigger>
-              <TabsTrigger value="pricing" className="flex-1 min-w-[80px] flex items-center justify-center gap-1">
-                <DollarSign className="h-3 w-3 hidden sm:inline" />
-                <span>Pricing</span>
-              </TabsTrigger>
-              <TabsTrigger value="permits" className="flex-1 min-w-[80px] flex items-center justify-center gap-1">
-                <FileWarning className="h-3 w-3 hidden sm:inline" />
-                <span>Permits</span>
-              </TabsTrigger>
-              <TabsTrigger value="compare" className="flex-1 min-w-[80px] flex items-center justify-center gap-1">
-                <GitCompareArrows className="h-3 w-3 hidden sm:inline" />
-                <span>Compare</span>
-              </TabsTrigger>
-              <TabsTrigger value="pdf" className="flex-1 min-w-[80px] flex items-center justify-center gap-1">
-                <FileText className="h-3 w-3 hidden sm:inline" />
-                <span>PDF</span>
-              </TabsTrigger>
+              {TAB_CONFIG.filter((tab) => isTabEnabled(tab.value)).map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    className="flex-1 min-w-[80px] flex items-center justify-center gap-1"
+                  >
+                    <Icon className="h-3 w-3 hidden sm:inline" />
+                    <span>{tab.label}</span>
+                  </TabsTrigger>
+                );
+              })}
             </TabsList>
 
             {/* Customer Tab */}
-            <TabsContent value="customer" className="mt-4">
+            {isTabEnabled('customer') && <TabsContent value="customer" className="mt-4">
               <Card>
                 <CardHeader>
                   <CardTitle>Customer Information</CardTitle>
@@ -1437,16 +1627,18 @@ export default function LoadPlannerEditPage() {
                   />
 
                   <div className="flex gap-4 pt-4">
-                    <Button onClick={() => setActiveTab('route')} className="flex-1">
-                      Continue to Route
-                    </Button>
+                    {getNextTab('customer') && (
+                      <Button onClick={() => setActiveTab(getNextTab('customer')!)} className="flex-1">
+                        Continue to {getTabLabel(getNextTab('customer')!)}
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
-            </TabsContent>
+            </TabsContent>}
 
             {/* Route Tab */}
-            <TabsContent value="route" className="mt-4 space-y-4">
+            {isTabEnabled('route') && <TabsContent value="route" className="mt-4 space-y-4">
               <Card>
                 <CardHeader>
                   <div className="flex items-center gap-2">
@@ -1558,17 +1750,21 @@ export default function LoadPlannerEditPage() {
               </Card>
 
               <div className="flex gap-4">
-                <Button variant="outline" onClick={() => setActiveTab('customer')}>
-                  Back
-                </Button>
-                <Button onClick={() => setActiveTab('cargo')} className="flex-1">
-                  Continue to Cargo
-                </Button>
+                {getPrevTab('route') && (
+                  <Button variant="outline" onClick={() => setActiveTab(getPrevTab('route')!)}>
+                    Back
+                  </Button>
+                )}
+                {getNextTab('route') && (
+                  <Button onClick={() => setActiveTab(getNextTab('route')!)} className="flex-1">
+                    Continue to {getTabLabel(getNextTab('route')!)}
+                  </Button>
+                )}
               </div>
-            </TabsContent>
+            </TabsContent>}
 
             {/* Cargo Tab */}
-            <TabsContent value="cargo" className="mt-4 space-y-4">
+            {isTabEnabled('cargo') && <TabsContent value="cargo" className="mt-4 space-y-4">
               {/* Entry Mode Toggle */}
               <Card>
                 <CardContent className="pt-4">
@@ -1661,7 +1857,7 @@ export default function LoadPlannerEditPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Plus className="h-5 w-5" />
-                      Add Cargo Item
+                      Add Cargo
                     </CardTitle>
                     <CardDescription>
                       Enter cargo details manually. Toggle Equipment Mode to select from the database.
@@ -1711,6 +1907,35 @@ export default function LoadPlannerEditPage() {
                             setSelectedModelId('');
                             setManualFrontImage(null);
                             setManualSideImage(null);
+                          }
+                        }}
+                      />
+                    </div>
+
+                    {/* Contains Items Toggle */}
+                    <div className="flex items-center justify-between p-3 bg-muted/60 border border-border/60 rounded-lg shadow-sm">
+                      <div className="flex items-center gap-2">
+                        <Layers className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <span className="text-sm font-medium">Contains Items</span>
+                          <p className="text-xs text-muted-foreground">
+                            Add items inside this cargo (e.g., items in a container)
+                          </p>
+                        </div>
+                      </div>
+                      <Switch
+                        className="bg-background/70 data-[state=checked]:bg-primary/90 shadow-inner ring-1 ring-border/60"
+                        checked={containsItems}
+                        onCheckedChange={(checked) => {
+                          setContainsItems(checked);
+                          if (!checked) {
+                            setInnerCargoItems([]);
+                            setInnerItemLoadType('');
+                            setInnerItemDescription('');
+                            setInnerItemLength('');
+                            setInnerItemWidth('');
+                            setInnerItemHeight('');
+                            setInnerItemWeight('');
                           }
                         }}
                       />
@@ -1801,7 +2026,7 @@ export default function LoadPlannerEditPage() {
                               <div>
                                 <Label className="text-[10px] text-muted-foreground mb-1 block">Front View</Label>
                                 {manualFrontImage ? (
-                                  <div className="relative aspect-video rounded-md overflow-hidden border bg-muted">
+                                  <div className="relative aspect-video rounded-md overflow-hidden border bg-muted group">
                                     <img
                                       src={manualFrontImage}
                                       alt="Front view"
@@ -1810,6 +2035,13 @@ export default function LoadPlannerEditPage() {
                                         (e.target as HTMLImageElement).style.display = 'none';
                                       }}
                                     />
+                                    <button
+                                      type="button"
+                                      onClick={() => setManualFrontImage(null)}
+                                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </button>
                                   </div>
                                 ) : (
                                   <div className="aspect-video rounded-md border border-dashed bg-muted/30 flex items-center justify-center">
@@ -1820,16 +2052,25 @@ export default function LoadPlannerEditPage() {
                                   </div>
                                 )}
                                 <Input
-                                  value={manualFrontImage || ''}
-                                  onChange={(e) => setManualFrontImage(e.target.value || null)}
-                                  placeholder="Front image URL..."
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      const reader = new FileReader();
+                                      reader.onloadend = () => {
+                                        setManualFrontImage(reader.result as string);
+                                      };
+                                      reader.readAsDataURL(file);
+                                    }
+                                  }}
                                   className="mt-1 text-xs h-7"
                                 />
                               </div>
                               <div>
                                 <Label className="text-[10px] text-muted-foreground mb-1 block">Side View</Label>
                                 {manualSideImage ? (
-                                  <div className="relative aspect-video rounded-md overflow-hidden border bg-muted">
+                                  <div className="relative aspect-video rounded-md overflow-hidden border bg-muted group">
                                     <img
                                       src={manualSideImage}
                                       alt="Side view"
@@ -1838,6 +2079,13 @@ export default function LoadPlannerEditPage() {
                                         (e.target as HTMLImageElement).style.display = 'none';
                                       }}
                                     />
+                                    <button
+                                      type="button"
+                                      onClick={() => setManualSideImage(null)}
+                                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </button>
                                   </div>
                                 ) : (
                                   <div className="aspect-video rounded-md border border-dashed bg-muted/30 flex items-center justify-center">
@@ -1848,9 +2096,18 @@ export default function LoadPlannerEditPage() {
                                   </div>
                                 )}
                                 <Input
-                                  value={manualSideImage || ''}
-                                  onChange={(e) => setManualSideImage(e.target.value || null)}
-                                  placeholder="Side image URL..."
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      const reader = new FileReader();
+                                      reader.onloadend = () => {
+                                        setManualSideImage(reader.result as string);
+                                      };
+                                      reader.readAsDataURL(file);
+                                    }
+                                  }}
                                   className="mt-1 text-xs h-7"
                                 />
                               </div>
@@ -2026,42 +2283,253 @@ export default function LoadPlannerEditPage() {
                             <div>
                               <Label className="text-[10px] text-muted-foreground mb-1 block">Image 1</Label>
                               {manualImageUrl1 && (
-                                <div className="relative aspect-video rounded-md overflow-hidden border bg-muted mb-1">
+                                <div className="relative aspect-video rounded-md overflow-hidden border bg-muted mb-1 group">
                                   <img
                                     src={manualImageUrl1}
                                     alt="Cargo image 1"
                                     className="w-full h-full object-contain"
                                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                                   />
+                                  <button
+                                    type="button"
+                                    onClick={() => setManualImageUrl1('')}
+                                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </button>
                                 </div>
                               )}
                               <Input
-                                value={manualImageUrl1}
-                                onChange={(e) => setManualImageUrl1(e.target.value)}
-                                placeholder="https://..."
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => {
+                                      setManualImageUrl1(reader.result as string);
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
+                                }}
                                 className="text-xs"
                               />
                             </div>
                             <div>
                               <Label className="text-[10px] text-muted-foreground mb-1 block">Image 2</Label>
                               {manualImageUrl2 && (
-                                <div className="relative aspect-video rounded-md overflow-hidden border bg-muted mb-1">
+                                <div className="relative aspect-video rounded-md overflow-hidden border bg-muted mb-1 group">
                                   <img
                                     src={manualImageUrl2}
                                     alt="Cargo image 2"
                                     className="w-full h-full object-contain"
                                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                                   />
+                                  <button
+                                    type="button"
+                                    onClick={() => setManualImageUrl2('')}
+                                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </button>
                                 </div>
                               )}
                               <Input
-                                value={manualImageUrl2}
-                                onChange={(e) => setManualImageUrl2(e.target.value)}
-                                placeholder="https://..."
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => {
+                                      setManualImageUrl2(reader.result as string);
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
+                                }}
                                 className="text-xs"
                               />
                             </div>
                           </div>
+                        </div>
+                      )}
+
+                      {/* Inner Cargo Items Section - shown when Contains Items is enabled */}
+                      {containsItems && (
+                        <div className="space-y-3 p-4 border rounded-lg bg-blue-50/30">
+                          <div className="flex items-center gap-2 pb-2 border-b border-blue-200">
+                            <Layers className="h-4 w-4 text-blue-600" />
+                            <span className="text-sm font-medium text-blue-900">Items Inside Cargo</span>
+                          </div>
+
+                          {/* Add Item Form */}
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="col-span-2">
+                                <Label className="text-xs font-medium">Load Type</Label>
+                                <select
+                                  value={innerItemLoadType}
+                                  onChange={(e) => setInnerItemLoadType(e.target.value)}
+                                  className="w-full px-3 py-2 border rounded-md bg-background text-sm"
+                                >
+                                  <option value="">Select load type...</option>
+                                  {LOAD_TYPES.map((type) => (
+                                    <option key={type} value={type}>{type}</option>
+                                  ))}
+                                </select>
+                              </div>
+
+                              <div className="col-span-2">
+                                <Label className="text-xs font-medium">Description</Label>
+                                <Input
+                                  value={innerItemDescription}
+                                  onChange={(e) => {
+                                    setInnerItemDescription(e.target.value);
+                                    if (innerItemValidation.description) {
+                                      setInnerItemValidation({ ...innerItemValidation, description: undefined });
+                                    }
+                                  }}
+                                  placeholder="Item description..."
+                                  className={innerItemValidation.description ? 'border-red-500' : ''}
+                                />
+                                {innerItemValidation.description && (
+                                  <p className="text-xs text-red-600 mt-1">{innerItemValidation.description}</p>
+                                )}
+                              </div>
+
+                              <div>
+                                <Label className="text-xs font-medium">L (ft-in)</Label>
+                                <Input
+                                  type="number"
+                                  step="0.1"
+                                  min="0"
+                                  value={innerItemLength}
+                                  onChange={(e) => {
+                                    setInnerItemLength(e.target.value);
+                                    if (innerItemValidation.length) {
+                                      setInnerItemValidation({ ...innerItemValidation, length: undefined });
+                                    }
+                                  }}
+                                  placeholder="Length"
+                                  className={innerItemValidation.length ? 'border-red-500' : ''}
+                                />
+                                {innerItemValidation.length && (
+                                  <p className="text-xs text-red-600 mt-1">{innerItemValidation.length}</p>
+                                )}
+                              </div>
+
+                              <div>
+                                <Label className="text-xs font-medium">W (ft-in)</Label>
+                                <Input
+                                  type="number"
+                                  step="0.1"
+                                  min="0"
+                                  value={innerItemWidth}
+                                  onChange={(e) => {
+                                    setInnerItemWidth(e.target.value);
+                                    if (innerItemValidation.width) {
+                                      setInnerItemValidation({ ...innerItemValidation, width: undefined });
+                                    }
+                                  }}
+                                  placeholder="Width"
+                                  className={innerItemValidation.width ? 'border-red-500' : ''}
+                                />
+                                {innerItemValidation.width && (
+                                  <p className="text-xs text-red-600 mt-1">{innerItemValidation.width}</p>
+                                )}
+                              </div>
+
+                              <div>
+                                <Label className="text-xs font-medium">H (ft-in)</Label>
+                                <Input
+                                  type="number"
+                                  step="0.1"
+                                  min="0"
+                                  value={innerItemHeight}
+                                  onChange={(e) => {
+                                    setInnerItemHeight(e.target.value);
+                                    if (innerItemValidation.height) {
+                                      setInnerItemValidation({ ...innerItemValidation, height: undefined });
+                                    }
+                                  }}
+                                  placeholder="Height"
+                                  className={innerItemValidation.height ? 'border-red-500' : ''}
+                                />
+                                {innerItemValidation.height && (
+                                  <p className="text-xs text-red-600 mt-1">{innerItemValidation.height}</p>
+                                )}
+                              </div>
+
+                              <div>
+                                <Label className="text-xs font-medium">Wt (lbs)</Label>
+                                <Input
+                                  type="number"
+                                  step="1"
+                                  min="0"
+                                  value={innerItemWeight}
+                                  onChange={(e) => {
+                                    setInnerItemWeight(e.target.value);
+                                    if (innerItemValidation.weight) {
+                                      setInnerItemValidation({ ...innerItemValidation, weight: undefined });
+                                    }
+                                  }}
+                                  placeholder="Weight"
+                                  className={innerItemValidation.weight ? 'border-red-500' : ''}
+                                />
+                                {innerItemValidation.weight && (
+                                  <p className="text-xs text-red-600 mt-1">{innerItemValidation.weight}</p>
+                                )}
+                              </div>
+                            </div>
+
+                            <Button
+                              onClick={handleAddInnerCargoItem}
+                              variant="outline"
+                              size="sm"
+                              className="w-full"
+                            >
+                              <Plus className="h-4 w-4 mr-2" />
+                              Add Item
+                            </Button>
+                          </div>
+
+                          {/* Items List */}
+                          {innerCargoItems.length > 0 && (
+                            <div className="space-y-2">
+                              <div className="text-xs font-medium text-blue-900 pt-2 border-t border-blue-200">
+                                Added Items ({innerCargoItems.length})
+                              </div>
+                              <div className="space-y-2 max-h-60 overflow-y-auto">
+                                {innerCargoItems.map((item) => (
+                                  <div
+                                    key={item.id}
+                                    className="flex items-center justify-between p-3 bg-white rounded-md border text-sm"
+                                  >
+                                    <div className="flex-1 min-w-0">
+                                      <div className="font-medium truncate">{item.description}</div>
+                                      <div className="text-xs text-muted-foreground flex flex-wrap gap-x-3 gap-y-1 mt-1">
+                                        {item.loadType && (
+                                          <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded">
+                                            {item.loadType}
+                                          </span>
+                                        )}
+                                        <span>{(item.lengthIn / 12).toFixed(1)}×{(item.widthIn / 12).toFixed(1)}×{(item.heightIn / 12).toFixed(1)} ft</span>
+                                        <span>{item.weightLbs.toFixed(0)} lbs</span>
+                                      </div>
+                                    </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleDeleteInnerCargoItem(item.id)}
+                                      className="ml-2 h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
 
@@ -2077,7 +2545,7 @@ export default function LoadPlannerEditPage() {
                         </div>
                         <Button onClick={handleAddManualItem} className="flex-1">
                           <Plus className="h-4 w-4 mr-2" />
-                          Add Item
+                          Add Cargo
                         </Button>
                         {lastAddedItem && (
                           <Button
@@ -2121,7 +2589,7 @@ export default function LoadPlannerEditPage() {
               )}
 
               {/* Smart Truck Recommendation - Shows automatically calculated load plan */}
-              {activePlan && activePlan.loads.length > 0 && (
+              {activePlan && activePlan.loads.length > 0 && isTabEnabled('trucks') && (
                 <Card className="border-l-4 border-l-green-500">
                   <CardContent className="py-4">
                     <div className="flex items-center justify-between">
@@ -2141,9 +2609,11 @@ export default function LoadPlannerEditPage() {
                           </div>
                         </div>
                       </div>
-                      <Button variant="outline" size="sm" onClick={() => setActiveTab('trucks')}>
-                        Customize
-                      </Button>
+                      {isTabEnabled('trucks') && (
+                        <Button variant="outline" size="sm" onClick={() => setActiveTab('trucks')}>
+                          Customize
+                        </Button>
+                      )}
                     </div>
                     {activePlan.warnings.length > 0 && (
                       <div className="mt-3 flex flex-wrap gap-2">
@@ -2167,7 +2637,7 @@ export default function LoadPlannerEditPage() {
                     )}
                     {hasPermitRisk && (
                       <div className="mt-2 text-xs text-orange-600">
-                        Permits may be required - see Trucks tab for details
+                        Permits may be required{isTabEnabled('trucks') ? ' - see Trucks tab for details' : ''}
                       </div>
                     )}
                   </CardContent>
@@ -2175,17 +2645,21 @@ export default function LoadPlannerEditPage() {
               )}
 
               <div className="flex gap-4">
-                <Button variant="outline" onClick={() => setActiveTab('route')}>
-                  Back
-                </Button>
-                <Button onClick={() => setActiveTab('trucks')} className="flex-1">
-                  Continue to Trucks
-                </Button>
+                {getPrevTab('cargo') && (
+                  <Button variant="outline" onClick={() => setActiveTab(getPrevTab('cargo')!)}>
+                    Back
+                  </Button>
+                )}
+                {getNextTab('cargo') && (
+                  <Button onClick={() => setActiveTab(getNextTab('cargo')!)} className="flex-1">
+                    Continue to {getTabLabel(getNextTab('cargo')!)}
+                  </Button>
+                )}
               </div>
-            </TabsContent>
+            </TabsContent>}
 
             {/* Trucks Tab */}
-            <TabsContent value="trucks" className="mt-4 space-y-4">
+            {isTabEnabled('trucks') && <TabsContent value="trucks" className="mt-4 space-y-4">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -2300,17 +2774,21 @@ export default function LoadPlannerEditPage() {
               </Card>
 
               <div className="flex gap-4">
-                <Button variant="outline" onClick={() => setActiveTab('cargo')}>
-                  Back
-                </Button>
-                <Button onClick={() => setActiveTab('pricing')} className="flex-1">
-                  Continue to Pricing
-                </Button>
+                {getPrevTab('trucks') && (
+                  <Button variant="outline" onClick={() => setActiveTab(getPrevTab('trucks')!)}>
+                    Back
+                  </Button>
+                )}
+                {getNextTab('trucks') && (
+                  <Button onClick={() => setActiveTab(getNextTab('trucks')!)} className="flex-1">
+                    Continue to {getTabLabel(getNextTab('trucks')!)}
+                  </Button>
+                )}
               </div>
-            </TabsContent>
+            </TabsContent>}
 
             {/* Pricing Tab */}
-            <TabsContent value="pricing" className="mt-4 space-y-4">
+            {isTabEnabled('pricing') && <TabsContent value="pricing" className="mt-4 space-y-4">
               <Card>
                 <CardHeader>
                   <div className="flex items-center justify-between">
@@ -2411,6 +2889,16 @@ export default function LoadPlannerEditPage() {
                                       onChange={(e) => updateServiceItem(index, 'name', e.target.value || 'Custom Service')}
                                     />
                                   )}
+                                  <SearchableSelect
+                                    value={service.billing_unit}
+                                    onChange={(value) => updateServiceItem(index, 'billing_unit', value)}
+                                    options={billingUnitOptions.map((b): SearchableSelectOption => ({
+                                      value: b.value,
+                                      label: b.label,
+                                    }))}
+                                    placeholder="Unit"
+                                    className="w-[150px]"
+                                  />
                                   <Input
                                     className="w-16 sm:w-20"
                                     type="number"
@@ -2549,6 +3037,16 @@ export default function LoadPlannerEditPage() {
                                             onChange={(e) => updateServiceItem(index, 'name', e.target.value || 'Custom Service')}
                                           />
                                         )}
+                                        <SearchableSelect
+                                          value={service.billing_unit}
+                                          onChange={(value) => updateServiceItem(index, 'billing_unit', value)}
+                                          options={billingUnitOptions.map((b): SearchableSelectOption => ({
+                                            value: b.value,
+                                            label: b.label,
+                                          }))}
+                                          placeholder="Unit"
+                                          className="w-[150px]"
+                                        />
                                         <Input
                                           className="w-16"
                                           type="number"
@@ -2636,28 +3134,31 @@ export default function LoadPlannerEditPage() {
                   {/* Accessorial Charges Section - Collapsible */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <button
-                        type="button"
-                        onClick={() => setAccessorialsExpanded(!accessorialsExpanded)}
-                        className="flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors"
-                      >
-                        {accessorialsExpanded ? (
-                          <ChevronUp className="h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4" />
-                        )}
-                        Accessorial Charges
-                        {accessorialItems.length > 0 && (
-                          <Badge variant="secondary" className="ml-1">
-                            {accessorialItems.length}
-                          </Badge>
-                        )}
-                        {!accessorialsExpanded && accessorialItems.length > 0 && (
-                          <span className="text-muted-foreground font-normal ml-2">
-                            ({formatCurrency(accessorialsTotal)})
-                          </span>
-                        )}
-                      </button>
+                      <div>
+                        <button
+                          type="button"
+                          onClick={() => setAccessorialsExpanded(!accessorialsExpanded)}
+                          className="flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors"
+                        >
+                          {accessorialsExpanded ? (
+                            <ChevronUp className="h-4 w-4" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4" />
+                          )}
+                          Accessorial Charges
+                          {accessorialItems.length > 0 && (
+                            <Badge variant="secondary" className="ml-1">
+                              {accessorialItems.length}
+                            </Badge>
+                          )}
+                          {!accessorialsExpanded && accessorialItems.length > 0 && (
+                            <span className="text-muted-foreground font-normal ml-2">
+                              ({formatCurrency(accessorialsTotal)})
+                            </span>
+                          )}
+                        </button>
+                        <p className="text-xs text-muted-foreground/70 mt-1">Add accessorial charges like Detention, Layover, Tolls, and other fees</p>
+                      </div>
                       <Button variant="outline" size="sm" onClick={() => { addAccessorialItem(); setAccessorialsExpanded(true); }}>
                         <Plus className="h-3 w-3 mr-1" />
                         Add Accessorial
@@ -2673,57 +3174,78 @@ export default function LoadPlannerEditPage() {
                         ) : (
                           <div className="space-y-2">
                             {accessorialItems.map((accessorial, index) => (
-                              <div key={accessorial.id} className="flex flex-wrap items-center gap-2 p-2 rounded bg-amber-50/50 border border-amber-200">
-                                <SearchableSelect
-                                  value={accessorial.name}
-                                  onChange={(value) => updateAccessorialItem(index, 'name', value)}
-                                  options={accessorialOptions.map((a): SearchableSelectOption => ({
-                                    value: a.value,
-                                    label: a.label,
-                                  }))}
-                                  placeholder="Select type"
-                                  searchPlaceholder="Search accessorials..."
-                                  className="w-full sm:w-[180px]"
-                                />
-                                <SearchableSelect
-                                  value={accessorial.billing_unit}
-                                  onChange={(value) => updateAccessorialItem(index, 'billing_unit', value)}
-                                  options={billingUnitOptions.map((b): SearchableSelectOption => ({
-                                    value: b.value,
-                                    label: b.label,
-                                  }))}
-                                  placeholder="Unit"
-                                  className="w-[100px]"
-                                />
-                                <Input
-                                  className="w-16 sm:w-20"
-                                  type="number"
-                                  min={1}
-                                  value={accessorial.quantity}
-                                  onChange={(e) => updateAccessorialItem(index, 'quantity', e.target.value)}
-                                  placeholder="Qty"
-                                />
-                                <div className="relative w-24 sm:w-28">
-                                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                                  <Input
-                                    className="pl-5 text-right font-mono"
-                                    placeholder="0"
-                                    value={accessorial.rateInput ?? formatWholeDollars(accessorial.rate)}
-                                    onChange={(e) => updateAccessorialItem(index, 'rate', e.target.value)}
-                                    onBlur={() => finalizeAccessorialRateInput(index)}
+                              <div key={accessorial.id} className="space-y-1">
+                                <div className="flex flex-wrap items-center gap-2 p-2 rounded bg-amber-50/50 border border-amber-200">
+                                  <SearchableSelect
+                                    value={accessorial.name}
+                                    onChange={(value) => updateAccessorialItem(index, 'name', value)}
+                                    options={accessorialOptions.map((a): SearchableSelectOption => ({
+                                      value: a.value,
+                                      label: a.label,
+                                    }))}
+                                    placeholder="Select type"
+                                    searchPlaceholder="Search accessorials..."
+                                    className="w-full sm:w-[180px]"
                                   />
+                                  <SearchableSelect
+                                    value={accessorial.billing_unit}
+                                    onChange={(value) => updateAccessorialItem(index, 'billing_unit', value)}
+                                    options={billingUnitOptions.map((b): SearchableSelectOption => ({
+                                      value: b.value,
+                                      label: b.label,
+                                    }))}
+                                    placeholder="Unit"
+                                    className="w-[150px]"
+                                  />
+                                  <Input
+                                    className="w-16 sm:w-20"
+                                    type="number"
+                                    min={1}
+                                    value={accessorial.quantity}
+                                    onChange={(e) => updateAccessorialItem(index, 'quantity', e.target.value)}
+                                    placeholder="Qty"
+                                  />
+                                  <div className="relative w-24 sm:w-28">
+                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                                    <Input
+                                      className="pl-5 text-right font-mono"
+                                      placeholder="0"
+                                      value={accessorial.rateInput ?? formatWholeDollars(accessorial.rate)}
+                                      onChange={(e) => updateAccessorialItem(index, 'rate', e.target.value)}
+                                      onBlur={() => finalizeAccessorialRateInput(index)}
+                                    />
+                                  </div>
+                                  <span className="w-20 sm:w-24 text-right font-mono text-sm">
+                                    ${formatWholeDollars(accessorial.total)}
+                                  </span>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => toggleAccessorialNotes(index)}
+                                    className={accessorial.notes ? 'text-blue-500' : ''}
+                                    title="Add notes"
+                                  >
+                                    <MessageSquare className="h-3 w-3" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => removeAccessorialItem(index)}
+                                    className="shrink-0"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
                                 </div>
-                                <span className="w-20 sm:w-24 text-right font-mono text-sm">
-                                  ${formatWholeDollars(accessorial.total)}
-                                </span>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => removeAccessorialItem(index)}
-                                  className="shrink-0"
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
+                                {accessorial.showNotes && (
+                                  <div>
+                                    <Input
+                                      className="text-sm bg-white"
+                                      placeholder="Add notes for this accessorial charge..."
+                                      value={accessorial.notes || ''}
+                                      onChange={(e) => updateAccessorialItem(index, 'notes', e.target.value)}
+                                    />
+                                  </div>
+                                )}
                               </div>
                             ))}
                           </div>
@@ -2786,17 +3308,21 @@ export default function LoadPlannerEditPage() {
               </Card>
 
               <div className="flex gap-4">
-                <Button variant="outline" onClick={() => setActiveTab('trucks')}>
-                  Back
-                </Button>
-                <Button onClick={() => setActiveTab('permits')} className="flex-1">
-                  Continue to Permits
-                </Button>
+                {getPrevTab('pricing') && (
+                  <Button variant="outline" onClick={() => setActiveTab(getPrevTab('pricing')!)}>
+                    Back
+                  </Button>
+                )}
+                {getNextTab('pricing') && (
+                  <Button onClick={() => setActiveTab(getNextTab('pricing')!)} className="flex-1">
+                    Continue to {getTabLabel(getNextTab('pricing')!)}
+                  </Button>
+                )}
               </div>
-            </TabsContent>
+            </TabsContent>}
 
             {/* Permits Tab */}
-            <TabsContent value="permits" className="mt-4 space-y-4">
+            {isTabEnabled('permits') && <TabsContent value="permits" className="mt-4 space-y-4">
               {!pickupAddress || !dropoffAddress ? (
                 <Card>
                   <CardContent className="flex flex-col items-center py-10 text-muted-foreground">
@@ -2849,17 +3375,21 @@ export default function LoadPlannerEditPage() {
               )}
 
               <div className="flex gap-4">
-                <Button variant="outline" onClick={() => setActiveTab('pricing')}>
-                  Back
-                </Button>
-                <Button onClick={() => setActiveTab('compare')} className="flex-1">
-                  Continue to Compare
-                </Button>
+                {getPrevTab('permits') && (
+                  <Button variant="outline" onClick={() => setActiveTab(getPrevTab('permits')!)}>
+                    Back
+                  </Button>
+                )}
+                {getNextTab('permits') && (
+                  <Button onClick={() => setActiveTab(getNextTab('permits')!)} className="flex-1">
+                    Continue to {getTabLabel(getNextTab('permits')!)}
+                  </Button>
+                )}
               </div>
-            </TabsContent>
+            </TabsContent>}
 
             {/* Compare Tab */}
-            <TabsContent value="compare" className="mt-4 space-y-4">
+            {isTabEnabled('compare') && <TabsContent value="compare" className="mt-4 space-y-4">
               {!pickupAddress || !dropoffAddress ? (
                 <Card>
                   <CardContent className="flex flex-col items-center py-10 text-muted-foreground">
@@ -2897,17 +3427,21 @@ export default function LoadPlannerEditPage() {
               )}
 
               <div className="flex gap-4">
-                <Button variant="outline" onClick={() => setActiveTab('permits')}>
-                  Back
-                </Button>
-                <Button onClick={() => setActiveTab('pdf')} className="flex-1">
-                  Continue to PDF
-                </Button>
+                {getPrevTab('compare') && (
+                  <Button variant="outline" onClick={() => setActiveTab(getPrevTab('compare')!)}>
+                    Back
+                  </Button>
+                )}
+                {getNextTab('compare') && (
+                  <Button onClick={() => setActiveTab(getNextTab('compare')!)} className="flex-1">
+                    Continue to {getTabLabel(getNextTab('compare')!)}
+                  </Button>
+                )}
               </div>
-            </TabsContent>
+            </TabsContent>}
 
             {/* PDF Tab */}
-            <TabsContent value="pdf" className="mt-4 space-y-4">
+            {isTabEnabled('pdf') && <TabsContent value="pdf" className="mt-4 space-y-4">
               {/* Controls */}
               <div className="mb-6 no-print space-y-3">
                 <div className="flex items-center justify-between gap-4 p-4 bg-slate-50 rounded-lg">
@@ -2975,14 +3509,18 @@ export default function LoadPlannerEditPage() {
                             <Switch checked={pdfSections.routeMap} onCheckedChange={(checked) => setPdfSections((prev) => ({ ...prev, routeMap: checked }))} />
                             <span className="text-sm">Route Map</span>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <Switch checked={pdfSections.loadCompliance} onCheckedChange={(checked) => setPdfSections((prev) => ({ ...prev, loadCompliance: checked }))} />
-                            <span className="text-sm">Load Compliance (Warnings & Permits)</span>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <Switch checked={pdfSections.permitEscortCosts} onCheckedChange={(checked) => setPdfSections((prev) => ({ ...prev, permitEscortCosts: checked }))} />
-                            <span className="text-sm">Permit & Escort Costs</span>
-                          </div>
+                          {isTabEnabled('trucks') && (
+                            <div className="flex items-center gap-3">
+                              <Switch checked={pdfSections.loadCompliance} onCheckedChange={(checked) => setPdfSections((prev) => ({ ...prev, loadCompliance: checked }))} />
+                              <span className="text-sm">Load Compliance (Warnings & Permits)</span>
+                            </div>
+                          )}
+                          {isTabEnabled('permits') && (
+                            <div className="flex items-center gap-3">
+                              <Switch checked={pdfSections.permitEscortCosts} onCheckedChange={(checked) => setPdfSections((prev) => ({ ...prev, permitEscortCosts: checked }))} />
+                              <span className="text-sm">Permit & Escort Costs</span>
+                            </div>
+                          )}
                         </div>
 
                         <div className="space-y-3">
@@ -3009,10 +3547,12 @@ export default function LoadPlannerEditPage() {
                             <Switch checked={pdfSections.pickupDropoffLocations} onCheckedChange={(checked) => setPdfSections((prev) => ({ ...prev, pickupDropoffLocations: checked }))} />
                             <span className="text-sm">Pickup / Dropoff Locations</span>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <Switch checked={pdfSections.loadArrangementDiagrams} onCheckedChange={(checked) => setPdfSections((prev) => ({ ...prev, loadArrangementDiagrams: checked }))} />
-                            <span className="text-sm">Load Arrangement Diagrams</span>
-                          </div>
+                          {isTabEnabled('trucks') && (
+                            <div className="flex items-center gap-3">
+                              <Switch checked={pdfSections.loadArrangementDiagrams} onCheckedChange={(checked) => setPdfSections((prev) => ({ ...prev, loadArrangementDiagrams: checked }))} />
+                              <span className="text-sm">Load Arrangement Diagrams</span>
+                            </div>
+                          )}
                           <div className="flex items-center gap-3">
                             <Switch checked={pdfSections.accessorialCharges} onCheckedChange={(checked) => setPdfSections((prev) => ({ ...prev, accessorialCharges: checked }))} />
                             <span className="text-sm">Accessorial Charges</span>
@@ -3220,7 +3760,7 @@ export default function LoadPlannerEditPage() {
                     )}
 
                     {/* Load Arrangement Diagrams */}
-                    {pdfSections.loadArrangementDiagrams && (
+                    {isTabEnabled('trucks') && pdfSections.loadArrangementDiagrams && (
                       <div className="p-8 border-b border-slate-100">
                         <h3 className="text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2 text-blue-600">
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -3250,7 +3790,7 @@ export default function LoadPlannerEditPage() {
                     )}
 
                     {/* Load Compliance (Warnings & Permits) */}
-                    {pdfSections.loadCompliance && (
+                    {isTabEnabled('trucks') && pdfSections.loadCompliance && (
                       <div className="p-8 border-b border-slate-100">
                         <h3 className="text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2 text-blue-600">
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -3275,7 +3815,7 @@ export default function LoadPlannerEditPage() {
                     )}
 
                     {/* Permit & Escort Costs */}
-                    {pdfSections.permitEscortCosts && (
+                    {isTabEnabled('permits') && pdfSections.permitEscortCosts && (
                       <div className="p-8 border-b border-slate-100">
                         <h3 className="text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2 text-blue-600">
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -3466,11 +4006,13 @@ export default function LoadPlannerEditPage() {
               </div>
 
               <div className="flex gap-4">
-                <Button variant="outline" onClick={() => setActiveTab('compare')}>
-                  Back to Compare
-                </Button>
+                {getPrevTab('pdf') && (
+                  <Button variant="outline" onClick={() => setActiveTab(getPrevTab('pdf')!)}>
+                    Back to {getTabLabel(getPrevTab('pdf')!)}
+                  </Button>
+                )}
               </div>
-            </TabsContent>
+            </TabsContent>}
           </Tabs>
         </div>
 

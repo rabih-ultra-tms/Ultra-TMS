@@ -19,6 +19,8 @@ import { TemplatesController } from './templates/templates.controller';
 import { TemplatesService } from './templates/templates.service';
 import { TenantConfigController } from './tenant/tenant-config.controller';
 import { TenantConfigService } from './tenant/tenant-config.service';
+import { TenantServicesController } from './tenant-services/tenant-services.controller';
+import { TenantServicesService } from './tenant-services/tenant-services.service';
 
 @Module({
   controllers: [
@@ -30,6 +32,7 @@ import { TenantConfigService } from './tenant/tenant-config.service';
     SequencesController,
     TemplatesController,
     EmailTemplatesController,
+    TenantServicesController,
   ],
   providers: [
     PrismaService,
@@ -44,7 +47,8 @@ import { TenantConfigService } from './tenant/tenant-config.service';
     SequencesService,
     TemplatesService,
     EmailTemplatesService,
+    TenantServicesService,
   ],
-  exports: [SystemConfigService, TenantConfigService, PreferencesService, FeaturesService],
+  exports: [SystemConfigService, TenantConfigService, PreferencesService, FeaturesService, TenantServicesService],
 })
 export class ConfigModule {}

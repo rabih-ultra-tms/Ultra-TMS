@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Pencil, Trash2, Check, X, Plus, ChevronDown, ChevronUp, Package, Copy, AlertTriangle, Layers, Box } from 'lucide-react'
+import { Pencil, Trash2, Check, X, ChevronDown, ChevronUp, Package, Copy, AlertTriangle, Layers, Box, Upload, Image as ImageIcon, XCircle } from 'lucide-react'
 
 interface ExtractedItemsListProps {
   items: LoadItem[]
@@ -20,6 +20,11 @@ export function ExtractedItemsList({ items, onChange }: ExtractedItemsListProps)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValues, setEditValues] = useState<Partial<LoadItem>>({})
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [uploadingImageFor, setUploadingImageFor] = useState<string | null>(null)
+
+  // Filter items to separate parents and children
+  const parentItems = items.filter(item => !item.parentCargoId)
+  const getChildItems = (parentId: string) => items.filter(item => item.parentCargoId === parentId)
 
   const handleEdit = (item: LoadItem) => {
     setEditingId(item.id)
@@ -61,27 +66,6 @@ export function ExtractedItemsList({ items, onChange }: ExtractedItemsListProps)
     onChange(items.filter(item => item.id !== id))
   }
 
-  const handleAddItem = () => {
-    const newItem: LoadItem = {
-      id: `item-${Date.now()}`,
-      description: 'New Item',
-      quantity: 1,
-      length: 10,
-      width: 8,
-      height: 8,
-      weight: 5000,
-      stackable: false,
-      fragile: false,
-      hazmat: false,
-      bottomOnly: false,
-      maxLayers: undefined,
-      orientation: 3,
-      geometry: 'box',
-    }
-    onChange([...items, newItem])
-    handleEdit(newItem)
-  }
-
   const handleDuplicate = (item: LoadItem) => {
     const newItem: LoadItem = {
       ...item,
@@ -89,6 +73,54 @@ export function ExtractedItemsList({ items, onChange }: ExtractedItemsListProps)
       description: `${item.description} (copy)`
     }
     onChange([...items, newItem])
+  }
+
+  const handleImageUpload = async (file: File, itemId: string) => {
+    try {
+      setUploadingImageFor(itemId)
+
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch('/api/v1/operations/load-planner-quotes/cargo-images/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error('Upload failed')
+      }
+
+      const result = await response.json()
+      const imageUrl = result.data.url
+
+      // Update the item with the new image URL
+      onChange(items.map(item => {
+        if (item.id === itemId) {
+          const currentImages = item.imageUrls || []
+          return { ...item, imageUrls: [...currentImages, imageUrl] }
+        }
+        return item
+      }))
+    } catch (error) {
+      console.error('Image upload failed:', error)
+      alert('Failed to upload image. Please try again.')
+    } finally {
+      setUploadingImageFor(null)
+    }
+  }
+
+  const handleRemoveImage = (itemId: string, imageUrl: string) => {
+    onChange(items.map(item => {
+      if (item.id === itemId) {
+        const updatedImages = (item.imageUrls || []).filter(url => url !== imageUrl)
+        return { ...item, imageUrls: updatedImages }
+      }
+      return item
+    }))
   }
 
   const formatDimensions = (item: LoadItem) => {
@@ -107,9 +139,9 @@ export function ExtractedItemsList({ items, onChange }: ExtractedItemsListProps)
       {items.length > 0 && (
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium text-gray-700">
-            {items.length} item{items.length !== 1 ? 's' : ''} ({items.reduce((sum, i) => sum + i.quantity, 0)} total units)
+            {parentItems.length} item{parentItems.length !== 1 ? 's' : ''} ({items.reduce((sum, i) => sum + i.quantity, 0)} total units)
           </span>
-          {items.length > 3 && (
+          {parentItems.length > 3 && (
             <span className="text-xs text-muted-foreground">Scroll to see all</span>
           )}
         </div>
@@ -126,7 +158,9 @@ export function ExtractedItemsList({ items, onChange }: ExtractedItemsListProps)
       )}
 
       <div className="max-h-[400px] overflow-y-auto space-y-2">
-        {items.map((item) => (
+        {parentItems.map((item) => {
+          const childItems = getChildItems(item.id)
+          return (
           <div
             key={item.id}
             className={`
@@ -299,6 +333,68 @@ export function ExtractedItemsList({ items, onChange }: ExtractedItemsListProps)
                   </div>
                 </div>
 
+                <Separator className="my-3" />
+                <div className="space-y-3">
+                  <Label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                    <ImageIcon className="w-3 h-3" />
+                    Cargo Images
+                  </Label>
+
+                  {/* Display existing images */}
+                  {item.imageUrls && item.imageUrls.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2">
+                      {item.imageUrls.map((url, idx) => (
+                        <div key={idx} className="relative group">
+                          <img
+                            src={url}
+                            alt={`Cargo ${idx + 1}`}
+                            className="w-full h-24 object-cover rounded border border-gray-200"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveImage(item.id, url)}
+                            className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <XCircle className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Upload button */}
+                  <div>
+                    <input
+                      type="file"
+                      id={`image-upload-${item.id}`}
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) {
+                          handleImageUpload(file, item.id)
+                        }
+                      }}
+                      disabled={uploadingImageFor === item.id}
+                    />
+                    <label htmlFor={`image-upload-${item.id}`}>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={uploadingImageFor === item.id}
+                        onClick={(e) => {
+                          e.preventDefault()
+                          document.getElementById(`image-upload-${item.id}`)?.click()
+                        }}
+                      >
+                        <Upload className="w-4 h-4 mr-1" />
+                        {uploadingImageFor === item.id ? 'Uploading...' : 'Upload Image'}
+                      </Button>
+                    </label>
+                  </div>
+                </div>
+
                 <div className="flex gap-1 mt-4 justify-end">
                   <Button size="sm" onClick={handleSave}>
                     <Check className="w-4 h-4 mr-1" />
@@ -340,9 +436,37 @@ export function ExtractedItemsList({ items, onChange }: ExtractedItemsListProps)
                         <ChevronDown className="w-4 h-4 text-gray-400" />
                       )}
                     </div>
-                    <div className="text-sm text-gray-500 mt-0.5">
-                      {formatDimensions(item)} &bull; {formatWeight(item.weight)}
-                    </div>
+
+                    {/* Show summary ribbon if item contains children, otherwise show dimensions */}
+                    {childItems.length > 0 ? (
+                      <div className="mt-1.5 flex items-center gap-3 text-xs bg-blue-50 border border-blue-200 rounded px-2 py-1.5">
+                        <span className="text-blue-600 font-medium">Calculated from items:</span>
+                        <span className="text-gray-600">
+                          Length (sum): <span className="font-medium text-gray-900">
+                            {childItems.reduce((sum, child) => sum + child.length, 0).toFixed(1)}'
+                          </span>
+                        </span>
+                        <span className="text-gray-600">
+                          Width (max): <span className="font-medium text-gray-900">
+                            {Math.max(...childItems.map(child => child.width)).toFixed(1)}'
+                          </span>
+                        </span>
+                        <span className="text-gray-600">
+                          Height (max): <span className="font-medium text-gray-900">
+                            {Math.max(...childItems.map(child => child.height)).toFixed(1)}'
+                          </span>
+                        </span>
+                        <span className="text-gray-600">
+                          Weight (total): <span className="font-medium text-gray-900">
+                            {formatWeight(childItems.reduce((sum, child) => sum + child.weight, 0))}
+                          </span>
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-500 mt-0.5">
+                        {formatDimensions(item)} &bull; {formatWeight(item.weight)}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex gap-1">
@@ -378,6 +502,28 @@ export function ExtractedItemsList({ items, onChange }: ExtractedItemsListProps)
 
                 {expandedId === item.id && (
                   <div className="mt-3 pt-3 border-t border-gray-100">
+                    {/* Display images if available */}
+                    {item.imageUrls && item.imageUrls.length > 0 && (
+                      <div className="mb-3">
+                        <div className="text-xs text-gray-500 mb-2 flex items-center gap-1">
+                          <ImageIcon className="w-3 h-3" />
+                          Cargo Images
+                        </div>
+                        <div className="grid grid-cols-4 gap-2">
+                          {item.imageUrls.map((url, idx) => (
+                            <div key={idx} className="relative group">
+                              <img
+                                src={url}
+                                alt={`${item.description} - Image ${idx + 1}`}
+                                className="w-full h-20 object-cover rounded border border-gray-200 cursor-pointer hover:border-blue-400 transition-colors"
+                                onClick={() => window.open(url, '_blank')}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     <div className="flex flex-wrap gap-1.5 mb-2">
                       {item.stackable && (
                         <Badge variant="outline" className="text-green-600 border-green-300 text-xs">
@@ -425,18 +571,78 @@ export function ExtractedItemsList({ items, onChange }: ExtractedItemsListProps)
                         </div>
                       </div>
                     </div>
+
+                    {/* Inner Cargo Items */}
+                    {childItems.length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-blue-100 bg-blue-50/30 -mx-3 px-3 pb-2 rounded-b-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Layers className="w-3 h-3 text-blue-600" />
+                          <span className="text-xs font-medium text-blue-900">
+                            Items Inside ({childItems.length})
+                          </span>
+                        </div>
+                        <div className="space-y-1.5">
+                          {childItems.map((childItem) => (
+                            <div
+                              key={childItem.id}
+                              className="flex items-center justify-between p-2 bg-white rounded border border-blue-100 text-xs"
+                            >
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-gray-900 truncate">
+                                    {childItem.description}
+                                  </span>
+                                  {childItem.loadType && (
+                                    <Badge variant="outline" className="text-[10px] px-1 py-0 bg-blue-50 text-blue-700 border-blue-200">
+                                      {childItem.loadType}
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="text-gray-500 flex gap-2 mt-0.5">
+                                  <span>{formatDimensions(childItem)}</span>
+                                  <span>&bull;</span>
+                                  <span>{formatWeight(childItem.weight)}</span>
+                                </div>
+                              </div>
+                              <div className="flex gap-1 ml-2">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 w-6 p-0"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleEdit(childItem)
+                                  }}
+                                  title="Edit item"
+                                >
+                                  <Pencil className="w-3 h-3" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleDelete(childItem.id)
+                                  }}
+                                  title="Delete item"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
             )}
           </div>
-        ))}
+        )
+        })}
       </div>
-
-      <Button variant="outline" size="sm" onClick={handleAddItem} className="mt-2">
-        <Plus className="w-4 h-4 mr-1" />
-        Add Item Manually
-      </Button>
 
       {items.length > 0 && (
         <div className="pt-3 border-t border-gray-200 text-sm text-gray-500">

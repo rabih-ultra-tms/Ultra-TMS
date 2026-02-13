@@ -10,6 +10,8 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -17,7 +19,10 @@ import {
   ApiOperation,
   ApiResponse,
   ApiQuery,
+  ApiConsumes,
+  ApiBody,
 } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../../auth/guards';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { CurrentTenant } from '../../../common/decorators/current-tenant.decorator';
@@ -30,6 +35,9 @@ import {
   UpdateQuoteStatusDto,
   ListLoadPlannerQuotesDto,
 } from './dto';
+import { getLocalStorageOptions } from '../../../common/utils/file-upload.util';
+import { join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
 
 @Controller('operations/load-planner-quotes')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -156,6 +164,65 @@ export class LoadPlannerQuotesController {
     @Param('id') quoteId: string
   ) {
     return this.loadPlannerQuotesService.duplicate(tenantId, quoteId);
+  }
+
+  @Post('cargo-images/upload')
+  @Roles('ADMIN', 'MANAGER', 'SALES_REP', 'SALES_MANAGER', 'ACCOUNT_MANAGER')
+  @ApiOperation({ summary: 'Upload cargo image' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Image uploaded successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        data: {
+          type: 'object',
+          properties: {
+            url: { type: 'string' },
+            filename: { type: 'string' },
+          },
+        },
+      },
+    },
+  })
+  @UseInterceptors(
+    FileInterceptor('file', (() => {
+      const uploadPath = join(process.cwd(), 'uploads', 'cargo-images');
+      if (!existsSync(uploadPath)) {
+        mkdirSync(uploadPath, { recursive: true });
+      }
+      return getLocalStorageOptions(uploadPath);
+    })())
+  )
+  async uploadCargoImage(
+    @CurrentTenant() tenantId: string,
+    @UploadedFile() file: Express.Multer.File
+  ) {
+    if (!file) {
+      throw new Error('No file uploaded');
+    }
+
+    const url = `/uploads/cargo-images/${file.filename}`;
+
+    return {
+      data: {
+        url,
+        filename: file.filename,
+      },
+      message: 'Image uploaded successfully',
+    };
   }
 
   @Delete(':id')

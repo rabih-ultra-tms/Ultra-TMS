@@ -52,6 +52,7 @@ export type OrientationMode = 1 | 3 | 63 | number
 export interface LoadItem {
   id: string
   description: string
+  loadType?: string
   quantity: number
   length: number
   width: number
@@ -67,6 +68,9 @@ export interface LoadItem {
   geometry?: ItemGeometry
   imageUrl?: string
   imageUrl2?: string
+  imageUrls?: string[]
+  notes?: string
+  parentCargoId?: string
 }
 
 export interface ItemPlacement {

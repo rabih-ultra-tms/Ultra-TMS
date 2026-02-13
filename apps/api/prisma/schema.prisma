@@ -5019,7 +5019,8 @@ model LoadPlannerAccessorial {
 model LoadPlannerCargoItem {
   id                 String           @id @default(uuid())
   quoteId            String
-  description        String           @db.VarChar(500)
+  description        String           @db.VarChar(1000)
+  loadType           String?          @db.VarChar(100)
   sku                String?          @db.VarChar(100)
   quantity           Int              @default(1)
   lengthIn           Decimal          @db.Decimal(8, 2)
@@ -5031,22 +5032,24 @@ model LoadPlannerCargoItem {
   maxLayers          Int?
   fragile            Boolean          @default(false)
   hazmat             Boolean          @default(false)
+  notes              String?
   orientation        String?          @db.VarChar(20)
   geometryType       String?          @db.VarChar(50)
   geometryData       Json?
   equipmentMakeId    String?          @db.VarChar(100)
   equipmentModelId   String?          @db.VarChar(100)
   dimensionsSource   String?          @db.VarChar(50)
-  imageUrl1          String?          @db.VarChar(500)
-  imageUrl2          String?          @db.VarChar(500)
-  imageUrl3          String?          @db.VarChar(500)
-  imageUrl4          String?          @db.VarChar(500)
+  imageUrl1          String?          @db.VarChar(2000)
+  imageUrl2          String?          @db.VarChar(2000)
+  imageUrl3          String?          @db.VarChar(2000)
+  imageUrl4          String?          @db.VarChar(2000)
   assignedTruckIndex Int?
   placementX         Decimal?         @db.Decimal(8, 2)
   placementY         Decimal?         @db.Decimal(8, 2)
   placementZ         Decimal?         @db.Decimal(8, 2)
   rotation           Decimal?         @db.Decimal(5, 2)
   sortOrder          Int              @default(0)
+  parentCargoId      String?
   createdAt          DateTime         @default(now())
   updatedAt          DateTime @updatedAt
   deletedAt          DateTime?
@@ -5055,6 +5058,7 @@ model LoadPlannerCargoItem {
   @@unique([quoteId, sortOrder])
   @@index([assignedTruckIndex])
   @@index([quoteId])
+  @@index([parentCargoId])
 }
 
 model LoadPlannerPermit {
@@ -5094,7 +5098,7 @@ model LoadPlannerQuote {
   isActive               Boolean                  @default(true)
   customerName           String                   @db.VarChar(255)
   customerEmail          String?                  @db.VarChar(255)
-  customerPhone          String?                  @db.VarChar(20)
+  customerPhone          String?                  @db.VarChar(50)
   customerCompany        String?                  @db.VarChar(255)
   pickupAddress          String                   @db.VarChar(500)
   pickupCity             String                   @db.VarChar(100)
@@ -8346,6 +8350,7 @@ model Tenant {
   SurveyResponse             SurveyResponse[]
   SyncJob                    SyncJob[]
   TenantConfig               TenantConfig[]
+  TenantService              TenantService[]
   TenderRecipient            TenderRecipient[]
   TicketReply                TicketReply[]
   TimeEntry                  TimeEntry[]
@@ -8390,6 +8395,27 @@ model TenantConfig {
   @@index([configKey])
   @@index([externalId, sourceSystem])
   @@index([tenantId])
+}
+
+model TenantService {
+  id           String    @id @default(uuid())
+  tenantId     String
+  serviceKey   String    @db.VarChar(50)
+  enabled      Boolean   @default(true)
+  displayOrder Int       @default(0)
+  externalId   String?   @db.VarChar(255)
+  sourceSystem String?   @db.VarChar(100)
+  customFields Json      @default("{}")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+  createdById  String?
+  updatedById  String?
+  tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, serviceKey])
+  @@index([tenantId])
+  @@index([serviceKey])
 }
 
 model TenderRecipient {

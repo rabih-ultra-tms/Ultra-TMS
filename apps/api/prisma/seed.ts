@@ -33,6 +33,7 @@ import { seedLoadBoardExternal } from './seed/load-board-external';
 import { seedRateIntelligence } from './seed/rate-intelligence';
 import { seedClaims } from './seed/claims';
 import { seedEquipment } from './seed/equipment';
+import { seedTenantServices } from './seed/tenant-services';
 import seedTruckTypes from './seeds/truck-types.seed';
 
 const prisma = new PrismaClient() as any;
@@ -155,6 +156,11 @@ async function main() {
     console.log('⚙️ Seeding Config...');
     await seedConfig(prisma, tenantIds);
     console.log('✅ Config seeded\n');
+
+    // 23b. Tenant Services (dependency: tenants)
+    console.log('⚙️ Seeding Tenant Services...');
+    await seedTenantServices(prisma, tenantIds);
+    console.log('✅ Tenant Services seeded\n');
 
     // 24. Scheduler (dependency: all services)
     console.log('⏰ Seeding Scheduler...');

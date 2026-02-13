@@ -6,6 +6,7 @@
 export interface CargoItem {
   id: string;
   description: string;
+  loadType?: string;
   sku?: string;
   quantity: number;
   lengthIn: number;
@@ -17,6 +18,7 @@ export interface CargoItem {
   maxLayers?: number;
   fragile: boolean;
   hazmat: boolean;
+  notes?: string;
   orientation?: string;
   geometryType?: string;
   equipmentMakeId?: string;
@@ -32,6 +34,7 @@ export interface CargoItem {
   placementZ?: number;
   rotation?: number;
   sortOrder: number;
+  parentCargoId?: string;
 }
 
 export interface LoadPlannerTruck {

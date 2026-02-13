@@ -6,3 +6,4 @@ export * from './business-hours.dto';
 export * from './email-templates.dto';
 export * from './sequences.dto';
 export * from './templates.dto';
+export * from './tenant-services.dto';

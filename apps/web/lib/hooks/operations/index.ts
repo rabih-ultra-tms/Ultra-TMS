@@ -5,3 +5,4 @@ export * from './use-load-history';
 export * from './use-truck-types';
 export * from './use-equipment';
 export * from './use-inland-service-types';
+export * from './use-tenant-services';
