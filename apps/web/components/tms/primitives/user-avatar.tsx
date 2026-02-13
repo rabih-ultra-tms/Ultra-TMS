@@ -47,7 +47,7 @@ export function UserAvatar({
     <span
       className={cn(
         "inline-flex items-center justify-center rounded-full shrink-0",
-        "bg-gradient-to-br from-[#7C3AED] to-[#3B82F6]",
+        "bg-gradient-to-br from-primary to-accent",
         "font-semibold text-white select-none cursor-pointer",
         "overflow-hidden",
         sizeMap[size],
