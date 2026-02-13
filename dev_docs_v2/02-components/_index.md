@@ -21,6 +21,30 @@ See full audit: `dev_docs_v2/04-audit/components.md`
 
 ---
 
+## TMS Design Components (NEEDS REVISION)
+
+> **Status:** 31 components extracted from V5_final prototype — ON HOLD
+> **Reason:** Shareholder feedback (Feb 9, 2026): color scheme rejected, table column separators missing
+> **Path:** `components/tms/` (10 directories)
+> **Action:** Do not use in production pages until design revision is approved
+> **Process:** New color scheme + table border variants being prototyped via superdesign workflow
+
+| Category | Count | Components | Revision Impact |
+|----------|-------|------------|-----------------|
+| Primitives | 5 | status-badge, status-dot, checkbox, search-input, user-avatar | Color token changes |
+| Filters | 4 | filter-chip, filter-bar, status-dropdown, column-visibility | Color token changes |
+| Stats | 3 | stat-item, stats-bar, kpi-card | Color token changes |
+| Tables | 5 | data-table, density-toggle, group-header, bulk-action-bar, pagination | **Major**: add column borders + color changes |
+| Panels | 3 | slide-panel, panel-tabs, quick-actions | Color token changes only (layout approved) |
+| Cards | 3 | route-card, info-grid, field-list | Color token changes |
+| Timeline | 1 | timeline | Color token changes |
+| Finance | 1 | finance-breakdown | Color token changes |
+| Documents | 3 | document-list, upload-zone, permit-list | Color token changes |
+| Alerts | 1 | alert-banner | Color token changes |
+| Layout | 2 | app-sidebar, page-header | Color token changes (layout approved) |
+
+---
+
 ## Reusable Components (Use These)
 
 | Component | Path | What It Does |
