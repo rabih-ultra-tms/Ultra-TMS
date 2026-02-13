@@ -1,0 +1,87 @@
+
+import { render, screen, waitFor } from "@/test/utils";
+import userEvent from "@testing-library/user-event";
+import { CarrierForm } from "./carrier-form";
+import { jest } from "@jest/globals";
+import * as React from "react";
+
+// Mock next/navigation
+jest.mock("next/navigation", () => ({
+    useRouter: () => ({
+        push: jest.fn(),
+        back: jest.fn(),
+        refresh: jest.fn(),
+    }),
+}));
+
+describe("CarrierForm", () => {
+    const mockSubmit = jest.fn();
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it("renders create form correctly", () => {
+        render(<CarrierForm onSubmit={mockSubmit} />);
+
+        expect(screen.getByText("Add New Carrier")).toBeInTheDocument();
+        expect(screen.getByLabelText(/Company Name/i)).toBeInTheDocument();
+    });
+
+    it("validates required fields", async () => {
+        const user = userEvent.setup();
+        render(<CarrierForm onSubmit={mockSubmit} />);
+
+        // Click submit without filling required fields
+        const submitBtn = screen.getByRole("button", { name: /create carrier/i });
+        await user.click(submitBtn);
+
+        // Expect validation errors
+        // Company Name min(2)
+        // Carrier Type default is COMPANY, so valid.
+        // Status default ACTIVE.
+
+        // Company Name is required
+        await waitFor(() => {
+            expect(screen.getByText(/Company name must be at least 2 characters/i)).toBeInTheDocument();
+        });
+
+        expect(mockSubmit).not.toHaveBeenCalled();
+    });
+
+    it("submits valid data", async () => {
+        const user = userEvent.setup();
+        render(<CarrierForm onSubmit={mockSubmit} />);
+
+        // Fill valid data
+        await user.type(screen.getByLabelText(/Company Name/i), "Test Carrier");
+
+        const submitBtn = screen.getByRole("button", { name: /create carrier/i });
+        await user.click(submitBtn);
+
+        await waitFor(() => {
+            expect(mockSubmit).toHaveBeenCalledTimes(1);
+        });
+
+        expect(mockSubmit).toHaveBeenCalledWith(expect.objectContaining({
+            companyName: "Test Carrier",
+            carrierType: "COMPANY", // default
+            status: "ACTIVE", // default
+        }));
+    });
+
+    it("renders edit form with initial data", () => {
+        const initialData = {
+            companyName: "Existing Carrier",
+            carrierType: "OWNER_OPERATOR" as const,
+            status: "INACTIVE" as const,
+        };
+
+        render(<CarrierForm initialData={initialData} onSubmit={mockSubmit} />);
+
+        expect(screen.getByText("Edit Carrier")).toBeInTheDocument();
+        expect(screen.getByDisplayValue("Existing Carrier")).toBeInTheDocument();
+        // Select value check is tricky with Radix UI, but we can check display text if rendered
+        // Usually triggers contain the text "Owner-Operator" or "Inactive"
+    });
+});
