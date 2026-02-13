@@ -2890,7 +2890,7 @@ export default function LoadPlannerEditPage() {
                                     />
                                   )}
                                   <SearchableSelect
-                                    value={service.billing_unit}
+                                    value={service.billing_unit ?? ""}
                                     onChange={(value) => updateServiceItem(index, 'billing_unit', value)}
                                     options={billingUnitOptions.map((b): SearchableSelectOption => ({
                                       value: b.value,
@@ -3038,7 +3038,7 @@ export default function LoadPlannerEditPage() {
                                           />
                                         )}
                                         <SearchableSelect
-                                          value={service.billing_unit}
+                                          value={service.billing_unit ?? ""}
                                           onChange={(value) => updateServiceItem(index, 'billing_unit', value)}
                                           options={billingUnitOptions.map((b): SearchableSelectOption => ({
                                             value: b.value,

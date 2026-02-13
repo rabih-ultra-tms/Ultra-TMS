@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { CurrentTenant, CurrentUser, Roles } from '../../../common/decorators';
-import { UpdateTenantServiceDto } from '../dto';
+import { UpdateTenantServiceDto, UpdateTenantServiceForTenantDto } from '../dto';
 import { TenantServicesService } from './tenant-services.service';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
@@ -22,6 +22,17 @@ export class TenantServicesController {
   @ApiErrorResponses()
   async list(@CurrentTenant() tenantId: string) {
     const data = await this.service.list(tenantId);
+    return { data };
+  }
+
+  @Get('tenants')
+  @UseGuards(RolesGuard)
+  @Roles('SUPER_ADMIN')
+  @ApiOperation({ summary: 'List tenant services grouped by tenant' })
+  @ApiStandardResponse('Tenant services grouped by tenant')
+  @ApiErrorResponses()
+  async listAll() {
+    const data = await this.service.listAllTenants();
     return { data };
   }
 
@@ -46,6 +57,20 @@ export class TenantServicesController {
     @Body() dto: UpdateTenantServiceDto,
   ) {
     const data = await this.service.update(tenantId, userId, dto);
+    return { data };
+  }
+
+  @Put('tenants')
+  @UseGuards(RolesGuard)
+  @Roles('SUPER_ADMIN')
+  @ApiOperation({ summary: 'Update a tenant service for a specific tenant' })
+  @ApiStandardResponse('Tenant service updated for tenant')
+  @ApiErrorResponses()
+  async updateForTenant(
+    @CurrentUser('id') userId: string,
+    @Body() dto: UpdateTenantServiceForTenantDto,
+  ) {
+    const data = await this.service.updateForTenant(userId, dto);
     return { data };
   }
 }

@@ -10,6 +10,13 @@ export interface TenantService {
   displayOrder: number;
 }
 
+export interface TenantServicesByTenant {
+  id: string;
+  name: string;
+  status: string;
+  services: TenantService[];
+}
+
 const TENANT_SERVICES_KEY = 'tenant-services';
 
 export const useTenantServices = () => {
@@ -37,6 +44,18 @@ export const useEnabledServices = () => {
   });
 };
 
+export const useTenantServicesByTenant = () => {
+  return useQuery({
+    queryKey: [TENANT_SERVICES_KEY, 'tenants'],
+    queryFn: async () => {
+      const response = await apiClient.get<{ data: TenantServicesByTenant[] }>(
+        '/tenant-services/tenants'
+      );
+      return response.data;
+    },
+  });
+};
+
 export const useUpdateTenantService = () => {
   const queryClient = useQueryClient();
 
@@ -53,6 +72,33 @@ export const useUpdateTenantService = () => {
         `${variables.serviceKey} ${variables.enabled ? 'enabled' : 'disabled'}`
       );
       queryClient.invalidateQueries({ queryKey: [TENANT_SERVICES_KEY] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update service');
+    },
+  });
+};
+
+export const useUpdateTenantServiceForTenant = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (dto: {
+      tenantId: string;
+      serviceKey: string;
+      enabled: boolean;
+    }) => {
+      const response = await apiClient.put<{ data: TenantService }>(
+        '/tenant-services/tenants',
+        dto
+      );
+      return response.data;
+    },
+    onSuccess: (_data, variables) => {
+      toast.success(
+        `${variables.serviceKey} ${variables.enabled ? 'enabled' : 'disabled'}`
+      );
+      queryClient.invalidateQueries({ queryKey: [TENANT_SERVICES_KEY, 'tenants'] });
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to update service');

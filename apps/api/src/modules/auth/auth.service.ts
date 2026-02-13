@@ -52,11 +52,8 @@ export class AuthService {
    * Login user with email and password
    */
   async login(loginDto: LoginDto, userAgent?: string, ipAddress?: string): Promise<TokenPair> {
-    const { email, password, tenantId } = loginDto;
-
-    if (!tenantId) {
-      throw new BadRequestException('tenantId is required');
-    }
+    const { email, password } = loginDto;
+    let tenantId = loginDto.tenantId?.trim();
 
     // Check if account is locked
     const isLocked = await this.redisService.isAccountLocked(email);
@@ -64,11 +61,41 @@ export class AuthService {
       throw new UnauthorizedException('Account is temporarily locked due to too many failed login attempts');
     }
 
+    const superAdminRoleNames = ['SUPER_ADMIN', 'SUPERADMIN', 'SUPER-ADMIN'];
+
     // Find user
-    const user = await this.prisma.user.findFirst({
-      where: { email, tenantId },
-      include: { role: true },
-    });
+    type UserWithRole = Awaited<ReturnType<PrismaService["user"]["findFirst"]>>;
+    let user: UserWithRole | null = null;
+
+    if (tenantId) {
+      user = await this.prisma.user.findFirst({
+        where: { email, tenantId },
+        include: { role: true },
+      });
+    } else {
+      const superAdmins: Awaited<ReturnType<PrismaService["user"]["findMany"]>> =
+        await this.prisma.user.findMany({
+        where: {
+          email,
+          deletedAt: null,
+          role: {
+            name: { in: superAdminRoleNames },
+          },
+        },
+        include: { role: true },
+      });
+
+      if (superAdmins.length === 0) {
+        throw new BadRequestException('tenantId is required');
+      }
+
+      if (superAdmins.length > 1) {
+        throw new BadRequestException('Multiple super admin accounts found. Provide tenantId.');
+      }
+
+      user = superAdmins.at(0) ?? null;
+      tenantId = user?.tenantId || undefined;
+    }
 
     if (!user) {
       await this.handleFailedLogin(email);

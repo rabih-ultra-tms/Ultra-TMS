@@ -71,10 +71,42 @@ describe('AuthService', () => {
     service = module.get(AuthService);
   });
 
-  it('rejects login without tenantId', async () => {
+  it('rejects login without tenantId for non-superadmin', async () => {
+    prisma.user.findMany?.mockResolvedValue([]);
+
     await expect(
       service.login({ email: 'a@b.com', password: 'x' } as any),
     ).rejects.toThrow(BadRequestException);
+  });
+
+  it('allows login without tenantId for superadmin', async () => {
+    redisService.isAccountLocked.mockResolvedValue(false);
+    prisma.user.findMany?.mockResolvedValue([
+      {
+        id: 'u1',
+        email: 'a@b.com',
+        tenantId: 't1',
+        roleId: 'r1',
+        firstName: 'A',
+        lastName: 'B',
+        status: 'ACTIVE',
+        deletedAt: null,
+        passwordHash: 'hash',
+        role: { name: 'SUPER_ADMIN' },
+      },
+    ]);
+    (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+    prisma.user.update.mockResolvedValue({ id: 'u1' });
+    jest.spyOn(service as any, 'generateTokenPair').mockResolvedValue({
+      accessToken: 'access',
+      refreshToken: 'refresh',
+      expiresIn: 3600,
+    });
+
+    const result = await service.login({ email: 'a@b.com', password: 'pw' } as any);
+
+    expect(result.accessToken).toBe('access');
+    expect(redisService.resetLoginAttempts).toHaveBeenCalled();
   });
 
   it('rejects login when account locked', async () => {

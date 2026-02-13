@@ -171,6 +171,7 @@ export interface LoadPlannerQuoteStats {
   draftCount: number;
   sentCount: number;
   acceptedCount: number;
+  rejectedCount: number;
   totalValueCents: number;
 }
 

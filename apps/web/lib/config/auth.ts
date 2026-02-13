@@ -10,6 +10,7 @@ export const AUTH_CONFIG = {
   defaultTenantId: process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID || "default-tenant",
   publicPaths: [
     "/login",
+    "/superadmin/login",
     "/register",
     "/forgot-password",
     "/reset-password",

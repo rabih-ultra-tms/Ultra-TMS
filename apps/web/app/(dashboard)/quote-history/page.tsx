@@ -237,7 +237,7 @@ export default function QuoteHistoryPage() {
 
       {/* Stats Cards */}
       {stats && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
@@ -278,6 +278,17 @@ export default function QuoteHistoryPage() {
                 <div>
                   <div className="text-2xl font-bold text-green-600">{stats.acceptedCount ?? 0}</div>
                   <p className="text-xs text-muted-foreground">Accepted</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex items-center gap-2">
+                <XCircle className="h-5 w-5 text-red-600" />
+                <div>
+                  <div className="text-2xl font-bold text-red-600">{stats.rejectedCount ?? 0}</div>
+                  <p className="text-xs text-muted-foreground">Rejected</p>
                 </div>
               </div>
             </CardContent>

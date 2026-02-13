@@ -27,19 +27,11 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
       .filter(Boolean)
       .map((role) => normalizeRole(role as string));
     
-    console.log('[AdminGuard] isAdmin check:', { 
-      rolesFromArray, 
-      roleName, 
-      allRoles, 
-      hasAdminRole: allRoles.some((role) => ADMIN_ROLES.has(role))
-    });
-    
     return allRoles.some((role) => ADMIN_ROLES.has(role));
   }, [currentUser]);
 
   React.useEffect(() => {
     if (!isLoading && !isAdmin) {
-      console.log('[AdminGuard] Access denied - redirecting to unauthorized');
       router.replace(`${AUTH_CONFIG.defaultRedirect}?unauthorized=true`);
     }
   }, [isLoading, isAdmin, router]);

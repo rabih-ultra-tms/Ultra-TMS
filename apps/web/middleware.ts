@@ -7,6 +7,16 @@ const rbacRules = [
     pattern: /^\/admin(\/|$)/,
     roles: ["ADMIN", "SUPER_ADMIN"],
   },
+  {
+    pattern: /^\/superadmin(\/|$)/,
+    roles: ["SUPER_ADMIN"],
+  },
+];
+
+const superAdminAllowedPatterns = [
+  /^\/dashboard(\/|$)/,
+  /^\/admin\/(users|roles|audit-logs|settings)(\/|$)/,
+  /^\/superadmin\/tenant-services(\/|$)/,
 ];
 
 function decodeRoles(token?: string): string[] {
@@ -80,27 +90,22 @@ export function middleware(request: NextRequest) {
     const roles = decodeRoles(authToken?.value);
     const required = matchedRule.roles.map((role) => role.replace(/-/g, "_").toUpperCase());
 
-    console.log('[RBAC Middleware]', {
-      pathname,
-      userRoles: roles,
-      requiredRoles: required,
-      tokenValue: authToken?.value?.substring(0, 50) + '...',
-    });
-
-    // SUPER_ADMIN bypasses all checks
-    if (roles.includes('SUPER_ADMIN')) {
-      return NextResponse.next();
-    }
-
     const hasRole = roles.some((role) => required.includes(role));
     if (!hasRole) {
-      console.log('[RBAC Middleware] Access denied - redirecting');
       const redirectUrl = new URL(AUTH_CONFIG.defaultRedirect, request.url);
       redirectUrl.searchParams.set("unauthorized", "true");
       return NextResponse.redirect(redirectUrl);
     }
-    
-    console.log('[RBAC Middleware] Access granted');
+  }
+
+  const roles = decodeRoles(authToken?.value);
+  if (roles.includes("SUPER_ADMIN")) {
+    const allowed = superAdminAllowedPatterns.some((pattern) => pattern.test(pathname));
+    if (!allowed) {
+      const redirectUrl = new URL(AUTH_CONFIG.defaultRedirect, request.url);
+      redirectUrl.searchParams.set("unauthorized", "true");
+      return NextResponse.redirect(redirectUrl);
+    }
   }
 
   return NextResponse.next();

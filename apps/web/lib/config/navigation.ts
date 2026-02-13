@@ -138,8 +138,8 @@ export const navigationConfig: NavConfig = {
           requiredRoles: ["ADMIN", "SUPER_ADMIN"],
         },
         {
-          title: "Services",
-          href: "/admin/tenant-services",
+          title: "Tenant Services",
+          href: "/superadmin/tenant-services",
           icon: ToggleRight,
           requiredRoles: ["SUPER_ADMIN"],
         },

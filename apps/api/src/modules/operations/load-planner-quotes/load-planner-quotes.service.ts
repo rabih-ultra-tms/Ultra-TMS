@@ -809,7 +809,7 @@ export class LoadPlannerQuotesService {
    * Get quote statistics
    */
   async getStats(tenantId: string) {
-    const [total, drafts, sent, accepted, totalValue] = await Promise.all([
+    const [total, drafts, sent, accepted, rejected, totalValue] = await Promise.all([
       this.prisma.loadPlannerQuote.count({
         where: { tenantId, isActive: true },
       }),
@@ -822,6 +822,9 @@ export class LoadPlannerQuotesService {
       this.prisma.loadPlannerQuote.count({
         where: { tenantId, status: 'ACCEPTED', isActive: true },
       }),
+      this.prisma.loadPlannerQuote.count({
+        where: { tenantId, status: 'REJECTED', isActive: true },
+      }),
       this.prisma.loadPlannerQuote.aggregate({
         where: { tenantId, isActive: true },
         _sum: { totalCents: true },
@@ -829,11 +832,14 @@ export class LoadPlannerQuotesService {
     ]);
 
     return {
-      total,
-      drafts,
-      sent,
-      accepted,
-      totalValueCents: totalValue._sum.totalCents || 0,
+      data: {
+        totalLoads: total,
+        draftCount: drafts,
+        sentCount: sent,
+        acceptedCount: accepted,
+        rejectedCount: rejected,
+        totalValueCents: totalValue._sum.totalCents || 0,
+      },
     };
   }
 }

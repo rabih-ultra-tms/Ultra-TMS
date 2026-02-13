@@ -28,6 +28,12 @@ export function AppSidebar({ className }: AppSidebarProps) {
     return normalized;
   }, [currentUser]);
 
+  const isSuperAdmin = React.useMemo(() => userRoles.includes("SUPER_ADMIN"), [userRoles]);
+  const superAdminGroups = React.useMemo(
+    () => new Set(["Overview", "User Management", "System"]),
+    []
+  );
+
   const canSeeItem = React.useCallback(
     (requiredRoles?: string[]) => {
       if (!requiredRoles || requiredRoles.length === 0) {
@@ -45,12 +51,16 @@ export function AppSidebar({ className }: AppSidebarProps) {
         ...group,
         items: group.items.filter((item) => canSeeItem(item.requiredRoles)),
       }))
-      .filter((group) => group.items.length > 0),
-  [canSeeItem]);
+      .filter((group) => group.items.length > 0)
+      .filter((group) => (isSuperAdmin ? superAdminGroups.has(group.title) : true)),
+  [canSeeItem, isSuperAdmin, superAdminGroups]);
 
   const filteredBottomNav = React.useMemo(
-    () => navigationConfig.bottomNav.filter((item) => canSeeItem(item.requiredRoles)),
-    [canSeeItem]
+    () =>
+      isSuperAdmin
+        ? []
+        : navigationConfig.bottomNav.filter((item) => canSeeItem(item.requiredRoles)),
+    [canSeeItem, isSuperAdmin]
   );
 
   const sidebarContent = (
