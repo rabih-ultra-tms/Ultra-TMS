@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { createId } from '@paralleldrive/cuid2';
 
 const prisma = new PrismaClient();
 
@@ -36,6 +37,7 @@ async function main() {
   // Create the super admin user
   const user = await prisma.user.create({
     data: {
+      id: createId(),
       tenantId: tenant.id,
       email: email,
       passwordHash,
@@ -46,6 +48,7 @@ async function main() {
       emailVerifiedAt: new Date(),
       timezone: 'America/Chicago',
       locale: 'en',
+      updatedAt: new Date(),
     },
   });
 

@@ -9,7 +9,7 @@ export class LoadsService {
   constructor(
     private prisma: PrismaService,
     private eventEmitter: EventEmitter2,
-  ) {}
+  ) { }
 
   async create(tenantId: string, userId: string, dto: CreateLoadDto) {
     // Verify order exists
@@ -90,13 +90,24 @@ export class LoadsService {
         take: limit,
         orderBy: { createdAt: 'desc' },
         include: {
-          order: { 
-            select: { 
-              id: true, 
-              orderNumber: true, 
+          order: {
+            select: {
+              id: true,
+              orderNumber: true,
               status: true,
               customer: { select: { id: true, name: true } },
-            } 
+              stops: {
+                orderBy: { stopNumber: 'asc' },
+                select: {
+                  id: true,
+                  city: true,
+                  state: true,
+                  stopType: true,
+                  appointmentDate: true,
+                  stopNumber: true
+                }
+              }
+            }
           },
           carrier: { select: { id: true, legalName: true, mcNumber: true } },
         },
@@ -104,8 +115,25 @@ export class LoadsService {
       this.prisma.load.count({ where }),
     ]);
 
+    // Map to flat structure for UI
+    const flattenedLoads = loads.map(load => {
+      const stops = load.order.stops || [];
+      const pickup = stops.find(s => s.stopType === 'PICKUP') || stops[0];
+      const delivery = stops.find(s => s.stopType === 'DELIVERY') || stops[stops.length - 1];
+
+      return {
+        ...load,
+        originCity: pickup?.city,
+        originState: pickup?.state,
+        destinationCity: delivery?.city,
+        destinationState: delivery?.state,
+        pickupDate: pickup?.appointmentDate,
+        deliveryDate: delivery?.appointmentDate,
+      };
+    });
+
     return {
-      data: loads,
+      data: flattenedLoads,
       total,
       page,
       limit,
@@ -540,7 +568,7 @@ export class LoadsService {
         order: {
           include: {
             customer: { select: { id: true, name: true } },
-            stops: { 
+            stops: {
               orderBy: { stopSequence: 'asc' },
               take: 2,
             },
@@ -618,7 +646,7 @@ export class LoadsService {
   private async generateLoadNumber(tenantId: string): Promise<string> {
     const today = new Date();
     const prefix = `LD${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}`;
-    
+
     const lastLoad = await this.prisma.load.findFirst({
       where: {
         tenantId,
