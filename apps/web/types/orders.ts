@@ -78,3 +78,126 @@ export interface OrderListResponse {
         pages: number;
     };
 }
+
+// --- Types for Order Detail Page ---
+
+export type EquipmentType =
+    | 'DRY_VAN'
+    | 'REEFER'
+    | 'FLATBED'
+    | 'STEP_DECK'
+    | 'POWER_ONLY'
+    | 'HOTSHOT'
+    | 'CONTAINER'
+    | 'OTHER';
+
+export type StopStatus = 'PENDING' | 'ARRIVED' | 'DEPARTED' | 'CANCELLED';
+
+export interface Stop {
+    id: string;
+    tenantId: string;
+    orderId?: string;
+    loadId?: string;
+    stopType: OrderStopType;
+    stopSequence: number;
+    facilityName?: string;
+    addressLine1: string;
+    addressLine2?: string;
+    city: string;
+    state: string;
+    postalCode: string;
+    country: string;
+    contactName?: string;
+    contactPhone?: string;
+    contactEmail?: string;
+    appointmentRequired: boolean;
+    appointmentDate?: string;
+    appointmentTimeStart?: string;
+    appointmentTimeEnd?: string;
+    scheduledAppointment?: string;
+    status: StopStatus;
+    arrivedAt?: string;
+    departedAt?: string;
+    specialInstructions?: string;
+    externalId?: string;
+    sourceSystem?: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface TimelineEvent {
+    id: string;
+    timestamp: string;
+    eventType: string;
+    description: string;
+    userId?: string;
+    userName?: string;
+    metadata?: Record<string, unknown>;
+}
+
+export interface OrderDocument {
+    id: string;
+    documentType: string;
+    fileName: string;
+    fileSize: number;
+    mimeType: string;
+    uploadedAt: string;
+    uploadedById?: string;
+    uploadedByName?: string;
+    url?: string;
+}
+
+export interface PaginatedResponse<T> {
+    data: T[];
+    pagination: {
+        page: number;
+        pageSize: number;
+        total: number;
+        pages: number;
+    };
+}
+
+export interface OrderDetailResponse extends Order {
+    stops: Stop[];
+    loads: OrderLoad[];
+    documents?: OrderDocument[];
+    timeline?: TimelineEvent[];
+    customer?: {
+        id: string;
+        companyName: string;
+        contactName?: string;
+        contactEmail?: string;
+        contactPhone?: string;
+    };
+    // Financial fields from Prisma model
+    customerRate?: number;
+    accessorialCharges?: number;
+    fuelSurcharge?: number;
+    totalCharges?: number;
+    currency?: string;
+    // Freight details
+    commodity?: string;
+    commodityClass?: string;
+    weightLbs?: number;
+    pieceCount?: number;
+    palletCount?: number;
+    equipmentType?: EquipmentType;
+    // Flags
+    isHazmat?: boolean;
+    hazmatClass?: string;
+    temperatureMin?: number;
+    temperatureMax?: number;
+    isHot?: boolean;
+    isTeam?: boolean;
+    isExpedited?: boolean;
+    // Dates
+    orderDate?: string;
+    requiredDeliveryDate?: string;
+    actualDeliveryDate?: string;
+    // Notes
+    internalNotes?: string;
+    // Metadata
+    poNumber?: string;
+    bolNumber?: string;
+    salesRepId?: string;
+}

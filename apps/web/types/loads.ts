@@ -103,3 +103,64 @@ export interface LoadStats {
     avgMargin: number;
     totalActive: number;
 }
+
+// --- Types for Load Detail Page ---
+
+export interface CheckCall {
+    id: string;
+    tenantId: string;
+    loadId: string;
+    city?: string;
+    state?: string;
+    latitude?: number;
+    longitude?: number;
+    status?: string;
+    notes?: string;
+    contacted?: string;
+    contactMethod?: string;
+    eta?: string;
+    milesRemaining?: number;
+    source?: string;
+    createdAt: string;
+    createdById?: string;
+}
+
+export interface LoadDetailResponse extends Load {
+    orderId: string;
+    tenantId: string;
+    accessorialCosts?: number;
+    fuelAdvance?: number;
+    totalCost?: number;
+    currentLocationLat?: number;
+    currentLocationLng?: number;
+    currentCity?: string;
+    currentState?: string;
+    lastTrackingUpdate?: string;
+    eta?: string;
+    equipmentLength?: number;
+    equipmentWeightLimit?: number;
+    dispatchedAt?: string;
+    pickedUpAt?: string;
+    deliveredAt?: string;
+    rateConfirmationSent?: boolean;
+    rateConfirmationSigned?: boolean;
+    dispatchNotes?: string;
+    checkCalls?: CheckCall[];
+    documents?: Array<{
+        id: string;
+        documentType: string;
+        fileName: string;
+        fileSize: number;
+        mimeType: string;
+        uploadedAt: string;
+        url?: string;
+    }>;
+    timeline?: Array<{
+        id: string;
+        timestamp: string;
+        eventType: string;
+        description: string;
+        userId?: string;
+        userName?: string;
+    }>;
+}
