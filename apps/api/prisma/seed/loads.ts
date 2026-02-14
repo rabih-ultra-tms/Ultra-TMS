@@ -85,8 +85,8 @@ export async function seedLoads(prisma: any, tenantIds: string[]): Promise<void>
       include: { stops: true },
       take: 100,
     });
-    const carriers = await prisma.carrier.findMany({ where: { tenantId }, take: 20 });
-    const users = await prisma.user.findMany({ where: { tenantId }, take: 10 });
+    const carriers: any[] = await prisma.carrier.findMany({ where: { tenantId }, take: 20 });
+    const users: any[] = await prisma.user.findMany({ where: { tenantId }, take: 10 });
 
     if (orders.length === 0) continue;
 

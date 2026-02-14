@@ -20,7 +20,7 @@ export async function seedLoadBoard(prisma: any, tenantIds: string[]): Promise<v
     const account = await prisma.loadBoardAccount.findFirst({ where: { tenantId } });
     if (!account) continue;
 
-    const users = await prisma.user.findMany({ where: { tenantId }, take: 5 });
+    const users: any[] = await prisma.user.findMany({ where: { tenantId }, take: 5 });
 
     for (const load of unassignedLoads) {
       const order = load.order;
