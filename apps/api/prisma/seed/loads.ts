@@ -94,14 +94,151 @@ export async function seedLoads(prisma: any, tenantIds: string[]): Promise<void>
       const loadCount = faker.number.int({ min: 1, max: 2 });
 
       for (let i = 0; i < loadCount; i++) {
-        // TODO: Task 1.5 — Load creation logic goes here
-        // Will create Load records with:
-        // - Status from getLoadStatus()
-        // - Carrier assignment (70% assigned)
-        // - Financial data derived from order rates
-        // - Equipment details from order
-        // - Tracking data for IN_TRANSIT loads via getTrackingLocation()
-        // - Check calls for active loads
+        const loadStatus = getLoadStatus();
+        const isAssigned = faker.datatype.boolean(0.70);
+        const carrier = isAssigned && carriers.length > 0
+          ? faker.helpers.arrayElement(carriers)
+          : null;
+
+        // Financial: carrier rate is 85-90% of customer rate
+        const customerRate = order.customerRate ? Number(order.customerRate) : 0;
+        const carrierRate = customerRate * faker.number.float({ min: 0.85, max: 0.90, fractionDigits: 4 });
+        const accessorialCosts = faker.number.float({ min: 0, max: 300, fractionDigits: 2 });
+        const fuelAdvance = faker.number.float({ min: 0, max: 500, fractionDigits: 2 });
+        const totalCost = carrierRate + accessorialCosts + fuelAdvance;
+
+        // Equipment
+        const equipmentType = order.equipmentType ?? 'DRY_VAN';
+        const lengths = EQUIPMENT_LENGTHS[equipmentType] ?? [48, 53];
+        const equipmentLength = faker.helpers.arrayElement(lengths);
+
+        // Timestamps based on status progression
+        const orderCreated = new Date(order.createdAt);
+        const dispatchedAt = ['DISPATCHED', 'PICKED_UP', 'IN_TRANSIT', 'DELIVERED'].includes(loadStatus)
+          ? new Date(orderCreated.getTime() + faker.number.int({ min: 1, max: 3 }) * 24 * 60 * 60 * 1000)
+          : null;
+        const pickedUpAt = ['PICKED_UP', 'IN_TRANSIT', 'DELIVERED'].includes(loadStatus) && dispatchedAt
+          ? new Date(dispatchedAt.getTime() + faker.number.int({ min: 4, max: 12 }) * 60 * 60 * 1000)
+          : null;
+        const deliveredAt = loadStatus === 'DELIVERED' && order.requiredDeliveryDate
+          ? new Date(new Date(order.requiredDeliveryDate).getTime() + faker.number.int({ min: -2, max: 2 }) * 24 * 60 * 60 * 1000)
+          : null;
+
+        // Tracking for IN_TRANSIT loads
+        const originStop = order.stops?.find((s: any) => s.stopSequence === 1);
+        const lastStop = order.stops?.length > 0
+          ? order.stops.reduce((max: any, s: any) => s.stopSequence > max.stopSequence ? s : max, order.stops[0])
+          : null;
+        const originCity = originStop?.city ?? 'Chicago';
+        const destCity = lastStop?.city ?? 'New York';
+        const progress = faker.number.float({ min: 0.1, max: 0.9, fractionDigits: 2 });
+        const tracking = loadStatus === 'IN_TRANSIT'
+          ? getTrackingLocation(originCity, destCity, progress)
+          : null;
+
+        // Documents
+        const statusOrder = ['PENDING', 'ASSIGNED', 'DISPATCHED', 'PICKED_UP', 'IN_TRANSIT', 'DELIVERED'];
+        const statusIdx = statusOrder.indexOf(loadStatus);
+        const rateConfirmationSent = statusIdx >= 1; // ASSIGNED+
+        const rateConfirmationSigned = statusIdx >= 2; // DISPATCHED+
+
+        const load = await prisma.load.create({
+          data: {
+            tenantId,
+            loadNumber: `LD-${Date.now()}-${String(totalLoads + 1).padStart(4, '0')}`,
+            orderId: order.id,
+            carrierId: carrier?.id ?? null,
+
+            // Driver & vehicle (only if carrier assigned)
+            driverName: carrier ? faker.person.fullName() : null,
+            driverPhone: carrier ? faker.phone.number() : null,
+            truckNumber: carrier ? `T${faker.string.numeric(4)}` : null,
+            trailerNumber: carrier ? `TR${faker.string.numeric(5)}` : null,
+
+            status: loadStatus,
+
+            // Financial
+            carrierRate,
+            accessorialCosts,
+            fuelAdvance,
+            totalCost,
+
+            // Tracking
+            currentLocationLat: tracking?.lat ?? null,
+            currentLocationLng: tracking?.lng ?? null,
+            currentCity: tracking?.city ?? null,
+            currentState: tracking?.state ?? null,
+            lastTrackingUpdate: tracking ? new Date(Date.now() - faker.number.int({ min: 1, max: 4 }) * 60 * 60 * 1000) : null,
+            eta: loadStatus === 'IN_TRANSIT' && order.requiredDeliveryDate
+              ? new Date(order.requiredDeliveryDate)
+              : null,
+
+            // Equipment
+            equipmentType,
+            equipmentLength,
+            equipmentWeightLimit: 45000,
+
+            // Timestamps
+            dispatchedAt,
+            pickedUpAt,
+            deliveredAt,
+
+            // Documents
+            rateConfirmationSent,
+            rateConfirmationSigned,
+
+            // Notes
+            dispatchNotes: faker.datatype.boolean(0.3) ? faker.lorem.sentence() : null,
+
+            // Metadata
+            externalId: `SEED-LOAD-${String(totalLoads + 1).padStart(4, '0')}`,
+            sourceSystem: 'FAKER_SEED',
+            customFields: {},
+            createdById: users.length > 0 ? faker.helpers.arrayElement(users).id : null,
+            createdAt: orderCreated,
+            updatedAt: new Date(),
+          },
+        });
+
+        // Check calls for IN_TRANSIT loads (1-3 per load, spaced ~4 hours apart)
+        if (loadStatus === 'IN_TRANSIT' && tracking) {
+          const checkCallCount = faker.number.int({ min: 1, max: 3 });
+          for (let c = 0; c < checkCallCount; c++) {
+            const hoursAgo = (checkCallCount - c) * 4;
+            const ccProgress = Math.max(0.05, progress - (checkCallCount - c) * 0.1);
+            const ccTracking = getTrackingLocation(originCity, destCity, ccProgress);
+
+            await prisma.checkCall.create({
+              data: {
+                tenantId,
+                loadId: load.id,
+                city: ccTracking.city,
+                state: ccTracking.state,
+                latitude: ccTracking.lat,
+                longitude: ccTracking.lng,
+                status: 'IN_TRANSIT',
+                notes: faker.helpers.arrayElement([
+                  'Driver confirmed on schedule',
+                  'Checked in with driver, ETA on track',
+                  'Driver reports smooth traffic',
+                  'Minor delay due to weather, adjusted ETA',
+                  'Fuel stop, resuming shortly',
+                ]),
+                contacted: 'DRIVER',
+                contactMethod: faker.helpers.arrayElement(['PHONE', 'TEXT', 'ELD']),
+                eta: order.requiredDeliveryDate ? new Date(order.requiredDeliveryDate) : null,
+                milesRemaining: Math.round((1 - ccProgress) * faker.number.int({ min: 300, max: 2000 })),
+                source: faker.helpers.arrayElement(['MANUAL', 'ELD', 'TRACKING']),
+                externalId: `SEED-CHECKCALL-${totalLoads + 1}-${c}`,
+                sourceSystem: 'FAKER_SEED',
+                createdAt: new Date(Date.now() - hoursAgo * 60 * 60 * 1000),
+                createdById: users.length > 0 ? faker.helpers.arrayElement(users).id : null,
+              },
+            });
+            totalCheckCalls++;
+          }
+        }
+
         totalLoads++;
       }
     }
