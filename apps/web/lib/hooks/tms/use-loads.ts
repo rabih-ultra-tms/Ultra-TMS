@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { LoadListParams, LoadListResponse, Load } from "@/types/loads";
+import { LoadListParams, LoadListResponse, Load, LoadDetailResponse, CheckCall } from "@/types/loads";
 
 export function useLoads(params: LoadListParams) {
     return useQuery<LoadListResponse>({
@@ -22,7 +22,7 @@ export function useLoads(params: LoadListParams) {
             if (params.toDate) searchParams.set('toDate', params.toDate);
 
             // Backend returns { data, total, page, limit } directly for loads
-            const response = await apiClient.get<LoadListResponse>(`/api/v1/loads?${searchParams.toString()}`);
+            const response = await apiClient.get<LoadListResponse>(`/loads?${searchParams.toString()}`);
             return response;
         },
         placeholderData: (previousData) => previousData,
@@ -30,12 +30,15 @@ export function useLoads(params: LoadListParams) {
 }
 
 export function useLoad(id: string) {
-    return useQuery<Load>({
+    return useQuery<LoadDetailResponse>({
         queryKey: ['load', id],
         queryFn: async () => {
-            const response = await apiClient.get<Load>(`/api/v1/loads/${id}`);
+            const response = await apiClient.get<LoadDetailResponse>(`/loads/${id}`);
             return response;
         },
+        enabled: !!id,
+        staleTime: 30000,
+        retry: 2,
     });
 }
 
@@ -86,5 +89,17 @@ export function useLoadTimeline(id: string) {
             ];
         },
         enabled: !!id
+    });
+}
+
+export function useCheckCalls(loadId: string) {
+    return useQuery<CheckCall[]>({
+        queryKey: ['check-calls', loadId],
+        queryFn: async () => {
+            const response = await apiClient.get<CheckCall[]>(`/loads/${loadId}/check-calls`);
+            return response;
+        },
+        enabled: !!loadId,
+        staleTime: 60000,
     });
 }
