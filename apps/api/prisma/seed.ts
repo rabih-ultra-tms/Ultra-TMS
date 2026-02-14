@@ -34,6 +34,8 @@ import { seedRateIntelligence } from './seed/rate-intelligence';
 import { seedClaims } from './seed/claims';
 import { seedEquipment } from './seed/equipment';
 import { seedTenantServices } from './seed/tenant-services';
+import { seedLoads } from './seed/loads';
+import { seedLoadBoard } from './seed/load-board';
 import seedTruckTypes from './seeds/truck-types.seed';
 
 const prisma = new PrismaClient() as any;
@@ -71,6 +73,11 @@ async function main() {
     console.log('🚛 Seeding Carrier...');
     await seedCarrier(prisma, tenantIds);
     console.log('✅ Carrier seeded\n');
+
+    // 6a. Loads (dependency: tms-core orders, carriers)
+    console.log('📦 Seeding Loads...');
+    await seedLoads(prisma, tenantIds);
+    console.log('✅ Loads seeded\n');
 
     // 7. Accounting (dependency: tms, carrier)
     console.log('💵 Seeding Accounting...');
@@ -196,6 +203,11 @@ async function main() {
     console.log('📢 Seeding Load Board External...');
     await seedLoadBoardExternal(prisma, tenantIds);
     console.log('✅ Load Board External seeded\n');
+
+    // 30a. Load Board Internal (dependency: loads, load-board-external accounts)
+    console.log('📋 Seeding Load Board (Internal)...');
+    await seedLoadBoard(prisma, tenantIds);
+    console.log('✅ Load Board (Internal) seeded\n');
 
     // 31. Rate Intelligence (dependency: sales, tms)
     console.log('💹 Seeding Rate Intelligence...');
