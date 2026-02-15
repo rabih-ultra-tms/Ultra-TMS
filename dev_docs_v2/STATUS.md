@@ -183,7 +183,7 @@
 | PATT-003 | Form page pattern | DONE | Antigravity | M (3-4h) | Feb 12 |
 | CARR-001 | Refactor carrier list | DONE | Antigravity | M (4h) ⬆️ | Feb 12 |
 | CARR-002 | Upgrade carrier detail | DONE | Antigravity | M (5h) ⬆️ | Feb 12 |
-| CARR-003 | Carrier module tests | BLOCKED (Env) | Antigravity | M (3-4h) | Feb 13 |
+| CARR-003 | Carrier module tests | DONE | Claude Code | M (3-4h) | Feb 14 |
 | COMP-009 | DateRangePicker | DONE | Antigravity | M (2-3h) | Feb 13 |
 | COMP-010 | StopList component | DONE | Antigravity | M (2-3h) | Feb 13 |
 
@@ -199,7 +199,7 @@
 | TMS-002 | Order Detail page (tabs) | DONE | Antigravity | L (8h) ⬆️ | Feb 12 |
 | TMS-003 | Loads List page | DONE | Antigravity | M (5h) ⬆️ | Feb 13 |
 | TMS-004 | Load Detail page (tabs) | DONE | Antigravity | L (8h) ⬆️ | Feb 13 |
-| SALES-001 | Quotes List rebuild | NOT STARTED | — | M (5h) ⬆️ | — |
+| SALES-001 | Quotes List rebuild | DONE | Claude Code | M (5h) ⬆️ | Feb 14 |
 | SALES-002 | Quote Detail rebuild | NOT STARTED | — | L (7h) ⬆️ | — |
 | SALES-003 | Quote Create/Edit rebuild | NOT STARTED | — | L (8h) ⬆️ | — |
 | **TMS-015** | **Public Tracking Page** | NOT STARTED | — | L (8-12h) | — |

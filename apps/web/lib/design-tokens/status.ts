@@ -84,6 +84,21 @@ export const PRIORITIES = {
 export type Priority = keyof typeof PRIORITIES;
 
 // ---------------------------------------------------------------------------
+// Quote Status
+// ---------------------------------------------------------------------------
+export const QUOTE_STATUSES = {
+  DRAFT: { label: "Draft", status: undefined as StatusColorToken | undefined, intent: undefined as Intent | undefined, className: "bg-gray-100 text-gray-700 border-gray-300" },
+  SENT: { label: "Sent", status: "transit" as StatusColorToken | undefined, intent: undefined as Intent | undefined, className: undefined as string | undefined },
+  VIEWED: { label: "Viewed", status: "tendered" as StatusColorToken | undefined, intent: undefined as Intent | undefined, className: undefined as string | undefined },
+  ACCEPTED: { label: "Accepted", status: "delivered" as StatusColorToken | undefined, intent: undefined as Intent | undefined, className: undefined as string | undefined },
+  CONVERTED: { label: "Converted", status: undefined as StatusColorToken | undefined, intent: "success" as Intent | undefined, className: undefined as string | undefined },
+  REJECTED: { label: "Rejected", status: "atrisk" as StatusColorToken | undefined, intent: undefined as Intent | undefined, className: undefined as string | undefined },
+  EXPIRED: { label: "Expired", status: "unassigned" as StatusColorToken | undefined, intent: undefined as Intent | undefined, className: undefined as string | undefined },
+} as const;
+
+export type QuoteStatusToken = keyof typeof QUOTE_STATUSES;
+
+// ---------------------------------------------------------------------------
 // Intent (semantic meaning, not entity-specific)
 // ---------------------------------------------------------------------------
 export type Intent = "success" | "warning" | "danger" | "info";
