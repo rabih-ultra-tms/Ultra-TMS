@@ -10,24 +10,47 @@
 
 ### Developer: Claude Code
 ### AI Tool: Claude Opus 4.6
-### Commits: ca2befa, eb878e9, f2437f7, 21db7ba, 066dc2b, 08b1051, 5280f88, 20f2579, a860166, 0ac41b5, 2f21864
+### Commits: ca2befa, eb878e9, f2437f7, 21db7ba, 066dc2b, 08b1051, 5280f88, 20f2579, a860166, 0ac41b5, 2f21864, 02d203e
 
 **What was done:**
-Completed all 19 tasks across 3 phases of the TMS Core Pages implementation plan:
+Completed all 19 tasks across 3 phases of the TMS Core Pages implementation plan — seed data foundation, TypeScript types & React Query hooks, and shared UI components for Order Detail, Load Detail, and Load Board pages.
 
-- **Phase 1 (Seed Data):** Enhanced tms-core.ts with city pairs, weighted distributions, realistic orders (10/tenant), transit-based stop scheduling. Created loads.ts (1-2 loads/order, carrier assignment, financial data, GPS tracking, check calls). Created load-board.ts (postings from unassigned loads). Integrated into main seed pipeline.
-- **Phase 2 (Types & Hooks):** Enhanced orders.ts/loads.ts types with detail page interfaces (OrderDetailResponse, LoadDetailResponse, CheckCall, etc.). Created load-board.ts types. Enhanced useOrder/useLoad hooks with detail types, added useOrderLoads/Timeline/Documents, useCheckCalls, created useLoadPosts/useLoadPost/useLoadBoardStats.
-- **Phase 3 (Components):** Created 4 shared components: StatusBadge, FinancialSummaryCard, TimelineFeed, MetadataCard.
+**Files created/changed:** 16 files (1,274 lines added, 29 removed)
 
-**Files created:** 5 new files (loads.ts, load-board.ts seed files, load-board.ts types, use-load-board.ts hook, 4 shared components)
-**Files modified:** 5 files (tms-core.ts, seed.ts, orders.ts types, loads.ts types, use-orders.ts, use-loads.ts)
+**Detailed breakdown:**
 
-**Task(s) completed:** Tasks 1.1-1.8, 2.1-2.7, 3.1-3.4 (19 total)
+| Area | Files | What was built |
+|------|-------|---------------|
+| Seed: Orders & Stops | `tms-core.ts` | 8 city pairs, weighted distributions, 10 orders/tenant, transit-based stops |
+| Seed: Loads | `loads.ts` (new) | 1-2 loads/order, 70% carrier assignment, GPS tracking, check calls |
+| Seed: Load Board | `load-board.ts` (new) | Postings from unassigned loads, linked to real order/stop data |
+| Seed: Pipeline | `seed.ts` | Integrated seedLoads + seedLoadBoard into 36-step pipeline |
+| Types: Orders | `types/orders.ts` | +123 lines: Stop, TimelineEvent, OrderDocument, OrderDetailResponse |
+| Types: Loads | `types/loads.ts` | +61 lines: CheckCall, LoadDetailResponse |
+| Types: Load Board | `types/load-board.ts` (new) | LoadPost, LoadBoardFilters, LoadBoardListResponse, LoadBoardStats |
+| Hooks: Orders | `use-orders.ts` | Enhanced useOrder, added useOrderLoads/Timeline/Documents |
+| Hooks: Loads | `use-loads.ts` | Enhanced useLoad, added useCheckCalls |
+| Hooks: Load Board | `use-load-board.ts` (new) | useLoadPosts, useLoadPost, useLoadBoardStats |
+| Components | `shared/` (4 new) | StatusBadge, FinancialSummaryCard, TimelineFeed, MetadataCard |
+| Docs | checklist + work log | Task tracker at 19/19 complete |
+
+**Key deliverables:**
+- Comprehensive seed data: ~50 orders, ~75 loads, ~150 stops, ~50 check calls, ~15 load board posts
+- 14 TypeScript interfaces/types for 3 page domains
+- 10 React Query hooks wired to backend API endpoints
+- 4 reusable shared components for detail pages
+
+**Impact metrics for report:**
+- 12 commits, 19 tasks completed
+- 16 files touched, 1,274 net lines added
+- 3 phases complete (Seed Data, Types & Hooks, Shared Components)
+- 0 pre-existing code broken (additive approach)
+- Foundation ready for Phase 4-6 page builds
 
 **Key learnings:**
 - Existing seed files all use `prisma: any` pattern — consistent, don't fight it
-- `createMany()` doesn't return created records, so individual `create()` is needed when IDs are required for relations (like check calls needing load.id)
-- Existing type files already had good coverage — additive approach (appending new types) avoids breaking 12+ existing component imports
+- `createMany()` doesn't return created records, so individual `create()` is needed when IDs are required for relations
+- Existing type files already had good coverage — additive approach avoids breaking 12+ existing component imports
 
 **Unblocked tasks:** Phase 4 (Order Detail Page), Phase 5 (Load Detail Page), Phase 6 (Load Board Page)
 
@@ -1206,6 +1229,52 @@ Implemented core UI patterns and refactored key modules to support the TMS Viewi
 -   `apps/web/app/(dashboard)/operations/loads/` (started list)
 
 ---
+
+## Session: 2026-02-14 (Friday) — Afternoon
+
+### Developer: Claude Code
+### AI Tool: Claude Opus 4.6
+### Task: CARR-003 — Carrier Module Tests (Unblock + Fix)
+
+**What was done:**
+Unblocked and completed CARR-003 (Carrier Module Tests), which was marked BLOCKED (Env) due to Jest mocks not working with ESM modules. Diagnosed root cause: Next.js SWC transformer resolves `@/` path aliases during transformation, **before** Jest's `moduleNameMapper` can intercept them — so mock files were never loaded. Built a custom Jest resolver (`test/jest-resolver.cjs`) that intercepts at the filesystem path level after SWC resolution. All 45 carrier tests now pass (72 total across 13 suites).
+
+**Files created/changed:** 12 files (~900 lines added, ~160 removed)
+
+**Detailed breakdown:**
+
+| Area | File | Action | Purpose |
+|------|------|--------|---------|
+| Test Infrastructure | `test/jest-resolver.cjs` | NEW (46 lines) | Custom Jest resolver — intercepts SWC-resolved paths, redirects to mock files |
+| Mock: Operations | `test/mocks/hooks-operations.ts` | REWRITTEN (170 lines) | globalThis shared state for carrier hooks (7 mutable return objects) |
+| Mock: Hooks | `test/mocks/hooks.ts` | MODIFIED (41 lines) | Mock for `@/lib/hooks` barrel (useDebounce, useConfirm, useCurrentUser, etc.) |
+| Mock: Navigation | `test/mocks/next-navigation.ts` | REWRITTEN (81 lines) | globalThis shared state for router/params/pathname |
+| Mock: MSW Handlers | `test/mocks/handlers/carriers.ts` | NEW (194 lines) | MSW handlers for carrier API endpoints |
+| Test: Form | `__tests__/carriers/carrier-form.test.tsx` | MODIFIED (252 lines) | 17 tests — form rendering, validation, create/edit modes |
+| Test: List | `__tests__/carriers/carriers-list.test.tsx` | NEW (187 lines) | 14 tests — table data, stats, search, filter, loading/empty/error |
+| Test: Detail | `__tests__/carriers/carrier-detail.test.tsx` | NEW (168 lines) | 14 tests — tabs, breadcrumb, edit nav, loading/error states |
+| Config | `jest.config.ts` | MODIFIED | Added custom resolver + moduleNameMapper entries |
+| Cleanup | `carrier-form.test.tsx.skip` | DELETED | Removed disabled test file |
+| Cleanup | `carriers-list-integration.test.tsx.skip` | DELETED | Removed disabled test file |
+| Docs | `STATUS.md`, `CARR-003-carrier-tests.md` | MODIFIED | Task marked DONE |
+
+**Root cause of "Env" blocker:**
+SWC receives `jsConfig.paths: { "@/*": ["./*"] }` and resolves `@/lib/hooks/operations` → `./lib/hooks/operations/index.ts` during transformation. By the time Jest's `moduleNameMapper` runs, the import is already a relative filesystem path — so the `^@/lib/hooks/operations$` pattern never matches. The custom resolver intercepts at the resolved-path level instead.
+
+**Key deliverables:**
+- Custom Jest resolver reusable for all future test suites
+- globalThis mock pattern for ESM module state sharing
+- 45 carrier tests: 17 form + 14 list + 14 detail
+- 72 total tests across 13 suites, all green
+- Testing infrastructure documented in `memory/testing.md`
+
+**Impact metrics for report:**
+- 1 task completed (CARR-003 — was BLOCKED since Feb 13)
+- 12 files created/modified (~900 lines net)
+- 45 carrier tests written and passing
+- 72 total tests, 13 suites, 0 failures
+- Phase 2 fully complete (all 8 tasks DONE)
+- Reusable test infrastructure for all future modules
 
 <!-- NEXT SESSION ENTRY GOES HERE -->
 
