@@ -49,7 +49,7 @@ export default function OrdersPage() {
         router.push(`/operations/orders/${row.id}`);
     };
 
-    const handleDelete = async (id: string) => {
+    const handleDelete = async (_id: string) => {
         if (!confirm("Are you sure you want to delete this order?")) return;
         // In a real app, use a proper mutation and dialog
         alert("Delete not implemented yet");

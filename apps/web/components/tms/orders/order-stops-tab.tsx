@@ -1,8 +1,8 @@
 "use client";
 
-import { Order, OrderStop } from "@/types/orders";
+import { Order } from "@/types/orders";
 import { format } from "date-fns";
-import { MapPin, Building2, User } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 

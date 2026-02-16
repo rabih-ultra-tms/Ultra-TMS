@@ -215,7 +215,7 @@
 
 | Task | Title | Status | Assigned | Effort | Updated |
 |------|-------|--------|----------|--------|---------|
-| TMS-005 | New Order Form (multi-step, 4 sessions) | NOT STARTED | — | XL (12h) ⬆️ | — |
+| TMS-005 | New Order Form (multi-step, 4 sessions) | DONE | Antigravity | XL (12h) ⬆️ | Feb 16 |
 | TMS-006 | Edit Order Form | NOT STARTED | — | M (5h) ⬆️ | — |
 | TMS-007 | New Load Form (3 sessions) | NOT STARTED | — | L (9h) ⬆️ | — |
 | TMS-008 | Edit Load Form | NOT STARTED | — | M (5h) ⬆️ | — |
