@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { PageHeader } from "@/components/tms/layout/page-header";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
-import { useCreateOrder, useOrderFromQuote } from "@/lib/hooks/tms/use-orders";
+import { useCreateOrder, useOrderFromQuote, useUpdateOrder } from "@/lib/hooks/tms/use-orders";
 
 import { OrderCustomerStep } from "./order-customer-step";
 import { OrderCargoStep } from "./order-cargo-step";
@@ -27,6 +27,15 @@ import {
   type OrderFormValues,
   type StopFormValues,
 } from "./order-form-schema";
+
+// --- Component Props ---
+
+export interface OrderFormProps {
+  mode?: "create" | "edit";
+  orderId?: string;
+  initialData?: Partial<OrderFormValues>;
+  orderStatus?: string;
+}
 
 // --- Step definitions ---
 
@@ -221,7 +230,12 @@ function SummaryRow({
 
 // --- Main Form Component ---
 
-export function OrderForm() {
+export function OrderForm({
+  mode = "create",
+  orderId,
+  initialData,
+  orderStatus,
+}: OrderFormProps = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const quoteId = searchParams.get("quoteId") || "";
@@ -233,20 +247,33 @@ export function OrderForm() {
   const [showExitDialog, setShowExitDialog] = React.useState(false);
 
   const createOrder = useCreateOrder();
+  const updateOrder = useUpdateOrder();
   const { data: quoteData } = useOrderFromQuote(quoteId);
+
+  const isEditMode = mode === "edit";
+  const isCustomerLocked: boolean = isEditMode && !!orderStatus && !["PENDING", "QUOTED"].includes(orderStatus);
 
   const form = useForm<OrderFormValues>({
     resolver: zodResolver(orderFormSchema) as any,
-    defaultValues: ORDER_FORM_DEFAULTS,
+    defaultValues: isEditMode && initialData
+      ? { ...ORDER_FORM_DEFAULTS, ...initialData }
+      : ORDER_FORM_DEFAULTS,
     mode: "onTouched",
   });
 
   const { isDirty } = form.formState;
   const watchedValues = form.watch();
 
-  // Pre-fill from quote when data loads
+  // Pre-fill from initialData (edit mode)
   React.useEffect(() => {
-    if (quoteData && quoteId) {
+    if (isEditMode && initialData) {
+      form.reset({ ...ORDER_FORM_DEFAULTS, ...initialData });
+    }
+  }, [isEditMode, initialData, form]);
+
+  // Pre-fill from quote when data loads (create mode)
+  React.useEffect(() => {
+    if (!isEditMode && quoteData && quoteId) {
       const q = quoteData as any;
       const prefill: Partial<OrderFormValues> = {};
 
@@ -288,7 +315,7 @@ export function OrderForm() {
 
       form.reset({ ...ORDER_FORM_DEFAULTS, ...prefill });
     }
-  }, [quoteData, quoteId, form]);
+  }, [isEditMode, quoteData, quoteId, form]);
 
   // Warn on browser close with unsaved changes
   React.useEffect(() => {
@@ -350,23 +377,37 @@ export function OrderForm() {
 
     try {
       const formData = form.getValues();
-      const result = await createOrder.mutateAsync({
-        formData,
-        status,
-      });
 
-      const orderId = (result as any)?.data?.id || (result as any)?.id;
-      toast.success(
-        status === "BOOKED" ? "Order created and confirmed!" : "Draft saved!"
-      );
+      if (isEditMode && orderId) {
+        // Update existing order
+        await updateOrder.mutateAsync({
+          id: orderId,
+          formData,
+          status,
+        });
 
-      if (orderId) {
+        toast.success("Order updated successfully!");
         router.push(`/operations/orders/${orderId}`);
       } else {
-        router.push("/operations/orders");
+        // Create new order
+        const result = await createOrder.mutateAsync({
+          formData,
+          status,
+        });
+
+        const newOrderId = (result as any)?.data?.id || (result as any)?.id;
+        toast.success(
+          status === "BOOKED" ? "Order created and confirmed!" : "Draft saved!"
+        );
+
+        if (newOrderId) {
+          router.push(`/operations/orders/${newOrderId}`);
+        } else {
+          router.push("/operations/orders");
+        }
       }
     } catch (error: any) {
-      toast.error(error?.message || "Failed to create order. Please try again.");
+      toast.error(error?.message || `Failed to ${isEditMode ? "update" : "create"} order. Please try again.`);
     }
   };
 
@@ -374,7 +415,11 @@ export function OrderForm() {
     if (isDirty) {
       setShowExitDialog(true);
     } else {
-      router.push("/operations/orders");
+      if (isEditMode && orderId) {
+        router.push(`/operations/orders/${orderId}`);
+      } else {
+        router.push("/operations/orders");
+      }
     }
   };
 
@@ -385,7 +430,7 @@ export function OrderForm() {
     const f = form as any;
     switch (currentStep) {
       case 0:
-        return <OrderCustomerStep form={f} />;
+        return <OrderCustomerStep form={f} isCustomerLocked={isCustomerLocked} />;
       case 1:
         return <OrderCargoStep form={f} />;
       case 2:
@@ -414,8 +459,8 @@ export function OrderForm() {
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div className="flex flex-col">
-              <span>New Order</span>
-              {quoteId && (
+              <span>{isEditMode ? "Edit Order" : "New Order"}</span>
+              {!isEditMode && quoteId && (
                 <span className="text-xs font-normal text-muted-foreground">
                   From Quote
                 </span>
@@ -467,10 +512,10 @@ export function OrderForm() {
           <Button
             variant="outline"
             onClick={() => handleSubmit("PENDING")}
-            disabled={createOrder.isPending}
+            disabled={createOrder.isPending || updateOrder.isPending}
           >
             <Save className="mr-2 h-4 w-4" />
-            Save Draft
+            {isEditMode ? "Save Changes" : "Save Draft"}
           </Button>
 
           {/* Right: Back / Next / Submit */}
@@ -492,24 +537,24 @@ export function OrderForm() {
                 <Button
                   variant="outline"
                   onClick={() => handleSubmit("PENDING")}
-                  disabled={createOrder.isPending}
+                  disabled={createOrder.isPending || updateOrder.isPending}
                 >
                   <FileText className="mr-2 h-4 w-4" />
-                  Create as Draft
+                  {isEditMode ? "Save as Draft" : "Create as Draft"}
                 </Button>
                 <Button
                   onClick={() => handleSubmit("BOOKED")}
-                  disabled={createOrder.isPending}
+                  disabled={createOrder.isPending || updateOrder.isPending}
                 >
-                  {createOrder.isPending ? (
+                  {createOrder.isPending || updateOrder.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating...
+                      {isEditMode ? "Updating..." : "Creating..."}
                     </>
                   ) : (
                     <>
                       <CheckCircle className="mr-2 h-4 w-4" />
-                      Create &amp; Confirm
+                      {isEditMode ? "Update &amp; Confirm" : "Create &amp; Confirm"}
                     </>
                   )}
                 </Button>
@@ -529,7 +574,11 @@ export function OrderForm() {
         variant="destructive"
         onConfirm={() => {
           setShowExitDialog(false);
-          router.push("/operations/orders");
+          if (isEditMode && orderId) {
+            router.push(`/operations/orders/${orderId}`);
+          } else {
+            router.push("/operations/orders");
+          }
         }}
         onCancel={() => setShowExitDialog(false)}
       />

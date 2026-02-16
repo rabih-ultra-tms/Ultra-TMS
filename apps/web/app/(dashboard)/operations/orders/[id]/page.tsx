@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { StatusBadge } from "@/components/tms/primitives/status-badge";
 import { STATUS_INTENTS, STATUS_LABELS } from "@/components/tms/orders/order-columns";
+import Link from "next/link";
 
 export default function OrderDetailPage({ params }: { params: { id: string } }) {
     const { data: order, isLoading, error, refetch } = useOrder(params.id);
@@ -31,7 +32,9 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
     // --- Actions Menu ---
     const actions = (
         <>
-            <Button variant="outline" size="sm">Edit Order</Button>
+            <Button variant="outline" size="sm" asChild>
+                <Link href={`/operations/orders/${params.id}/edit`}>Edit Order</Link>
+            </Button>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon">

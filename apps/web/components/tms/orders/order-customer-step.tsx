@@ -38,9 +38,10 @@ const PRIORITY_LABELS: Record<string, string> = {
 
 interface OrderCustomerStepProps {
   form: UseFormReturn<OrderFormValues>;
+  isCustomerLocked?: boolean;
 }
 
-export function OrderCustomerStep({ form }: OrderCustomerStepProps) {
+export function OrderCustomerStep({ form, isCustomerLocked = false }: OrderCustomerStepProps) {
   const { data: companiesData, isLoading: loadingCompanies } = useCompanies({
     limit: 50,
   });
@@ -113,8 +114,14 @@ export function OrderCustomerStep({ form }: OrderCustomerStepProps) {
                         ? "Loading..."
                         : "No customers found"
                     }
+                    disabled={!!isCustomerLocked}
                   />
                 </FormControl>
+                {isCustomerLocked && (
+                  <p className="text-xs text-muted-foreground">
+                    Customer cannot be changed after order is booked
+                  </p>
+                )}
                 <FormMessage />
               </FormItem>
             )}
