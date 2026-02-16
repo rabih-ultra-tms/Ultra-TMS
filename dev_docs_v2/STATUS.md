@@ -217,7 +217,7 @@
 |------|-------|--------|----------|--------|---------|
 | TMS-005 | New Order Form (multi-step, 4 sessions) | DONE | Antigravity | XL (12h) ⬆️ | Feb 16 |
 | TMS-006 | Edit Order Form | DONE | Claude Code | M (5h) ⬆️ | Feb 16 |
-| TMS-007 | New Load Form (3 sessions) | NOT STARTED | — | L (9h) ⬆️ | — |
+| TMS-007 | New Load Form (3 sessions) | DONE | Claude Code | L (9h) ⬆️ | Feb 16 |
 | TMS-008 | Edit Load Form | NOT STARTED | — | M (5h) ⬆️ | — |
 | TMS-009 | Stop Management | NOT STARTED | — | L (6h) ⬆️ | — |
 | TMS-010 | Check Call Log | NOT STARTED | — | L (6h) ⬆️ | — |

@@ -1,8 +1,12 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { LoadListParams, LoadListResponse, Load, LoadDetailResponse, CheckCall } from "@/types/loads";
+import { OperationsCarrier } from "@/types/carriers";
+import { OrderDetailResponse } from "@/types/orders";
 
 export function useLoads(params: LoadListParams) {
     return useQuery<LoadListResponse>({
@@ -87,6 +91,143 @@ export function useCheckCalls(loadId: string) {
             return response;
         },
         enabled: !!loadId,
+        staleTime: 60000,
+    });
+}
+
+// --- Create Load ---
+
+export interface CreateLoadInput {
+    orderId?: string;
+    equipmentType: string;
+    commodity?: string;
+    weight?: number;
+    pieces?: number;
+    pallets?: number;
+    isHazmat?: boolean;
+    hazmatClass?: string;
+    temperatureMin?: number;
+    temperatureMax?: number;
+    specialHandling?: string[];
+    stops: Array<{
+        stopType: 'PICKUP' | 'DELIVERY';
+        stopSequence: number;
+        facilityName?: string;
+        addressLine1: string;
+        addressLine2?: string;
+        city: string;
+        state: string;
+        postalCode: string;
+        country?: string;
+        contactName?: string;
+        contactPhone?: string;
+        contactEmail?: string;
+        appointmentRequired?: boolean;
+        appointmentDate?: string;
+        appointmentTimeStart?: string;
+        appointmentTimeEnd?: string;
+        specialInstructions?: string;
+    }>;
+    carrierId?: string;
+    driverName?: string;
+    driverPhone?: string;
+    truckNumber?: string;
+    trailerNumber?: string;
+    carrierRate?: number;
+    accessorials?: Array<{ type: string; amount: number }>;
+    fuelSurcharge?: number;
+    carrierPaymentTerms?: string;
+    dispatchNotes?: string;
+}
+
+export function useCreateLoad() {
+    const router = useRouter();
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (data: CreateLoadInput) => {
+            const response = await apiClient.post<Load>('/loads', data);
+            return response;
+        },
+        onSuccess: (load) => {
+            queryClient.invalidateQueries({ queryKey: ['loads'] });
+            if (load.order?.id) {
+                queryClient.invalidateQueries({ queryKey: ['order', load.order.id] });
+            }
+            toast.success('Load created successfully', {
+                description: `Load ${load.loadNumber} has been created`,
+            });
+            router.push(`/operations/loads/${load.id}`);
+        },
+        onError: (error: any) => {
+            const errorMessage = error?.response?.data?.message || error?.message || 'Failed to create load';
+            toast.error('Error creating load', {
+                description: errorMessage,
+            });
+        },
+    });
+}
+
+// --- Carrier Search ---
+
+export interface CarrierSearchParams {
+    search?: string;
+    equipmentType?: string;
+    originState?: string;
+    destState?: string;
+    tier?: string;
+    compliance?: 'COMPLIANT' | 'WARNING' | 'ALL';
+    sort?: 'score' | 'rate' | 'recent' | 'preferred';
+    page?: number;
+    limit?: number;
+}
+
+export interface CarrierWithScore extends OperationsCarrier {
+    scorecard?: {
+        score: number;
+        onTimePercentage: number;
+        claimsRate: number;
+    };
+    laneRate?: number;
+    lastUsedDate?: string;
+    loadsCompleted?: number;
+    tier?: 'PLATINUM' | 'GOLD' | 'SILVER' | 'BRONZE';
+}
+
+export function useCarriers(params: CarrierSearchParams) {
+    return useQuery<{ data: CarrierWithScore[]; total: number }>({
+        queryKey: ['carriers', 'search', params],
+        queryFn: async () => {
+            const searchParams = new URLSearchParams();
+            if (params.search) searchParams.set('search', params.search);
+            if (params.equipmentType) searchParams.set('equipmentType', params.equipmentType);
+            if (params.originState) searchParams.set('originState', params.originState);
+            if (params.destState) searchParams.set('destState', params.destState);
+            if (params.tier) searchParams.set('tier', params.tier);
+            if (params.compliance) searchParams.set('compliance', params.compliance);
+            if (params.sort) searchParams.set('sort', params.sort);
+            if (params.page) searchParams.set('page', params.page.toString());
+            if (params.limit) searchParams.set('limit', params.limit.toString());
+
+            const response = await apiClient.get<{ data: CarrierWithScore[]; total: number }>(
+                `/carriers?${searchParams.toString()}`
+            );
+            return response;
+        },
+        staleTime: 300000, // 5 minutes
+    });
+}
+
+// --- Order Detail (for pre-fill) ---
+
+export function useOrder(orderId: string | undefined) {
+    return useQuery<OrderDetailResponse>({
+        queryKey: ['order', orderId],
+        queryFn: async () => {
+            const response = await apiClient.get<OrderDetailResponse>(`/orders/${orderId}`);
+            return response;
+        },
+        enabled: !!orderId,
         staleTime: 60000,
     });
 }
