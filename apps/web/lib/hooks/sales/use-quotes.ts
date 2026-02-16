@@ -9,6 +9,9 @@ import type {
   QuoteVersion,
   QuoteTimelineEvent,
   QuoteNote,
+  QuoteFormValues,
+  CalculateRateRequest,
+  CalculateRateResponse,
 } from "@/types/quotes";
 
 const QUOTES_KEY = "quotes";
@@ -188,6 +191,43 @@ export function useCreateQuoteVersion() {
       queryClient.invalidateQueries({ queryKey: [QUOTES_KEY, "detail", id] });
       queryClient.invalidateQueries({ queryKey: [QUOTES_KEY, "versions", id] });
       queryClient.invalidateQueries({ queryKey: [QUOTES_KEY] });
+    },
+  });
+}
+
+// --- Form hooks ---
+
+export function useCreateQuote() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: QuoteFormValues) => {
+      return await apiClient.post<Quote>("/quotes", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUOTES_KEY] });
+    },
+  });
+}
+
+export function useUpdateQuote() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: QuoteFormValues }) => {
+      return await apiClient.patch<Quote>(`/quotes/${id}`, data);
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: [QUOTES_KEY, "detail", variables.id] });
+      queryClient.invalidateQueries({ queryKey: [QUOTES_KEY] });
+    },
+  });
+}
+
+export function useCalculateRate() {
+  return useMutation({
+    mutationFn: async (params: CalculateRateRequest) => {
+      return await apiClient.post<CalculateRateResponse>("/quotes/calculate-rate", params);
     },
   });
 }

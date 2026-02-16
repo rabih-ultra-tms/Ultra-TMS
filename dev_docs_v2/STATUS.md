@@ -200,8 +200,8 @@
 | TMS-003 | Loads List page | DONE | Antigravity | M (5h) ⬆️ | Feb 13 |
 | TMS-004 | Load Detail page (tabs) | DONE | Antigravity | L (8h) ⬆️ | Feb 13 |
 | SALES-001 | Quotes List rebuild | DONE | Claude Code | M (5h) ⬆️ | Feb 14 |
-| SALES-002 | Quote Detail rebuild | NOT STARTED | — | L (7h) ⬆️ | — |
-| SALES-003 | Quote Create/Edit rebuild | NOT STARTED | — | L (8h) ⬆️ | — |
+| SALES-002 | Quote Detail rebuild | DONE | Antigravity | L (7h) ⬆️ | Feb 15 |
+| SALES-003 | Quote Create/Edit rebuild | DONE | Claude Code | L (8h) ⬆️ | Feb 15 |
 | **TMS-015** | **Public Tracking Page** | NOT STARTED | — | L (8-12h) | — |
 | **DOC-001** | **Document Upload on Load Detail** | NOT STARTED | — | M (4-6h) | — |
 

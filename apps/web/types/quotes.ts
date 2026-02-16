@@ -180,3 +180,68 @@ export interface QuoteNote {
   createdBy: string;
   createdAt: string;
 }
+
+// --- Form types ---
+
+export interface QuoteStopInput {
+  type: "PICKUP" | "DELIVERY" | "STOP";
+  city: string;
+  state: string;
+  address?: string;
+  zipCode?: string;
+  facilityName?: string;
+  appointmentDate?: string;
+  appointmentTime?: string;
+  contactName?: string;
+  contactPhone?: string;
+  notes?: string;
+  sequence: number;
+}
+
+export interface QuoteFormValues {
+  customerId: string;
+  customerName?: string;
+  contactId?: string;
+  serviceType: ServiceType;
+  equipmentType: EquipmentType;
+  commodity?: string;
+  weight?: number;
+  pieces?: number;
+  pallets?: number;
+  specialHandling?: string[];
+  stops: QuoteStopInput[];
+  linehaulRate: number;
+  fuelSurcharge?: number;
+  accessorials: QuoteAccessorialInput[];
+  internalNotes?: string;
+  validityDays?: number;
+}
+
+export interface QuoteAccessorialInput {
+  type: string;
+  description?: string;
+  rateType: "FLAT" | "PER_MILE" | "PER_CWT" | "PERCENTAGE";
+  amount: number;
+}
+
+export interface CalculateRateRequest {
+  originCity: string;
+  originState: string;
+  destinationCity: string;
+  destinationState: string;
+  equipmentType: EquipmentType;
+  weight?: number;
+  customerId?: string;
+}
+
+export interface CalculateRateResponse {
+  linehaulRate: number;
+  fuelSurcharge: number;
+  estimatedCost: number;
+  distance: number;
+  transitTime: string;
+  rateSource: string;
+  marketRateLow?: number;
+  marketRateAvg?: number;
+  marketRateHigh?: number;
+}
