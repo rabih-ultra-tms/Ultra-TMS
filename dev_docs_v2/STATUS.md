@@ -203,7 +203,7 @@
 | SALES-002 | Quote Detail rebuild | DONE | Antigravity | L (7h) ⬆️ | Feb 15 |
 | SALES-003 | Quote Create/Edit rebuild | DONE | Claude Code | L (8h) ⬆️ | Feb 15 |
 | **TMS-015** | **Public Tracking Page** | DONE | Claude Code | L (8-12h) | Feb 15 |
-| **DOC-001** | **Document Upload on Load Detail** | NOT STARTED | — | M (4-6h) | — |
+| **DOC-001** | **Document Upload on Load Detail** | DONE | Claude Code | M (4-6h) | Feb 15 |
 
 **Phase 3 Total:** ~46-52 hours
 

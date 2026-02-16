@@ -6,6 +6,101 @@
 
 ---
 
+## Session: 2026-02-15 (Saturday) — Session 2
+
+### Developer: Claude Code
+### AI Tool: Claude Opus 4.6
+### Commit: `a83f898` — feat(tms): add public shipment tracking page (TMS-015)
+
+**What was done:**
+Built the public-facing shipment tracking page at `/track/[trackingCode]` — the single highest-ROI feature identified by the logistics expert. Customers get a tracking link (no login required) and see shipment status, stop timeline, route visualization, and ETA. Created a new unauthenticated backend endpoint, React Query hook with 5-minute auto-refresh, and 5 frontend components with full design-token styling. Passed sensitive data audit — no rates, carrier contacts, or internal notes exposed.
+
+**Files created/changed:** 10 files (983 lines added, 2 modified)
+
+**Detailed breakdown:**
+
+| Area | Files | What was built |
+|------|-------|---------------|
+| Backend | `public-tracking.controller.ts` (new) | Public endpoint `GET /api/v1/public/tracking/:trackingCode` — no JWT auth required |
+| Backend | `tracking.service.ts` (modified) | `getPublicTrackingByCode()` method — queries by loadNumber, returns only safe public data |
+| Backend | `tms.module.ts` (modified) | Registered PublicTrackingController in TMS module |
+| Hook | `lib/hooks/tracking/use-public-tracking.ts` (new) | React Query hook with plain fetch (no auth headers), 5-min auto-refresh, custom TrackingNotFoundError |
+| Component | `components/tracking/tracking-status-timeline.tsx` (new) | Vertical stop timeline with status icons, live pulse indicators, arrival/departure timestamps |
+| Component | `components/tracking/tracking-map-mini.tsx` (new) | Route visualization with origin/destination markers, current truck position with GPS indicator |
+| Component | `components/tracking/public-tracking-view.tsx` (new) | Main tracking display: status overview card with progress bar, key info grid (pickup/delivery/ETA/equipment), map + timeline cards, skeleton loading state |
+| Page | `app/track/[trackingCode]/page.tsx` (new) | Public route outside (dashboard) layout, Ultra TMS branded header/footer, not-found + error states |
+| Page | `app/track/[trackingCode]/layout.tsx` (new) | Dynamic OG meta tags for social sharing, noindex robots directive |
+| Status | `dev_docs_v2/STATUS.md` | Marked TMS-015 as DONE (Feb 15) |
+
+**Key deliverables:**
+- `/track/[trackingCode]` renders without login — public route outside auth layout
+- Status overview with progress bar (PENDING → COMPLETED), pickup/delivery dates, ETA, equipment type
+- Vertical stop timeline with live pulse indicator for active stops, arrival/departure timestamps
+- Route visualization with origin/destination markers and current truck position
+- "Shipment Not Found" and error states with retry button
+- Mobile-responsive, Ultra TMS branded header + footer
+- OG meta tags for social sharing (title, description, siteName)
+- 5-minute auto-refresh + manual refresh button
+- Security audit: PASS — no sensitive data (rates, carrier PII, notes) exposed
+
+**Impact metrics for report:**
+- 1 commit, 1 task completed (TMS-015)
+- 10 files touched, 983 net lines added
+- Phase 3 progress: 8/9 tasks complete (only DOC-001 remains)
+- 0 type errors, 0 lint warnings in new code
+- 1 new public-facing feature (customer-facing tracking page)
+- 1 new backend endpoint (unauthenticated)
+- Eliminates ~50% of "where's my truck?" support calls per logistics expert estimate
+
+---
+
+## Session: 2026-02-15 (Saturday) — Session 1
+
+### Developer: Claude Code
+### AI Tool: Claude Sonnet 4.5
+### Commit: `65731eb` — feat(sales): rebuild Quotes List page (SALES-001)
+
+**What was done:**
+Rebuilt the Quotes List page (`/quotes`) from design spec using the ListPage pattern. Created complete quote management foundation with types, React Query hooks, design-token-driven status badges, TanStack Table columns, filters (status/service type/search with 300ms debounce), pagination, bulk selection, and contextual row action menus.
+
+**Files created/changed:** 8 files (774 lines added, 2 modified)
+
+**Detailed breakdown:**
+
+| Area | Files | What was built |
+|------|-------|---------------|
+| Types | `types/quotes.ts` (new) | Quote, QuoteListParams, QuoteListResponse, QuoteStats interfaces; QuoteStatus/ServiceType/EquipmentType enums; label maps |
+| Hooks | `lib/hooks/sales/use-quotes.ts` (new) | React Query hooks: useQuotes (paginated list), useQuoteStats, useDeleteQuote, useCloneQuote, useSendQuote, useConvertQuote |
+| Design Tokens | `lib/design-tokens/status.ts` | Added QUOTE_STATUSES mapping 7 statuses (DRAFT, SENT, VIEWED, ACCEPTED, CONVERTED, REJECTED, EXPIRED) to token system |
+| Components | `components/sales/quotes/quote-status-badge.tsx` (new) | QuoteStatusBadge using design tokens with 7 color variants |
+| Columns | `app/(dashboard)/quotes/columns.tsx` (new) | TanStack Table columns: select, quote#/version/status, customer/agent, lane/distance, type, equipment, amount/margin, created, actions menu |
+| Page | `app/(dashboard)/quotes/page.tsx` (new) | Quotes list with ListPage pattern, 4 stat cards, filters (status preset/service type/search), bulk actions, pagination |
+| Status | `dev_docs_v2/STATUS.md` | Marked SALES-001 as DONE (Feb 15) |
+
+**Key deliverables:**
+- `/quotes` page rendering with filters, search debounce (300ms), pagination
+- 7 status badges using design token system (no hardcoded colors)
+- 10 table columns with conditional action menus (Edit/Send/Delete for drafts, Convert for accepted, etc.)
+- 4 stat cards: Total Quotes, Active Pipeline, Pipeline Value, Won This Month
+- React Query hooks for 6 quote operations wired to `/api/v1/quotes` endpoints
+- TypeScript types for Quote domain (3 enums, 4 interfaces)
+
+**Impact metrics for report:**
+- 1 commit, 1 task completed (SALES-001)
+- 8 files touched, 774 net lines added
+- Phase 3 progress: 5/9 tasks complete (TMS-001→004 + SALES-001 done)
+- 0 type errors, 0 lint warnings in new code
+- First Sales service screen rebuilt from design spec
+
+**Key learnings:**
+- ListPage pattern from PATT-001 makes list screens 5x faster — just columns + filters, no boilerplate
+- Design token QUOTE_STATUSES cleanly maps 7 business statuses to 6 TMS color tokens (DRAFT uses custom gray, CONVERTED uses `success` intent)
+- StatusBadge from COMP-002 handles both `status` and `intent` props, with optional `className` override for edge cases
+
+**Unblocked tasks:** SALES-002 (Quote Detail rebuild), SALES-003 (Quote Create/Edit rebuild)
+
+---
+
 ## Session: 2026-02-14 (Friday)
 
 ### Developer: Claude Code
@@ -1275,6 +1370,44 @@ SWC receives `jsConfig.paths: { "@/*": ["./*"] }` and resolves `@/lib/hooks/oper
 - 72 total tests, 13 suites, 0 failures
 - Phase 2 fully complete (all 8 tasks DONE)
 - Reusable test infrastructure for all future modules
+
+## Session: 2026-02-15 (Saturday) — Session 3
+
+### Developer: Claude Code
+### AI Tool: Claude Opus 4.6
+### Commit: `f3cbb49` — feat(tms): add document upload to Load Detail tab (DOC-001)
+
+**What was done:**
+Wired the Documents tab on Load Detail to the real backend API. Replaced mock `useLoadDocuments` with new `useDocuments("LOAD", id)` hook backed by `/api/v1/documents` endpoints. Created a reusable drag-drop upload widget with document type selector, upload progress, and file validation. Documents tab now supports upload (FormData POST), download via signed URLs, and delete with ConfirmDialog.
+
+**Files created/changed:** 4 files (662 lines added, 79 removed)
+
+**Detailed breakdown:**
+
+| Area | Files | What was built |
+|------|-------|---------------|
+| Hooks | `lib/hooks/documents/use-documents.ts` (new) | React Query hooks: useDocuments, useUploadDocument, useDeleteDocument, useDocumentDownloadUrl. Full TypeScript types for Document, DocumentType, EntityType. |
+| Component | `components/shared/document-upload.tsx` (new) | Reusable drag-drop upload widget: file validation (PDF/JPG/PNG/TIFF, 25MB max), image preview, document type selector (POD/BOL/Rate Confirm/Invoice/Insurance/Other), upload progress bar |
+| Component | `components/tms/loads/load-documents-tab.tsx` (rewritten) | Full Documents tab: upload toggle, document cards with type/size/date/uploader, download via signed URL, delete with ConfirmDialog, empty state with upload CTA |
+| Cleanup | `lib/hooks/tms/use-loads.ts` (modified) | Removed mock useLoadDocuments (was returning hardcoded data) |
+
+**Key deliverables:**
+- Documents tab wired to real API: `GET /documents/entity/LOAD/:id`, `POST /documents`, `DELETE /documents/:id`
+- Drag-drop upload with document type selector (POD, BOL, Rate Confirmation, Invoice, Insurance, Other)
+- Download via `GET /documents/:id/download` signed URLs
+- Delete with ConfirmDialog (destructive variant)
+- Upload progress indicator
+- Document cards showing: name, type label, file size, date, uploader name
+- Reusable `DocumentUpload` component for Orders, Carriers, etc.
+- No `console.log`, no `any` types, TypeScript compiles clean
+
+**Impact metrics for report:**
+- 1 commit, 1 task completed (DOC-001)
+- 4 files touched, 662 net lines added
+- Phase 3 complete: 9/9 tasks DONE
+- 0 type errors in new code
+- 1 reusable shared component (document-upload.tsx)
+- Unblocks ACC-002 (Invoicing — POD triggers invoice readiness)
 
 <!-- NEXT SESSION ENTRY GOES HERE -->
 
