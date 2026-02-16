@@ -219,9 +219,9 @@
 | TMS-006 | Edit Order Form | DONE | Claude Code | M (5h) ⬆️ | Feb 16 |
 | TMS-007 | New Load Form (3 sessions) | DONE | Claude Code | L (9h) ⬆️ | Feb 16 |
 | TMS-008 | Edit Load Form | DONE | Claude Code | M (5h) ⬆️ | Feb 16 |
-| TMS-009 | Stop Management | NOT STARTED | — | L (6h) ⬆️ | — |
-| TMS-010 | Check Call Log | NOT STARTED | — | L (6h) ⬆️ | — |
-| INFRA-001 | WebSocket Infrastructure | NOT STARTED | — | L (8h) ⬆️ | — |
+| TMS-009 | Stop Management | DONE | Claude Code | L (6h) ⬆️ | Feb 16 |
+| TMS-010 | Check Call Log | DONE | Claude Code | L (6h) ⬆️ | Feb 16 |
+| INFRA-001 | WebSocket Infrastructure | DONE | Claude Code | L (8h) ⬆️ | Feb 16 |
 | **TMS-011a** | **Dispatch: Data layer** (React Query + WS hooks) | NOT STARTED | — | L (8-10h) | — |
 | **TMS-011b** | **Dispatch: Kanban UI** (6 columns, cards, filters) | NOT STARTED | — | L (8-10h) | — |
 | **TMS-011c** | **Dispatch: Drag-drop** (dnd-kit, validation) | NOT STARTED | — | XL (12-16h) | — |

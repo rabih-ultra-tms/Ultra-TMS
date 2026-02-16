@@ -1,6 +1,6 @@
 "use client";
 import * as React from "react";
-import { PanelLeft, Bell, Search } from "lucide-react";
+import { PanelLeft, Bell, Search, Wifi, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,8 +10,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { UserNav } from "./user-nav";
 import { useUIStore } from "@/lib/stores/ui-store";
+import { useSocketStatus } from "@/lib/socket";
 import { cn } from "@/lib/utils";
 
 interface AppHeaderProps {
@@ -21,6 +28,7 @@ interface AppHeaderProps {
 export function AppHeader({ className }: AppHeaderProps) {
   const { toggleSidebar, toggleSidebarCollapsed } = useUIStore();
   const [mounted, setMounted] = React.useState(false);
+  const { status, connected, latency } = useSocketStatus();
 
   React.useEffect(() => {
     setMounted(true);
@@ -71,6 +79,43 @@ export function AppHeader({ className }: AppHeaderProps) {
           <Search className="h-5 w-5" />
           <span className="sr-only">Search</span>
         </Button>
+
+        {mounted && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-1.5 px-2 py-1 text-xs text-muted-foreground">
+                  {connected ? (
+                    <>
+                      <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                      <Wifi className="h-3.5 w-3.5" />
+                    </>
+                  ) : status === 'reconnecting' ? (
+                    <>
+                      <div className="h-2 w-2 rounded-full bg-yellow-500 animate-pulse" />
+                      <Wifi className="h-3.5 w-3.5" />
+                    </>
+                  ) : (
+                    <>
+                      <div className="h-2 w-2 rounded-full bg-gray-400" />
+                      <WifiOff className="h-3.5 w-3.5" />
+                    </>
+                  )}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <div className="text-sm">
+                  <p className="font-medium">
+                    {connected ? 'Real-time Connected' : status === 'reconnecting' ? 'Reconnecting...' : 'Disconnected'}
+                  </p>
+                  {latency !== null && connected && (
+                    <p className="text-xs text-muted-foreground">Latency: {latency}ms</p>
+                  )}
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
 
         {mounted ? (
           <DropdownMenu>
