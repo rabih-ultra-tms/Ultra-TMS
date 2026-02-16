@@ -97,3 +97,86 @@ export const EQUIPMENT_TYPE_LABELS: Record<EquipmentType, string> = {
   CONESTOGA: "CN",
   POWER_ONLY: "PO",
 };
+
+export const EQUIPMENT_TYPE_FULL_LABELS: Record<EquipmentType, string> = {
+  DRY_VAN: "Dry Van",
+  REEFER: "Reefer",
+  FLATBED: "Flatbed",
+  STEP_DECK: "Step Deck",
+  LOWBOY: "Lowboy",
+  CONESTOGA: "Conestoga",
+  POWER_ONLY: "Power Only",
+};
+
+// --- Detail types ---
+
+export interface QuoteStop {
+  id: string;
+  type: "PICKUP" | "DELIVERY" | "STOP";
+  city: string;
+  state: string;
+  address?: string;
+  zipCode?: string;
+  facilityName?: string;
+  appointmentDate?: string;
+  appointmentTime?: string;
+  notes?: string;
+  sequence: number;
+}
+
+export interface QuoteDetail extends Quote {
+  commodity?: string;
+  weight?: number;
+  pieces?: number;
+  pallets?: number;
+  specialHandling?: string[];
+  deliveryDate?: string;
+  transitTime?: string;
+  linehaulRate?: number;
+  fuelSurcharge?: number;
+  accessorialsTotal?: number;
+  marginAmount?: number;
+  rateSource?: string;
+  ratePerMile?: number;
+  marketRateLow?: number;
+  marketRateAvg?: number;
+  marketRateHigh?: number;
+  sentAt?: string;
+  viewedAt?: string;
+  acceptedAt?: string;
+  rejectedAt?: string;
+  rejectionReason?: string;
+  convertedOrderId?: string;
+  convertedOrderNumber?: string;
+  contactName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  parentQuoteId?: string;
+  stops?: QuoteStop[];
+}
+
+export interface QuoteVersion {
+  id: string;
+  version: number;
+  status: QuoteStatus;
+  totalAmount: number;
+  changes?: string;
+  createdBy?: string;
+  createdAt: string;
+}
+
+export interface QuoteTimelineEvent {
+  id: string;
+  type: "created" | "edited" | "sent" | "viewed" | "accepted" | "rejected" | "expired" | "converted" | "note" | "version";
+  description: string;
+  details?: string;
+  createdBy?: string;
+  createdAt: string;
+}
+
+export interface QuoteNote {
+  id: string;
+  content: string;
+  createdBy: string;
+  createdAt: string;
+}
