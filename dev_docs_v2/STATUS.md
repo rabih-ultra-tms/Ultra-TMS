@@ -222,7 +222,7 @@
 | TMS-009 | Stop Management | DONE | Claude Code | L (6h) ⬆️ | Feb 16 |
 | TMS-010 | Check Call Log | DONE | Claude Code | L (6h) ⬆️ | Feb 16 |
 | INFRA-001 | WebSocket Infrastructure | DONE | Claude Code | L (8h) ⬆️ | Feb 16 |
-| **TMS-011a** | **Dispatch: Data layer** (React Query + WS hooks) | NOT STARTED | — | L (8-10h) | — |
+| **TMS-011a** | **Dispatch: Data layer** (React Query + WS hooks) | DONE | Claude Code | L (8-10h) | Feb 16 |
 | **TMS-011b** | **Dispatch: Kanban UI** (6 columns, cards, filters) | NOT STARTED | — | L (8-10h) | — |
 | **TMS-011c** | **Dispatch: Drag-drop** (dnd-kit, validation) | NOT STARTED | — | XL (12-16h) | — |
 | **TMS-011d** | **Dispatch: Real-time sync** (WebSocket events) | NOT STARTED | — | L (8-12h) | — |
