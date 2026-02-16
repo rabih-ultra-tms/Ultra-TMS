@@ -123,4 +123,104 @@ export class TrackingService {
         notes: cc.notes || undefined,
       }));
   }
+
+  async getPublicTrackingByCode(trackingCode: string) {
+    const load = await this.prisma.load.findFirst({
+      where: {
+        loadNumber: trackingCode,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        loadNumber: true,
+        status: true,
+        equipmentType: true,
+        currentLocationLat: true,
+        currentLocationLng: true,
+        currentCity: true,
+        currentState: true,
+        lastTrackingUpdate: true,
+        eta: true,
+        pickupDate: true,
+        deliveryDate: true,
+        dispatchedAt: true,
+        pickedUpAt: true,
+        deliveredAt: true,
+        order: {
+          select: {
+            orderNumber: true,
+            customer: {
+              select: { companyName: true },
+            },
+            stops: {
+              where: { deletedAt: null },
+              orderBy: { stopSequence: 'asc' },
+              select: {
+                id: true,
+                stopType: true,
+                stopSequence: true,
+                facilityName: true,
+                city: true,
+                state: true,
+                zip: true,
+                status: true,
+                appointmentDate: true,
+                appointmentTimeStart: true,
+                appointmentTimeEnd: true,
+                arrivedAt: true,
+                departedAt: true,
+                latitude: true,
+                longitude: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!load) {
+      return null;
+    }
+
+    return {
+      loadNumber: load.loadNumber,
+      orderNumber: load.order?.orderNumber,
+      status: load.status,
+      equipmentType: load.equipmentType,
+      customerName: load.order?.customer?.companyName,
+      currentLocation: load.currentLocationLat && load.currentLocationLng
+        ? {
+            lat: Number(load.currentLocationLat),
+            lng: Number(load.currentLocationLng),
+            city: load.currentCity,
+            state: load.currentState,
+            updatedAt: load.lastTrackingUpdate,
+          }
+        : null,
+      eta: load.eta,
+      pickupDate: load.pickupDate,
+      deliveryDate: load.deliveryDate,
+      dispatchedAt: load.dispatchedAt,
+      pickedUpAt: load.pickedUpAt,
+      deliveredAt: load.deliveredAt,
+      stops: (load.order?.stops || []).map((stop) => ({
+        id: stop.id,
+        type: stop.stopType,
+        sequence: stop.stopSequence,
+        facilityName: stop.facilityName,
+        city: stop.city,
+        state: stop.state,
+        zip: stop.zip,
+        status: stop.status,
+        appointmentDate: stop.appointmentDate,
+        appointmentTimeStart: stop.appointmentTimeStart,
+        appointmentTimeEnd: stop.appointmentTimeEnd,
+        arrivedAt: stop.arrivedAt,
+        departedAt: stop.departedAt,
+        location: stop.latitude && stop.longitude
+          ? { lat: Number(stop.latitude), lng: Number(stop.longitude) }
+          : null,
+      })),
+    };
+  }
 }

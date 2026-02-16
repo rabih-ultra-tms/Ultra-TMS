@@ -8,11 +8,12 @@ import { OrdersController } from './orders.controller';
 import { LoadsController } from './loads.controller';
 import { StopsController } from './stops.controller';
 import { TrackingController } from './tracking.controller';
+import { PublicTrackingController } from './public-tracking.controller';
 import { TrackingService } from './tracking.service';
 
 @Module({
   imports: [EventEmitterModule],
-  controllers: [OrdersController, LoadsController, StopsController, TrackingController],
+  controllers: [OrdersController, LoadsController, StopsController, TrackingController, PublicTrackingController],
   providers: [PrismaService, OrdersService, LoadsService, StopsService, TrackingService],
   exports: [OrdersService, LoadsService, StopsService, TrackingService],
 })
