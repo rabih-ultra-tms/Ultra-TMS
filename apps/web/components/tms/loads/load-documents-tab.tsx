@@ -1,79 +1,238 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { useLoadDocuments } from "@/lib/hooks/tms/use-loads";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useState, useCallback } from "react";
+import {
+  useDocuments,
+  useUploadDocument,
+  useDeleteDocument,
+  type Document,
+  type DocumentType,
+} from "@/lib/hooks/documents/use-documents";
+import { apiClient } from "@/lib/api-client";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Download, Eye, Upload } from "lucide-react";
+import {
+  FileText,
+  Download,
+  Trash2,
+  Upload,
+  ImageIcon,
+  ChevronUp,
+} from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DocumentUpload } from "@/components/shared/document-upload";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 
 interface LoadDocumentsTabProps {
-    loadId: string;
+  loadId: string;
+}
+
+const DOC_TYPE_LABELS: Record<DocumentType, string> = {
+  POD: "POD",
+  BOL: "BOL",
+  RATE_CONFIRM: "Rate Confirmation",
+  INVOICE: "Invoice",
+  INSURANCE: "Insurance",
+  CONTRACT: "Contract",
+  W9: "W-9",
+  CARRIER_AGREEMENT: "Carrier Agreement",
+  OTHER: "Other",
+};
+
+const STATUS_VARIANTS: Record<string, "default" | "secondary" | "outline"> = {
+  verified: "default",
+  received: "secondary",
+  pending: "outline",
+};
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 export function LoadDocumentsTab({ loadId }: LoadDocumentsTabProps) {
-    const { data: documents, isLoading } = useLoadDocuments(loadId);
+  const { data: documents, isLoading } = useDocuments("LOAD", loadId);
+  const uploadMutation = useUploadDocument();
+  const deleteMutation = useDeleteDocument();
 
-    if (isLoading) {
-        return <div className="space-y-4">
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-24 w-full" />
-        </div>;
-    }
+  const [showUpload, setShowUpload] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Document | null>(null);
 
-    if (!documents || documents.length === 0) {
-        return (
-            <div className="flex flex-col items-center justify-center h-64 border rounded-lg bg-muted/10 dashed border-muted-foreground/30">
-                <FileText className="h-10 w-10 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium">No documents yet</h3>
-                <p className="text-sm text-muted-foreground mb-4">Upload BOLs, PODs, or Rate Confirmations.</p>
-                <Button>
-                    <Upload className="h-4 w-4 mr-2" /> Upload Document
-                </Button>
-            </div>
-        );
-    }
+  const handleUpload = useCallback(
+    async (file: File, documentType: DocumentType, name: string) => {
+      await uploadMutation.mutateAsync({
+        file,
+        name,
+        documentType,
+        entityType: "LOAD",
+        entityId: loadId,
+      });
+      setShowUpload(false);
+    },
+    [uploadMutation, loadId]
+  );
 
+  const handleDelete = useCallback(async () => {
+    if (!deleteTarget) return;
+    await deleteMutation.mutateAsync({
+      documentId: deleteTarget.id,
+      entityType: "LOAD",
+      entityId: loadId,
+    });
+    setDeleteTarget(null);
+  }, [deleteMutation, deleteTarget, loadId]);
+
+  const handleDownload = useCallback(
+    async (doc: Document) => {
+      try {
+        const response = await apiClient.get<{
+          downloadUrl: string;
+        }>(`/documents/${doc.id}/download`);
+        window.open(response.downloadUrl, "_blank");
+      } catch {
+        // Fallback: open in new tab via API URL
+        const url = apiClient.getFullUrl(`/documents/${doc.id}/download`);
+        window.open(url, "_blank");
+      }
+    },
+    []
+  );
+
+  if (isLoading) {
     return (
-        <div className="space-y-4">
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium">Documents ({documents.length})</h3>
-                <Button size="sm">
-                    <Upload className="h-4 w-4 mr-2" /> Upload
-                </Button>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-                {documents.map((doc: any) => (
-                    <Card key={doc.id} className="hover:bg-muted/5 transition-colors">
-                        <CardContent className="p-4 flex items-start gap-3">
-                            <div className="bg-blue-100 p-2 rounded text-blue-600">
-                                <FileText className="h-6 w-6" />
-                            </div>
-                            <div className="flex-1 space-y-1">
-                                <div className="flex justify-between items-start">
-                                    <div className="font-medium truncate" title={doc.name}>{doc.name}</div>
-                                    <Badge variant={doc.status === 'signed' ? 'default' : 'secondary'} className="text-[10px] uppercase">
-                                        {doc.status}
-                                    </Badge>
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                    {doc.type} • {new Date(doc.date).toLocaleDateString()}
-                                </div>
-                                <div className="flex gap-2 mt-2">
-                                    <Button variant="ghost" size="xs" className="h-6 px-2">
-                                        <Eye className="h-3 w-3 mr-1" /> View
-                                    </Button>
-                                    <Button variant="ghost" size="xs" className="h-6 px-2">
-                                        <Download className="h-3 w-3 mr-1" /> Download
-                                    </Button>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
-        </div>
+      <div className="space-y-4">
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-24 w-full" />
+      </div>
     );
+  }
+
+  const hasDocuments = documents && documents.length > 0;
+
+  return (
+    <div className="space-y-4">
+      {/* Header with upload toggle */}
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium">
+          Documents{hasDocuments ? ` (${documents.length})` : ""}
+        </h3>
+        <Button
+          size="sm"
+          variant={showUpload ? "outline" : "default"}
+          onClick={() => setShowUpload(!showUpload)}
+        >
+          {showUpload ? (
+            <>
+              <ChevronUp className="h-4 w-4 mr-2" /> Hide Upload
+            </>
+          ) : (
+            <>
+              <Upload className="h-4 w-4 mr-2" /> Upload
+            </>
+          )}
+        </Button>
+      </div>
+
+      {/* Upload zone */}
+      {showUpload && (
+        <DocumentUpload
+          onUpload={handleUpload}
+          isUploading={uploadMutation.isPending}
+        />
+      )}
+
+      {/* Empty state */}
+      {!hasDocuments && !showUpload && (
+        <div className="flex flex-col items-center justify-center h-52 border-2 border-dashed rounded-lg bg-muted/10 border-muted-foreground/25">
+          <FileText className="h-10 w-10 text-muted-foreground mb-3" />
+          <h4 className="text-base font-medium">No documents yet</h4>
+          <p className="text-sm text-muted-foreground mb-4">
+            Upload BOLs, PODs, or Rate Confirmations.
+          </p>
+          <Button size="sm" onClick={() => setShowUpload(true)}>
+            <Upload className="h-4 w-4 mr-2" /> Upload Document
+          </Button>
+        </div>
+      )}
+
+      {/* Document list */}
+      {hasDocuments && (
+        <div className="grid gap-3 md:grid-cols-2">
+          {documents.map((doc) => (
+            <Card
+              key={doc.id}
+              className="hover:bg-muted/5 transition-colors"
+            >
+              <CardContent className="p-4 flex items-start gap-3">
+                <div className="w-10 h-10 flex items-center justify-center rounded bg-primary/10 text-primary shrink-0">
+                  {doc.mimeType?.startsWith("image/") ? (
+                    <ImageIcon className="h-5 w-5" />
+                  ) : (
+                    <FileText className="h-5 w-5" />
+                  )}
+                </div>
+
+                <div className="flex-1 min-w-0 space-y-1">
+                  <div className="flex justify-between items-start gap-2">
+                    <p className="font-medium text-sm truncate" title={doc.name}>
+                      {doc.name}
+                    </p>
+                    <Badge
+                      variant={STATUS_VARIANTS[doc.status ?? "pending"] ?? "outline"}
+                      className="text-[10px] uppercase shrink-0"
+                    >
+                      {doc.status ?? "pending"}
+                    </Badge>
+                  </div>
+
+                  <div className="text-xs text-muted-foreground">
+                    {DOC_TYPE_LABELS[doc.documentType] ?? doc.documentType}
+                    {" \u00B7 "}
+                    {formatFileSize(doc.fileSize)}
+                    {" \u00B7 "}
+                    {new Date(doc.createdAt).toLocaleDateString()}
+                    {doc.createdByUser &&
+                      ` \u00B7 ${doc.createdByUser.firstName} ${doc.createdByUser.lastName}`}
+                  </div>
+
+                  <div className="flex gap-1 pt-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-xs"
+                      onClick={() => handleDownload(doc)}
+                    >
+                      <Download className="h-3 w-3 mr-1" /> Download
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-xs text-destructive hover:text-destructive"
+                      onClick={() => setDeleteTarget(doc)}
+                    >
+                      <Trash2 className="h-3 w-3 mr-1" /> Delete
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Delete confirmation */}
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Delete Document"
+        description={`Are you sure you want to delete "${deleteTarget?.name}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        variant="destructive"
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+        isLoading={deleteMutation.isPending}
+      />
+    </div>
+  );
 }

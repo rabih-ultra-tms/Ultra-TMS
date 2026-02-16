@@ -60,20 +60,7 @@ export function useLoadStats() {
 
 // --- Mocks for Missing Endpoints ---
 
-export function useLoadDocuments(id: string) {
-    return useQuery({
-        queryKey: ['load-documents', id],
-        queryFn: async () => {
-            // Mock documents
-            await new Promise(resolve => setTimeout(resolve, 500));
-            return [
-                { id: '1', type: 'Justification', name: 'Rate Confirmation.pdf', status: 'signed', date: '2025-02-10T10:00:00Z', url: '#' },
-                { id: '2', type: 'BOL', name: 'Bill of Lading.pdf', status: 'uploaded', date: '2025-02-10T08:00:00Z', url: '#' },
-            ];
-        },
-        enabled: !!id
-    });
-}
+// useLoadDocuments removed — replaced by useDocuments("LOAD", id) in @/lib/hooks/documents/use-documents
 
 export function useLoadTimeline(id: string) {
     return useQuery({
