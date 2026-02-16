@@ -113,9 +113,11 @@ interface LoadFormSectionsProps {
     form: UseFormReturn<LoadFormValues>;
     customerRate?: number;
     isFromOrder?: boolean;
+    mode?: 'create' | 'edit';
+    loadStatus?: string;
 }
 
-export function LoadFormSections({ form, customerRate, isFromOrder }: LoadFormSectionsProps) {
+export function LoadFormSections({ form, customerRate, isFromOrder, mode = 'create', loadStatus }: LoadFormSectionsProps) {
     const [showCarrierSelector, setShowCarrierSelector] = React.useState(false);
     const [selectedCarrier, setSelectedCarrier] = React.useState<CarrierWithScore | null>(null);
 
@@ -134,6 +136,11 @@ export function LoadFormSections({ form, customerRate, isFromOrder }: LoadFormSe
     // Get origin and destination for carrier search
     const originStop = stops.find(s => s.stopType === 'PICKUP');
     const destStop = stops.find(s => s.stopType === 'DELIVERY');
+
+    // Carrier field is read-only after PICKED_UP status
+    const carrierReadOnly = mode === 'edit' && loadStatus && [
+        'PICKED_UP', 'IN_TRANSIT', 'AT_DELIVERY', 'DELIVERED', 'COMPLETED'
+    ].includes(loadStatus);
 
     const handleCarrierSelect = (carrier: CarrierWithScore) => {
         setSelectedCarrier(carrier);
@@ -348,11 +355,20 @@ export function LoadFormSections({ form, customerRate, isFromOrder }: LoadFormSe
                 <CardHeader>
                     <CardTitle>Carrier Assignment</CardTitle>
                     <CardDescription>
-                        Select a carrier for this load (optional — can be assigned later)
+                        {carrierReadOnly
+                            ? "Carrier cannot be changed after pickup"
+                            : "Select a carrier for this load (optional — can be assigned later)"
+                        }
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {!showCarrierSelector && !selectedCarrier && (
+                    {carrierReadOnly && (
+                        <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+                            ⚠️ Carrier assignment is locked after pickup. Contact operations manager to reassign.
+                        </div>
+                    )}
+
+                    {!showCarrierSelector && !selectedCarrier && !carrierReadOnly && (
                         <Button onClick={() => setShowCarrierSelector(true)} variant="outline" className="w-full">
                             <Plus className="mr-2 h-4 w-4" />
                             Select Carrier
@@ -366,17 +382,19 @@ export function LoadFormSections({ form, customerRate, isFromOrder }: LoadFormSe
                                     <div className="font-medium">{selectedCarrier.companyName}</div>
                                     <div className="text-sm text-muted-foreground">{selectedCarrier.mcNumber}</div>
                                 </div>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                        setSelectedCarrier(null);
-                                        form.setValue("carrierId", undefined);
-                                        setShowCarrierSelector(true);
-                                    }}
-                                >
-                                    Change
-                                </Button>
+                                {!carrierReadOnly && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                            setSelectedCarrier(null);
+                                            form.setValue("carrierId", undefined);
+                                            setShowCarrierSelector(true);
+                                        }}
+                                    >
+                                        Change
+                                    </Button>
+                                )}
                             </div>
 
                             {/* Driver Info */}

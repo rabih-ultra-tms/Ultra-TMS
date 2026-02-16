@@ -168,6 +168,39 @@ export function useCreateLoad() {
     });
 }
 
+// --- Update Load ---
+
+export type UpdateLoadInput = CreateLoadInput;
+
+export function useUpdateLoad(loadId: string) {
+    const router = useRouter();
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (data: UpdateLoadInput) => {
+            const response = await apiClient.put<Load>(`/loads/${loadId}`, data);
+            return response;
+        },
+        onSuccess: (load) => {
+            queryClient.invalidateQueries({ queryKey: ['loads'] });
+            queryClient.invalidateQueries({ queryKey: ['load', loadId] });
+            if (load.order?.id) {
+                queryClient.invalidateQueries({ queryKey: ['order', load.order.id] });
+            }
+            toast.success('Load updated successfully', {
+                description: `Load ${load.loadNumber} has been updated`,
+            });
+            router.push(`/operations/loads/${load.id}`);
+        },
+        onError: (error: Error) => {
+            const errorMessage = (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message || error?.message || 'Failed to update load';
+            toast.error('Error updating load', {
+                description: errorMessage,
+            });
+        },
+    });
+}
+
 // --- Carrier Search ---
 
 export interface CarrierSearchParams {
