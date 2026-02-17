@@ -269,7 +269,7 @@
 | ACC-006 | Aging Reports | DONE | Claude Code | M (4h) ⬆️ | Feb 17 |
 | COM-001 | Commission Dashboard | DONE | Claude Code | M (4h) ⬆️ | Feb 17 |
 | COM-002 | Sales Reps list + detail | DONE | Claude Code | M (5h) ⬆️ | Feb 17 |
-| COM-003 | Commission Plans (CRUD + tier editor) | NOT STARTED | — | L (8h) ⬆️ | — |
+| COM-003 | Commission Plans (CRUD + tier editor) | DONE | Claude Code | L (8h) ⬆️ | Feb 17 |
 | COM-004 | Commission Transactions | NOT STARTED | — | M (4h) ⬆️ | — |
 | COM-005 | Payout Processing | NOT STARTED | — | M (5h) ⬆️ | — |
 | COM-006 | Commission Reports | NOT STARTED | — | M (3h) ⬆️ | — |
