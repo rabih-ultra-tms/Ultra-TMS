@@ -115,6 +115,18 @@ export const INVOICE_STATUSES = {
 export type InvoiceStatusToken = keyof typeof INVOICE_STATUSES;
 
 // ---------------------------------------------------------------------------
+// Payment Status
+// ---------------------------------------------------------------------------
+export const PAYMENT_STATUSES = {
+  PENDING: { label: "Pending", status: "unassigned" as StatusColorToken | undefined, intent: undefined as Intent | undefined, className: undefined as string | undefined },
+  APPLIED: { label: "Applied", status: "delivered" as StatusColorToken | undefined, intent: undefined as Intent | undefined, className: undefined as string | undefined },
+  PARTIAL: { label: "Partial", status: undefined as StatusColorToken | undefined, intent: "warning" as Intent | undefined, className: undefined as string | undefined },
+  VOIDED: { label: "Voided", status: undefined as StatusColorToken | undefined, intent: undefined as Intent | undefined, className: "bg-gray-100 text-gray-500 border-gray-300 line-through" },
+} as const;
+
+export type PaymentStatusToken = keyof typeof PAYMENT_STATUSES;
+
+// ---------------------------------------------------------------------------
 // Intent (semantic meaning, not entity-specific)
 // ---------------------------------------------------------------------------
 export type Intent = "success" | "warning" | "danger" | "info";
