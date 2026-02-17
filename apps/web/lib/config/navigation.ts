@@ -14,6 +14,8 @@ import {
   ListChecks,
   Truck,
   ToggleRight,
+  Package,
+  ShoppingCart,
 } from "lucide-react";
 import type { NavConfig } from "@/lib/types/navigation";
 
@@ -58,13 +60,33 @@ export const navigationConfig: NavConfig = {
       title: "Operations",
       items: [
         {
+          title: "Operations Dashboard",
+          href: "/operations",
+          icon: LayoutDashboard,
+        },
+        {
+          title: "Orders",
+          href: "/operations/orders",
+          icon: ShoppingCart,
+        },
+        {
+          title: "Loads",
+          href: "/operations/loads",
+          icon: Package,
+        },
+        {
+          title: "Dispatch Board",
+          href: "/operations/dispatch",
+          icon: ClipboardList,
+        },
+        {
           title: "Load Planner",
           href: "/load-planner/new/edit",
           icon: ClipboardList,
         },
         {
-          title: "Quote History",
-          href: "/quote-history",
+          title: "Quotes",
+          href: "/quotes",
           icon: FileText,
         },
         {
