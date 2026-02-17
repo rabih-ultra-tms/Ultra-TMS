@@ -9,9 +9,10 @@ import { ColumnSettingsDrawer } from "@/components/tms/loads/column-settings-dra
 import { useState } from "react";
 import { Load, LoadStatus } from "@/types/loads";
 import { Button } from "@/components/ui/button";
-import { Settings } from "lucide-react";
+import { Settings, Plus } from "lucide-react";
 import { PaginationState, VisibilityState } from "@tanstack/react-table";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
 
 export default function LoadsListPage() {
     const searchParams = useSearchParams();
@@ -52,8 +53,7 @@ export default function LoadsListPage() {
     };
 
     const handleEdit = (load: Load) => {
-        // Navigate to edit page (Future Comp)
-        console.log("Edit load", load.id);
+        router.push(`/operations/loads/${load.id}`);
     };
 
     const handleViewDetails = (load: Load) => {
@@ -67,7 +67,12 @@ export default function LoadsListPage() {
                 <div className="px-6 py-2 border-b bg-background flex items-center justify-between">
                     <h1 className="text-lg font-bold text-foreground">Dispatch Board</h1>
                     <div className="flex items-center gap-2">
-                        {/* Global Actions like Refresh, Notifications could go here */}
+                        <Button asChild>
+                            <Link href="/operations/loads/new">
+                                <Plus className="mr-2 h-4 w-4" />
+                                New Load
+                            </Link>
+                        </Button>
                     </div>
                 </div>
 

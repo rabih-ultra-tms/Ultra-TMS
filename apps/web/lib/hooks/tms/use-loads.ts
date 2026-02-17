@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
-import { LoadListParams, LoadListResponse, Load, LoadDetailResponse, CheckCall } from "@/types/loads";
+import { LoadListParams, LoadListResponse, Load, LoadDetailResponse } from "@/types/loads";
 import { OperationsCarrier } from "@/types/carriers";
 import { OrderDetailResponse } from "@/types/orders";
 
@@ -80,18 +80,6 @@ export function useLoadTimeline(id: string) {
             ];
         },
         enabled: !!id
-    });
-}
-
-export function useCheckCalls(loadId: string) {
-    return useQuery<CheckCall[]>({
-        queryKey: ['check-calls', loadId],
-        queryFn: async () => {
-            const response = await apiClient.get<CheckCall[]>(`/loads/${loadId}/check-calls`);
-            return response;
-        },
-        enabled: !!loadId,
-        staleTime: 60000,
     });
 }
 
