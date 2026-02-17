@@ -6,7 +6,7 @@
 
 'use client';
 
-import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useCurrentUser } from '@/lib/hooks/use-auth';
 import {
@@ -47,6 +47,10 @@ export function SocketProvider({ children, namespace = SOCKET_NAMESPACES.EVENTS 
   const latencyInterval = useRef<NodeJS.Timeout | null>(null);
   const socketRef = useRef<Socket | null>(null);
 
+  // Stable user identity — only reconnect when the actual user changes, not on
+  // every React Query refetch (which returns a new object reference each time).
+  const userId = user?.id;
+
   // Get access token from cookie
   const getAccessToken = useCallback(() => {
     if (typeof window === 'undefined') return null;
@@ -60,7 +64,7 @@ export function SocketProvider({ children, namespace = SOCKET_NAMESPACES.EVENTS 
   }, []);
 
   useEffect(() => {
-    if (isLoading || !user) {
+    if (isLoading || !userId) {
       if (socketRef.current) {
         socketRef.current.disconnect();
         socketRef.current = null;
@@ -146,16 +150,13 @@ export function SocketProvider({ children, namespace = SOCKET_NAMESPACES.EVENTS 
       newSocket.disconnect();
       socketRef.current = null;
     };
-    // NOTE: 'socket' intentionally excluded — including it causes infinite reconnect loop
-  }, [user, isLoading, namespace, getAccessToken]);
+  }, [userId, isLoading, namespace, getAccessToken]);
 
-  const contextValue: SocketContextValue = {
-    socket,
-    connected,
-    status,
-    error,
-    latency,
-  };
+  // Memoize context value to prevent unnecessary consumer re-renders
+  const contextValue = useMemo<SocketContextValue>(
+    () => ({ socket, connected, status, error, latency }),
+    [socket, connected, status, error, latency]
+  );
 
   return (
     <SocketContext.Provider value={contextValue}>

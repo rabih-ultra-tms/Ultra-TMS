@@ -52,24 +52,41 @@ export function useSocketEvents<T = unknown>(
   events: Record<string, (data: T) => void>
 ) {
   const { socket, connected } = useSocket();
+  // Store handlers in a ref so inline objects don't cause re-subscription every render
+  const eventsRef = useRef(events);
+  useEffect(() => {
+    eventsRef.current = events;
+  });
+
+  // Stable list of event names — only re-subscribe when the set of events changes
+  const eventNames = Object.keys(events).sort().join(',');
 
   useEffect(() => {
     if (!socket || !connected) {
       return;
     }
 
-    const entries = Object.entries(events);
+    const currentEvents = eventsRef.current;
+    const entries = Object.entries(currentEvents);
 
-    entries.forEach(([event, handler]) => {
+    // Wrap each handler so it always calls the latest ref
+    const wrappedEntries = entries.map(([event]) => {
+      const wrapped = (data: T) => eventsRef.current[event]?.(data);
+      return [event, wrapped] as const;
+    });
+
+    wrappedEntries.forEach(([event, handler]) => {
       socket.on(event, handler);
     });
 
     return () => {
-      entries.forEach(([event, handler]) => {
+      wrappedEntries.forEach(([event, handler]) => {
         socket.off(event, handler);
       });
     };
-  }, [socket, connected, events]);
+    // Re-subscribe only when socket, connection status, or the set of event names changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [socket, connected, eventNames]);
 }
 
 /**

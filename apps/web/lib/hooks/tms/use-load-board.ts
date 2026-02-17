@@ -4,6 +4,11 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { LoadBoardFilters, LoadBoardListResponse, LoadBoardStats, LoadPost } from "@/types/load-board";
 
+function unwrap<T>(response: unknown): T {
+    const body = response as Record<string, unknown>;
+    return (body.data ?? response) as T;
+}
+
 export function useLoadPosts(filters: LoadBoardFilters) {
     return useQuery<LoadBoardListResponse>({
         queryKey: ['load-posts', filters],
@@ -23,10 +28,10 @@ export function useLoadPosts(filters: LoadBoardFilters) {
                 searchParams.set('equipmentType', filters.equipmentType.join(','));
             }
 
-            const response = await apiClient.get<LoadBoardListResponse>(
+            const response = await apiClient.get(
                 `/load-board/posts?${searchParams.toString()}`
             );
-            return response;
+            return unwrap<LoadBoardListResponse>(response);
         },
         placeholderData: (previousData) => previousData,
     });
@@ -36,8 +41,8 @@ export function useLoadPost(id: string) {
     return useQuery<LoadPost>({
         queryKey: ['load-post', id],
         queryFn: async () => {
-            const response = await apiClient.get<LoadPost>(`/load-board/posts/${id}`);
-            return response;
+            const response = await apiClient.get(`/load-board/posts/${id}`);
+            return unwrap<LoadPost>(response);
         },
         enabled: !!id,
         staleTime: 30000,
@@ -48,8 +53,8 @@ export function useLoadBoardStats() {
     return useQuery<LoadBoardStats>({
         queryKey: ['load-board-stats'],
         queryFn: async () => {
-            const response = await apiClient.get<LoadBoardStats>('/load-board/stats');
-            return response;
+            const response = await apiClient.get('/load-board/stats');
+            return unwrap<LoadBoardStats>(response);
         },
         staleTime: 60000,
     });

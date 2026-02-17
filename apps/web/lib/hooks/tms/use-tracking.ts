@@ -8,6 +8,7 @@
 
 import { useEffect } from 'react'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
+import { apiClient } from '@/lib/api/client'
 import { useSocket } from '@/lib/socket/socket-provider'
 import { SOCKET_EVENTS } from '@/lib/socket/socket-config'
 import type { LoadLocationUpdatedEvent } from '@/lib/socket/socket-config'
@@ -79,49 +80,44 @@ export const trackingKeys = {
   loadDetail: (loadId: string) => ['tracking', 'load', loadId] as const,
 }
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function unwrap<T>(response: unknown): T {
+  const body = response as Record<string, unknown>
+  return (body.data ?? response) as T
+}
+
 // ─── API Fetchers ─────────────────────────────────────────────────────────────
 
 async function fetchTrackingPositions(
   filters: TrackingFilters,
 ): Promise<TrackingPosition[]> {
-  const params = new URLSearchParams()
-  // Use existing loads endpoint with in-transit status filter
-  params.set('status', 'IN_TRANSIT,DISPATCHED,AT_PICKUP,AT_DELIVERY')
-  if (filters.etaStatus?.length) params.set('etaStatus', filters.etaStatus.join(','))
-  if (filters.equipmentType?.length)
-    params.set('equipmentType', filters.equipmentType.join(','))
-  if (filters.carrierId) params.set('carrierId', filters.carrierId)
-  if (filters.customerId) params.set('customerId', filters.customerId)
+  const params: Record<string, string> = {
+    status: 'IN_TRANSIT,DISPATCHED,AT_PICKUP,AT_DELIVERY',
+  }
+  if (filters.etaStatus?.length) params.etaStatus = filters.etaStatus.join(',')
+  if (filters.equipmentType?.length) params.equipmentType = filters.equipmentType.join(',')
+  if (filters.carrierId) params.carrierId = filters.carrierId
+  if (filters.customerId) params.customerId = filters.customerId
 
-  const qs = params.toString()
-  const url = `/api/v1/loads${qs ? `?${qs}` : ''}`
-  const resp = await fetch(url, { credentials: 'include' })
-  if (!resp.ok) throw new Error('Failed to fetch tracking positions')
-  const body = await resp.json()
-  return body.data ?? body
+  const response = await apiClient.get('/loads', params)
+  return unwrap<TrackingPosition[]>(response)
 }
 
 async function fetchLoadDetail(loadId: string): Promise<TrackingLoadDetail> {
-  const resp = await fetch(`/api/v1/loads/${loadId}`, { credentials: 'include' })
-  if (!resp.ok) throw new Error(`Failed to fetch load ${loadId}`)
-  const body = await resp.json()
-  const load = body.data ?? body
+  const response = await apiClient.get(`/loads/${loadId}`)
+  const load = unwrap<Record<string, unknown>>(response)
   // Normalize: backend nests stops under load.order.stops, driver as flat fields
+  const order = load.order as Record<string, unknown> | undefined
   return {
     ...load,
-    stops: load.stops ?? load.order?.stops ?? [],
-    driver: load.driver ?? (load.driverName ? { name: load.driverName, phone: load.driverPhone ?? '' } : null),
-  }
+    stops: (load.stops ?? order?.stops ?? []),
+    driver: load.driver ?? (load.driverName ? { name: load.driverName, phone: (load.driverPhone as string) ?? '' } : null),
+  } as TrackingLoadDetail
 }
 
 async function updateLoadStatus(loadId: string, newStatus: string): Promise<void> {
-  const resp = await fetch(`/api/v1/loads/${loadId}/status`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify({ status: newStatus }),
-  })
-  if (!resp.ok) throw new Error('Failed to update load status')
+  await apiClient.patch(`/loads/${loadId}/status`, { status: newStatus })
 }
 
 async function createCheckCall(payload: {
@@ -131,14 +127,7 @@ async function createCheckCall(payload: {
   lat?: number
   lng?: number
 }): Promise<void> {
-  // Correct endpoint: nested under loads, not top-level /checkcalls
-  const resp = await fetch(`/api/v1/loads/${payload.loadId}/check-calls`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify(payload),
-  })
-  if (!resp.ok) throw new Error('Failed to create check call')
+  await apiClient.post(`/loads/${payload.loadId}/check-calls`, payload)
 }
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────

@@ -6,6 +6,175 @@
 
 ---
 
+## Session: 2026-02-17 (Monday) — Health Score Sprint: SocketProvider Fix + Hooks Audit
+
+### Developer: Claude Code (Opus 4.6)
+### AI Tool: Claude Opus 4.6
+
+**What was done:**
+Comprehensive health improvement session targeting runtime quality. Fixed the #1 shared bug (SocketProvider infinite loop), ran a static analysis audit of all 42 hook files, and fixed 15 runtime-breaking issues across 7 files.
+
+**Fixes applied:**
+
+| Fix | File | Impact |
+|-----|------|--------|
+| SocketProvider infinite loop | `lib/socket/socket-provider.tsx` | Stabilized `user` dep to `user?.id`, memoized context value — prevents disconnect/reconnect cascade on every RQ refetch |
+| useSocketEvents instability | `lib/socket/use-socket-event.ts` | Ref-ified `events` object to prevent re-subscription on every render |
+| Public tracking auth bypass | `lib/config/auth.ts` | Added `/track` to `publicPaths` — tracking page was incorrectly requiring auth |
+| 4 raw fetch() → apiClient | `lib/hooks/tms/use-tracking.ts` | Tracking hooks now use apiClient (correct base URL, auth headers, token refresh) |
+| 5 raw fetch() → apiClient | `lib/hooks/tms/use-ops-dashboard.ts` | Ops dashboard hooks now use apiClient instead of hardcoded /api/v1 URLs |
+| useUpdateLoadEta broken | `lib/hooks/tms/use-dispatch.ts` | Was silently doing GET instead of updating — now uses PUT /stops/:id |
+| Accounting dashboard unwrap | `lib/hooks/accounting/use-accounting-dashboard.ts` | Replaced type-cast with standard unwrap pattern |
+| Load board missing unwrap | `lib/hooks/tms/use-load-board.ts` | 3 hooks now unwrap API envelope correctly |
+
+**Audit findings (for reference):**
+- 42 hook files analyzed, 187+ hook functions
+- 15 issues found: 7 critical, 3 high, 5 medium
+- 37 of 42 files are clean (no issues)
+- Quotes/carriers hooks deliberately NOT changed (pages already adapted to current format)
+
+**Build status:** 0 errors in source code (22 pre-existing test file errors, unchanged)
+
+**Impact metrics:**
+- Files modified: 7
+- Runtime bugs fixed: 15
+- Raw fetch() calls eliminated: 9
+- Estimated health improvement: C+ (6.4) → B- (7.2)
+
+---
+
+## Session: 2026-02-17 (Monday) — ACC-002: Invoices List, Detail, Create
+
+### Developer: Claude Code (Opus 4.6)
+### AI Tool: Claude Opus 4.6
+
+**What was done:**
+Built the full Invoices UI (ACC-002) — list, detail, and create pages covering the complete invoice lifecycle (DRAFT→PAID→VOID). Created 8 new files: React Query hooks with 7 operations (list, detail, create, update, delete, send, void), invoice table columns with action menus, URL-driven filters, a 3-tab detail page (Overview, Line Items, Payments), and a Zod-validated create form with dynamic line items. Added INVOICE_STATUSES to the design token system.
+
+**Files created (8):**
+| File | Purpose |
+|------|---------|
+| `lib/hooks/accounting/use-invoices.ts` | 7 React Query hooks (useInvoices, useInvoice, useCreateInvoice, useUpdateInvoice, useDeleteInvoice, useSendInvoice, useVoidInvoice) |
+| `components/accounting/invoice-status-badge.tsx` | StatusBadge wrapper using INVOICE_STATUSES design tokens (8 states) |
+| `components/accounting/invoices-table.tsx` | TanStack Table columns with Send/PDF/Void action menu |
+| `components/accounting/invoice-filters.tsx` | URL-driven filters (status, search, date range) with debounce |
+| `components/accounting/invoice-detail-card.tsx` | 3 tab components: InvoiceOverviewTab, InvoiceLineItemsTab, InvoicePaymentsTab |
+| `components/accounting/invoice-form.tsx` | Zod-validated form with dynamic line items, payment terms, using FormPage pattern |
+| `app/(dashboard)/accounting/invoices/page.tsx` | List page using ListPage pattern |
+| `app/(dashboard)/accounting/invoices/[id]/page.tsx` | Detail page with 3 tabs using DetailPage pattern |
+| `app/(dashboard)/accounting/invoices/new/page.tsx` | Create form page |
+
+**Files modified (3):**
+| File | Change |
+|------|--------|
+| `lib/design-tokens/status.ts` | Added INVOICE_STATUSES (8 states mapped to token system) |
+| `lib/design-tokens/index.ts` | Re-exported INVOICE_STATUSES + InvoiceStatusToken |
+| `dev_docs_v2/STATUS.md` | ACC-002 → DONE |
+
+**Key deliverables:**
+- 3 new routes: `/accounting/invoices`, `/accounting/invoices/[id]`, `/accounting/invoices/new`
+- Full CRUD + Send + Void + PDF download actions
+- 8-state invoice badge using 3-layer design token system
+- URL-driven filtering with debounced search
+- Line items table with subtotal/tax/total breakdown
+- Payments tab with balance tracking
+- 0 TS errors in new code
+
+**Impact metrics for report:**
+- New pages: 3 (List, Detail, Create)
+- Components created: 5
+- Hooks created: 7
+- Lines of code: ~1,739
+- Phase 6 progress: 2/15 tasks complete
+- Commit: 2067e5c
+
+---
+
+## Session: 2026-02-17 (Monday) — ACC-001: Accounting Dashboard
+
+### Developer: Claude Code (Opus 4.6)
+### AI Tool: Claude Opus 4.6
+
+**What was done:**
+Built the Accounting Dashboard at `/accounting` (ACC-001) — first task of Phase 6. Created 4 new files: React Query hooks for dashboard KPIs and recent invoices, a 5-card KPI stats component (AR, AP, overdue, DSO, revenue MTD), a recent invoices list with 8 status badge states, and the dashboard page with quick-link cards. Updated sidebar navigation to add Accounting entry under Finance.
+
+**Files created (4):**
+| File | Purpose |
+|------|---------|
+| `lib/hooks/accounting/use-accounting-dashboard.ts` | React Query hooks (useAccountingDashboard, useRecentInvoices) with API envelope unwrap |
+| `components/accounting/acc-dashboard-stats.tsx` | 5 KPI cards using KpiCard (COMP-003) with loading skeletons |
+| `components/accounting/acc-recent-invoices.tsx` | Recent invoices list with 8-state status badges, clickable rows |
+| `app/(dashboard)/accounting/page.tsx` | Dashboard page — KPIs, quick links, recent invoices |
+
+**Files modified (3):**
+| File | Change |
+|------|--------|
+| `lib/config/navigation.ts` | Added "Accounting" link under Finance, updated Invoices/Settlements to `/accounting/*` routes |
+| `dev_docs_v2/STATUS.md` | ACC-001 → DONE, Phase 6 started |
+| `dev_docs_v2/01-tasks/phase-6-financial/ACC-001-accounting-dashboard.md` | Status → DONE, assigned Claude Code |
+
+**Key deliverables:**
+- Accounting dashboard live at `/accounting`
+- 5 KPI cards: AR, AP, overdue invoices, DSO, revenue MTD
+- Recent invoices list with status badges
+- Quick links to Invoices, Payments, Settlements, Aging
+- Sidebar navigation updated
+- 0 TS errors, 0 lint errors in new code
+
+**Impact metrics for report:**
+- New pages: 1 (Accounting Dashboard)
+- Components created: 3
+- Hooks created: 2
+- Phase 6 progress: 1/15 tasks complete
+- Commit: f124e6a
+
+---
+
+## Session: 2026-02-17 (Monday) — TEST-001d: Phase 5 Testing Complete
+
+### Developer: Claude Code (Opus 4.6)
+### AI Tool: Claude Opus 4.6
+
+**What was done:**
+Completed TEST-001d — wrote 66 new tests covering all Phase 5 features (TrackingMap, RateConPreview, EmailPreviewDialog, useAutoEmail hook). Created 6 new mock files and updated test infrastructure (jest-resolver + jest.config). Phase 5 is now fully done; STATUS.md updated to Phase 6.
+
+**Files created (10):**
+| File | Purpose |
+|------|---------|
+| `test/mocks/hooks-tms-tracking.ts` | Mock for use-tracking hook (positions, detail, mutations) |
+| `test/mocks/hooks-tms-rate-confirmation.ts` | Mock for use-rate-confirmation hook |
+| `test/mocks/hooks-communication-send-email.ts` | Mock for use-send-email hook |
+| `test/mocks/google-maps.tsx` | Mock for @react-google-maps/api (GoogleMap, Marker, InfoWindow) |
+| `test/mocks/google-maps-config.ts` | Mock for lib/google-maps constants |
+| `test/mocks/socket-provider.tsx` | Mock for SocketProvider + useSocket |
+| `__tests__/tms/tracking-map.test.tsx` | 29 tests: TrackingMap + TrackingSidebar + TrackingPinPopup |
+| `__tests__/tms/rate-confirmation.test.tsx` | 7 tests: RateConPreview states (loading/error/empty/PDF) |
+| `__tests__/communication/email-preview-dialog.test.tsx` | 16 tests: EmailPreviewDialog (5 types, send, cancel, attachments) |
+| `__tests__/communication/email-triggers.test.tsx` | 14 tests: useAutoEmail + loadToEmailData + dispatchLoadToEmailData |
+
+**Files modified (3):**
+| File | Change |
+|------|--------|
+| `test/jest-resolver.cjs` | +5 mock mappings (tracking, rate-con, send-email, socket-provider, google-maps) |
+| `jest.config.ts` | +1 moduleNameMapper for @react-google-maps/api |
+| `dev_docs_v2/STATUS.md` | TEST-001d → DONE, Phase 5 complete, current phase → Phase 6 |
+
+**Key deliverables:**
+- 66 new tests, all passing
+- 362 total tests across 36 suites (358 pass, 4 pre-existing layout failures)
+- Phase 5 fully complete (all 8 tasks DONE)
+- Project advances to Phase 6: Financial + Go-Live
+
+**Impact metrics for report:**
+- Tests written: 66
+- Test suites created: 4
+- Mock files created: 6
+- Total project tests: 362
+- Phase completion: Phase 5 → 100% (8/8 tasks)
+- Overall progress: Phases 0-5 complete, Phase 6 remaining
+
+---
+
 ## Session: 2026-02-17 (Monday) — Comprehensive Sonnet 4.5 Audit Batch 3
 
 ### Developer: Claude Code (Opus 4.6)

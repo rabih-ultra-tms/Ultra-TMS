@@ -64,6 +64,15 @@ export const accountingKeys = {
 };
 
 // ===========================
+// Helpers
+// ===========================
+
+function unwrap<T>(response: unknown): T {
+  const body = response as Record<string, unknown>;
+  return (body.data ?? response) as T;
+}
+
+// ===========================
 // Hooks
 // ===========================
 
@@ -71,10 +80,8 @@ export function useAccountingDashboard() {
   return useQuery({
     queryKey: accountingKeys.dashboard(),
     queryFn: async () => {
-      const response = await apiClient.get<DashboardResponse>(
-        '/accounting/dashboard'
-      );
-      return response.data ?? (response as unknown as AccountingDashboardData);
+      const response = await apiClient.get('/accounting/dashboard');
+      return unwrap<AccountingDashboardData>(response);
     },
     staleTime: 30_000,
   });
@@ -84,13 +91,13 @@ export function useRecentInvoices(limit = 10) {
   return useQuery({
     queryKey: accountingKeys.recentInvoices(),
     queryFn: async () => {
-      const response = await apiClient.get<InvoicesResponse>('/invoices', {
+      const response = await apiClient.get('/invoices', {
         limit,
         page: 1,
         sortBy: 'createdAt',
         sortOrder: 'desc',
       });
-      return response.data ?? (response as unknown as RecentInvoice[]);
+      return unwrap<RecentInvoice[]>(response);
     },
     staleTime: 30_000,
   });

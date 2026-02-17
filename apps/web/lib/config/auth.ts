@@ -15,6 +15,7 @@ export const AUTH_CONFIG = {
     "/forgot-password",
     "/reset-password",
     "/verify-email",
+    "/track",
     "/api/v1/auth",
     "/api/health",
   ],

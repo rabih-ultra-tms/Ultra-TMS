@@ -491,8 +491,8 @@ export function useBulkDispatch() {
 }
 
 /**
- * Update load ETA — no backend /loads/:id/eta endpoint exists.
- * Falls back to general load status update for now.
+ * Update load ETA via the stops endpoint (PUT /orders/:orderId/stops/:stopId).
+ * Updates the stop's appointmentDate to reflect the new ETA.
  */
 export function useUpdateLoadEta() {
   const queryClient = useQueryClient();
@@ -500,24 +500,30 @@ export function useUpdateLoadEta() {
   return useMutation({
     mutationFn: async ({
       loadId,
-      stopId: _stopId,
-      newEta: _newEta,
-      reason: _reason,
+      stopId,
+      newEta,
+      reason,
     }: {
       loadId: number;
       stopId: number;
       newEta: string;
       reason?: string;
     }) => {
-      // TODO: Backend needs a PATCH /loads/:id/eta endpoint
-      // For now, just refetch to get latest data
-      const response = await apiClient.get(`/loads/${loadId}`);
+      const response = await apiClient.put(`/stops/${stopId}`, {
+        appointmentDate: newEta,
+        notes: reason ? `ETA updated: ${reason}` : undefined,
+      });
       return unwrap<DispatchLoad>(response);
     },
 
-    onSettled: (_data, _error, variables) => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: dispatchKeys.load(variables.loadId) });
       queryClient.invalidateQueries({ queryKey: ['dispatch', 'board'] });
+    },
+
+    onError: () => {
+      // Errors are handled by the apiClient (throws ApiError)
+      // The consuming component should use the mutation's error state
     },
   });
 }

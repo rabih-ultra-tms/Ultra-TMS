@@ -4,6 +4,7 @@
  */
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api/client';
 import { useSocket } from '@/lib/socket/socket-provider';
 import { useEffect } from 'react';
 
@@ -103,6 +104,15 @@ export const dashboardKeys = {
 };
 
 // ===========================
+// Helpers
+// ===========================
+
+function unwrap<T>(response: unknown): T {
+  const body = response as Record<string, unknown>;
+  return (body.data ?? response) as T;
+}
+
+// ===========================
 // API Fetchers
 // ===========================
 
@@ -111,71 +121,32 @@ async function fetchDashboardKPIs(
   scope: Scope,
   comparison: ComparisonPeriod
 ): Promise<DashboardKPIs> {
-  const params = new URLSearchParams({ period, scope, comparisonPeriod: comparison });
-  const response = await fetch(`/api/v1/operations/dashboard?${params}`, {
-    credentials: 'include',
+  const response = await apiClient.get('/operations/dashboard', {
+    period,
+    scope,
+    comparisonPeriod: comparison,
   });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch dashboard KPIs: ${response.statusText}`);
-  }
-
-  const body = await response.json();
-  return body.data ?? body;
+  return unwrap<DashboardKPIs>(response);
 }
 
 async function fetchDashboardCharts(period: Period): Promise<DashboardCharts> {
-  const params = new URLSearchParams({ period });
-  const response = await fetch(`/api/v1/operations/dashboard/charts?${params}`, {
-    credentials: 'include',
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch dashboard charts: ${response.statusText}`);
-  }
-
-  const body = await response.json();
-  return body.data ?? body;
+  const response = await apiClient.get('/operations/dashboard/charts', { period });
+  return unwrap<DashboardCharts>(response);
 }
 
 async function fetchDashboardAlerts(): Promise<DashboardAlert[]> {
-  const response = await fetch('/api/v1/operations/dashboard/alerts', {
-    credentials: 'include',
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch dashboard alerts: ${response.statusText}`);
-  }
-
-  const body = await response.json();
-  return body.data ?? body;
+  const response = await apiClient.get('/operations/dashboard/alerts');
+  return unwrap<DashboardAlert[]>(response);
 }
 
 async function fetchDashboardActivity(period: Period): Promise<ActivityItem[]> {
-  const params = new URLSearchParams({ period });
-  const response = await fetch(`/api/v1/operations/dashboard/activity?${params}`, {
-    credentials: 'include',
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch dashboard activity: ${response.statusText}`);
-  }
-
-  const body = await response.json();
-  return body.data ?? body;
+  const response = await apiClient.get('/operations/dashboard/activity', { period });
+  return unwrap<ActivityItem[]>(response);
 }
 
 async function fetchNeedsAttention(): Promise<NeedsAttentionLoad[]> {
-  const response = await fetch('/api/v1/operations/dashboard/needs-attention', {
-    credentials: 'include',
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch needs attention: ${response.statusText}`);
-  }
-
-  const body = await response.json();
-  return body.data ?? body;
+  const response = await apiClient.get('/operations/dashboard/needs-attention');
+  return unwrap<NeedsAttentionLoad[]>(response);
 }
 
 // ===========================
