@@ -22,7 +22,8 @@ export type EmailType =
   | "rate_confirmation"
   | "load_tendered"
   | "pickup_reminder"
-  | "delivery_confirmation";
+  | "delivery_confirmation"
+  | "invoice_sent";
 
 interface EmailPreset {
   templateCode: string;
@@ -60,6 +61,13 @@ const EMAIL_PRESETS: Record<EmailType, EmailPreset> = {
       "Load {{loadNumber}} has been delivered and proof of delivery has been received. Thank you for your business.",
     recipientLabel: "Customer Contact",
   },
+  invoice_sent: {
+    templateCode: "INVOICE_CREATED",
+    defaultSubject: "Invoice - Load {{loadNumber}}",
+    defaultBody:
+      "Please find attached the invoice for Load {{loadNumber}}. Payment is due per the agreed terms.",
+    recipientLabel: "Customer Contact",
+  },
 };
 
 const EMAIL_TYPE_LABELS: Record<EmailType, string> = {
@@ -67,6 +75,7 @@ const EMAIL_TYPE_LABELS: Record<EmailType, string> = {
   load_tendered: "Load Tender Notification",
   pickup_reminder: "Pickup Reminder",
   delivery_confirmation: "Delivery Confirmation",
+  invoice_sent: "Invoice Email",
 };
 
 interface EmailPreviewDialogProps {

@@ -21,13 +21,12 @@ interface LoadDetailHeaderProps {
     load: Load;
 }
 
-// TODO: Extract carrier/customer contact emails from backend when those fields are available
-function getCarrierEmail(): string {
-    return "";
+function getCarrierEmail(load: Load): string {
+    return load.carrier?.dispatchEmail || load.carrier?.contactEmail || "";
 }
 
-function getCustomerEmail(): string {
-    return "";
+function getCustomerEmail(load: Load): string {
+    return load.order?.customer?.contactEmail || load.order?.customer?.email || "";
 }
 
 /** Which email actions are available based on load status */
@@ -63,6 +62,7 @@ const EMAIL_LABELS: Record<EmailType, string> = {
     load_tendered: "Send Tender Notification",
     pickup_reminder: "Send Pickup Reminder",
     delivery_confirmation: "Send Delivery Confirmation",
+    invoice_sent: "Send Invoice Email",
 };
 
 export function LoadDetailHeader({ load }: LoadDetailHeaderProps) {
@@ -79,8 +79,8 @@ export function LoadDetailHeader({ load }: LoadDetailHeaderProps) {
 
     const isCarrierEmail = activeEmailType !== "delivery_confirmation";
     const recipientEmail = isCarrierEmail
-        ? getCarrierEmail()
-        : getCustomerEmail();
+        ? getCarrierEmail(load)
+        : getCustomerEmail(load);
     const recipientName = isCarrierEmail
         ? load.carrier?.legalName
         : load.order?.customer?.name;

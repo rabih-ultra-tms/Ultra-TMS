@@ -74,7 +74,7 @@ export function LoadDetailClient({ id }: { id: string }) {
                                 <LoadCarrierTab load={load} />
                             </TabsContent>
                             <TabsContent value="documents" className="mt-0">
-                                <LoadDocumentsTab loadId={load.id} />
+                                <LoadDocumentsTab loadId={load.id} load={load} />
                             </TabsContent>
                             <TabsContent value="timeline" className="mt-0">
                                 <LoadTimelineTab loadId={load.id} />

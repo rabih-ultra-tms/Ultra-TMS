@@ -6,6 +6,37 @@
 
 ---
 
+## Session: 2026-02-16 (Sunday) — COMM-001: Automated Emails Complete
+
+### Developer: Claude Code (Opus 4.6)
+### AI Tool: Claude Opus 4.6
+
+**What was done:**
+Completed COMM-001 by wiring auto-trigger emails into workflow actions. Previous session built the infrastructure (hooks, dialog, timeline integration). This session connected the triggers: dispatch → rate con email, tender → tender notification, POD upload → delivery confirmation. Also fixed carrier/customer email extraction and added invoice email type stub.
+
+**Auto-triggers wired:**
+1. Rate Confirmation — auto-sends when load dragged to DISPATCHED on dispatch board (with PDF attachment)
+2. Load Tendered — auto-sends when load dragged to TENDERED on dispatch board
+3. Delivery Confirmation — auto-sends when POD document uploaded on a delivered load
+4. Pickup Reminder — manual only (24h auto-trigger requires backend scheduler)
+5. Invoice Sent — type stubbed, blocked by ACC-002 (Phase 6)
+
+**Files created:**
+- `lib/hooks/communication/use-auto-email.ts` — reusable hook for auto-triggering emails with toast feedback, handles missing emails gracefully
+
+**Files modified:**
+- `types/loads.ts` — added contactEmail, dispatchEmail, phone to carrier & customer nested types
+- `components/tms/loads/load-detail-header.tsx` — fixed getCarrierEmail/getCustomerEmail (were returning ""), added invoice_sent label
+- `components/tms/dispatch/kanban-board.tsx` — wired dispatch/tender drag-drop → auto email triggers
+- `components/tms/loads/load-documents-tab.tsx` — POD upload on delivered load → delivery confirmation email
+- `components/tms/emails/email-preview-dialog.tsx` — added invoice_sent email type preset
+- `app/(dashboard)/operations/loads/[id]/client-page.tsx` — passes load object to LoadDocumentsTab
+
+**TypeScript check:** 0 new errors, 0 new lint warnings in changed files
+**COMM-001 status:** DONE (marked in STATUS.md)
+
+---
+
 ## Session: 2026-02-16 (Sunday) — COMM-001: Automated Emails (4 of 5)
 
 ### Developer: Claude Code (Opus 4.6)

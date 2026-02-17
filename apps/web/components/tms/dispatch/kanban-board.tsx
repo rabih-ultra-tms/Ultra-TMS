@@ -33,6 +33,7 @@ import type {
 } from '@/lib/types/dispatch';
 import { LANE_CONFIG, STATUS_TO_LANE, isValidTransition } from '@/lib/types/dispatch';
 import { useUpdateLoadStatus, useBulkStatusUpdate } from '@/lib/hooks/tms/use-dispatch';
+import { useAutoEmail, dispatchLoadToEmailData } from '@/lib/hooks/communication/use-auto-email';
 import { toast } from 'sonner';
 
 interface KanbanBoardProps {
@@ -74,6 +75,7 @@ export function KanbanBoard({ boardData, sortConfig, onSortChange }: KanbanBoard
   const [selectedLoadIds, setSelectedLoadIds] = useState<Set<number>>(new Set());
   const updateLoadStatus = useUpdateLoadStatus();
   const bulkStatusUpdate = useBulkStatusUpdate();
+  const { triggerEmail } = useAutoEmail();
 
   // Selection mode is active when any loads are selected
   const selectionMode = selectedLoadIds.size > 0;
@@ -273,6 +275,18 @@ export function KanbanBoard({ boardData, sortConfig, onSortChange }: KanbanBoard
           toast.success('Load status updated', {
             description: `${load.loadNumber} moved to ${LANE_CONFIG[targetLane].label}`,
           });
+
+          // Auto-trigger emails on status transitions
+          const emailData = dispatchLoadToEmailData(load);
+          if (targetStatus === 'DISPATCHED') {
+            triggerEmail('rate_confirmation', emailData, {
+              attachments: [
+                { name: `Rate-Con-${load.loadNumber}.pdf`, url: `/loads/${load.id}/rate-confirmation`, mimeType: 'application/pdf' },
+              ],
+            });
+          } else if (targetStatus === 'TENDERED') {
+            triggerEmail('load_tendered', emailData);
+          }
         },
         onError: (error) => {
           toast.error('Failed to update load status', {

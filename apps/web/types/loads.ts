@@ -49,12 +49,18 @@ export interface Load {
         customer: {
             id: string;
             name: string;
+            email?: string;
+            contactEmail?: string;
+            phone?: string;
         };
     };
     carrier?: {
         id: string;
         legalName: string;
         mcNumber: string;
+        contactEmail?: string;
+        dispatchEmail?: string;
+        phone?: string;
     };
     stops?: Array<{
         id: string;

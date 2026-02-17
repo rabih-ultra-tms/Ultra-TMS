@@ -23,9 +23,12 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { DocumentUpload } from "@/components/shared/document-upload";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { useAutoEmail, loadToEmailData } from "@/lib/hooks/communication/use-auto-email";
+import { LoadStatus, type Load } from "@/types/loads";
 
 interface LoadDocumentsTabProps {
   loadId: string;
+  load?: Load;
 }
 
 const DOC_TYPE_LABELS: Record<DocumentType, string> = {
@@ -52,10 +55,11 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function LoadDocumentsTab({ loadId }: LoadDocumentsTabProps) {
+export function LoadDocumentsTab({ loadId, load }: LoadDocumentsTabProps) {
   const { data: documents, isLoading } = useDocuments("LOAD", loadId);
   const uploadMutation = useUploadDocument();
   const deleteMutation = useDeleteDocument();
+  const { triggerEmail } = useAutoEmail();
 
   const [showUpload, setShowUpload] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Document | null>(null);
@@ -70,8 +74,17 @@ export function LoadDocumentsTab({ loadId }: LoadDocumentsTabProps) {
         entityId: loadId,
       });
       setShowUpload(false);
+
+      // Auto-trigger delivery confirmation email when POD is uploaded on a delivered load
+      if (
+        documentType === "POD" &&
+        load &&
+        [LoadStatus.DELIVERED, LoadStatus.COMPLETED].includes(load.status)
+      ) {
+        triggerEmail("delivery_confirmation", loadToEmailData(load));
+      }
     },
-    [uploadMutation, loadId]
+    [uploadMutation, loadId, load, triggerEmail]
   );
 
   const handleDelete = useCallback(async () => {
