@@ -99,6 +99,22 @@ export const QUOTE_STATUSES = {
 export type QuoteStatusToken = keyof typeof QUOTE_STATUSES;
 
 // ---------------------------------------------------------------------------
+// Invoice Status
+// ---------------------------------------------------------------------------
+export const INVOICE_STATUSES = {
+  DRAFT: { label: "Draft", status: undefined as StatusColorToken | undefined, intent: undefined as Intent | undefined, className: "bg-gray-100 text-gray-700 border-gray-300" },
+  PENDING: { label: "Pending", status: "unassigned" as StatusColorToken | undefined, intent: undefined as Intent | undefined, className: undefined as string | undefined },
+  SENT: { label: "Sent", status: "transit" as StatusColorToken | undefined, intent: undefined as Intent | undefined, className: undefined as string | undefined },
+  VIEWED: { label: "Viewed", status: "tendered" as StatusColorToken | undefined, intent: undefined as Intent | undefined, className: undefined as string | undefined },
+  PARTIAL: { label: "Partial", status: undefined as StatusColorToken | undefined, intent: "warning" as Intent | undefined, className: undefined as string | undefined },
+  PAID: { label: "Paid", status: "delivered" as StatusColorToken | undefined, intent: undefined as Intent | undefined, className: undefined as string | undefined },
+  OVERDUE: { label: "Overdue", status: "atrisk" as StatusColorToken | undefined, intent: undefined as Intent | undefined, className: undefined as string | undefined },
+  VOID: { label: "Void", status: undefined as StatusColorToken | undefined, intent: undefined as Intent | undefined, className: "bg-gray-100 text-gray-500 border-gray-300 line-through" },
+} as const;
+
+export type InvoiceStatusToken = keyof typeof INVOICE_STATUSES;
+
+// ---------------------------------------------------------------------------
 // Intent (semantic meaning, not entity-specific)
 // ---------------------------------------------------------------------------
 export type Intent = "success" | "warning" | "danger" | "info";
