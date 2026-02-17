@@ -1,7 +1,7 @@
 # Ultra TMS — Task Status Dashboard
 
-> **Last Updated:** February 12, 2026
-> **Current Phase:** Phase 2 — Patterns & Carrier Refactor (Weeks 3-4)
+> **Last Updated:** February 16, 2026 (TMS-011d completed)
+> **Current Phase:** Phase 4 — TMS Forms + Operations (Weeks 7-8)
 > **Overall Health:** C+ (6.4/10) → targeting B+ (8/10) by Week 12
 > **Revision:** v5 — Timeline compressed to 12 weeks. Load Board deferred to post-MVP.
 
@@ -223,9 +223,9 @@
 | TMS-010 | Check Call Log | DONE | Claude Code | L (6h) ⬆️ | Feb 16 |
 | INFRA-001 | WebSocket Infrastructure | DONE | Claude Code | L (8h) ⬆️ | Feb 16 |
 | **TMS-011a** | **Dispatch: Data layer** (React Query + WS hooks) | DONE | Claude Code | L (8-10h) | Feb 16 |
-| **TMS-011b** | **Dispatch: Kanban UI** (6 columns, cards, filters) | NOT STARTED | — | L (8-10h) | — |
-| **TMS-011c** | **Dispatch: Drag-drop** (dnd-kit, validation) | NOT STARTED | — | XL (12-16h) | — |
-| **TMS-011d** | **Dispatch: Real-time sync** (WebSocket events) | NOT STARTED | — | L (8-12h) | — |
+| **TMS-011b** | **Dispatch: Kanban UI** (6 columns, cards, filters) | DONE | Claude Code | L (8-10h) | Feb 16 |
+| **TMS-011c** | **Dispatch: Drag-drop** (dnd-kit, validation) | DONE | Claude Code | XL (12-16h) | Feb 16 |
+| **TMS-011d** | **Dispatch: Real-time sync** (WebSocket events) | DONE | Claude Code | L (8-12h) | Feb 16 |
 | **TMS-011e** | **Dispatch: Bulk actions + polish** | NOT STARTED | — | M (4-6h) | — |
 | TMS-012 | Operations Dashboard | NOT STARTED | — | L (9h) ⬆️ | — |
 
