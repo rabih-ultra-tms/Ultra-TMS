@@ -246,6 +246,7 @@ None. Backend has zero known bugs. Frontend not yet built.
 | Business Rules | `dev_docs/11-ai-dev/92-business-rules-reference.md` | Credit, margin, detention, TONU rules |
 | WebSocket Standards | `dev_docs/10-features/79-real-time-websocket-standards.md` | Socket.io namespaces, events, auth |
 | Contract Registry | `dev_docs/06-external/76-contract-structure.md` | Rate contract + accessorial structure |
+| Business Rules Quick Ref | `dev_docs_v2/05-references/business-rules-quick-ref.md` | Margin, credit, detention, TONU, status transitions |
 
 ---
 

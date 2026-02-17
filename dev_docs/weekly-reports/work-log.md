@@ -6,6 +6,54 @@
 
 ---
 
+## Session: 2026-02-17 (Monday) — Comprehensive Sonnet 4.5 Audit Batch 3
+
+### Developer: Claude Code (Opus 4.6)
+### AI Tool: Claude Opus 4.6
+
+**What was done:**
+Completed a comprehensive audit of ALL remaining Phase 4-5 features built by Sonnet 4.5/other AI. Found 28 issues (14 critical, 14 warnings) across 22 files. All 28 fixed, build passes clean. Combined with previous batches: 62 total issues identified, 57 fixed across 3 audit sessions.
+
+**Audit scope (Batch 3):**
+- TMS-005/006 (Order Forms), TMS-007/008 (Load Forms)
+- TMS-011a/b/c (Dispatch data/Kanban/DnD)
+- SALES-002/003 (Quotes), TMS-014 (Rate Con), COMM-001 (Emails)
+
+**Critical fixes (14):**
+1. `use-loads.ts` — no envelope unwrapping on ANY hook; added `unwrap()` to all 6 hooks
+2. `use-loads.ts` — mock hooks returning fake data with `enabled: true`; disabled
+3. `use-dispatch.ts` — no envelope unwrapping; added `unwrap()` to all hooks
+4. `use-dispatch.ts` — doubled `/api/v1/api/v1/` URL prefix; removed redundant prefix
+5. `use-dispatch.ts` — wrong HTTP methods (POST→PATCH for assign/dispatch)
+6. `use-dispatch.ts` — non-existent bulk endpoints; rewrote to loop individual PATCH calls
+7. `use-dispatch.ts` — non-existent stats endpoint; rewrote to compute from board data
+8. `operations/page.tsx` — `user?.role` → `user?.roles[]` array check (build-breaking)
+9. `order-form.tsx` — double-unwrap `result?.data?.id` on already-unwrapped response
+10. `orders/page.tsx` — stub `alert()` and `console.log` → toast + useUpdateOrder
+11. `load-carrier-tab.tsx` — hardcoded $1,450 customer rate → reads from load data
+12. `use-rate-confirmation.ts` — bypassed apiClient (CORS risk) → uses `apiClient.getFullUrl()`
+13. `use-send-email.ts` — ambiguous double-unwrap → clarified envelope extraction
+14. `quotes/page.tsx` — pagination total always 0 → reads from `pagination.total`
+
+**Warning fixes (14):**
+- `window.location.reload()` → React refetch/router (3 files)
+- Unstable deps in useMemo/useCallback/useEffect → useRef pattern (3 files)
+- Stub buttons → disabled with proper UX (3 files)
+- View Order link → correct search param (1 file)
+- Type fixes and guards (4 files)
+
+**Files modified (22):**
+`use-loads.ts`, `use-dispatch.ts`, `operations/page.tsx`, `order-form.tsx`, `orders/page.tsx`, `orders/[id]/edit/page.tsx`, `orders/[id]/page.tsx`, `loads/[id]/edit/page.tsx`, `form-page.tsx`, `quotes/page.tsx`, `quotes/columns.tsx`, `use-rate-confirmation.ts`, `use-send-email.ts`, `use-auto-email.ts`, `load-carrier-tab.tsx`, `load-detail-header.tsx`, `kanban-board.tsx`, `dispatch-board.tsx`, `dispatch-bulk-toolbar.tsx`, `quote-form-v2.tsx`, `ops-charts.tsx`, `hooks-communication-auto-email.ts` (mock)
+
+**Build iterations:** 4 cycles to resolve cascading type errors → clean build
+**Commit:** `3f2e4c5` pushed to `main`
+
+**Grand totals (all 3 batches):**
+- 62 issues identified, 57 fixed, 5 skipped (minor)
+- 10 recurring Sonnet anti-patterns documented in `memory/sonnet-audit-fixes.md`
+
+---
+
 ## Session: 2026-02-16 (Sunday) — COMM-001: Automated Emails Complete
 
 ### Developer: Claude Code (Opus 4.6)
@@ -1852,6 +1900,34 @@ Completed TEST-001c — comprehensive frontend test suite for all Phase 4 featur
 - Pass rate: 100% (226/226)
 - Phase 4 components covered: order-form, load-form, dispatch-board, kanban-board, stops-table, check-call-timeline, check-call-form
 - Task: TEST-001c DONE
+
+## Session: 2026-02-17 (Monday) — DOC-002: Business Rules Quick Reference
+
+### Developer: Claude Code (Opus 4.6)
+### AI Tool: Claude Opus 4.6
+
+**What was done:**
+Completed DOC-002 — created a comprehensive business rules quick reference document at `dev_docs_v2/05-references/business-rules-quick-ref.md`. Consolidated all 11 rule categories from the source (`92-business-rules-reference.md`) and Prisma schema into scannable tables. Linked from doc-map, TMS Core hub, and Accounting hub files. Updated STATUS.md.
+
+**Files created:** 1 file (~350 lines)
+- `dev_docs_v2/05-references/business-rules-quick-ref.md` — full business rules quick reference
+
+**Files modified:** 3 files
+- `dev_docs_v2/05-references/doc-map.md` — updated placeholder link
+- `dev_docs_v2/03-services/04-tms-core.md` — added to Key References table
+- `dev_docs_v2/03-services/06-accounting.md` — cleaned up existing link description
+
+**Key deliverables:**
+- 11 rule categories covered with specific values (no TBDs): margins, credit, detention, TONU, check calls, load status transitions, accessorials, weight limits, insurance, invoices, commissions
+- Appendices: carrier/customer/load validation rules, dispatch/invoice/payment pre-flight checklists, notification triggers, load number format
+- All values cross-referenced against Prisma schema enums (commission statuses, payout statuses, compliance statuses)
+- Task DOC-002 marked DONE in STATUS.md
+
+**Impact metrics for report:**
+- 1 document created (~350 lines, 11 sections + 7 appendices)
+- 3 files updated (hub links)
+- 1 task completed (DOC-002)
+- Phase 5 progress: 6/8 tasks done (75%)
 
 <!-- NEXT SESSION ENTRY GOES HERE -->
 

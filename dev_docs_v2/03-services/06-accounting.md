@@ -201,7 +201,7 @@ Load DELIVERED → Carrier Payable created → Group into Settlement → Approve
 | Data Dictionary | `dev_docs/11-ai-dev/91-data-dictionary.md` | Invoice, Payment, Settlement schemas |
 | Business Rules | `dev_docs/11-ai-dev/92-business-rules-reference.md` | Payment terms, DSO, quick pay formulas |
 | ~~QuickBooks Integration~~ | ~~`dev_docs/06-external/59-integrations-external-apis.md`~~ | REMOVED from MVP — own accounting built instead |
-| Business Rules Quick Ref | `dev_docs_v2/05-references/business-rules-quick-ref.md` | Margin, credit, detention, TONU rules (DOC-002) |
+| Business Rules Quick Ref | `dev_docs_v2/05-references/business-rules-quick-ref.md` | Margin, credit, detention, TONU, invoice, commission rules |
 
 ---
 

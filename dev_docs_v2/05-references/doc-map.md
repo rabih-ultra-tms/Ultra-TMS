@@ -13,7 +13,7 @@ Where to find things across the project documentation.
 | **MVP scope (8 services, 16 weeks)** | `CLAUDE.md` → "P0 MVP Scope" section |
 | **16-week action plan** | `dev_docs/Claude-review-v1/00-executive-summary/prioritized-action-plan.md` |
 | **Task tracking** | `dev_docs_v2/STATUS.md` |
-| **Business rules quick ref** | `dev_docs_v2/05-references/business-rules-quick-ref.md` (DOC-002, to be created) |
+| **Business rules quick ref** | `dev_docs_v2/05-references/business-rules-quick-ref.md` |
 | **Screen-to-API registry** | `dev_docs_v2/05-references/screen-api-registry.md` (DOC-003, to be created) |
 
 ---
