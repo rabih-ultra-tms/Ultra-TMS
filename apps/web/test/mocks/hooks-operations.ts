@@ -32,6 +32,8 @@ interface MockState {
   createCarrier: Record<string, unknown>;
   updateCarrier: Record<string, unknown>;
   deleteCarrier: Record<string, unknown>;
+  loadHistoryStats: Record<string, unknown>;
+  loadPlannerQuoteStats: Record<string, unknown>;
 }
 
 function getShared(): MockState {
@@ -70,6 +72,16 @@ function getShared(): MockState {
         mutateAsync: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
         isPending: false,
       },
+      loadHistoryStats: {
+        data: undefined,
+        isLoading: true,
+        isError: false,
+      },
+      loadPlannerQuoteStats: {
+        data: undefined,
+        isLoading: true,
+        isError: false,
+      },
     };
   }
   return (globalThis as any)[KEY];
@@ -88,6 +100,8 @@ export const carrierDriversReturn = shared.carrierDrivers;
 export const createCarrierReturn = shared.createCarrier;
 export const updateCarrierReturn = shared.updateCarrier;
 export const deleteCarrierReturn = shared.deleteCarrier;
+export const loadHistoryStatsReturn = shared.loadHistoryStats;
+export const loadPlannerQuoteStatsReturn = shared.loadPlannerQuoteStats;
 
 export function useCarriers() {
   return shared.carriers;
@@ -109,6 +123,17 @@ export function useUpdateCarrier() {
 }
 export function useDeleteCarrier() {
   return shared.deleteCarrier;
+}
+
+// ---------------------------------------------------------------------------
+// Dashboard stat hooks
+// ---------------------------------------------------------------------------
+
+export function useLoadHistoryStats() {
+  return shared.loadHistoryStats;
+}
+export function useLoadPlannerQuoteStats() {
+  return shared.loadPlannerQuoteStats;
 }
 
 // ---------------------------------------------------------------------------
