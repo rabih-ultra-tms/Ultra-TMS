@@ -19,6 +19,7 @@ const config: Config = {
     "^@/lib/hooks/sales/use-quotes$": "<rootDir>/test/mocks/hooks-sales-quotes.ts",
     "^@/lib/hooks/tracking/use-public-tracking$": "<rootDir>/test/mocks/hooks-tracking.ts",
     "^@/lib/hooks$": "<rootDir>/test/mocks/hooks.ts",
+    "^@react-google-maps/api$": "<rootDir>/test/mocks/google-maps.tsx",
     "^next/navigation$": "<rootDir>/test/mocks/next-navigation.ts",
     "^@/(.*)$": "<rootDir>/$1",
     "^@mswjs/interceptors/ClientRequest$":

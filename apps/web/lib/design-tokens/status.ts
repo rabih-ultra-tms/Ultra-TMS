@@ -139,6 +139,18 @@ export const PAYABLE_STATUSES = {
 export type PayableStatusToken = keyof typeof PAYABLE_STATUSES;
 
 // ---------------------------------------------------------------------------
+// Settlement Status (carrier settlement payouts)
+// ---------------------------------------------------------------------------
+export const SETTLEMENT_STATUSES = {
+  CREATED: { label: "Created", status: "unassigned" as StatusColorToken | undefined, intent: undefined as Intent | undefined, className: undefined as string | undefined },
+  APPROVED: { label: "Approved", status: "tendered" as StatusColorToken | undefined, intent: undefined as Intent | undefined, className: undefined as string | undefined },
+  PROCESSED: { label: "Processed", status: "transit" as StatusColorToken | undefined, intent: undefined as Intent | undefined, className: undefined as string | undefined },
+  PAID: { label: "Paid", status: "delivered" as StatusColorToken | undefined, intent: undefined as Intent | undefined, className: undefined as string | undefined },
+} as const;
+
+export type SettlementStatusToken = keyof typeof SETTLEMENT_STATUSES;
+
+// ---------------------------------------------------------------------------
 // Intent (semantic meaning, not entity-specific)
 // ---------------------------------------------------------------------------
 export type Intent = "success" | "warning" | "danger" | "info";

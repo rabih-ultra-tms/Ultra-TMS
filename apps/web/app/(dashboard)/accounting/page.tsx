@@ -37,7 +37,7 @@ const QUICK_LINKS = [
   {
     label: 'Aging Reports',
     description: 'AR/AP aging analysis',
-    href: '/accounting/aging',
+    href: '/accounting/reports/aging',
     icon: BarChart3,
   },
 ] as const;

@@ -265,10 +265,10 @@
 | ACC-002 | Invoices (list, detail, create) | DONE | Claude Code | L (8h) ⬆️ | Feb 17 |
 | ACC-003 | Payments Received | DONE | Claude Code | M (5h) ⬆️ | Feb 17 |
 | ACC-004 | Carrier Payables | DONE | Claude Code | M (3h) ⬆️ | Feb 17 |
-| ACC-005 | Settlements | NOT STARTED | — | M (5h) ⬆️ | — |
-| ACC-006 | Aging Reports | NOT STARTED | — | M (4h) ⬆️ | — |
-| COM-001 | Commission Dashboard | NOT STARTED | — | M (4h) ⬆️ | — |
-| COM-002 | Sales Reps list + detail | NOT STARTED | — | M (5h) ⬆️ | — |
+| ACC-005 | Settlements | DONE | Claude Code | M (5h) ⬆️ | Feb 17 |
+| ACC-006 | Aging Reports | DONE | Claude Code | M (4h) ⬆️ | Feb 17 |
+| COM-001 | Commission Dashboard | DONE | Claude Code | M (4h) ⬆️ | Feb 17 |
+| COM-002 | Sales Reps list + detail | DONE | Claude Code | M (5h) ⬆️ | Feb 17 |
 | COM-003 | Commission Plans (CRUD + tier editor) | NOT STARTED | — | L (8h) ⬆️ | — |
 | COM-004 | Commission Transactions | NOT STARTED | — | M (4h) ⬆️ | — |
 | COM-005 | Payout Processing | NOT STARTED | — | M (5h) ⬆️ | — |
