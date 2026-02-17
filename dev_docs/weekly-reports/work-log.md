@@ -1801,6 +1801,58 @@ Completed TEST-001b — comprehensive tests for all Phase 3 screens (orders, loa
 - Mock hooks: 37 hooks mocked across 4 domain files
 - Task: TEST-001b DONE
 
+## Session: 2026-02-16 (Sunday) — TEST-001c: Phase 4 Testing Complete
+
+### Developer: Claude Code (Opus 4.6)
+### AI Tool: Claude Opus 4.6
+
+**What was done:**
+Completed TEST-001c — comprehensive frontend test suite for all Phase 4 features (order/load forms, dispatch board kanban + drag-drop + real-time, stop management, check calls). Created 8 new mock files using the globalThis shared-state pattern, wrote 7 new test files with 86 tests, and updated the jest-resolver to wire all new mocks. Also fixed a pre-existing AppHeader test regression by adding `useIsRealtime` export to the socket-status mock. Full suite: 226 tests, 27 suites, all green.
+
+**Files created (15):**
+- `test/mocks/hooks-tms-dispatch.ts` — Mock for useDispatchLoads, useUpdateLoadStatus, useBulkStatusUpdate
+- `test/mocks/hooks-tms-dispatch-ws.ts` — Mock for useDispatchBoardUpdates
+- `test/mocks/hooks-socket-status.ts` — Mock for useSocketStatus + useIsRealtime
+- `test/mocks/hooks-tms-stops.ts` — Mock for useStops, useMarkArrived, useMarkDeparted, useCreateStop, useDeleteStop, useReorderStops
+- `test/mocks/hooks-tms-checkcalls.ts` — Mock for useCheckCalls, useCreateCheckCall + type exports
+- `test/mocks/hooks-tms-ops-dashboard.ts` — Mock for useDashboardKPIs, useDashboardCharts, useDashboardAlerts, etc.
+- `test/mocks/hooks-use-auth.ts` — Mock for useCurrentUser with roles/permissions
+- `test/mocks/hooks-communication-auto-email.ts` — Mock for useAutoEmail, loadToEmailData
+- `__tests__/tms/order-form.test.tsx` — 14 tests (create/edit mode, step navigation, submission, summary)
+- `__tests__/tms/load-form.test.tsx` — 14 tests (equipment, stops, carrier assignment, dispatch notes)
+- `__tests__/tms/dispatch-board.test.tsx` — 13 tests (data loaded, loading, error, empty states)
+- `__tests__/tms/dispatch-drag-drop.test.tsx` — 5 tests (lane rendering, load cards, selection mode, empty)
+- `__tests__/tms/dispatch-realtime.test.tsx` — 6 tests (WS connected/disconnected, real-time updates)
+- `__tests__/tms/stop-management.test.tsx` — 14 tests (route summary, loading/error/empty, invalid config, completion)
+- `__tests__/tms/check-call.test.tsx` — 20 tests (timeline CRUD states, overdue warning, form validation, submission)
+
+**Files modified (2):**
+- `test/jest-resolver.cjs` — Added 8 new mock mappings (use-dispatch-ws before use-dispatch for includes() ordering)
+- `dev_docs_v2/STATUS.md` — Marked TEST-001c DONE
+
+**Key debugging insights:**
+1. DispatchLoad type uses nested objects (`customer: {name}`, `carrier: {name}`) not flat strings (`customerName`)
+2. LoadCard requires `updatedAt` (for `formatDistanceToNow`), `stops` array (for origin/destination), and `isHotLoad`/`hasExceptions` booleans
+3. Jest 30 disallows dynamic imports inside test bodies (registers afterEach hooks = "hooks nested in tests" error)
+4. HTML `required` attribute on `<input>` blocks form submission in jsdom — fill required fields before testing JS validation
+5. DispatchBoard renders labels in both KpiStrip and KanbanBoard — use `getAllByText` not `getByText`
+
+**Key deliverables:**
+- 86 new tests across 7 test files — all passing
+- 8 new mock files following established globalThis pattern
+- Full test suite: 226 tests, 27 suites, 0 failures
+- Fixed pre-existing AppHeader test by adding useIsRealtime to socket mock
+- TEST-001c marked DONE in STATUS.md
+
+**Impact metrics for report:**
+- Tests added: 86 (from 140 → 226 total)
+- Test files added: 7
+- Mock files added: 8
+- Total test suites: 27 (from 20 → 27)
+- Pass rate: 100% (226/226)
+- Phase 4 components covered: order-form, load-form, dispatch-board, kanban-board, stops-table, check-call-timeline, check-call-form
+- Task: TEST-001c DONE
+
 <!-- NEXT SESSION ENTRY GOES HERE -->
 
 ---
