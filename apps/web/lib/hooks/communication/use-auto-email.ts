@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { useSendEmail, type SendEmailPayload } from "./use-send-email";
 import { toast } from "sonner";
 
@@ -191,6 +191,8 @@ export function dispatchLoadToEmailData(load: {
  */
 export function useAutoEmail() {
   const sendEmail = useSendEmail();
+  const sendEmailRef = useRef(sendEmail);
+  sendEmailRef.current = sendEmail;
 
   const triggerEmail = useCallback(
     (
@@ -236,7 +238,7 @@ export function useAutoEmail() {
         attachments: extra?.attachments,
       };
 
-      sendEmail.mutate(payload, {
+      sendEmailRef.current.mutate(payload, {
         onSuccess: (result) => {
           if (result.success) {
             toast.success(config.toastSuccess, {
@@ -246,7 +248,7 @@ export function useAutoEmail() {
         },
       });
     },
-    [sendEmail]
+    [] // stable — uses ref instead of mutation object
   );
 
   return {

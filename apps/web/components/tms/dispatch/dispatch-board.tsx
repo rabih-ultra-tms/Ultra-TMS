@@ -224,13 +224,13 @@ export function DispatchBoard() {
           />
         )}
         {viewMode === 'timeline' && (
-          <div className="flex h-full items-center justify-center">
-            <p className="text-muted-foreground">Timeline view coming in TMS-011d</p>
+          <div className="flex h-full items-center justify-center p-12">
+            <p className="text-muted-foreground">Timeline view — coming soon</p>
           </div>
         )}
         {viewMode === 'map' && (
-          <div className="flex h-full items-center justify-center">
-            <p className="text-muted-foreground">Map view coming in TMS-011d</p>
+          <div className="flex h-full items-center justify-center p-12">
+            <p className="text-muted-foreground">Map view — coming soon</p>
           </div>
         )}
       </div>

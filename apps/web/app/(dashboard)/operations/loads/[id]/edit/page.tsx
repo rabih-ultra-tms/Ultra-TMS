@@ -1,13 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { FormPage } from "@/components/patterns/form-page";
 import { LoadFormSections, loadFormSchema, LoadFormValues } from "@/components/tms/loads/load-form";
 import { useLoad, useUpdateLoad } from "@/lib/hooks/tms/use-loads";
 
 export default function EditLoadPage() {
     const params = useParams();
+    const router = useRouter();
     const loadId = params.id as string;
 
     const { data: loadData, isLoading, error } = useLoad(loadId);
@@ -111,7 +112,7 @@ export default function EditLoadPage() {
             error={error}
             submitLabel="Save Changes"
             cancelLabel="Cancel"
-            onCancel={() => window.location.href = `/operations/loads/${loadId}`}
+            onCancel={() => router.push(`/operations/loads/${loadId}`)}
         >
             {(form) => (
                 <LoadFormSections

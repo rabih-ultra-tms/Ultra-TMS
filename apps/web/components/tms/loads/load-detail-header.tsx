@@ -149,14 +149,16 @@ export function LoadDetailHeader({ load }: LoadDetailHeaderProps) {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
+                                navigator.clipboard.writeText(load.loadNumber);
+                            }}>
                                 <Copy className="h-4 w-4 mr-2" /> Copy Load Number
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => window.print()}>
                                 <Printer className="h-4 w-4 mr-2" /> Print Summary
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-red-600">
+                            <DropdownMenuItem className="text-red-600" disabled>
                                 Delete Load
                             </DropdownMenuItem>
                         </DropdownMenuContent>

@@ -23,7 +23,7 @@ import { LANE_CONFIG } from '@/lib/types/dispatch';
 interface DispatchBulkToolbarProps {
   selectedCount: number;
   onClearSelection: () => void;
-  onBulkStatusChange: (status: LoadStatus) => Promise<void>;
+  onBulkStatusChange: (status: LoadStatus) => Promise<unknown>;
   onBulkCarrierAssign: () => void;
 }
 

@@ -3,9 +3,7 @@
 import { useState, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1";
+import { apiClient } from "@/lib/api-client";
 
 export interface RateConfirmationOptions {
   includeAccessorials?: boolean;
@@ -14,33 +12,33 @@ export interface RateConfirmationOptions {
   sendToCarrier?: boolean;
 }
 
-function getAccessToken(): string | undefined {
-  if (typeof window === "undefined") return undefined;
-  const cookieName =
-    process.env.NEXT_PUBLIC_AUTH_COOKIE_NAME || "accessToken";
-  const parts = document.cookie.split(";").map((p) => p.trim());
-  const match = parts.find((p) => p.startsWith(`${cookieName}=`));
-  if (!match) return undefined;
-  return decodeURIComponent(match.substring(cookieName.length + 1));
-}
-
 async function fetchRateConPdf(
   loadId: string,
   options: RateConfirmationOptions
 ): Promise<Blob> {
-  const token = getAccessToken();
-  const res = await fetch(
-    `${API_BASE_URL}/loads/${loadId}/rate-confirmation`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      credentials: "include",
-      body: JSON.stringify(options),
-    }
-  );
+  // Use apiClient.getFullUrl to build the URL but fetch manually for blob response
+  const url = apiClient.getFullUrl(`/loads/${loadId}/rate-confirmation`);
+
+  // Get auth headers the same way apiClient does (via cookies)
+  const accessToken = typeof window !== "undefined"
+    ? (() => {
+        const cookieName = process.env.NEXT_PUBLIC_AUTH_COOKIE_NAME || "accessToken";
+        const parts = document.cookie.split(";").map((p) => p.trim());
+        const match = parts.find((p) => p.startsWith(`${cookieName}=`));
+        return match ? decodeURIComponent(match.substring(cookieName.length + 1)) : undefined;
+      })()
+    : undefined;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/pdf,application/json",
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    },
+    credentials: "include",
+    body: JSON.stringify(options),
+  });
 
   if (!res.ok) {
     let message = `Failed to generate rate confirmation (${res.status})`;
@@ -63,7 +61,6 @@ export function useRateConfirmation(loadId: string) {
     mutationFn: (options: RateConfirmationOptions = {}) =>
       fetchRateConPdf(loadId, { ...options, sendToCarrier: false }),
     onSuccess: (blob) => {
-      // Revoke previous URL to prevent memory leaks
       if (pdfUrl) URL.revokeObjectURL(pdfUrl);
       const url = URL.createObjectURL(blob);
       setPdfUrl(url);

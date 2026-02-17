@@ -3,10 +3,10 @@
  */
 import { jest } from "@jest/globals";
 
-export function useAutoEmail() {
+export function useAutoEmail(): { triggerEmail: ReturnType<typeof jest.fn>; isPending: boolean } {
   return {
     triggerEmail: jest.fn(),
-    isTriggering: false,
+    isPending: false,
   };
 }
 

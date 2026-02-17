@@ -86,7 +86,7 @@ export default function QuotesPage() {
   const convertMutation = useConvertQuote();
 
   const quotes = data?.data ?? [];
-  const total = data?.total ?? 0;
+  const total = (data as any)?.pagination?.total ?? (data as any)?.total ?? quotes.length;
 
   const selectedCount = Object.keys(rowSelection).length;
 
@@ -98,7 +98,8 @@ export default function QuotesPage() {
         onDelete: (id) => setDeleteTarget(id),
         onConvert: (id) => convertMutation.mutate(id),
       }),
-    [cloneMutation, sendMutation, convertMutation]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
   );
 
   const clearFilters = () => {
@@ -135,11 +136,11 @@ export default function QuotesPage() {
             </Button>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" disabled title="Bulk send not implemented yet">
               <Send className="h-4 w-4 mr-2" />
               Send Selected
             </Button>
-            <Button variant="destructive" size="sm">
+            <Button variant="destructive" size="sm" disabled title="Bulk delete not implemented yet">
               <Trash2 className="h-4 w-4 mr-2" />
               Delete Selected
             </Button>

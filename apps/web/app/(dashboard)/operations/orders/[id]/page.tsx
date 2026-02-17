@@ -42,8 +42,8 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    <DropdownMenuItem>Duplicate Order</DropdownMenuItem>
-                    <DropdownMenuItem className="text-destructive">Cancel Order</DropdownMenuItem>
+                    <DropdownMenuItem disabled>Duplicate Order</DropdownMenuItem>
+                    <DropdownMenuItem className="text-destructive" disabled>Cancel Order</DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
         </>

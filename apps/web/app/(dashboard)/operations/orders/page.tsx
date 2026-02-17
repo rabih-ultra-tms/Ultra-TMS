@@ -4,8 +4,9 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { ListPage } from "@/components/patterns/list-page";
 import { getOrderColumns } from "@/components/tms/orders/order-columns";
 import { OrderFilters } from "@/components/tms/orders/order-filters";
-import { useOrders } from "@/lib/hooks/tms/use-orders";
+import { useOrders, useUpdateOrder } from "@/lib/hooks/tms/use-orders";
 import { OrderStatus, Order } from "@/types/orders";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import Link from "next/link";
@@ -14,6 +15,7 @@ import { useState } from "react";
 export default function OrdersPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const updateOrder = useUpdateOrder();
 
     // Parse URL params
     const page = parseInt(searchParams.get("page") || "1");
@@ -50,14 +52,17 @@ export default function OrdersPage() {
     };
 
     const handleDelete = async (_id: string) => {
-        if (!confirm("Are you sure you want to delete this order?")) return;
-        // In a real app, use a proper mutation and dialog
-        alert("Delete not implemented yet");
+        // TODO: Wire to useDeleteOrder mutation + ConfirmDialog when backend DELETE /orders/:id is ready
+        toast.info("Delete not available yet");
     };
 
     const handleStatusChange = async (id: string, newStatus: OrderStatus) => {
-        // In a real app, use a proper mutation
-        console.log("Change status", id, newStatus);
+        try {
+            await updateOrder.mutateAsync({ id, formData: {} as any, status: newStatus as any });
+            toast.success(`Order status changed to ${newStatus}`);
+        } catch {
+            toast.error("Failed to update order status");
+        }
     };
 
     return (

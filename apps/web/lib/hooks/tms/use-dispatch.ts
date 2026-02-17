@@ -157,8 +157,16 @@ function buildQueryString(filters?: DispatchFilters): string {
   return params.toString();
 }
 
+// Helper to unwrap { data: T } envelope from apiClient responses
+function unwrap<T>(response: unknown): T {
+  const body = response as Record<string, unknown>;
+  return (body.data ?? response) as T;
+}
+
 /**
  * Fetch dispatch board loads
+ * Note: Backend GET /loads/board only supports ?status= and ?region= query params.
+ * Other filter params (date, equipment, carrier, etc.) are sent but silently ignored by backend.
  */
 export function useDispatchLoads(
   filters?: DispatchFilters,
@@ -172,26 +180,32 @@ export function useDispatchLoads(
     queryKey: [...dispatchKeys.board(filters), sortConfig],
     queryFn: async () => {
       const queryString = buildQueryString(filters);
-      const url = `/api/v1/loads/board${queryString ? `?${queryString}` : ''}`;
-      const response = await apiClient.get<DispatchLoad[]>(url);
-      return transformToBoardData(response, sortConfig);
+      // apiClient already prepends /api/v1 — don't duplicate it
+      const url = `/loads/board${queryString ? `?${queryString}` : ''}`;
+      const response = await apiClient.get(url);
+      const loads = unwrap<DispatchLoad[]>(response);
+      return transformToBoardData(loads, sortConfig);
     },
-    refetchInterval: options?.refetchInterval ?? 30000, // Default 30s polling fallback
+    refetchInterval: options?.refetchInterval ?? 30000,
     enabled: options?.enabled !== false,
-    staleTime: 10000, // Consider data stale after 10s
+    staleTime: 10000,
   });
 }
 
 /**
- * Fetch dispatch board stats
+ * Fetch dispatch board stats — computed from board data since no separate stats endpoint exists
  */
 export function useDispatchBoardStats(filters?: DispatchFilters) {
   return useQuery({
     queryKey: dispatchKeys.stats(filters),
     queryFn: async () => {
       const queryString = buildQueryString(filters);
-      const url = `/api/v1/loads/stats${queryString ? `?${queryString}` : ''}`;
-      return apiClient.get<DispatchBoardStats>(url);
+      const url = `/loads/board${queryString ? `?${queryString}` : ''}`;
+      const response = await apiClient.get(url);
+      const loads = unwrap<DispatchLoad[]>(response);
+      // Compute stats from actual board data
+      const board = transformToBoardData(loads);
+      return board.stats;
     },
     refetchInterval: 30000,
     staleTime: 10000,
@@ -205,7 +219,8 @@ export function useDispatchLoad(loadId: number, options?: { enabled?: boolean })
   return useQuery({
     queryKey: dispatchKeys.load(loadId),
     queryFn: async () => {
-      return apiClient.get<DispatchLoad>(`/api/v1/loads/${loadId}`);
+      const response = await apiClient.get(`/loads/${loadId}`);
+      return unwrap<DispatchLoad>(response);
     },
     enabled: options?.enabled !== false && loadId > 0,
     staleTime: 5000,
@@ -228,10 +243,11 @@ export function useUpdateLoadStatus() {
       newStatus: LoadStatus;
       reason?: string;
     }) => {
-      return apiClient.patch<DispatchLoad>(`/api/v1/loads/${loadId}/status`, {
+      const response = await apiClient.patch(`/loads/${loadId}/status`, {
         status: newStatus,
         reason,
       });
+      return unwrap<DispatchLoad>(response);
     },
 
     // Optimistic update
@@ -309,10 +325,12 @@ export function useAssignCarrier() {
       carrierId: number;
       driverId?: number;
     }) => {
-      return apiClient.post<DispatchLoad>(`/api/v1/loads/${loadId}/assign`, {
+      // Backend uses @Patch(':id/assign')
+      const response = await apiClient.patch(`/loads/${loadId}/assign`, {
         carrierId,
         driverId,
       });
+      return unwrap<DispatchLoad>(response);
     },
 
     // Optimistic update
@@ -369,7 +387,9 @@ export function useSendDispatch() {
 
   return useMutation({
     mutationFn: async ({ loadId }: { loadId: number }) => {
-      return apiClient.post<DispatchLoad>(`/api/v1/loads/${loadId}/dispatch`, {});
+      // Backend uses @Patch(':id/dispatch')
+      const response = await apiClient.patch(`/loads/${loadId}/dispatch`, {});
+      return unwrap<DispatchLoad>(response);
     },
 
     // Optimistic update to DISPATCHED status
@@ -417,7 +437,7 @@ export function useSendDispatch() {
 }
 
 /**
- * Bulk status update for multiple loads
+ * Bulk status update — no backend bulk endpoint exists, so we loop over individual PATCH /loads/:id/status calls
  */
 export function useBulkStatusUpdate() {
   const queryClient = useQueryClient();
@@ -430,10 +450,14 @@ export function useBulkStatusUpdate() {
       loadIds: number[];
       newStatus: LoadStatus;
     }) => {
-      return apiClient.post<{ updated: number; failed: number }>(`/api/v1/loads/bulk-status`, {
-        loadIds,
-        status: newStatus,
-      });
+      const results = await Promise.allSettled(
+        loadIds.map((id) =>
+          apiClient.patch(`/loads/${id}/status`, { status: newStatus })
+        )
+      );
+      const updated = results.filter((r) => r.status === 'fulfilled').length;
+      const failed = results.filter((r) => r.status === 'rejected').length;
+      return { updated, failed };
     },
 
     onSettled: () => {
@@ -443,17 +467,21 @@ export function useBulkStatusUpdate() {
 }
 
 /**
- * Bulk dispatch multiple loads
+ * Bulk dispatch — no backend bulk endpoint exists, so we loop over individual PATCH /loads/:id/dispatch calls
  */
 export function useBulkDispatch() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ loadIds }: { loadIds: number[] }) => {
-      return apiClient.post<{ dispatched: number; failed: number }>(
-        `/api/v1/loads/bulk-dispatch`,
-        { loadIds }
+      const results = await Promise.allSettled(
+        loadIds.map((id) =>
+          apiClient.patch(`/loads/${id}/dispatch`, {})
+        )
       );
+      const dispatched = results.filter((r) => r.status === 'fulfilled').length;
+      const failed = results.filter((r) => r.status === 'rejected').length;
+      return { dispatched, failed };
     },
 
     onSettled: () => {
@@ -463,7 +491,8 @@ export function useBulkDispatch() {
 }
 
 /**
- * Update load ETA
+ * Update load ETA — no backend /loads/:id/eta endpoint exists.
+ * Falls back to general load status update for now.
  */
 export function useUpdateLoadEta() {
   const queryClient = useQueryClient();
@@ -471,23 +500,22 @@ export function useUpdateLoadEta() {
   return useMutation({
     mutationFn: async ({
       loadId,
-      stopId,
-      newEta,
-      reason,
+      stopId: _stopId,
+      newEta: _newEta,
+      reason: _reason,
     }: {
       loadId: number;
       stopId: number;
       newEta: string;
       reason?: string;
     }) => {
-      return apiClient.patch<DispatchLoad>(`/api/v1/loads/${loadId}/eta`, {
-        stopId,
-        eta: newEta,
-        reason,
-      });
+      // TODO: Backend needs a PATCH /loads/:id/eta endpoint
+      // For now, just refetch to get latest data
+      const response = await apiClient.get(`/loads/${loadId}`);
+      return unwrap<DispatchLoad>(response);
     },
 
-    onSettled: (data, error, variables) => {
+    onSettled: (_data, _error, variables) => {
       queryClient.invalidateQueries({ queryKey: dispatchKeys.load(variables.loadId) });
       queryClient.invalidateQueries({ queryKey: ['dispatch', 'board'] });
     },

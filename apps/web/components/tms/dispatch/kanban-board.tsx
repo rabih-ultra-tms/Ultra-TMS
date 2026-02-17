@@ -7,7 +7,7 @@
  * Each lane contains load cards grouped by status.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -157,29 +157,21 @@ export function KanbanBoard({ boardData, sortConfig, onSortChange }: KanbanBoard
   }, []);
 
   /**
-   * Keyboard shortcuts
+   * Keyboard shortcuts — use refs to avoid re-registering on every selection change
    */
+  const selectedLoadIdsRef = useRef(selectedLoadIds);
+  useEffect(() => { selectedLoadIdsRef.current = selectedLoadIds; }, [selectedLoadIds]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Escape - clear selection
-      if (e.key === 'Escape' && selectedLoadIds.size > 0) {
+      if (e.key === 'Escape' && selectedLoadIdsRef.current.size > 0) {
         handleClearSelection();
-        return;
-      }
-
-      // Ctrl+A - select all in focused lane (for now, just show a toast)
-      if (e.key === 'a' && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault();
-        toast.info('Select all', {
-          description: 'Click on a lane header to select all loads in that lane',
-        });
-        return;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedLoadIds, handleClearSelection]);
+  }, [handleClearSelection]);
 
   // Configure sensors for drag-and-drop (disabled during selection mode)
   const sensors = useSensors(

@@ -23,13 +23,11 @@ export interface SendEmailPayload {
   replyTo?: string;
 }
 
-interface SendEmailResponse {
-  data: {
-    success: boolean;
-    logId: string;
-    messageId?: string;
-    error?: string;
-  };
+interface SendEmailResult {
+  success: boolean;
+  logId: string;
+  messageId?: string;
+  error?: string;
 }
 
 export function useSendEmail() {
@@ -37,11 +35,13 @@ export function useSendEmail() {
 
   return useMutation({
     mutationFn: async (payload: SendEmailPayload) => {
-      const response = await apiClient.post<SendEmailResponse>(
+      const response = await apiClient.post(
         "/communication/email/send",
         payload
       );
-      return response.data ?? response;
+      // apiClient returns raw response.json() which is { data: { success, logId, ... } }
+      const body = response as Record<string, unknown>;
+      return (body.data ?? response) as SendEmailResult;
     },
     onSuccess: (data) => {
       if (data.success) {

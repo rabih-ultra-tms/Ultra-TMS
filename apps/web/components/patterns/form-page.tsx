@@ -54,6 +54,7 @@ interface FormPageProps<T extends FieldValues> {
     submitLabel?: string;
     cancelLabel?: string;
     onCancel?: () => void;
+    onRetry?: () => void;
 
     className?: string;
 }
@@ -72,6 +73,7 @@ export function FormPage<T extends FieldValues>({
     submitLabel = "Save Changes",
     cancelLabel = "Cancel",
     onCancel,
+    onRetry,
     className,
 }: FormPageProps<T>) {
     const router = useRouter();
@@ -147,7 +149,7 @@ export function FormPage<T extends FieldValues>({
                 <ErrorState
                     title="Error loading form"
                     message={error.message}
-                    retry={() => window.location.reload()}
+                    retry={onRetry ?? (() => router.back())}
                     backButton={
                         <Button variant="outline" onClick={() => router.back()}>
                             Go Back

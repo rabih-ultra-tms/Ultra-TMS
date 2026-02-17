@@ -75,7 +75,7 @@ function mapOrderToFormValues(order: OrderDetailResponse): Partial<OrderFormValu
 
 export default function EditOrderPage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const { data: order, isLoading, error } = useOrder(params.id);
+  const { data: order, isLoading, error, refetch } = useOrder(params.id);
 
   const initialData = React.useMemo(() => {
     if (!order) return undefined;
@@ -108,7 +108,7 @@ export default function EditOrderPage({ params }: { params: { id: string } }) {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => window.location.reload()}
+                  onClick={() => refetch()}
                 >
                   Retry
                 </Button>

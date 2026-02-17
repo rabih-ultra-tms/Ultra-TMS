@@ -242,7 +242,7 @@ function RevenueTrendChart({ data }: RevenueTrendChartProps) {
                 textAnchor="middle"
                 className="fill-text-muted text-[10px]"
               >
-                {formatDate(data[index].date)}
+                {data[index] ? formatDate(data[index].date) : ''}
               </text>
             );
           })}

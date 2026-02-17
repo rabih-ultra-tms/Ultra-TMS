@@ -89,43 +89,57 @@ export function LoadCarrierTab({ load }: LoadCarrierTabProps) {
             <Separator />
 
             {/* Rate Info */}
-            <div className="grid grid-cols-2 gap-8">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-base text-muted-foreground">Customer Rate</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">$1,450.00</div>
-                        <div className="text-xs text-muted-foreground mt-1">Invoice Amount</div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-base text-muted-foreground">Carrier Rate</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-blue-600">${load.carrierRate?.toFixed(2) || '0.00'}</div>
-                        <div className="text-xs text-muted-foreground mt-1">Bill Amount</div>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Margin Calculation */}
-            <Card className="bg-slate-50 border-dashed">
-                <CardContent className="pt-6">
-                    <div className="flex justify-between items-center">
-                        <span className="font-medium">Estimated Margin</span>
-                        <div className="text-right">
-                            <div className="text-xl font-bold text-green-600">
-                                ${(1450 - (load.carrierRate || 0)).toFixed(2)}
-                            </div>
-                            <div className="text-xs text-green-700 font-medium">
-                                {((1450 - (load.carrierRate || 0)) / 1450 * 100).toFixed(1)}%
-                            </div>
+            {(() => {
+                const customerRate = (load as any).order?.customerRate ?? (load as any).customerRate ?? 0;
+                const carrierRate = load.carrierRate ?? 0;
+                const margin = customerRate - carrierRate;
+                const marginPct = customerRate > 0 ? (margin / customerRate) * 100 : 0;
+                return (
+                    <>
+                        <div className="grid grid-cols-2 gap-8">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="text-base text-muted-foreground">Customer Rate</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold">
+                                        {customerRate > 0 ? `$${customerRate.toFixed(2)}` : '—'}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground mt-1">Invoice Amount</div>
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="text-base text-muted-foreground">Carrier Rate</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold text-blue-600">${carrierRate.toFixed(2)}</div>
+                                    <div className="text-xs text-muted-foreground mt-1">Bill Amount</div>
+                                </CardContent>
+                            </Card>
                         </div>
-                    </div>
-                </CardContent>
-            </Card>
+
+                        {/* Margin Calculation */}
+                        {customerRate > 0 && (
+                            <Card className="bg-slate-50 border-dashed">
+                                <CardContent className="pt-6">
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-medium">Estimated Margin</span>
+                                        <div className="text-right">
+                                            <div className={`text-xl font-bold ${margin >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                ${margin.toFixed(2)}
+                                            </div>
+                                            <div className={`text-xs font-medium ${margin >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                                                {marginPct.toFixed(1)}%
+                                            </div>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
+                    </>
+                );
+            })()}
         </div>
     );
 }

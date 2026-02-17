@@ -395,7 +395,7 @@ export function OrderForm({
           status,
         });
 
-        const newOrderId = (result as any)?.data?.id || (result as any)?.id;
+        const newOrderId = result.id;
         toast.success(
           status === "BOOKED" ? "Order created and confirmed!" : "Draft saved!"
         );

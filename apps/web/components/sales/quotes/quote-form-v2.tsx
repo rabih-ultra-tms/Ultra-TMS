@@ -247,7 +247,7 @@ export function QuoteFormV2({ initialData, quoteId }: QuoteFormV2Props) {
 
   const handleSaveDraft = async (values: QuoteFormValues) => {
     if (isEdit && quoteId) {
-      const result = await updateMutation.mutateAsync({
+      await updateMutation.mutateAsync({
         id: quoteId,
         data: values,
       });

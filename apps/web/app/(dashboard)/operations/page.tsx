@@ -23,8 +23,10 @@ function OperationsDashboardContent() {
   const [period, setPeriod] = useState<Period>('today');
   const [comparison, setComparison] = useState<ComparisonPeriod>('yesterday');
 
-  // Determine scope based on user role
-  const scope: Scope = ['Super Admin', 'Admin', 'Ops Manager'].includes(user?.role || '')
+  // Determine scope based on user roles (roles is an array of { name: string })
+  const scope: Scope = (user?.roles ?? []).some((r: { name: string }) =>
+    ['Super Admin', 'Admin', 'Ops Manager'].includes(r.name)
+  )
     ? 'team'
     : 'personal';
 

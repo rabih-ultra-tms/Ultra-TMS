@@ -8,6 +8,12 @@ import { LoadListParams, LoadListResponse, Load, LoadDetailResponse } from "@/ty
 import { OperationsCarrier } from "@/types/carriers";
 import { OrderDetailResponse } from "@/types/orders";
 
+// Helper to unwrap { data: T } envelope from apiClient responses
+function unwrap<T>(response: unknown): T {
+    const body = response as Record<string, unknown>;
+    return (body.data ?? response) as T;
+}
+
 export function useLoads(params: LoadListParams) {
     return useQuery<LoadListResponse>({
         queryKey: ['loads', params],
@@ -25,9 +31,8 @@ export function useLoads(params: LoadListParams) {
             if (params.fromDate) searchParams.set('fromDate', params.fromDate);
             if (params.toDate) searchParams.set('toDate', params.toDate);
 
-            // Backend returns { data, total, page, limit } directly for loads
-            const response = await apiClient.get<LoadListResponse>(`/loads?${searchParams.toString()}`);
-            return response;
+            const response = await apiClient.get(`/loads?${searchParams.toString()}`);
+            return unwrap<LoadListResponse>(response);
         },
         placeholderData: (previousData) => previousData,
     });
@@ -37,8 +42,8 @@ export function useLoad(id: string) {
     return useQuery<LoadDetailResponse>({
         queryKey: ['load', id],
         queryFn: async () => {
-            const response = await apiClient.get<LoadDetailResponse>(`/loads/${id}`);
-            return response;
+            const response = await apiClient.get(`/loads/${id}`);
+            return unwrap<LoadDetailResponse>(response);
         },
         enabled: !!id,
         staleTime: 30000,
@@ -46,40 +51,32 @@ export function useLoad(id: string) {
     });
 }
 
+// STUB: No backend endpoint for load stats — disabled until backend adds GET /loads/stats
 export function useLoadStats() {
     return useQuery({
         queryKey: ['load-stats'],
         queryFn: async () => {
             return {
-                total: 847,
-                unassigned: 23,
-                inTransit: 234,
-                deliveredToday: 56,
-                avgMargin: 18.4,
-                totalActive: 120
+                total: 0,
+                unassigned: 0,
+                inTransit: 0,
+                deliveredToday: 0,
+                avgMargin: 0,
+                totalActive: 0
             };
-        }
+        },
+        enabled: false, // No backend endpoint exists yet
     });
 }
 
-// --- Mocks for Missing Endpoints ---
-
-// useLoadDocuments removed — replaced by useDocuments("LOAD", id) in @/lib/hooks/documents/use-documents
-
+// STUB: No backend endpoint for load timeline — disabled until backend adds GET /loads/:id/timeline
 export function useLoadTimeline(id: string) {
     return useQuery({
         queryKey: ['load-timeline', id],
         queryFn: async () => {
-            // Mock timeline
-            await new Promise(resolve => setTimeout(resolve, 500));
-            return [
-                { id: '1', type: 'status', title: 'Load Dispatched', description: 'Load dispatched to Swift Transport', date: '2025-02-10T10:30:00Z', user: 'Maria D.' },
-                { id: '2', type: 'document', title: 'Rate Confirmation Signed', description: 'Carrier signed rate confirmation', date: '2025-02-10T10:15:00Z', user: 'System' },
-                { id: '3', type: 'assignment', title: 'Carrier Assigned', description: 'Assigned to Swift Transport', date: '2025-02-10T09:00:00Z', user: 'Maria D.' },
-                { id: '4', type: 'creation', title: 'Load Created', description: 'Load created from Order #1234', date: '2025-02-10T08:00:00Z', user: 'System' },
-            ];
+            return [] as Array<{ id: string; type: string; title: string; description: string; date: string; user: string }>;
         },
-        enabled: !!id
+        enabled: false, // No backend endpoint exists yet
     });
 }
 
@@ -134,8 +131,8 @@ export function useCreateLoad() {
 
     return useMutation({
         mutationFn: async (data: CreateLoadInput) => {
-            const response = await apiClient.post<Load>('/loads', data);
-            return response;
+            const response = await apiClient.post('/loads', data);
+            return unwrap<Load>(response);
         },
         onSuccess: (load) => {
             queryClient.invalidateQueries({ queryKey: ['loads'] });
@@ -166,8 +163,9 @@ export function useUpdateLoad(loadId: string) {
 
     return useMutation({
         mutationFn: async (data: UpdateLoadInput) => {
-            const response = await apiClient.put<Load>(`/loads/${loadId}`, data);
-            return response;
+            // Backend uses @Put(':id') for load updates
+            const response = await apiClient.put(`/loads/${loadId}`, data);
+            return unwrap<Load>(response);
         },
         onSuccess: (load) => {
             queryClient.invalidateQueries({ queryKey: ['loads'] });
@@ -230,10 +228,10 @@ export function useCarriers(params: CarrierSearchParams) {
             if (params.page) searchParams.set('page', params.page.toString());
             if (params.limit) searchParams.set('limit', params.limit.toString());
 
-            const response = await apiClient.get<{ data: CarrierWithScore[]; total: number }>(
+            const response = await apiClient.get(
                 `/carriers?${searchParams.toString()}`
             );
-            return response;
+            return unwrap<{ data: CarrierWithScore[]; total: number }>(response);
         },
         staleTime: 300000, // 5 minutes
     });
@@ -245,8 +243,8 @@ export function useOrder(orderId: string | undefined) {
     return useQuery<OrderDetailResponse>({
         queryKey: ['order', orderId],
         queryFn: async () => {
-            const response = await apiClient.get<OrderDetailResponse>(`/orders/${orderId}`);
-            return response;
+            const response = await apiClient.get(`/orders/${orderId}`);
+            return unwrap<OrderDetailResponse>(response);
         },
         enabled: !!orderId,
         staleTime: 60000,

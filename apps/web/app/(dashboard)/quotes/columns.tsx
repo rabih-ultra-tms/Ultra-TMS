@@ -244,7 +244,7 @@ export function getColumns(config: ColumnsConfig = {}): ColumnDef<Quote>[] {
 
               {isConverted && (
                 <DropdownMenuItem asChild>
-                  <Link href={`/orders`}>
+                  <Link href={`/operations/orders?search=${encodeURIComponent(quote.quoteNumber || quote.id)}`}>
                     <ExternalLink className="mr-2 h-4 w-4" />
                     View Order
                   </Link>
