@@ -242,7 +242,7 @@
 |------|-------|--------|----------|--------|---------|
 | TMS-013 | Tracking Map (live GPS) | DONE | Claude Code | L (12h) ⬆️ | Feb 16 |
 | TMS-014 | Rate Confirmation (PDF) | DONE | Claude Code | L (6h) ⬆️ | Feb 16 |
-| **COMM-001** | **5 Automated Emails** (rate con, tender, pickup, delivery, invoice) | NOT STARTED | — | L (8-12h) | — |
+| **COMM-001** | **5 Automated Emails** (rate con, tender, pickup, delivery, invoice) | IN PROGRESS | Claude Code | L (8-12h) | Feb 16 |
 | **DOC-002** | **Business Rules Reference Doc** | NOT STARTED | — | M (4-6h) | — |
 | **TEST-001a** | **Testing: Phase 0-2** (bug fixes, design, carrier) | NOT STARTED | — | L (8-10h) | — |
 | **TEST-001b** | **Testing: Phase 3** (orders, loads, quotes, tracking) | DONE | Claude Code | XL (12-16h) | Feb 16 |

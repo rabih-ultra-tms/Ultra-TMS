@@ -6,6 +6,36 @@
 
 ---
 
+## Session: 2026-02-16 (Sunday) — COMM-001: Automated Emails (4 of 5)
+
+### Developer: Claude Code (Opus 4.6)
+### AI Tool: Claude Opus 4.6
+
+**What was done:**
+Implemented 4 of 5 automated emails for COMM-001 (5th — Invoice email — deferred pending ACC-002). Created email communication hooks, email preview dialog, and integrated email actions into Load Detail page. Email logs now appear in the Load timeline.
+
+**The 4 emails implemented:**
+1. Rate Confirmation — sent to carrier when load is dispatched (with PDF attachment)
+2. Load Tendered — sent to carrier when load is tendered
+3. Pickup Reminder — sent to carrier before pickup window
+4. Delivery Confirmation — sent to customer when POD uploaded on delivered load
+
+**Files created:**
+- `lib/hooks/communication/use-send-email.ts` — mutation hook for `POST /api/v1/communication/email/send`
+- `lib/hooks/communication/use-email-logs.ts` — query hook for email logs by entity
+- `components/tms/emails/email-preview-dialog.tsx` — preview + send dialog with template presets
+
+**Files modified:**
+- `components/tms/loads/load-detail-header.tsx` — added "Email" dropdown with context-aware actions (buttons appear based on load status)
+- `components/tms/loads/load-timeline-tab.tsx` — email logs merged into activity timeline with teal markers + status badges
+
+**TypeScript check:** 0 new errors, 0 lint warnings in COMM-001 files
+**Backend integration:** Wired to existing `POST /api/v1/communication/email/send` (SendGrid provider, CommunicationLog audit trail, template rendering)
+
+**Remaining for COMM-001:** Invoice email (#5) blocked by ACC-002. Carrier/customer email extraction needs backend to expose contact emails on load/order responses.
+
+---
+
 ## Session: 2026-02-16 (Sunday) — Sonnet 4.5 Audit Batch 2
 
 ### Developer: Claude Code (Opus 4.6)
