@@ -26,10 +26,14 @@ import {
   GripVertical,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface LoadCardProps {
   load: DispatchLoad;
   isDragging?: boolean;
+  isSelected?: boolean;
+  onSelectionChange?: (loadId: number, selected: boolean) => void;
+  selectionMode?: boolean;
 }
 
 /**
@@ -131,6 +135,9 @@ function renderCardContent({
   lastUpdate,
   loadAge,
   showDragHandle = true,
+  isSelected = false,
+  onSelectionChange,
+  selectionMode = false,
 }: {
   load: DispatchLoad;
   origin: DispatchStop | undefined;
@@ -142,13 +149,27 @@ function renderCardContent({
   lastUpdate: string;
   loadAge: { hours: number; variant: string };
   showDragHandle?: boolean;
+  isSelected?: boolean;
+  onSelectionChange?: (loadId: number, selected: boolean) => void;
+  selectionMode?: boolean;
 }) {
   return (
     <>
       {/* Row 1: Load Number + Equipment + Priority Indicators */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-1.5">
-          {showDragHandle && (
+          {/* Checkbox for selection mode */}
+          {selectionMode && onSelectionChange && (
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={(checked) => {
+                onSelectionChange(load.id, checked === true);
+              }}
+              onClick={(e) => e.stopPropagation()}
+              className="flex-shrink-0"
+            />
+          )}
+          {showDragHandle && !selectionMode && (
             <GripVertical className="h-4 w-4 text-muted-foreground/40 group-hover:text-muted-foreground/70 transition-colors flex-shrink-0" />
           )}
           <a
@@ -253,8 +274,14 @@ function renderCardContent({
   );
 }
 
-export function LoadCard({ load, isDragging = false }: LoadCardProps) {
-  // Sortable hook for drag-and-drop
+export function LoadCard({
+  load,
+  isDragging = false,
+  isSelected = false,
+  onSelectionChange,
+  selectionMode = false,
+}: LoadCardProps) {
+  // Sortable hook for drag-and-drop (disabled during selection mode)
   const {
     attributes,
     listeners,
@@ -264,6 +291,7 @@ export function LoadCard({ load, isDragging = false }: LoadCardProps) {
     isDragging: isSortableDragging,
   } = useSortable({
     id: load.id.toString(),
+    disabled: selectionMode, // Disable drag when in selection mode
   });
 
   const style = {
@@ -323,6 +351,9 @@ export function LoadCard({ load, isDragging = false }: LoadCardProps) {
             lastUpdate,
             loadAge,
             showDragHandle: false,
+            isSelected,
+            onSelectionChange,
+            selectionMode,
           })}
         </div>
       </div>
@@ -334,14 +365,25 @@ export function LoadCard({ load, isDragging = false }: LoadCardProps) {
       ref={setNodeRef}
       style={style}
       className={cn(
-        'group relative rounded-lg border shadow-sm transition-all hover:shadow-md cursor-grab active:cursor-grabbing',
+        'group relative rounded-lg border shadow-sm transition-all hover:shadow-md',
+        selectionMode
+          ? 'cursor-pointer'
+          : 'cursor-grab active:cursor-grabbing',
         ageBackground,
         stale && 'border-l-4 border-l-orange-500',
-        isSortableDragging && 'opacity-50'
+        isSortableDragging && 'opacity-50',
+        isSelected && 'ring-2 ring-primary ring-offset-2'
       )}
       {...attributes}
+      onClick={(e) => {
+        // In selection mode, clicking the card toggles selection
+        if (selectionMode && onSelectionChange) {
+          e.preventDefault();
+          onSelectionChange(load.id, !isSelected);
+        }
+      }}
     >
-      <div className="space-y-2 p-3" {...listeners}>
+      <div className="space-y-2 p-3" {...(!selectionMode ? listeners : {})}>
         {renderCardContent({
           load,
           origin,
@@ -353,6 +395,9 @@ export function LoadCard({ load, isDragging = false }: LoadCardProps) {
           lastUpdate,
           loadAge,
           showDragHandle: true,
+          isSelected,
+          onSelectionChange,
+          selectionMode,
         })}
       </div>
     </div>

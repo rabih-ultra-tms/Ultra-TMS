@@ -226,7 +226,7 @@
 | **TMS-011b** | **Dispatch: Kanban UI** (6 columns, cards, filters) | DONE | Claude Code | L (8-10h) | Feb 16 |
 | **TMS-011c** | **Dispatch: Drag-drop** (dnd-kit, validation) | DONE | Claude Code | XL (12-16h) | Feb 16 |
 | **TMS-011d** | **Dispatch: Real-time sync** (WebSocket events) | DONE | Claude Code | L (8-12h) | Feb 16 |
-| **TMS-011e** | **Dispatch: Bulk actions + polish** | NOT STARTED | — | M (4-6h) | — |
+| **TMS-011e** | **Dispatch: Bulk actions + polish** | DONE | Claude Code | M (4-6h) | Feb 16 |
 | TMS-012 | Operations Dashboard | NOT STARTED | — | L (9h) ⬆️ | — |
 
 **Phase 4 Total:** ~98-118 hours (heaviest phase — both developers fully engaged for 2 weeks)

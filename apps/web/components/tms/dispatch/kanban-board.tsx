@@ -7,7 +7,7 @@
  * Each lane contains load cards grouped by status.
  */
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -23,6 +23,7 @@ import {
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { KanbanLane } from './kanban-lane';
 import { LoadCard } from './load-card';
+import { DispatchBulkToolbar } from './dispatch-bulk-toolbar';
 import type {
   DispatchBoardData,
   DispatchLoad,
@@ -31,7 +32,7 @@ import type {
   SortConfig,
 } from '@/lib/types/dispatch';
 import { LANE_CONFIG, STATUS_TO_LANE, isValidTransition } from '@/lib/types/dispatch';
-import { useUpdateLoadStatus } from '@/lib/hooks/tms/use-dispatch';
+import { useUpdateLoadStatus, useBulkStatusUpdate } from '@/lib/hooks/tms/use-dispatch';
 import { toast } from 'sonner';
 
 interface KanbanBoardProps {
@@ -70,9 +71,109 @@ function getTargetStatus(currentStatus: LoadStatus, targetLane: LaneType): LoadS
 export function KanbanBoard({ boardData, sortConfig, onSortChange }: KanbanBoardProps) {
   const [activeLoad, setActiveLoad] = useState<DispatchLoad | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
+  const [selectedLoadIds, setSelectedLoadIds] = useState<Set<number>>(new Set());
   const updateLoadStatus = useUpdateLoadStatus();
+  const bulkStatusUpdate = useBulkStatusUpdate();
 
-  // Configure sensors for drag-and-drop
+  // Selection mode is active when any loads are selected
+  const selectionMode = selectedLoadIds.size > 0;
+
+  /**
+   * Handle selection change for a single load
+   */
+  const handleSelectionChange = useCallback((loadId: number, selected: boolean) => {
+    setSelectedLoadIds((prev) => {
+      const next = new Set(prev);
+      if (selected) {
+        next.add(loadId);
+      } else {
+        next.delete(loadId);
+      }
+      return next;
+    });
+  }, []);
+
+  /**
+   * Clear all selections
+   */
+  const handleClearSelection = useCallback(() => {
+    setSelectedLoadIds(new Set());
+  }, []);
+
+  /**
+   * Select all loads in a specific lane
+   */
+  const handleSelectAllInLane = useCallback((laneKey: LaneType) => {
+    const loadsInLane = boardData.loadsByLane[laneKey] || [];
+    setSelectedLoadIds((prev) => {
+      const next = new Set(prev);
+      loadsInLane.forEach((load) => next.add(load.id));
+      return next;
+    });
+  }, [boardData.loadsByLane]);
+
+  /**
+   * Handle bulk status change
+   */
+  const handleBulkStatusChange = useCallback(
+    async (newStatus: LoadStatus) => {
+      const loadIds = Array.from(selectedLoadIds);
+
+      return bulkStatusUpdate.mutateAsync(
+        { loadIds, newStatus },
+        {
+          onSuccess: () => {
+            toast.success('Bulk update successful', {
+              description: `Updated ${loadIds.length} load(s) to ${newStatus}`,
+            });
+            handleClearSelection();
+          },
+          onError: (error) => {
+            toast.error('Bulk update failed', {
+              description: error instanceof Error ? error.message : 'Some loads could not be updated',
+            });
+          },
+        }
+      );
+    },
+    [selectedLoadIds, bulkStatusUpdate, handleClearSelection]
+  );
+
+  /**
+   * Handle bulk carrier assignment (placeholder)
+   */
+  const handleBulkCarrierAssign = useCallback(() => {
+    toast.info('Carrier assignment', {
+      description: 'Bulk carrier assignment coming soon',
+    });
+  }, []);
+
+  /**
+   * Keyboard shortcuts
+   */
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Escape - clear selection
+      if (e.key === 'Escape' && selectedLoadIds.size > 0) {
+        handleClearSelection();
+        return;
+      }
+
+      // Ctrl+A - select all in focused lane (for now, just show a toast)
+      if (e.key === 'a' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        toast.info('Select all', {
+          description: 'Click on a lane header to select all loads in that lane',
+        });
+        return;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedLoadIds, handleClearSelection]);
+
+  // Configure sensors for drag-and-drop (disabled during selection mode)
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -85,9 +186,11 @@ export function KanbanBoard({ boardData, sortConfig, onSortChange }: KanbanBoard
   );
 
   /**
-   * Handle drag start - store the dragged load
+   * Handle drag start - store the dragged load (disabled during selection mode)
    */
   function handleDragStart(event: DragStartEvent) {
+    if (selectionMode) return;
+
     const { active } = event;
     const load = boardData.loads.find((l) => l.id.toString() === active.id);
     if (load) {
@@ -187,44 +290,59 @@ export function KanbanBoard({ boardData, sortConfig, onSortChange }: KanbanBoard
   }
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCorners}
-      onDragStart={handleDragStart}
-      onDragOver={handleDragOver}
-      onDragEnd={handleDragEnd}
-    >
-      <div className="flex h-full gap-4 overflow-x-auto p-6 bg-muted/10">
-        {LANE_ORDER.map((laneKey) => {
-          const laneConfig = LANE_CONFIG[laneKey];
-          const loads = boardData.loadsByLane[laneKey] || [];
-          const isOver = overId === laneKey;
-          const isValidTarget = isValidDropTarget(laneKey);
+    <>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCorners}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="flex h-full gap-4 overflow-x-auto p-6 bg-muted/10">
+          {LANE_ORDER.map((laneKey) => {
+            const laneConfig = LANE_CONFIG[laneKey];
+            const loads = boardData.loadsByLane[laneKey] || [];
+            const isOver = overId === laneKey;
+            const isValidTarget = isValidDropTarget(laneKey);
 
-          return (
-            <KanbanLane
-              key={laneKey}
-              lane={laneKey}
-              label={laneConfig.label}
-              color={laneConfig.color}
-              loads={loads}
-              sortConfig={sortConfig}
-              onSortChange={onSortChange}
-              isOver={isOver}
-              isValidTarget={isValidTarget}
-            />
-          );
-        })}
-      </div>
+            return (
+              <KanbanLane
+                key={laneKey}
+                lane={laneKey}
+                label={laneConfig.label}
+                color={laneConfig.color}
+                loads={loads}
+                sortConfig={sortConfig}
+                onSortChange={onSortChange}
+                isOver={isOver}
+                isValidTarget={isValidTarget}
+                selectedLoadIds={selectedLoadIds}
+                onSelectionChange={handleSelectionChange}
+                selectionMode={selectionMode}
+              />
+            );
+          })}
+        </div>
 
-      {/* Drag overlay - shows the card being dragged */}
-      <DragOverlay>
-        {activeLoad ? (
-          <div className="rotate-2 opacity-90">
-            <LoadCard load={activeLoad} isDragging />
-          </div>
-        ) : null}
-      </DragOverlay>
-    </DndContext>
+        {/* Drag overlay - shows the card being dragged */}
+        <DragOverlay>
+          {activeLoad ? (
+            <div className="rotate-2 opacity-90">
+              <LoadCard load={activeLoad} isDragging />
+            </div>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
+
+      {/* Bulk toolbar - appears when loads are selected */}
+      {selectionMode && (
+        <DispatchBulkToolbar
+          selectedCount={selectedLoadIds.size}
+          onClearSelection={handleClearSelection}
+          onBulkStatusChange={handleBulkStatusChange}
+          onBulkCarrierAssign={handleBulkCarrierAssign}
+        />
+      )}
+    </>
   );
 }

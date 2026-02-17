@@ -23,6 +23,9 @@ interface KanbanLaneProps {
   onSortChange?: (config: SortConfig) => void;
   isOver?: boolean;
   isValidTarget?: boolean;
+  selectedLoadIds?: Set<number>;
+  onSelectionChange?: (loadId: number, selected: boolean) => void;
+  selectionMode?: boolean;
 }
 
 export function KanbanLane({
@@ -32,6 +35,9 @@ export function KanbanLane({
   loads,
   isOver,
   isValidTarget,
+  selectedLoadIds = new Set(),
+  onSelectionChange,
+  selectionMode = false,
 }: KanbanLaneProps) {
   const { setNodeRef } = useDroppable({
     id: lane,
@@ -84,7 +90,13 @@ export function KanbanLane({
         ) : (
           <SortableContext items={loadIds} strategy={verticalListSortingStrategy}>
             {loads.map((load) => (
-              <LoadCard key={load.id} load={load} />
+              <LoadCard
+                key={load.id}
+                load={load}
+                isSelected={selectedLoadIds.has(load.id)}
+                onSelectionChange={onSelectionChange}
+                selectionMode={selectionMode}
+              />
             ))}
           </SortableContext>
         )}
