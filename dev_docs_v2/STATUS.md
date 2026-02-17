@@ -1,9 +1,9 @@
 # Ultra TMS — Task Status Dashboard
 
-> **Last Updated:** February 17, 2026 (ACC-002 completed — Invoices list/detail/create live)
+> **Last Updated:** February 17, 2026 (Health sprint — SocketProvider fix + 15 runtime bugs patched)
 > **Current Phase:** Phase 6 — Financial + Go-Live (Weeks 11-12)
-> **Overall Health:** C+ (6.4/10) → targeting B+ (8/10) by Week 12
-> **Revision:** v5 — Timeline compressed to 12 weeks. Load Board deferred to post-MVP.
+> **Overall Health:** B- (7.2/10) → targeting B+ (8/10) by Week 12
+> **Revision:** v6 — Health sprint: SocketProvider infinite loop fixed, 15 runtime bugs patched across hooks.
 
 ---
 
@@ -295,6 +295,7 @@
 | Feb 9, 2026 | v3 — Design system marked "needs revision" | Shareholder feedback: color scheme rejected, table column separators needed. 31 TMS components on hold pending new design approval. COMP-001 blocked. |
 | Feb 12, 2026 | v4 — Rabih V1 design APPROVED | Stakeholder approved Rabih V1 design (navy accent, Inter font, warm borders, dot-label badges). Phase 1 unblocked. COMP-001 estimate reduced to 4-6h (pure implementation). Phase 0 BUG-009/010 marked DONE. |
 | Feb 12, 2026 | v5 — Timeline compressed to 12 weeks | Load Board removal saves ~25h. Sprint calendar compressed from 16→12 weeks. Phase timings: P3 (5-6), P4 (7-8), P5 (9-10), P6 (11-12). Total capacity now 360h (2 devs × 15h × 12 weeks). |
+| Feb 17, 2026 | v6 — Health sprint: C+ → B- (6.4 → 7.2) | Fixed SocketProvider infinite loop (#1 shared bug across all WS features). Patched 15 runtime bugs: 9 raw fetch() calls replaced with apiClient (tracking + ops-dashboard), 3 missing unwrap() calls (load-board), useUpdateLoadEta rewired from no-op GET to PUT /stops/:id, accounting dashboard type-cast → unwrap. Added /track to public paths. All changes verified with TypeScript build (0 new errors). |
 
 ---
 
