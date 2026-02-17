@@ -1,6 +1,6 @@
 # Ultra TMS — Task Status Dashboard
 
-> **Last Updated:** February 16, 2026 (TMS-011d completed)
+> **Last Updated:** February 16, 2026 (TMS-012 completed)
 > **Current Phase:** Phase 4 — TMS Forms + Operations (Weeks 7-8)
 > **Overall Health:** C+ (6.4/10) → targeting B+ (8/10) by Week 12
 > **Revision:** v5 — Timeline compressed to 12 weeks. Load Board deferred to post-MVP.
@@ -227,7 +227,7 @@
 | **TMS-011c** | **Dispatch: Drag-drop** (dnd-kit, validation) | DONE | Claude Code | XL (12-16h) | Feb 16 |
 | **TMS-011d** | **Dispatch: Real-time sync** (WebSocket events) | DONE | Claude Code | L (8-12h) | Feb 16 |
 | **TMS-011e** | **Dispatch: Bulk actions + polish** | DONE | Claude Code | M (4-6h) | Feb 16 |
-| TMS-012 | Operations Dashboard | NOT STARTED | — | L (9h) ⬆️ | — |
+| TMS-012 | Operations Dashboard | DONE | Claude Code | L (9h) ⬆️ | Feb 16 |
 
 **Phase 4 Total:** ~98-118 hours (heaviest phase — both developers fully engaged for 2 weeks)
 
