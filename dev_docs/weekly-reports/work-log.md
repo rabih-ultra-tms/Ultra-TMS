@@ -6,6 +6,48 @@
 
 ---
 
+## Session: 2026-02-16 (Sunday) — Sonnet 4.5 Audit & Fixes
+
+### Developer: Claude Code (Opus 4.6)
+### AI Tool: Claude Opus 4.6
+### Commit: Not yet committed
+
+**What was done:**
+Comprehensive audit of last 3 Sonnet 4.5 tasks (TMS-011d/e, TMS-012, TMS-013). Found 22 bugs — 9 critical (runtime-breaking), 14 warnings (degradation). Fixed 17 of 22 across 12 files. All 3 features were non-functional at runtime due to shared SocketProvider infinite reconnect loop, API envelope not unwrapped, wrong endpoints, and unstable React hook dependencies.
+
+**Key fixes:**
+- SocketProvider: eliminated infinite reconnect loop, fixed JWT cookie parsing truncation
+- API envelope: added `.data ?? body` unwrapping to all 7 fetch functions
+- Finance role gate: `user?.role` → `user?.roles[]` array check
+- Tracking endpoint: wired to existing `/api/v1/loads?status=...`
+- Check-call URL: corrected to `/api/v1/loads/:id/check-calls`
+- SVG chart: division-by-zero guard for revenue trend chart
+- Dispatch WS: stabilized callback refs to prevent handler recreation
+- Drag-drop: validated drop target is a lane before processing
+- Bulk updates: surfaced failure count to user
+- sortConfig: added to React Query key
+- Handler memoization: wrapped in useCallback
+- Polling fallback: `||` → `??`
+- Error recovery: `window.location.reload()` → React Query `refetch()`
+- Dead buttons: connected to entity navigation
+- Typing: imported proper types instead of `typeof array[0]`
+- Activity header: dynamic period label
+- Gitignore: added `*.log`
+
+**Files changed:** 12 files modified
+
+| Area | Files | What was fixed |
+|------|-------|---------------|
+| Socket | `socket-provider.tsx` | Infinite reconnect loop, JWT cookie parsing |
+| Hooks | `use-tracking.ts`, `use-ops-dashboard.ts`, `use-dispatch-ws.ts`, `use-dispatch.ts` | API envelope, endpoints, stable refs, query keys |
+| Dashboard | 5 `ops-*.tsx` components | Finance role, refetch, types, dead buttons, dynamic header, SVG NaN |
+| Dispatch | `kanban-board.tsx`, `dispatch-board.tsx` | Drag-drop validation, bulk failures, useCallback handlers |
+| Config | `.gitignore` | Added `*.log` |
+
+**Documented:** Fix tracker saved to `memory/sonnet-audit-fixes.md` with recurring Sonnet patterns for future audits.
+
+---
+
 ## Session: 2026-02-16 (Sunday)
 
 ### Developer: Claude Code
