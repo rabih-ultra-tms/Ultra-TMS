@@ -111,22 +111,20 @@ export const navigationConfig: NavConfig = {
       title: "Finance",
       items: [
         {
+          title: "Accounting",
+          href: "/accounting",
+          icon: Wallet,
+        },
+        {
           title: "Invoices",
-          href: "/invoices",
+          href: "/accounting/invoices",
           icon: FileText,
           disabled: true,
           badge: "Soon",
         },
         {
           title: "Settlements",
-          href: "/settlements",
-          icon: Wallet,
-          disabled: true,
-          badge: "Soon",
-        },
-        {
-          title: "Reports",
-          href: "/reports",
+          href: "/accounting/settlements",
           icon: BarChart3,
           disabled: true,
           badge: "Soon",

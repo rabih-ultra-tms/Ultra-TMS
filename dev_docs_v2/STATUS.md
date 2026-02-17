@@ -1,7 +1,7 @@
 # Ultra TMS — Task Status Dashboard
 
-> **Last Updated:** February 17, 2026 (TEST-001a completed — 70 new tests for Phase 0-2 components + dashboard)
-> **Current Phase:** Phase 5 — Testing + Tracking + Emails (Weeks 9-10)
+> **Last Updated:** February 17, 2026 (ACC-001 completed — Phase 6 started, accounting dashboard live)
+> **Current Phase:** Phase 6 — Financial + Go-Live (Weeks 11-12)
 > **Overall Health:** C+ (6.4/10) → targeting B+ (8/10) by Week 12
 > **Revision:** v5 — Timeline compressed to 12 weeks. Load Board deferred to post-MVP.
 
@@ -247,7 +247,7 @@
 | **TEST-001a** | **Testing: Phase 0-2** (bug fixes, design, carrier) | DONE | Claude Code | L (8-10h) | Feb 17 |
 | **TEST-001b** | **Testing: Phase 3** (orders, loads, quotes, tracking) | DONE | Claude Code | XL (12-16h) | Feb 16 |
 | **TEST-001c** | **Testing: Phase 4** (forms, dispatch board, ops dashboard) | DONE | Claude Code | XL (16-24h) | Feb 16 |
-| **TEST-001d** | **Testing: Phase 5** (tracking map, emails) | NOT STARTED | — | L (6-9h) | — |
+| **TEST-001d** | **Testing: Phase 5** (tracking map, emails) | DONE | Claude Code | L (6-9h) | Feb 17 |
 
 **Phase 5 Total:** ~48-61 hours
 
@@ -261,7 +261,7 @@
 
 | Task | Title | Status | Assigned | Effort | Updated |
 |------|-------|--------|----------|--------|---------|
-| ACC-001 | Accounting Dashboard | NOT STARTED | — | M (5h) ⬆️ | — |
+| ACC-001 | Accounting Dashboard | DONE | Claude Code | M (5h) ⬆️ | Feb 17 |
 | ACC-002 | Invoices (list, detail, create) | NOT STARTED | — | L (8h) ⬆️ | — |
 | ACC-003 | Payments Received | NOT STARTED | — | M (5h) ⬆️ | — |
 | ACC-004 | Carrier Payables | NOT STARTED | — | M (3h) ⬆️ | — |

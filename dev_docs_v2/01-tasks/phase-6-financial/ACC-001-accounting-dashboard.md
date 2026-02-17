@@ -1,8 +1,9 @@
 # ACC-001: Accounting Dashboard
 
-> **Phase:** 6 | **Priority:** P1 | **Status:** NOT STARTED
+> **Phase:** 6 | **Priority:** P1 | **Status:** DONE
 > **Effort:** M (4h)
-> **Assigned:** Unassigned
+> **Assigned:** Claude Code
+> **Completed:** February 17, 2026
 
 ## Context Header
 Before starting, read:
