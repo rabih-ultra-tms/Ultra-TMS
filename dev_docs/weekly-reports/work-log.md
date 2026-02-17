@@ -6,6 +6,59 @@
 
 ---
 
+## Session: 2026-02-16 (Sunday)
+
+### Developer: Claude Code
+### AI Tool: Claude Sonnet 4.5
+### Commit: Not yet committed (work in progress)
+
+**What was done:**
+Built the Check Call Log feature (TMS-010) for the Load Detail page. Dispatchers can now log driver check-ins with location, notes, and track overdue loads (>4 hours since last call). Created React Query hooks for check call management, timeline component with time-gap indicators and overdue warnings, form component with 5 check call types, and overdue loads view. Integrated into existing Load Detail tabs. All TypeScript type-safe with zero lint warnings.
+
+**Files created/changed:** 5 files (726 lines added)
+
+**Detailed breakdown:**
+
+| Area | Files | What was built |
+|------|-------|---------------|
+| Hooks | `lib/hooks/tms/use-checkcalls.ts` (new) | React Query hooks: useCheckCalls, useCreateCheckCall, useOverdueCheckCalls, useCheckCallStats with 30-60s stale time |
+| Components | `components/tms/checkcalls/check-call-timeline.tsx` (new) | Timeline view with type badges (CHECK_CALL/ARRIVAL/DEPARTURE/DELAY/ISSUE), GPS indicators, time gap calculations, overdue warnings (>4h) |
+| Components | `components/tms/checkcalls/check-call-form.tsx` (new) | Add check call form: type selector, city/state inputs, location description, notes textarea (500 char limit), inline error handling |
+| Components | `components/tms/checkcalls/overdue-checkcalls.tsx` (new) | Standalone view listing loads missing check calls >4h with carrier/driver info and quick action buttons |
+| Integration | `components/tms/loads/load-check-calls-tab.tsx` (modified) | Simplified tab to render CheckCallForm + CheckCallTimeline, already wired into Load Detail page |
+| Status | `dev_docs_v2/STATUS.md` | Marked TMS-010 as DONE (Feb 16) |
+
+**Key deliverables:**
+- Check Calls tab functional on Load Detail page with form + timeline
+- 5 check call types: CHECK_CALL, ARRIVAL, DEPARTURE, DELAY, ISSUE
+- Type badges with color-coded status (blue/green/purple/amber/red)
+- GPS indicator distinguishes auto vs manual location entry
+- Time gap indicators between check calls with overdue warnings (>4h in red)
+- Overdue loads list showing loads missing check calls
+- Loading states, empty states, error handling
+- Form validation with inline alerts
+- TypeScript fully typed (CheckCall, CreateCheckCallData, OverdueCheckCall interfaces)
+- API integration ready for `/api/v1/checkcalls` endpoints
+
+**Impact metrics for report:**
+- 1 task completed (TMS-010)
+- 5 files touched, 726 net lines added (709 new + 17 modified)
+- Phase 4 progress: 6/13 tasks complete (TMS-005→010 done)
+- 0 type errors (test mocks excluded), 0 lint warnings in new code
+- 4 new reusable components for check call management
+- 4 React Query hooks for check call operations
+
+**Key technical decisions:**
+- Used inline error alerts instead of toast notifications (no useToast hook available)
+- API client returns response directly (not response.data) per project convention
+- 30-second stale time for check calls data, 60s for stats (balances freshness vs API load)
+- Type safety enforced with explicit CheckCall type in map callbacks
+- Time gap calculation between consecutive check calls for overdue detection
+
+**Unblocked tasks:** TMS-012 (Operations Dashboard can now show overdue check calls widget)
+
+---
+
 ## Session: 2026-02-15 (Saturday) — Session 2
 
 ### Developer: Claude Code
@@ -1465,7 +1518,111 @@ Verified and validated that TMS-005 (New Order Form) was already fully implement
 - React Query integration complete (create + update + quote conversion)
 - Unblocks TMS-006 (Edit Order — reuses form components)
 
+---
+
+## Session: 2026-02-16 (Sunday) — Session 2
+
+### Developer: Claude Code
+### AI Tool: Claude Sonnet 4.5
+### Commit: `226ad16` — feat(tms): add edit order form (TMS-006)
+
+**What was done:**
+Built the Edit Order Form at `/operations/orders/:id/edit` — reuses the OrderForm component from TMS-005 in edit mode. Added edit mode props (mode, orderId, initialData, orderStatus), implemented customer field locking after BOOKED status per business rules, created edit page with order-to-form data mapping, and wired the "Edit Order" button on detail page. Form pre-fills all fields from existing order data and uses PATCH endpoint for updates.
+
+**Files created/changed:** 5 files (253 lines added, 33 lines removed, net +220 lines)
+
+**Detailed breakdown:**
+
+| Area | Files | What was built |
+|------|-------|---------------|
+| Component | `components/tms/orders/order-form.tsx` (modified) | Added edit mode support: OrderFormProps interface with mode/orderId/initialData/orderStatus props, isEditMode logic, isCustomerLocked calculation, dual submit handler (create vs update), edit-mode button labels ("Update & Confirm", "Save Changes"), navigation returns to order detail in edit mode |
+| Component | `components/tms/orders/order-customer-step.tsx` (modified) | Added isCustomerLocked prop to disable customer selector after BOOKED status, helper text "Customer cannot be changed after order is booked" |
+| Page | `app/(dashboard)/operations/orders/[id]/edit/page.tsx` (new) | Edit page: useOrder hook fetches order data, mapOrderToFormValues() transforms OrderDetailResponse → OrderFormValues (5 steps mapped), loading/error states, passes initialData to OrderForm in edit mode |
+| Page | `app/(dashboard)/operations/orders/[id]/page.tsx` (modified) | Updated "Edit Order" button to link to `/operations/orders/:id/edit` using Next.js Link component |
+| Status | `dev_docs_v2/STATUS.md` (modified) | Marked TMS-006 as DONE (Claude Code, Feb 16) |
+
+**Key deliverables:**
+- `/operations/orders/:id/edit` loads existing order and pre-fills all form fields
+- Customer selector locked after BOOKED status (business rule enforcement)
+- OrderForm reused in edit mode — no code duplication
+- Submit handler switches between POST (create) and PATCH (update) based on mode
+- Unsaved changes warning on exit
+- TypeScript compiles with zero errors in modified files
+- Edit page passes ESLint with zero warnings
+- All Zod validation preserved from create mode
+
+**Impact metrics for report:**
+- 1 commit, 1 task completed (TMS-006)
+- 5 files touched, net +220 lines
+- Phase 4 progress: 2/13 tasks complete (TMS-005, TMS-006 done)
+- 0 type errors, 0 lint warnings in new code
+- useUpdateOrder() mutation already existed (no new hook needed)
+- Edit page: 161 lines (new file)
+- OrderForm component: +76 lines (edit mode logic added)
+
 <!-- NEXT SESSION ENTRY GOES HERE -->
+
+---
+
+## Session: 2026-02-16 (Sunday) — Session 3
+
+### Developer: Claude Code
+
+### AI Tool: Claude Sonnet 4.5
+
+### Commits
+
+- `9d00e7a` — feat(TMS-011d): Add WebSocket real-time sync to Dispatch Board
+- `7ab18e9` — fix: Add explicit type annotations to test mocks
+
+**What was done:**
+Integrated WebSocket real-time synchronization with the Dispatch Board (TMS-011d), enabling instant load updates without page refresh. Connected useDispatchBoardUpdates hook to handle 8 event types (load:created, load:status:changed, load:assigned, etc.) with optimistic React Query cache updates. Added connection status indicator to toolbar showing Live/Reconnecting/Offline states with latency display. Implemented graceful degradation with conditional polling (30s when offline). Fixed blocking TypeScript build errors by adding explicit return type annotations to 11 test mock functions.
+
+**Files created/changed:** 14 files (1,837 lines added)
+
+**Detailed breakdown:**
+
+| Area | Files | What was built |
+|------|-------|---------------|
+| WebSocket Integration | `dispatch-board.tsx` (modified) | Added useSocketStatus + useDispatchBoardUpdates hooks, conditional polling (only when WS disconnected), connection status passed to toolbar |
+| Connection Indicator | `dispatch-toolbar.tsx` (modified) | renderConnectionStatus() function with 3 states: green "Live" badge (shows latency), yellow "Reconnecting" spinner, red "Offline" badge |
+| Real-time Events | Via existing `use-dispatch-ws.ts` hook | Handles 8 events: load:created, load:status:changed, load:assigned, load:dispatched, load:location:updated, load:eta:updated, checkcall:received, load:updated |
+| Performance | Event batching & throttling | 500ms batch window, max 20 concurrent animations, automatic React Query cache invalidation |
+| Test Mocks | `test/mocks/hooks-operations.ts` (new) | Added explicit return types to 7 mock functions (useCreateDriver, useUpdateDriver, useDeleteDriver, useCreateTruck, useUpdateTruck, useDeleteTruck, useAssignDriverToTruck) |
+| Test Mocks | `test/mocks/hooks.ts` (new) | Added explicit return types to 4 mock functions (usePagination, useConfirm, useLogin, useLogout) |
+| Test Mocks | `test/mocks/handlers/carriers.ts` (new) | MSW request handlers for carrier API endpoints (170 lines) |
+| Status | `dev_docs_v2/STATUS.md` | Marked TMS-011d as DONE (Feb 16) |
+
+**Key deliverables:**
+
+- Real-time dispatch board updates via WebSocket (no page refresh needed)
+- Connection status indicator: Live (green, shows latency) / Reconnecting (yellow, spinner) / Offline (red)
+- Graceful degradation: 30s polling only when WebSocket disconnected
+- Toast notifications for load created/assigned/status changed events
+- Event batching prevents UI thrashing with rapid updates
+- Animation throttling (max 20 concurrent) maintains performance
+- TypeScript build now succeeds (was blocked by test mock type errors)
+- All 8 dispatch board components now deployed: page, board, toolbar, KPI strip, kanban board, kanban lane, load card, skeleton
+
+**Impact metrics for report:**
+
+- 2 commits, 1 task completed (TMS-011d)
+- 14 files touched, 1,837 net lines added (1,832 new + 5 modified)
+- Phase 4 progress: 11/13 tasks complete (TMS-005→011d done, only TMS-011e + TMS-012 remain)
+- 0 type errors, 0 lint warnings, build passes
+- 8 dispatch board components operational
+- 8 real-time event types handled automatically
+
+**Key technical decisions:**
+
+- WebSocket infrastructure from INFRA-001 (already in place) — no provider changes needed
+- Polling disabled when WebSocket connected (refetchInterval: undefined vs 30000)
+- Connection status optional prop on toolbar (gracefully omits if not provided)
+- Event batching window: 500ms (balances responsiveness vs performance)
+- Toast notifications enabled by default, sound disabled (playSound: false)
+- Latency displayed in ms when connected (helps diagnose network issues)
+
+**Unblocked tasks:** TMS-011e (Bulk actions + polish — final dispatch board task)
 
 ---
 
