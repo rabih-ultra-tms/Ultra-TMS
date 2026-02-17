@@ -1,7 +1,7 @@
 # Ultra TMS — Task Status Dashboard
 
-> **Last Updated:** February 16, 2026 (TMS-012 completed)
-> **Current Phase:** Phase 4 — TMS Forms + Operations (Weeks 7-8)
+> **Last Updated:** February 16, 2026 (TMS-013 completed)
+> **Current Phase:** Phase 5 — Testing + Tracking + Emails (Weeks 9-10)
 > **Overall Health:** C+ (6.4/10) → targeting B+ (8/10) by Week 12
 > **Revision:** v5 — Timeline compressed to 12 weeks. Load Board deferred to post-MVP.
 
@@ -240,7 +240,7 @@
 
 | Task | Title | Status | Assigned | Effort | Updated |
 |------|-------|--------|----------|--------|---------|
-| TMS-013 | Tracking Map (live GPS) | NOT STARTED | — | L (12h) ⬆️ | — |
+| TMS-013 | Tracking Map (live GPS) | DONE | Claude Code | L (12h) ⬆️ | Feb 16 |
 | TMS-014 | Rate Confirmation (PDF) | NOT STARTED | — | L (6h) ⬆️ | — |
 | **COMM-001** | **5 Automated Emails** (rate con, tender, pickup, delivery, invoice) | NOT STARTED | — | L (8-12h) | — |
 | **DOC-002** | **Business Rules Reference Doc** | NOT STARTED | — | M (4-6h) | — |
