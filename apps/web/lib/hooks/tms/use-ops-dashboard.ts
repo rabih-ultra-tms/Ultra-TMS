@@ -120,7 +120,8 @@ async function fetchDashboardKPIs(
     throw new Error(`Failed to fetch dashboard KPIs: ${response.statusText}`);
   }
 
-  return response.json();
+  const body = await response.json();
+  return body.data ?? body;
 }
 
 async function fetchDashboardCharts(period: Period): Promise<DashboardCharts> {
@@ -133,7 +134,8 @@ async function fetchDashboardCharts(period: Period): Promise<DashboardCharts> {
     throw new Error(`Failed to fetch dashboard charts: ${response.statusText}`);
   }
 
-  return response.json();
+  const body = await response.json();
+  return body.data ?? body;
 }
 
 async function fetchDashboardAlerts(): Promise<DashboardAlert[]> {
@@ -145,7 +147,8 @@ async function fetchDashboardAlerts(): Promise<DashboardAlert[]> {
     throw new Error(`Failed to fetch dashboard alerts: ${response.statusText}`);
   }
 
-  return response.json();
+  const body = await response.json();
+  return body.data ?? body;
 }
 
 async function fetchDashboardActivity(period: Period): Promise<ActivityItem[]> {
@@ -158,7 +161,8 @@ async function fetchDashboardActivity(period: Period): Promise<ActivityItem[]> {
     throw new Error(`Failed to fetch dashboard activity: ${response.statusText}`);
   }
 
-  return response.json();
+  const body = await response.json();
+  return body.data ?? body;
 }
 
 async function fetchNeedsAttention(): Promise<NeedsAttentionLoad[]> {
@@ -170,7 +174,8 @@ async function fetchNeedsAttention(): Promise<NeedsAttentionLoad[]> {
     throw new Error(`Failed to fetch needs attention: ${response.statusText}`);
   }
 
-  return response.json();
+  const body = await response.json();
+  return body.data ?? body;
 }
 
 // ===========================

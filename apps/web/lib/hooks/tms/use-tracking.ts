@@ -85,29 +85,40 @@ async function fetchTrackingPositions(
   filters: TrackingFilters,
 ): Promise<TrackingPosition[]> {
   const params = new URLSearchParams()
-  if (filters.etaStatus?.length) params.set('status', filters.etaStatus.join(','))
+  // Use existing loads endpoint with in-transit status filter
+  params.set('status', 'IN_TRANSIT,DISPATCHED,AT_PICKUP,AT_DELIVERY')
+  if (filters.etaStatus?.length) params.set('etaStatus', filters.etaStatus.join(','))
   if (filters.equipmentType?.length)
     params.set('equipmentType', filters.equipmentType.join(','))
   if (filters.carrierId) params.set('carrierId', filters.carrierId)
   if (filters.customerId) params.set('customerId', filters.customerId)
 
   const qs = params.toString()
-  const url = `/api/v1/operations/tracking/positions${qs ? `?${qs}` : ''}`
-  const resp = await fetch(url)
+  const url = `/api/v1/loads${qs ? `?${qs}` : ''}`
+  const resp = await fetch(url, { credentials: 'include' })
   if (!resp.ok) throw new Error('Failed to fetch tracking positions')
-  return resp.json()
+  const body = await resp.json()
+  return body.data ?? body
 }
 
 async function fetchLoadDetail(loadId: string): Promise<TrackingLoadDetail> {
-  const resp = await fetch(`/api/v1/loads/${loadId}`)
+  const resp = await fetch(`/api/v1/loads/${loadId}`, { credentials: 'include' })
   if (!resp.ok) throw new Error(`Failed to fetch load ${loadId}`)
-  return resp.json()
+  const body = await resp.json()
+  const load = body.data ?? body
+  // Normalize: backend nests stops under load.order.stops, driver as flat fields
+  return {
+    ...load,
+    stops: load.stops ?? load.order?.stops ?? [],
+    driver: load.driver ?? (load.driverName ? { name: load.driverName, phone: load.driverPhone ?? '' } : null),
+  }
 }
 
 async function updateLoadStatus(loadId: string, newStatus: string): Promise<void> {
   const resp = await fetch(`/api/v1/loads/${loadId}/status`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify({ status: newStatus }),
   })
   if (!resp.ok) throw new Error('Failed to update load status')
@@ -120,9 +131,11 @@ async function createCheckCall(payload: {
   lat?: number
   lng?: number
 }): Promise<void> {
-  const resp = await fetch('/api/v1/checkcalls', {
+  // Correct endpoint: nested under loads, not top-level /checkcalls
+  const resp = await fetch(`/api/v1/loads/${payload.loadId}/check-calls`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify(payload),
   })
   if (!resp.ok) throw new Error('Failed to create check call')
@@ -151,7 +164,6 @@ export function useTrackingPositions(filters: TrackingFilters = {}) {
     if (!socket) return
 
     const handleLocationUpdate = (event: LoadLocationUpdatedEvent) => {
-      // Update the specific load's position in the cache without a re-fetch
       queryClient.setQueriesData<TrackingPosition[]>(
         { queryKey: ['tracking', 'positions'] },
         (prev) => {
@@ -165,6 +177,8 @@ export function useTrackingPositions(filters: TrackingFilters = {}) {
                   speed: event.speed ?? pos.speed,
                   timestamp: new Date().toISOString(),
                   eta: event.eta ?? pos.eta,
+                  // Recalculate etaStatus when ETA changes
+                  etaStatus: event.eta ? deriveEtaStatus(event.eta) : pos.etaStatus,
                 }
               : pos,
           )
@@ -178,7 +192,6 @@ export function useTrackingPositions(filters: TrackingFilters = {}) {
     }
   }, [socket, queryClient])
 
-  // Client-side filter for search (after fetch)
   return query
 }
 
@@ -188,9 +201,7 @@ export function useTrackingPositions(filters: TrackingFilters = {}) {
  */
 export function useLoadTrackingDetail(loadId: string | null) {
   return useQuery({
-    queryKey: loadId
-      ? trackingKeys.loadDetail(loadId)
-      : ['tracking', 'load', '__none__'],
+    queryKey: trackingKeys.loadDetail(loadId ?? '__none__'),
     queryFn: () => fetchLoadDetail(loadId!),
     enabled: !!loadId,
     staleTime: 30_000,
@@ -212,8 +223,12 @@ export function useUpdateLoadStatus() {
 
 /** Mutation: log a check call from the tracking side panel */
 export function useCreateTrackingCheckCall() {
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: createCheckCall,
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: trackingKeys.loadDetail(variables.loadId) })
+    },
   })
 }
 
@@ -249,4 +264,14 @@ export function formatTimestampAge(timestamp: string): string {
 /** Returns true if GPS is stale (no update in 30+ min) */
 export function isGpsStale(timestamp: string): boolean {
   return Date.now() - new Date(timestamp).getTime() > 30 * 60_000
+}
+
+/** Derive ETA status from an ETA timestamp string */
+function deriveEtaStatus(eta: string): EtaStatus {
+  const etaTime = new Date(eta).getTime()
+  const now = Date.now()
+  const hoursUntilEta = (etaTime - now) / (1000 * 60 * 60)
+  if (hoursUntilEta < 0) return 'at-risk'
+  if (hoursUntilEta < 1) return 'tight'
+  return 'on-time'
 }

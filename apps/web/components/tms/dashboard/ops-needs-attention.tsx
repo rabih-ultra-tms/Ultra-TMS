@@ -1,6 +1,6 @@
 'use client';
 
-import { useNeedsAttention } from '@/lib/hooks/tms/use-ops-dashboard';
+import { useNeedsAttention, type NeedsAttentionLoad } from '@/lib/hooks/tms/use-ops-dashboard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Eye, Phone, Edit, FileText } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -14,7 +14,7 @@ export function OpsNeedsAttention({
   maxVisible = 6,
   onViewAll,
 }: OpsNeedsAttentionProps) {
-  const { data: loads, isLoading, error } = useNeedsAttention();
+  const { data: loads, isLoading, error, refetch } = useNeedsAttention();
   const router = useRouter();
 
   if (isLoading) {
@@ -35,7 +35,7 @@ export function OpsNeedsAttention({
       <div className="rounded-lg border border-red-200 bg-red-50 p-4">
         <p className="text-sm font-semibold text-red-900">Unable to load needs attention</p>
         <button
-          onClick={() => window.location.reload()}
+          onClick={() => refetch()}
           className="mt-2 text-sm text-red-600 underline hover:text-red-800"
         >
           Retry
@@ -51,7 +51,7 @@ export function OpsNeedsAttention({
     router.push(`/operations/loads/${loadId}`);
   };
 
-  const getActionButtons = (load: typeof loads[0]) => {
+  const getActionButtons = (load: NeedsAttentionLoad) => {
     switch (load.issueType) {
       case 'no_check_call':
         return (
@@ -69,7 +69,7 @@ export function OpsNeedsAttention({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                // TODO: Open carrier contact modal
+                handleViewLoad(load.id);
               }}
               className="flex-1 rounded-md border border-border bg-surface px-2 py-1.5 text-xs font-medium text-text-primary hover:bg-gray-50"
             >
@@ -94,7 +94,7 @@ export function OpsNeedsAttention({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                // TODO: Open ETA update modal
+                handleViewLoad(load.id);
               }}
               className="flex-1 rounded-md border border-border bg-surface px-2 py-1.5 text-xs font-medium text-text-primary hover:bg-gray-50"
             >
@@ -119,7 +119,7 @@ export function OpsNeedsAttention({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                // TODO: Open detention entry form
+                handleViewLoad(load.id);
               }}
               className="flex-1 rounded-md border border-border bg-surface px-2 py-1.5 text-xs font-medium text-text-primary hover:bg-gray-50"
             >

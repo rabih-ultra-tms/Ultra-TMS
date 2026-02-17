@@ -45,6 +45,7 @@ export function SocketProvider({ children, namespace = SOCKET_NAMESPACES.EVENTS 
   const [error, setError] = useState<string | null>(null);
   const [latency, setLatency] = useState<number | null>(null);
   const latencyInterval = useRef<NodeJS.Timeout | null>(null);
+  const socketRef = useRef<Socket | null>(null);
 
   // Get access token from cookie
   const getAccessToken = useCallback(() => {
@@ -52,19 +53,24 @@ export function SocketProvider({ children, namespace = SOCKET_NAMESPACES.EVENTS 
     const cookies = document.cookie.split(';');
     const tokenCookie = cookies.find((c) => c.trim().startsWith('accessToken='));
     if (!tokenCookie) return null;
-    const tokenValue = tokenCookie.split('=')[1];
+    // Use substring to avoid truncating base64 JWT padding chars
+    const tokenValue = tokenCookie.substring(tokenCookie.indexOf('=') + 1).trim();
     if (!tokenValue) return null;
     return decodeURIComponent(tokenValue);
   }, []);
 
   useEffect(() => {
     if (isLoading || !user) {
-      if (socket) {
-        socket.disconnect();
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
         setSocket(null);
       }
       return;
     }
+
+    // Prevent duplicate connections
+    if (socketRef.current) return;
 
     const token = getAccessToken();
     if (!token) {
@@ -130,6 +136,7 @@ export function SocketProvider({ children, namespace = SOCKET_NAMESPACES.EVENTS 
     });
 
     newSocket.connect();
+    socketRef.current = newSocket;
     setSocket(newSocket);
 
     return () => {
@@ -137,8 +144,10 @@ export function SocketProvider({ children, namespace = SOCKET_NAMESPACES.EVENTS 
         clearInterval(latencyInterval.current);
       }
       newSocket.disconnect();
+      socketRef.current = null;
     };
-  }, [user, isLoading, namespace, getAccessToken, socket]);
+    // NOTE: 'socket' intentionally excluded — including it causes infinite reconnect loop
+  }, [user, isLoading, namespace, getAccessToken]);
 
   const contextValue: SocketContextValue = {
     socket,

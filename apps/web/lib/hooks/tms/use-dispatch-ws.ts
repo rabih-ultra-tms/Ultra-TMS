@@ -218,17 +218,28 @@ export function useDispatchBoardUpdates(options?: {
       }
 
       playNotificationSound();
-      options?.onLoadCreated?.(event);
+      onLoadCreatedRef.current?.(event);
     },
-    [queryClient, toast, showToasts, playNotificationSound, options]
+    // NOTE: toast is a module-level singleton, options is unstable — excluded from deps
+    [queryClient, showToasts, playNotificationSound]
   );
+
+  // Use refs for unstable callback props to avoid re-subscription on every render
+  const onLoadCreatedRef = useRef(options?.onLoadCreated);
+  const onLoadStatusChangedRef = useRef(options?.onLoadStatusChanged);
+  const onLoadAssignedRef = useRef(options?.onLoadAssigned);
+  useEffect(() => {
+    onLoadCreatedRef.current = options?.onLoadCreated;
+    onLoadStatusChangedRef.current = options?.onLoadStatusChanged;
+    onLoadAssignedRef.current = options?.onLoadAssigned;
+  });
 
   /**
    * Handle load:status:changed event
    */
   const handleLoadStatusChanged = useCallback(
     (event: LoadStatusChangedEvent) => {
-      updateBoardCache(event.loadId, (load) => ({
+      updateBoardCache(event.loadId, () => ({
         status: event.newStatus,
         statusChangedAt: event.timestamp,
         updatedAt: event.timestamp,
@@ -241,9 +252,9 @@ export function useDispatchBoardUpdates(options?: {
       }
 
       batcherRef.current?.add(event.loadId);
-      options?.onLoadStatusChanged?.(event);
+      onLoadStatusChangedRef.current?.(event);
     },
-    [updateBoardCache, toast, showToasts, options]
+    [updateBoardCache, showToasts]
   );
 
   /**
@@ -251,7 +262,7 @@ export function useDispatchBoardUpdates(options?: {
    */
   const handleLoadAssigned = useCallback(
     (event: LoadAssignedEvent) => {
-      updateBoardCache(event.loadId, (load) => ({
+      updateBoardCache(event.loadId, () => ({
         carrier: {
           id: event.carrierId,
           name: event.carrierName,
@@ -273,9 +284,9 @@ export function useDispatchBoardUpdates(options?: {
       }
 
       batcherRef.current?.add(event.loadId);
-      options?.onLoadAssigned?.(event);
+      onLoadAssignedRef.current?.(event);
     },
-    [updateBoardCache, toast, showToasts, options]
+    [updateBoardCache, showToasts]
   );
 
   /**
@@ -283,7 +294,7 @@ export function useDispatchBoardUpdates(options?: {
    */
   const handleLoadDispatched = useCallback(
     (event: LoadDispatchedEvent) => {
-      updateBoardCache(event.loadId, (load) => ({
+      updateBoardCache(event.loadId, () => ({
         status: 'DISPATCHED',
         statusChangedAt: event.timestamp,
         updatedAt: event.timestamp,
@@ -301,7 +312,7 @@ export function useDispatchBoardUpdates(options?: {
 
       batcherRef.current?.add(event.loadId);
     },
-    [updateBoardCache, toast, showToasts]
+    [updateBoardCache, showToasts]
   );
 
   /**
@@ -341,7 +352,7 @@ export function useDispatchBoardUpdates(options?: {
 
       batcherRef.current?.add(event.loadId);
     },
-    [updateBoardCache, toast, showToasts]
+    [updateBoardCache, showToasts]
   );
 
   /**
@@ -435,22 +446,22 @@ export function useLoadLocationUpdates(options?: {
 }) {
   const { socket, connected } = useSocket();
   const enabled = options?.enabled !== false;
+  // Stable ref for callback to avoid re-subscription every render
+  const callbackRef = useRef(options?.onLocationUpdate);
+  useEffect(() => { callbackRef.current = options?.onLocationUpdate; });
 
   useEffect(() => {
-    if (!socket || !connected || !enabled) {
-      return;
-    }
+    if (!socket || !connected || !enabled) return;
 
     const handleLocationUpdate = (event: LoadLocationUpdatedEvent) => {
-      options?.onLocationUpdate?.(event);
+      callbackRef.current?.(event);
     };
 
     socket.on(SOCKET_EVENTS.LOAD_LOCATION_UPDATED, handleLocationUpdate);
-
     return () => {
       socket.off(SOCKET_EVENTS.LOAD_LOCATION_UPDATED, handleLocationUpdate);
     };
-  }, [socket, connected, enabled, options]);
+  }, [socket, connected, enabled]);
 
   return { connected };
 }
@@ -465,24 +476,22 @@ export function useCheckCallUpdates(options?: {
   const { socket, connected } = useSocket();
   const queryClient = useQueryClient();
   const enabled = options?.enabled !== false;
+  const callbackRef = useRef(options?.onCheckCallReceived);
+  useEffect(() => { callbackRef.current = options?.onCheckCallReceived; });
 
   useEffect(() => {
-    if (!socket || !connected || !enabled) {
-      return;
-    }
+    if (!socket || !connected || !enabled) return;
 
     const handleCheckCall = (event: CheckCallReceivedEvent) => {
-      // Invalidate load query to refresh check call data
       queryClient.invalidateQueries({ queryKey: ['checkcalls'] });
-      options?.onCheckCallReceived?.(event);
+      callbackRef.current?.(event);
     };
 
     socket.on(SOCKET_EVENTS.CHECKCALL_RECEIVED, handleCheckCall);
-
     return () => {
       socket.off(SOCKET_EVENTS.CHECKCALL_RECEIVED, handleCheckCall);
     };
-  }, [socket, connected, enabled, queryClient, options]);
+  }, [socket, connected, enabled, queryClient]);
 
   return { connected };
 }
@@ -496,22 +505,21 @@ export function useEtaUpdates(options?: {
 }) {
   const { socket, connected } = useSocket();
   const enabled = options?.enabled !== false;
+  const callbackRef = useRef(options?.onEtaUpdate);
+  useEffect(() => { callbackRef.current = options?.onEtaUpdate; });
 
   useEffect(() => {
-    if (!socket || !connected || !enabled) {
-      return;
-    }
+    if (!socket || !connected || !enabled) return;
 
     const handleEtaUpdate = (event: LoadEtaUpdatedEvent) => {
-      options?.onEtaUpdate?.(event);
+      callbackRef.current?.(event);
     };
 
     socket.on(SOCKET_EVENTS.LOAD_ETA_UPDATED, handleEtaUpdate);
-
     return () => {
       socket.off(SOCKET_EVENTS.LOAD_ETA_UPDATED, handleEtaUpdate);
     };
-  }, [socket, connected, enabled, options]);
+  }, [socket, connected, enabled]);
 
   return { connected };
 }

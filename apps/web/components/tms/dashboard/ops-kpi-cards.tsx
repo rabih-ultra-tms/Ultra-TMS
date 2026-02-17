@@ -27,11 +27,13 @@ export function OpsKPICards({
   onCardClick,
 }: OpsKPICardsProps) {
   const { data: user } = useCurrentUser();
-  const { data: kpis, isLoading, error } = useDashboardKPIs(period, scope, comparison);
+  const { data: kpis, isLoading, error, refetch } = useDashboardKPIs(period, scope, comparison);
 
-  // Check if user has finance_view permission
+  // Check if user has finance_view permission (user.roles is an array, not user.role)
   const hasFinanceView = user?.permissions?.includes('finance_view') ||
-    ['Super Admin', 'Admin', 'Ops Manager'].includes(user?.role || '');
+    (user?.roles ?? []).some((r: { name: string }) =>
+      ['Super Admin', 'Admin', 'Ops Manager'].includes(r.name)
+    );
 
   if (isLoading) {
     return (
@@ -51,7 +53,7 @@ export function OpsKPICards({
           {error instanceof Error ? error.message : 'An error occurred'}
         </p>
         <button
-          onClick={() => window.location.reload()}
+          onClick={() => refetch()}
           className="mt-2 text-red-600 underline hover:text-red-800"
         >
           Retry

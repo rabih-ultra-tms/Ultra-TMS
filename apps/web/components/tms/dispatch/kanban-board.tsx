@@ -122,10 +122,16 @@ export function KanbanBoard({ boardData, sortConfig, onSortChange }: KanbanBoard
       return bulkStatusUpdate.mutateAsync(
         { loadIds, newStatus },
         {
-          onSuccess: () => {
-            toast.success('Bulk update successful', {
-              description: `Updated ${loadIds.length} load(s) to ${newStatus}`,
-            });
+          onSuccess: (result) => {
+            if (result && result.failed > 0) {
+              toast.warning('Partial update', {
+                description: `Updated ${result.updated} load(s), ${result.failed} failed`,
+              });
+            } else {
+              toast.success('Bulk update successful', {
+                description: `Updated ${result?.updated ?? loadIds.length} load(s) to ${newStatus}`,
+              });
+            }
             handleClearSelection();
           },
           onError: (error) => {
@@ -217,8 +223,12 @@ export function KanbanBoard({ boardData, sortConfig, onSortChange }: KanbanBoard
 
     if (!over) return;
 
+    // Validate that the drop target is a lane, not another load card
+    const targetId = over.id.toString();
+    if (!(targetId in LANE_CONFIG)) return;
+
     const loadId = parseInt(active.id.toString());
-    const targetLane = over.id as LaneType;
+    const targetLane = targetId as LaneType;
     const load = boardData.loads.find((l) => l.id === loadId);
 
     if (!load) return;

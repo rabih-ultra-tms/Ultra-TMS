@@ -11,11 +11,14 @@ interface OpsChartsProps {
 
 export function OpsCharts({ period = 'today' }: OpsChartsProps) {
   const { data: user } = useCurrentUser();
-  const { data: charts, isLoading, error } = useDashboardCharts(period);
+  const { data: charts, isLoading, error, refetch } = useDashboardCharts(period);
   const router = useRouter();
 
+  // user.roles is an array of { name: string }, not user.role
   const hasFinanceView = user?.permissions?.includes('finance_view') ||
-    ['Super Admin', 'Admin', 'Ops Manager'].includes(user?.role || '');
+    (user?.roles ?? []).some((r: { name: string }) =>
+      ['Super Admin', 'Admin', 'Ops Manager'].includes(r.name)
+    );
 
   if (isLoading) {
     return (
@@ -31,7 +34,7 @@ export function OpsCharts({ period = 'today' }: OpsChartsProps) {
       <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-900">
         <p className="font-semibold">Unable to load charts</p>
         <button
-          onClick={() => window.location.reload()}
+          onClick={() => refetch()}
           className="mt-2 text-red-600 underline hover:text-red-800"
         >
           Retry
@@ -135,24 +138,29 @@ interface RevenueTrendChartProps {
 }
 
 function RevenueTrendChart({ data }: RevenueTrendChartProps) {
-  if (!data || data.length === 0) {
+  if (!data || data.length < 2) {
     return (
       <div className="flex h-[400px] items-center justify-center rounded-lg border border-border bg-surface">
-        <p className="text-sm text-text-muted">No revenue data available</p>
+        <p className="text-sm text-text-muted">
+          {!data || data.length === 0 ? 'No revenue data available' : 'Insufficient data for trend chart'}
+        </p>
       </div>
     );
   }
 
   const maxRevenue = Math.max(...data.map((d) => d.revenue), 1);
   const minRevenue = Math.min(...data.map((d) => d.revenue), 0);
+  const yRange = maxRevenue - minRevenue;
   const chartHeight = 300;
   const chartWidth = 100; // percentage
   const padding = { top: 20, right: 20, bottom: 40, left: 60 };
 
-  // Create SVG path for line chart
+  // Create SVG path for line chart (guarded against division by zero)
   const points = data.map((point, index) => {
     const x = (index / (data.length - 1)) * chartWidth;
-    const y = chartHeight - ((point.revenue - minRevenue) / (maxRevenue - minRevenue)) * chartHeight;
+    const y = yRange === 0
+      ? chartHeight / 2
+      : chartHeight - ((point.revenue - minRevenue) / yRange) * chartHeight;
     return { x, y, revenue: point.revenue, date: point.date };
   });
 
@@ -207,7 +215,7 @@ function RevenueTrendChart({ data }: RevenueTrendChartProps) {
             const y =
               padding.top +
               chartHeight -
-              ((tick - minRevenue) / (maxRevenue - minRevenue)) * chartHeight;
+              (yRange === 0 ? 0.5 : (tick - minRevenue) / yRange) * chartHeight;
             return (
               <text
                 key={i}

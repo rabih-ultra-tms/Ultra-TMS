@@ -7,7 +7,7 @@
  * Manages filters, view state, and coordinates all sub-components.
  */
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { DispatchToolbar } from './dispatch-toolbar';
 import { DispatchKpiStrip } from './dispatch-kpi-strip';
 import { KanbanBoard } from './kanban-board';
@@ -57,19 +57,19 @@ export function DispatchBoard() {
   );
 
   // Handle filter changes
-  const handleFilterChange = (newFilters: Partial<DispatchFilters>) => {
+  const handleFilterChange = useCallback((newFilters: Partial<DispatchFilters>) => {
     setFilters((prev) => ({ ...prev, ...newFilters }));
-  };
+  }, []);
 
   // Handle sort change
-  const handleSortChange = (newSort: SortConfig) => {
+  const handleSortChange = useCallback((newSort: SortConfig) => {
     setSortConfig(newSort);
-  };
+  }, []);
 
   // Handle search
-  const handleSearch = (query: string) => {
+  const handleSearch = useCallback((query: string) => {
     setFilters((prev) => ({ ...prev, search: query || undefined }));
-  };
+  }, []);
 
   // Loading state
   if (isLoading && !boardData) {

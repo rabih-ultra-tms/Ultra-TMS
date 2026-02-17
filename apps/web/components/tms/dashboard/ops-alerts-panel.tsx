@@ -1,6 +1,6 @@
 'use client';
 
-import { useDashboardAlerts } from '@/lib/hooks/tms/use-ops-dashboard';
+import { useDashboardAlerts, type DashboardAlert } from '@/lib/hooks/tms/use-ops-dashboard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertTriangle, Eye, Phone, Edit, FileText } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -15,7 +15,7 @@ export function OpsAlertsPanel({
   maxVisible = 5,
   onViewAll,
 }: OpsAlertsPanelProps) {
-  const { data: alerts, isLoading, error } = useDashboardAlerts();
+  const { data: alerts, isLoading, error, refetch } = useDashboardAlerts();
   const router = useRouter();
 
   if (isLoading) {
@@ -38,7 +38,7 @@ export function OpsAlertsPanel({
       <div className="rounded-lg border border-red-200 bg-red-50 p-4">
         <p className="text-sm font-semibold text-red-900">Unable to load alerts</p>
         <button
-          onClick={() => window.location.reload()}
+          onClick={() => refetch()}
           className="mt-2 text-sm text-red-600 underline hover:text-red-800"
         >
           Retry
@@ -50,7 +50,7 @@ export function OpsAlertsPanel({
   const visibleAlerts = alerts?.slice(0, maxVisible) || [];
   const totalAlerts = alerts?.length || 0;
 
-  const handleAlertClick = (alert: typeof alerts[0]) => {
+  const handleAlertClick = (alert: DashboardAlert) => {
     if (alert.entityType === 'load') {
       router.push(`/operations/loads/${alert.entityId}`);
     } else if (alert.entityType === 'order') {
@@ -60,7 +60,7 @@ export function OpsAlertsPanel({
     }
   };
 
-  const getActionButton = (alert: typeof alerts[0]) => {
+  const getActionButton = (alert: DashboardAlert) => {
     switch (alert.actionType) {
       case 'call':
         return (
@@ -68,7 +68,7 @@ export function OpsAlertsPanel({
             className="rounded-md border border-border bg-surface px-2 py-1 text-xs font-medium text-text-primary hover:bg-gray-50"
             onClick={(e) => {
               e.stopPropagation();
-              // TODO: Open carrier contact modal or click-to-call
+              handleAlertClick(alert);
             }}
           >
             <Phone className="inline size-3 mr-1" />
@@ -81,7 +81,7 @@ export function OpsAlertsPanel({
             className="rounded-md border border-border bg-surface px-2 py-1 text-xs font-medium text-text-primary hover:bg-gray-50"
             onClick={(e) => {
               e.stopPropagation();
-              // TODO: Open quick-update modal
+              handleAlertClick(alert);
             }}
           >
             <Edit className="inline size-3 mr-1" />
@@ -94,7 +94,7 @@ export function OpsAlertsPanel({
             className="rounded-md border border-border bg-surface px-2 py-1 text-xs font-medium text-text-primary hover:bg-gray-50"
             onClick={(e) => {
               e.stopPropagation();
-              // TODO: Open check call entry form
+              handleAlertClick(alert);
             }}
           >
             <FileText className="inline size-3 mr-1" />

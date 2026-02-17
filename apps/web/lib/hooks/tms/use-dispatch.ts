@@ -169,14 +169,14 @@ export function useDispatchLoads(
   }
 ) {
   return useQuery({
-    queryKey: dispatchKeys.board(filters),
+    queryKey: [...dispatchKeys.board(filters), sortConfig],
     queryFn: async () => {
       const queryString = buildQueryString(filters);
       const url = `/api/v1/loads/board${queryString ? `?${queryString}` : ''}`;
       const response = await apiClient.get<DispatchLoad[]>(url);
       return transformToBoardData(response, sortConfig);
     },
-    refetchInterval: options?.refetchInterval || 30000, // Default 30s polling fallback
+    refetchInterval: options?.refetchInterval ?? 30000, // Default 30s polling fallback
     enabled: options?.enabled !== false,
     staleTime: 10000, // Consider data stale after 10s
   });

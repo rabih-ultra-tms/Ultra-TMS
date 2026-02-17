@@ -1,6 +1,6 @@
 'use client';
 
-import { useDashboardActivity, type Period } from '@/lib/hooks/tms/use-ops-dashboard';
+import { useDashboardActivity, type Period, type ActivityItem } from '@/lib/hooks/tms/use-ops-dashboard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
 import { format, isToday, isYesterday, parseISO } from 'date-fns';
@@ -16,7 +16,7 @@ export function OpsActivityFeed({
   maxVisible = 10,
   onViewAll,
 }: OpsActivityFeedProps) {
-  const { data: activities, isLoading, error } = useDashboardActivity(period);
+  const { data: activities, isLoading, error, refetch } = useDashboardActivity(period);
   const router = useRouter();
 
   if (isLoading) {
@@ -37,7 +37,7 @@ export function OpsActivityFeed({
       <div className="rounded-lg border border-red-200 bg-red-50 p-4">
         <p className="text-sm font-semibold text-red-900">Unable to load activity</p>
         <button
-          onClick={() => window.location.reload()}
+          onClick={() => refetch()}
           className="mt-2 text-sm text-red-600 underline hover:text-red-800"
         >
           Retry
@@ -48,7 +48,7 @@ export function OpsActivityFeed({
 
   const visibleActivities = activities?.slice(0, maxVisible) || [];
 
-  const handleEntityClick = (activity: typeof activities[0]) => {
+  const handleEntityClick = (activity: ActivityItem) => {
     if (activity.entityType === 'load') {
       router.push(`/operations/loads/${activity.entityId}`);
     } else if (activity.entityType === 'order') {
@@ -72,7 +72,7 @@ export function OpsActivityFeed({
     <div className="rounded-lg border border-border bg-surface p-4">
       {/* Header */}
       <h3 className="mb-4 text-sm font-semibold text-text-primary">
-        Today&apos;s Activity
+        {period === 'today' ? "Today's" : period === 'thisWeek' ? "This Week's" : "This Month's"} Activity
       </h3>
 
       {/* Activity List */}
