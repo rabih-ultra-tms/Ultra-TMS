@@ -264,7 +264,7 @@
 | ACC-001 | Accounting Dashboard | DONE | Claude Code | M (5h) ⬆️ | Feb 17 |
 | ACC-002 | Invoices (list, detail, create) | DONE | Claude Code | L (8h) ⬆️ | Feb 17 |
 | ACC-003 | Payments Received | DONE | Claude Code | M (5h) ⬆️ | Feb 17 |
-| ACC-004 | Carrier Payables | NOT STARTED | — | M (3h) ⬆️ | — |
+| ACC-004 | Carrier Payables | DONE | Claude Code | M (3h) ⬆️ | Feb 17 |
 | ACC-005 | Settlements | NOT STARTED | — | M (5h) ⬆️ | — |
 | ACC-006 | Aging Reports | NOT STARTED | — | M (4h) ⬆️ | — |
 | COM-001 | Commission Dashboard | NOT STARTED | — | M (4h) ⬆️ | — |

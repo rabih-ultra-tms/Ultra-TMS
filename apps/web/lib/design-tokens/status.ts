@@ -127,6 +127,18 @@ export const PAYMENT_STATUSES = {
 export type PaymentStatusToken = keyof typeof PAYMENT_STATUSES;
 
 // ---------------------------------------------------------------------------
+// Payable Status (Carrier Payables — amounts owed to carriers)
+// ---------------------------------------------------------------------------
+export const PAYABLE_STATUSES = {
+  PENDING: { label: "Pending", status: "unassigned" as StatusColorToken | undefined, intent: undefined as Intent | undefined, className: undefined as string | undefined },
+  ELIGIBLE: { label: "Eligible", status: "tendered" as StatusColorToken | undefined, intent: undefined as Intent | undefined, className: undefined as string | undefined },
+  PROCESSING: { label: "Processing", status: "transit" as StatusColorToken | undefined, intent: undefined as Intent | undefined, className: undefined as string | undefined },
+  PAID: { label: "Paid", status: "delivered" as StatusColorToken | undefined, intent: undefined as Intent | undefined, className: undefined as string | undefined },
+} as const;
+
+export type PayableStatusToken = keyof typeof PAYABLE_STATUSES;
+
+// ---------------------------------------------------------------------------
 // Intent (semantic meaning, not entity-specific)
 // ---------------------------------------------------------------------------
 export type Intent = "success" | "warning" | "danger" | "info";

@@ -6,6 +6,47 @@
 
 ---
 
+## Session: 2026-02-17 (Monday) — ACC-004: Carrier Payables
+
+### Developer: Claude Code (Opus 4.6)
+### AI Tool: Claude Opus 4.6
+
+**What was done:**
+Built the Carrier Payables list page at `/accounting/payables` (ACC-004). Shows amounts owed to carriers for delivered loads with quick pay indicators. Created 4 new files following the same conventions as ACC-002/ACC-003: React Query hooks wired to `GET /payments-made`, a payables table with 8 columns (carrier, load #, status, amount, quick pay, delivered, payment due, actions), URL-driven filters (search, status, date range), and the ListPage-pattern page. Added `PAYABLE_STATUSES` (PENDING/ELIGIBLE/PROCESSING/PAID) to the design token system.
+
+**Files created (4):**
+| File | Purpose |
+|------|---------|
+| `lib/hooks/accounting/use-payables.ts` | React Query hooks: usePayables, usePayable, useProcessPayable |
+| `components/accounting/payable-status-badge.tsx` | StatusBadge wrapper using PAYABLE_STATUSES design tokens (4 states) |
+| `components/accounting/payables-table.tsx` | TanStack Table columns with quick pay indicator (Zap icon), overdue date highlighting |
+| `components/accounting/payable-filters.tsx` | URL-driven filters (status, search, date range) with debounce |
+| `app/(dashboard)/accounting/payables/page.tsx` | List page using ListPage pattern |
+
+**Files modified (3):**
+| File | Change |
+|------|--------|
+| `lib/design-tokens/status.ts` | Added PAYABLE_STATUSES (4 states mapped to token system) |
+| `lib/design-tokens/index.ts` | Re-exported PAYABLE_STATUSES + PayableStatusToken |
+| `dev_docs_v2/STATUS.md` | ACC-004 → DONE |
+
+**Key deliverables:**
+- 1 new route: `/accounting/payables`
+- Quick pay eligibility column with amber Zap indicator
+- Overdue payment due dates highlighted in red
+- 4-state payable badge (Pending, Eligible, Processing, Paid)
+- 0 TS errors, lint clean
+
+**Impact metrics for report:**
+- New pages: 1 (List)
+- Components created: 3 (badge, table, filters)
+- Hooks created: 3
+- Lines of code: ~350
+- Phase 6 progress: 4/15 tasks complete
+- ACC-005 (Settlements) unblocked
+
+---
+
 ## Session: 2026-02-17 (Monday) — Health Score Sprint: SocketProvider Fix + Hooks Audit
 
 ### Developer: Claude Code (Opus 4.6)
