@@ -10,7 +10,16 @@ const config: Config = {
   testEnvironment: "jsdom",
   injectGlobals: true,
   setupFilesAfterEnv: ["<rootDir>/test/setup.ts"],
+  resolver: "<rootDir>/test/jest-resolver.cjs",
   moduleNameMapper: {
+    "^@/lib/hooks/operations$": "<rootDir>/test/mocks/hooks-operations.ts",
+    "^@/lib/hooks/operations/(.*)$": "<rootDir>/test/mocks/hooks-operations.ts",
+    "^@/lib/hooks/tms/use-orders$": "<rootDir>/test/mocks/hooks-tms-orders.ts",
+    "^@/lib/hooks/tms/use-loads$": "<rootDir>/test/mocks/hooks-tms-loads.ts",
+    "^@/lib/hooks/sales/use-quotes$": "<rootDir>/test/mocks/hooks-sales-quotes.ts",
+    "^@/lib/hooks/tracking/use-public-tracking$": "<rootDir>/test/mocks/hooks-tracking.ts",
+    "^@/lib/hooks$": "<rootDir>/test/mocks/hooks.ts",
+    "^next/navigation$": "<rootDir>/test/mocks/next-navigation.ts",
     "^@/(.*)$": "<rootDir>/$1",
     "^@mswjs/interceptors/ClientRequest$":
       "<rootDir>/../../node_modules/.pnpm/@mswjs+interceptors@0.40.0/node_modules/@mswjs/interceptors/lib/node/interceptors/ClientRequest/index.js",

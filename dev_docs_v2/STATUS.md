@@ -1,6 +1,6 @@
 # Ultra TMS — Task Status Dashboard
 
-> **Last Updated:** February 16, 2026 (TMS-014 completed)
+> **Last Updated:** February 16, 2026 (TEST-001b completed — Phase 3 testing)
 > **Current Phase:** Phase 5 — Testing + Tracking + Emails (Weeks 9-10)
 > **Overall Health:** C+ (6.4/10) → targeting B+ (8/10) by Week 12
 > **Revision:** v5 — Timeline compressed to 12 weeks. Load Board deferred to post-MVP.
@@ -245,7 +245,7 @@
 | **COMM-001** | **5 Automated Emails** (rate con, tender, pickup, delivery, invoice) | NOT STARTED | — | L (8-12h) | — |
 | **DOC-002** | **Business Rules Reference Doc** | NOT STARTED | — | M (4-6h) | — |
 | **TEST-001a** | **Testing: Phase 0-2** (bug fixes, design, carrier) | NOT STARTED | — | L (8-10h) | — |
-| **TEST-001b** | **Testing: Phase 3** (orders, loads, quotes, tracking) | NOT STARTED | — | XL (12-16h) | — |
+| **TEST-001b** | **Testing: Phase 3** (orders, loads, quotes, tracking) | DONE | Claude Code | XL (12-16h) | Feb 16 |
 | **TEST-001c** | **Testing: Phase 4** (forms, dispatch board, ops dashboard) | NOT STARTED | — | XL (16-24h) | — |
 | **TEST-001d** | **Testing: Phase 5** (tracking map, emails) | NOT STARTED | — | L (6-9h) | — |
 

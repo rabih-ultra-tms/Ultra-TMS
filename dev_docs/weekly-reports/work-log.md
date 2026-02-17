@@ -6,11 +6,46 @@
 
 ---
 
+## Session: 2026-02-16 (Sunday) — Sonnet 4.5 Audit Batch 2
+
+### Developer: Claude Code (Opus 4.6)
+### AI Tool: Claude Opus 4.6
+### Commit: f639846
+
+**What was done:**
+Second audit pass on Sonnet 4.5's uncommitted TMS-009/010 files (stops hooks, check-call hooks, orders hooks, loads page). Found 12 additional bugs — 4 critical (wrong URLs, wrong HTTP methods, missing envelope unwrapping), 8 important (dead buttons, duplicate exports, unstable deps). All 12 fixed.
+
+**Key fixes:**
+- use-stops.ts: rewrote all URLs from `/stops/:id` to correct backend route `/orders/:orderId/stops/:id`
+- use-stops.ts: arrive/depart methods PATCH→POST, reorder POST→PUT (matching backend)
+- use-stops.ts: switched from raw fetch() to apiClient, added envelope unwrapping
+- use-checkcalls.ts: fixed doubled `/api/v1/` prefix, `checkcalls`→`check-calls` (hyphen)
+- use-checkcalls.ts: disabled non-existent overdue/stats endpoints
+- use-orders.ts: added envelope unwrapping to all 8 hooks, fixed mutation return types
+- use-loads.ts: removed duplicate useCheckCalls export conflicting with use-checkcalls.ts
+- stop-actions.tsx: removed unstable mutation objects from useMemo deps, added orderId
+- stops-table.tsx: disabled dead Add Stop buttons, accepts orderId prop
+- load-route-tab.tsx: passes load.order.id as orderId to StopsTable
+- loads/page.tsx: dead handleEdit stub → navigates to load detail
+
+**Files changed:** 13 files (8 modified, 5 new)
+
+| Area | Files | What was fixed |
+|------|-------|---------------|
+| Hooks | `use-stops.ts`, `use-checkcalls.ts`, `use-orders.ts`, `use-loads.ts` | URLs, HTTP methods, envelope unwrapping, duplicate exports |
+| Stops | `stop-actions.tsx`, `stops-table.tsx`, `stop-card.tsx` | useMemo deps, orderId prop, dead buttons |
+| Loads | `load-route-tab.tsx`, `load-check-calls-tab.tsx`, `loads/page.tsx` | orderId wiring, dead handleEdit |
+| Check Calls | `check-call-timeline.tsx`, `check-call-form.tsx`, `overdue-checkcalls.tsx` | Included Sonnet components (audited, no issues found) |
+
+**TypeScript check:** 3 pre-existing errors only (none from these changes)
+
+---
+
 ## Session: 2026-02-16 (Sunday) — Sonnet 4.5 Audit & Fixes
 
 ### Developer: Claude Code (Opus 4.6)
 ### AI Tool: Claude Opus 4.6
-### Commit: Not yet committed
+### Commit: bfa48e9, d7bc470
 
 **What was done:**
 Comprehensive audit of last 3 Sonnet 4.5 tasks (TMS-011d/e, TMS-012, TMS-013). Found 22 bugs — 9 critical (runtime-breaking), 14 warnings (degradation). Fixed 17 of 22 across 12 files. All 3 features were non-functional at runtime due to shared SocketProvider infinite reconnect loop, API envelope not unwrapped, wrong endpoints, and unstable React hook dependencies.
@@ -1658,6 +1693,52 @@ Built the Edit Order Form at `/operations/orders/:id/edit` — reuses the OrderF
 - useUpdateOrder() mutation already existed (no new hook needed)
 - Edit page: 161 lines (new file)
 - OrderForm component: +76 lines (edit mode logic added)
+
+## Session: 2026-02-16 (Sunday) — TEST-001b: Phase 3 Testing
+
+### Developer: Claude Code (Opus 4.6)
+### AI Tool: Claude Opus 4.6
+### Commit: (uncommitted — ready for commit)
+
+**What was done:**
+Completed TEST-001b — comprehensive tests for all Phase 3 screens (orders, loads, quotes, public tracking). Built mock infrastructure for 4 hook domains (TMS orders, TMS loads, sales quotes, tracking), extended jest config and custom resolver, and wrote 7 test suites with 68 tests. All 140 tests (including pre-existing 72) pass green.
+
+**Files created:** 11 files
+
+| File | Lines | What |
+|------|-------|------|
+| `test/mocks/hooks-tms-orders.ts` | 88 | Mock for `@/lib/hooks/tms/use-orders` (8 hooks) |
+| `test/mocks/hooks-tms-loads.ts` | 82 | Mock for `@/lib/hooks/tms/use-loads` (8 hooks) |
+| `test/mocks/hooks-sales-quotes.ts` | 152 | Mock for `@/lib/hooks/sales/use-quotes` (17 hooks) |
+| `test/mocks/hooks-tracking.ts` | 40 | Mock for `@/lib/hooks/tracking/use-public-tracking` |
+| `__tests__/tms/orders-list.test.tsx` | 136 | Orders list: renders, loading, empty, error, row click |
+| `__tests__/tms/order-detail.test.tsx` | 138 | Order detail: title, tabs (6), status, breadcrumb, edit link |
+| `__tests__/tms/loads-list.test.tsx` | 110 | Loads list: renders, loading, empty, new load link |
+| `__tests__/tms/load-detail.test.tsx` | 113 | Load detail: tabs (5), loading, error, not-found states |
+| `__tests__/tms/public-tracking.test.tsx` | 121 | Public tracking: data, loading, not-found, generic error, no sensitive data |
+| `__tests__/sales/quotes-list.test.tsx` | 190 | Quotes list: renders, stats cards, filters, loading, empty, error, navigation |
+| `__tests__/sales/quote-detail.test.tsx` | 135 | Quote detail: number, version badge, tabs (4), breadcrumb, error |
+
+**Files modified:** 2 files
+
+| File | Change |
+|------|--------|
+| `jest.config.ts` | +4 moduleNameMapper entries for Phase 3 hook mocks |
+| `test/jest-resolver.cjs` | +4 MOCK_MAP entries for SWC alias interception |
+
+**Key deliverables:**
+- 7 new test suites covering all Phase 3 screens
+- 68 new tests (orders list/detail, loads list/detail, public tracking, quotes list/detail)
+- Mock infrastructure for 4 hook domains using globalThis shared-state pattern
+- Security test: public tracking page verified to NOT expose carrier rates/margins
+- Full suite: 140 tests, 20 suites, all passing
+
+**Impact metrics for report:**
+- Tests: 72 → 140 (+68 new, +94% increase)
+- Test suites: 13 → 20 (+7 new)
+- Screens tested: 7 Phase 3 screens now covered
+- Mock hooks: 37 hooks mocked across 4 domain files
+- Task: TEST-001b DONE
 
 <!-- NEXT SESSION ENTRY GOES HERE -->
 
