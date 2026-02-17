@@ -105,7 +105,7 @@ export function KanbanBoard({ boardData, sortConfig, onSortChange }: KanbanBoard
   /**
    * Select all loads in a specific lane
    */
-  const handleSelectAllInLane = useCallback((laneKey: LaneType) => {
+  const _handleSelectAllInLane = useCallback((laneKey: LaneType) => {
     const loadsInLane = boardData.loadsByLane[laneKey] || [];
     setSelectedLoadIds((prev) => {
       const next = new Set(prev);

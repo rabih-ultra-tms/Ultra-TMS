@@ -18,7 +18,6 @@ import {
 } from '@/components/ui/select';
 import { X, Loader2, CheckCircle2 } from 'lucide-react';
 import type { LoadStatus } from '@/lib/types/dispatch';
-import { LANE_CONFIG } from '@/lib/types/dispatch';
 
 interface DispatchBulkToolbarProps {
   selectedCount: number;

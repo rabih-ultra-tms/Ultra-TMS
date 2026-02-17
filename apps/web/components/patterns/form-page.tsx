@@ -82,13 +82,14 @@ export function FormPage<T extends FieldValues>({
 
     // Initialize form
     const form = useForm<T>({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         resolver: zodResolver(schema as any),
         defaultValues,
         mode: "onChange",
         criteriaMode: "all", // Show all errors for a field
     });
 
-    const { isDirty, isValid, isSubmitting: formIsSubmitting } = form.formState;
+    const { isDirty, isSubmitting: formIsSubmitting } = form.formState;
     const isSubmitting = externalIsSubmitting || formIsSubmitting;
 
     // Warn on browser close/refresh if dirty
@@ -108,10 +109,10 @@ export function FormPage<T extends FieldValues>({
         if (isDirty) {
             setShowExitDialog(true);
             setPendingNavigation(() => () => {
-                backPath ? router.push(backPath) : router.back();
+                if (backPath) { router.push(backPath); } else { router.back(); }
             });
         } else {
-            backPath ? router.push(backPath) : router.back();
+            if (backPath) { router.push(backPath); } else { router.back(); }
         }
     };
 

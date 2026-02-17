@@ -13,7 +13,6 @@ import { DetailPageSkeleton } from "@/components/shared/detail-page-skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Map, List, FileText, Activity, Phone } from "lucide-react";
-import { notFound } from "next/navigation";
 
 export function LoadDetailClient({ id }: { id: string }) {
     const { data: load, isLoading, error, refetch } = useLoad(id);

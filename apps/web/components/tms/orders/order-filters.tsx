@@ -19,7 +19,7 @@ interface OrderFiltersProps {
     // No props needed as we use URL search params
 }
 
-export function OrderFilters(props: OrderFiltersProps) {
+export function OrderFilters(_props: OrderFiltersProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -71,6 +71,7 @@ export function OrderFilters(props: OrderFiltersProps) {
             }
         }, 300);
         return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- updateFilters is recreated every render; adding it would cause infinite re-renders
     }, [searchValue, search]);
 
     return (

@@ -1,12 +1,11 @@
 "use client";
 
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Load } from "@/types/loads";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { X, Map, Edit, Eye } from "lucide-react";
+import { Map, Edit, Eye } from "lucide-react";
 import { LoadStatusBadge } from "./load-status-badge";
-import { Separator } from "@/components/ui/separator";
 
 interface LoadDrawerProps {
     load: Load | null;

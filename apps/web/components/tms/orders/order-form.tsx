@@ -26,7 +26,40 @@ import {
   STEP_FIELDS,
   type OrderFormValues,
   type StopFormValues,
+  type OrderEquipmentType,
 } from "./order-form-schema";
+
+// --- Quote prefill shape (from useOrderFromQuote) ---
+
+interface QuotePrefillData {
+  customerId?: string;
+  customer?: { companyName?: string };
+  commodity?: string;
+  weightLbs?: number;
+  pieceCount?: number;
+  palletCount?: number;
+  equipmentType?: OrderEquipmentType;
+  customerRate?: number;
+  fuelSurcharge?: number;
+  stops?: Array<{
+    stopType?: StopFormValues['type'];
+    type?: StopFormValues['type'];
+    facilityName?: string;
+    addressLine1?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+    zipCode?: string;
+    contactName?: string;
+    contactPhone?: string;
+    appointmentDate?: string;
+    appointmentTimeStart?: string;
+    appointmentTime?: string;
+    appointmentTimeEnd?: string;
+    specialInstructions?: string;
+  }>;
+}
 
 // --- Component Props ---
 
@@ -254,6 +287,7 @@ export function OrderForm({
   const isCustomerLocked: boolean = isEditMode && !!orderStatus && !["PENDING", "QUOTED"].includes(orderStatus);
 
   const form = useForm<OrderFormValues>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Zod v4 + react-hook-form type inference mismatch
     resolver: zodResolver(orderFormSchema) as any,
     defaultValues: isEditMode && initialData
       ? { ...ORDER_FORM_DEFAULTS, ...initialData }
@@ -274,7 +308,7 @@ export function OrderForm({
   // Pre-fill from quote when data loads (create mode)
   React.useEffect(() => {
     if (!isEditMode && quoteData && quoteId) {
-      const q = quoteData as any;
+      const q = quoteData as QuotePrefillData;
       const prefill: Partial<OrderFormValues> = {};
 
       if (q.customerId) prefill.customerId = q.customerId;
@@ -289,7 +323,7 @@ export function OrderForm({
 
       if (q.stops?.length) {
         prefill.stops = q.stops.map(
-          (s: any, i: number): StopFormValues => ({
+          (s, i): StopFormValues => ({
             id: crypto.randomUUID(),
             type: s.stopType || s.type || "PICKUP",
             facilityName: s.facilityName || "",
@@ -335,7 +369,7 @@ export function OrderForm({
     const fields = STEP_FIELDS[currentStep];
     if (!fields || fields.length === 0) return true;
 
-    const result = await form.trigger(fields as any);
+    const result = await form.trigger(fields as (keyof OrderFormValues)[]);
     return result;
   };
 
@@ -406,8 +440,9 @@ export function OrderForm({
           router.push("/operations/orders");
         }
       }
-    } catch (error: any) {
-      toast.error(error?.message || `Failed to ${isEditMode ? "update" : "create"} order. Please try again.`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : `Failed to ${isEditMode ? "update" : "create"} order. Please try again.`;
+      toast.error(message);
     }
   };
 
@@ -426,7 +461,8 @@ export function OrderForm({
   // --- Render Steps ---
 
   const renderStep = () => {
-    // Cast to any to avoid Zod v4 + react-hook-form type inference mismatch
+    // Cast to satisfy child component prop types (Zod v4 + react-hook-form type inference mismatch)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const f = form as any;
     switch (currentStep) {
       case 0:

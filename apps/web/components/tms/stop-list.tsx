@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils"
 import { StopCard, StopData } from "./stop-card"
-import { Check, MapPin } from "lucide-react"
+import { Check } from "lucide-react"
 
 interface StopListProps {
     stops: StopData[]

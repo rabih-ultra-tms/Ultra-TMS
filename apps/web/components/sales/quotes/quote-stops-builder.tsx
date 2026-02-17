@@ -19,7 +19,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Plus, Trash2, MapPin, GripVertical } from "lucide-react";
+import { Plus, Trash2, GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { QuoteFormValues } from "@/types/quotes";
 
@@ -59,8 +59,8 @@ export function QuoteStopsBuilder({ form }: QuoteStopsBuilderProps) {
     <div className="space-y-4">
       {fields.map((field, index) => {
         const stopType = form.watch(`stops.${index}.type`);
-        const isFirst = index === 0;
-        const isLast = index === fields.length - 1;
+        const _isFirst = index === 0;
+        const _isLast = index === fields.length - 1;
         const canDelete = fields.length > 2;
 
         return (

@@ -7,11 +7,9 @@ import * as React from "react";
 
 import { CarrierForm } from "@/components/carriers/carrier-form";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockSubmitFn = jest.fn<() => Promise<void>>().mockResolvedValue(undefined);
 
 describe("CarrierForm — Create Mode", () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mockSubmit = mockSubmitFn as any;
 
   beforeEach(() => {
@@ -123,7 +121,6 @@ describe("CarrierForm — Create Mode", () => {
 });
 
 describe("CarrierForm — Edit Mode", () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mockSubmit = jest.fn<() => Promise<void>>().mockResolvedValue(undefined) as any;
 
   const initialData = {

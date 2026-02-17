@@ -42,7 +42,7 @@ export function DispatchBoard() {
   const { connected, status, latency } = useSocketStatus();
 
   // Real-time WebSocket updates
-  const { animationCount } = useDispatchBoardUpdates({
+  const { animationCount: _animationCount } = useDispatchBoardUpdates({
     enabled: true,
     showToasts: true,
     playSound: false, // Optional: enable if user wants audio notifications

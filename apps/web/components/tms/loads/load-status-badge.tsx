@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { LoadStatus } from "@/types/loads";
+import type { LucideIcon } from "lucide-react";
 import {
     PenLine,
     Clock,
@@ -54,7 +55,7 @@ export function LoadStatusBadge({ status, className, variant = "default" }: Load
 }
 
 // Configuration map based on design system
-const STATUS_CONFIG: Record<LoadStatus, { label: string; icon: any; bgColor: string; textColor: string; dotColor: string }> = {
+const STATUS_CONFIG: Record<LoadStatus, { label: string; icon: LucideIcon; bgColor: string; textColor: string; dotColor: string }> = {
     [LoadStatus.PLANNING]: {
         label: "Planning",
         icon: PenLine,

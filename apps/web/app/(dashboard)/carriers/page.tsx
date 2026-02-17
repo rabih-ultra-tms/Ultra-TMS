@@ -50,7 +50,7 @@ type CarrierStatus = "ACTIVE" | "INACTIVE" | "PREFERRED" | "ON_HOLD" | "BLACKLIS
 
 // --- Components ---
 
-function StatsCards({ stats }: { stats: any }) {
+function StatsCards({ stats }: { stats: { total: number; byType: Record<string, number>; byStatus: Record<string, number> } | undefined }) {
   if (!stats) return null;
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">

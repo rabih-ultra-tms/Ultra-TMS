@@ -1,6 +1,5 @@
 "use client";
 
-import { UseFormReturn } from "react-hook-form";
 import { FormPage, FormSection } from "@/components/patterns/form-page";
 import { carrierSchema, CarrierFormValues } from "@/lib/validations/carriers";
 import {

@@ -13,7 +13,7 @@ export function OrderStopsTab({ order }: { order: Order }) {
         <div className="space-y-6">
             <div className="relative border-l-2 border-muted pl-6 space-y-10 py-2 ml-4">
                 {stops.map((stop, index) => {
-                    const isLast = index === stops.length - 1;
+                    const _isLast = index === stops.length - 1;
                     const isPickup = stop.stopType === "PICKUP";
                     const isDelivery = stop.stopType === "DELIVERY";
 

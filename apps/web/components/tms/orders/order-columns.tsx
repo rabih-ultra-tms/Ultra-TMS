@@ -12,7 +12,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, MapPin, Calendar, FileText, Truck } from "lucide-react";
+import { MoreHorizontal, FileText } from "lucide-react";
 import Link from "next/link";
 import { StatusBadge } from "@/components/tms/primitives/status-badge";
 import { Intent } from "@/lib/design-tokens";
@@ -52,11 +52,6 @@ const formatDate = (dateString?: string) => {
     return new Date(dateString).toLocaleDateString();
 };
 
-const formatTime = (timeString?: string) => {
-    if (!timeString) return '';
-    return new Date(`1970-01-01T${timeString}`).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-};
-
 // --- Columns ---
 
 interface OrderColumnsProps {
@@ -65,7 +60,7 @@ interface OrderColumnsProps {
 }
 
 export const getOrderColumns = ({
-    onDelete,
+    onDelete: _onDelete,
     onStatusChange,
 }: OrderColumnsProps): ColumnDef<Order>[] => [
         {

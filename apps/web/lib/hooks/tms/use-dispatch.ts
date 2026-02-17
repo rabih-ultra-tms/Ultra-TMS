@@ -499,7 +499,7 @@ export function useUpdateLoadEta() {
 
   return useMutation({
     mutationFn: async ({
-      loadId,
+      loadId: _loadId,
       stopId,
       newEta,
       reason,

@@ -5,7 +5,7 @@ import { Order } from "@/types/orders";
 import { StatusBadge } from "@/components/tms/primitives/status-badge";
 import { STATUS_INTENTS, STATUS_LABELS } from "@/components/tms/orders/order-columns";
 import { format } from "date-fns";
-import { Calendar, MapPin, Truck, Building2, User } from "lucide-react";
+import { Calendar, Building2, User } from "lucide-react";
 
 export function OrderDetailOverview({ order }: { order: Order }) {
     const pickupStop = order.stops.find(s => s.stopSequence === 1);

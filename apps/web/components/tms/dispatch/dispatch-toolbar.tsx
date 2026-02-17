@@ -48,7 +48,7 @@ export function DispatchToolbar({
   viewMode,
   onViewModeChange,
   filters,
-  onFilterChange,
+  onFilterChange: _onFilterChange,
   onSearch,
   connectionStatus,
 }: DispatchToolbarProps) {

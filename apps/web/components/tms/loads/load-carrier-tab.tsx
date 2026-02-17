@@ -2,7 +2,7 @@
 
 import { Load } from "@/types/loads";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Phone, Mail, Award, Truck } from "lucide-react";
+import { Phone, Mail, Truck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
@@ -90,7 +90,8 @@ export function LoadCarrierTab({ load }: LoadCarrierTabProps) {
 
             {/* Rate Info */}
             {(() => {
-                const customerRate = (load as any).order?.customerRate ?? (load as any).customerRate ?? 0;
+                const loadRecord = load as Load & { customerRate?: number; order?: { customerRate?: number } };
+                const customerRate = loadRecord.order?.customerRate ?? loadRecord.customerRate ?? 0;
                 const carrierRate = load.carrierRate ?? 0;
                 const margin = customerRate - carrierRate;
                 const marginPct = customerRate > 0 ? (margin / customerRate) * 100 : 0;

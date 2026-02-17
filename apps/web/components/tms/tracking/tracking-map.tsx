@@ -544,7 +544,7 @@ function LoadDetailPanel({
                     <p className="text-gray-700">{detail.lastCheckCall.location}</p>
                   )}
                   {detail.lastCheckCall.notes && (
-                    <p className="italic text-gray-500">"{detail.lastCheckCall.notes}"</p>
+                    <p className="italic text-gray-500">&quot;{detail.lastCheckCall.notes}&quot;</p>
                   )}
                 </div>
               ) : (

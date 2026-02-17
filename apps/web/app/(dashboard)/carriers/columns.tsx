@@ -8,26 +8,11 @@ import { StatusBadge } from "@/components/tms/primitives/status-badge";
 import { Phone, Mail, MapPin, Truck, Users, Shield, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { CarrierActionsMenu } from "./carrier-actions-menu";
-
-const STATUS_COLORS: Record<string, string> = {
-    ACTIVE: "bg-green-100 text-green-800",
-    INACTIVE: "bg-gray-100 text-gray-800",
-    PREFERRED: "bg-blue-100 text-blue-800",
-    ON_HOLD: "bg-yellow-100 text-yellow-800",
-    BLACKLISTED: "bg-red-100 text-red-800",
-};
+import type { StatusColorToken, Intent } from "@/lib/design-tokens";
 
 const TYPE_COLORS: Record<string, string> = {
     COMPANY: "bg-purple-100 text-purple-800",
     OWNER_OPERATOR: "bg-orange-100 text-orange-800",
-};
-
-const STATUS_LABELS: Record<string, string> = {
-    ACTIVE: "Active",
-    INACTIVE: "Inactive",
-    PREFERRED: "Preferred",
-    ON_HOLD: "On Hold",
-    BLACKLISTED: "Blacklisted",
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -202,7 +187,7 @@ export const columns: ColumnDef<OperationsCarrierListItem>[] = [
         header: "Status",
         cell: ({ row }) => {
             const status = row.original.status;
-            const config: Record<string, { status?: any; intent?: any; label: string }> = {
+            const config: Record<string, { status?: StatusColorToken; intent?: Intent; label: string }> = {
                 ACTIVE: { intent: "success", label: "Active" },
                 INACTIVE: { status: "unassigned", label: "Inactive" },
                 PREFERRED: { status: "delivered", label: "Preferred" },

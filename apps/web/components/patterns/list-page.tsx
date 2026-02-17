@@ -4,12 +4,10 @@ import * as React from "react";
 import {
     useReactTable,
     getCoreRowModel,
-    flexRender,
     ColumnDef,
     SortingState,
     OnChangeFn,
     RowSelectionState,
-    VisibilityState,
 } from "@tanstack/react-table";
 import { PageHeader } from "@/components/tms/layout/page-header";
 import { DataTable } from "@/components/tms/tables/data-table";
@@ -17,7 +15,7 @@ import { TablePagination } from "@/components/tms/tables/table-pagination";
 import { ListPageSkeleton } from "@/components/shared/list-page-skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -86,7 +84,7 @@ interface ListPageProps<TData> {
 
 export function ListPage<TData>({
     title,
-    description,
+    description: _description,
     headerActions,
     filters,
     stats,
@@ -132,7 +130,7 @@ export function ListPage<TData>({
         onSortingChange,
         onRowSelectionChange,
         getCoreRowModel: getCoreRowModel(),
-        getRowId: (row: any) => row.id, // Assume 'id' field exists, or make configurable
+        getRowId: (row) => String((row as Record<string, unknown>).id),
     });
 
     // Derived state

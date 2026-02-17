@@ -85,7 +85,6 @@ export function useSocketEvents<T = unknown>(
       });
     };
     // Re-subscribe only when socket, connection status, or the set of event names changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socket, connected, eventNames]);
 }
 

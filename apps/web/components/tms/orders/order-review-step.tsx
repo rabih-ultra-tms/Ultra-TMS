@@ -66,7 +66,7 @@ export function OrderReviewStep({ form, values }: OrderReviewStepProps) {
                   Please fix the following errors before confirming:
                 </p>
                 <ul className="mt-1 text-sm text-destructive list-disc list-inside">
-                  {Object.entries(errors).map(([key, error]: [string, any]) => (
+                  {Object.entries(errors).map(([key, error]) => (
                     <li key={key}>
                       {typeof error?.message === "string"
                         ? error.message

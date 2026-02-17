@@ -58,6 +58,7 @@ export default function OrdersPage() {
 
     const handleStatusChange = async (id: string, newStatus: OrderStatus) => {
         try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             await updateOrder.mutateAsync({ id, formData: {} as any, status: newStatus as any });
             toast.success(`Order status changed to ${newStatus}`);
         } catch {

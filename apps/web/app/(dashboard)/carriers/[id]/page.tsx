@@ -21,8 +21,9 @@ import { CarrierInsuranceSection } from "@/components/carriers/carrier-insurance
 import { CarrierDocumentsSection } from "@/components/carriers/carrier-documents-section";
 import { CarrierDriversSection } from "@/components/carriers/carrier-drivers-section";
 import { StatusBadge } from "@/components/tms/primitives/status-badge";
+import type { StatusColorToken, Intent } from "@/lib/design-tokens";
 
-const STATUS_CONFIG: Record<string, { status?: any; intent?: any; label: string }> = {
+const STATUS_CONFIG: Record<string, { status?: StatusColorToken; intent?: Intent; label: string }> = {
   ACTIVE: { intent: "success", label: "Active" },
   INACTIVE: { status: "unassigned", label: "Inactive" },
   PREFERRED: { status: "delivered", label: "Preferred" },

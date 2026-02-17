@@ -102,7 +102,7 @@ export function useDispatchBoardUpdates(options?: {
   // Initialize batcher
   useEffect(() => {
     if (!batcherRef.current) {
-      batcherRef.current = new EventBatcher((loadIds) => {
+      batcherRef.current = new EventBatcher((_loadIds) => {
         // Invalidate board queries after batch update
         queryClient.invalidateQueries({ queryKey: dispatchKeys.all });
       });
@@ -195,7 +195,7 @@ export function useDispatchBoardUpdates(options?: {
   const handleLoadCreated = useCallback(
     (event: LoadCreatedEvent) => {
       // Add new load to cache
-      const newLoad: Partial<DispatchLoad> = {
+      const _newLoad: Partial<DispatchLoad> = {
         id: event.loadId,
         status: event.status,
         isHotLoad: false,

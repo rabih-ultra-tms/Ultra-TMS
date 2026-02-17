@@ -39,20 +39,6 @@ export type InvoiceStatus =
   | 'OVERDUE'
   | 'VOID';
 
-interface DashboardResponse {
-  data: AccountingDashboardData;
-}
-
-interface InvoicesResponse {
-  data: RecentInvoice[];
-  pagination?: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}
-
 // ===========================
 // Query Keys
 // ===========================

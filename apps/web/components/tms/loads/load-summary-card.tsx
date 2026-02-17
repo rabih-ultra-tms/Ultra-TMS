@@ -3,9 +3,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Load } from "@/types/loads";
 import { Separator } from "@/components/ui/separator";
-import { MapPin, Calendar, Truck, Scale, Box, Info } from "lucide-react";
+import { Calendar, Truck, Scale, Box, Info } from "lucide-react";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
 
 interface LoadSummaryCardProps {
     load: Load;

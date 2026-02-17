@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LoadStatus } from "@/types/loads";
-import { Search, Plus, X, ListFilter, LayoutGrid, Map as MapIcon, RotateCcw } from "lucide-react";
+import { Search, Plus, ListFilter, LayoutGrid, Map as MapIcon, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";

@@ -86,6 +86,7 @@ export default function QuotesPage() {
   const convertMutation = useConvertQuote();
 
   const quotes = data?.data ?? [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const total = (data as any)?.pagination?.total ?? (data as any)?.total ?? quotes.length;
 
   const selectedCount = Object.keys(rowSelection).length;

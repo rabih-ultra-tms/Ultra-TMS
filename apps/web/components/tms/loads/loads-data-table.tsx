@@ -22,9 +22,7 @@ import { useState } from "react";
 import {
     ArrowUpDown,
     MoreHorizontal,
-    LayoutList,
     Truck,
-    Box,
     Snowflake,
     Container,
     Eye,
@@ -37,7 +35,6 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
 
 interface LoadsDataTableProps {
     data: Load[];
@@ -49,9 +46,9 @@ interface LoadsDataTableProps {
 
 export function LoadsDataTable({
     data,
-    isLoading,
+    isLoading: _isLoading,
     onRowClick,
-    onSelectionChange,
+    onSelectionChange: _onSelectionChange,
     groupBy
 }: LoadsDataTableProps) {
     const [sorting, setSorting] = useState<SortingState>([]);

@@ -1,7 +1,5 @@
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import type { OrderStatus } from '@/types/orders';
-import type { LoadPostStatus } from '@/types/load-board';
 
 const ORDER_STATUS_STYLES: Record<string, string> = {
     PENDING: 'bg-gray-50 text-gray-700 border-gray-200',

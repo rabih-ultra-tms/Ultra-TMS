@@ -26,8 +26,15 @@ import {
 import { SearchableSelect } from "@/components/ui/searchable-select";
 
 import { useCompanies } from "@/lib/hooks/crm/use-companies";
+import type { Customer } from "@/lib/types/crm";
 
 import { PRIORITIES, type OrderFormValues } from "./order-form-schema";
+
+/** Extended Customer with optional fields that may come from the API response */
+interface CompanyRecord extends Customer {
+  companyName?: string;
+  currentBalance?: number;
+}
 
 const PRIORITY_LABELS: Record<string, string> = {
   LOW: "Low",
@@ -48,9 +55,9 @@ export function OrderCustomerStep({ form, isCustomerLocked = false }: OrderCusto
 
   const customerOptions = useMemo(() => {
     const companies = companiesData?.data || [];
-    return companies.map((c: any) => ({
+    return companies.map((c: CompanyRecord) => ({
       value: c.id,
-      label: c.name || c.companyName || c.legalName || "Unknown",
+      label: c.name || c.legalName || "Unknown",
       description: [c.address?.city, c.address?.state].filter(Boolean).join(", ") || undefined,
     }));
   }, [companiesData]);
@@ -58,14 +65,13 @@ export function OrderCustomerStep({ form, isCustomerLocked = false }: OrderCusto
   const selectedCustomerId = form.watch("customerId");
   const selectedCustomer = useMemo(() => {
     const companies = companiesData?.data || [];
-    return companies.find((c: any) => c.id === selectedCustomerId);
-  }, [companiesData, selectedCustomerId]) as any;
+    return companies.find((c: CompanyRecord) => c.id === selectedCustomerId);
+  }, [companiesData, selectedCustomerId]) as CompanyRecord | undefined;
 
   // Credit status warning
   const creditBlocked =
-    selectedCustomer?.status === "PENDING" ||
-    selectedCustomer?.status === "HOLD" ||
-    selectedCustomer?.status === "DENIED";
+    selectedCustomer?.status === "SUSPENDED" ||
+    selectedCustomer?.status === "INACTIVE";
 
   const creditWarning =
     selectedCustomer?.creditLimit &&
@@ -95,8 +101,8 @@ export function OrderCustomerStep({ form, isCustomerLocked = false }: OrderCusto
                     onChange={(value) => {
                       field.onChange(value);
                       const customer = (companiesData?.data || []).find(
-                        (c: any) => c.id === value
-                      ) as any;
+                        (c: CompanyRecord) => c.id === value
+                      ) as CompanyRecord | undefined;
                       if (customer) {
                         form.setValue(
                           "customerName",
@@ -185,7 +191,7 @@ export function OrderCustomerStep({ form, isCustomerLocked = false }: OrderCusto
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
                 This customer is at or over their credit limit ($
-                {selectedCustomer.creditLimit.toLocaleString()}). The order
+                {selectedCustomer?.creditLimit?.toLocaleString()}). The order
                 can be saved as draft but may require approval to confirm.
               </AlertDescription>
             </Alert>

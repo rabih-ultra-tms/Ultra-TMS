@@ -144,8 +144,8 @@ export function useCreateLoad() {
             });
             router.push(`/operations/loads/${load.id}`);
         },
-        onError: (error: any) => {
-            const errorMessage = error?.response?.data?.message || error?.message || 'Failed to create load';
+        onError: (error: Error) => {
+            const errorMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || error?.message || 'Failed to create load';
             toast.error('Error creating load', {
                 description: errorMessage,
             });

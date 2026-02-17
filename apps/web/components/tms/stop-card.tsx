@@ -2,7 +2,7 @@ import { StatusBadge } from "@/components/tms/primitives/status-badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
-import { MapPin, Calendar, Clock, Navigation } from "lucide-react"
+import { MapPin, Calendar } from "lucide-react"
 
 export type StopType = "PICKUP" | "DELIVERY" | "STOP"
 export type StopStatus = "PENDING" | "ARRIVED" | "IN_PROGRESS" | "COMPLETED" | "SKIPPED"
@@ -106,7 +106,7 @@ export function StopCard({ stop, compact = false, className, onClick }: StopCard
 
                     {!compact && stop.instructions && (
                         <div className="mt-1 pt-2 border-t text-xs italic">
-                            "{stop.instructions}"
+                            &quot;{stop.instructions}&quot;
                         </div>
                     )}
                 </div>

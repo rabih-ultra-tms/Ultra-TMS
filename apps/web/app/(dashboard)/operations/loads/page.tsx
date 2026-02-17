@@ -10,14 +10,13 @@ import { useState } from "react";
 import { Load, LoadStatus } from "@/types/loads";
 import { Button } from "@/components/ui/button";
 import { Settings, Plus } from "lucide-react";
-import { PaginationState, VisibilityState } from "@tanstack/react-table";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { VisibilityState } from "@tanstack/react-table";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function LoadsListPage() {
     const searchParams = useSearchParams();
     const router = useRouter();
-    const pathname = usePathname();
 
     // -- State --
     const [selectedLoad, setSelectedLoad] = useState<Load | null>(null);

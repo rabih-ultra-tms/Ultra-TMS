@@ -1,19 +1,17 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowLeft, Save, Send, Loader2, ChevronRight } from "lucide-react";
+import { ArrowLeft, Save, Send, Loader2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import {
   Select,
@@ -45,7 +43,6 @@ import type {
   CalculateRateResponse,
 } from "@/types/quotes";
 import {
-  EQUIPMENT_TYPE_FULL_LABELS,
   SERVICE_TYPE_LABELS,
 } from "@/types/quotes";
 
@@ -191,7 +188,7 @@ export function QuoteFormV2({ initialData, quoteId }: QuoteFormV2Props) {
   const [rateData, setRateData] = useState<CalculateRateResponse | null>(null);
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [showSendDialog, setShowSendDialog] = useState(false);
-  const [customerSearch, setCustomerSearch] = useState("");
+  const [customerSearch, _setCustomerSearch] = useState("");
   const debouncedSearch = useDebounce(customerSearch, 300);
 
   const { data: companiesData } = useCompanies({
@@ -207,7 +204,7 @@ export function QuoteFormV2({ initialData, quoteId }: QuoteFormV2Props) {
     mode: "onChange",
   });
 
-  const { isDirty, isSubmitting } = form.formState;
+  const { isDirty, isSubmitting: _isSubmitting } = form.formState;
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
   // Warn on browser close if dirty
