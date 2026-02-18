@@ -273,7 +273,7 @@
 | COM-004 | Commission Transactions | DONE | Claude Code | M (4h) ⬆️ | Feb 17 |
 | COM-005 | Payout Processing | DONE | Claude Code | M (5h) ⬆️ | Feb 17 |
 | COM-006 | Commission Reports | DONE | Claude Code | M (3h) ⬆️ | Feb 17 |
-| INTEG-001 | FMCSA Integration | NOT STARTED | — | M (6h) ⬆️ | — |
+| INTEG-001 | FMCSA Integration | DONE | Claude Code | M (6h) ⬆️ | Feb 17 |
 | **DOC-003** | **Screen-to-API Contract Registry** | NOT STARTED | — | L (6-8h) | — |
 | RELEASE-001 | Pre-Release + Go-Live checklist | NOT STARTED | — | L (8h) ⬆️ | — |
 | **BUG-BUFFER** | **Bug Fix / Iteration Buffer** (distributed) | RESERVED | — | XL (42-66h) | — |

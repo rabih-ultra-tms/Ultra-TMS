@@ -10,6 +10,7 @@ import {
 import {
   Building2,
   Shield,
+  ShieldCheck,
   FileText,
   Users,
   Pencil,
@@ -21,6 +22,7 @@ import { CarrierInsuranceSection } from "@/components/carriers/carrier-insurance
 import { CarrierDocumentsSection } from "@/components/carriers/carrier-documents-section";
 import { CarrierDriversSection } from "@/components/carriers/carrier-drivers-section";
 import { StatusBadge } from "@/components/tms/primitives/status-badge";
+import { CsaScoresDisplay } from "@/components/carriers/csa-scores-display";
 import type { StatusColorToken, Intent } from "@/lib/design-tokens";
 
 const STATUS_CONFIG: Record<string, { status?: StatusColorToken; intent?: Intent; label: string }> = {
@@ -76,6 +78,12 @@ export default function CarrierDetailPage({
           drivers={Array.isArray(drivers) ? drivers : []}
         />
       ),
+    },
+    {
+      value: "compliance",
+      label: "Compliance",
+      icon: ShieldCheck,
+      content: <CsaScoresDisplay carrierId={id} />,
     },
   ] : [];
 

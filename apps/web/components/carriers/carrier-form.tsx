@@ -18,6 +18,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { FmcsaLookup } from "@/components/carriers/fmcsa-lookup";
 
 
 interface CarrierFormProps {
@@ -65,6 +66,20 @@ export function CarrierForm({
         >
             {(form) => (
                 <div className="grid gap-6">
+                    {/* FMCSA Verification — auto-fill form fields from lookup */}
+                    <FmcsaLookup
+                        onAutoFill={(data) => {
+                            if (data.companyName) form.setValue("companyName", data.companyName, { shouldDirty: true });
+                            if (data.mcNumber) form.setValue("mcNumber", data.mcNumber, { shouldDirty: true });
+                            if (data.dotNumber) form.setValue("dotNumber", data.dotNumber, { shouldDirty: true });
+                            if (data.address) form.setValue("address", data.address, { shouldDirty: true });
+                            if (data.city) form.setValue("city", data.city, { shouldDirty: true });
+                            if (data.state) form.setValue("state", data.state, { shouldDirty: true });
+                            if (data.zip) form.setValue("zip", data.zip, { shouldDirty: true });
+                            if (data.phone) form.setValue("phone", data.phone, { shouldDirty: true });
+                        }}
+                    />
+
                     <FormSection title="Company Information" description="Basic identification details.">
                         <div className="grid gap-4 sm:grid-cols-2">
                             <FormField
