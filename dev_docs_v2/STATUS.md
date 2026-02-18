@@ -270,9 +270,9 @@
 | COM-001 | Commission Dashboard | DONE | Claude Code | M (4h) ⬆️ | Feb 17 |
 | COM-002 | Sales Reps list + detail | DONE | Claude Code | M (5h) ⬆️ | Feb 17 |
 | COM-003 | Commission Plans (CRUD + tier editor) | DONE | Claude Code | L (8h) ⬆️ | Feb 17 |
-| COM-004 | Commission Transactions | NOT STARTED | — | M (4h) ⬆️ | — |
-| COM-005 | Payout Processing | NOT STARTED | — | M (5h) ⬆️ | — |
-| COM-006 | Commission Reports | NOT STARTED | — | M (3h) ⬆️ | — |
+| COM-004 | Commission Transactions | DONE | Claude Code | M (4h) ⬆️ | Feb 17 |
+| COM-005 | Payout Processing | DONE | Claude Code | M (5h) ⬆️ | Feb 17 |
+| COM-006 | Commission Reports | DONE | Claude Code | M (3h) ⬆️ | Feb 17 |
 | INTEG-001 | FMCSA Integration | NOT STARTED | — | M (6h) ⬆️ | — |
 | **DOC-003** | **Screen-to-API Contract Registry** | NOT STARTED | — | L (6-8h) | — |
 | RELEASE-001 | Pre-Release + Go-Live checklist | NOT STARTED | — | L (8h) ⬆️ | — |
