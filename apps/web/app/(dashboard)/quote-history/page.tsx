@@ -41,6 +41,7 @@ import {
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/shared/confirm-dialog'
+import { useDebounce } from '@/lib/hooks'
 import {
   Plus,
   Search,
@@ -91,6 +92,7 @@ export default function QuoteHistoryPage() {
   const [pickupStateFilter, setPickupStateFilter] = useState<string>('')
   const [dropoffStateFilter, setDropoffStateFilter] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState('')
+  const debouncedSearch = useDebounce(searchQuery, 300)
   const [page, setPage] = useState(1)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const pageSize = 25
@@ -100,7 +102,7 @@ export default function QuoteHistoryPage() {
   const { data, isLoading, error } = useLoadPlannerQuotes({
     page: Math.max(1, page),
     limit: pageSize,
-    ...(searchQuery ? { search: searchQuery } : {}),
+    ...(debouncedSearch ? { search: debouncedSearch } : {}),
     ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
     ...(pickupStateFilter ? { pickupState: pickupStateFilter } : {}),
     ...(dropoffStateFilter ? { dropoffState: dropoffStateFilter } : {}),

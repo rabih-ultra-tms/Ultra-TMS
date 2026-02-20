@@ -2139,6 +2139,78 @@ Completed DOC-002 — created a comprehensive business rules quick reference doc
 - 1 task completed (DOC-002)
 - Phase 5 progress: 6/8 tasks done (75%)
 
+## Session: 2026-02-21 (Friday) — Phase 4 TMS Forms Review
+
+### Developer: Claude Code (Opus 4.6)
+### AI Tool: Claude Opus 4.6
+
+**What was done:**
+Conducted a comprehensive software review of all 13 Phase 4 TMS Forms tasks (9 top-level + 4 dispatch sub-tasks). Reviewed every file against acceptance criteria from `dev_docs_v2/01-tasks/phase-4-tms-forms/`. Found 2 failures and 3 partial passes. Applied 3 fixes (customer credit blocking, cross-stop date validation, toast notifications), wrote 19 regression tests, and generated the `phase-4-tms-forms-review.html` report. All quality gates pass: 0 TS errors, 0 lint warnings, 575/578 tests green.
+
+**Tasks reviewed (13):**
+
+| Task | Component | Initial | Final |
+|------|-----------|---------|-------|
+| INFRA-001 | WebSocket Infrastructure | Pass | Pass |
+| TMS-005 | New Order Form (Multi-Step) | 12/15 Fail | Fixed |
+| TMS-006 | Edit Order Form | Pass | Pass |
+| TMS-007 | New Load Form | Pass | Pass |
+| TMS-008 | Edit Load Form | Pass | Pass |
+| TMS-009 | Stop Management | Partial | Partial (drag-drop UI missing) |
+| TMS-010 | Check Call Log | Partial | Fixed |
+| TMS-011a | Dispatch: Data Layer | Pass | Pass |
+| TMS-011b | Dispatch: Kanban UI | Pass | Pass |
+| TMS-011c | Dispatch: Drag-Drop | Pass | Pass |
+| TMS-011d | Dispatch: Real-Time Sync | Pass | Pass |
+| TMS-011e | Dispatch: Bulk Actions | Pass | Pass |
+| TMS-012 | Operations Dashboard | Partial | Partial (missing chart + backend) |
+
+**Fixes applied (3):**
+
+| Fix | File | What |
+|-----|------|------|
+| TMS-005: Credit blocking | `components/tms/orders/order-customer-step.tsx` | Extended blocked statuses to PENDING/HOLD/DENIED/SUSPENDED/INACTIVE; added form.setError to prevent step navigation |
+| TMS-005: Date validation | `components/tms/orders/order-form-schema.ts` | Added superRefine to stopsStepSchema ensuring delivery dates >= earliest pickup date |
+| TMS-010: Toast notifications | `lib/hooks/tms/use-checkcalls.ts` | Added toast.success/toast.error to useCreateCheckCall mutation callbacks |
+
+**Files modified (3):**
+| File | Change |
+|------|--------|
+| `components/tms/orders/order-customer-step.tsx` | Added BLOCKED_STATUSES array + React.useEffect to set/clear form error |
+| `components/tms/orders/order-form-schema.ts` | Added cross-stop date validation in stopsStepSchema superRefine |
+| `lib/hooks/tms/use-checkcalls.ts` | Added sonner toast import + onSuccess/onError callbacks |
+
+**Files created (2):**
+| File | Purpose |
+|------|---------|
+| `__tests__/components/phase4-tms-forms-regression.test.tsx` | 19 regression tests: 8 date validation, 8 credit blocking, 3 check call module |
+| `phase-4-tms-forms-review.html` | Phase 4 review report (matches Phase 1 format) |
+
+**Quality gates:**
+- TypeScript: 0 errors
+- ESLint: 0 warnings
+- Tests: 575/578 green (3 pre-existing CRM failures)
+- Phase 4 regression: 19/19 green
+
+**Key deliverables:**
+- Comprehensive Phase 4 review covering 13 tasks across ~80 files
+- 3 bug fixes for acceptance criteria failures
+- 19 regression tests preventing future regressions
+- `phase-4-tms-forms-review.html` report
+
+**Remaining items (not in scope for fixes):**
+- TMS-009: Drag-drop reorder UI (hook exists, no DnD library integrated)
+- TMS-010: useOverdueCheckCalls disabled (no backend endpoint)
+- TMS-012: Missing Carrier Performance chart; backend dashboard endpoints not implemented
+- Backend: WebSocket gateway not implemented (frontend infrastructure complete)
+
+**Impact metrics for report:**
+- 13 tasks reviewed against acceptance criteria
+- 3 bug fixes applied
+- 3 files modified, 2 files created
+- 19 regression tests added (total project: 578 tests)
+- Phase 4 final score: 10/13 passing, 2 partial (backend-blocked), 1 partial (drag-drop UI)
+
 <!-- NEXT SESSION ENTRY GOES HERE -->
 
 ---

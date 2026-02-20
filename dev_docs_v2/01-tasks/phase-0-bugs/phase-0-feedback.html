@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phase 0 Bug Review Feedback</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8fafc; color: #1e293b; padding: 2rem; line-height: 1.6; }
+  .container { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+  .subtitle { color: #64748b; font-size: 0.875rem; margin-bottom: 2rem; }
+  .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.25rem; margin-bottom: 1rem; }
+  .card h2 { font-size: 1rem; margin-bottom: 0.75rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+  th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid #f1f5f9; }
+  th { color: #64748b; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .pass { color: #16a34a; font-weight: 600; }
+  .fixed { color: #2563eb; font-weight: 600; }
+  .stat { display: inline-block; background: #f1f5f9; border-radius: 6px; padding: 0.5rem 1rem; margin-right: 0.5rem; margin-bottom: 0.5rem; font-size: 0.8125rem; }
+  .stat strong { display: block; font-size: 1.25rem; color: #0f172a; }
+  code { background: #f1f5f9; padding: 0.125rem 0.375rem; border-radius: 4px; font-size: 0.8125rem; }
+  .section-label { font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 0.5rem; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>Phase 0 &mdash; Bug Review Feedback</h1>
+<p class="subtitle">Ultra-TMS &middot; Review Date: 2026-02-20</p>
+
+<div style="margin-bottom: 1.5rem;">
+  <div class="stat"><strong>10</strong> Bugs reviewed</div>
+  <div class="stat"><strong>8</strong> Passed on first check</div>
+  <div class="stat"><strong>2</strong> Required fixes</div>
+  <div class="stat"><strong>110</strong> Tests &mdash; all green</div>
+</div>
+
+<!-- Verification Results -->
+<div class="card">
+  <h2>Verification Results</h2>
+  <table>
+    <tr><th>Bug</th><th>Description</th><th>Initial Status</th><th>Final</th></tr>
+    <tr><td>BUG-001</td><td>Carrier detail 404</td><td class="pass">Pass</td><td class="pass">Pass</td></tr>
+    <tr><td>BUG-002</td><td>Load history detail 404</td><td class="pass">Pass</td><td class="pass">Pass</td></tr>
+    <tr><td>BUG-003</td><td>Sidebar 404 links</td><td class="pass">Pass</td><td class="pass">Pass</td></tr>
+    <tr><td>BUG-004</td><td>Security console logs</td><td class="pass">Pass</td><td class="pass">Pass</td></tr>
+    <tr><td>BUG-005</td><td>localStorage tokens</td><td class="pass">Pass</td><td class="pass">Pass</td></tr>
+    <tr><td>BUG-006</td><td>window.confirm() &times;7</td><td style="color:#dc2626;font-weight:600">Fail</td><td class="fixed">Fixed</td></tr>
+    <tr><td>BUG-007</td><td>Search debounce &times;3</td><td style="color:#dc2626;font-weight:600">Fail</td><td class="fixed">Fixed</td></tr>
+    <tr><td>BUG-008</td><td>Dashboard zeros</td><td class="pass">Pass</td><td class="pass">Pass</td></tr>
+    <tr><td>BUG-009</td><td>CRM delete buttons</td><td class="pass">Pass</td><td class="pass">Pass</td></tr>
+    <tr><td>BUG-010</td><td>CRM missing features</td><td class="pass">Pass</td><td class="pass">Pass</td></tr>
+  </table>
+</div>
+
+<!-- Fixes Applied -->
+<div class="card">
+  <h2>Fixes Applied</h2>
+  <p class="section-label">BUG-006 &mdash; truck-types still used bare <code>confirm()</code></p>
+  <p style="font-size:0.8125rem;margin-bottom:1rem;">
+    Replaced <code>window.confirm()</code> in <code>truck-types/page.tsx</code> with <code>ConfirmDialog</code> component, added <code>deleteId</code> state management, and wired <code>onConfirm</code>/<code>onCancel</code> callbacks.
+  </p>
+  <p class="section-label">BUG-007 &mdash; load-history &amp; quote-history missing debounce</p>
+  <p style="font-size:0.8125rem;">
+    Added <code>useDebounce</code> hook (300ms) in <code>load-history/page.tsx</code> and <code>quote-history/page.tsx</code>. API queries now use <code>debouncedSearch</code> instead of raw <code>searchQuery</code>.
+  </p>
+</div>
+
+<!-- Tests Created -->
+<div class="card">
+  <h2>Tests Created</h2>
+  <table>
+    <tr><th>File</th><th>Tests</th><th>Approach</th></tr>
+    <tr><td><code>bug-002-load-history-detail.test.tsx</code></td><td>11</td><td>Component render &mdash; data, loading, error, not-found states</td></tr>
+    <tr><td><code>bug-003-sidebar-navigation.test.ts</code></td><td>11</td><td>Static analysis &mdash; remapped routes, no broken hrefs</td></tr>
+    <tr><td><code>bug-004-security-console-logs.test.ts</code></td><td>6</td><td>Static analysis &mdash; no console.log with sensitive data</td></tr>
+    <tr><td><code>bug-005-localstorage-tokens.test.ts</code></td><td>9</td><td>Static analysis &mdash; no localStorage in auth client</td></tr>
+    <tr><td><code>bug-006-window-confirm.test.ts</code></td><td>11</td><td>Static analysis &mdash; no bare confirm() in 4 files</td></tr>
+    <tr><td><code>bug-007-search-debounce.test.ts</code></td><td>10</td><td>Static analysis &mdash; useDebounce import + usage in 3 pages</td></tr>
+    <tr><td><code>bug-009-crm-delete-buttons.test.tsx</code></td><td>8</td><td>Component render &mdash; delete buttons, ConfirmDialog, callbacks</td></tr>
+    <tr><td><code>bug-010-crm-missing-features.test.ts</code></td><td>14</td><td>Static analysis &mdash; owner filter, pipeline dialog, convert button</td></tr>
+  </table>
+  <p style="font-size:0.75rem;color:#64748b;margin-top:0.75rem;">
+    Pre-existing tests for BUG-001 (14 tests) and BUG-008 (16 tests) were verified and still pass.
+    All tests located in <code>apps/web/__tests__/bugs/</code>.
+  </p>
+</div>
+
+<!-- Note -->
+<div class="card" style="background:#fffbeb;border-color:#fde68a;">
+  <h2 style="font-size:0.875rem;">Note</h2>
+  <p style="font-size:0.8125rem;">
+    One pre-existing issue found outside bug scope: <code>ExtractedItemsList.tsx:88</code> uses <code>localStorage.getItem('token')</code>. This was not part of BUG-005 scope but should be addressed separately.
+  </p>
+</div>
+
+</div>
+</body>
+</html>

@@ -6,6 +6,7 @@ import { OrderDetailOverview } from "@/components/tms/orders/order-detail-overvi
 import { OrderStopsTab } from "@/components/tms/orders/order-stops-tab";
 import { OrderLoadsTab } from "@/components/tms/orders/order-loads-tab";
 import { OrderItemsTab } from "@/components/tms/orders/order-items-tab";
+import { OrderTimelineTab } from "@/components/tms/orders/order-timeline-tab";
 import {
     LayoutDashboard,
     MapPin,
@@ -85,7 +86,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
             value: "history",
             label: "Timeline",
             icon: History,
-            content: <div className="p-8 text-center text-muted-foreground">Order timeline coming soon in Phase 3.</div>
+            content: order ? <OrderTimelineTab orderId={order.id} /> : null
         },
     ];
 

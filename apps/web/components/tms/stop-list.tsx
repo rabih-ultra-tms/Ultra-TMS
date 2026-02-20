@@ -1,6 +1,14 @@
 import { cn } from "@/lib/utils"
-import { StopCard, StopData } from "./stop-card"
+import { StopCard, StopData, StopType } from "./stop-card"
+import { getStatusClasses, type StatusColorToken } from "@/lib/design-tokens"
 import { Check } from "lucide-react"
+
+/** Map stop types to design token status colors */
+const STOP_TYPE_TOKEN: Record<StopType, StatusColorToken> = {
+    PICKUP: "delivered",    // green family
+    DELIVERY: "dispatched", // blue family
+    STOP: "unassigned",     // gray family
+}
 
 interface StopListProps {
     stops: StopData[]
@@ -14,18 +22,13 @@ export function StopList({ stops, compact = false, className, onStopClick }: Sto
         <div className={cn("space-y-0", className)}>
             {stops.map((stop, index) => {
                 const isLast = index === stops.length - 1
-                const isPickup = stop.type === "PICKUP"
-                const isDelivery = stop.type === "DELIVERY"
                 const isCompleted = stop.status === "COMPLETED"
+                const typeClasses = getStatusClasses(STOP_TYPE_TOKEN[stop.type])
 
-                // Determine dot color
+                // Determine dot color using design tokens
                 const dotColor = isCompleted
                     ? "bg-primary border-primary text-primary-foreground"
-                    : isPickup
-                        ? "bg-background border-green-500 text-green-600"
-                        : isDelivery
-                            ? "bg-background border-blue-500 text-blue-600"
-                            : "bg-background border-muted-foreground text-muted-foreground"
+                    : `bg-background ${typeClasses.border} ${typeClasses.text}`
 
                 return (
                     <div key={stop.id} className="relative pl-10 pb-6 last:pb-0 group">

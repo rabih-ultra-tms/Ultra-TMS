@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { apiClient } from '@/lib/api-client';
 
 export interface CheckCall {
@@ -83,6 +84,10 @@ export function useCreateCheckCall() {
       queryClient.invalidateQueries({ queryKey: ['checkcalls', variables.loadId] });
       queryClient.invalidateQueries({ queryKey: ['check-calls', variables.loadId] });
       queryClient.invalidateQueries({ queryKey: ['load', variables.loadId] });
+      toast.success('Check call logged successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to log check call');
     },
   });
 }

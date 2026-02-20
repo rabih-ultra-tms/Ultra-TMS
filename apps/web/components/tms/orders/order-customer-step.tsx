@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { useMemo } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { AlertCircle, Building2 } from "lucide-react";
@@ -68,10 +69,21 @@ export function OrderCustomerStep({ form, isCustomerLocked = false }: OrderCusto
     return companies.find((c: CompanyRecord) => c.id === selectedCustomerId);
   }, [companiesData, selectedCustomerId]) as CompanyRecord | undefined;
 
-  // Credit status warning
-  const creditBlocked =
-    selectedCustomer?.status === "SUSPENDED" ||
-    selectedCustomer?.status === "INACTIVE";
+  // Credit status blocking — PENDING/HOLD/DENIED/SUSPENDED/INACTIVE cannot place orders
+  const BLOCKED_STATUSES = ["PENDING", "HOLD", "DENIED", "SUSPENDED", "INACTIVE"];
+  const creditBlocked = !!selectedCustomer?.status && BLOCKED_STATUSES.includes(selectedCustomer.status);
+
+  // Set form error when blocked customer is selected, clear when valid
+  React.useEffect(() => {
+    if (creditBlocked) {
+      form.setError("customerId", {
+        type: "manual",
+        message: `Customer is on ${selectedCustomer?.status} status and cannot place orders`,
+      });
+    } else if (selectedCustomerId && form.formState.errors.customerId?.type === "manual") {
+      form.clearErrors("customerId");
+    }
+  }, [creditBlocked, selectedCustomer?.status, selectedCustomerId, form]);
 
   const creditWarning =
     selectedCustomer?.creditLimit &&

@@ -65,6 +65,7 @@ import {
   SlidersHorizontal,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { ConfirmDialog } from '@/components/shared/confirm-dialog'
 import {
   TRUCK_CATEGORIES,
   TRUCK_CATEGORY_LABELS,
@@ -138,6 +139,7 @@ export default function TruckTypesPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingTruckId, setEditingTruckId] = useState<string | null>(null)
   const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
 
   // Range filters
   const [minDeckLength, setMinDeckLength] = useState<number | ''>('')
@@ -220,13 +222,19 @@ export default function TruckTypesPage() {
   }
 
   const handleDelete = (id: string) => {
-    if (!confirm('Deactivate this truck type?')) return
-    deleteTruckType.mutate(id, {
+    setDeleteId(id)
+  }
+
+  const handleConfirmDelete = () => {
+    if (!deleteId) return
+    deleteTruckType.mutate(deleteId, {
       onSuccess: () => {
         toast.success('Truck type deactivated')
+        setDeleteId(null)
       },
       onError: (error: Error) => {
         toast.error(error.message || 'Failed to deactivate truck type')
+        setDeleteId(null)
       },
     })
   }
@@ -1117,6 +1125,16 @@ export default function TruckTypesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <ConfirmDialog
+        open={!!deleteId}
+        title="Deactivate truck type"
+        description="Are you sure you want to deactivate this truck type? You can restore it later."
+        confirmLabel="Deactivate"
+        variant="warning"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteId(null)}
+        isLoading={deleteTruckType.isPending}
+      />
     </div>
   )
 }

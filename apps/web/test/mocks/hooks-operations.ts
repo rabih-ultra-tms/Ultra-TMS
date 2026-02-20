@@ -34,6 +34,7 @@ interface MockState {
   deleteCarrier: Record<string, unknown>;
   loadHistoryStats: Record<string, unknown>;
   loadPlannerQuoteStats: Record<string, unknown>;
+  loadHistoryItem: Record<string, unknown>;
 }
 
 function getShared(): MockState {
@@ -82,6 +83,12 @@ function getShared(): MockState {
         isLoading: true,
         isError: false,
       },
+      loadHistoryItem: {
+        data: undefined,
+        isLoading: true,
+        error: null,
+        refetch: jest.fn(),
+      },
     };
   }
   return (globalThis as any)[KEY];
@@ -102,6 +109,7 @@ export const updateCarrierReturn = shared.updateCarrier;
 export const deleteCarrierReturn = shared.deleteCarrier;
 export const loadHistoryStatsReturn = shared.loadHistoryStats;
 export const loadPlannerQuoteStatsReturn = shared.loadPlannerQuoteStats;
+export const loadHistoryItemReturn = shared.loadHistoryItem;
 
 export function useCarriers() {
   return shared.carriers;
@@ -148,6 +156,9 @@ export function useLoadPlannerQuote() {
 }
 export function useLoadHistory() {
   return { data: undefined, isLoading: true };
+}
+export function useLoadHistoryItem() {
+  return shared.loadHistoryItem;
 }
 export function useTruckTypes() {
   return { data: undefined, isLoading: true };

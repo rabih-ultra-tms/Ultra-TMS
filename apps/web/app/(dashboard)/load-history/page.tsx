@@ -80,12 +80,14 @@ import {
   useCreateLoadHistory,
   useDeleteLoadHistory,
 } from '@/lib/hooks/operations'
+import { useDebounce } from '@/lib/hooks'
 
 export default function LoadHistoryPage() {
   const [statusFilter, setStatusFilter] = useState<LoadHistoryStatus | 'all'>('all')
   const [originStateFilter, setOriginStateFilter] = useState<string>('')
   const [destinationStateFilter, setDestinationStateFilter] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState('')
+  const debouncedSearch = useDebounce(searchQuery, 300)
   const [page, setPage] = useState(1)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [showNewLoadDialog, setShowNewLoadDialog] = useState(false)
@@ -116,7 +118,7 @@ export default function LoadHistoryPage() {
   const { data: listData, isLoading, error } = useLoadHistory({
     page,
     limit: pageSize,
-    search: searchQuery || undefined,
+    search: debouncedSearch || undefined,
     status: statusFilter === 'all' ? undefined : statusFilter,
     originState: originStateFilter || undefined,
     destinationState: destinationStateFilter || undefined,

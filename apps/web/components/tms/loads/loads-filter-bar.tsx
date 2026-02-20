@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { LoadStatus } from "@/types/loads";
 import { Search, Plus, ListFilter, LayoutGrid, Map as MapIcon, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -23,15 +23,21 @@ export function LoadsFilterBar() {
     const [search, setSearch] = useState(searchParams.get("search") || "");
     const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
-    // Debounce search update
+    // Debounce search update (300ms)
+    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const handleSearch = (term: string) => {
         setSearch(term);
-        // Implement useDebounce or direct timeout here
-        const params = new URLSearchParams(searchParams);
-        if (term) params.set("search", term);
-        else params.delete("search");
-        router.replace(`${pathname}?${params.toString()}`);
-    }
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => {
+            const params = new URLSearchParams(searchParams);
+            if (term) params.set("search", term);
+            else params.delete("search");
+            router.replace(`${pathname}?${params.toString()}`);
+        }, 300);
+    };
+    useEffect(() => {
+        return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+    }, []);
 
     const setFilter = (key: string, value: string | null) => {
         const params = new URLSearchParams(searchParams);

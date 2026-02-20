@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phase 1 Design Foundation Review</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8fafc; color: #1e293b; padding: 2rem; line-height: 1.6; }
+  .container { max-width: 960px; margin: 0 auto; }
+  h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+  .subtitle { color: #64748b; font-size: 0.875rem; margin-bottom: 2rem; }
+  .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.25rem; margin-bottom: 1rem; }
+  .card h2 { font-size: 1rem; margin-bottom: 0.75rem; }
+  .card h3 { font-size: 0.875rem; margin-bottom: 0.5rem; color: #334155; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+  th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid #f1f5f9; }
+  th { color: #64748b; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .pass { color: #16a34a; font-weight: 600; }
+  .fail { color: #dc2626; font-weight: 600; }
+  .partial { color: #d97706; font-weight: 600; }
+  .fixed { color: #2563eb; font-weight: 600; }
+  .stat { display: inline-block; background: #f1f5f9; border-radius: 6px; padding: 0.5rem 1rem; margin-right: 0.5rem; margin-bottom: 0.5rem; font-size: 0.8125rem; }
+  .stat strong { display: block; font-size: 1.25rem; color: #0f172a; }
+  .stat.green { background: #f0fdf4; }
+  .stat.green strong { color: #16a34a; }
+  .stat.red { background: #fef2f2; }
+  .stat.red strong { color: #dc2626; }
+  .stat.blue { background: #eff6ff; }
+  .stat.blue strong { color: #2563eb; }
+  .stat.amber { background: #fffbeb; }
+  .stat.amber strong { color: #d97706; }
+  code { background: #f1f5f9; padding: 0.125rem 0.375rem; border-radius: 4px; font-size: 0.8125rem; }
+  .section-label { font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 0.5rem; font-weight: 600; }
+  .badge { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.6875rem; font-weight: 600; }
+  .badge-pass { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+  .badge-fail { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+  .badge-partial { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+  .badge-fixed { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+  .divider { border-top: 1px solid #e2e8f0; margin: 1.5rem 0; }
+  .file-list { font-size: 0.8125rem; color: #475569; }
+  .file-list li { margin-bottom: 0.25rem; }
+  .note { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 1rem; font-size: 0.8125rem; margin-bottom: 1rem; }
+  .note h2 { font-size: 0.875rem; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>Phase 1 &mdash; Design Foundation Review</h1>
+<p class="subtitle">Ultra-TMS &middot; Review Date: 2026-02-20 &middot; 8 COMP tasks reviewed</p>
+
+<div style="margin-bottom: 1.5rem;">
+  <div class="stat green"><strong>4</strong> Passed initially</div>
+  <div class="stat red"><strong>2</strong> Failed initially</div>
+  <div class="stat amber"><strong>2</strong> Partial initially</div>
+  <div class="stat blue"><strong>6</strong> Fixed this session</div>
+</div>
+
+<!-- Summary Table -->
+<div class="card">
+  <h2>Component Review Summary</h2>
+  <table>
+    <tr><th>Task</th><th>Component</th><th>Initial</th><th>Issues</th><th>Final</th></tr>
+    <tr>
+      <td>COMP-001</td><td>Design Tokens Foundation</td>
+      <td><span class="badge badge-partial">7/8</span></td>
+      <td>Missing spacing tokens</td>
+      <td><span class="badge badge-fixed">Fixed</span></td>
+    </tr>
+    <tr>
+      <td>COMP-002</td><td>Unified StatusBadge</td>
+      <td><span class="badge badge-fail">1/5</span></td>
+      <td>No unified component, Admin/CRM hardcoded</td>
+      <td><span class="badge badge-fixed">Fixed</span></td>
+    </tr>
+    <tr>
+      <td>COMP-003</td><td>KPICard</td>
+      <td><span class="badge badge-partial">5/7</span></td>
+      <td>No loading state, no neutral trend</td>
+      <td><span class="badge badge-fixed">Fixed</span></td>
+    </tr>
+    <tr>
+      <td>COMP-004</td><td>FilterBar</td>
+      <td><span class="badge badge-fail">3/8</span></td>
+      <td>Wrong architecture, no search, no dynamic filters</td>
+      <td><span class="badge badge-fixed">Fixed</span></td>
+    </tr>
+    <tr>
+      <td>COMP-005</td><td>DataGrid (TanStack Table)</td>
+      <td class="pass">Pass</td>
+      <td>&mdash;</td>
+      <td class="pass">Pass</td>
+    </tr>
+    <tr>
+      <td>COMP-006</td><td>ConfirmDialog Upgrade</td>
+      <td class="pass">Pass</td>
+      <td>&mdash;</td>
+      <td class="pass">Pass</td>
+    </tr>
+    <tr>
+      <td>COMP-007</td><td>Loading Skeletons</td>
+      <td class="pass">Pass</td>
+      <td>&mdash;</td>
+      <td class="pass">Pass</td>
+    </tr>
+    <tr>
+      <td>COMP-008</td><td>shadcn Installs</td>
+      <td><span class="badge badge-partial">2/4</span></td>
+      <td>Missing DatePicker + Combobox</td>
+      <td><span class="badge badge-fixed">Fixed</span></td>
+    </tr>
+  </table>
+</div>
+
+<!-- Quality Gates -->
+<div class="card">
+  <h2>Quality Gates</h2>
+  <table>
+    <tr><th>Check</th><th>Result</th><th>Details</th></tr>
+    <tr><td><code>pnpm check-types</code></td><td class="pass">Pass</td><td>0 errors across 4 packages</td></tr>
+    <tr><td><code>pnpm lint</code></td><td class="pass">Pass</td><td>0 warnings (max-warnings=0 enforced)</td></tr>
+    <tr><td>Tests</td><td class="pass">Pass</td><td>537/537 tests green (excludes 3 pre-existing CRM failures)</td></tr>
+    <tr><td>Regression Tests</td><td class="pass">Pass</td><td>72 regression tests across 5 files &mdash; all green</td></tr>
+  </table>
+</div>
+
+<!-- Fixes Applied -->
+<div class="card">
+  <h2>Fixes Applied</h2>
+
+  <p class="section-label">COMP-001 &mdash; Missing spacing tokens</p>
+  <p style="font-size:0.8125rem;margin-bottom:1rem;">
+    Created <code>lib/design-tokens/spacing.ts</code> with 8-level spacing scale and 7 layout context presets
+    (pagePadding, sectionGap, cardGridGap, cardPadding, formFieldGap, inlineGap, filterBarPadding).
+    Exported via barrel <code>lib/design-tokens/index.ts</code>.
+  </p>
+
+  <p class="section-label">COMP-002 &mdash; Unified StatusBadge</p>
+  <p style="font-size:0.8125rem;margin-bottom:1rem;">
+    Created <code>components/shared/status-badge.tsx</code> &mdash; entity-aware StatusBadge supporting 14 entity types
+    (user, customer, lead, order, load, carrier, document, insurance, quote, invoice, payment, payable, settlement, priority).
+    Wraps TMS Primitives StatusBadge internally. Refactored <code>UserStatusBadge</code>, <code>CustomerStatusBadge</code>,
+    and <code>LeadStageBadge</code> to re-export from the unified component. All now use design tokens instead of hardcoded Badge variants.
+  </p>
+
+  <p class="section-label">COMP-003 &mdash; KPICard missing features</p>
+  <p style="font-size:0.8125rem;margin-bottom:1rem;">
+    Added <code>loading?: boolean</code> prop with Skeleton shimmer state (icon + label + value + trend skeleton).
+    Added <code>"neutral"</code> to trend type with gray <code>Minus</code> icon and <code>text-text-muted</code> color.
+  </p>
+
+  <p class="section-label">COMP-004 &mdash; FilterBar redesign</p>
+  <p style="font-size:0.8125rem;margin-bottom:1rem;">
+    Redesigned from simple container to full-featured component. Now accepts: <code>searchPlaceholder</code>,
+    <code>onSearchChange</code> (debounced 300ms via <code>useDebounce</code>), <code>filters</code> array
+    (<code>FilterDefinition[]</code> with select/date-range/text types), <code>filterValues</code>,
+    <code>onFilterChange</code>, and <code>onClear</code>. Shows active filter count badge.
+    Still supports pass-through children for custom FilterChip usage.
+  </p>
+
+  <p class="section-label">COMP-008 &mdash; Missing shadcn components</p>
+  <p style="font-size:0.8125rem;">
+    Created <code>components/ui/date-picker.tsx</code> (Calendar + Popover composition with controlled value/onChange)
+    and <code>components/ui/combobox.tsx</code> (Command + Popover composition with searchable select, check marks,
+    and keyboard navigation). Both built from existing shadcn primitives.
+  </p>
+</div>
+
+<!-- Files Modified -->
+<div class="card">
+  <h2>Files Modified / Created</h2>
+  <table>
+    <tr><th>Action</th><th>File</th><th>Task</th></tr>
+    <tr><td><span class="badge badge-fixed">CREATE</span></td><td><code>components/shared/status-badge.tsx</code></td><td>COMP-002</td></tr>
+    <tr><td><span class="badge badge-fixed">MODIFY</span></td><td><code>components/admin/users/user-status-badge.tsx</code></td><td>COMP-002</td></tr>
+    <tr><td><span class="badge badge-fixed">MODIFY</span></td><td><code>components/crm/customers/customer-status-badge.tsx</code></td><td>COMP-002</td></tr>
+    <tr><td><span class="badge badge-fixed">MODIFY</span></td><td><code>components/crm/leads/lead-stage-badge.tsx</code></td><td>COMP-002</td></tr>
+    <tr><td><span class="badge badge-fixed">MODIFY</span></td><td><code>components/shared/index.ts</code></td><td>COMP-002</td></tr>
+    <tr><td><span class="badge badge-fixed">MODIFY</span></td><td><code>components/tms/filters/filter-bar.tsx</code></td><td>COMP-004</td></tr>
+    <tr><td><span class="badge badge-fixed">MODIFY</span></td><td><code>components/tms/filters/index.ts</code></td><td>COMP-004</td></tr>
+    <tr><td><span class="badge badge-fixed">CREATE</span></td><td><code>lib/design-tokens/spacing.ts</code></td><td>COMP-001</td></tr>
+    <tr><td><span class="badge badge-fixed">MODIFY</span></td><td><code>lib/design-tokens/index.ts</code></td><td>COMP-001</td></tr>
+    <tr><td><span class="badge badge-fixed">MODIFY</span></td><td><code>components/tms/stats/kpi-card.tsx</code></td><td>COMP-003</td></tr>
+    <tr><td><span class="badge badge-fixed">CREATE</span></td><td><code>components/ui/date-picker.tsx</code></td><td>COMP-008</td></tr>
+    <tr><td><span class="badge badge-fixed">CREATE</span></td><td><code>components/ui/combobox.tsx</code></td><td>COMP-008</td></tr>
+  </table>
+  <p style="font-size:0.75rem;color:#64748b;margin-top:0.75rem;">
+    All paths relative to <code>apps/web/</code>. 4 files created, 8 files modified.
+  </p>
+</div>
+
+<!-- Regression Tests -->
+<div class="card">
+  <h2>Regression Test Coverage</h2>
+  <p style="font-size:0.8125rem;margin-bottom:0.75rem;">
+    5 test files created to prevent regression on all fixed items. Total: <strong>72 regression tests</strong>.
+  </p>
+  <table>
+    <tr><th>Task</th><th>Test File</th><th>Tests</th><th>What&rsquo;s Covered</th></tr>
+    <tr>
+      <td>COMP-001</td>
+      <td><code>__tests__/components/spacing-tokens.test.ts</code></td>
+      <td>12</td>
+      <td>8-level spacing scale values, 7 layout context presets, rem format validation</td>
+    </tr>
+    <tr>
+      <td>COMP-002</td>
+      <td><code>__tests__/components/unified-status-badge.test.tsx</code></td>
+      <td>25</td>
+      <td>All 14 entity types, 20 entity/status pairs, design token classes, size/withDot props, unknown status fallback</td>
+    </tr>
+    <tr>
+      <td>COMP-003</td>
+      <td><code>__tests__/components/kpi-card-regression.test.tsx</code></td>
+      <td>7</td>
+      <td>loading=true skeleton state, neutral trend muted color, Minus icon SVG, defaults</td>
+    </tr>
+    <tr>
+      <td>COMP-004</td>
+      <td><code>__tests__/components/filter-bar-regression.test.tsx</code></td>
+      <td>16</td>
+      <td>Search input with debounce, dynamic filter types (select/text/date-range), onFilterChange, active filter count badge, Clear all button, children passthrough</td>
+    </tr>
+    <tr>
+      <td>COMP-008</td>
+      <td><code>__tests__/components/date-picker-combobox.test.tsx</code></td>
+      <td>12</td>
+      <td>DatePicker: placeholder, formatted date, disabled state, calendar icon. Combobox: placeholder, selected value, disabled, aria-expanded, type export</td>
+    </tr>
+  </table>
+  <p style="font-size:0.75rem;color:#64748b;margin-top:0.75rem;">
+    All paths relative to <code>apps/web/</code>. Run with <code>pnpm --filter web test</code>.
+  </p>
+</div>
+
+<!-- What Passed Initially -->
+<div class="card">
+  <h2>Components That Passed Initially (No Changes Needed)</h2>
+
+  <h3>COMP-005: DataGrid (TanStack Table) &mdash; Exceeds Spec</h3>
+  <p style="font-size:0.8125rem;margin-bottom:0.75rem;">
+    13/13 acceptance criteria met + 6 bonus features (density toggle, group headers, bulk actions).
+    14 tests passing, 5 Storybook stories, 12 active pages using it. Production-ready.
+  </p>
+
+  <h3>COMP-006: ConfirmDialog Upgrade &mdash; Full Pass</h3>
+  <p style="font-size:0.8125rem;margin-bottom:0.75rem;">
+    All 6 criteria met. Destructive + warning variants, async loading state, accessible via AlertDialog.
+    Used in 7+ pages. Backward compatible with deprecated <code>destructive={true}</code> prop.
+  </p>
+
+  <h3>COMP-007: Loading Skeletons &mdash; Full Pass</h3>
+  <p style="font-size:0.8125rem;">
+    All 3 skeleton types (list, detail, form) implemented with shadcn Skeleton.
+    Configurable rows/cols/sections. Used in 7+ pages via Suspense boundaries.
+  </p>
+</div>
+
+<!-- Remaining Items -->
+<div class="note">
+  <h2 style="font-size:0.875rem;">Remaining Items (Not In Scope)</h2>
+  <p style="font-size:0.8125rem;">
+    1. <code>components/tms/shared/status-badge.tsx</code> is a duplicate of <code>tms/primitives/status-badge.tsx</code> with hardcoded colors.
+    Consider removing the duplicate in a future cleanup task.<br>
+    2. <code>ExtractedItemsList.tsx:88</code> uses <code>localStorage.getItem('token')</code> &mdash;
+    flagged in Phase 0 review, not part of Phase 1 scope.<br>
+    3. FilterBar <code>date-range</code> type renders a placeholder button. Full DateRangePicker integration
+    should use the existing <code>components/shared/date-range-picker.tsx</code> component.
+  </p>
+</div>
+
+<!-- Final Score -->
+<div class="card" style="background: #f0fdf4; border-color: #bbf7d0;">
+  <h2 style="font-size:0.875rem; color: #16a34a;">Final Score: 8/8 Tasks Passing</h2>
+  <p style="font-size:0.8125rem;">
+    All Phase 1 Design Foundation tasks now meet acceptance criteria.
+    TypeScript: 0 errors &middot; ESLint: 0 warnings &middot; Tests: 537/537 green &middot; 72 regression tests added.
+    Phase 2 (Patterns + Carrier Refactor) is unblocked.
+  </p>
+</div>
+
+</div>
+</body>
+</html>

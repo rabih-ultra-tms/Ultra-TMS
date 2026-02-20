@@ -46,3 +46,13 @@ export {
   LINE_HEIGHT,
   TEXT_PRESETS,
 } from "./typography";
+
+export {
+  SPACING,
+  SPACING_CONTEXTS,
+} from "./spacing";
+
+export type {
+  SpacingToken,
+  SpacingContext,
+} from "./spacing";

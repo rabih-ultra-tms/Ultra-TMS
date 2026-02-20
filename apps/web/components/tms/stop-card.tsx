@@ -1,6 +1,7 @@
 import { StatusBadge } from "@/components/tms/primitives/status-badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+import { getStatusClasses, type StatusColorToken } from "@/lib/design-tokens"
 import { format } from "date-fns"
 import { MapPin, Calendar } from "lucide-react"
 
@@ -33,9 +34,16 @@ interface StopCardProps {
     onClick?: () => void
 }
 
+/** Map stop types to design token status colors */
+const STOP_TYPE_TOKEN: Record<StopType, StatusColorToken> = {
+    PICKUP: "delivered",    // green family
+    DELIVERY: "dispatched", // blue family
+    STOP: "unassigned",     // gray family
+}
+
 export function StopCard({ stop, compact = false, className, onClick }: StopCardProps) {
-    const isPickup = stop.type === "PICKUP"
-    const isDelivery = stop.type === "DELIVERY"
+    const token = STOP_TYPE_TOKEN[stop.type]
+    const typeClasses = getStatusClasses(token)
 
     // Status Badge Logic
     const getStatusProps = (status: StopStatus) => {
@@ -62,7 +70,7 @@ export function StopCard({ stop, compact = false, className, onClick }: StopCard
         <Card
             className={cn(
                 "relative overflow-hidden transition-all hover:shadow-sm border-l-4",
-                isPickup ? "border-l-green-500" : isDelivery ? "border-l-blue-500" : "border-l-gray-400",
+                typeClasses.border,
                 onClick && "cursor-pointer hover:bg-muted/50",
                 className
             )}
@@ -72,8 +80,8 @@ export function StopCard({ stop, compact = false, className, onClick }: StopCard
                 <div className="flex items-start justify-between">
                     <div className="font-semibold flex items-center gap-2">
                         <span className={cn(
-                            "uppercase text-[10px] tracking-wider font-bold px-1.5 py-0.5 rounded-sm bg-muted",
-                            isPickup ? "text-green-700 bg-green-50" : isDelivery ? "text-blue-700 bg-blue-50" : "text-gray-700 bg-gray-50"
+                            "uppercase text-[10px] tracking-wider font-bold px-1.5 py-0.5 rounded-sm",
+                            typeClasses.text, typeClasses.bg
                         )}>
                             {getTypeLabel(stop.type)} {stop.sequence && `#${stop.sequence}`}
                         </span>
@@ -98,7 +106,7 @@ export function StopCard({ stop, compact = false, className, onClick }: StopCard
                             {format(new Date(stop.scheduledTime), "MMM d, yyyy h:mm a")}
                         </span>
                         {stop.actualTime && (
-                            <span className="text-xs text-green-600 font-medium ml-1">
+                            <span className="text-xs text-status-delivered font-medium ml-1">
                                 (Actual: {format(new Date(stop.actualTime), "h:mm a")})
                             </span>
                         )}

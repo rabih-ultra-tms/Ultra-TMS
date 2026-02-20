@@ -299,6 +299,26 @@ export const stopsStepSchema = z
         path: ["stops"],
       });
     }
+
+    // Cross-stop validation: delivery dates must be >= earliest pickup date
+    const pickupDates = data.stops
+      .filter((s: StopFormValues) => s.type === "PICKUP" && s.appointmentDate)
+      .map((s: StopFormValues) => s.appointmentDate);
+    const earliestPickup = pickupDates.length > 0
+      ? pickupDates.sort()[0]
+      : null;
+
+    if (earliestPickup) {
+      data.stops.forEach((s: StopFormValues, i: number) => {
+        if (s.type === "DELIVERY" && s.appointmentDate && s.appointmentDate < earliestPickup) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Delivery date must be on or after the earliest pickup date",
+            path: ["stops", i, "appointmentDate"],
+          });
+        }
+      });
+    }
   });
 
 export const rateStepSchema = z.object(rateStepFields);

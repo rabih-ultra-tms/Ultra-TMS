@@ -6,17 +6,19 @@ import { LoadsFilterBar } from "@/components/tms/loads/loads-filter-bar";
 import { KPIStatCards } from "@/components/tms/loads/kpi-stat-cards";
 import { LoadDrawer } from "@/components/tms/loads/load-drawer";
 import { ColumnSettingsDrawer } from "@/components/tms/loads/column-settings-drawer";
+import { TablePagination } from "@/components/tms/tables/table-pagination";
 import { useState } from "react";
 import { Load, LoadStatus } from "@/types/loads";
 import { Button } from "@/components/ui/button";
 import { Settings, Plus } from "lucide-react";
 import { VisibilityState } from "@tanstack/react-table";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 
 export default function LoadsListPage() {
     const searchParams = useSearchParams();
     const router = useRouter();
+    const pathname = usePathname();
 
     // -- State --
     const [selectedLoad, setSelectedLoad] = useState<Load | null>(null);
@@ -59,6 +61,12 @@ export default function LoadsListPage() {
         router.push(`/operations/loads/${load.id}`);
     };
 
+    const handlePageChange = (pageIndex: number) => {
+        const params = new URLSearchParams(searchParams);
+        params.set("page", (pageIndex + 1).toString());
+        router.replace(`${pathname}?${params.toString()}`);
+    };
+
     return (
         <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-950/20">
             {/* Header Area */}
@@ -92,6 +100,18 @@ export default function LoadsListPage() {
                         isLoading={isLoading}
                         onRowClick={handleRowClick}
                     />
+                    {data && data.total > 0 && (
+                        <TablePagination
+                            pageIndex={page - 1}
+                            pageCount={Math.ceil(data.total / limit)}
+                            totalRows={data.total}
+                            pageSize={limit}
+                            canPreviousPage={page > 1}
+                            canNextPage={page < Math.ceil(data.total / limit)}
+                            onPageChange={handlePageChange}
+                            entityLabel="loads"
+                        />
+                    )}
                 </div>
 
                 {/* Floating Settings Trigger (Bottom Right) */}

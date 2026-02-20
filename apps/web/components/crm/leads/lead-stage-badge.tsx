@@ -1,20 +1,11 @@
-import { Badge } from "@/components/ui/badge";
+import { UnifiedStatusBadge } from "@/components/shared/status-badge";
 import type { LeadStage } from "@/lib/types/crm";
 
 interface LeadStageBadgeProps {
   stage: LeadStage;
+  size?: "sm" | "md" | "lg";
 }
 
-export function LeadStageBadge({ stage }: LeadStageBadgeProps) {
-  const getVariant = () => {
-    if (stage === "WON") return "default";
-    if (stage === "LOST") return "destructive";
-    return "outline";
-  };
-  
-  return (
-    <Badge variant={getVariant()} className="capitalize">
-      {stage}
-    </Badge>
-  );
+export function LeadStageBadge({ stage, size = "sm" }: LeadStageBadgeProps) {
+  return <UnifiedStatusBadge entity="lead" status={stage} size={size} withDot />;
 }

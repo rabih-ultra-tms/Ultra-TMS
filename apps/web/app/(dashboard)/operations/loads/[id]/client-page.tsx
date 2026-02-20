@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useLoad } from "@/lib/hooks/tms/use-loads";
 import { LoadDetailHeader } from "@/components/tms/loads/load-detail-header";
 import { LoadSummaryCard } from "@/components/tms/loads/load-summary-card";
@@ -14,8 +15,28 @@ import { ErrorState } from "@/components/shared/error-state";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Map, List, FileText, Activity, Phone } from "lucide-react";
 
+const VALID_TABS = ["route", "carrier", "documents", "timeline", "check-calls"];
+
 export function LoadDetailClient({ id }: { id: string }) {
     const { data: load, isLoading, error, refetch } = useLoad(id);
+
+    // Persist active tab in URL hash
+    const [activeTab, setActiveTab] = useState("route");
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const hash = window.location.hash.replace("#", "");
+            if (hash && VALID_TABS.includes(hash)) {
+                setActiveTab(hash);
+            }
+        }
+    }, []);
+
+    const handleTabChange = (value: string) => {
+        setActiveTab(value);
+        if (typeof window !== "undefined") {
+            window.location.hash = value;
+        }
+    };
 
     if (isLoading) {
         return <div className="p-6"><DetailPageSkeleton /></div>;
@@ -46,7 +67,7 @@ export function LoadDetailClient({ id }: { id: string }) {
 
                 {/* Center Column: Tabs (50%) */}
                 <div className="xl:col-span-2 space-y-6">
-                    <Tabs defaultValue="route" className="w-full">
+                    <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
                         <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 bg-transparent gap-6">
                             <TabsTrigger value="route" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-2 pb-2">
                                 <Map className="h-4 w-4 mr-2" /> Route & Stops
