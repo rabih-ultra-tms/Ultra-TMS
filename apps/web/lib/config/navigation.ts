@@ -16,6 +16,13 @@ import {
   ToggleRight,
   Package,
   ShoppingCart,
+  MapPin,
+  CreditCard,
+  Receipt,
+  DollarSign,
+  PieChart,
+  UserCheck,
+  Banknote,
 } from "lucide-react";
 import type { NavConfig } from "@/lib/types/navigation";
 
@@ -100,6 +107,11 @@ export const navigationConfig: NavConfig = {
           icon: BarChart3,
         },
         {
+          title: "Tracking Map",
+          href: "/operations/tracking",
+          icon: MapPin,
+        },
+        {
           title: "Truck Types",
           href: "/truck-types",
           icon: Truck,
@@ -119,15 +131,61 @@ export const navigationConfig: NavConfig = {
           title: "Invoices",
           href: "/accounting/invoices",
           icon: FileText,
-          disabled: true,
-          badge: "Soon",
+        },
+        {
+          title: "Payments",
+          href: "/accounting/payments",
+          icon: CreditCard,
+        },
+        {
+          title: "Carrier Payables",
+          href: "/accounting/payables",
+          icon: Receipt,
         },
         {
           title: "Settlements",
           href: "/accounting/settlements",
+          icon: Banknote,
+        },
+        {
+          title: "Aging Reports",
+          href: "/accounting/reports/aging",
           icon: BarChart3,
-          disabled: true,
-          badge: "Soon",
+        },
+      ],
+    },
+    {
+      title: "Commissions",
+      items: [
+        {
+          title: "Commission Dashboard",
+          href: "/commissions",
+          icon: DollarSign,
+        },
+        {
+          title: "Sales Reps",
+          href: "/commissions/reps",
+          icon: UserCheck,
+        },
+        {
+          title: "Plans",
+          href: "/commissions/plans",
+          icon: PieChart,
+        },
+        {
+          title: "Transactions",
+          href: "/commissions/transactions",
+          icon: ListChecks,
+        },
+        {
+          title: "Payouts",
+          href: "/commissions/payouts",
+          icon: Banknote,
+        },
+        {
+          title: "Reports",
+          href: "/commissions/reports",
+          icon: BarChart3,
         },
       ],
     },

@@ -88,7 +88,7 @@ describe("EmailPreviewDialog", () => {
     render(<EmailPreviewDialog {...defaultProps} />);
     await user.click(screen.getByText("Send Email"));
     expect(sendEmailReturn.mutate).toHaveBeenCalledTimes(1);
-    const callArgs = (sendEmailReturn.mutate as jest.Mock).mock.calls[0];
+    const callArgs = (sendEmailReturn.mutate as jest.Mock).mock.calls[0]!;
     expect(callArgs[0]).toMatchObject({
       recipientEmail: "carrier@example.com",
       templateCode: "RATE_CONFIRMATION",

@@ -135,10 +135,10 @@ describe("DataTable", () => {
     );
     const rows = container.querySelectorAll("tbody tr");
     // Row 2 (Beta Load) should have danger-bg class
-    expect(rows[1].className).toContain("danger-bg");
+    expect(rows[1]!.className).toContain("danger-bg");
     // Other rows should not
-    expect(rows[0].className).not.toContain("danger-bg");
-    expect(rows[2].className).not.toContain("danger-bg");
+    expect(rows[0]!.className).not.toContain("danger-bg");
+    expect(rows[2]!.className).not.toContain("danger-bg");
   });
 
   // ---- Sort indicators ----

@@ -66,7 +66,7 @@ describe("useAutoEmail", () => {
     });
     result.current.triggerEmail("rate_confirmation", mockLoadData);
     expect(sendEmailReturn.mutate).toHaveBeenCalledTimes(1);
-    const payload = (sendEmailReturn.mutate as jest.Mock).mock.calls[0][0];
+    const payload = (sendEmailReturn.mutate as jest.Mock).mock.calls[0]![0] as Record<string, unknown>;
     expect(payload).toMatchObject({
       templateCode: "RATE_CONFIRMATION",
       recipientEmail: "carrier@fast-freight.com",
@@ -83,7 +83,7 @@ describe("useAutoEmail", () => {
       wrapper: createWrapper(),
     });
     result.current.triggerEmail("load_tendered", mockLoadData);
-    const payload = (sendEmailReturn.mutate as jest.Mock).mock.calls[0][0];
+    const payload = (sendEmailReturn.mutate as jest.Mock).mock.calls[0]![0] as Record<string, unknown>;
     expect(payload).toMatchObject({
       templateCode: "LOAD_ASSIGNED",
       recipientEmail: "carrier@fast-freight.com",
@@ -97,7 +97,7 @@ describe("useAutoEmail", () => {
       wrapper: createWrapper(),
     });
     result.current.triggerEmail("delivery_confirmation", mockLoadData);
-    const payload = (sendEmailReturn.mutate as jest.Mock).mock.calls[0][0];
+    const payload = (sendEmailReturn.mutate as jest.Mock).mock.calls[0]![0] as Record<string, unknown>;
     expect(payload).toMatchObject({
       templateCode: "DOCUMENT_RECEIVED",
       recipientEmail: "billing@acme.com",
@@ -111,7 +111,7 @@ describe("useAutoEmail", () => {
       wrapper: createWrapper(),
     });
     result.current.triggerEmail("invoice_sent", mockLoadData);
-    const payload = (sendEmailReturn.mutate as jest.Mock).mock.calls[0][0];
+    const payload = (sendEmailReturn.mutate as jest.Mock).mock.calls[0]![0] as Record<string, unknown>;
     expect(payload).toMatchObject({
       templateCode: "INVOICE_CREATED",
       recipientEmail: "billing@acme.com",
@@ -124,7 +124,7 @@ describe("useAutoEmail", () => {
       wrapper: createWrapper(),
     });
     result.current.triggerEmail("pickup_reminder", mockLoadData);
-    const payload = (sendEmailReturn.mutate as jest.Mock).mock.calls[0][0];
+    const payload = (sendEmailReturn.mutate as jest.Mock).mock.calls[0]![0] as Record<string, unknown>;
     expect(payload).toMatchObject({
       templateCode: "LOAD_STATUS_UPDATE",
       recipientEmail: "carrier@fast-freight.com",
@@ -157,7 +157,7 @@ describe("useAutoEmail", () => {
     result.current.triggerEmail("rate_confirmation", mockLoadData, {
       attachments: [{ name: "rate-con.pdf", url: "/files/rate-con.pdf" }],
     });
-    const payload = (sendEmailReturn.mutate as jest.Mock).mock.calls[0][0];
+    const payload = (sendEmailReturn.mutate as jest.Mock).mock.calls[0]![0] as Record<string, unknown>;
     expect(payload.attachments).toEqual([
       { name: "rate-con.pdf", url: "/files/rate-con.pdf" },
     ]);
@@ -170,8 +170,8 @@ describe("useAutoEmail", () => {
     result.current.triggerEmail("rate_confirmation", mockLoadData, {
       additionalVariables: { customField: "value" },
     });
-    const payload = (sendEmailReturn.mutate as jest.Mock).mock.calls[0][0];
-    expect(payload.variables.customField).toBe("value");
+    const payload = (sendEmailReturn.mutate as jest.Mock).mock.calls[0]![0] as Record<string, unknown>;
+    expect((payload.variables as Record<string, unknown>).customField).toBe("value");
   });
 
   it("includes load data variables in payload", () => {
@@ -179,7 +179,7 @@ describe("useAutoEmail", () => {
       wrapper: createWrapper(),
     });
     result.current.triggerEmail("rate_confirmation", mockLoadData);
-    const payload = (sendEmailReturn.mutate as jest.Mock).mock.calls[0][0];
+    const payload = (sendEmailReturn.mutate as jest.Mock).mock.calls[0]![0] as Record<string, unknown>;
     expect(payload.variables).toMatchObject({
       loadNumber: "LD-2026-100",
       carrierName: "Fast Freight",

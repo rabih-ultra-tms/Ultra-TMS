@@ -30,12 +30,8 @@ export class RolesController {
   @ApiStandardResponse('Roles list')
   @ApiErrorResponses()
   async findAll(@CurrentTenant() tenantId: string) {
-    console.log('📥 Roles controller: findAll called for tenantId:', tenantId);
     const roles = await this.rolesService.findAll(tenantId);
-    console.log('📤 Roles controller: returning', roles.length, 'roles');
-    const response = { data: roles };
-    console.log('📤 Response structure:', JSON.stringify(response, null, 2).substring(0, 500));
-    return response;
+    return { data: roles };
   }
 
   /**

@@ -65,7 +65,7 @@ describe("OrderForm — Edit Mode", () => {
   const initialData = {
     customerId: "cust-1",
     customerName: "Test Customer",
-    equipmentType: "DRY_VAN",
+    equipmentType: "DRY_VAN" as const,
     commodity: "Electronics",
     weight: 10000,
     customerRate: 2500,

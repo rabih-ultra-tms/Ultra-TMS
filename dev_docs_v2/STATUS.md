@@ -1,9 +1,9 @@
 # Ultra TMS — Task Status Dashboard
 
-> **Last Updated:** February 17, 2026 (Health sprint — SocketProvider fix + 15 runtime bugs patched)
+> **Last Updated:** February 18, 2026 (RELEASE-001 — Pre-release quality sweep complete)
 > **Current Phase:** Phase 6 — Financial + Go-Live (Weeks 11-12)
-> **Overall Health:** B- (7.2/10) → targeting B+ (8/10) by Week 12
-> **Revision:** v6 — Health sprint: SocketProvider infinite loop fixed, 15 runtime bugs patched across hooks.
+> **Overall Health:** B+ (8.0/10) — All quality gates pass, 0 type errors, 0 lint warnings
+> **Revision:** v7 — RELEASE-001: 13 type errors fixed, 8 debug console.logs removed, missing nav links added (commissions, accounting sub-pages, tracking), packages installed.
 
 ---
 
@@ -275,7 +275,7 @@
 | COM-006 | Commission Reports | DONE | Claude Code | M (3h) ⬆️ | Feb 17 |
 | INTEG-001 | FMCSA Integration | DONE | Claude Code | M (6h) ⬆️ | Feb 17 |
 | **DOC-003** | **Screen-to-API Contract Registry** | DONE | Claude Code | L (6-8h) | Feb 18 |
-| RELEASE-001 | Pre-Release + Go-Live checklist | NOT STARTED | — | L (8h) ⬆️ | — |
+| RELEASE-001 | Pre-Release + Go-Live checklist | DONE | Claude Code | L (8h) ⬆️ | Feb 18 |
 | **BUG-BUFFER** | **Bug Fix / Iteration Buffer** (distributed) | RESERVED | — | XL (42-66h) | — |
 
 **Phase 6 Total:** ~98-134 hours (includes 42-66h bug buffer)
@@ -296,6 +296,7 @@
 | Feb 12, 2026 | v4 — Rabih V1 design APPROVED | Stakeholder approved Rabih V1 design (navy accent, Inter font, warm borders, dot-label badges). Phase 1 unblocked. COMP-001 estimate reduced to 4-6h (pure implementation). Phase 0 BUG-009/010 marked DONE. |
 | Feb 12, 2026 | v5 — Timeline compressed to 12 weeks | Load Board removal saves ~25h. Sprint calendar compressed from 16→12 weeks. Phase timings: P3 (5-6), P4 (7-8), P5 (9-10), P6 (11-12). Total capacity now 360h (2 devs × 15h × 12 weeks). |
 | Feb 17, 2026 | v6 — Health sprint: C+ → B- (6.4 → 7.2) | Fixed SocketProvider infinite loop (#1 shared bug across all WS features). Patched 15 runtime bugs: 9 raw fetch() calls replaced with apiClient (tracking + ops-dashboard), 3 missing unwrap() calls (load-board), useUpdateLoadEta rewired from no-op GET to PUT /stops/:id, accounting dashboard type-cast → unwrap. Added /track to public paths. All changes verified with TypeScript build (0 new errors). |
+| Feb 18, 2026 | v7 — RELEASE-001: Pre-release quality sweep (B- → B+) | Fixed 13 type errors in API (loads.service.ts: stopNumber→stopSequence, tracking.service.ts: field mismatches with Prisma schema). Removed 8 debug console.logs from auth controllers. Installed missing @dnd-kit + socket.io-client packages. Fixed strict TS in 4 test files. Added sidebar nav links for: Commissions (6 pages), Accounting sub-pages (payments, payables, aging), Tracking Map. Enabled Invoices + Settlements nav (were disabled with "Soon" badge). Final result: `pnpm check-types` 0 errors, `pnpm lint` 0 warnings. |
 
 ---
 

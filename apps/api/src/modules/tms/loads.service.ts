@@ -97,14 +97,14 @@ export class LoadsService {
               status: true,
               customer: { select: { id: true, name: true } },
               stops: {
-                orderBy: { stopNumber: 'asc' },
+                orderBy: { stopSequence: 'asc' },
                 select: {
                   id: true,
                   city: true,
                   state: true,
                   stopType: true,
                   appointmentDate: true,
-                  stopNumber: true
+                  stopSequence: true
                 }
               }
             }
@@ -117,9 +117,9 @@ export class LoadsService {
 
     // Map to flat structure for UI
     const flattenedLoads = loads.map(load => {
-      const stops = load.order.stops || [];
-      const pickup = stops.find(s => s.stopType === 'PICKUP') || stops[0];
-      const delivery = stops.find(s => s.stopType === 'DELIVERY') || stops[stops.length - 1];
+      const stops = load.order?.stops || [];
+      const pickup = stops.find((s: typeof stops[number]) => s.stopType === 'PICKUP') || stops[0];
+      const delivery = stops.find((s: typeof stops[number]) => s.stopType === 'DELIVERY') || stops[stops.length - 1];
 
       return {
         ...load,

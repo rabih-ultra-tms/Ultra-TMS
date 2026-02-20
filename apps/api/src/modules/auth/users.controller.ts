@@ -42,15 +42,13 @@ export class UsersController {
     @Query('status') status?: string,
     @Query('search') search?: string,
   ) {
-    console.log('📥 Users controller: findAll called for tenantId:', tenantId);
-    const result = await this.usersService.findAll(tenantId, { 
-      page: page ? parseInt(page, 10) : undefined, 
-      limit: limit ? parseInt(limit, 10) : undefined, 
-      status, 
-      search 
+    const result = await this.usersService.findAll(tenantId, {
+      page: page ? parseInt(page, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+      status,
+      search
     });
-    console.log('📤 Users controller: returning', result.data.length, 'users');
-    const response = {
+    return {
       data: result.data,
       pagination: {
         page: result.page,
@@ -59,8 +57,6 @@ export class UsersController {
         totalPages: result.totalPages,
       },
     };
-    console.log('📤 Response structure:', JSON.stringify(response, null, 2).substring(0, 500));
-    return response;
   }
 
   @Get(':id')

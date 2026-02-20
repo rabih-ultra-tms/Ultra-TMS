@@ -103,7 +103,7 @@ export function SocketProvider({ children, namespace = SOCKET_NAMESPACES.EVENTS 
       }, 5000);
     });
 
-    newSocket.on('disconnect', (reason) => {
+    newSocket.on('disconnect', (reason: string) => {
       setConnected(false);
       setStatus('disconnected');
 
@@ -117,7 +117,7 @@ export function SocketProvider({ children, namespace = SOCKET_NAMESPACES.EVENTS 
       }
     });
 
-    newSocket.on('connect_error', (err) => {
+    newSocket.on('connect_error', (err: Error) => {
       setConnected(false);
       setStatus('error');
       setError(err.message || 'Connection error');

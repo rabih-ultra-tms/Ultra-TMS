@@ -141,8 +141,6 @@ export class TrackingService {
         currentState: true,
         lastTrackingUpdate: true,
         eta: true,
-        pickupDate: true,
-        deliveryDate: true,
         dispatchedAt: true,
         pickedUpAt: true,
         deliveredAt: true,
@@ -150,7 +148,7 @@ export class TrackingService {
           select: {
             orderNumber: true,
             customer: {
-              select: { companyName: true },
+              select: { name: true },
             },
             stops: {
               where: { deletedAt: null },
@@ -162,7 +160,7 @@ export class TrackingService {
                 facilityName: true,
                 city: true,
                 state: true,
-                zip: true,
+                postalCode: true,
                 status: true,
                 appointmentDate: true,
                 appointmentTimeStart: true,
@@ -187,7 +185,7 @@ export class TrackingService {
       orderNumber: load.order?.orderNumber,
       status: load.status,
       equipmentType: load.equipmentType,
-      customerName: load.order?.customer?.companyName,
+      customerName: load.order?.customer?.name,
       currentLocation: load.currentLocationLat && load.currentLocationLng
         ? {
             lat: Number(load.currentLocationLat),
@@ -198,8 +196,8 @@ export class TrackingService {
           }
         : null,
       eta: load.eta,
-      pickupDate: load.pickupDate,
-      deliveryDate: load.deliveryDate,
+      pickupDate: (load.order?.stops || []).find((s: { stopType: string }) => s.stopType === 'PICKUP')?.appointmentDate ?? null,
+      deliveryDate: (load.order?.stops || []).find((s: { stopType: string }) => s.stopType === 'DELIVERY')?.appointmentDate ?? null,
       dispatchedAt: load.dispatchedAt,
       pickedUpAt: load.pickedUpAt,
       deliveredAt: load.deliveredAt,
@@ -210,7 +208,7 @@ export class TrackingService {
         facilityName: stop.facilityName,
         city: stop.city,
         state: stop.state,
-        zip: stop.zip,
+        zip: stop.postalCode,
         status: stop.status,
         appointmentDate: stop.appointmentDate,
         appointmentTimeStart: stop.appointmentTimeStart,
