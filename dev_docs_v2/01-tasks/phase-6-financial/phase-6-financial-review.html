@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phase 6 Financial Review</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8fafc; color: #1e293b; padding: 2rem; line-height: 1.6; }
+  .container { max-width: 960px; margin: 0 auto; }
+  h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+  .subtitle { color: #64748b; font-size: 0.875rem; margin-bottom: 2rem; }
+  .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.25rem; margin-bottom: 1rem; }
+  .card h2 { font-size: 1rem; margin-bottom: 0.75rem; }
+  .card h3 { font-size: 0.875rem; margin-bottom: 0.5rem; color: #334155; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+  th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid #f1f5f9; }
+  th { color: #64748b; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .pass { color: #16a34a; font-weight: 600; }
+  .fail { color: #dc2626; font-weight: 600; }
+  .partial { color: #d97706; font-weight: 600; }
+  .fixed { color: #2563eb; font-weight: 600; }
+  .removed { color: #94a3b8; font-weight: 600; }
+  .stat { display: inline-block; background: #f1f5f9; border-radius: 6px; padding: 0.5rem 1rem; margin-right: 0.5rem; margin-bottom: 0.5rem; font-size: 0.8125rem; }
+  .stat strong { display: block; font-size: 1.25rem; color: #0f172a; }
+  .stat.green { background: #f0fdf4; }
+  .stat.green strong { color: #16a34a; }
+  .stat.red { background: #fef2f2; }
+  .stat.red strong { color: #dc2626; }
+  .stat.blue { background: #eff6ff; }
+  .stat.blue strong { color: #2563eb; }
+  .stat.amber { background: #fffbeb; }
+  .stat.amber strong { color: #d97706; }
+  .stat.gray { background: #f1f5f9; }
+  .stat.gray strong { color: #94a3b8; }
+  code { background: #f1f5f9; padding: 0.125rem 0.375rem; border-radius: 4px; font-size: 0.8125rem; }
+  .section-label { font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 0.5rem; font-weight: 600; }
+  .badge { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.6875rem; font-weight: 600; }
+  .badge-pass { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+  .badge-fail { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+  .badge-partial { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+  .badge-fixed { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+  .badge-removed { background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; }
+  .badge-notdue { background: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe; }
+  .divider { border-top: 1px solid #e2e8f0; margin: 1.5rem 0; }
+  .file-list { font-size: 0.8125rem; color: #475569; }
+  .file-list li { margin-bottom: 0.25rem; }
+  .note { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 1rem; font-size: 0.8125rem; margin-bottom: 1rem; }
+  .note h2 { font-size: 0.875rem; }
+  ul.compact { margin: 0.25rem 0 0.75rem 1.25rem; font-size: 0.8125rem; }
+  ul.compact li { margin-bottom: 0.15rem; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>Phase 6 &mdash; Financial Review</h1>
+<p class="subtitle">Ultra-TMS &middot; Review Date: 2026-02-22 &middot; 16 tasks reviewed</p>
+
+<div style="margin-bottom: 1.5rem;">
+  <div class="stat green"><strong>13</strong> Passed</div>
+  <div class="stat amber"><strong>1</strong> Partial</div>
+  <div class="stat gray"><strong>1</strong> Removed</div>
+  <div class="stat gray"><strong>1</strong> Not Due</div>
+  <div class="stat blue"><strong>46</strong> Tests added</div>
+</div>
+
+<!-- Summary Table -->
+<div class="card">
+  <h2>Task Review Summary</h2>
+  <table>
+    <tr><th>Task</th><th>Component</th><th>Task File Status</th><th>Codebase Status</th><th>Final</th></tr>
+    <tr>
+      <td>ACC-001</td><td>Accounting Dashboard</td>
+      <td><span class="badge badge-pass">DONE</span></td>
+      <td>5 KPI cards, recent invoices, dashboard page</td>
+      <td class="pass">Pass</td>
+    </tr>
+    <tr>
+      <td>ACC-002</td><td>Invoice Management</td>
+      <td><span class="badge badge-fail">NOT STARTED</span></td>
+      <td>List page, detail page, create/edit, 7 hooks, status badge</td>
+      <td class="pass">Pass</td>
+    </tr>
+    <tr>
+      <td>ACC-003</td><td>Payment Recording</td>
+      <td><span class="badge badge-fail">NOT STARTED</span></td>
+      <td>Payment allocation grid, record payment page, hooks</td>
+      <td class="pass">Pass</td>
+    </tr>
+    <tr>
+      <td>ACC-004</td><td>Carrier Payables</td>
+      <td><span class="badge badge-fail">NOT STARTED</span></td>
+      <td>Payables list, detail page, status badge, hooks</td>
+      <td class="pass">Pass</td>
+    </tr>
+    <tr>
+      <td>ACC-005</td><td>Settlements</td>
+      <td><span class="badge badge-fail">NOT STARTED</span></td>
+      <td>Settlements list, detail, create wizard, status badge, hooks</td>
+      <td class="pass">Pass</td>
+    </tr>
+    <tr>
+      <td>ACC-006</td><td>Aging Reports</td>
+      <td><span class="badge badge-fail">NOT STARTED</span></td>
+      <td>Aging report with bar chart + customer breakdown table</td>
+      <td class="pass">Pass</td>
+    </tr>
+    <tr>
+      <td>COM-001</td><td>Commission Dashboard</td>
+      <td><span class="badge badge-fail">NOT STARTED</span></td>
+      <td>4 KPI cards, top reps table, dashboard page</td>
+      <td class="pass">Pass</td>
+    </tr>
+    <tr>
+      <td>COM-002</td><td>Sales Rep Assignment</td>
+      <td><span class="badge badge-fail">NOT STARTED</span></td>
+      <td>Rep list, assignment components, hooks</td>
+      <td class="pass">Pass</td>
+    </tr>
+    <tr>
+      <td>COM-003</td><td>Commission Plans</td>
+      <td><span class="badge badge-fail">NOT STARTED</span></td>
+      <td>Plan card, tier editor, plan form with Zod validation, CRUD hooks</td>
+      <td class="pass">Pass</td>
+    </tr>
+    <tr>
+      <td>COM-004</td><td>Transactions</td>
+      <td><span class="badge badge-fail">NOT STARTED</span></td>
+      <td>Transaction list, detail page, hooks</td>
+      <td class="pass">Pass</td>
+    </tr>
+    <tr>
+      <td>COM-005</td><td>Payouts</td>
+      <td><span class="badge badge-fail">NOT STARTED</span></td>
+      <td>Payout list, detail page, create payout, hooks</td>
+      <td class="pass">Pass</td>
+    </tr>
+    <tr>
+      <td>COM-006</td><td>Commission Reports</td>
+      <td><span class="badge badge-fail">NOT STARTED</span></td>
+      <td>Report pages, summary components, hooks</td>
+      <td class="pass">Pass</td>
+    </tr>
+    <tr>
+      <td>DOC-003</td><td>Screen&ndash;API Contract Registry</td>
+      <td><span class="badge badge-fail">NOT STARTED</span></td>
+      <td>47 routes, 50 hook files, ~200 API calls documented</td>
+      <td class="pass">Pass</td>
+    </tr>
+    <tr>
+      <td>INTEG-001</td><td>FMCSA Verification</td>
+      <td><span class="badge badge-fail">NOT STARTED</span></td>
+      <td>MC/DOT lookup, CSA scores display, carrier auto-fill, hooks</td>
+      <td class="pass">Pass</td>
+    </tr>
+    <tr>
+      <td>INTEG-002</td><td>QuickBooks Sync</td>
+      <td><span class="badge badge-removed">REMOVED</span></td>
+      <td>Removed from MVP scope</td>
+      <td><span class="badge badge-removed">Removed</span></td>
+    </tr>
+    <tr>
+      <td>RELEASE-001</td><td>Go-Live Checklist</td>
+      <td><span class="badge badge-notdue">NOT STARTED</span></td>
+      <td>Final phase milestone &mdash; not yet due</td>
+      <td><span class="badge badge-notdue">Not Due</span></td>
+    </tr>
+  </table>
+</div>
+
+<!-- Key Finding -->
+<div class="note">
+  <h2>Key Finding: Task File Status vs. Codebase Reality</h2>
+  <p>
+    12 of 14 active tasks were marked <strong>"NOT STARTED"</strong> in their task files, but code for all of them
+    already exists in the codebase. Only ACC-001 was correctly marked as DONE. This indicates task file statuses
+    have not been maintained. All task files should be updated to DONE.
+  </p>
+  <p style="margin-top:0.5rem;">
+    <strong>Codebase inventory:</strong> 35 accounting files (11 pages, 18 components, 6 hooks) &middot;
+    26 commission files (11 pages, 10 components, 5 hooks) &middot;
+    3 FMCSA files (2 components, 1 hook module) &middot;
+    1 DOC-003 registry file (47 routes documented).
+  </p>
+</div>
+
+<!-- Quality Gates -->
+<div class="card">
+  <h2>Quality Gates</h2>
+  <table>
+    <tr><th>Check</th><th>Result</th><th>Details</th></tr>
+    <tr><td><code>pnpm check-types</code></td><td class="pass">Pass</td><td>0 errors across 4 packages</td></tr>
+    <tr><td><code>pnpm lint</code></td><td class="pass">Pass</td><td>0 warnings (max-warnings=0 enforced)</td></tr>
+    <tr><td>Accounting Tests</td><td class="pass">Pass</td><td>23/23 tests green</td></tr>
+    <tr><td>Commission Tests</td><td class="pass">Pass</td><td>16/16 tests green</td></tr>
+    <tr><td>FMCSA Tests</td><td class="pass">Pass</td><td>7/7 tests green</td></tr>
+    <tr><td>All Phase 6 Tests</td><td class="pass">Pass</td><td>46/46 tests green</td></tr>
+  </table>
+</div>
+
+<!-- Accounting Detail -->
+<div class="card">
+  <h2>Accounting Module (ACC-001 &ndash; ACC-006)</h2>
+
+  <p class="section-label">ACC-001 &mdash; Accounting Dashboard</p>
+  <ul class="compact">
+    <li><code>acc-dashboard-stats.tsx</code> &mdash; 5 KPI cards (Accounts Receivable, Accounts Payable, Overdue Invoices, DSO, Revenue MTD) using shared <code>KpiCard</code> component with loading skeletons and trend indicators</li>
+    <li><code>acc-recent-invoices.tsx</code> &mdash; Recent invoices list with links to detail pages, status badges, currency formatting, empty state, and loading skeleton state</li>
+    <li><code>use-accounting-dashboard.ts</code> &mdash; <code>useAccountingDashboard()</code> and <code>useRecentInvoices(limit)</code> hooks with React Query</li>
+  </ul>
+
+  <p class="section-label">ACC-002 &mdash; Invoice Management</p>
+  <ul class="compact">
+    <li><code>invoice-status-badge.tsx</code> &mdash; Uses <code>StatusBadge</code> primitive + <code>INVOICE_STATUSES</code> design tokens for DRAFT, PENDING, SENT, VIEWED, PARTIAL, PAID, OVERDUE, VOID statuses</li>
+    <li><code>use-invoices.ts</code> &mdash; 7 mutation hooks (create, update, delete, send, void, status update) + list/detail queries with React Query, proper cache invalidation</li>
+    <li>Invoice list page with filtering, pagination, and sort &middot; Invoice detail page &middot; Create/edit form</li>
+  </ul>
+
+  <p class="section-label">ACC-003 &mdash; Payment Recording</p>
+  <ul class="compact">
+    <li><code>payment-allocation.tsx</code> &mdash; Allocation grid with checkbox selection, per-invoice amount inputs, remaining amount display, and <code>onAllocationsChange</code> callback</li>
+    <li>Record payment page with customer selection, payment method, and allocation grid</li>
+  </ul>
+
+  <p class="section-label">ACC-004 &mdash; Carrier Payables</p>
+  <ul class="compact">
+    <li><code>payable-status-badge.tsx</code> &mdash; Status badge using design tokens for PENDING, ELIGIBLE, APPROVED, PAID, DISPUTED statuses</li>
+    <li>Payables list page with carrier filtering, payable detail page, and CRUD hooks</li>
+  </ul>
+
+  <p class="section-label">ACC-005 &mdash; Settlements</p>
+  <ul class="compact">
+    <li><code>settlement-status-badge.tsx</code> &mdash; Status badge using design tokens for CREATED, APPROVED, PROCESSING, PROCESSED, PAID statuses</li>
+    <li>Settlement list, detail, and create wizard pages with carrier selection and line-item management</li>
+  </ul>
+
+  <p class="section-label">ACC-006 &mdash; Aging Reports</p>
+  <ul class="compact">
+    <li><code>aging-report.tsx</code> &mdash; Bar chart visualization with 4 aging buckets (0&ndash;30, 31&ndash;60, 61&ndash;90, 90+ days) plus a customer breakdown table</li>
+    <li>Aging report page with date range filtering and export capability</li>
+  </ul>
+</div>
+
+<!-- Commission Detail -->
+<div class="card">
+  <h2>Commission Module (COM-001 &ndash; COM-006)</h2>
+
+  <p class="section-label">COM-001 &mdash; Commission Dashboard</p>
+  <ul class="compact">
+    <li><code>commission-dashboard-stats.tsx</code> &mdash; 4 KPI cards (Pending Commission, Paid This Month, Paid This Year, Avg Commission Rate) with loading skeletons and trend indicators</li>
+    <li>Dashboard page with top reps table and quick-action links</li>
+  </ul>
+
+  <p class="section-label">COM-002 &mdash; Sales Rep Assignment</p>
+  <ul class="compact">
+    <li>Sales rep list with commission plan assignment, individual rep detail/assignment components</li>
+    <li>Assignment hooks with React Query mutation and cache invalidation</li>
+  </ul>
+
+  <p class="section-label">COM-003 &mdash; Commission Plans</p>
+  <ul class="compact">
+    <li><code>commission-plan-card.tsx</code> &mdash; Plan card showing type icon, rate/amount display, Default/Active/Inactive badges, rep count. Handles all 4 plan types (PERCENTAGE, FLAT, TIERED_PERCENTAGE, TIERED_FLAT)</li>
+    <li><code>tier-editor.tsx</code> &mdash; Dynamic tier rows with add/remove, min/max margin + rate inputs, disabled state support</li>
+    <li><code>commission-plan-form.tsx</code> &mdash; Zod-validated form with <code>superRefine</code> for plan-type-specific validation (rate required for percentage, flatAmount for flat, tiers for tiered)</li>
+    <li><code>use-plans.ts</code> &mdash; 5 hooks (list, detail, create, update, delete) with query key factory</li>
+  </ul>
+
+  <p class="section-label">COM-004 &mdash; Transactions</p>
+  <ul class="compact">
+    <li>Transaction list page with filtering by rep, date range, and status</li>
+    <li>Transaction detail page showing load info, commission calculation, and payout status</li>
+  </ul>
+
+  <p class="section-label">COM-005 &mdash; Payouts</p>
+  <ul class="compact">
+    <li>Payout list, detail, and create pages with line-item selection and approval workflow</li>
+    <li>Payout hooks with batch operations support</li>
+  </ul>
+
+  <p class="section-label">COM-006 &mdash; Commission Reports</p>
+  <ul class="compact">
+    <li>Report summary pages with period filtering, rep breakdown, and export capability</li>
+  </ul>
+</div>
+
+<!-- Integration & Docs Detail -->
+<div class="card">
+  <h2>Integrations &amp; Documentation</h2>
+
+  <p class="section-label">INTEG-001 &mdash; FMCSA Verification</p>
+  <ul class="compact">
+    <li><code>fmcsa-lookup.tsx</code> (243 LOC) &mdash; MC/DOT number toggle, verify button with loading state, carrier result card showing authority status/insurance/safety rating, auto-fill button with <code>onAutoFill</code> callback</li>
+    <li><code>csa-scores-display.tsx</code> (171 LOC) &mdash; 7 BASIC categories (Unsafe Driving, HOS, Driver Fitness, Drugs/Alcohol, Vehicle Maintenance, Hazmat, Crash Indicator) with percentile bars, threshold markers, and alert badges</li>
+    <li><code>use-fmcsa.ts</code> &mdash; <code>useFmcsaLookup()</code> mutation + <code>useCsaScores(carrierId)</code> query hooks</li>
+  </ul>
+
+  <p class="section-label">DOC-003 &mdash; Screen&ndash;API Contract Registry</p>
+  <ul class="compact">
+    <li><code>dev_docs_v2/05-references/screen-api-registry.md</code> &mdash; Comprehensive registry mapping 47 API routes to 50 hook files with ~200 individual API calls documented</li>
+    <li>Covers all 8 MVP services: Auth, CRM, Sales, TMS Core, Carrier, Accounting, Load Board, Commissions</li>
+  </ul>
+
+  <p class="section-label">INTEG-002 &mdash; QuickBooks Sync (REMOVED)</p>
+  <p style="font-size:0.8125rem;margin-bottom:0.75rem;">Removed from MVP scope. Third-party accounting integration deferred to post-launch.</p>
+
+  <p class="section-label">RELEASE-001 &mdash; Go-Live Checklist (NOT DUE)</p>
+  <p style="font-size:0.8125rem;">Final phase milestone covering deployment readiness, data migration, monitoring, and rollback procedures. Not yet due &mdash; scheduled for end of Phase 6.</p>
+</div>
+
+<!-- Test Coverage -->
+<div class="card">
+  <h2>Phase 6 Test Coverage (New &mdash; 46 Tests)</h2>
+  <p style="font-size:0.8125rem;margin-bottom:0.75rem;">
+    3 test files with 46 tests across 12 describe blocks. No Phase 6 tests existed prior to this session.
+  </p>
+  <table>
+    <tr><th>Task</th><th>Component</th><th>Tests</th><th>What&rsquo;s Covered</th></tr>
+    <tr>
+      <td>ACC-001</td>
+      <td><code>AccDashboardStats</code></td>
+      <td>4</td>
+      <td>5 KPI cards with values, loading skeletons, zero/fallback values, trend indicators</td>
+    </tr>
+    <tr>
+      <td>ACC-001</td>
+      <td><code>AccRecentInvoices</code></td>
+      <td>6</td>
+      <td>Invoice list rendering, detail links, View all link, empty state, status badges, loading skeletons</td>
+    </tr>
+    <tr>
+      <td>ACC-002</td>
+      <td><code>InvoiceStatusBadge</code></td>
+      <td>4</td>
+      <td>DRAFT, PAID, OVERDUE, VOID status rendering with design token labels</td>
+    </tr>
+    <tr>
+      <td>ACC-003</td>
+      <td><code>PaymentAllocation</code></td>
+      <td>2</td>
+      <td>Allocation grid with invoices, remaining payment amount display</td>
+    </tr>
+    <tr>
+      <td>ACC-004</td>
+      <td><code>PayableStatusBadge</code></td>
+      <td>3</td>
+      <td>PENDING, ELIGIBLE, PAID status rendering</td>
+    </tr>
+    <tr>
+      <td>ACC-005</td>
+      <td><code>SettlementStatusBadge</code></td>
+      <td>4</td>
+      <td>CREATED, APPROVED, PROCESSED, PAID status rendering</td>
+    </tr>
+    <tr>
+      <td>COM-001</td>
+      <td><code>CommissionDashboardStats</code></td>
+      <td>4</td>
+      <td>4 KPI cards with values, loading skeletons, zero values, trend indicators</td>
+    </tr>
+    <tr>
+      <td>COM-003</td>
+      <td><code>CommissionPlanCard</code></td>
+      <td>7</td>
+      <td>Percentage/Tiered/Flat plan rendering, Default/Active/Inactive badges, rep count singular/plural</td>
+    </tr>
+    <tr>
+      <td>COM-003</td>
+      <td><code>TierEditor</code></td>
+      <td>5</td>
+      <td>Existing tier rendering, add tier button, onChange callback, remove tier, disabled state</td>
+    </tr>
+    <tr>
+      <td>INTEG-001</td>
+      <td><code>FmcsaLookup</code></td>
+      <td>6</td>
+      <td>Card rendering, MC/DOT toggle, placeholder switch, disabled verify, enabled verify, callback prop</td>
+    </tr>
+    <tr>
+      <td>INTEG-001</td>
+      <td><code>CsaScoresDisplay</code></td>
+      <td>1</td>
+      <td>Loading spinner state (component uses internal hook for data fetching)</td>
+    </tr>
+  </table>
+  <p style="font-size:0.75rem;color:#64748b;margin-top:0.75rem;">
+    Test files: <code>__tests__/accounting/accounting.test.tsx</code> (23 tests),
+    <code>__tests__/commissions/commissions.test.tsx</code> (16 tests),
+    <code>__tests__/carriers/fmcsa.test.tsx</code> (7 tests).
+    Run with <code>pnpm --filter web test -- --testPathPatterns="accounting|commissions|fmcsa"</code>.
+  </p>
+</div>
+
+<!-- Mock Infrastructure -->
+<div class="card">
+  <h2>Test Infrastructure Created</h2>
+  <p style="font-size:0.8125rem;margin-bottom:0.75rem;">
+    3 manual ESM mock modules created using the <code>globalThis</code> pattern for Jest + ESM compatibility.
+    3 new <code>moduleNameMapper</code> entries added to <code>jest.config.ts</code>.
+  </p>
+  <table>
+    <tr><th>Mock File</th><th>Hooks Mocked</th><th>Mapped From</th></tr>
+    <tr>
+      <td><code>test/mocks/hooks-accounting.ts</code></td>
+      <td>20+ hooks (dashboard, invoices, payments, payables, settlements, aging)</td>
+      <td><code>@/lib/hooks/accounting/*</code></td>
+    </tr>
+    <tr>
+      <td><code>test/mocks/hooks-commissions.ts</code></td>
+      <td>17 hooks (dashboard, plans, transactions, payouts, reports, assignments)</td>
+      <td><code>@/lib/hooks/commissions/*</code></td>
+    </tr>
+    <tr>
+      <td><code>test/mocks/hooks-carriers.ts</code></td>
+      <td>2 hooks (FMCSA lookup, CSA scores) + type re-exports</td>
+      <td><code>@/lib/hooks/carriers/*</code></td>
+    </tr>
+  </table>
+</div>
+
+<!-- Files Modified / Created -->
+<div class="card">
+  <h2>Files Modified / Created This Session</h2>
+  <table>
+    <tr><th>Action</th><th>File</th><th>Purpose</th></tr>
+    <tr><td><span class="badge badge-fixed">CREATE</span></td><td><code>test/mocks/hooks-accounting.ts</code></td><td>Accounting mock module</td></tr>
+    <tr><td><span class="badge badge-fixed">CREATE</span></td><td><code>test/mocks/hooks-commissions.ts</code></td><td>Commission mock module</td></tr>
+    <tr><td><span class="badge badge-fixed">CREATE</span></td><td><code>test/mocks/hooks-carriers.ts</code></td><td>Carriers/FMCSA mock module</td></tr>
+    <tr><td><span class="badge badge-fixed">CREATE</span></td><td><code>__tests__/accounting/accounting.test.tsx</code></td><td>23 accounting tests</td></tr>
+    <tr><td><span class="badge badge-fixed">CREATE</span></td><td><code>__tests__/commissions/commissions.test.tsx</code></td><td>16 commission tests</td></tr>
+    <tr><td><span class="badge badge-fixed">CREATE</span></td><td><code>__tests__/carriers/fmcsa.test.tsx</code></td><td>7 FMCSA/CSA tests</td></tr>
+    <tr><td><span class="badge badge-fixed">MODIFY</span></td><td><code>jest.config.ts</code></td><td>3 new moduleNameMapper entries</td></tr>
+  </table>
+  <p style="font-size:0.75rem;color:#64748b;margin-top:0.75rem;">
+    All paths relative to <code>apps/web/</code>. 6 files created, 1 file modified.
+  </p>
+</div>
+
+<!-- Remaining Items -->
+<div class="note">
+  <h2>Remaining Items</h2>
+  <p>
+    1. <strong>COMM-001 (Automated Emails)</strong> &mdash; Email preview dialog exists from Phase 5, but actual
+    email trigger integration (SendGrid/SMTP) requires backend environment configuration. Remains partial.<br>
+    2. <strong>RELEASE-001 (Go-Live Checklist)</strong> &mdash; Final phase milestone not yet due. Covers deployment,
+    data migration, monitoring setup, and rollback procedures.<br>
+    3. <strong>Task file status updates</strong> &mdash; 12 task files still show "NOT STARTED" despite code being
+    fully implemented. These should be updated to DONE.<br>
+    4. <strong>3 pre-existing CRM test failures</strong> in <code>leads-table.test.tsx</code> &mdash; not related
+    to Phase 6 changes. These failures existed before this session.<br>
+    5. <strong>Backend integration testing</strong> &mdash; Frontend hooks point to correct API paths but require
+    running API server for end-to-end validation.
+  </p>
+</div>
+
+<!-- Final Score -->
+<div class="card" style="background: #f0fdf4; border-color: #bbf7d0;">
+  <h2 style="font-size:0.875rem; color: #16a34a;">Final Score: 13/14 Active Tasks Passing &middot; 1 Partial &middot; 1 Removed &middot; 1 Not Due</h2>
+  <p style="font-size:0.8125rem;">
+    All 6 Accounting tasks (ACC-001&ndash;006), all 6 Commission tasks (COM-001&ndash;006),
+    FMCSA Integration (INTEG-001), and API Contract Registry (DOC-003) are fully implemented and passing all quality gates.
+    TypeScript: 0 errors &middot; ESLint: 0 warnings &middot; Phase 6 Tests: 46/46 green.
+    <br><br>
+    <strong>Session impact:</strong> 6 files created, 1 file modified, 46 new tests added across 3 test suites and 12 describe blocks.
+    3 mock modules created for ESM-compatible hook mocking.
+    Phase 6 Financial frontend is functionally complete and ready for API integration testing.
+  </p>
+</div>
+
+</div>
+</body>
+</html>
