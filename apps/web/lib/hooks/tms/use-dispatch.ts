@@ -183,8 +183,9 @@ export function useDispatchLoads(
       // apiClient already prepends /api/v1 — don't duplicate it
       const url = `/loads/board${queryString ? `?${queryString}` : ''}`;
       const response = await apiClient.get(url);
-      const loads = unwrap<DispatchLoad[]>(response);
-      return transformToBoardData(loads, sortConfig);
+      // Backend returns { data: { total, byStatus, loads } } — extract the loads array
+      const body = unwrap<{ total: number; byStatus: Record<string, DispatchLoad[]>; loads: DispatchLoad[] }>(response);
+      return transformToBoardData(body.loads ?? [], sortConfig);
     },
     refetchInterval: options?.refetchInterval ?? 30000,
     enabled: options?.enabled !== false,
@@ -202,9 +203,9 @@ export function useDispatchBoardStats(filters?: DispatchFilters) {
       const queryString = buildQueryString(filters);
       const url = `/loads/board${queryString ? `?${queryString}` : ''}`;
       const response = await apiClient.get(url);
-      const loads = unwrap<DispatchLoad[]>(response);
-      // Compute stats from actual board data
-      const board = transformToBoardData(loads);
+      // Backend returns { data: { total, byStatus, loads } } — extract the loads array
+      const body = unwrap<{ total: number; byStatus: Record<string, DispatchLoad[]>; loads: DispatchLoad[] }>(response);
+      const board = transformToBoardData(body.loads ?? []);
       return board.stats;
     },
     refetchInterval: 30000,

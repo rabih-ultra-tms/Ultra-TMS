@@ -50,7 +50,7 @@ export function LoadsFilterBar() {
     const presets = [
         { label: "My Loads", key: "preset", value: "my_loads" },
         { label: "Urgent", key: "preset", value: "urgent" },
-        { label: "Unassigned", key: "status", value: "PLANNING,PENDING", carrier: "unassigned" }, // Logic needed
+        { label: "Unassigned", key: "status", value: "PENDING", carrier: "unassigned" },
         { label: "Needs Attention", key: "preset", value: "attention" },
         { label: "Picking Up Today", key: "date", value: "today" },
     ];

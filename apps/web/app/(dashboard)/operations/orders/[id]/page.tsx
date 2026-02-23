@@ -1,5 +1,6 @@
 "use client";
 
+import { use } from "react";
 import { useOrder } from "@/lib/hooks/tms/use-orders";
 import { DetailPage, DetailTab } from "@/components/patterns/detail-page";
 import { OrderDetailOverview } from "@/components/tms/orders/order-detail-overview";
@@ -27,14 +28,15 @@ import { StatusBadge } from "@/components/tms/primitives/status-badge";
 import { STATUS_INTENTS, STATUS_LABELS } from "@/components/tms/orders/order-columns";
 import Link from "next/link";
 
-export default function OrderDetailPage({ params }: { params: { id: string } }) {
-    const { data: order, isLoading, error, refetch } = useOrder(params.id);
+export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
+    const { data: order, isLoading, error, refetch } = useOrder(id);
 
     // --- Actions Menu ---
     const actions = (
         <>
             <Button variant="outline" size="sm" asChild>
-                <Link href={`/operations/orders/${params.id}/edit`}>Edit Order</Link>
+                <Link href={`/operations/orders/${id}/edit`}>Edit Order</Link>
             </Button>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>

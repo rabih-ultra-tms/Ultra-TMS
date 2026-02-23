@@ -37,7 +37,7 @@ function OperationsDashboardContent() {
     switch (cardType) {
       case 'active-loads':
         router.push(
-          '/operations/loads?status=PLANNING,PENDING,TENDERED,ACCEPTED,DISPATCHED,AT_PICKUP,PICKED_UP,IN_TRANSIT,AT_DELIVERY'
+          '/operations/loads?status=PENDING,TENDERED,ACCEPTED,DISPATCHED,AT_PICKUP,PICKED_UP,IN_TRANSIT,AT_DELIVERY'
         );
         break;
       case 'dispatched-today':

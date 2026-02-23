@@ -17,8 +17,8 @@ export enum LoadStatusEnum {
 
 export class LoadQueryDto extends PaginationDto {
   @IsOptional()
-  @IsEnum(LoadStatusEnum)
-  status?: LoadStatusEnum;
+  @IsString()
+  status?: string;
 
   @IsOptional()
   @IsString()

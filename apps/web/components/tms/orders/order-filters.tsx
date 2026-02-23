@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search } from "lucide-react";
+import { Search, X, CalendarDays } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,23 +13,17 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { OrderStatus } from "@/types/orders";
-import { X } from "lucide-react";
 
-interface OrderFiltersProps {
-    // No props needed as we use URL search params
-}
-
-export function OrderFilters(_props: OrderFiltersProps) {
+export function OrderFilters() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
     // Get current values from URL
-    const status = (searchParams.get("status") as OrderStatus | "all") || "all";
+    const status =
+        (searchParams.get("status") as OrderStatus | "all") || "all";
     const search = searchParams.get("search") || "";
-    const customerId = searchParams.get("customerId") || "";
     const fromDate = searchParams.get("fromDate") || "";
     const toDate = searchParams.get("toDate") || "";
-    // Future filters like date range, customer, origin, etc.
 
     // Helper to update URL
     const updateFilters = (updates: Record<string, string | null>) => {
@@ -45,11 +39,11 @@ export function OrderFilters(_props: OrderFiltersProps) {
 
         // Always reset to page 1 when filtering
         params.set("page", "1");
-
         router.push(`?${params.toString()}`);
     };
 
-    const hasActiveFilters = status !== "all" || !!search || !!customerId || !!fromDate || !!toDate;
+    const hasActiveFilters =
+        status !== "all" || !!search || !!fromDate || !!toDate;
 
     const clearFilters = () => {
         router.push("?");
@@ -71,32 +65,32 @@ export function OrderFilters(_props: OrderFiltersProps) {
             }
         }, 300);
         return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- updateFilters is recreated every render; adding it would cause infinite re-renders
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchValue, search]);
 
     return (
-        <div className="flex flex-col gap-3 mb-6">
-            <div className="flex flex-col sm:flex-row gap-3">
-                {/* Search */}
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search by Order #, Customer Ref..."
-                        value={searchValue}
-                        onChange={(e) => setSearchValue(e.target.value)}
-                        className="pl-10 h-9"
-                    />
-                </div>
+        <div className="p-4 space-y-3">
+            {/* Search */}
+            <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                    placeholder="Search by Order #, Customer Ref..."
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
+                    className="pl-10 h-9"
+                />
             </div>
 
             {/* Filter Row */}
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap items-center gap-2">
                 <Select
                     value={status}
-                    onValueChange={(value) => updateFilters({ status: value })}
+                    onValueChange={(value) =>
+                        updateFilters({ status: value })
+                    }
                 >
-                    <SelectTrigger className="w-full sm:w-[180px] h-9">
-                        <SelectValue placeholder="Status" />
+                    <SelectTrigger className="w-[160px] h-8 text-xs">
+                        <SelectValue placeholder="All Statuses" />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">All Statuses</SelectItem>
@@ -113,28 +107,24 @@ export function OrderFilters(_props: OrderFiltersProps) {
                     </SelectContent>
                 </Select>
 
-                <Input
-                    placeholder="Customer ID"
-                    value={customerId}
-                    onChange={(e) => updateFilters({ customerId: e.target.value })}
-                    className="w-full sm:w-[120px] h-9"
-                />
-
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <CalendarDays className="h-3.5 w-3.5" />
                     <Input
                         type="date"
-                        placeholder="From Date"
                         value={fromDate}
-                        onChange={(e) => updateFilters({ fromDate: e.target.value })}
-                        className="w-[130px] h-9"
+                        onChange={(e) =>
+                            updateFilters({ fromDate: e.target.value })
+                        }
+                        className="w-[130px] h-8 text-xs"
                     />
-                    <span className="text-muted-foreground">-</span>
+                    <span>to</span>
                     <Input
                         type="date"
-                        placeholder="To Date"
                         value={toDate}
-                        onChange={(e) => updateFilters({ toDate: e.target.value })}
-                        className="w-[130px] h-9"
+                        onChange={(e) =>
+                            updateFilters({ toDate: e.target.value })
+                        }
+                        className="w-[130px] h-8 text-xs"
                     />
                 </div>
 
@@ -143,10 +133,10 @@ export function OrderFilters(_props: OrderFiltersProps) {
                         variant="ghost"
                         size="sm"
                         onClick={clearFilters}
-                        className="h-9 px-2 text-muted-foreground hover:text-foreground"
+                        className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
                     >
-                        <X className="h-4 w-4 mr-1" />
-                        Clear
+                        <X className="h-3.5 w-3.5 mr-1" />
+                        Clear filters
                     </Button>
                 )}
             </div>

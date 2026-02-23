@@ -25,6 +25,32 @@ function generateRandomSuffix(length: number = 4): string {
   return result;
 }
 
+/**
+ * Convert Prisma Decimal fields to plain numbers so the
+ * ClassSerializerInterceptor (instanceToPlain) doesn't corrupt
+ * them into { d, e, s } internal representations.
+ */
+function toPlainOrder<T extends Record<string, unknown>>(order: T): T {
+  if (!order) return order;
+  const decimalFields = [
+    'weightLbs',
+    'customerRate',
+    'fuelSurcharge',
+    'accessorialCharges',
+    'totalCharges',
+    'temperatureMin',
+    'temperatureMax',
+    'totalMiles',
+  ] as const;
+  const result = { ...order };
+  for (const field of decimalFields) {
+    if (field in result && result[field] != null) {
+      (result as Record<string, unknown>)[field] = Number(result[field]);
+    }
+  }
+  return result as T;
+}
+
 @Injectable()
 export class OrdersService {
   constructor(
@@ -74,13 +100,15 @@ export class OrdersService {
         include: {
           stops: { where: { deletedAt: null }, orderBy: { stopSequence: 'asc' } },
           loads: { where: { deletedAt: null } },
+          customer: { select: { id: true, name: true } },
+          _count: { select: { loads: true, stops: true } },
         },
       }),
       this.prisma.order.count({ where }),
     ]);
 
     return {
-      data: orders,
+      data: orders.map(toPlainOrder),
       pagination: {
         page,
         limit,
@@ -100,6 +128,7 @@ export class OrdersService {
         stops: { where: { deletedAt: null }, orderBy: { stopSequence: 'asc' } },
         loads: { where: { deletedAt: null } },
         items: { where: { deletedAt: null } },
+        customer: { select: { id: true, name: true } },
       },
     });
 
@@ -107,7 +136,7 @@ export class OrdersService {
       throw new NotFoundException(`Order ${id} not found`);
     }
 
-    return order;
+    return toPlainOrder(order);
   }
 
   /**
@@ -133,36 +162,74 @@ export class OrdersService {
     const suffix = generateRandomSuffix(4);
     const orderNumber = `ORD-${today}-${suffix}`;
 
+    // Compute accessorial total
+    const accessorialTotal = dto.accessorials?.reduce((sum, a) => sum + (a.amount || 0), 0) ?? 0;
+    const totalCharges = (dto.customerRate ?? 0) + (dto.fuelSurcharge ?? 0) + accessorialTotal;
+
+    // Store fields without Prisma columns in customFields
+    const customFields: Record<string, unknown> = {};
+    if (dto.priority) customFields.priority = dto.priority;
+    if (dto.paymentTerms) customFields.paymentTerms = dto.paymentTerms;
+    if (dto.specialHandling?.length) customFields.specialHandling = dto.specialHandling;
+    if (dto.hazmatUnNumber) customFields.hazmatUnNumber = dto.hazmatUnNumber;
+    if (dto.hazmatPlacard) customFields.hazmatPlacard = dto.hazmatPlacard;
+    if (dto.estimatedCarrierRate) customFields.estimatedCarrierRate = dto.estimatedCarrierRate;
+    if (dto.billingContactId) customFields.billingContactId = dto.billingContactId;
+    if (dto.billingNotes) customFields.billingNotes = dto.billingNotes;
+    if (dto.accessorials?.length) customFields.accessorials = dto.accessorials;
+
     // Create order with stops in transaction
     const order = await this.prisma.order.create({
       data: {
         tenantId,
         orderNumber,
         customerId: dto.customerId,
-        status: 'PENDING',
+        status: dto.status || 'PENDING',
         createdById: userId,
         updatedById: userId,
-        customerReference: dto.customerReference,
+        customerReference: dto.customerReferenceNumber || dto.customerReference,
+        poNumber: dto.poNumber,
+        bolNumber: dto.bolNumber,
+        salesRepId: dto.salesRepId || undefined,
         specialInstructions: dto.specialInstructions,
+        internalNotes: dto.internalNotes,
+        commodity: dto.commodity,
+        weightLbs: dto.weightLbs,
+        pieceCount: dto.pieceCount,
+        palletCount: dto.palletCount,
+        equipmentType: dto.equipmentType,
+        isHazmat: dto.isHazmat ?? false,
+        hazmatClass: dto.isHazmat ? dto.hazmatClass : undefined,
+        temperatureMin: dto.temperatureMin,
+        temperatureMax: dto.temperatureMax,
+        customerRate: dto.customerRate,
+        fuelSurcharge: dto.fuelSurcharge ?? 0,
+        accessorialCharges: accessorialTotal,
+        totalCharges: totalCharges > 0 ? totalCharges : undefined,
+        customFields: Object.keys(customFields).length > 0 ? (customFields as Prisma.InputJsonValue) : undefined,
 
-        // Create stops
+        // Create stops — field names now match Prisma schema directly
         stops: {
           createMany: {
             data: dto.stops.map((stop: CreateStopDto, idx: number) => ({
               tenantId,
               stopType: stop.stopType,
-              facilityName: stop.companyName,
-              addressLine1: stop.address,
+              facilityName: stop.facilityName,
+              addressLine1: stop.addressLine1,
+              addressLine2: stop.addressLine2,
               city: stop.city,
               state: stop.state,
-              postalCode: stop.zip,
-              country: 'USA',
+              postalCode: stop.postalCode,
+              country: stop.country || 'USA',
               contactName: stop.contactName,
-              contactPhone: stop.phone,
-              contactEmail: stop.email,
+              contactPhone: stop.contactPhone,
+              contactEmail: stop.contactEmail,
+              appointmentRequired: stop.appointmentRequired ?? false,
               appointmentDate: stop.appointmentDate ? new Date(stop.appointmentDate) : null,
-              appointmentTimeStart: stop.appointmentTime,
-              stopSequence: stop.stopSequence || idx + 1,
+              appointmentTimeStart: stop.appointmentTimeStart,
+              appointmentTimeEnd: stop.appointmentTimeEnd,
+              specialInstructions: stop.specialInstructions,
+              stopSequence: stop.stopSequence ?? idx + 1,
               status: 'PENDING',
               createdById: userId,
               updatedById: userId,
@@ -207,7 +274,7 @@ export class OrdersService {
       tenantId,
     });
 
-    return order;
+    return toPlainOrder(order);
   }
 
   async createFromQuote(tenantId: string, userId: string, quoteId: string) {
@@ -252,17 +319,17 @@ export class OrdersService {
       specialInstructions: quote.specialInstructions ?? undefined,
       stops: quote.stops?.map((s: any, idx: number) => ({
         stopType: s.stopType ?? 'PICKUP',
-        companyName: s.facilityName ?? '',
-        address: s.addressLine1 ?? '',
+        facilityName: s.facilityName ?? undefined,
+        addressLine1: s.addressLine1 ?? '',
         city: s.city ?? '',
         state: s.state ?? '',
-        zip: s.postalCode ?? '',
+        postalCode: s.postalCode ?? '',
         contactName: s.contactName ?? undefined,
-        phone: s.contactPhone ?? undefined,
-        email: s.contactEmail ?? undefined,
+        contactPhone: s.contactPhone ?? undefined,
+        contactEmail: s.contactEmail ?? undefined,
         appointmentDate: s.earliestTime ?? undefined,
-        appointmentTime: s.latestTime ?? undefined,
-        instructions: s.instructions ?? undefined,
+        appointmentTimeStart: s.latestTime ?? undefined,
+        specialInstructions: s.instructions ?? undefined,
         stopSequence: s.stopSequence ?? idx + 1,
       })) ?? [],
       items: [],
@@ -310,20 +377,20 @@ export class OrdersService {
       const override = overrides.stopOverrides?.[index];
       return {
         stopType: stop.stopType,
-        companyName: override?.facilityName || stop.facilityName || '',
-        address: override?.address || stop.addressLine1 || '',
+        facilityName: override?.facilityName || stop.facilityName || undefined,
+        addressLine1: override?.address || stop.addressLine1 || '',
         city: override?.city || stop.city || '',
         state: override?.state || stop.state || '',
-        zip: override?.postalCode || stop.postalCode || '',
+        postalCode: override?.postalCode || stop.postalCode || '',
         contactName: stop.contactName || undefined,
-        phone: stop.contactPhone || undefined,
-        email: stop.contactEmail || undefined,
+        contactPhone: stop.contactPhone || undefined,
+        contactEmail: stop.contactEmail || undefined,
         appointmentDate: override?.appointmentDate
           ? override.appointmentDate
           : stop.appointmentDate
           ? stop.appointmentDate.toISOString()
           : undefined,
-        appointmentTime:
+        appointmentTimeStart:
           override?.appointmentTime || stop.appointmentTimeStart || undefined,
         stopSequence: stop.stopSequence || index + 1,
       };
@@ -366,26 +433,111 @@ export class OrdersService {
       throw new ConflictException(`Cannot modify order in ${order.status} status`);
     }
 
+    // Track changes for event
     const changes: Record<string, unknown> = {};
-    if (dto.customerReference !== undefined && dto.customerReference !== order.customerReference) {
-      changes.customerReference = dto.customerReference;
-    }
-    if (dto.specialInstructions !== undefined && dto.specialInstructions !== order.specialInstructions) {
-      changes.specialInstructions = dto.specialInstructions;
-    }
+    const trackChange = (field: string, newVal: unknown, oldVal: unknown) => {
+      if (newVal !== undefined && newVal !== oldVal) changes[field] = newVal;
+    };
+
+    trackChange('customerReference', dto.customerReferenceNumber ?? dto.customerReference, order.customerReference);
+    trackChange('status', dto.status, order.status);
+    trackChange('commodity', dto.commodity, order.commodity);
+    trackChange('equipmentType', dto.equipmentType, order.equipmentType);
+
+    // Compute accessorial total if provided
+    const customFields = (order.customFields as Record<string, unknown>) || {};
+    if (dto.specialHandling?.length) customFields.specialHandling = dto.specialHandling;
+    if (dto.hazmatUnNumber) customFields.hazmatUnNumber = dto.hazmatUnNumber;
+    if (dto.hazmatPlacard) customFields.hazmatPlacard = dto.hazmatPlacard;
+    if (dto.estimatedCarrierRate !== undefined) customFields.estimatedCarrierRate = dto.estimatedCarrierRate;
+    if (dto.billingContactId) customFields.billingContactId = dto.billingContactId;
+    if (dto.billingNotes) customFields.billingNotes = dto.billingNotes;
+    if (dto.priority) customFields.priority = dto.priority;
+    if (dto.paymentTerms) customFields.paymentTerms = dto.paymentTerms;
+    if (dto.accessorials?.length) customFields.accessorials = dto.accessorials;
+
+    const accessorialTotal = dto.accessorials?.reduce((sum, a) => sum + (a.amount || 0), 0);
+    const customerRate = dto.customerRate ?? (Number(order.customerRate) || 0);
+    const fuelSurcharge = dto.fuelSurcharge ?? (Number(order.fuelSurcharge) || 0);
+    const accCharges = accessorialTotal ?? (Number(order.accessorialCharges) || 0);
+    const totalCharges = customerRate + fuelSurcharge + accCharges;
 
     const updated = await this.prisma.order.update({
       where: { id },
       data: {
-        customerReference: dto.customerReference !== undefined ? dto.customerReference : order.customerReference,
-        specialInstructions: dto.specialInstructions !== undefined ? dto.specialInstructions : order.specialInstructions,
+        ...(dto.customerId !== undefined && { customerId: dto.customerId }),
+        customerReference: dto.customerReferenceNumber ?? dto.customerReference ?? order.customerReference,
+        ...(dto.poNumber !== undefined && { poNumber: dto.poNumber }),
+        ...(dto.bolNumber !== undefined && { bolNumber: dto.bolNumber }),
+        ...(dto.salesRepId !== undefined && { salesRepId: dto.salesRepId || null }),
+        ...(dto.status !== undefined && { status: dto.status }),
+        ...(dto.priority !== undefined && { /* stored in customFields */ }),
+        specialInstructions: dto.specialInstructions ?? order.specialInstructions,
+        ...(dto.internalNotes !== undefined && { internalNotes: dto.internalNotes }),
+        // Cargo
+        ...(dto.commodity !== undefined && { commodity: dto.commodity }),
+        ...(dto.weightLbs !== undefined && { weightLbs: dto.weightLbs }),
+        ...(dto.pieceCount !== undefined && { pieceCount: dto.pieceCount }),
+        ...(dto.palletCount !== undefined && { palletCount: dto.palletCount }),
+        ...(dto.equipmentType !== undefined && { equipmentType: dto.equipmentType }),
+        ...(dto.isHazmat !== undefined && { isHazmat: dto.isHazmat }),
+        ...(dto.hazmatClass !== undefined && { hazmatClass: dto.hazmatClass }),
+        ...(dto.temperatureMin !== undefined && { temperatureMin: dto.temperatureMin }),
+        ...(dto.temperatureMax !== undefined && { temperatureMax: dto.temperatureMax }),
+        // Financial
+        ...(dto.customerRate !== undefined && { customerRate: dto.customerRate }),
+        ...(dto.fuelSurcharge !== undefined && { fuelSurcharge: dto.fuelSurcharge }),
+        ...(accessorialTotal !== undefined && { accessorialCharges: accessorialTotal }),
+        totalCharges: totalCharges > 0 ? totalCharges : undefined,
+        // Flags
+        ...(dto.isHot !== undefined && { isHot: dto.isHot }),
+        // Metadata
+        customFields: Object.keys(customFields).length > 0 ? customFields as any : undefined,
         updatedById: userId,
       },
       include: {
         stops: { where: { deletedAt: null }, orderBy: { stopSequence: 'asc' } },
         loads: { where: { deletedAt: null } },
+        items: { where: { deletedAt: null } },
+        customer: { select: { id: true, name: true } },
       },
     });
+
+    // Update stops if provided
+    if (dto.stops?.length) {
+      // Hard-delete old stops — soft-delete would violate the
+      // @@unique([orderId, stopSequence]) constraint when recreating
+      await this.prisma.stop.deleteMany({
+        where: { orderId: id, tenantId },
+      });
+
+      await this.prisma.stop.createMany({
+        data: dto.stops.map((stop, idx) => ({
+          tenantId,
+          orderId: id,
+          stopType: stop.stopType,
+          facilityName: stop.facilityName,
+          addressLine1: stop.addressLine1,
+          addressLine2: stop.addressLine2,
+          city: stop.city,
+          state: stop.state,
+          postalCode: stop.postalCode,
+          country: stop.country || 'USA',
+          contactName: stop.contactName,
+          contactPhone: stop.contactPhone,
+          contactEmail: stop.contactEmail,
+          appointmentRequired: stop.appointmentRequired ?? false,
+          appointmentDate: stop.appointmentDate ? new Date(stop.appointmentDate) : null,
+          appointmentTimeStart: stop.appointmentTimeStart,
+          appointmentTimeEnd: stop.appointmentTimeEnd,
+          specialInstructions: stop.specialInstructions,
+          stopSequence: stop.stopSequence ?? idx + 1,
+          status: 'PENDING',
+          createdById: userId,
+          updatedById: userId,
+        })),
+      });
+    }
 
     this.eventEmitter.emit('order.updated', {
       orderId: id,
@@ -393,7 +545,8 @@ export class OrdersService {
       tenantId,
     });
 
-    return updated;
+    // Re-fetch to get updated stops
+    return this.findOne(tenantId, id);
   }
 
   /**
@@ -726,5 +879,41 @@ export class OrdersService {
       },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  /**
+   * Get order activity timeline (status history mapped to TimelineEvent shape)
+   */
+  async getTimeline(tenantId: string, orderId: string) {
+    const order = await this.prisma.order.findFirst({
+      where: { id: orderId, tenantId, deletedAt: null },
+      select: { id: true, createdAt: true, orderNumber: true },
+    });
+    if (!order) throw new NotFoundException(`Order ${orderId} not found`);
+
+    const history = await this.prisma.statusHistory.findMany({
+      where: { tenantId, entityType: 'ORDER', entityId: orderId },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    const statusEvents = history.map((h) => ({
+      id: h.id,
+      timestamp: h.createdAt.toISOString(),
+      eventType: 'STATUS_CHANGE',
+      description: h.oldStatus
+        ? `Status changed from ${h.oldStatus} to ${h.newStatus}`
+        : `Status set to ${h.newStatus}`,
+      userId: h.createdById ?? undefined,
+      metadata: h.notes ? { notes: h.notes } : undefined,
+    }));
+
+    const createdEvent = {
+      id: `${orderId}-created`,
+      timestamp: order.createdAt.toISOString(),
+      eventType: 'CREATED',
+      description: `Order ${order.orderNumber} created`,
+    };
+
+    return { data: [createdEvent, ...statusEvents] };
   }
 }

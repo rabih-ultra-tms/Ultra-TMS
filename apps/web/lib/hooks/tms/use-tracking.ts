@@ -95,13 +95,19 @@ async function fetchTrackingPositions(
   const params: Record<string, string> = {
     status: 'IN_TRANSIT,DISPATCHED,AT_PICKUP,AT_DELIVERY',
   }
-  if (filters.etaStatus?.length) params.etaStatus = filters.etaStatus.join(',')
+  // etaStatus is a client-side derived field — don't send to backend
   if (filters.equipmentType?.length) params.equipmentType = filters.equipmentType.join(',')
   if (filters.carrierId) params.carrierId = filters.carrierId
   if (filters.customerId) params.customerId = filters.customerId
 
   const response = await apiClient.get('/loads', params)
-  return unwrap<TrackingPosition[]>(response)
+  const loads = unwrap<TrackingPosition[]>(response)
+
+  // Apply etaStatus filter client-side
+  if (filters.etaStatus?.length) {
+    return loads.filter((l) => filters.etaStatus!.includes(l.etaStatus))
+  }
+  return loads
 }
 
 async function fetchLoadDetail(loadId: string): Promise<TrackingLoadDetail> {

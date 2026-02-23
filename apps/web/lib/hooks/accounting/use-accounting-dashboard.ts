@@ -78,12 +78,14 @@ export function useRecentInvoices(limit = 10) {
     queryKey: accountingKeys.recentInvoices(),
     queryFn: async () => {
       const response = await apiClient.get('/invoices', {
-        limit,
-        page: 1,
-        sortBy: 'createdAt',
-        sortOrder: 'desc',
+        take: limit,
+        skip: 0,
       });
-      return unwrap<RecentInvoice[]>(response);
+      // Response interceptor wraps as { data: { invoices: [...], total } }
+      const body = response as Record<string, unknown>;
+      const inner = (body.data ?? body) as Record<string, unknown>;
+      const arr = (inner as Record<string, unknown>).invoices ?? inner;
+      return Array.isArray(arr) ? (arr as RecentInvoice[]) : [];
     },
     staleTime: 30_000,
   });

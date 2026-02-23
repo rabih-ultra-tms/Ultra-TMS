@@ -16,15 +16,32 @@ export const orderKeys = {
     detail: (id: string) => [...orderKeys.details(), id] as const,
 };
 
-// Helper to unwrap { data: T } envelope from apiClient responses
+// Helper to unwrap { success, data: T } envelope from apiClient responses
 function unwrap<T>(response: unknown): T {
     const body = response as Record<string, unknown>;
     return (body.data ?? response) as T;
 }
 
+// Helper to unwrap paginated responses: { success, data: T[], pagination: {...} }
+// Maps API's `totalPages` to frontend's `pages`
+function unwrapPaginated<T>(response: unknown): { data: T[]; pagination: { page: number; limit: number; total: number; pages: number } } {
+    const body = response as Record<string, unknown>;
+    const data = (body.data ?? []) as T[];
+    const apiPagination = body.pagination as Record<string, unknown> | undefined;
+    return {
+        data,
+        pagination: {
+            page: Number(apiPagination?.page ?? 1),
+            limit: Number(apiPagination?.limit ?? 20),
+            total: Number(apiPagination?.total ?? 0),
+            pages: Number(apiPagination?.totalPages ?? 1),
+        },
+    };
+}
+
 export function useOrder(id: string) {
     return useQuery<OrderDetailResponse>({
-        queryKey: ['order', id],
+        queryKey: orderKeys.detail(id),
         queryFn: async () => {
             const response = await apiClient.get(`/orders/${id}`);
             return unwrap<OrderDetailResponse>(response);
@@ -48,7 +65,7 @@ export function useOrders(params: OrderListParams) {
             if (params.toDate) searchParams.set('toDate', params.toDate);
 
             const response = await apiClient.get(`/orders?${searchParams.toString()}`);
-            return unwrap<OrderListResponse>(response);
+            return unwrapPaginated<Order>(response);
         },
         placeholderData: (previousData) => previousData,
     });
@@ -118,7 +135,7 @@ export function useUpdateOrder() {
     return useMutation({
         mutationFn: async ({ id, formData, status }: { id: string } & CreateOrderPayload) => {
             const payload = mapFormToApi(formData, status);
-            const response = await apiClient.patch(`/orders/${id}`, payload);
+            const response = await apiClient.put(`/orders/${id}`, payload);
             return unwrap<Order>(response);
         },
         onSuccess: (_data, variables) => {
@@ -142,6 +159,12 @@ export function useOrderFromQuote(quoteId: string) {
 
 // --- Helper: map form values to API payload ---
 
+function toNum(value: unknown): number | undefined {
+    if (value == null || value === '') return undefined;
+    const n = Number(value);
+    return Number.isFinite(n) ? n : undefined;
+}
+
 function mapFormToApi(formData: OrderFormValues, status: 'PENDING' | 'BOOKED') {
     return {
         customerId: formData.customerId,
@@ -153,20 +176,20 @@ function mapFormToApi(formData: OrderFormValues, status: 'PENDING' | 'BOOKED') {
         priority: formData.priority,
         internalNotes: formData.internalNotes || undefined,
         commodity: formData.commodity,
-        weightLbs: formData.weight,
-        pieceCount: formData.pieces ?? undefined,
-        palletCount: formData.pallets ?? undefined,
+        weightLbs: toNum(formData.weight),
+        pieceCount: toNum(formData.pieces),
+        palletCount: toNum(formData.pallets),
         equipmentType: formData.equipmentType,
         isHazmat: formData.isHazmat,
         hazmatClass: formData.isHazmat ? formData.hazmatClass : undefined,
         hazmatUnNumber: formData.isHazmat ? formData.hazmatUnNumber : undefined,
         hazmatPlacard: formData.isHazmat ? formData.hazmatPlacard : undefined,
-        temperatureMin: formData.equipmentType === 'REEFER' ? formData.tempMin : undefined,
-        temperatureMax: formData.equipmentType === 'REEFER' ? formData.tempMax : undefined,
+        temperatureMin: formData.equipmentType === 'REEFER' ? toNum(formData.tempMin) : undefined,
+        temperatureMax: formData.equipmentType === 'REEFER' ? toNum(formData.tempMax) : undefined,
         specialHandling: formData.specialHandling,
-        customerRate: formData.customerRate ?? undefined,
-        fuelSurcharge: formData.fuelSurcharge ?? undefined,
-        estimatedCarrierRate: formData.estimatedCarrierRate ?? undefined,
+        customerRate: toNum(formData.customerRate),
+        fuelSurcharge: toNum(formData.fuelSurcharge),
+        estimatedCarrierRate: toNum(formData.estimatedCarrierRate),
         paymentTerms: formData.paymentTerms,
         billingContactId: formData.billingContactId || undefined,
         billingNotes: formData.billingNotes || undefined,

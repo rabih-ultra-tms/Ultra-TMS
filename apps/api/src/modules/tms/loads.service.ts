@@ -65,7 +65,10 @@ export class LoadsService {
     const skip = (page - 1) * limit;
 
     const where: any = { tenantId, deletedAt: null };
-    if (status) where.status = status;
+    if (status) {
+      const statuses = status.split(',').map(s => s.trim()).filter(Boolean);
+      where.status = statuses.length === 1 ? statuses[0] : { in: statuses };
+    }
     if (carrierId) where.carrierId = carrierId;
     if (orderId) where.orderId = orderId;
     if (dispatcherId) where.createdById = dispatcherId;

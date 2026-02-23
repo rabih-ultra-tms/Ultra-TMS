@@ -1,5 +1,5 @@
 export enum LoadStatus {
-    PLANNING = 'PLANNING', // Not in backend enum but in status machine description? Backend has PENDING.
+    PLANNING = 'PLANNING', // Frontend-only display status (dispatch board). Not in backend enum — do not send to API.
     PENDING = 'PENDING',
     TENDERED = 'TENDERED',
     ACCEPTED = 'ACCEPTED',

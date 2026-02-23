@@ -7,6 +7,7 @@ import { apiClient } from "@/lib/api-client";
 import { LoadListParams, LoadListResponse, Load, LoadDetailResponse } from "@/types/loads";
 import { OperationsCarrier } from "@/types/carriers";
 import { OrderDetailResponse } from "@/types/orders";
+import { orderKeys } from "./use-orders";
 
 // Helper to unwrap { data: T } envelope from apiClient responses
 function unwrap<T>(response: unknown): T {
@@ -32,7 +33,15 @@ export function useLoads(params: LoadListParams) {
             if (params.toDate) searchParams.set('toDate', params.toDate);
 
             const response = await apiClient.get(`/loads?${searchParams.toString()}`);
-            return unwrap<LoadListResponse>(response);
+            // API returns { success, data, pagination: { page, limit, total, totalPages } }
+            // Map to LoadListResponse shape expected by page components
+            const body = response as { data?: Load[]; pagination?: { total?: number; page?: number; limit?: number } };
+            return {
+                data: body.data ?? [],
+                total: body.pagination?.total ?? 0,
+                page: body.pagination?.page ?? 1,
+                limit: body.pagination?.limit ?? 20,
+            };
         },
         placeholderData: (previousData) => previousData,
     });
@@ -137,7 +146,7 @@ export function useCreateLoad() {
         onSuccess: (load) => {
             queryClient.invalidateQueries({ queryKey: ['loads'] });
             if (load.order?.id) {
-                queryClient.invalidateQueries({ queryKey: ['order', load.order.id] });
+                queryClient.invalidateQueries({ queryKey: orderKeys.detail(load.order.id) });
             }
             toast.success('Load created successfully', {
                 description: `Load ${load.loadNumber} has been created`,
@@ -171,7 +180,7 @@ export function useUpdateLoad(loadId: string) {
             queryClient.invalidateQueries({ queryKey: ['loads'] });
             queryClient.invalidateQueries({ queryKey: ['load', loadId] });
             if (load.order?.id) {
-                queryClient.invalidateQueries({ queryKey: ['order', load.order.id] });
+                queryClient.invalidateQueries({ queryKey: orderKeys.detail(load.order.id) });
             }
             toast.success('Load updated successfully', {
                 description: `Load ${load.loadNumber} has been updated`,
@@ -241,7 +250,7 @@ export function useCarriers(params: CarrierSearchParams) {
 
 export function useOrder(orderId: string | undefined) {
     return useQuery<OrderDetailResponse>({
-        queryKey: ['order', orderId],
+        queryKey: orderKeys.detail(orderId ?? ''),
         queryFn: async () => {
             const response = await apiClient.get(`/orders/${orderId}`);
             return unwrap<OrderDetailResponse>(response);
