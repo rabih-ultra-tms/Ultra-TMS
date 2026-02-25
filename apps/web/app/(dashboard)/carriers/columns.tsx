@@ -5,7 +5,7 @@ import { OperationsCarrierListItem } from "@/types/carriers";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { StatusBadge } from "@/components/tms/primitives/status-badge";
-import { Phone, Mail, MapPin, Truck, Users, Shield, AlertTriangle } from "lucide-react";
+import { Phone, Mail, MapPin, Truck, Users, Shield, AlertTriangle, ShieldCheck, ShieldX } from "lucide-react";
 import Link from "next/link";
 import { CarrierActionsMenu } from "./carrier-actions-menu";
 import type { StatusColorToken, Intent } from "@/lib/design-tokens";
@@ -34,6 +34,18 @@ const isInsuranceExpired = (carrier: OperationsCarrierListItem) => {
     const expiry = new Date(carrier.insuranceExpiryDate);
     return expiry < now;
 };
+
+type ComplianceState = "compliant" | "expiring" | "expired" | "unknown";
+
+function getComplianceState(carrier: OperationsCarrierListItem): ComplianceState {
+  if (!carrier.insuranceExpiryDate) return "unknown";
+  const now = new Date();
+  const expiry = new Date(carrier.insuranceExpiryDate);
+  if (expiry < now) return "expired";
+  const diffDays = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays <= 30) return "expiring";
+  return "compliant";
+}
 
 const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
@@ -149,6 +161,32 @@ export const columns: ColumnDef<OperationsCarrierListItem>[] = [
                         <Truck className="h-3.5 w-3.5 text-muted-foreground" />
                         <span>{_count?.trucks || 0}</span>
                     </div>
+                </div>
+            );
+        },
+    },
+    {
+        id: "compliance",
+        header: "Compliance",
+        cell: ({ row }) => {
+            const state = getComplianceState(row.original);
+
+            if (state === "unknown") {
+                return <span className="text-muted-foreground text-sm">-</span>;
+            }
+
+            const COMPLIANCE_CONFIG = {
+                compliant: { icon: ShieldCheck, label: "Compliant", className: "text-green-600" },
+                expiring:  { icon: AlertTriangle, label: "Expiring",  className: "text-amber-600" },
+                expired:   { icon: ShieldX,       label: "Expired",   className: "text-red-600"   },
+            } as const;
+
+            const { icon: Icon, label, className } = COMPLIANCE_CONFIG[state];
+
+            return (
+                <div className={`flex items-center gap-1.5 text-xs font-medium ${className}`}>
+                    <Icon className="h-3.5 w-3.5 shrink-0" />
+                    <span>{label}</span>
                 </div>
             );
         },
