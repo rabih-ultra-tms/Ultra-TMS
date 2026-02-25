@@ -49,9 +49,8 @@ export const useCarrier = (id: string) => {
   return useQuery({
     queryKey: [CARRIERS_KEY, id],
     queryFn: async () => {
-      return await apiClient.get<OperationsCarrier>(
-        `/operations/carriers/${id}`
-      );
+      const raw = await apiClient.get<unknown>(`/operations/carriers/${id}`);
+      return (raw as { data: OperationsCarrier }).data;
     },
     enabled: !!id,
   });

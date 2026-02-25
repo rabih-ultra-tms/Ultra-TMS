@@ -19,6 +19,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { FmcsaLookup } from "@/components/carriers/fmcsa-lookup";
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 
 
 interface CarrierFormProps {
@@ -226,7 +227,17 @@ export function CarrierForm({
                                     <FormItem className="sm:col-span-2">
                                         <FormLabel>Address</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="123 Main St" {...field} />
+                                            <AddressAutocomplete
+                                                value={field.value ?? ""}
+                                                onChange={field.onChange}
+                                                onSelect={(components) => {
+                                                    field.onChange(components.address);
+                                                    if (components.city) form.setValue("city", components.city, { shouldDirty: true });
+                                                    if (components.state) form.setValue("state", components.state, { shouldDirty: true });
+                                                    if (components.zip) form.setValue("zip", components.zip, { shouldDirty: true });
+                                                }}
+                                                placeholder="123 Main St"
+                                            />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
