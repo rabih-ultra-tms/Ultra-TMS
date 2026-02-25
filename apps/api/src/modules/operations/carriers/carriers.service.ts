@@ -676,4 +676,50 @@ export class CarriersService {
 
     return { success: true };
   }
+
+  // ============================================================================
+  // SCORECARD
+  // ============================================================================
+
+  async getCarrierScorecard(carrierId: string, tenantId: string) {
+    const carrier = await this.prisma.operationsCarrier.findUnique({
+      where: { id: carrierId, tenantId },
+      select: {
+        id: true,
+        companyName: true,
+        tier: true,
+        onTimePickupRate: true,
+        onTimeDeliveryRate: true,
+        claimsRate: true,
+        avgRating: true,
+        acceptanceRate: true,
+        totalLoadsCompleted: true,
+        performanceScore: true,
+        LoadHistory: {
+          where: { status: { in: ['DELIVERED', 'COMPLETED'] } },
+          orderBy: { deliveryDate: 'desc' },
+          take: 50,
+          select: {
+            id: true,
+            status: true,
+            pickupDate: true,
+            deliveryDate: true,
+            carrierRateCents: true,
+            ratePerMileCarrierCents: true,
+            originCity: true,
+            originState: true,
+            destinationCity: true,
+            destinationState: true,
+            totalMiles: true,
+          },
+        },
+      },
+    });
+
+    if (!carrier) {
+      throw new NotFoundException(`Carrier ${carrierId} not found`);
+    }
+
+    return { carrier };
+  }
 }

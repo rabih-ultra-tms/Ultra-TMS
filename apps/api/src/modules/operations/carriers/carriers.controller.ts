@@ -70,6 +70,16 @@ export class CarriersController {
     return this.carriersService.getCarrierStats(tenantId);
   }
 
+  @Get(':carrierId/scorecard')
+  @Roles('ADMIN', 'MANAGER', 'SALES_REP', 'SALES_MANAGER')
+  @ApiOperation({ summary: 'Get carrier performance scorecard and recent load history' })
+  async getCarrierScorecard(
+    @CurrentTenant() tenantId: string,
+    @Param('carrierId') carrierId: string,
+  ) {
+    return this.carriersService.getCarrierScorecard(carrierId, tenantId);
+  }
+
   @Get(':carrierId')
   @Roles('ADMIN', 'MANAGER', 'SALES_REP', 'SALES_MANAGER')
   @ApiOperation({ summary: 'Get carrier by ID' })
