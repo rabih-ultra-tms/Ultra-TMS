@@ -8,6 +8,7 @@ import { StatusBadge } from "@/components/tms/primitives/status-badge";
 import { Phone, Mail, MapPin, Truck, Users, Shield, AlertTriangle, ShieldCheck, ShieldX } from "lucide-react";
 import Link from "next/link";
 import { CarrierActionsMenu } from "./carrier-actions-menu";
+import { TierBadge } from "@/components/carriers/tier-badge";
 import type { StatusColorToken, Intent } from "@/lib/design-tokens";
 
 const TYPE_COLORS: Record<string, string> = {
@@ -239,6 +240,14 @@ export const columns: ColumnDef<OperationsCarrierListItem>[] = [
                 </StatusBadge>
             );
         },
+    },
+    {
+        id: "tier",
+        header: "Tier",
+        cell: ({ row }) => (
+            <TierBadge tier={row.original.tier} size="sm" />
+        ),
+        size: 80,
     },
     {
         id: "actions",
