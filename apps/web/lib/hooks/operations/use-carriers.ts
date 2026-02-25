@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import {
   OperationsCarrier,
   OperationsCarrierListItem,
@@ -31,13 +32,15 @@ export const useCarriers = (params: CarrierListParams) => {
       if (params.sortBy) cleanParams.sortBy = params.sortBy;
       if (params.sortOrder) cleanParams.sortOrder = params.sortOrder;
       
-      return await apiClient.get<{
-        data: OperationsCarrierListItem[];
-        total: number;
-        page: number;
-        limit: number;
-        totalPages: number;
-      }>('/operations/carriers', cleanParams);
+      const raw = await apiClient.get<unknown>('/operations/carriers', cleanParams);
+      const r = raw as { data: OperationsCarrierListItem[]; pagination: { total: number; page: number; limit: number; totalPages: number } };
+      return {
+        data: r.data,
+        total: r.pagination?.total ?? 0,
+        page: r.pagination?.page ?? 1,
+        limit: r.pagination?.limit ?? 10,
+        totalPages: r.pagination?.totalPages ?? 1,
+      };
     },
   });
 };
@@ -59,9 +62,12 @@ export const useCreateCarrier = () => {
 
   return useMutation({
     mutationFn: async (data: Partial<OperationsCarrier>) => {
+      const payload = Object.fromEntries(
+        Object.entries(data).filter(([, v]) => v !== '')
+      );
       return await apiClient.post<OperationsCarrier>(
         '/operations/carriers',
-        data
+        payload
       );
     },
     onSuccess: () => {
@@ -79,7 +85,11 @@ export const useUpdateCarrier = (id?: string) => {
     mutationFn: async (data: Partial<OperationsCarrier> & { id?: string }) => {
       const targetId = data.id || id;
       if (!targetId) throw new Error('Carrier ID is required for update');
-      const { id: _, ...updateData } = data;
+      const { id: _, ...rest } = data;
+      // Strip empty strings so @IsOptional() fields aren't sent as "" (which fails @IsEmail etc.)
+      const updateData = Object.fromEntries(
+        Object.entries(rest).filter(([, v]) => v !== '')
+      );
       return await apiClient.patch<OperationsCarrier>(
         `/operations/carriers/${targetId}`,
         updateData
@@ -96,6 +106,10 @@ export const useUpdateCarrier = (id?: string) => {
       queryClient.invalidateQueries({
         queryKey: [CARRIERS_KEY, 'stats'],
       });
+      toast.success('Carrier updated successfully');
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to update carrier', { description: error.message });
     },
   });
 };
@@ -128,11 +142,8 @@ export const useCarrierStats = () => {
   return useQuery({
     queryKey: [CARRIERS_KEY, 'stats'],
     queryFn: async () => {
-      return await apiClient.get<{
-        total: number;
-        byType: Record<string, number>;
-        byStatus: Record<string, number>;
-      }>('/operations/carriers/stats');
+      const raw = await apiClient.get<unknown>('/operations/carriers/stats');
+      return (raw as { data: { total: number; byType: Record<string, number>; byStatus: Record<string, number> } }).data;
     },
   });
 };
