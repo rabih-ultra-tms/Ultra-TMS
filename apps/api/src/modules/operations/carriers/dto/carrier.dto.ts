@@ -203,6 +203,14 @@ export class OperationsCarrierResponseDto {
   cargoInsuranceLimitCents?: number;
   status: string;
   notes?: string;
+  tier?: string;
+  onTimePickupRate?: number;
+  onTimeDeliveryRate?: number;
+  claimsRate?: number;
+  avgRating?: number;
+  acceptanceRate?: number;
+  totalLoadsCompleted?: number;
+  performanceScore?: number;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;

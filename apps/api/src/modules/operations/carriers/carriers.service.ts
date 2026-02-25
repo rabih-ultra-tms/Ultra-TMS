@@ -60,6 +60,28 @@ export class CarriersService {
           truckCount: dto.truckCount,
           trailerCount: dto.trailerCount,
           isActive: true,
+          ...(dto.tier !== undefined && { tier: dto.tier }),
+          ...(dto.onTimePickupRate !== undefined && {
+            onTimePickupRate: new Prisma.Decimal(String(dto.onTimePickupRate)),
+          }),
+          ...(dto.onTimeDeliveryRate !== undefined && {
+            onTimeDeliveryRate: new Prisma.Decimal(String(dto.onTimeDeliveryRate)),
+          }),
+          ...(dto.claimsRate !== undefined && {
+            claimsRate: new Prisma.Decimal(String(dto.claimsRate)),
+          }),
+          ...(dto.avgRating !== undefined && {
+            avgRating: new Prisma.Decimal(String(dto.avgRating)),
+          }),
+          ...(dto.acceptanceRate !== undefined && {
+            acceptanceRate: new Prisma.Decimal(String(dto.acceptanceRate)),
+          }),
+          ...(dto.totalLoadsCompleted !== undefined && {
+            totalLoadsCompleted: dto.totalLoadsCompleted,
+          }),
+          ...(dto.performanceScore !== undefined && {
+            performanceScore: new Prisma.Decimal(String(dto.performanceScore)),
+          }),
         },
       });
     } catch (error) {
