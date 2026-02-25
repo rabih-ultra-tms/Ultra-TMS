@@ -132,7 +132,7 @@ function StatsCards({ stats }: { stats: { total: number; byType: Record<string, 
                   <p className="text-xs text-muted-foreground font-medium truncate">{card.label}</p>
                   <div className="text-2xl font-bold mt-0.5">{card.value}</div>
                 </div>
-                <div className={`shrink-0 rounded-lg p-2 ${card.iconBg}`}>
+                <div className={`shrink-0 rounded-full p-2 ${card.iconBg}`}>
                   <Icon className={`h-4 w-4 ${card.iconColor}`} />
                 </div>
               </div>
