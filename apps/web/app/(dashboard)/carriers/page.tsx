@@ -77,7 +77,7 @@ function StatsCards({ stats }: { stats: { total: number; byType: Record<string, 
   if (!stats) return null;
 
   const cards: StatCard[] = [
-    { label: "Total Carriers", value: stats.total,                          icon: Truck,        colorKey: "blue600"   },
+    { label: "Total Carriers", value: stats.total ?? 0,                      icon: Truck,        colorKey: "blue600"   },
     { label: "Companies",      value: stats.byType?.COMPANY ?? 0,           icon: Building2,    colorKey: "purple600" },
     { label: "Owner-Ops",      value: stats.byType?.OWNER_OPERATOR ?? 0,    icon: User,         colorKey: "orange500" },
     { label: "Active",         value: stats.byStatus?.ACTIVE ?? 0,          icon: CheckCircle2, colorKey: "green600"  },
