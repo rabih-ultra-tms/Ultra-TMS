@@ -163,6 +163,11 @@ export default function CarrierDetailPage({
       backLabel="Back to Carriers"
       actions={
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/carriers/${id}/scorecard`}>
+              View Scorecard
+            </Link>
+          </Button>
           <Button variant="outline" size="sm" onClick={() => router.push(`/carriers/${id}/edit`)}>
             <Pencil className="mr-2 h-4 w-4" />
             Edit
