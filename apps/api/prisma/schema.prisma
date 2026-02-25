@@ -4746,7 +4746,7 @@ model Load {
   id                       String                     @id @default(uuid())
   tenantId                 String
   loadNumber               String                     @db.VarChar(50)
-  orderId                  String
+  orderId                  String?
   carrierId                String?
   driverName               String?                    @db.VarChar(100)
   driverPhone              String?                    @db.VarChar(20)
@@ -5655,7 +5655,19 @@ model OperationsCarrier {
   cargoInsuranceLimitCents Int?
   status                   String                    @default("ACTIVE") @db.VarChar(50)
   notes                    String?
+  equipmentTypes           String[]
+  truckCount               Int?
+  trailerCount             Int?
   isActive                 Boolean                   @default(true)
+  qualificationTier        String?                   @db.VarChar(50)
+  tier                     String?                   @db.VarChar(20)   // PLATINUM|GOLD|SILVER|BRONZE|UNQUALIFIED
+  onTimePickupRate         Decimal?                  @db.Decimal(5, 2) // 0.00–100.00
+  onTimeDeliveryRate       Decimal?                  @db.Decimal(5, 2) // 0.00–100.00
+  claimsRate               Decimal?                  @db.Decimal(5, 2) // claims per 100 loads
+  avgRating                Decimal?                  @db.Decimal(3, 2) // 1.00–5.00
+  acceptanceRate           Decimal?                  @db.Decimal(5, 2) // 0.00–100.00
+  totalLoadsCompleted      Int                       @default(0)
+  performanceScore         Decimal?                  @db.Decimal(5, 2) // computed overall score 0–100
   externalId               String?                   @db.VarChar(255)
   sourceSystem             String?                   @db.VarChar(100)
   customFields             Json                      @default("{}")
@@ -5668,6 +5680,7 @@ model OperationsCarrier {
   tenant                   Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   drivers                  OperationsCarrierDriver[]
   trucks                   OperationsCarrierTruck[]
+  documents                OperationsCarrierDocument[]
 
   @@index([dotNumber])
   @@index([isActive])
@@ -5759,6 +5772,24 @@ model OperationsCarrierTruck {
   @@index([truckTypeId])
   @@index([unitNumber])
   @@index([vin])
+}
+
+model OperationsCarrierDocument {
+  id           String            @id @default(uuid())
+  carrierId    String
+  documentType String            @db.VarChar(50)
+  name         String            @db.VarChar(255)
+  description  String?
+  expiryDate   DateTime?         @db.Date
+  status       String            @default("PENDING") @db.VarChar(20)
+  isActive     Boolean           @default(true)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  deletedAt    DateTime?
+  carrier      OperationsCarrier @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+
+  @@index([carrierId])
+  @@index([status])
 }
 
 model Opportunity {

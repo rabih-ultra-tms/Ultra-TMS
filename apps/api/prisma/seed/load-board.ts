@@ -71,7 +71,7 @@ export async function seedLoadBoard(prisma: any, tenantIds: string[]): Promise<v
 
           // Contact
           contactName: faker.person.fullName(),
-          contactPhone: faker.phone.number(),
+          contactPhone: faker.phone.number({ style: 'national' }).slice(0, 20),
           contactEmail: faker.internet.email(),
 
           // Timestamps
