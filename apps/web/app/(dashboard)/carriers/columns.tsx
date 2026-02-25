@@ -46,6 +46,11 @@ function getComplianceState(carrier: OperationsCarrierListItem): ComplianceState
   if (diffDays <= 30) return "expiring";
   return "compliant";
 }
+const COMPLIANCE_CONFIG = {
+    compliant: { icon: ShieldCheck, label: "Compliant", className: "text-green-600" },
+    expiring:  { icon: AlertTriangle, label: "Expiring",  className: "text-amber-600" },
+    expired:   { icon: ShieldX,       label: "Expired",   className: "text-red-600"   },
+} as const;
 
 const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
@@ -174,12 +179,6 @@ export const columns: ColumnDef<OperationsCarrierListItem>[] = [
             if (state === "unknown") {
                 return <span className="text-muted-foreground text-sm">-</span>;
             }
-
-            const COMPLIANCE_CONFIG = {
-                compliant: { icon: ShieldCheck, label: "Compliant", className: "text-green-600" },
-                expiring:  { icon: AlertTriangle, label: "Expiring",  className: "text-amber-600" },
-                expired:   { icon: ShieldX,       label: "Expired",   className: "text-red-600"   },
-            } as const;
 
             const { icon: Icon, label, className } = COMPLIANCE_CONFIG[state];
 
