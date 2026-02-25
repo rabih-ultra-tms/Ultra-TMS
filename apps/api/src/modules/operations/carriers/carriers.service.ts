@@ -13,6 +13,7 @@ import {
   UpdateOperationsCarrierDriverDto,
   CreateOperationsCarrierTruckDto,
   UpdateOperationsCarrierTruckDto,
+  CreateOperationsCarrierDocumentDto,
 } from './dto';
 
 @Injectable()
@@ -55,6 +56,9 @@ export class CarriersService {
           cargoInsuranceLimitCents: dto.cargoInsuranceLimitCents,
           status: dto.status || 'ACTIVE',
           notes: dto.notes,
+          equipmentTypes: dto.equipmentTypes ?? [],
+          truckCount: dto.truckCount,
+          trailerCount: dto.trailerCount,
           isActive: true,
         },
       });
@@ -173,6 +177,11 @@ export class CarriersService {
           where: { isActive: true },
           orderBy: { createdAt: 'desc' },
         },
+        _count: {
+          select: {
+            documents: { where: { isActive: true } },
+          },
+        },
       },
     });
 
@@ -221,6 +230,31 @@ export class CarriersService {
           cargoInsuranceLimitCents: dto.cargoInsuranceLimitCents,
           status: dto.status,
           notes: dto.notes,
+          ...(dto.equipmentTypes !== undefined && { equipmentTypes: dto.equipmentTypes }),
+          ...(dto.truckCount !== undefined && { truckCount: dto.truckCount }),
+          ...(dto.trailerCount !== undefined && { trailerCount: dto.trailerCount }),
+          ...(dto.tier !== undefined && { tier: dto.tier }),
+          ...(dto.onTimePickupRate !== undefined && {
+            onTimePickupRate: new Prisma.Decimal(String(dto.onTimePickupRate)),
+          }),
+          ...(dto.onTimeDeliveryRate !== undefined && {
+            onTimeDeliveryRate: new Prisma.Decimal(String(dto.onTimeDeliveryRate)),
+          }),
+          ...(dto.claimsRate !== undefined && {
+            claimsRate: new Prisma.Decimal(String(dto.claimsRate)),
+          }),
+          ...(dto.avgRating !== undefined && {
+            avgRating: new Prisma.Decimal(String(dto.avgRating)),
+          }),
+          ...(dto.acceptanceRate !== undefined && {
+            acceptanceRate: new Prisma.Decimal(String(dto.acceptanceRate)),
+          }),
+          ...(dto.totalLoadsCompleted !== undefined && {
+            totalLoadsCompleted: dto.totalLoadsCompleted,
+          }),
+          ...(dto.performanceScore !== undefined && {
+            performanceScore: new Prisma.Decimal(String(dto.performanceScore)),
+          }),
           updatedAt: new Date(),
         },
       });
@@ -563,5 +597,61 @@ export class CarriersService {
         assignedDriver: true,
       },
     });
+  }
+
+  // ============================================================================
+  // DOCUMENTS
+  // ============================================================================
+
+  async listDocuments(tenantId: string, carrierId: string) {
+    await this.getCarrierById(tenantId, carrierId); // validates access
+
+    return this.prisma.operationsCarrierDocument.findMany({
+      where: { carrierId, isActive: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async createDocument(
+    tenantId: string,
+    carrierId: string,
+    dto: CreateOperationsCarrierDocumentDto,
+  ) {
+    await this.getCarrierById(tenantId, carrierId);
+
+    try {
+      return await this.prisma.operationsCarrierDocument.create({
+        data: {
+          carrierId,
+          documentType: dto.documentType,
+          name: dto.name,
+          description: dto.description,
+          expiryDate: dto.expiryDate ? new Date(dto.expiryDate) : null,
+          status: 'PENDING',
+          isActive: true,
+        },
+      });
+    } catch (error) {
+      throw new BadRequestException(`Failed to create document: ${error.message}`);
+    }
+  }
+
+  async deleteDocument(tenantId: string, carrierId: string, documentId: string) {
+    await this.getCarrierById(tenantId, carrierId);
+
+    const doc = await this.prisma.operationsCarrierDocument.findUnique({
+      where: { id: documentId },
+    });
+
+    if (!doc || doc.carrierId !== carrierId) {
+      throw new NotFoundException('Document not found');
+    }
+
+    await this.prisma.operationsCarrierDocument.update({
+      where: { id: documentId },
+      data: { isActive: false, deletedAt: new Date() },
+    });
+
+    return { success: true };
   }
 }

@@ -3,7 +3,11 @@ import {
   IsOptional,
   IsEmail,
   IsNumber,
+  IsArray,
+  IsInt,
+  IsIn,
   Min,
+  Max,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -107,6 +111,66 @@ export class CreateOperationsCarrierDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  equipmentTypes?: string[];
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  truckCount?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  trailerCount?: number;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['PLATINUM', 'GOLD', 'SILVER', 'BRONZE', 'UNQUALIFIED'])
+  tier?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  onTimePickupRate?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  onTimeDeliveryRate?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  claimsRate?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Max(5)
+  avgRating?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  acceptanceRate?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  totalLoadsCompleted?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  performanceScore?: number;
 }
 
 export class UpdateOperationsCarrierDto extends CreateOperationsCarrierDto {}
