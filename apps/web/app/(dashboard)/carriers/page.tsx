@@ -54,77 +54,46 @@ type CarrierStatus = "ACTIVE" | "INACTIVE" | "PREFERRED" | "ON_HOLD" | "BLACKLIS
 
 // --- Components ---
 
+// Color configuration — all class names are complete static strings for Tailwind scanner
+const CARD_COLORS = {
+  blue600:   { accent: "border-l-blue-600",   iconBg: "bg-blue-50",   iconText: "text-blue-600"   },
+  purple600: { accent: "border-l-purple-600", iconBg: "bg-purple-50", iconText: "text-purple-600" },
+  orange500: { accent: "border-l-orange-500", iconBg: "bg-orange-50", iconText: "text-orange-500" },
+  green600:  { accent: "border-l-green-600",  iconBg: "bg-green-50",  iconText: "text-green-600"  },
+  blue500:   { accent: "border-l-blue-500",   iconBg: "bg-blue-50",   iconText: "text-blue-500"   },
+  amber500:  { accent: "border-l-amber-500",  iconBg: "bg-amber-50",  iconText: "text-amber-500"  },
+} as const;
+
+type ColorKey = keyof typeof CARD_COLORS;
+
 interface StatCard {
   label: string;
   value: number;
   icon: React.ElementType;
-  accentColor: string;
-  iconBg: string;
-  iconColor: string;
+  colorKey: ColorKey;
 }
 
 function StatsCards({ stats }: { stats: { total: number; byType: Record<string, number>; byStatus: Record<string, number> } | undefined }) {
   if (!stats) return null;
 
   const cards: StatCard[] = [
-    {
-      label: "Total Carriers",
-      value: stats.total,
-      icon: Truck,
-      accentColor: "border-l-blue-600",
-      iconBg: "bg-blue-50",
-      iconColor: "text-blue-600",
-    },
-    {
-      label: "Companies",
-      value: stats.byType?.COMPANY ?? 0,
-      icon: Building2,
-      accentColor: "border-l-purple-600",
-      iconBg: "bg-purple-50",
-      iconColor: "text-purple-600",
-    },
-    {
-      label: "Owner-Ops",
-      value: stats.byType?.OWNER_OPERATOR ?? 0,
-      icon: User,
-      accentColor: "border-l-orange-500",
-      iconBg: "bg-orange-50",
-      iconColor: "text-orange-500",
-    },
-    {
-      label: "Active",
-      value: stats.byStatus?.ACTIVE ?? 0,
-      icon: CheckCircle2,
-      accentColor: "border-l-green-600",
-      iconBg: "bg-green-50",
-      iconColor: "text-green-600",
-    },
-    {
-      label: "Preferred",
-      value: stats.byStatus?.PREFERRED ?? 0,
-      icon: Star,
-      accentColor: "border-l-blue-500",
-      iconBg: "bg-blue-50",
-      iconColor: "text-blue-500",
-    },
-    {
-      label: "On Hold",
-      value: stats.byStatus?.ON_HOLD ?? 0,
-      icon: PauseCircle,
-      accentColor: "border-l-amber-500",
-      iconBg: "bg-amber-50",
-      iconColor: "text-amber-500",
-    },
+    { label: "Total Carriers", value: stats.total,                          icon: Truck,        colorKey: "blue600"   },
+    { label: "Companies",      value: stats.byType?.COMPANY ?? 0,           icon: Building2,    colorKey: "purple600" },
+    { label: "Owner-Ops",      value: stats.byType?.OWNER_OPERATOR ?? 0,    icon: User,         colorKey: "orange500" },
+    { label: "Active",         value: stats.byStatus?.ACTIVE ?? 0,          icon: CheckCircle2, colorKey: "green600"  },
+    { label: "Preferred",      value: stats.byStatus?.PREFERRED ?? 0,       icon: Star,         colorKey: "blue500"   },
+    { label: "On Hold",        value: stats.byStatus?.ON_HOLD ?? 0,         icon: PauseCircle,  colorKey: "amber500"  },
   ];
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
       {cards.map((card) => {
         const Icon = card.icon;
+        const colors = CARD_COLORS[card.colorKey];
         return (
           <Card
             key={card.label}
-            className={`border-l-4 ${card.accentColor} transition-shadow hover:shadow-md cursor-default`}
+            className={`border-l-4 ${colors.accent} transition-shadow hover:shadow-md cursor-default`}
           >
             <CardContent className="pt-4 pb-3 px-4">
               <div className="flex items-start justify-between gap-2">
@@ -132,8 +101,8 @@ function StatsCards({ stats }: { stats: { total: number; byType: Record<string, 
                   <p className="text-xs text-muted-foreground font-medium truncate">{card.label}</p>
                   <div className="text-2xl font-bold mt-0.5">{card.value}</div>
                 </div>
-                <div className={`shrink-0 rounded-full p-2 ${card.iconBg}`}>
-                  <Icon className={`h-4 w-4 ${card.iconColor}`} />
+                <div className={`shrink-0 rounded-full p-2 ${colors.iconBg}`}>
+                  <Icon className={`h-4 w-4 ${colors.iconText}`} />
                 </div>
               </div>
             </CardContent>
