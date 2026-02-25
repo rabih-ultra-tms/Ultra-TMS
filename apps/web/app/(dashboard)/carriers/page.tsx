@@ -27,6 +27,10 @@ import {
   CheckSquare,
   Building2,
   User,
+  Truck,
+  CheckCircle2,
+  Star,
+  PauseCircle,
 } from "lucide-react";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { useDebounce } from "@/lib/hooks";
@@ -50,56 +54,92 @@ type CarrierStatus = "ACTIVE" | "INACTIVE" | "PREFERRED" | "ON_HOLD" | "BLACKLIS
 
 // --- Components ---
 
+interface StatCard {
+  label: string;
+  value: number;
+  icon: React.ElementType;
+  accentColor: string;
+  iconBg: string;
+  iconColor: string;
+}
+
 function StatsCards({ stats }: { stats: { total: number; byType: Record<string, number>; byStatus: Record<string, number> } | undefined }) {
   if (!stats) return null;
+
+  const cards: StatCard[] = [
+    {
+      label: "Total Carriers",
+      value: stats.total,
+      icon: Truck,
+      accentColor: "border-l-blue-600",
+      iconBg: "bg-blue-50",
+      iconColor: "text-blue-600",
+    },
+    {
+      label: "Companies",
+      value: stats.byType?.COMPANY ?? 0,
+      icon: Building2,
+      accentColor: "border-l-purple-600",
+      iconBg: "bg-purple-50",
+      iconColor: "text-purple-600",
+    },
+    {
+      label: "Owner-Ops",
+      value: stats.byType?.OWNER_OPERATOR ?? 0,
+      icon: User,
+      accentColor: "border-l-orange-500",
+      iconBg: "bg-orange-50",
+      iconColor: "text-orange-500",
+    },
+    {
+      label: "Active",
+      value: stats.byStatus?.ACTIVE ?? 0,
+      icon: CheckCircle2,
+      accentColor: "border-l-green-600",
+      iconBg: "bg-green-50",
+      iconColor: "text-green-600",
+    },
+    {
+      label: "Preferred",
+      value: stats.byStatus?.PREFERRED ?? 0,
+      icon: Star,
+      accentColor: "border-l-blue-500",
+      iconBg: "bg-blue-50",
+      iconColor: "text-blue-500",
+    },
+    {
+      label: "On Hold",
+      value: stats.byStatus?.ON_HOLD ?? 0,
+      icon: PauseCircle,
+      accentColor: "border-l-amber-500",
+      iconBg: "bg-amber-50",
+      iconColor: "text-amber-500",
+    },
+  ];
+
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-      <Card>
-        <CardContent className="pt-4">
-          <div className="text-2xl font-bold">{stats.total}</div>
-          <p className="text-xs text-muted-foreground">Total</p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="pt-4">
-          <div className="text-2xl font-bold text-purple-600">
-            {stats.byType?.COMPANY || 0}
-          </div>
-          <p className="text-xs text-muted-foreground">Companies</p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="pt-4">
-          <div className="text-2xl font-bold text-orange-600">
-            {stats.byType?.OWNER_OPERATOR || 0}
-          </div>
-          <p className="text-xs text-muted-foreground">Owner-Ops</p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="pt-4">
-          <div className="text-2xl font-bold text-green-600">
-            {stats.byStatus?.ACTIVE || 0}
-          </div>
-          <p className="text-xs text-muted-foreground">Active</p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="pt-4">
-          <div className="text-2xl font-bold text-blue-600">
-            {stats.byStatus?.PREFERRED || 0}
-          </div>
-          <p className="text-xs text-muted-foreground">Preferred</p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="pt-4">
-          <div className="text-2xl font-bold text-yellow-600">
-            {stats.byStatus?.ON_HOLD || 0}
-          </div>
-          <p className="text-xs text-muted-foreground">On Hold</p>
-        </CardContent>
-      </Card>
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      {cards.map((card) => {
+        const Icon = card.icon;
+        return (
+          <Card
+            key={card.label}
+            className={`border-l-4 ${card.accentColor} transition-shadow hover:shadow-md cursor-default`}
+          >
+            <CardContent className="pt-4 pb-3 px-4">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground font-medium truncate">{card.label}</p>
+                  <div className="text-2xl font-bold mt-0.5">{card.value}</div>
+                </div>
+                <div className={`shrink-0 rounded-lg p-2 ${card.iconBg}`}>
+                  <Icon className={`h-4 w-4 ${card.iconColor}`} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }
