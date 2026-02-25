@@ -5687,6 +5687,7 @@ model OperationsCarrier {
   @@index([mcNumber])
   @@index([status])
   @@index([tenantId])
+  @@index([tier])
 }
 
 model OperationsCarrierDriver {
@@ -5783,6 +5784,12 @@ model OperationsCarrierDocument {
   expiryDate   DateTime?         @db.Date
   status       String            @default("PENDING") @db.VarChar(20)
   isActive     Boolean           @default(true)
+  tenantId     String?
+  externalId   String?           @db.VarChar(255)
+  sourceSystem String?           @db.VarChar(100)
+  customFields Json              @default("{}")
+  createdById  String?
+  updatedById  String?
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
   deletedAt    DateTime?
@@ -5790,6 +5797,8 @@ model OperationsCarrierDocument {
 
   @@index([carrierId])
   @@index([status])
+  @@index([tenantId])
+  @@index([externalId, sourceSystem])
 }
 
 model Opportunity {
