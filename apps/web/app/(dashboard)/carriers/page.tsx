@@ -174,12 +174,6 @@ export default function CarriersPage() {
   // Selection helpers
   const selectedCount = Object.keys(rowSelection).length;
 
-  React.useEffect(() => {
-    // Reset selection when data changes (e.g. filter/page change)
-    // Actually, TanStack table handles this via row id, but good to be safe if we want to clear.
-    // For now, let's keep selection if ids match.
-  }, [data]);
-
   const handleBatchDelete = () => {
     if (selectedCount === 0) return;
     setShowBatchDeleteDialog(true);
@@ -199,7 +193,7 @@ export default function CarriersPage() {
   const handleBulkStatusUpdate = async () => {
     const selectedIds = Object.keys(rowSelection);
     const results = await Promise.allSettled(
-      selectedIds.map((id) => updateMutation.mutateAsync({ id, status: bulkStatus }))
+      selectedIds.map((id) => updateMutation.mutateAsync({ id, status: bulkStatus }, { onSuccess: () => {} }))
     );
     const failed = results.filter((r) => r.status === "rejected").length;
     const succeeded = results.length - failed;
