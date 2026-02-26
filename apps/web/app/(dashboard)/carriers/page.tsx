@@ -45,8 +45,17 @@ import {
 import { Label } from "@/components/ui/label";
 import { ListPage } from "@/components/patterns/list-page";
 import { columns, isInsuranceExpired, isInsuranceExpiring } from "./columns";
-import { OperationsCarrierListItem } from "@/types/carriers";
+import { OperationsCarrierListItem, EQUIPMENT_TYPES, CARRIER_EQUIPMENT_TYPE_LABELS } from "@/types/carriers";
 import type { Row } from "@tanstack/react-table";
+
+// --- US States ---
+const US_STATES = [
+  'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA',
+  'HI','ID','IL','IN','IA','KS','KY','LA','ME','MD',
+  'MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ',
+  'NM','NY','NC','ND','OH','OK','OR','PA','RI','SC',
+  'SD','TN','TX','UT','VT','VA','WA','WV','WI','WY',
+] as const;
 
 // --- Constants ---
 
@@ -119,6 +128,10 @@ export default function CarriersPage() {
   const [typeFilter, setTypeFilter] = useState<CarrierType | "all">("all");
   const [statusFilter, setStatusFilter] = useState<CarrierStatus | "all">("all");
   const [stateFilter, setStateFilter] = useState<string>("");
+  const [tierFilter, setTierFilter] = useState<string>("all");
+  const [equipmentFilter, setEquipmentFilter] = useState<string>("all");
+  const [complianceFilter, setComplianceFilter] = useState<string>("all");
+  const [minScore, setMinScore] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const [showNewCarrierDialog, setShowNewCarrierDialog] = useState(false);
@@ -137,6 +150,10 @@ export default function CarriersPage() {
     status: statusFilter === "all" ? undefined : statusFilter,
     carrierType: typeFilter === "all" ? undefined : typeFilter,
     state: stateFilter || undefined,
+    tier: tierFilter === "all" ? undefined : tierFilter,
+    equipmentTypes: equipmentFilter === "all" ? undefined : [equipmentFilter],
+    compliance: complianceFilter === "all" ? undefined : complianceFilter,
+    minScore: minScore ? Number(minScore) : undefined,
   });
 
   // Fetch stats
@@ -177,12 +194,17 @@ export default function CarriersPage() {
     setTypeFilter("all");
     setStatusFilter("all");
     setStateFilter("");
+    setTierFilter("all");
+    setEquipmentFilter("all");
+    setComplianceFilter("all");
+    setMinScore("");
     setSearchQuery("");
     setPage(1);
   };
 
   const hasActiveFilters =
-    typeFilter !== "all" || statusFilter !== "all" || stateFilter || searchQuery;
+    typeFilter !== "all" || statusFilter !== "all" || stateFilter || searchQuery
+    || tierFilter !== "all" || equipmentFilter !== "all" || complianceFilter !== "all" || minScore;
 
   const handleCreateCarrier = () => {
     if (!newCarrierName) return;
@@ -251,7 +273,7 @@ export default function CarriersPage() {
       </div>
 
       {/* Filter Row */}
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-2">
         <Select
           value={typeFilter}
           onValueChange={(value) => {
@@ -290,15 +312,66 @@ export default function CarriersPage() {
           </SelectContent>
         </Select>
 
+        <Select value={stateFilter || "all"} onValueChange={(v) => { setStateFilter(v === "all" ? "" : v); setPage(1); }}>
+          <SelectTrigger className="w-[110px] h-9">
+            <SelectValue placeholder="State" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All States</SelectItem>
+            {US_STATES.map((s) => (
+              <SelectItem key={s} value={s}>{s}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={tierFilter} onValueChange={(v) => { setTierFilter(v); setPage(1); }}>
+          <SelectTrigger className="w-[130px] h-9">
+            <SelectValue placeholder="Tier" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Tiers</SelectItem>
+            <SelectItem value="PLATINUM">Platinum</SelectItem>
+            <SelectItem value="GOLD">Gold</SelectItem>
+            <SelectItem value="SILVER">Silver</SelectItem>
+            <SelectItem value="BRONZE">Bronze</SelectItem>
+            <SelectItem value="UNRATED">Unrated</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={equipmentFilter} onValueChange={(v) => { setEquipmentFilter(v); setPage(1); }}>
+          <SelectTrigger className="w-[140px] h-9">
+            <SelectValue placeholder="Equipment" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Equipment</SelectItem>
+            {EQUIPMENT_TYPES.map((type) => (
+              <SelectItem key={type} value={type}>
+                {CARRIER_EQUIPMENT_TYPE_LABELS[type] ?? type}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={complianceFilter} onValueChange={(v) => { setComplianceFilter(v); setPage(1); }}>
+          <SelectTrigger className="w-[140px] h-9">
+            <SelectValue placeholder="Compliance" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Compliance</SelectItem>
+            <SelectItem value="COMPLIANT">Compliant</SelectItem>
+            <SelectItem value="WARNING">Expiring Soon</SelectItem>
+            <SelectItem value="EXPIRED">Expired</SelectItem>
+          </SelectContent>
+        </Select>
+
         <Input
-          placeholder="State"
-          value={stateFilter}
-          onChange={(e) => {
-            setStateFilter(e.target.value.toUpperCase().slice(0, 2));
-            setPage(1);
-          }}
-          className="w-full sm:w-[80px] h-9"
-          maxLength={2}
+          type="number"
+          placeholder="Min Score"
+          value={minScore}
+          onChange={(e) => { setMinScore(e.target.value); setPage(1); }}
+          className="w-[110px] h-9"
+          min={0}
+          max={100}
         />
 
         {hasActiveFilters && (
