@@ -24,7 +24,7 @@ const TYPE_LABELS: Record<string, string> = {
     OWNER_OPERATOR: "Owner-Operator",
 };
 
-const isInsuranceExpiring = (carrier: OperationsCarrierListItem) => {
+export const isInsuranceExpiring = (carrier: OperationsCarrierListItem) => {
     if (!carrier.insuranceExpiryDate) return false;
     const now = new Date();
     const expiry = new Date(carrier.insuranceExpiryDate);
@@ -32,7 +32,7 @@ const isInsuranceExpiring = (carrier: OperationsCarrierListItem) => {
     return diffDays > 0 && diffDays <= 30;
 };
 
-const isInsuranceExpired = (carrier: OperationsCarrierListItem) => {
+export const isInsuranceExpired = (carrier: OperationsCarrierListItem) => {
     if (!carrier.insuranceExpiryDate) return false;
     const now = new Date();
     const expiry = new Date(carrier.insuranceExpiryDate);

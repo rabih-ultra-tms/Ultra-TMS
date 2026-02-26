@@ -44,8 +44,9 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { ListPage } from "@/components/patterns/list-page";
-import { columns } from "./columns";
+import { columns, isInsuranceExpired, isInsuranceExpiring } from "./columns";
 import { OperationsCarrierListItem } from "@/types/carriers";
+import type { Row } from "@tanstack/react-table";
 
 // --- Constants ---
 
@@ -336,6 +337,12 @@ export default function CarriersPage() {
         onRowSelectionChange={setRowSelection}
         renderBulkActions={renderBulkActions}
         entityLabel="carriers"
+        getRowClassName={(row: Row<OperationsCarrierListItem>) => {
+          const carrier = row.original;
+          if (isInsuranceExpired(carrier)) return "bg-red-50";
+          if (isInsuranceExpiring(carrier)) return "bg-amber-50";
+          return undefined;
+        }}
       />
 
       {/* New Carrier Dialog */}

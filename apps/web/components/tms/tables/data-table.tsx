@@ -40,6 +40,8 @@ export interface DataTableProps<TData> {
   isRowAtRisk?: (row: Row<TData>) => boolean;
   /** Optional render function for group header rows (used with grouping) */
   renderGroupHeader?: (row: Row<TData>) => React.ReactNode;
+  /** Optional: returns extra CSS classes for a row (e.g. 'bg-amber-50') */
+  getRowClassName?: (row: Row<TData>) => string | undefined;
 }
 
 // ---- Density mapping ------------------------------------------------------
@@ -120,6 +122,7 @@ export function DataTable<TData>({
   onRowClick,
   isRowAtRisk,
   renderGroupHeader,
+  getRowClassName,
 }: DataTableProps<TData>) {
   return (
     <div
@@ -218,7 +221,8 @@ export function DataTable<TData>({
                     atRisk && "[&>td]:bg-danger-bg",
                     atRisk &&
                       "[&>td:first-child]:border-l-[3px] [&>td:first-child]:border-l-danger",
-                    atRisk && "hover:[&>td]:bg-surface-hover"
+                    atRisk && "hover:[&>td]:bg-surface-hover",
+                    !atRisk && !selected && getRowClassName?.(row)
                   )}
                   onClick={() => onRowClick?.(row)}
                   data-state={selected ? "selected" : undefined}
