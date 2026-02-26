@@ -140,7 +140,7 @@ export interface OperationsCarrier {
   insurancePolicyNumber?: string;
   insuranceExpiryDate?: string;
   cargoInsuranceLimitCents?: number;
-  status: 'ACTIVE' | 'INACTIVE' | 'PREFERRED' | 'ON_HOLD' | 'BLACKLISTED';
+  status: 'PENDING' | 'APPROVED' | 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'BLACKLISTED';
   notes?: string;
   tier?: string | null;
   onTimePickupRate?: number;
@@ -177,6 +177,11 @@ export interface CarrierListParams {
   status?: string;
   carrierType?: string;
   state?: string;
+  // NEW fields:
+  tier?: string;
+  equipmentTypes?: string[];
+  compliance?: string;
+  minScore?: number;
 }
 
 export interface CarrierLoadHistoryItem {
