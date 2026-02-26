@@ -25,12 +25,13 @@ const INVOICE_STATUS_STYLES: Record<InvoiceStatus, string> = {
   VOID: 'bg-gray-100 text-gray-500 border-gray-300',
 };
 
-function formatCurrency(value: number): string {
+function formatCurrency(value: number | string | null | undefined): string {
+  const num = Number(value ?? 0);
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 2,
-  }).format(value);
+  }).format(isNaN(num) ? 0 : num);
 }
 
 function formatDate(dateString: string): string {

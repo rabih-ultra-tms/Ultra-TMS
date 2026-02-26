@@ -39,22 +39,22 @@ export class SettlementsController {
   @ApiOperation({ summary: 'List settlements' })
   @ApiQuery({ name: 'status', required: false, type: String })
   @ApiQuery({ name: 'carrierId', required: false, type: String })
-  @ApiQuery({ name: 'skip', required: false, type: String })
-  @ApiQuery({ name: 'take', required: false, type: String })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiStandardResponse('Settlements list')
   @ApiErrorResponses()
   async findAll(
     @CurrentTenant() tenantId: string,
     @Query('status') status?: string,
     @Query('carrierId') carrierId?: string,
-    @Query('skip') skip?: string,
-    @Query('take') take?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ) {
     return this.settlementsService.findAll(tenantId, {
       status,
       carrierId,
-      skip: skip ? parseInt(skip, 10) : undefined,
-      take: take ? parseInt(take, 10) : undefined,
+      page: page ? parseInt(page, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
     });
   }
 

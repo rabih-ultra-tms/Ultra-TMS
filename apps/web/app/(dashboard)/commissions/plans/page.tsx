@@ -5,7 +5,7 @@ import { useState, useCallback } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { ListPage } from '@/components/patterns/list-page';
 import { usePlans } from '@/lib/hooks/commissions/use-plans';
-import type { CommissionPlan, PlanType } from '@/lib/hooks/commissions/use-plans';
+import type { CommissionPlan, BackendPlanType } from '@/lib/hooks/commissions/use-plans';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,11 +23,12 @@ import Link from 'next/link';
 // Plan Type Labels
 // ===========================
 
-const PLAN_TYPE_LABELS: Record<PlanType, string> = {
-  PERCENTAGE: 'Percentage',
-  FLAT: 'Flat Rate',
-  TIERED_PERCENTAGE: 'Tiered %',
-  TIERED_FLAT: 'Tiered Flat',
+const PLAN_TYPE_LABELS: Record<BackendPlanType, string> = {
+  PERCENT_MARGIN: 'Percentage',
+  PERCENT_REVENUE: 'Percentage (Revenue)',
+  FLAT_FEE: 'Flat Rate',
+  TIERED: 'Tiered',
+  CUSTOM: 'Custom',
 };
 
 // ===========================
@@ -53,24 +54,24 @@ function getPlanColumns(): ColumnDef<CommissionPlan>[] {
       ),
     },
     {
-      accessorKey: 'type',
+      accessorKey: 'planType',
       header: 'Type',
       cell: ({ row }) => (
         <Badge variant="outline" className="text-xs">
-          {PLAN_TYPE_LABELS[row.original.type]}
+          {PLAN_TYPE_LABELS[row.original.planType]}
         </Badge>
       ),
     },
     {
-      accessorKey: 'rate',
+      accessorKey: 'percentRate',
       header: 'Rate / Amount',
       cell: ({ row }) => {
         const plan = row.original;
-        if (plan.type === 'PERCENTAGE' && plan.rate !== null) {
-          return <span className="font-medium">{plan.rate}%</span>;
+        if ((plan.planType === 'PERCENT_MARGIN' || plan.planType === 'PERCENT_REVENUE') && plan.percentRate !== null) {
+          return <span className="font-medium">{Number(plan.percentRate)}%</span>;
         }
-        if (plan.type === 'FLAT' && plan.flatAmount !== null) {
-          return <span className="font-medium">${plan.flatAmount.toFixed(2)}</span>;
+        if (plan.planType === 'FLAT_FEE' && plan.flatAmount !== null) {
+          return <span className="font-medium">${Number(plan.flatAmount).toFixed(2)}</span>;
         }
         if (plan.tiers.length > 0) {
           return (
@@ -83,7 +84,7 @@ function getPlanColumns(): ColumnDef<CommissionPlan>[] {
       },
     },
     {
-      accessorKey: 'isActive',
+      accessorKey: 'status',
       header: 'Status',
       cell: ({ row }) => (
         <div className="flex items-center gap-1.5">
@@ -93,19 +94,19 @@ function getPlanColumns(): ColumnDef<CommissionPlan>[] {
             </Badge>
           )}
           <Badge
-            variant={row.original.isActive ? 'outline' : 'secondary'}
+            variant={row.original.status === 'ACTIVE' ? 'outline' : 'secondary'}
           >
-            {row.original.isActive ? 'Active' : 'Inactive'}
+            {row.original.status === 'ACTIVE' ? 'Active' : 'Inactive'}
           </Badge>
         </div>
       ),
     },
     {
-      accessorKey: 'repCount',
+      id: 'repCount',
       header: () => <div className="text-right">Reps</div>,
       cell: ({ row }) => (
         <div className="text-right text-text-muted">
-          {row.original.repCount}
+          {row.original._count?.assignments ?? 0}
         </div>
       ),
     },
@@ -198,10 +199,10 @@ export default function CommissionPlansPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="PERCENTAGE">Percentage</SelectItem>
-              <SelectItem value="FLAT">Flat Rate</SelectItem>
-              <SelectItem value="TIERED_PERCENTAGE">Tiered %</SelectItem>
-              <SelectItem value="TIERED_FLAT">Tiered Flat</SelectItem>
+              <SelectItem value="PERCENT_MARGIN">Percentage</SelectItem>
+              <SelectItem value="FLAT_FEE">Flat Rate</SelectItem>
+              <SelectItem value="TIERED">Tiered</SelectItem>
+              <SelectItem value="CUSTOM">Custom</SelectItem>
             </SelectContent>
           </Select>
         </div>

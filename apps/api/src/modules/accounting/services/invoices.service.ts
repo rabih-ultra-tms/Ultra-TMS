@@ -82,10 +82,14 @@ export class InvoicesService {
       companyId?: string;
       fromDate?: Date;
       toDate?: Date;
-      skip?: number;
-      take?: number;
+      page?: number;
+      limit?: number;
     },
   ) {
+    const page = options?.page ?? 1;
+    const limit = options?.limit ?? 20;
+    const skip = (page - 1) * limit;
+
     const where = {
       tenantId,
       ...(options?.status && { status: options.status }),
@@ -103,13 +107,13 @@ export class InvoicesService {
           company: { select: { id: true, name: true } },
         },
         orderBy: { invoiceDate: 'desc' },
-        skip: options?.skip,
-        take: options?.take,
+        skip,
+        take: limit,
       }),
       this.prisma.invoice.count({ where }),
     ]);
 
-    return { invoices, total };
+    return { data: invoices, total, page, limit };
   }
 
   async findOne(id: string, tenantId: string) {
@@ -317,7 +321,7 @@ export class InvoicesService {
 
     return this.create(tenantId, userId, {
       companyId: load.order.customerId,
-      orderId: load.orderId,
+      orderId: load.orderId ?? undefined,
       loadId: load.id,
       invoiceDate: new Date().toISOString(),
       dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // NET30
@@ -331,7 +335,7 @@ export class InvoicesService {
           description: `Freight charges for Load ${load.loadNumber}`,
           itemType: InvoiceLineItemType.FREIGHT,
           loadId: load.id,
-          orderId: load.orderId,
+          orderId: load.orderId ?? undefined,
           quantity: 1,
           unitPrice: totalAmount,
           amount: totalAmount,

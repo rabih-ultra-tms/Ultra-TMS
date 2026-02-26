@@ -21,7 +21,7 @@ import { Roles } from '../../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
-@Controller('commission/entries')
+@Controller('commissions/entries')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Commission')
 @ApiBearerAuth('JWT-auth')

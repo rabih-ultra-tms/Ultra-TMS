@@ -151,7 +151,7 @@ export async function seedLoads(prisma: any, tenantIds: string[]): Promise<void>
 
             // Driver & vehicle (only if carrier assigned)
             driverName: carrier ? faker.person.fullName() : null,
-            driverPhone: carrier ? faker.phone.number() : null,
+            driverPhone: carrier ? faker.phone.number({ style: 'national' }).slice(0, 20) : null,
             truckNumber: carrier ? `T${faker.string.numeric(4)}` : null,
             trailerNumber: carrier ? `TR${faker.string.numeric(5)}` : null,
 

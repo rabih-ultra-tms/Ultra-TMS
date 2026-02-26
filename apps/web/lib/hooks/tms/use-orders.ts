@@ -193,14 +193,14 @@ function mapFormToApi(formData: OrderFormValues, status: 'PENDING' | 'BOOKED') {
         paymentTerms: formData.paymentTerms,
         billingContactId: formData.billingContactId || undefined,
         billingNotes: formData.billingNotes || undefined,
-        accessorials: formData.accessorials
+        accessorials: (formData.accessorials ?? [])
             .filter((a: { type: string; amount: number }) => a.type && a.amount > 0)
             .map((a: { type: string; amount: number; notes?: string }) => ({
                 type: a.type,
                 amount: a.amount,
                 notes: a.notes || undefined,
             })),
-        stops: formData.stops.map((stop: OrderFormValues['stops'][number], index: number) => ({
+        stops: (formData.stops ?? []).map((stop: OrderFormValues['stops'][number], index: number) => ({
             stopType: stop.type,
             stopSequence: index,
             facilityName: stop.facilityName || undefined,

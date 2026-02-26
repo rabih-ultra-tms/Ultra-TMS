@@ -48,7 +48,8 @@ function describeArc(
   return `M ${s.x} ${s.y} A ${r} ${r} 0 ${large} 1 ${e.x} ${e.y}`;
 }
 
-export function ScoreGauge({ score, size = 180, className }: ScoreGaugeProps) {
+export function ScoreGauge({ score: rawScore, size = 180, className }: ScoreGaugeProps) {
+  const score = Number.isFinite(rawScore) ? rawScore : 0;
   const radius = size * 0.38;
   const cx = size / 2;
   const cy = size / 2;

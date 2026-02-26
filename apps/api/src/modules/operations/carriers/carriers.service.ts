@@ -16,6 +16,40 @@ import {
   CreateOperationsCarrierDocumentDto,
 } from './dto';
 
+const CARRIER_DECIMAL_FIELDS = [
+  'onTimePickupRate',
+  'onTimeDeliveryRate',
+  'claimsRate',
+  'avgRating',
+  'acceptanceRate',
+  'performanceScore',
+] as const;
+
+const TRUCK_DECIMAL_FIELDS = ['deckLengthFt', 'deckWidthFt', 'deckHeightFt'] as const;
+
+function toNum(val: unknown): number | null {
+  if (val == null) return null;
+  const n = parseFloat(String(val));
+  return isNaN(n) ? null : n;
+}
+
+function serializeCarrier<T extends Record<string, unknown>>(carrier: T): T {
+  const result = { ...carrier } as Record<string, unknown>;
+  for (const field of CARRIER_DECIMAL_FIELDS) {
+    if (field in result) result[field] = toNum(result[field]);
+  }
+  if (Array.isArray(result.trucks)) {
+    result.trucks = (result.trucks as Record<string, unknown>[]).map((t) => {
+      const truck = { ...t };
+      for (const field of TRUCK_DECIMAL_FIELDS) {
+        if (field in truck) truck[field] = toNum(truck[field]);
+      }
+      return truck;
+    });
+  }
+  return result as T;
+}
+
 @Injectable()
 export class CarriersService {
   constructor(private prisma: PrismaService) {}
@@ -26,7 +60,7 @@ export class CarriersService {
 
   async createCarrier(tenantId: string, dto: CreateOperationsCarrierDto) {
     try {
-      return await this.prisma.operationsCarrier.create({
+      const carrier = await this.prisma.operationsCarrier.create({
         data: {
           tenantId,
           carrierType: dto.carrierType,
@@ -84,6 +118,7 @@ export class CarriersService {
           }),
         },
       });
+      return serializeCarrier(carrier as unknown as Record<string, unknown>);
     } catch (error) {
       throw new BadRequestException(
         `Failed to create carrier: ${error.message}`
@@ -173,7 +208,7 @@ export class CarriersService {
     ]);
 
     return {
-      data,
+      data: data.map(serializeCarrier),
       total,
       page: dto.page,
       limit: dto.limit,
@@ -239,7 +274,7 @@ export class CarriersService {
       throw new NotFoundException('Carrier not found');
     }
 
-    return carrier;
+    return serializeCarrier(carrier as unknown as Record<string, unknown>) as typeof carrier;
   }
 
   async updateCarrier(
@@ -250,7 +285,7 @@ export class CarriersService {
     const _existing = await this.getCarrierById(tenantId, carrierId);
 
     try {
-      return await this.prisma.operationsCarrier.update({
+      const updated = await this.prisma.operationsCarrier.update({
         where: { id: carrierId },
         data: {
           carrierType: dto.carrierType,
@@ -308,6 +343,7 @@ export class CarriersService {
           updatedAt: new Date(),
         },
       });
+      return serializeCarrier(updated as unknown as Record<string, unknown>);
     } catch (error) {
       throw new BadRequestException(
         `Failed to update carrier: ${error.message}`

@@ -10,6 +10,7 @@ import {
   Max,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
+import { PartialType } from '@nestjs/mapped-types';
 
 export class CreateOperationsCarrierDto {
   @IsString()
@@ -173,7 +174,7 @@ export class CreateOperationsCarrierDto {
   performanceScore?: number;
 }
 
-export class UpdateOperationsCarrierDto extends CreateOperationsCarrierDto {}
+export class UpdateOperationsCarrierDto extends PartialType(CreateOperationsCarrierDto) {}
 
 export class OperationsCarrierResponseDto {
   id: string;

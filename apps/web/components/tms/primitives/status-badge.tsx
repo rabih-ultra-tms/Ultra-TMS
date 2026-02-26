@@ -13,7 +13,7 @@ import type { StatusColorToken, Intent } from "@/lib/design-tokens";
 // ---------------------------------------------------------------------------
 
 const statusBadgeVariants = cva(
-  "inline-flex items-center gap-1.5 font-semibold border rounded-[4px] leading-none whitespace-nowrap",
+  "inline-flex items-center justify-center gap-1.5 font-semibold border rounded-[4px] leading-none whitespace-nowrap",
   {
     variants: {
       status: {

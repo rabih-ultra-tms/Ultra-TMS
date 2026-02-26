@@ -46,22 +46,22 @@ export class InvoicesController {
   @ApiOperation({ summary: 'List invoices' })
   @ApiQuery({ name: 'status', required: false, type: String })
   @ApiQuery({ name: 'companyId', required: false, type: String })
-  @ApiQuery({ name: 'skip', required: false, type: String })
-  @ApiQuery({ name: 'take', required: false, type: String })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiStandardResponse('Invoices list')
   @ApiErrorResponses()
   async findAll(
     @CurrentTenant() tenantId: string,
     @Query('status') status?: string,
     @Query('companyId') companyId?: string,
-    @Query('skip') skip?: string,
-    @Query('take') take?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ) {
     return this.invoicesService.findAll(tenantId, {
       status,
       companyId,
-      skip: skip ? parseInt(skip, 10) : undefined,
-      take: take ? parseInt(take, 10) : undefined,
+      page: page ? parseInt(page, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
     });
   }
 

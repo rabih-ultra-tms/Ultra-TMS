@@ -9,11 +9,20 @@ import { apiClient } from '@/lib/api-client';
 // Types
 // ===========================
 
+// Frontend-friendly aliases used by form UI
 export type PlanType =
   | 'PERCENTAGE'
   | 'FLAT'
   | 'TIERED_PERCENTAGE'
   | 'TIERED_FLAT';
+
+// Backend PlanType enum values (what the API actually returns)
+export type BackendPlanType =
+  | 'FLAT_FEE'
+  | 'PERCENT_REVENUE'
+  | 'PERCENT_MARGIN'
+  | 'TIERED'
+  | 'CUSTOM';
 
 export interface PlanTier {
   minMargin: number;
@@ -21,17 +30,33 @@ export interface PlanTier {
   rate: number;
 }
 
+// Backend tier structure (what the API actually returns)
+export interface BackendPlanTier {
+  id: string;
+  tierNumber: number;
+  tierName: string | null;
+  thresholdType: string;
+  thresholdMin: number;
+  thresholdMax: number | null;
+  rateType: string;
+  rateAmount: number;
+  periodType: string | null;
+}
+
+// Matches the actual API response from Prisma
 export interface CommissionPlan {
   id: string;
   name: string;
-  type: PlanType;
+  planType: BackendPlanType;
   description: string | null;
-  rate: number | null;
+  percentRate: number | null;
   flatAmount: number | null;
-  tiers: PlanTier[];
-  isActive: boolean;
+  tiers: BackendPlanTier[];
+  status: string;
   isDefault: boolean;
-  repCount: number;
+  effectiveDate: string;
+  endDate: string | null;
+  _count?: { assignments: number; entries: number };
   createdAt: string;
   updatedAt: string;
 }
@@ -58,15 +83,35 @@ interface PlanListResponse {
 
 export interface CreatePlanInput {
   name: string;
-  type: PlanType;
+  planType: string;
   description?: string;
-  rate?: number;
+  percentRate?: number;
   flatAmount?: number;
-  tiers?: PlanTier[];
-  isActive?: boolean;
+  effectiveDate: string;
+  endDate?: string;
+  calculationBasis?: string;
+  minimumMarginPercent?: number;
+  isDefault?: boolean;
+  tiers?: {
+    tierNumber: number;
+    tierName?: string;
+    thresholdType: string;
+    thresholdMin: number;
+    thresholdMax?: number;
+    rateType: string;
+    rateAmount: number;
+    periodType?: string;
+  }[];
 }
 
-export type UpdatePlanInput = Partial<CreatePlanInput>;
+export interface UpdatePlanInput {
+  name?: string;
+  description?: string;
+  status?: string;
+  endDate?: string;
+  flatAmount?: number;
+  percentRate?: number;
+}
 
 // ===========================
 // Query Keys
@@ -111,7 +156,12 @@ export function usePlans(params: PlanListParams = {}) {
       const query = searchParams.toString();
       const url = query ? `/commissions/plans?${query}` : '/commissions/plans';
       const response = await apiClient.get(url);
-      return unwrap<PlanListResponse>(response);
+      // The global interceptor returns { success, data: [...], pagination: {...} }
+      const raw = response as { data: any[]; pagination: PlanListResponse['pagination'] };
+      return {
+        data: raw.data ?? [],
+        pagination: raw.pagination ?? { page: 1, limit: 20, total: 0, totalPages: 0 },
+      };
     },
     placeholderData: (previousData) => previousData,
   });
@@ -150,7 +200,7 @@ export function useUpdatePlan() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...input }: UpdatePlanInput & { id: string }) => {
-      const response = await apiClient.put(`/commissions/plans/${id}`, input);
+      const response = await apiClient.patch(`/commissions/plans/${id}`, input);
       return unwrap<CommissionPlan>(response);
     },
     onSuccess: (_data, variables) => {

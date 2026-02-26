@@ -25,14 +25,16 @@ const mockCommissionDashboard = {
 const mockPercentagePlan = {
     id: "plan-1",
     name: "Standard Commission",
-    type: "PERCENTAGE" as const,
+    planType: "PERCENT_MARGIN" as const,
     description: "Standard percentage-based plan",
-    rate: 10,
+    percentRate: 10,
     flatAmount: null,
     tiers: [],
-    isActive: true,
+    status: "ACTIVE",
     isDefault: true,
-    repCount: 5,
+    effectiveDate: new Date().toISOString(),
+    endDate: null,
+    _count: { assignments: 5, entries: 20 },
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
 };
@@ -40,19 +42,21 @@ const mockPercentagePlan = {
 const mockTieredPlan = {
     id: "plan-2",
     name: "Tiered Growth Plan",
-    type: "TIERED_PERCENTAGE" as const,
+    planType: "TIERED" as const,
     description: "Higher margins earn higher rates",
-    rate: null,
+    percentRate: null,
     flatAmount: null,
     tiers: [
-        { minMargin: 0, maxMargin: 12, rate: 8 },
-        { minMargin: 12, maxMargin: 18, rate: 10 },
-        { minMargin: 18, maxMargin: 25, rate: 12 },
-        { minMargin: 25, maxMargin: null, rate: 15 },
+        { id: "t1", tierNumber: 1, tierName: null, thresholdType: "MARGIN", thresholdMin: 0, thresholdMax: 12, rateType: "PERCENT", rateAmount: 8, periodType: null },
+        { id: "t2", tierNumber: 2, tierName: null, thresholdType: "MARGIN", thresholdMin: 12, thresholdMax: 18, rateType: "PERCENT", rateAmount: 10, periodType: null },
+        { id: "t3", tierNumber: 3, tierName: null, thresholdType: "MARGIN", thresholdMin: 18, thresholdMax: 25, rateType: "PERCENT", rateAmount: 12, periodType: null },
+        { id: "t4", tierNumber: 4, tierName: null, thresholdType: "MARGIN", thresholdMin: 25, thresholdMax: null, rateType: "PERCENT", rateAmount: 15, periodType: null },
     ],
-    isActive: true,
+    status: "ACTIVE",
     isDefault: false,
-    repCount: 3,
+    effectiveDate: new Date().toISOString(),
+    endDate: null,
+    _count: { assignments: 3, entries: 15 },
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
 };
@@ -60,14 +64,16 @@ const mockTieredPlan = {
 const mockFlatPlan = {
     id: "plan-3",
     name: "Flat Fee Plan",
-    type: "FLAT" as const,
+    planType: "FLAT_FEE" as const,
     description: null,
-    rate: null,
+    percentRate: null,
     flatAmount: 150,
     tiers: [],
-    isActive: false,
+    status: "INACTIVE",
     isDefault: false,
-    repCount: 0,
+    effectiveDate: new Date().toISOString(),
+    endDate: null,
+    _count: { assignments: 0, entries: 0 },
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
 };
@@ -132,7 +138,7 @@ describe("COM-003: CommissionPlanCard", () => {
     it("renders tiered plan with tier count", () => {
         render(<CommissionPlanCard plan={mockTieredPlan} />);
         expect(screen.getByText("Tiered Growth Plan")).toBeInTheDocument();
-        expect(screen.getByText("Tiered %")).toBeInTheDocument();
+        expect(screen.getByText("Tiered")).toBeInTheDocument();
         expect(screen.getByText("4 tiers")).toBeInTheDocument();
     });
 
@@ -149,7 +155,7 @@ describe("COM-003: CommissionPlanCard", () => {
     });
 
     it("shows singular rep for single rep", () => {
-        render(<CommissionPlanCard plan={{ ...mockPercentagePlan, repCount: 1 }} />);
+        render(<CommissionPlanCard plan={{ ...mockPercentagePlan, _count: { assignments: 1, entries: 5 } }} />);
         expect(screen.getByText("1 rep")).toBeInTheDocument();
     });
 });

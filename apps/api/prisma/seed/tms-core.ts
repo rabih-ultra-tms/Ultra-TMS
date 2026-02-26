@@ -111,8 +111,6 @@ export async function seedTMSCore(prisma: any, tenantIds: string[]): Promise<voi
           pieceCount: faker.number.int({ min: 1, max: 50 }),
           palletCount: Math.ceil(weightLbs / 1500), // Rough calc: 1500 lbs per pallet
           equipmentType,
-          isHeavy,
-          isLongDistance,
 
           // Special handling (10% chance each)
           isHazmat: faker.datatype.boolean(0.10),
@@ -183,10 +181,10 @@ export async function seedTMSCore(prisma: any, tenantIds: string[]): Promise<voi
             country: 'USA',
             status: stopStatus,
             contactName: faker.person.fullName(),
-            contactPhone: faker.phone.number(),
+            contactPhone: faker.phone.number({ style: 'national' }).slice(0, 20),
             contactEmail: faker.internet.email(),
             appointmentRequired: faker.datatype.boolean(0.6),
-            scheduledAppointment,
+            appointmentDate: scheduledAppointment,
             specialInstructions: faker.datatype.boolean(0.4) ? faker.lorem.sentence() : null,
             externalId: `SEED-STOP-${total}-${j}`,
             sourceSystem: 'FAKER_SEED',

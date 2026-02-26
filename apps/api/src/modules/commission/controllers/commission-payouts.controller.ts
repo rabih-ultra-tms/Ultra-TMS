@@ -21,7 +21,7 @@ import { Roles } from '../../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
-@Controller('commission/payouts')
+@Controller('commissions/payouts')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Commission')
 @ApiBearerAuth('JWT-auth')
@@ -43,17 +43,32 @@ export class CommissionPayoutsController {
 
   @Get()
   @ApiOperation({ summary: 'List commission payouts' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'userId', required: false, type: String })
   @ApiQuery({ name: 'status', required: false, type: String })
+  @ApiQuery({ name: 'sortBy', required: false, type: String })
+  @ApiQuery({ name: 'sortOrder', required: false, type: String })
   @ApiStandardResponse('Commission payouts list')
   @ApiErrorResponses()
   @Roles('ADMIN', 'ACCOUNTING', 'SALES_MANAGER', 'AGENT_MANAGER')
   findAll(
     @Request() req: any,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
     @Query('userId') userId?: string,
-    @Query('status') status?: string
+    @Query('status') status?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('sortOrder') sortOrder?: string,
   ) {
-    return this.payoutsService.findAll(req.user.tenantId, userId, status);
+    return this.payoutsService.findAll(req.user.tenantId, {
+      page: page ? parseInt(page, 10) : 1,
+      limit: limit ? parseInt(limit, 10) : 20,
+      userId,
+      status,
+      sortBy,
+      sortOrder: sortOrder as 'asc' | 'desc' | undefined,
+    });
   }
 
   @Get(':id')

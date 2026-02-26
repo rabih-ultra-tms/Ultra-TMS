@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Delete,
   Body,
   Param,
@@ -42,6 +43,7 @@ export class QuotesController {
   @ApiQuery({ name: 'companyId', required: false, type: String })
   @ApiQuery({ name: 'salesRepId', required: false, type: String })
   @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'serviceType', required: false, type: String })
   @ApiStandardResponse('Quotes list')
   @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'PRICING_ANALYST')
@@ -53,8 +55,18 @@ export class QuotesController {
     @Query('companyId') companyId?: string,
     @Query('salesRepId') salesRepId?: string,
     @Query('search') search?: string,
+    @Query('serviceType') serviceType?: string,
   ) {
-    return this.quotesService.findAll(tenantId, { page, limit, status, companyId, salesRepId, search });
+    return this.quotesService.findAll(tenantId, { page, limit, status, companyId, salesRepId, search, serviceType });
+  }
+
+  @Get('stats')
+  @ApiOperation({ summary: 'Get quote statistics' })
+  @ApiStandardResponse('Quote statistics')
+  @ApiErrorResponses()
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'PRICING_ANALYST')
+  async getStats(@CurrentTenant() tenantId: string) {
+    return this.quotesService.getStats(tenantId);
   }
 
   @Get(':id')
@@ -80,7 +92,7 @@ export class QuotesController {
     return this.quotesService.create(tenantId, userId, dto);
   }
 
-  @Put(':id')
+  @Patch(':id')
   @ApiOperation({ summary: 'Update quote' })
   @ApiParam({ name: 'id', description: 'Quote ID' })
   @ApiStandardResponse('Quote updated')
@@ -107,6 +119,108 @@ export class QuotesController {
     @Param('id') id: string,
   ) {
     return this.quotesService.delete(tenantId, id, userId);
+  }
+
+  @Get(':id/versions')
+  @ApiOperation({ summary: 'Get all versions of a quote' })
+  @ApiParam({ name: 'id', description: 'Quote ID' })
+  @ApiStandardResponse('Quote versions')
+  @ApiErrorResponses()
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'PRICING_ANALYST')
+  async getVersions(@CurrentTenant() tenantId: string, @Param('id') id: string) {
+    return this.quotesService.getVersions(tenantId, id);
+  }
+
+  @Get(':id/timeline')
+  @ApiOperation({ summary: 'Get quote activity timeline' })
+  @ApiParam({ name: 'id', description: 'Quote ID' })
+  @ApiStandardResponse('Quote timeline')
+  @ApiErrorResponses()
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'PRICING_ANALYST')
+  async getTimeline(@CurrentTenant() tenantId: string, @Param('id') id: string) {
+    return this.quotesService.getTimeline(tenantId, id);
+  }
+
+  @Get(':id/notes')
+  @ApiOperation({ summary: 'Get quote notes' })
+  @ApiParam({ name: 'id', description: 'Quote ID' })
+  @ApiStandardResponse('Quote notes')
+  @ApiErrorResponses()
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'PRICING_ANALYST')
+  async getNotes(@CurrentTenant() tenantId: string, @Param('id') id: string) {
+    return this.quotesService.getNotes(tenantId, id);
+  }
+
+  @Post(':id/notes')
+  @ApiOperation({ summary: 'Add note to quote' })
+  @ApiParam({ name: 'id', description: 'Quote ID' })
+  @ApiStandardResponse('Note added')
+  @ApiErrorResponses()
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'PRICING_ANALYST')
+  async addNote(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+    @Body() body: { content: string },
+  ) {
+    return this.quotesService.addNote(tenantId, id, userId, body.content);
+  }
+
+  @Post(':id/accept')
+  @ApiOperation({ summary: 'Accept quote' })
+  @ApiParam({ name: 'id', description: 'Quote ID' })
+  @ApiStandardResponse('Quote accepted')
+  @ApiErrorResponses()
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
+  async accept(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ) {
+    return this.quotesService.accept(tenantId, id, userId);
+  }
+
+  @Post(':id/reject')
+  @ApiOperation({ summary: 'Reject quote' })
+  @ApiParam({ name: 'id', description: 'Quote ID' })
+  @ApiStandardResponse('Quote rejected')
+  @ApiErrorResponses()
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
+  async reject(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+    @Body() body: { reason?: string },
+  ) {
+    return this.quotesService.reject(tenantId, id, userId, body.reason);
+  }
+
+  @Post(':id/clone')
+  @ApiOperation({ summary: 'Clone quote' })
+  @ApiParam({ name: 'id', description: 'Quote ID' })
+  @ApiStandardResponse('Quote cloned')
+  @ApiErrorResponses()
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
+  async clone(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ) {
+    return this.quotesService.duplicate(tenantId, id, userId);
+  }
+
+  @Post(':id/version')
+  @ApiOperation({ summary: 'Create new version of quote' })
+  @ApiParam({ name: 'id', description: 'Quote ID' })
+  @ApiStandardResponse('Quote version created')
+  @ApiErrorResponses()
+  @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER')
+  async createVersion(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ) {
+    return this.quotesService.createNewVersion(tenantId, id, userId);
   }
 
   @Post(':id/convert')

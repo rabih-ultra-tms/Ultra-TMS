@@ -11,6 +11,7 @@ describe('CommissionPlansService', () => {
       findFirst: jest.Mock;
       create: jest.Mock;
       update: jest.Mock;
+      count: jest.Mock;
     };
   };
 
@@ -21,6 +22,7 @@ describe('CommissionPlansService', () => {
         findFirst: jest.fn(),
         create: jest.fn(),
         update: jest.fn(),
+        count: jest.fn(),
       },
     };
 
@@ -36,8 +38,9 @@ describe('CommissionPlansService', () => {
 
   it('findAll filters by deletedAt', async () => {
     prisma.commissionPlan.findMany.mockResolvedValue([]);
+    prisma.commissionPlan.count.mockResolvedValue(0);
 
-    await service.findAll('tenant-1');
+    await service.findAll('tenant-1', { page: 1, limit: 20 });
 
     expect(prisma.commissionPlan.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -78,7 +81,7 @@ describe('CommissionPlansService', () => {
       tiers: [{ tierNumber: 1, tierName: 'Tier 1', thresholdType: 'VOLUME', rateType: 'PERCENT', rateAmount: 0.1 }],
     } as any, 'user-1');
 
-    expect(result.id).toBe('plan-1');
+    expect((result as any).id).toBe('plan-1');
     expect(prisma.commissionPlan.create).toHaveBeenCalled();
   });
 
@@ -88,7 +91,7 @@ describe('CommissionPlansService', () => {
 
     const result = await service.update('tenant-1', 'plan-1', { name: 'Updated' } as any);
 
-    expect(result.name).toBe('Updated');
+    expect((result as any).name).toBe('Updated');
   });
 
   it('gets active plans', async () => {

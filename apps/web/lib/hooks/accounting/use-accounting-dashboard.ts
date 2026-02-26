@@ -81,11 +81,24 @@ export function useRecentInvoices(limit = 10) {
         take: limit,
         skip: 0,
       });
-      // Response interceptor wraps as { data: { invoices: [...], total } }
       const body = response as Record<string, unknown>;
       const inner = (body.data ?? body) as Record<string, unknown>;
       const arr = (inner as Record<string, unknown>).invoices ?? inner;
-      return Array.isArray(arr) ? (arr as RecentInvoice[]) : [];
+      if (!Array.isArray(arr)) return [];
+
+      // Map backend Invoice shape to RecentInvoice
+      return arr.map((inv: Record<string, unknown>): RecentInvoice => ({
+        id: String(inv.id ?? ''),
+        invoiceNumber: String(inv.invoiceNumber ?? ''),
+        customerName:
+          (inv.customerName as string) ??
+          ((inv.company as Record<string, unknown> | undefined)?.name as string) ??
+          'Unknown',
+        amount: Number(inv.amount ?? inv.totalAmount ?? 0),
+        dueDate: String(inv.dueDate ?? ''),
+        status: (inv.status as InvoiceStatus) ?? 'DRAFT',
+        createdAt: String(inv.createdAt ?? ''),
+      }));
     },
     staleTime: 30_000,
   });

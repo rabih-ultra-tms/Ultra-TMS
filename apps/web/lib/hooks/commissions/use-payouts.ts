@@ -71,6 +71,25 @@ function unwrap<T>(response: unknown): T {
   return (body.data ?? response) as T;
 }
 
+function mapPayout(raw: any): CommissionPayout {
+  const firstName = raw.user?.firstName ?? '';
+  const lastName = raw.user?.lastName ?? '';
+  const repName = `${firstName} ${lastName}`.trim() || raw.user?.email || 'Unknown';
+  return {
+    id: raw.id,
+    repId: raw.userId,
+    repName,
+    totalAmount: raw.netPayout != null ? Number(raw.netPayout) : 0,
+    transactionCount: raw._count?.entries ?? 0,
+    paymentMethod: raw.paymentMethod ?? null,
+    status: raw.status ?? 'PENDING',
+    periodStart: raw.periodStart,
+    periodEnd: raw.periodEnd,
+    processedAt: raw.paidAt ?? null,
+    createdAt: raw.createdAt,
+  };
+}
+
 // ===========================
 // Query Hooks
 // ===========================
@@ -91,7 +110,11 @@ export function usePayouts(params: PayoutListParams = {}) {
         '/commissions/payouts',
         searchParams
       );
-      return unwrap<PayoutListResponse>(response);
+      const raw = response as { data: any[]; pagination: PayoutListResponse['pagination'] };
+      return {
+        data: (raw.data ?? []).map(mapPayout),
+        pagination: raw.pagination,
+      };
     },
     placeholderData: (previousData) => previousData,
   });

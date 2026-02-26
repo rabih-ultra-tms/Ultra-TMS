@@ -43,7 +43,6 @@ export const contactFormSchema = z.object({
   phone: z.string().optional(),
   mobile: z.string().optional(),
   isPrimary: z.boolean().default(false),
-  notes: z.string().optional(),
 });
 
 export const leadFormSchema = z.object({

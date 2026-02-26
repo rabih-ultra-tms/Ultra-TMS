@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma.service';
 import { CreateQuoteDto, UpdateQuoteDto, QuickQuoteDto, CalculateRateDto } from './dto';
 import { RateCalculationService } from './rate-calculation.service';
@@ -50,16 +51,21 @@ export class QuotesService {
     companyId?: string;
     salesRepId?: string;
     search?: string;
+    serviceType?: string;
   }) {
-    const { page = 1, limit = 20, status, companyId, salesRepId, search } = options || {};
+    const { page = 1, limit = 20, status, companyId, salesRepId, search, serviceType } = options || {};
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
     const safeLimit = Number.isFinite(limit) && limit > 0 ? limit : 20;
     const skip = (safePage - 1) * safeLimit;
 
     const where: any = { tenantId, deletedAt: null };
-    if (status) where.status = status;
+    if (status) {
+      const statuses = status.split(',').map((s) => s.trim()).filter(Boolean);
+      where.status = statuses.length === 1 ? statuses[0] : { in: statuses };
+    }
     if (companyId) where.companyId = companyId;
     if (salesRepId) where.salesRepId = salesRepId;
+    if (serviceType) where.serviceType = serviceType;
     if (search) {
       where.OR = [
         { quoteNumber: { contains: search, mode: 'insensitive' } },
@@ -101,6 +107,56 @@ export class QuotesService {
     }
 
     return quote;
+  }
+
+  async getStats(tenantId: string): Promise<{
+    totalQuotes: number;
+    activePipeline: number;
+    pipelineValue: number;
+    wonThisMonth: number;
+  }> {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [statusGroups, pipelineValue, wonThisMonth] = await Promise.all([
+      this.prisma.quote.groupBy({
+        by: ['status'],
+        where: { tenantId, deletedAt: null },
+        _count: { id: true },
+      }),
+      this.prisma.quote.aggregate({
+        where: {
+          tenantId,
+          deletedAt: null,
+          status: { in: ['DRAFT', 'SENT', 'ACCEPTED'] },
+        },
+        _sum: { totalAmount: true },
+      }),
+      this.prisma.quote.count({
+        where: {
+          tenantId,
+          deletedAt: null,
+          status: 'CONVERTED',
+          createdAt: { gte: startOfMonth },
+        },
+      }),
+    ]);
+
+    let totalQuotes = 0;
+    let activePipeline = 0;
+    for (const group of statusGroups) {
+      totalQuotes += group._count.id;
+      if (['DRAFT', 'SENT', 'ACCEPTED'].includes(group.status)) {
+        activePipeline += group._count.id;
+      }
+    }
+
+    return {
+      totalQuotes,
+      activePipeline,
+      pipelineValue: Number(pipelineValue._sum.totalAmount ?? 0),
+      wonThisMonth,
+    };
   }
 
   async create(tenantId: string, userId: string, dto: CreateQuoteDto) {
@@ -194,9 +250,34 @@ export class QuotesService {
       totalAmount = dto.totalAmount || (linehaulRate + fuel + accessorialsTotal);
     }
 
+    // Replace stops if provided
+    if (dto.stops && dto.stops.length > 0) {
+      await this.prisma.quoteStop.deleteMany({ where: { quoteId: id } });
+      await this.prisma.quoteStop.createMany({
+        data: dto.stops.map((stop) => ({
+          tenantId,
+          quoteId: id,
+          stopType: stop.stopType,
+          stopSequence: stop.stopSequence,
+          facilityName: stop.facilityName,
+          addressLine1: stop.addressLine1,
+          addressLine2: stop.addressLine2,
+          city: stop.city,
+          state: stop.state,
+          postalCode: stop.postalCode,
+          country: stop.country || 'USA',
+          contactName: stop.contactName,
+          contactPhone: stop.contactPhone,
+        })),
+      });
+    }
+
     return this.prisma.quote.update({
       where: { id },
       data: {
+        companyId: dto.companyId,
+        contactId: dto.contactId,
+        customerName: dto.customerName,
         serviceType: dto.serviceType,
         equipmentType: dto.equipmentType,
         pickupDate: dto.pickupDate ? new Date(dto.pickupDate) : undefined,
@@ -204,6 +285,7 @@ export class QuotesService {
         commodity: dto.commodity,
         weightLbs: dto.weightLbs,
         pieces: dto.pieces,
+        pallets: dto.pallets,
         totalMiles: dto.totalMiles,
         linehaulRate: dto.linehaulRate,
         fuelSurcharge: dto.fuelSurcharge,
@@ -426,12 +508,124 @@ export class QuotesService {
     return newVersion;
   }
 
+  async getVersions(tenantId: string, id: string) {
+    const quote = await this.findOne(tenantId, id);
+    const rootId = quote.parentQuoteId || quote.id;
+
+    const versions = await this.prisma.quote.findMany({
+      where: {
+        tenantId,
+        deletedAt: null,
+        OR: [{ id: rootId }, { parentQuoteId: rootId }],
+      },
+      orderBy: { version: 'asc' },
+      select: { id: true, version: true, status: true, totalAmount: true, createdAt: true, createdById: true },
+    });
+
+    return versions.map((v) => ({
+      id: v.id,
+      version: v.version,
+      status: v.status,
+      totalAmount: v.totalAmount,
+      createdAt: v.createdAt,
+      createdBy: v.createdById,
+    }));
+  }
+
+  async getTimeline(tenantId: string, id: string) {
+    const quote = await this.prisma.quote.findFirst({
+      where: { id, tenantId, deletedAt: null },
+      select: {
+        createdAt: true, createdById: true,
+        sentAt: true, viewedAt: true, respondedAt: true,
+        convertedAt: true, rejectionReason: true,
+        status: true, customFields: true,
+      },
+    });
+
+    if (!quote) throw new NotFoundException(`Quote with ID ${id} not found`);
+
+    type RawEvent = { type: string; description: string; timestamp: Date; createdBy?: string | null };
+    const raw: RawEvent[] = [];
+
+    raw.push({ type: 'created', description: 'Quote created', timestamp: quote.createdAt, createdBy: quote.createdById });
+    if (quote.sentAt) raw.push({ type: 'sent', description: 'Quote sent to customer', timestamp: quote.sentAt });
+    if (quote.viewedAt) raw.push({ type: 'viewed', description: 'Quote viewed by customer', timestamp: quote.viewedAt });
+    if (quote.respondedAt && quote.status === 'ACCEPTED') raw.push({ type: 'accepted', description: 'Quote accepted', timestamp: quote.respondedAt });
+    if (quote.respondedAt && quote.status === 'REJECTED') raw.push({ type: 'rejected', description: `Quote rejected${quote.rejectionReason ? `: ${quote.rejectionReason}` : ''}`, timestamp: quote.respondedAt });
+    if (quote.convertedAt) raw.push({ type: 'converted', description: 'Converted to order', timestamp: quote.convertedAt });
+
+    // Include notes as timeline events
+    const cf = quote.customFields as Record<string, unknown> | null;
+    const notes: { id?: string; content: string; createdAt: string; createdById?: string }[] = Array.isArray(cf?.notes) ? (cf!.notes as typeof notes) : [];
+    for (const note of notes) {
+      raw.push({ type: 'note', description: note.content, timestamp: new Date(note.createdAt), createdBy: note.createdById });
+    }
+
+    return raw
+      .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+      .map((e, i) => ({
+        id: `${e.type}-${e.timestamp.getTime()}-${i}`,
+        type: e.type,
+        description: e.description,
+        createdAt: e.timestamp.toISOString(),
+        createdBy: e.createdBy ?? undefined,
+      }));
+  }
+
+  async getNotes(tenantId: string, id: string) {
+    const quote = await this.prisma.quote.findFirst({
+      where: { id, tenantId, deletedAt: null },
+      select: { customFields: true },
+    });
+    if (!quote) throw new NotFoundException(`Quote with ID ${id} not found`);
+
+    const cf = quote.customFields as Record<string, unknown> | null;
+    return Array.isArray(cf?.notes) ? cf!.notes : [];
+  }
+
+  async addNote(tenantId: string, id: string, userId: string, content: string) {
+    const quote = await this.prisma.quote.findFirst({
+      where: { id, tenantId, deletedAt: null },
+      select: { customFields: true },
+    });
+    if (!quote) throw new NotFoundException(`Quote with ID ${id} not found`);
+
+    const cf = (quote.customFields as Record<string, unknown>) || {};
+    const existing: unknown[] = Array.isArray(cf.notes) ? (cf.notes as unknown[]) : [];
+    const newNote = { id: crypto.randomUUID(), content, createdAt: new Date().toISOString(), createdById: userId };
+    const updated = await this.prisma.quote.update({
+      where: { id },
+      data: { customFields: { ...cf, notes: [...existing, newNote] } as Prisma.InputJsonValue },
+    });
+    void updated;
+    return newNote;
+  }
+
+  async accept(tenantId: string, id: string, userId: string) {
+    const quote = await this.findOne(tenantId, id);
+    if (!['SENT', 'VIEWED'].includes(quote.status)) {
+      throw new BadRequestException(`Cannot accept a quote with status ${quote.status}`);
+    }
+    return this.prisma.quote.update({
+      where: { id },
+      data: { status: 'ACCEPTED', respondedAt: new Date(), updatedById: userId },
+    });
+  }
+
+  async reject(tenantId: string, id: string, userId: string, reason?: string) {
+    const quote = await this.findOne(tenantId, id);
+    if (!['SENT', 'VIEWED', 'ACCEPTED'].includes(quote.status)) {
+      throw new BadRequestException(`Cannot reject a quote with status ${quote.status}`);
+    }
+    return this.prisma.quote.update({
+      where: { id },
+      data: { status: 'REJECTED', respondedAt: new Date(), rejectionReason: reason, updatedById: userId },
+    });
+  }
+
   async send(tenantId: string, id: string, userId: string) {
     const quote = await this.findOne(tenantId, id);
-
-    if (!quote.customerEmail) {
-      throw new BadRequestException('Quote must have a customer email to send');
-    }
 
     const updated = await this.prisma.quote.update({
       where: { id },

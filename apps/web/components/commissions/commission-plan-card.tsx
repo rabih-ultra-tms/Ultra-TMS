@@ -3,33 +3,32 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Layers, Percent, DollarSign, Users } from 'lucide-react';
-import type { CommissionPlan, PlanType } from '@/lib/hooks/commissions/use-plans';
+import type { CommissionPlan, BackendPlanType } from '@/lib/hooks/commissions/use-plans';
 
-const PLAN_TYPE_LABELS: Record<PlanType, string> = {
-  PERCENTAGE: 'Percentage',
-  FLAT: 'Flat Rate',
-  TIERED_PERCENTAGE: 'Tiered %',
-  TIERED_FLAT: 'Tiered Flat',
+const PLAN_TYPE_LABELS: Record<BackendPlanType, string> = {
+  PERCENT_MARGIN: 'Percentage',
+  PERCENT_REVENUE: 'Percentage (Revenue)',
+  FLAT_FEE: 'Flat Rate',
+  TIERED: 'Tiered',
+  CUSTOM: 'Custom',
 };
 
-const PLAN_TYPE_ICONS: Record<PlanType, React.ReactNode> = {
-  PERCENTAGE: <Percent className="size-4" />,
-  FLAT: <DollarSign className="size-4" />,
-  TIERED_PERCENTAGE: <Layers className="size-4" />,
-  TIERED_FLAT: <Layers className="size-4" />,
+const PLAN_TYPE_ICONS: Record<BackendPlanType, React.ReactNode> = {
+  PERCENT_MARGIN: <Percent className="size-4" />,
+  PERCENT_REVENUE: <Percent className="size-4" />,
+  FLAT_FEE: <DollarSign className="size-4" />,
+  TIERED: <Layers className="size-4" />,
+  CUSTOM: <Layers className="size-4" />,
 };
 
 function formatRate(plan: CommissionPlan): string {
-  if (plan.type === 'PERCENTAGE' && plan.rate !== null) {
-    return `${plan.rate}%`;
+  if ((plan.planType === 'PERCENT_MARGIN' || plan.planType === 'PERCENT_REVENUE') && plan.percentRate !== null) {
+    return `${plan.percentRate}%`;
   }
-  if (plan.type === 'FLAT' && plan.flatAmount !== null) {
-    return `$${plan.flatAmount.toFixed(2)}`;
+  if (plan.planType === 'FLAT_FEE' && plan.flatAmount !== null) {
+    return `$${Number(plan.flatAmount).toFixed(2)}`;
   }
-  if (
-    (plan.type === 'TIERED_PERCENTAGE' || plan.type === 'TIERED_FLAT') &&
-    plan.tiers.length > 0
-  ) {
+  if (plan.planType === 'TIERED' && plan.tiers.length > 0) {
     return `${plan.tiers.length} tier${plan.tiers.length === 1 ? '' : 's'}`;
   }
   return 'Not configured';
@@ -46,7 +45,7 @@ export function CommissionPlanCard({ plan }: CommissionPlanCardProps) {
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
             <div className="flex items-center justify-center size-8 rounded-md bg-brand-accent/10 text-brand-accent">
-              {PLAN_TYPE_ICONS[plan.type]}
+              {PLAN_TYPE_ICONS[plan.planType]}
             </div>
             <div>
               <CardTitle className="text-base">{plan.name}</CardTitle>
@@ -63,8 +62,8 @@ export function CommissionPlanCard({ plan }: CommissionPlanCardProps) {
                 Default
               </Badge>
             )}
-            <Badge variant={plan.isActive ? 'outline' : 'secondary'}>
-              {plan.isActive ? 'Active' : 'Inactive'}
+            <Badge variant={plan.status === 'ACTIVE' ? 'outline' : 'secondary'}>
+              {plan.status === 'ACTIVE' ? 'Active' : 'Inactive'}
             </Badge>
           </div>
         </div>
@@ -75,7 +74,7 @@ export function CommissionPlanCard({ plan }: CommissionPlanCardProps) {
             <span className="text-text-muted">
               Type:{' '}
               <span className="font-medium text-text-primary">
-                {PLAN_TYPE_LABELS[plan.type]}
+                {PLAN_TYPE_LABELS[plan.planType]}
               </span>
             </span>
             <span className="text-text-muted">
@@ -88,7 +87,7 @@ export function CommissionPlanCard({ plan }: CommissionPlanCardProps) {
           <div className="flex items-center gap-1 text-text-muted">
             <Users className="size-3.5" />
             <span className="text-xs">
-              {plan.repCount} rep{plan.repCount !== 1 ? 's' : ''}
+              {plan._count?.assignments ?? 0} rep{(plan._count?.assignments ?? 0) !== 1 ? 's' : ''}
             </span>
           </div>
         </div>

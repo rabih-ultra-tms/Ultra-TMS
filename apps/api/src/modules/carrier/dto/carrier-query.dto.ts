@@ -41,4 +41,8 @@ export class CarrierQueryDto extends PaginationDto {
   @IsOptional()
   @IsBoolean()
   hasExpiredDocuments?: boolean;
+
+  @IsOptional()
+  @IsString()
+  sort?: string;
 }

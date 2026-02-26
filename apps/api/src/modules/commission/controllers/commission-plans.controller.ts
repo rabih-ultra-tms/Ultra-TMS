@@ -18,7 +18,7 @@ import { Roles } from '../../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
-@Controller('commission/plans')
+@Controller('commissions/plans')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Commission')
 @ApiBearerAuth('JWT-auth')
@@ -40,12 +40,38 @@ export class CommissionPlansController {
 
   @Get()
   @ApiOperation({ summary: 'List commission plans' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'search', required: false, type: String })
   @ApiQuery({ name: 'status', required: false, type: String })
+  @ApiQuery({ name: 'type', required: false, type: String })
+  @ApiQuery({ name: 'isActive', required: false, type: String })
+  @ApiQuery({ name: 'sortBy', required: false, type: String })
+  @ApiQuery({ name: 'sortOrder', required: false, type: String })
   @ApiStandardResponse('Commission plans list')
   @ApiErrorResponses()
   @Roles('ADMIN', 'ACCOUNTING', 'SALES_MANAGER')
-  findAll(@Request() req: any, @Query('status') status?: string) {
-    return this.plansService.findAll(req.user.tenantId, status);
+  findAll(
+    @Request() req: any,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('status') status?: string,
+    @Query('type') type?: string,
+    @Query('isActive') isActive?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('sortOrder') sortOrder?: string,
+  ) {
+    return this.plansService.findAll(req.user.tenantId, {
+      page: page ? parseInt(page, 10) : 1,
+      limit: limit ? parseInt(limit, 10) : 20,
+      search,
+      status,
+      type,
+      isActive,
+      sortBy,
+      sortOrder: sortOrder as 'asc' | 'desc' | undefined,
+    });
   }
 
   @Get('active')

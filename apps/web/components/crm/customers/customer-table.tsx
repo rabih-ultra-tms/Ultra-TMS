@@ -51,16 +51,16 @@ export function CustomerTable({
   return (
     <div className="space-y-4">
       <div className="rounded-md border">
-        <Table>
+        <Table className="min-w-[800px]">
           <TableHeader>
             <TableRow>
               <TableHead className="w-12"></TableHead>
-              <TableHead>Code</TableHead>
-              <TableHead>Company</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="min-w-[80px]">Code</TableHead>
+              <TableHead className="min-w-[200px]">Company</TableHead>
+              <TableHead className="min-w-[120px] text-center">Status</TableHead>
+              <TableHead className="min-w-[200px]">Email</TableHead>
+              <TableHead className="min-w-[150px]">Phone</TableHead>
+              <TableHead className="min-w-[100px] text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -94,7 +94,9 @@ export function CustomerTable({
                     )}
                   </TableCell>
                   <TableCell>
-                    <CustomerStatusBadge status={customer.status} />
+                    <div className="flex justify-center">
+                      <CustomerStatusBadge status={customer.status} />
+                    </div>
                   </TableCell>
                   <TableCell>{customer.email || "—"}</TableCell>
                   <TableCell>{customer.phone || "—"}</TableCell>

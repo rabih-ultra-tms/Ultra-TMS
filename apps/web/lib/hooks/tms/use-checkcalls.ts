@@ -59,11 +59,40 @@ export function useCheckCalls(loadId: string) {
   return useQuery({
     queryKey: ['checkcalls', loadId],
     queryFn: async () => {
-      // apiClient baseUrl = http://localhost:3001/api/v1 — use relative paths only
-      // Backend: GET /api/v1/loads/:id/check-calls (with hyphen)
       const response = await apiClient.get<{ data: CheckCall[] }>(`/loads/${loadId}/check-calls`);
       const body = response as Record<string, unknown>;
-      return (body.data ?? response) as CheckCall[];
+      const raw = (body.data ?? response) as Array<Record<string, unknown>>;
+
+      // Map backend field names → frontend CheckCall interface
+      return raw.map((cc): CheckCall => {
+        const calledByRaw = cc.calledBy as Record<string, unknown> | undefined;
+        const createdByRaw = cc.createdBy as Record<string, unknown> | undefined;
+        return {
+          id: String(cc.id ?? ''),
+          loadId: String(cc.loadId ?? ''),
+          loadNumber: String(cc.loadNumber ?? ''),
+          // backend stores form "type" as "status"
+          type: (cc.type ?? cc.status ?? 'CHECK_CALL') as CheckCall['type'],
+          // backend uses createdAt (set from timestamp), frontend expects calledAt
+          calledAt: String(cc.calledAt ?? cc.createdAt ?? new Date().toISOString()),
+          city: String(cc.city ?? ''),
+          state: String(cc.state ?? ''),
+          locationDescription: String(cc.locationDescription ?? cc.location ?? ''),
+          lat: typeof cc.latitude === 'number' ? cc.latitude : typeof cc.lat === 'number' ? cc.lat : null,
+          lng: typeof cc.longitude === 'number' ? cc.longitude : typeof cc.lng === 'number' ? cc.lng : null,
+          gpsSource: (cc.gpsSource ?? 'MANUAL') as 'GPS' | 'MANUAL',
+          etaToNextStop: cc.eta ? String(cc.eta) : cc.etaToNextStop ? String(cc.etaToNextStop) : null,
+          notes: String(cc.notes ?? ''),
+          calledBy: {
+            id: String(calledByRaw?.id ?? cc.createdById ?? ''),
+            name: String(calledByRaw?.name ?? createdByRaw?.name ?? cc.createdById ?? 'System'),
+          },
+          source: (cc.source ?? 'MANUAL') as 'MANUAL' | 'AUTO' | 'WEBSOCKET',
+          statusAtTime: String(cc.statusAtTime ?? ''),
+          createdAt: String(cc.createdAt ?? new Date().toISOString()),
+          updatedAt: String(cc.updatedAt ?? new Date().toISOString()),
+        };
+      });
     },
     enabled: !!loadId,
     staleTime: 30000,
@@ -75,8 +104,22 @@ export function useCreateCheckCall() {
 
   return useMutation({
     mutationFn: async (data: CreateCheckCallData) => {
+      // Map frontend shape → CreateCheckCallDto shape
+      // loadId goes in the URL; forbidden fields (type, locationDescription, gpsSource) are remapped or dropped
+      const payload: Record<string, unknown> = {
+        timestamp: data.calledAt ?? new Date().toISOString(),
+        status: data.type,          // form "type" = DTO "status"
+        city: data.city,
+        state: data.state,
+        notes: data.notes,
+        ...(data.locationDescription ? { location: data.locationDescription } : {}),
+        ...(data.lat !== undefined ? { lat: data.lat } : {}),
+        ...(data.lng !== undefined ? { lng: data.lng } : {}),
+        ...(data.etaToNextStop ? { eta: data.etaToNextStop } : {}),
+      };
+
       // Backend: POST /api/v1/loads/:id/check-calls
-      const response = await apiClient.post<{ data: CheckCall }>(`/loads/${data.loadId}/check-calls`, data);
+      const response = await apiClient.post<{ data: CheckCall }>(`/loads/${data.loadId}/check-calls`, payload);
       const body = response as Record<string, unknown>;
       return (body.data ?? response) as CheckCall;
     },

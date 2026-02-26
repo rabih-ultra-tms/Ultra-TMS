@@ -11,6 +11,74 @@ type InvoiceWithCompany = Prisma.InvoiceGetPayload<{
 export class ReportsService {
   constructor(private prisma: PrismaService) {}
 
+  async getDashboard(tenantId: string) {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [invoices, overdueInvoices, payablesPending, paymentsThisMonth] = await Promise.all([
+      this.prisma.invoice.findMany({
+        where: { tenantId },
+        select: {
+          totalAmount: true,
+          amountPaid: true,
+          status: true,
+          invoiceDate: true,
+          dueDate: true,
+        },
+      }),
+      this.prisma.invoice.findMany({
+        where: { tenantId, status: 'OVERDUE' },
+        select: { totalAmount: true, amountPaid: true },
+      }),
+      this.prisma.paymentMade.aggregate({
+        where: { tenantId, deletedAt: null, status: { in: ['PENDING', 'SENT'] } },
+        _sum: { amount: true },
+      }),
+      this.prisma.paymentReceived.findMany({
+        where: { tenantId, deletedAt: null, paymentDate: { gte: monthStart } },
+        select: { amount: true },
+      }),
+    ]);
+
+    // Total AR = outstanding invoice balances
+    const totalAR = invoices.reduce(
+      (s, i) => s + (Number(i.totalAmount || 0) - Number(i.amountPaid || 0)),
+      0,
+    );
+
+    // Total AP = pending outbound payments
+    const totalAP = Number(payablesPending._sum.amount || 0);
+
+    // Overdue count
+    const overdueInvoiceCount = overdueInvoices.length;
+
+    // DSO = (Total AR / Total Revenue) * Days in period (use 90-day rolling)
+    const totalRevenue = invoices.reduce((s, i) => s + Number(i.totalAmount || 0), 0);
+    const dso = totalRevenue > 0 ? Math.round((totalAR / totalRevenue) * 90) : 0;
+
+    // Revenue MTD
+    const revenueMTD = invoices
+      .filter((i) => new Date(i.invoiceDate) >= monthStart)
+      .reduce((s, i) => s + Number(i.totalAmount || 0), 0);
+
+    // Cash collected MTD
+    const cashCollectedMTD = paymentsThisMonth.reduce(
+      (s, p) => s + Number(p.amount || 0),
+      0,
+    );
+
+    return {
+      data: {
+        totalAR,
+        totalAP,
+        overdueInvoiceCount,
+        dso,
+        revenueMTD,
+        cashCollectedMTD,
+      },
+    };
+  }
+
   async getRevenueReport(tenantId: string, query: ReportQueryDto) {
     const fromDate = query.fromDate
       ? new Date(query.fromDate)

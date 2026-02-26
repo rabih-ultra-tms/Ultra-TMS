@@ -3,6 +3,7 @@ import { PrismaService } from '../../prisma.service';
 
 // Controllers
 import {
+  AccountingController,
   ChartOfAccountsController,
   InvoicesController,
   SettlementsController,
@@ -28,6 +29,7 @@ import {
 
 @Module({
   controllers: [
+    AccountingController,
     ChartOfAccountsController,
     InvoicesController,
     SettlementsController,

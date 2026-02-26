@@ -216,14 +216,14 @@ export function CarrierForm({
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Performance Tier</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                                        <Select onValueChange={(v) => field.onChange(v === "NONE" ? "" : v)} value={field.value || "NONE"}>
                                             <FormControl>
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="No tier assigned" />
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
-                                                <SelectItem value="">No tier</SelectItem>
+                                                <SelectItem value="NONE">No tier</SelectItem>
                                                 <SelectItem value="PLATINUM">Platinum</SelectItem>
                                                 <SelectItem value="GOLD">Gold</SelectItem>
                                                 <SelectItem value="SILVER">Silver</SelectItem>

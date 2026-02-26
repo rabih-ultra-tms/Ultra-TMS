@@ -93,10 +93,17 @@ export function useProcessPayout() { return shared.processPayout; }
 
 // Type re-exports
 export type PlanType = "PERCENTAGE" | "FLAT" | "TIERED_PERCENTAGE" | "TIERED_FLAT";
+export type BackendPlanType = "FLAT_FEE" | "PERCENT_REVENUE" | "PERCENT_MARGIN" | "TIERED" | "CUSTOM";
 export interface PlanTier { minMargin: number; maxMargin: number | null; rate: number; }
+export interface BackendPlanTier {
+    id: string; tierNumber: number; tierName: string | null; thresholdType: string;
+    thresholdMin: number; thresholdMax: number | null; rateType: string;
+    rateAmount: number; periodType: string | null;
+}
 export interface CommissionPlan {
-    id: string; name: string; type: PlanType; description: string | null;
-    rate: number | null; flatAmount: number | null; tiers: PlanTier[];
-    isActive: boolean; isDefault: boolean; repCount: number;
+    id: string; name: string; planType: BackendPlanType; description: string | null;
+    percentRate: number | null; flatAmount: number | null; tiers: BackendPlanTier[];
+    status: string; isDefault: boolean; effectiveDate: string; endDate: string | null;
+    _count?: { assignments: number; entries: number };
     createdAt: string; updatedAt: string;
 }

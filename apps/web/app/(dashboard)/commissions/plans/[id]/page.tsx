@@ -31,25 +31,27 @@ import {
   useActivatePlan,
   useDeletePlan,
 } from '@/lib/hooks/commissions/use-plans';
-import type { PlanType, PlanTier } from '@/lib/hooks/commissions/use-plans';
+import type { BackendPlanType, BackendPlanTier } from '@/lib/hooks/commissions/use-plans';
 import { useReps } from '@/lib/hooks/commissions/use-reps';
 
 // ===========================
 // Helpers
 // ===========================
 
-const PLAN_TYPE_LABELS: Record<PlanType, string> = {
-  PERCENTAGE: 'Margin Percentage',
-  FLAT: 'Flat Per Load',
-  TIERED_PERCENTAGE: 'Tiered Percentage',
-  TIERED_FLAT: 'Tiered Flat',
+const PLAN_TYPE_LABELS: Record<BackendPlanType, string> = {
+  PERCENT_MARGIN: 'Margin Percentage',
+  PERCENT_REVENUE: 'Revenue Percentage',
+  FLAT_FEE: 'Flat Per Load',
+  TIERED: 'Tiered',
+  CUSTOM: 'Custom',
 };
 
-const PLAN_TYPE_ICONS: Record<PlanType, React.ReactNode> = {
-  PERCENTAGE: <Percent className="size-5" />,
-  FLAT: <DollarSign className="size-5" />,
-  TIERED_PERCENTAGE: <Layers className="size-5" />,
-  TIERED_FLAT: <Layers className="size-5" />,
+const PLAN_TYPE_ICONS: Record<BackendPlanType, React.ReactNode> = {
+  PERCENT_MARGIN: <Percent className="size-5" />,
+  PERCENT_REVENUE: <Percent className="size-5" />,
+  FLAT_FEE: <DollarSign className="size-5" />,
+  TIERED: <Layers className="size-5" />,
+  CUSTOM: <Layers className="size-5" />,
 };
 
 // ===========================
@@ -60,7 +62,7 @@ function TierTable({
   tiers,
   isPercentage,
 }: {
-  tiers: PlanTier[];
+  tiers: BackendPlanTier[];
   isPercentage: boolean;
 }) {
   if (tiers.length === 0) return null;
@@ -70,10 +72,10 @@ function TierTable({
         <thead>
           <tr className="border-b bg-muted/50">
             <th className="px-4 py-2.5 text-left font-medium text-text-muted">
-              Min Margin %
+              Min Threshold
             </th>
             <th className="px-4 py-2.5 text-left font-medium text-text-muted">
-              Max Margin %
+              Max Threshold
             </th>
             <th className="px-4 py-2.5 text-right font-medium text-text-muted">
               {isPercentage ? 'Rate (%)' : 'Amount ($)'}
@@ -83,12 +85,12 @@ function TierTable({
         <tbody>
           {tiers.map((tier, i) => (
             <tr key={i} className="border-b last:border-b-0">
-              <td className="px-4 py-2.5">{tier.minMargin}%</td>
+              <td className="px-4 py-2.5">{Number(tier.thresholdMin)}%</td>
               <td className="px-4 py-2.5">
-                {tier.maxMargin !== null ? `${tier.maxMargin}%` : 'No limit'}
+                {tier.thresholdMax !== null ? `${Number(tier.thresholdMax)}%` : 'No limit'}
               </td>
               <td className="px-4 py-2.5 text-right font-medium">
-                {isPercentage ? `${tier.rate}%` : `$${tier.rate.toFixed(2)}`}
+                {isPercentage ? `${Number(tier.rateAmount)}%` : `$${Number(tier.rateAmount).toFixed(2)}`}
               </td>
             </tr>
           ))}
@@ -158,7 +160,7 @@ export default function PlanDetailPage() {
               <>
                 <div className="flex items-center gap-2">
                   <div className="flex items-center justify-center size-8 rounded-md bg-brand-accent/10 text-brand-accent">
-                    {plan && PLAN_TYPE_ICONS[plan.type]}
+                    {plan && PLAN_TYPE_ICONS[plan.planType]}
                   </div>
                   <h1 className="text-2xl font-bold text-text-primary">
                     {plan?.name}
@@ -213,10 +215,10 @@ export default function PlanDetailPage() {
           {plan.isDefault && (
             <Badge variant="default">Default Plan</Badge>
           )}
-          <Badge variant={plan.isActive ? 'outline' : 'secondary'}>
-            {plan.isActive ? 'Active' : 'Inactive'}
+          <Badge variant={plan.status === 'ACTIVE' ? 'outline' : 'secondary'}>
+            {plan.status === 'ACTIVE' ? 'Active' : 'Inactive'}
           </Badge>
-          <Badge variant="outline">{PLAN_TYPE_LABELS[plan.type]}</Badge>
+          <Badge variant="outline">{PLAN_TYPE_LABELS[plan.planType]}</Badge>
         </div>
       )}
 
@@ -234,24 +236,24 @@ export default function PlanDetailPage() {
               <Skeleton className="h-5 w-48" />
               <Skeleton className="h-5 w-32" />
             </div>
-          ) : plan?.type === 'PERCENTAGE' ? (
+          ) : plan?.planType === 'PERCENT_MARGIN' || plan?.planType === 'PERCENT_REVENUE' ? (
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-text-muted">Commission Rate:</span>
                 <span className="text-lg font-semibold text-text-primary">
-                  {plan.rate}%
+                  {plan.percentRate != null ? Number(plan.percentRate) : '—'}%
                 </span>
               </div>
               <p className="text-xs text-text-muted">
-                Applied as a percentage of the load margin
+                Applied as a percentage of the load {plan.planType === 'PERCENT_MARGIN' ? 'margin' : 'revenue'}
               </p>
             </div>
-          ) : plan?.type === 'FLAT' ? (
+          ) : plan?.planType === 'FLAT_FEE' ? (
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-text-muted">Flat Amount:</span>
                 <span className="text-lg font-semibold text-text-primary">
-                  ${plan.flatAmount?.toFixed(2)}
+                  ${plan.flatAmount != null ? Number(plan.flatAmount).toFixed(2) : '—'}
                 </span>
               </div>
               <p className="text-xs text-text-muted">
@@ -265,7 +267,7 @@ export default function PlanDetailPage() {
               </p>
               <TierTable
                 tiers={plan.tiers}
-                isPercentage={plan.type === 'TIERED_PERCENTAGE'}
+                isPercentage={plan.tiers.some((t) => t.rateType === 'PERCENT')}
               />
             </div>
           ) : null}

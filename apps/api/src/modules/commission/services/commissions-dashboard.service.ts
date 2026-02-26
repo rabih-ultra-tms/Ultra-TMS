@@ -399,6 +399,99 @@ export class CommissionsDashboardService {
     };
   }
 
+  async listTransactions(
+    tenantId: string,
+    options: {
+      page: number;
+      limit: number;
+      search?: string;
+      status?: string;
+      startDate?: string;
+      endDate?: string;
+      sortBy?: string;
+      sortOrder?: 'asc' | 'desc';
+    },
+  ) {
+    const { page, limit } = options;
+    const skip = (page - 1) * limit;
+
+    const where: any = { tenantId };
+
+    if (options.status && options.status !== 'all') {
+      where.status = options.status.toUpperCase();
+    }
+
+    if (options.startDate || options.endDate) {
+      where.commissionPeriod = {};
+      if (options.startDate) where.commissionPeriod.gte = new Date(options.startDate);
+      if (options.endDate) where.commissionPeriod.lte = new Date(options.endDate);
+    }
+
+    if (options.search) {
+      where.OR = [
+        { user: { firstName: { contains: options.search, mode: 'insensitive' } } },
+        { user: { lastName: { contains: options.search, mode: 'insensitive' } } },
+        { load: { loadNumber: { contains: options.search, mode: 'insensitive' } } },
+        { order: { orderNumber: { contains: options.search, mode: 'insensitive' } } },
+      ];
+    }
+
+    const orderBy: any = {};
+    if (options.sortBy) {
+      orderBy[options.sortBy] = options.sortOrder ?? 'desc';
+    } else {
+      orderBy.createdAt = 'desc';
+    }
+
+    const [entries, total] = await Promise.all([
+      this.prisma.commissionEntry.findMany({
+        where,
+        include: {
+          user: { select: { id: true, firstName: true, lastName: true, email: true } },
+          load: { select: { id: true, loadNumber: true } },
+          order: { select: { id: true, orderNumber: true, totalCharges: true } },
+          plan: { select: { name: true } },
+        },
+        orderBy,
+        skip,
+        take: limit,
+      }),
+      this.prisma.commissionEntry.count({ where }),
+    ]);
+
+    const data = entries.map((e) => ({
+      id: e.id,
+      commissionPeriod: e.commissionPeriod?.toISOString() ?? null,
+      userId: e.userId,
+      user: e.user,
+      loadId: e.loadId,
+      load: e.load,
+      order: e.order
+        ? {
+            id: e.order.id,
+            orderNumber: e.order.orderNumber,
+            totalCharges: e.order.totalCharges != null ? Number(e.order.totalCharges) : 0,
+          }
+        : null,
+      commissionAmount: Number(e.commissionAmount),
+      rateApplied: e.rateApplied != null ? Number(e.rateApplied) : null,
+      plan: e.plan,
+      status: e.status,
+      reversalReason: e.reversalReason ?? null,
+      createdAt: e.createdAt.toISOString(),
+    }));
+
+    return {
+      data,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
   async assignPlan(tenantId: string, userId: string, planId: string) {
     // Verify plan exists
     const plan = await this.prisma.commissionPlan.findFirst({
@@ -426,5 +519,159 @@ export class CommissionsDashboardService {
     });
 
     return this.getRep(tenantId, userId);
+  }
+
+  // ── Reports endpoint data ──────────────────────────────────────────
+
+  async getReports(
+    tenantId: string,
+    startDate?: string,
+    endDate?: string,
+  ) {
+    const dateFilter: any = {};
+    if (startDate) dateFilter.gte = new Date(startDate);
+    if (endDate) dateFilter.lte = new Date(endDate);
+    const hasDates = Object.keys(dateFilter).length > 0;
+
+    const [earnings, planUsage, payoutSummary] = await Promise.all([
+      this.getEarningsByRep(tenantId, hasDates ? dateFilter : undefined),
+      this.getPlanUsage(tenantId),
+      this.getPayoutSummary(tenantId, hasDates ? dateFilter : undefined),
+    ]);
+
+    return { earnings, planUsage, payoutSummary };
+  }
+
+  private async getEarningsByRep(
+    tenantId: string,
+    dateFilter?: { gte?: Date; lte?: Date },
+  ) {
+    const where: any = {
+      tenantId,
+      status: { in: ['APPROVED', 'PAID'] },
+    };
+    if (dateFilter) where.commissionPeriod = dateFilter;
+
+    const entries = await this.prisma.commissionEntry.findMany({
+      where,
+      select: {
+        userId: true,
+        commissionAmount: true,
+        status: true,
+        commissionPeriod: true,
+        user: { select: { firstName: true, lastName: true } },
+      },
+    });
+
+    // Group by rep + month
+    const map = new Map<string, { repName: string; month: string; earned: number; paid: number }>();
+    for (const e of entries) {
+      const repName = e.user
+        ? `${e.user.firstName} ${e.user.lastName}`
+        : 'Unknown';
+      const month = e.commissionPeriod.toISOString().slice(0, 7); // YYYY-MM
+      const key = `${e.userId}|${month}`;
+      const existing = map.get(key) ?? { repName, month, earned: 0, paid: 0 };
+      const amt = Number(e.commissionAmount);
+      existing.earned += amt;
+      if (e.status === 'PAID') existing.paid += amt;
+      map.set(key, existing);
+    }
+
+    return Array.from(map.values()).sort((a, b) =>
+      a.month.localeCompare(b.month) || a.repName.localeCompare(b.repName),
+    );
+  }
+
+  private async getPlanUsage(tenantId: string) {
+    const assignments = await this.prisma.userCommissionAssignment.findMany({
+      where: { tenantId, status: 'ACTIVE', deletedAt: null },
+      select: {
+        planId: true,
+        userId: true,
+        plan: { select: { name: true } },
+      },
+    });
+
+    // Group by plan
+    const planMap = new Map<string, { planName: string; reps: Set<string> }>();
+    for (const a of assignments) {
+      if (!a.planId) continue;
+      const existing = planMap.get(a.planId) ?? {
+        planName: a.plan?.name ?? 'Unknown',
+        reps: new Set<string>(),
+      };
+      existing.reps.add(a.userId);
+      planMap.set(a.planId, existing);
+    }
+
+    // Get total earned per plan
+    const result = await Promise.all(
+      Array.from(planMap.entries()).map(async ([planId, info]) => {
+        const agg = await this.prisma.commissionEntry.aggregate({
+          where: {
+            tenantId,
+            planId,
+            status: { in: ['APPROVED', 'PAID'] },
+          },
+          _sum: { commissionAmount: true },
+        });
+        return {
+          planName: info.planName,
+          repCount: info.reps.size,
+          totalEarned: Number(agg._sum.commissionAmount ?? 0),
+        };
+      }),
+    );
+
+    return result.sort((a, b) => b.repCount - a.repCount);
+  }
+
+  private async getPayoutSummary(
+    tenantId: string,
+    dateFilter?: { gte?: Date; lte?: Date },
+  ) {
+    const where: any = {
+      tenantId,
+      status: 'PAID',
+      deletedAt: null,
+    };
+    if (dateFilter) where.paidAt = dateFilter;
+
+    const payouts = await this.prisma.commissionPayout.findMany({
+      where,
+      select: {
+        netPayout: true,
+        paymentMethod: true,
+        paidAt: true,
+      },
+    });
+
+    // Group by month
+    const monthMap = new Map<
+      string,
+      { totalPaid: number; achCount: number; checkCount: number; wireCount: number }
+    >();
+
+    for (const p of payouts) {
+      if (!p.paidAt) continue;
+      const month = p.paidAt.toISOString().slice(0, 7);
+      const existing = monthMap.get(month) ?? {
+        totalPaid: 0,
+        achCount: 0,
+        checkCount: 0,
+        wireCount: 0,
+      };
+      existing.totalPaid += Number(p.netPayout);
+      const method = (p.paymentMethod ?? '').toUpperCase();
+      if (method === 'ACH') existing.achCount++;
+      else if (method === 'CHECK') existing.checkCount++;
+      else if (method === 'WIRE') existing.wireCount++;
+      monthMap.set(month, existing);
+    }
+
+    return Array.from(monthMap.entries())
+      .map(([month, data]) => ({ month, ...data }))
+      .sort((a, b) => a.month.localeCompare(b.month));
   }
 }

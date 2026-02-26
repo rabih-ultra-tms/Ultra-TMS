@@ -35,6 +35,7 @@ import { seedClaims } from './seed/claims';
 import { seedEquipment } from './seed/equipment';
 import { seedTenantServices } from './seed/tenant-services';
 import { seedLoads } from './seed/loads';
+import { seedLoadHistory } from './seed/load-history';
 import { seedLoadBoard } from './seed/load-board';
 import seedTruckTypes from './seeds/truck-types.seed';
 
@@ -44,6 +45,30 @@ async function main() {
   console.log('🌱 Starting comprehensive database seeding...\n');
 
   try {
+    // 0. Cleanup seed data from previous runs
+    console.log('🗑️  Cleaning up previous seed data...');
+    const seedWhere = { where: { sourceSystem: 'FAKER_SEED' } };
+    // Delete in reverse dependency order
+    await prisma.paymentApplication.deleteMany(seedWhere).catch(() => {});
+    await prisma.paymentReceived.deleteMany(seedWhere).catch(() => {});
+    await prisma.paymentMade.deleteMany(seedWhere).catch(() => {});
+    await prisma.settlementLineItem.deleteMany({ where: { settlement: { sourceSystem: 'FAKER_SEED' } } }).catch(() => {});
+    await prisma.settlement.deleteMany(seedWhere).catch(() => {});
+    await prisma.invoiceLineItem.deleteMany({ where: { invoice: { sourceSystem: 'FAKER_SEED' } } }).catch(() => {});
+    await prisma.invoice.deleteMany(seedWhere).catch(() => {});
+    await prisma.commissionEntry.deleteMany(seedWhere).catch(() => {});
+    await prisma.commissionPayout.deleteMany(seedWhere).catch(() => {});
+    await prisma.userCommissionAssignment.deleteMany(seedWhere).catch(() => {});
+    await prisma.commissionPlan.deleteMany(seedWhere).catch(() => {});
+    await prisma.checkCall.deleteMany(seedWhere).catch(() => {});
+    await prisma.stop.deleteMany(seedWhere).catch(() => {});
+    await prisma.load.deleteMany(seedWhere).catch(() => {});
+    await prisma.order.deleteMany(seedWhere).catch(() => {});
+    await prisma.quote.deleteMany(seedWhere).catch(() => {});
+    await prisma.contact.deleteMany(seedWhere).catch(() => {});
+    await prisma.company.deleteMany(seedWhere).catch(() => {});
+    console.log('✅ Cleanup complete\n');
+
     // 1. Foundation: Tenants first
     console.log('📦 Seeding Tenants...');
     const tenantIds = await seedTenants(prisma);
@@ -78,6 +103,11 @@ async function main() {
     console.log('📦 Seeding Loads...');
     await seedLoads(prisma, tenantIds);
     console.log('✅ Loads seeded\n');
+
+    // 6b. Load History (dependency: tenants)
+    console.log('📋 Seeding Load History...');
+    await seedLoadHistory(prisma, tenantIds);
+    console.log('✅ Load History seeded\n');
 
     // 7. Accounting (dependency: tms, carrier)
     console.log('💵 Seeding Accounting...');
