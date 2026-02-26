@@ -11,10 +11,13 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Eye, Pencil, Trash2, Ban, CheckSquare, Pause, Star } from "lucide-react";
+import { MoreHorizontal, Eye, Pencil, Trash2, Ban, CheckSquare, Pause, CircleOff, ShieldX, ShieldCheck } from "lucide-react";
 import { OperationsCarrierListItem } from "@/types/carriers";
 import { useDeleteCarrier, useUpdateCarrier } from "@/lib/hooks/operations";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { apiClient } from "@/lib/api-client";
 
 interface CarrierActionsMenuProps {
     carrier: OperationsCarrierListItem;
@@ -27,16 +30,39 @@ export function CarrierActionsMenu({ carrier }: CarrierActionsMenuProps) {
     const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
 
     // Status helpers
-    const isActive = carrier.status === "ACTIVE";
-    const isPreferred = carrier.status === "PREFERRED";
+    const isPending    = carrier.status === "PENDING" || carrier.status === "APPROVED";
+    const isActive     = carrier.status === "ACTIVE";
+    const isInactive   = carrier.status === "INACTIVE";
+    const isSuspended  = carrier.status === "SUSPENDED";
     const isBlacklisted = carrier.status === "BLACKLISTED";
 
-    const handleStatusChange = (status: "ACTIVE" | "INACTIVE" | "PREFERRED" | "ON_HOLD" | "BLACKLISTED") => {
+    const handleStatusChange = (status: "PENDING" | "APPROVED" | "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BLACKLISTED") => {
         updateMutation.mutate({ id: carrier.id, status });
     };
 
+    const queryClient = useQueryClient();
+    const [fmcsaLoading, setFmcsaLoading] = React.useState(false);
+
+    const handleFmcsaVerify = async () => {
+        if (!carrier.mcNumber && !carrier.dotNumber) return;
+        setFmcsaLoading(true);
+        try {
+            await apiClient.post(`/operations/carriers/fmcsa/lookup`, {
+                mcNumber: carrier.mcNumber,
+                dotNumber: carrier.dotNumber,
+            });
+            toast.success(`FMCSA verification complete for ${carrier.companyName}`);
+            queryClient.invalidateQueries({ queryKey: ['carriers', carrier.id] });
+        } catch {
+            toast.error(`FMCSA verification failed for ${carrier.companyName}`);
+        } finally {
+            setFmcsaLoading(false);
+        }
+    };
+
     return (
-        <>
+        // Stop propagation so row-click navigation doesn't fire when using the menu
+        <div onClick={(e) => e.stopPropagation()}>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="h-8 w-8 p-0">
@@ -55,24 +81,49 @@ export function CarrierActionsMenu({ carrier }: CarrierActionsMenuProps) {
                     <DropdownMenuSeparator />
 
                     <DropdownMenuLabel>Status</DropdownMenuLabel>
-                    {!isActive && (
+                    {isPending && (
                         <DropdownMenuItem onClick={() => handleStatusChange("ACTIVE")}>
-                            <CheckSquare className="mr-2 h-4 w-4 text-green-600" /> Activate
+                            <CheckSquare className="mr-2 h-4 w-4 text-green-600" /> Approve
                         </DropdownMenuItem>
                     )}
-                    {!isPreferred && (
-                        <DropdownMenuItem onClick={() => handleStatusChange("PREFERRED")}>
-                            <Star className="mr-2 h-4 w-4 text-yellow-500" /> Mark Preferred
+                    {isPending && (
+                        <DropdownMenuItem onClick={() => handleStatusChange("INACTIVE")}>
+                            <Ban className="mr-2 h-4 w-4 text-slate-500" /> Reject
                         </DropdownMenuItem>
                     )}
-                    {carrier.status !== "ON_HOLD" && (
-                        <DropdownMenuItem onClick={() => handleStatusChange("ON_HOLD")}>
-                            <Pause className="mr-2 h-4 w-4 text-orange-500" /> Put On Hold
+                    {isActive && (
+                        <DropdownMenuItem onClick={() => handleStatusChange("SUSPENDED")}>
+                            <Pause className="mr-2 h-4 w-4 text-amber-500" /> Suspend
+                        </DropdownMenuItem>
+                    )}
+                    {isActive && (
+                        <DropdownMenuItem onClick={() => handleStatusChange("INACTIVE")}>
+                            <CircleOff className="mr-2 h-4 w-4 text-slate-500" /> Deactivate
+                        </DropdownMenuItem>
+                    )}
+                    {isInactive && (
+                        <DropdownMenuItem onClick={() => handleStatusChange("ACTIVE")}>
+                            <CheckSquare className="mr-2 h-4 w-4 text-green-600" /> Reactivate
+                        </DropdownMenuItem>
+                    )}
+                    {isSuspended && (
+                        <DropdownMenuItem onClick={() => handleStatusChange("ACTIVE")}>
+                            <CheckSquare className="mr-2 h-4 w-4 text-green-600" /> Reinstate
                         </DropdownMenuItem>
                     )}
                     {!isBlacklisted && (
-                        <DropdownMenuItem onClick={() => handleStatusChange("BLACKLISTED")}>
-                            <Ban className="mr-2 h-4 w-4 text-red-600" /> Blacklist
+                        <DropdownMenuItem
+                            onClick={() => handleStatusChange("BLACKLISTED")}
+                            className="text-red-600 focus:text-red-600"
+                        >
+                            <ShieldX className="mr-2 h-4 w-4" /> Blacklist
+                        </DropdownMenuItem>
+                    )}
+
+                    {(isActive || isPending) && (carrier.mcNumber || carrier.dotNumber) && (
+                        <DropdownMenuItem onClick={handleFmcsaVerify} disabled={fmcsaLoading}>
+                            <ShieldCheck className="mr-2 h-4 w-4 text-blue-600" />
+                            {fmcsaLoading ? "Verifying..." : "Verify FMCSA"}
                         </DropdownMenuItem>
                     )}
 
@@ -99,6 +150,6 @@ export function CarrierActionsMenu({ carrier }: CarrierActionsMenuProps) {
                 variant="destructive"
                 isLoading={deleteMutation.isPending}
             />
-        </>
+        </div>
     );
 }
