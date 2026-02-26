@@ -64,8 +64,8 @@ export function useLoadStats() {
     return useQuery({
         queryKey: ['load-stats'],
         queryFn: async () => {
-            const response = await apiClient.get<{ data: LoadStats }>('/loads/stats');
-            return response.data;
+            const response = await apiClient.get('/loads/stats');
+            return unwrap<LoadStats>(response);
         },
         staleTime: 30000,
     });
