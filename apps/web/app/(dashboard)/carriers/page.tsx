@@ -8,6 +8,7 @@ import {
   useCreateCarrier,
   useDeleteCarrier,
   useCarrierStats,
+  useUpdateCarrier,
 } from "@/lib/hooks/operations";
 import {
   Select,
@@ -31,8 +32,10 @@ import {
   CheckCircle2,
   Star,
   PauseCircle,
+  Download,
 } from "lucide-react";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { toast } from "sonner";
 import { useDebounce } from "@/lib/hooks";
 import {
   Dialog,
@@ -140,6 +143,8 @@ export default function CarriersPage() {
   const pageSize = 25;
   const [rowSelection, setRowSelection] = useState({});
   const [showBatchDeleteDialog, setShowBatchDeleteDialog] = useState(false);
+  const [showBulkStatusDialog, setShowBulkStatusDialog] = useState(false);
+  const [bulkStatus, setBulkStatus] = useState<CarrierStatus>("ACTIVE");
   const debouncedSearch = useDebounce(searchQuery, 300);
 
   // Fetch carriers
@@ -161,6 +166,7 @@ export default function CarriersPage() {
 
   const createMutation = useCreateCarrier();
   const deleteMutation = useDeleteCarrier();
+  const updateMutation = useUpdateCarrier();
 
   const carriers = data?.data || [];
   const total = data?.total || 0;
@@ -188,6 +194,41 @@ export default function CarriersPage() {
       // Errors handled by React Query
     }
     setShowBatchDeleteDialog(false);
+  };
+
+  const handleBulkStatusUpdate = async () => {
+    const selectedIds = Object.keys(rowSelection);
+    const results = await Promise.allSettled(
+      selectedIds.map((id) => updateMutation.mutateAsync({ id, status: bulkStatus }))
+    );
+    const failed = results.filter((r) => r.status === "rejected").length;
+    const succeeded = results.length - failed;
+
+    if (failed === 0) {
+      toast.success(`Updated ${succeeded} carrier${succeeded !== 1 ? "s" : ""} to ${bulkStatus}`);
+    } else {
+      toast.warning(`Updated ${succeeded} of ${results.length} carriers. ${failed} failed.`);
+    }
+    setRowSelection({});
+    setShowBulkStatusDialog(false);
+  };
+
+  const handleExport = (ids?: string[]) => {
+    const params = new URLSearchParams();
+    if (ids?.length) {
+      ids.forEach((id) => params.append("ids", id));
+    } else {
+      if (debouncedSearch) params.set("search", debouncedSearch);
+      if (statusFilter !== "all") params.set("status", statusFilter);
+      if (tierFilter !== "all") params.set("tier", tierFilter);
+      if (equipmentFilter !== "all") params.set("equipmentTypes", equipmentFilter);
+      if (stateFilter) params.set("state", stateFilter);
+    }
+    const url = `/api/v1/operations/carriers/export?${params.toString()}`;
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "carriers.csv";
+    a.click();
   };
 
   const clearFilters = () => {
@@ -226,19 +267,33 @@ export default function CarriersPage() {
     );
   };
 
-  const renderBulkActions = () => (
+  const renderBulkActions = (selectedRows: OperationsCarrierListItem[]) => (
     <Card className="border-primary bg-primary/5">
       <CardContent className="py-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <CheckSquare className="h-5 w-5 text-primary" />
-            <span className="font-medium">{selectedCount} selected</span>
+            <span className="font-medium">{selectedRows.length} selected</span>
             <Button variant="ghost" size="sm" onClick={() => setRowSelection({})}>
               <X className="h-4 w-4 mr-1" />
               Clear
             </Button>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowBulkStatusDialog(true)}
+            >
+              Update Status
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleExport(selectedRows.map((r) => r.id))}
+            >
+              Export Selected
+            </Button>
             <Button
               variant="destructive"
               size="sm"
@@ -390,10 +445,16 @@ export default function CarriersPage() {
         title="Carriers"
         description="Manage trucking companies and owner-operators"
         headerActions={
-          <Button onClick={() => setShowNewCarrierDialog(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Carrier
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => handleExport()}>
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
+            <Button onClick={() => setShowNewCarrierDialog(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Carrier
+            </Button>
+          </div>
         }
         topContent={<StatsCards stats={stats} />}
         filters={filters}
@@ -486,6 +547,45 @@ export default function CarriersPage() {
         onConfirm={confirmBatchDelete}
         onCancel={() => setShowBatchDeleteDialog(false)}
       />
+
+      {/* Bulk Status Update Dialog */}
+      <Dialog open={showBulkStatusDialog} onOpenChange={setShowBulkStatusDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Update Status</DialogTitle>
+            <DialogDescription>
+              Change the status of {Object.keys(rowSelection).length} selected carrier{Object.keys(rowSelection).length !== 1 ? "s" : ""}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>New Status</Label>
+              <Select
+                value={bulkStatus}
+                onValueChange={(v) => setBulkStatus(v as CarrierStatus)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ACTIVE">Active</SelectItem>
+                  <SelectItem value="INACTIVE">Inactive</SelectItem>
+                  <SelectItem value="SUSPENDED">Suspended</SelectItem>
+                  <SelectItem value="BLACKLISTED">Blacklisted</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowBulkStatusDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleBulkStatusUpdate} disabled={updateMutation.isPending}>
+              {updateMutation.isPending ? "Updating..." : `Update ${Object.keys(rowSelection).length} Carrier${Object.keys(rowSelection).length !== 1 ? "s" : ""}`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
