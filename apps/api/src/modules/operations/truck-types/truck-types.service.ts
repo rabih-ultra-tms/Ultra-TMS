@@ -147,7 +147,7 @@ export class TruckTypesService {
         features: data.features || [],
         bestFor: data.bestFor || [],
         loadingMethod: data.loadingMethod || null,
-        imageUrl: null,
+        imageUrl: data.imageUrl || null,
         isActive: data.isActive ?? true,
         baseRateCents: data.baseRateCents || null,
         ratePerMileCents: data.ratePerMileCents || null,
@@ -190,6 +190,7 @@ export class TruckTypesService {
     // Handle other fields
     if (data.loadingMethod !== undefined) updateData.loadingMethod = data.loadingMethod ?? null;
     if (data.isActive !== undefined) updateData.isActive = data.isActive;
+    if (data.imageUrl !== undefined) updateData.imageUrl = data.imageUrl ?? null;
 
     const updated = await this.prisma.truckType.update({
       where: { id },
