@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>New Load — Ultra TMS</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+      colors: {
+        primary: '#4f46e5',
+        'primary-hover': '#4338ca',
+        sidebar: '#1a1f36',
+        'sidebar-active': '#252b45',
+        'content-bg': '#f0f1f5',
+        'card-bg': '#ffffff',
+        border: '#e2e4ea',
+        'text-primary': '#1e2235',
+        'text-secondary': '#6b7194',
+        'text-muted': '#9ca3c0',
+        success: '#10b981',
+        warning: '#f59e0b',
+        danger: '#ef4444',
+        info: '#06b6d4',
+      }
+    }
+  }
+}
+</script>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: 'Inter', system-ui, sans-serif; margin: 0; }
+  /* Compact input styling */
+  .field-input {
+    height: 36px;
+    font-size: 13px;
+    border: 1px solid #e2e4ea;
+    border-radius: 6px;
+    padding: 0 10px;
+    width: 100%;
+    color: #1e2235;
+    background: #fff;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    outline: none;
+  }
+  .field-input:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  }
+  .field-input::placeholder { color: #9ca3c0; }
+  .field-label {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: #6b7194;
+    margin-bottom: 4px;
+    display: block;
+    letter-spacing: 0.01em;
+  }
+  .field-label .req { color: #ef4444; margin-left: 1px; }
+  select.field-input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236b7194' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
+  textarea.field-input { height: auto; padding: 8px 10px; resize: vertical; }
+  .kbd {
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    padding: 0 5px;
+    font-size: 10.5px;
+    font-weight: 500;
+    color: #6b7194;
+    background: #f0f1f5;
+    border: 1px solid #e2e4ea;
+    border-radius: 3px;
+    font-family: 'Inter', monospace;
+    line-height: 1;
+  }
+  /* Margin auto-calc highlight */
+  .margin-display {
+    height: 36px;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: #10b981;
+    padding: 0 10px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 6px;
+  }
+  .btn {
+    height: 36px;
+    padding: 0 16px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+    border: none;
+    white-space: nowrap;
+  }
+  .btn-primary { background: #4f46e5; color: #fff; }
+  .btn-primary:hover { background: #4338ca; }
+  .btn-secondary { background: #f0f1f5; color: #1e2235; border: 1px solid #e2e4ea; }
+  .btn-secondary:hover { background: #e2e4ea; }
+  .btn-outline { background: transparent; color: #4f46e5; border: 1px solid #4f46e5; }
+  .btn-outline:hover { background: #eef2ff; }
+  .btn-ghost { background: transparent; color: #6b7194; }
+  .btn-ghost:hover { background: #f0f1f5; }
+
+  /* Sidebar nav hover */
+  .nav-item { transition: background 0.12s; }
+  .nav-item:hover { background: rgba(255,255,255,0.05); }
+</style>
+</head>
+<body class="flex h-screen overflow-hidden bg-content-bg">
+
+  <!-- Sidebar -->
+  <aside class="w-[220px] flex-shrink-0 flex flex-col" style="background:#1a1f36;">
+    <!-- Logo -->
+    <div class="h-14 flex items-center px-5 border-b border-white/10">
+      <div class="flex items-center gap-2.5">
+        <div class="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2.5"><path d="M13 16V6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10m10 0H3m10 0a2 2 0 1 0 4 0m-4 0a2 2 0 1 1 4 0m6 0h1a1 1 0 0 0 1-1v-4.586a1 1 0 0 0-.293-.707l-3.414-3.414A1 1 0 0 0 17.586 7H16"/></svg>
+        </div>
+        <span class="text-white font-semibold text-sm tracking-tight">Ultra TMS</span>
+      </div>
+    </div>
+    <!-- Nav -->
+    <nav class="flex-1 py-3 px-3 space-y-0.5 text-[13px]">
+      <a href="#" class="nav-item flex items-center gap-2.5 px-3 py-2 rounded-md text-white/60">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a href="#" class="nav-item flex items-center gap-2.5 px-3 py-2 rounded-md text-white font-medium" style="background:#252b45;">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2M9 5h6"/></svg>
+        Loads
+      </a>
+      <a href="#" class="nav-item flex items-center gap-2.5 px-3 py-2 rounded-md text-white/60">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 0 1 5.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 0 1 9.288 0M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+        Customers
+      </a>
+      <a href="#" class="nav-item flex items-center gap-2.5 px-3 py-2 rounded-md text-white/60">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M13 16V6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10m10 0H3m10 0a2 2 0 1 0 4 0m-4 0a2 2 0 1 1 4 0m6 0h1a1 1 0 0 0 1-1v-4.586a1 1 0 0 0-.293-.707l-3.414-3.414A1 1 0 0 0 17.586 7H16"/></svg>
+        Carriers
+      </a>
+      <a href="#" class="nav-item flex items-center gap-2.5 px-3 py-2 rounded-md text-white/60">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z"/></svg>
+        Reports
+      </a>
+      <a href="#" class="nav-item flex items-center gap-2.5 px-3 py-2 rounded-md text-white/60">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065Z"/><circle cx="12" cy="12" r="3"/></svg>
+        Settings
+      </a>
+    </nav>
+    <!-- User -->
+    <div class="px-4 py-3 border-t border-white/10 flex items-center gap-2.5">
+      <div class="w-7 h-7 rounded-full bg-primary/30 flex items-center justify-center text-[11px] font-semibold text-white">JD</div>
+      <div class="flex-1 min-w-0">
+        <div class="text-white text-xs font-medium truncate">John Dispatcher</div>
+        <div class="text-white/40 text-[10.5px] truncate">Operations</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <div class="flex-1 flex flex-col min-w-0">
+    <!-- Top header bar -->
+    <header class="h-14 flex-shrink-0 bg-card-bg border-b border-border flex items-center justify-between px-6">
+      <div class="flex items-center gap-3">
+        <a href="#" class="text-text-secondary hover:text-text-primary text-[13px] flex items-center gap-1">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M15 19l-7-7 7-7"/></svg>
+          Loads
+        </a>
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#9ca3c0" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+        <h1 class="text-text-primary font-semibold text-[15px]">New Load</h1>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-1.5 text-text-muted text-[11.5px]">
+          <span class="kbd">Ctrl+S</span>
+          <span>Save</span>
+        </div>
+        <button class="btn btn-secondary" style="height:32px; padding: 0 10px; font-size: 12px;">
+          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4 16v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          From Template
+        </button>
+      </div>
+    </header>
+
+    <!-- Scrollable form area -->
+    <main class="flex-1 overflow-y-auto p-6 pb-24">
+      <div class="bg-card-bg rounded-lg border border-border p-6 max-w-[1100px]">
+
+        <!-- Row 1: Customer, Ref #, PO -->
+        <div class="grid grid-cols-3 gap-x-4 gap-y-4 mb-4">
+          <div>
+            <label class="field-label">Customer <span class="req">*</span></label>
+            <select class="field-input">
+              <option value="">Search customer...</option>
+              <option>Acme Corp</option>
+              <option>Global Freight Inc</option>
+              <option>Summit Logistics</option>
+              <option>Pacific Trading Co</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Reference #</label>
+            <input type="text" class="field-input" placeholder="e.g. REF-2024-001">
+          </div>
+          <div>
+            <label class="field-label">PO Number</label>
+            <input type="text" class="field-input" placeholder="Purchase order #">
+          </div>
+        </div>
+
+        <!-- Row 2: Origin, Destination -->
+        <div class="grid grid-cols-2 gap-x-4 gap-y-4 mb-2">
+          <div>
+            <label class="field-label">Origin <span class="req">*</span></label>
+            <div class="relative">
+              <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted">
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M17.657 16.657L13.414 20.9a2 2 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0Z"/><circle cx="12" cy="11" r="3"/></svg>
+              </span>
+              <input type="text" class="field-input" style="padding-left:28px;" placeholder="City, State" value="Chicago, IL">
+            </div>
+          </div>
+          <div>
+            <label class="field-label">Destination <span class="req">*</span></label>
+            <div class="relative">
+              <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted">
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M17.657 16.657L13.414 20.9a2 2 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0Z"/><circle cx="12" cy="11" r="3"/></svg>
+              </span>
+              <input type="text" class="field-input" style="padding-left:28px;" placeholder="City, State" value="Dallas, TX">
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Stop -->
+        <div class="mb-4">
+          <button class="text-primary text-[12.5px] font-medium flex items-center gap-1 hover:underline" style="background:none;border:none;cursor:pointer;padding:2px 0;">
+            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14m-7-7h14"/></svg>
+            Add Stop
+          </button>
+        </div>
+
+        <!-- Row 4: Equipment, Weight, Commodity, Hazmat -->
+        <div class="grid grid-cols-4 gap-x-4 gap-y-4 mb-4">
+          <div>
+            <label class="field-label">Equipment Type <span class="req">*</span></label>
+            <select class="field-input">
+              <option value="">Select...</option>
+              <option selected>Dry Van (53')</option>
+              <option>Reefer (53')</option>
+              <option>Flatbed (48')</option>
+              <option>Step Deck</option>
+              <option>Power Only</option>
+              <option>Straight Truck</option>
+              <option>Sprinter Van</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Weight (lbs)</label>
+            <input type="text" class="field-input" placeholder="0" value="42,000">
+          </div>
+          <div>
+            <label class="field-label">Commodity</label>
+            <input type="text" class="field-input" placeholder="Describe freight" value="Electronics">
+          </div>
+          <div>
+            <label class="field-label">&nbsp;</label>
+            <label class="flex items-center gap-2 h-9 cursor-pointer select-none">
+              <input type="checkbox" class="w-4 h-4 rounded border-border text-primary accent-primary">
+              <span class="text-[13px] text-text-primary">Hazmat</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Row 5: Pickup, Delivery, Special Instructions -->
+        <div class="grid grid-cols-3 gap-x-4 gap-y-4 mb-4">
+          <div>
+            <label class="field-label">Pickup Date/Time <span class="req">*</span></label>
+            <input type="datetime-local" class="field-input" value="2026-02-19T08:00">
+          </div>
+          <div>
+            <label class="field-label">Delivery Date/Time <span class="req">*</span></label>
+            <input type="datetime-local" class="field-input" value="2026-02-20T14:00">
+          </div>
+          <div>
+            <label class="field-label">Special Instructions</label>
+            <input type="text" class="field-input" placeholder="e.g. Call 30 min before delivery">
+          </div>
+        </div>
+
+        <!-- Row 6: Rate, Cost, Margin -->
+        <div class="grid grid-cols-3 gap-x-4 gap-y-4">
+          <div>
+            <label class="field-label">Customer Rate ($)</label>
+            <div class="relative">
+              <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted text-[13px]">$</span>
+              <input type="text" class="field-input" style="padding-left:22px;" placeholder="0.00" value="3,200.00" id="rate">
+            </div>
+          </div>
+          <div>
+            <label class="field-label">Carrier Cost ($)</label>
+            <div class="relative">
+              <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted text-[13px]">$</span>
+              <input type="text" class="field-input" style="padding-left:22px;" placeholder="0.00" value="2,650.00" id="cost">
+            </div>
+          </div>
+          <div>
+            <label class="field-label">Margin</label>
+            <div class="margin-display">
+              <span>$550.00</span>
+              <span class="ml-2 text-xs font-medium opacity-70">(17.2%)</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- Sticky footer -->
+    <footer class="flex-shrink-0 h-[60px] bg-card-bg border-t border-border flex items-center justify-between px-6">
+      <div>
+        <button class="btn btn-ghost">
+          <span class="kbd" style="margin-right:2px;">Esc</span> Cancel
+        </button>
+      </div>
+      <div class="flex items-center gap-2.5">
+        <button class="btn btn-outline">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M8 7H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+          Save Draft
+        </button>
+        <button class="btn btn-secondary">
+          Create &amp; Add Another
+        </button>
+        <button class="btn btn-primary">
+          <span class="kbd" style="background:rgba(255,255,255,0.2);border-color:rgba(255,255,255,0.25);color:#fff;margin-right:1px;">Ctrl+Enter</span>
+          Create &amp; Dispatch
+        </button>
+      </div>
+    </footer>
+  </div>
+
+</body>
+</html>

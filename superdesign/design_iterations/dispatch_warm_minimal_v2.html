@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultra TMS - Dispatch Board (Warm Minimal)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #fafaf9;
+            --surface: #ffffff;
+            --surface-alt: #f5f5f4;
+            --border: #e7e5e4;
+            --border-strong: #d6d3d1;
+            --accent: #0d9488;
+            --accent-light: #ccfbf1;
+            --accent-hover: #0f766e;
+            --text-1: #1c1917;
+            --text-2: #57534e;
+            --text-3: #a8a29e;
+            --red: #dc2626;
+            --amber: #d97706;
+            --green: #16a34a;
+            --sidebar-w: 220px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text-1);
+            font-size: 14px;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-w);
+            height: 100vh;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 50;
+        }
+
+        .sidebar-logo {
+            padding: 24px 20px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-logo .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--accent);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .sidebar-logo span {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-1);
+            letter-spacing: -0.02em;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 8px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            border-radius: 8px;
+            color: var(--text-2);
+            font-size: 14px;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-decoration: none;
+        }
+
+        .nav-item:hover {
+            background: var(--surface-alt);
+            color: var(--text-1);
+        }
+
+        .nav-item.active {
+            background: var(--accent-light);
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .nav-item .material-symbols-outlined {
+            font-size: 20px;
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+        }
+
+        .nav-item.active .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 20;
+        }
+
+        .nav-section-label {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-3);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 16px 12px 6px;
+        }
+
+        .sidebar-user {
+            padding: 16px 16px 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-user .avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: var(--accent-light);
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .sidebar-user .user-info {
+            overflow: hidden;
+        }
+
+        .sidebar-user .user-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-1);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-user .user-role {
+            font-size: 12px;
+            color: var(--text-3);
+        }
+
+        /* ── Main Content ── */
+        .main {
+            margin-left: var(--sidebar-w);
+            min-height: 100vh;
+            padding: 28px 32px 40px;
+        }
+
+        /* ── Header ── */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .breadcrumb-parent {
+            font-size: 14px;
+            color: var(--text-3);
+        }
+
+        .breadcrumb-sep {
+            color: var(--text-3);
+            font-size: 12px;
+        }
+
+        .breadcrumb-current {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--text-1);
+            letter-spacing: -0.02em;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .search-input {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--surface);
+            width: 240px;
+            transition: border-color 0.15s ease;
+        }
+
+        .search-input:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.08);
+        }
+
+        .search-input .material-symbols-outlined {
+            font-size: 18px;
+            color: var(--text-3);
+        }
+
+        .search-input input {
+            border: none;
+            outline: none;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            color: var(--text-1);
+            background: transparent;
+            width: 100%;
+        }
+
+        .search-input input::placeholder {
+            color: var(--text-3);
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 18px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-primary .material-symbols-outlined {
+            font-size: 18px;
+        }
+
+        /* ── Stats Cards ── */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px 20px;
+            transition: border-color 0.15s ease;
+        }
+
+        .stat-card:hover {
+            border-color: var(--border-strong);
+        }
+
+        .stat-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-2);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
+        }
+
+        .stat-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .stat-dot.teal { background: var(--accent); }
+        .stat-dot.amber { background: var(--amber); }
+        .stat-dot.green { background: var(--green); }
+        .stat-dot.red { background: var(--red); }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--text-1);
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }
+
+        /* ── Filter Row ── */
+        .filter-row {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 0 0 20px;
+            margin-bottom: 0;
+        }
+
+        .filter-item {
+            font-size: 13px;
+            color: var(--text-2);
+            cursor: pointer;
+            padding-bottom: 2px;
+            border-bottom: 1px dashed var(--border-strong);
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .filter-item:hover {
+            color: var(--text-1);
+            border-bottom-color: var(--text-1);
+        }
+
+        .filter-item .material-symbols-outlined {
+            font-size: 14px;
+        }
+
+        .filter-add {
+            font-size: 13px;
+            color: var(--text-3);
+            cursor: pointer;
+            transition: color 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .filter-add:hover {
+            color: var(--accent);
+        }
+
+        .filter-add .material-symbols-outlined {
+            font-size: 16px;
+        }
+
+        /* ── Bulk Actions Bar ── */
+        .bulk-bar {
+            display: none;
+            align-items: center;
+            gap: 16px;
+            padding: 10px 16px;
+            background: var(--accent);
+            color: white;
+            border-radius: 10px 10px 0 0;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .bulk-bar.visible {
+            display: flex;
+        }
+
+        .bulk-bar .bulk-count {
+            font-weight: 600;
+        }
+
+        .bulk-action {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            background: rgba(255,255,255,0.15);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .bulk-action:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        .bulk-action .material-symbols-outlined {
+            font-size: 16px;
+        }
+
+        .bulk-spacer {
+            flex: 1;
+        }
+
+        .bulk-close {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.7);
+            cursor: pointer;
+            padding: 2px;
+            display: flex;
+            align-items: center;
+        }
+
+        .bulk-close:hover {
+            color: white;
+        }
+
+        .bulk-close .material-symbols-outlined {
+            font-size: 18px;
+        }
+
+        /* ── Table Wrapper ── */
+        .table-wrapper {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .bulk-bar.visible + .table-wrapper {
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+            border-top: none;
+        }
+
+        /* ── Table ── */
+        .dispatch-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .dispatch-table thead th {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-2);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-strong);
+            background: var(--surface);
+            position: sticky;
+            top: 0;
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.15s ease;
+        }
+
+        .dispatch-table thead th:hover {
+            color: var(--text-1);
+        }
+
+        .dispatch-table thead th.align-right {
+            text-align: right;
+        }
+
+        .dispatch-table thead th .sort-icon {
+            font-size: 14px;
+            vertical-align: middle;
+            margin-left: 2px;
+            opacity: 0;
+            transition: opacity 0.15s ease;
+        }
+
+        .dispatch-table thead th:hover .sort-icon {
+            opacity: 0.5;
+        }
+
+        .dispatch-table thead th.sorted .sort-icon {
+            opacity: 1;
+            color: var(--accent);
+        }
+
+        .dispatch-table thead th.th-checkbox {
+            width: 44px;
+            padding-left: 16px;
+            padding-right: 0;
+        }
+
+        .dispatch-table tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: background 0.1s ease;
+        }
+
+        .dispatch-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .dispatch-table tbody tr:hover {
+            background: var(--surface-alt);
+        }
+
+        .dispatch-table tbody tr.selected {
+            background: var(--accent-light);
+        }
+
+        .dispatch-table tbody td {
+            padding: 16px 16px;
+            font-size: 13px;
+            color: var(--text-1);
+            vertical-align: middle;
+        }
+
+        .dispatch-table tbody td.align-right {
+            text-align: right;
+        }
+
+        .dispatch-table tbody td.td-checkbox {
+            width: 44px;
+            padding-left: 16px;
+            padding-right: 0;
+        }
+
+        /* ── Checkbox ── */
+        .checkbox {
+            width: 16px;
+            height: 16px;
+            border: 1.5px solid var(--border-strong);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            flex-shrink: 0;
+        }
+
+        .checkbox:hover {
+            border-color: var(--accent);
+        }
+
+        .checkbox.checked {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .checkbox.checked .material-symbols-outlined {
+            font-size: 14px;
+            color: white;
+            display: block;
+        }
+
+        .checkbox .material-symbols-outlined {
+            display: none;
+        }
+
+        .checkbox.indeterminate {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .checkbox.indeterminate .material-symbols-outlined {
+            font-size: 14px;
+            color: white;
+            display: block;
+        }
+
+        /* ── Load # Link ── */
+        .load-link {
+            color: var(--accent);
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: color 0.15s ease;
+        }
+
+        .load-link:hover {
+            color: var(--accent-hover);
+            text-decoration: underline;
+        }
+
+        /* ── Status ── */
+        .status-cell {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .status-dot.in-transit { background: var(--amber); }
+        .status-dot.delivered { background: var(--green); }
+        .status-dot.unassigned { background: var(--text-3); }
+        .status-dot.at-risk { background: var(--red); }
+        .status-dot.booked { background: var(--accent); }
+        .status-dot.picked-up { background: #6366f1; }
+        .status-dot.pending { background: var(--border-strong); }
+
+        .status-text {
+            font-size: 13px;
+            color: var(--text-1);
+        }
+
+        /* ── Route ── */
+        .route-main {
+            font-size: 13px;
+            color: var(--text-1);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .route-sub {
+            font-size: 12px;
+            color: var(--text-3);
+            margin-top: 2px;
+            white-space: nowrap;
+        }
+
+        /* ── Financial ── */
+        .money {
+            font-variant-numeric: tabular-nums;
+            font-size: 13px;
+        }
+
+        .margin-positive {
+            color: var(--green);
+            font-weight: 500;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .margin-low {
+            color: var(--amber);
+            font-weight: 500;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .margin-negative {
+            color: var(--red);
+            font-weight: 500;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ── Carrier & Driver ── */
+        .carrier-name {
+            font-size: 13px;
+            color: var(--text-1);
+        }
+
+        .driver-name {
+            font-size: 13px;
+            color: var(--text-1);
+        }
+
+        .unassigned-label {
+            font-size: 13px;
+            color: var(--text-3);
+            font-style: italic;
+        }
+
+        /* ── Dates ── */
+        .date-cell {
+            font-size: 13px;
+            color: var(--text-1);
+            white-space: nowrap;
+        }
+
+        .date-sub {
+            font-size: 12px;
+            color: var(--text-3);
+        }
+
+        /* ── Pagination ── */
+        .table-footer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            padding: 14px 16px;
+            border-top: 1px solid var(--border);
+            background: var(--surface);
+        }
+
+        .page-info {
+            font-size: 13px;
+            color: var(--text-2);
+        }
+
+        .page-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--surface);
+            color: var(--text-2);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .page-btn:hover {
+            border-color: var(--border-strong);
+            color: var(--text-1);
+            background: var(--surface-alt);
+        }
+
+        .page-btn .material-symbols-outlined {
+            font-size: 18px;
+        }
+
+        /* ── Scrollbar ── */
+        .table-scroll {
+            overflow-x: auto;
+        }
+
+        .table-scroll::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .table-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .table-scroll::-webkit-scrollbar-thumb {
+            background: var(--border-strong);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── Sidebar ── -->
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <div class="logo-icon">U</div>
+        <span>Ultra TMS</span>
+    </div>
+
+    <nav class="sidebar-nav">
+        <div class="nav-section-label">Main</div>
+        <a class="nav-item" href="#">
+            <span class="material-symbols-outlined">dashboard</span>
+            Dashboard
+        </a>
+        <a class="nav-item" href="#">
+            <span class="material-symbols-outlined">package_2</span>
+            Loads
+        </a>
+        <a class="nav-item active" href="#">
+            <span class="material-symbols-outlined">space_dashboard</span>
+            Dispatch Board
+        </a>
+        <a class="nav-item" href="#">
+            <span class="material-symbols-outlined">local_shipping</span>
+            Carriers
+        </a>
+        <a class="nav-item" href="#">
+            <span class="material-symbols-outlined">groups</span>
+            Customers
+        </a>
+
+        <div class="nav-section-label">Analytics</div>
+        <a class="nav-item" href="#">
+            <span class="material-symbols-outlined">bar_chart</span>
+            Reports
+        </a>
+        <a class="nav-item" href="#">
+            <span class="material-symbols-outlined">settings</span>
+            Settings
+        </a>
+    </nav>
+
+    <div class="sidebar-user">
+        <div class="avatar">JD</div>
+        <div class="user-info">
+            <div class="user-name">John Doe</div>
+            <div class="user-role">Dispatcher</div>
+        </div>
+    </div>
+</aside>
+
+<!-- ── Main Content ── -->
+<main class="main">
+
+    <!-- Header -->
+    <div class="header">
+        <div class="breadcrumb">
+            <span class="breadcrumb-parent">Dispatch</span>
+            <span class="breadcrumb-sep">/</span>
+            <span class="breadcrumb-current">Board</span>
+        </div>
+        <div class="header-actions">
+            <div class="search-input">
+                <span class="material-symbols-outlined">search</span>
+                <input type="text" placeholder="Search loads, carriers...">
+            </div>
+            <button class="btn-primary">
+                <span class="material-symbols-outlined">add</span>
+                New Load
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-label">
+                <span class="stat-dot teal"></span>
+                In Transit
+            </div>
+            <div class="stat-number">45</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">
+                <span class="stat-dot amber"></span>
+                Unassigned
+            </div>
+            <div class="stat-number">12</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">
+                <span class="stat-dot green"></span>
+                Delivered Today
+            </div>
+            <div class="stat-number">23</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">
+                <span class="stat-dot red"></span>
+                At Risk
+            </div>
+            <div class="stat-number">3</div>
+        </div>
+    </div>
+
+    <!-- Filter Row -->
+    <div class="filter-row">
+        <div class="filter-item">
+            Status: All
+            <span class="material-symbols-outlined">expand_more</span>
+        </div>
+        <div class="filter-item">
+            Carrier: All
+            <span class="material-symbols-outlined">expand_more</span>
+        </div>
+        <div class="filter-item">
+            This Week
+            <span class="material-symbols-outlined">expand_more</span>
+        </div>
+        <div class="filter-item">
+            Equipment: All
+            <span class="material-symbols-outlined">expand_more</span>
+        </div>
+        <div class="filter-add">
+            <span class="material-symbols-outlined">add</span>
+            Add Filter
+        </div>
+    </div>
+
+    <!-- Bulk Actions Bar -->
+    <div class="bulk-bar" id="bulkBar">
+        <span class="bulk-count" id="bulkCount">0 selected</span>
+        <button class="bulk-action">
+            <span class="material-symbols-outlined">local_shipping</span>
+            Assign Carrier
+        </button>
+        <button class="bulk-action">
+            <span class="material-symbols-outlined">edit</span>
+            Update Status
+        </button>
+        <button class="bulk-action">
+            <span class="material-symbols-outlined">file_download</span>
+            Export
+        </button>
+        <span class="bulk-spacer"></span>
+        <button class="bulk-close" id="bulkClose">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrapper">
+        <div class="table-scroll">
+            <table class="dispatch-table">
+                <thead>
+                    <tr>
+                        <th class="th-checkbox">
+                            <div class="checkbox" id="selectAll">
+                                <span class="material-symbols-outlined">check</span>
+                            </div>
+                        </th>
+                        <th class="sorted">
+                            Load #
+                            <span class="material-symbols-outlined sort-icon">arrow_downward</span>
+                        </th>
+                        <th>
+                            Status
+                            <span class="material-symbols-outlined sort-icon">arrow_downward</span>
+                        </th>
+                        <th>
+                            Route
+                            <span class="material-symbols-outlined sort-icon">arrow_downward</span>
+                        </th>
+                        <th>
+                            Carrier
+                            <span class="material-symbols-outlined sort-icon">arrow_downward</span>
+                        </th>
+                        <th>
+                            Driver
+                            <span class="material-symbols-outlined sort-icon">arrow_downward</span>
+                        </th>
+                        <th>
+                            Pickup
+                            <span class="material-symbols-outlined sort-icon">arrow_downward</span>
+                        </th>
+                        <th>
+                            Delivery
+                            <span class="material-symbols-outlined sort-icon">arrow_downward</span>
+                        </th>
+                        <th class="align-right">
+                            Rate
+                            <span class="material-symbols-outlined sort-icon">arrow_downward</span>
+                        </th>
+                        <th class="align-right">
+                            Margin
+                            <span class="material-symbols-outlined sort-icon">arrow_downward</span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="table-footer">
+            <button class="page-btn">
+                <span class="material-symbols-outlined">chevron_left</span>
+            </button>
+            <span class="page-info">1 &ndash; 25 of 571 loads</span>
+            <button class="page-btn">
+                <span class="material-symbols-outlined">chevron_right</span>
+            </button>
+        </div>
+    </div>
+
+</main>
+
+<script>
+// ── Mock Data ──
+const loads = [
+    { id: "LD-10471", status: "in-transit", statusLabel: "In Transit", origin: "Chicago", dest: "Dallas", originState: "IL", destState: "TX", miles: 920, carrier: "Swift Transport", driver: "Mike Reynolds", pickup: "Feb 6", pickupTime: "08:00 AM", delivery: "Feb 8", deliveryTime: "02:00 PM", rate: 3250, margin: 18.5 },
+    { id: "LD-10472", status: "in-transit", statusLabel: "In Transit", origin: "Los Angeles", dest: "Phoenix", originState: "CA", destState: "AZ", miles: 373, carrier: "Werner Logistics", driver: "Sarah Chen", pickup: "Feb 6", pickupTime: "10:30 AM", delivery: "Feb 7", deliveryTime: "06:00 PM", rate: 1850, margin: 22.1 },
+    { id: "LD-10473", status: "at-risk", statusLabel: "At Risk", origin: "Atlanta", dest: "Miami", originState: "GA", destState: "FL", miles: 662, carrier: "Heartland Express", driver: "Carlos Ruiz", pickup: "Feb 5", pickupTime: "06:00 AM", delivery: "Feb 7", deliveryTime: "10:00 AM", rate: 2780, margin: 8.3 },
+    { id: "LD-10474", status: "booked", statusLabel: "Booked", origin: "Houston", dest: "Memphis", originState: "TX", destState: "TN", miles: 586, carrier: "JB Hunt", driver: "Tom Bradley", pickup: "Feb 8", pickupTime: "07:00 AM", delivery: "Feb 9", deliveryTime: "04:00 PM", rate: 2190, margin: 15.7 },
+    { id: "LD-10475", status: "unassigned", statusLabel: "Unassigned", origin: "Seattle", dest: "Portland", originState: "WA", destState: "OR", miles: 174, carrier: null, driver: null, pickup: "Feb 9", pickupTime: "09:00 AM", delivery: "Feb 9", deliveryTime: "03:00 PM", rate: 980, margin: 25.0 },
+    { id: "LD-10476", status: "delivered", statusLabel: "Delivered", origin: "Denver", dest: "Kansas City", originState: "CO", destState: "MO", miles: 606, carrier: "Schneider National", driver: "Lisa Park", pickup: "Feb 4", pickupTime: "11:00 AM", delivery: "Feb 6", deliveryTime: "09:00 AM", rate: 2450, margin: 19.8 },
+    { id: "LD-10477", status: "in-transit", statusLabel: "In Transit", origin: "Nashville", dest: "Charlotte", originState: "TN", destState: "NC", miles: 409, carrier: "Old Dominion", driver: "James Wright", pickup: "Feb 6", pickupTime: "01:00 PM", delivery: "Feb 7", deliveryTime: "11:00 AM", rate: 1920, margin: 16.4 },
+    { id: "LD-10478", status: "picked-up", statusLabel: "Picked Up", origin: "Detroit", dest: "Indianapolis", originState: "MI", destState: "IN", miles: 287, carrier: "XPO Logistics", driver: "Anna Kim", pickup: "Feb 7", pickupTime: "05:30 AM", delivery: "Feb 7", deliveryTime: "02:00 PM", rate: 1340, margin: 21.2 },
+    { id: "LD-10479", status: "unassigned", statusLabel: "Unassigned", origin: "Philadelphia", dest: "Boston", originState: "PA", destState: "MA", miles: 308, carrier: null, driver: null, pickup: "Feb 10", pickupTime: "08:00 AM", delivery: "Feb 10", deliveryTime: "06:00 PM", rate: 1650, margin: 20.0 },
+    { id: "LD-10480", status: "at-risk", statusLabel: "At Risk", origin: "Minneapolis", dest: "Milwaukee", originState: "MN", destState: "WI", miles: 337, carrier: "Estes Express", driver: "Robert Hill", pickup: "Feb 5", pickupTime: "07:30 AM", delivery: "Feb 6", deliveryTime: "12:00 PM", rate: 1480, margin: 5.9 },
+    { id: "LD-10481", status: "in-transit", statusLabel: "In Transit", origin: "San Antonio", dest: "New Orleans", originState: "TX", destState: "LA", miles: 543, carrier: "Saia Inc", driver: "David Nguyen", pickup: "Feb 6", pickupTime: "04:00 AM", delivery: "Feb 7", deliveryTime: "08:00 PM", rate: 2100, margin: 17.3 },
+    { id: "LD-10482", status: "delivered", statusLabel: "Delivered", origin: "St. Louis", dest: "Louisville", originState: "MO", destState: "KY", miles: 264, carrier: "FedEx Freight", driver: "Maria Gonzalez", pickup: "Feb 4", pickupTime: "10:00 AM", delivery: "Feb 5", deliveryTime: "01:00 PM", rate: 1280, margin: 24.6 },
+    { id: "LD-10483", status: "booked", statusLabel: "Booked", origin: "Tampa", dest: "Jacksonville", originState: "FL", destState: "FL", miles: 200, carrier: "Ryder System", driver: "Kevin Brown", pickup: "Feb 9", pickupTime: "06:30 AM", delivery: "Feb 9", deliveryTime: "12:00 PM", rate: 890, margin: 28.1 },
+    { id: "LD-10484", status: "unassigned", statusLabel: "Unassigned", origin: "Las Vegas", dest: "Salt Lake City", originState: "NV", destState: "UT", miles: 421, carrier: null, driver: null, pickup: "Feb 11", pickupTime: "07:00 AM", delivery: "Feb 12", deliveryTime: "03:00 PM", rate: 1750, margin: 19.5 },
+    { id: "LD-10485", status: "in-transit", statusLabel: "In Transit", origin: "Columbus", dest: "Pittsburgh", originState: "OH", destState: "PA", miles: 185, carrier: "ABF Freight", driver: "Rachel Adams", pickup: "Feb 7", pickupTime: "09:00 AM", delivery: "Feb 7", deliveryTime: "04:30 PM", rate: 1050, margin: 14.8 },
+    { id: "LD-10486", status: "delivered", statusLabel: "Delivered", origin: "Omaha", dest: "Des Moines", originState: "NE", destState: "IA", miles: 143, carrier: "Werner Logistics", driver: "Brian Miller", pickup: "Feb 5", pickupTime: "08:00 AM", delivery: "Feb 5", deliveryTime: "01:00 PM", rate: 780, margin: 31.2 },
+    { id: "LD-10487", status: "at-risk", statusLabel: "At Risk", origin: "Sacramento", dest: "Reno", originState: "CA", destState: "NV", miles: 135, carrier: "CRST International", driver: "Tony Vasquez", pickup: "Feb 6", pickupTime: "11:30 AM", delivery: "Feb 6", deliveryTime: "05:00 PM", rate: 920, margin: 3.2 },
+    { id: "LD-10488", status: "pending", statusLabel: "Pending", origin: "Baltimore", dest: "Norfolk", originState: "MD", destState: "VA", miles: 213, carrier: "Swift Transport", driver: "Pending", pickup: "Feb 12", pickupTime: "TBD", delivery: "Feb 13", deliveryTime: "TBD", rate: 1120, margin: 17.9 },
+    { id: "LD-10489", status: "in-transit", statusLabel: "In Transit", origin: "Oklahoma City", dest: "Little Rock", originState: "OK", destState: "AR", miles: 344, carrier: "Heartland Express", driver: "Sandra Lee", pickup: "Feb 7", pickupTime: "03:00 AM", delivery: "Feb 8", deliveryTime: "10:00 AM", rate: 1560, margin: 13.6 },
+    { id: "LD-10490", status: "booked", statusLabel: "Booked", origin: "Richmond", dest: "Raleigh", originState: "VA", destState: "NC", miles: 169, carrier: "Old Dominion", driver: "Chris Taylor", pickup: "Feb 10", pickupTime: "07:30 AM", delivery: "Feb 10", deliveryTime: "01:00 PM", rate: 870, margin: 26.4 },
+];
+
+// ── Build table using DOM methods (safe, no innerHTML) ──
+const tbody = document.getElementById('tableBody');
+
+function createTextEl(tag, text, className) {
+    const el = document.createElement(tag);
+    if (className) el.className = className;
+    el.textContent = text;
+    return el;
+}
+
+function renderTable() {
+    tbody.textContent = '';
+
+    loads.forEach(function(load, index) {
+        const tr = document.createElement('tr');
+        tr.dataset.index = index;
+
+        // Checkbox cell
+        const tdCb = document.createElement('td');
+        tdCb.className = 'td-checkbox';
+        const cbDiv = document.createElement('div');
+        cbDiv.className = 'checkbox row-checkbox';
+        cbDiv.dataset.index = index;
+        const cbIcon = document.createElement('span');
+        cbIcon.className = 'material-symbols-outlined';
+        cbIcon.textContent = 'check';
+        cbDiv.appendChild(cbIcon);
+        tdCb.appendChild(cbDiv);
+        tr.appendChild(tdCb);
+
+        // Load # cell
+        const tdLoad = document.createElement('td');
+        const loadLink = document.createElement('a');
+        loadLink.className = 'load-link';
+        loadLink.href = '#';
+        loadLink.textContent = load.id;
+        tdLoad.appendChild(loadLink);
+        tr.appendChild(tdLoad);
+
+        // Status cell
+        const tdStatus = document.createElement('td');
+        const statusDiv = document.createElement('div');
+        statusDiv.className = 'status-cell';
+        const statusDot = document.createElement('span');
+        statusDot.className = 'status-dot ' + load.status;
+        const statusText = document.createElement('span');
+        statusText.className = 'status-text';
+        statusText.textContent = load.statusLabel;
+        statusDiv.appendChild(statusDot);
+        statusDiv.appendChild(statusText);
+        tdStatus.appendChild(statusDiv);
+        tr.appendChild(tdStatus);
+
+        // Route cell
+        const tdRoute = document.createElement('td');
+        const routeMain = document.createElement('div');
+        routeMain.className = 'route-main';
+        routeMain.textContent = load.origin + ' \u2192 ' + load.dest;
+        const routeSub = document.createElement('div');
+        routeSub.className = 'route-sub';
+        routeSub.textContent = load.originState + ' \u2014 ' + load.destState + ' \u00B7 ' + load.miles.toLocaleString() + ' mi';
+        tdRoute.appendChild(routeMain);
+        tdRoute.appendChild(routeSub);
+        tr.appendChild(tdRoute);
+
+        // Carrier cell
+        const tdCarrier = document.createElement('td');
+        if (load.carrier) {
+            const carrierSpan = document.createElement('span');
+            carrierSpan.className = 'carrier-name';
+            carrierSpan.textContent = load.carrier;
+            tdCarrier.appendChild(carrierSpan);
+        } else {
+            const unassigned = document.createElement('span');
+            unassigned.className = 'unassigned-label';
+            unassigned.textContent = 'Unassigned';
+            tdCarrier.appendChild(unassigned);
+        }
+        tr.appendChild(tdCarrier);
+
+        // Driver cell
+        const tdDriver = document.createElement('td');
+        if (load.driver && load.driver !== 'Pending') {
+            const driverSpan = document.createElement('span');
+            driverSpan.className = 'driver-name';
+            driverSpan.textContent = load.driver;
+            tdDriver.appendChild(driverSpan);
+        } else if (load.driver === 'Pending') {
+            const pendingSpan = document.createElement('span');
+            pendingSpan.className = 'unassigned-label';
+            pendingSpan.textContent = 'Pending';
+            tdDriver.appendChild(pendingSpan);
+        } else {
+            const dashSpan = document.createElement('span');
+            dashSpan.className = 'unassigned-label';
+            dashSpan.textContent = '\u2014';
+            tdDriver.appendChild(dashSpan);
+        }
+        tr.appendChild(tdDriver);
+
+        // Pickup cell
+        const tdPickup = document.createElement('td');
+        const pickupDate = document.createElement('div');
+        pickupDate.className = 'date-cell';
+        pickupDate.textContent = load.pickup;
+        const pickupTime = document.createElement('div');
+        pickupTime.className = 'date-sub';
+        pickupTime.textContent = load.pickupTime;
+        tdPickup.appendChild(pickupDate);
+        tdPickup.appendChild(pickupTime);
+        tr.appendChild(tdPickup);
+
+        // Delivery cell
+        const tdDelivery = document.createElement('td');
+        const deliveryDate = document.createElement('div');
+        deliveryDate.className = 'date-cell';
+        deliveryDate.textContent = load.delivery;
+        const deliveryTime = document.createElement('div');
+        deliveryTime.className = 'date-sub';
+        deliveryTime.textContent = load.deliveryTime;
+        tdDelivery.appendChild(deliveryDate);
+        tdDelivery.appendChild(deliveryTime);
+        tr.appendChild(tdDelivery);
+
+        // Rate cell
+        const tdRate = document.createElement('td');
+        tdRate.className = 'align-right';
+        const rateSpan = document.createElement('span');
+        rateSpan.className = 'money';
+        rateSpan.textContent = '$' + load.rate.toLocaleString();
+        tdRate.appendChild(rateSpan);
+        tr.appendChild(tdRate);
+
+        // Margin cell
+        const tdMargin = document.createElement('td');
+        tdMargin.className = 'align-right';
+        const marginSpan = document.createElement('span');
+        if (load.margin >= 15) {
+            marginSpan.className = 'margin-positive';
+        } else if (load.margin >= 8) {
+            marginSpan.className = 'margin-low';
+        } else {
+            marginSpan.className = 'margin-negative';
+        }
+        marginSpan.textContent = load.margin.toFixed(1) + '%';
+        tdMargin.appendChild(marginSpan);
+        tr.appendChild(tdMargin);
+
+        tbody.appendChild(tr);
+    });
+
+    attachCheckboxListeners();
+}
+
+// ── Selection Logic ──
+var selectedIndices = new Set();
+
+function attachCheckboxListeners() {
+    document.querySelectorAll('.row-checkbox').forEach(function(cb) {
+        cb.addEventListener('click', function() {
+            var idx = parseInt(cb.dataset.index);
+            if (selectedIndices.has(idx)) {
+                selectedIndices.delete(idx);
+            } else {
+                selectedIndices.add(idx);
+            }
+            updateSelectionUI();
+        });
+    });
+}
+
+function updateSelectionUI() {
+    var allCheckboxes = document.querySelectorAll('.row-checkbox');
+    var allRows = document.querySelectorAll('#tableBody tr');
+    var selectAllCb = document.getElementById('selectAll');
+    var bulkBar = document.getElementById('bulkBar');
+    var bulkCount = document.getElementById('bulkCount');
+
+    // Update row checkboxes and row highlight
+    allCheckboxes.forEach(function(cb, i) {
+        if (selectedIndices.has(i)) {
+            cb.classList.add('checked');
+            allRows[i].classList.add('selected');
+        } else {
+            cb.classList.remove('checked');
+            allRows[i].classList.remove('selected');
+        }
+    });
+
+    // Update select-all checkbox
+    if (selectedIndices.size === 0) {
+        selectAllCb.classList.remove('checked', 'indeterminate');
+    } else if (selectedIndices.size === loads.length) {
+        selectAllCb.classList.add('checked');
+        selectAllCb.classList.remove('indeterminate');
+        selectAllCb.querySelector('.material-symbols-outlined').textContent = 'check';
+    } else {
+        selectAllCb.classList.remove('checked');
+        selectAllCb.classList.add('indeterminate');
+        selectAllCb.querySelector('.material-symbols-outlined').textContent = 'remove';
+    }
+
+    // Bulk bar
+    if (selectedIndices.size > 0) {
+        bulkBar.classList.add('visible');
+        bulkCount.textContent = selectedIndices.size + ' selected';
+    } else {
+        bulkBar.classList.remove('visible');
+    }
+}
+
+// Select All
+document.getElementById('selectAll').addEventListener('click', function() {
+    if (selectedIndices.size === loads.length) {
+        selectedIndices.clear();
+    } else {
+        for (var i = 0; i < loads.length; i++) {
+            selectedIndices.add(i);
+        }
+    }
+    updateSelectionUI();
+});
+
+// Bulk close
+document.getElementById('bulkClose').addEventListener('click', function() {
+    selectedIndices.clear();
+    updateSelectionUI();
+});
+
+// ── Init ──
+renderTable();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TMS Drawer Design 2 — Wide Drawer with Vertical Tabs</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            primary: '#4f46e5',
+            'primary-50': '#eef2ff',
+            'primary-100': '#e0e7ff',
+            'primary-600': '#4f46e5',
+            'primary-700': '#4338ca',
+            sidebar: '#1a1f36',
+            'sidebar-active': '#252b45',
+            'content-bg': '#f0f1f5',
+            'card-bg': '#ffffff',
+            'border-ui': '#e2e4ea',
+            'text-primary': '#1e2235',
+            'text-secondary': '#6b7194',
+            'text-muted': '#9ca3c0',
+            success: '#10b981',
+            'success-50': '#ecfdf5',
+            warning: '#f59e0b',
+            'warning-50': '#fffbeb',
+            danger: '#ef4444',
+            info: '#06b6d4',
+            'info-50': '#ecfeff',
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', system-ui, sans-serif; margin: 0; background: #f0f1f5; }
+
+    /* Drawer slide-in animation */
+    .drawer-overlay {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .drawer-overlay.open { opacity: 1; pointer-events: auto; }
+
+    .drawer-panel {
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .drawer-panel.open { transform: translateX(0); }
+
+    /* Scrollbar styling */
+    .drawer-scroll::-webkit-scrollbar { width: 4px; }
+    .drawer-scroll::-webkit-scrollbar-track { background: transparent; }
+    .drawer-scroll::-webkit-scrollbar-thumb { background: #e2e4ea; border-radius: 4px; }
+    .drawer-scroll::-webkit-scrollbar-thumb:hover { background: #9ca3c0; }
+
+    /* Tooltip */
+    .vtab-btn { position: relative; }
+    .vtab-btn .vtab-tooltip {
+      position: absolute;
+      left: calc(100% + 8px);
+      top: 50%;
+      transform: translateY(-50%);
+      background: #1e2235;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 4px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s ease;
+      z-index: 10;
+    }
+    .vtab-btn .vtab-tooltip::before {
+      content: '';
+      position: absolute;
+      right: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 4px solid transparent;
+      border-right-color: #1e2235;
+    }
+    .vtab-btn:hover .vtab-tooltip { opacity: 1; }
+
+    /* Progress bar */
+    .progress-track {
+      background: #e2e4ea;
+      height: 6px;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: linear-gradient(90deg, #4f46e5, #06b6d4);
+      transition: width 0.6s ease;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ========== BACKGROUND: Dimmed Data Table ========== -->
+<div class="min-h-screen bg-content-bg">
+  <!-- Top bar simulation -->
+  <div class="bg-white border-b border-border-ui px-6 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" /></svg>
+      </div>
+      <span class="font-semibold text-text-primary text-sm">Ultra TMS</span>
+      <span class="text-text-muted mx-2">/</span>
+      <span class="text-text-secondary text-sm">Dispatch Board</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="w-8 h-8 rounded-full bg-primary-50 flex items-center justify-center">
+        <span class="text-primary text-xs font-semibold">JD</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table area -->
+  <div class="p-6">
+    <div class="bg-white rounded-xl border border-border-ui shadow-sm overflow-hidden">
+      <div class="px-5 py-3 border-b border-border-ui flex items-center justify-between">
+        <h2 class="text-sm font-semibold text-text-primary">Active Loads</h2>
+        <span class="text-xs text-text-muted">83 active</span>
+      </div>
+      <table class="w-full text-left">
+        <thead>
+          <tr class="border-b border-border-ui bg-content-bg/50">
+            <th class="px-5 py-2.5 text-xs font-medium text-text-muted uppercase tracking-wider">Load #</th>
+            <th class="px-5 py-2.5 text-xs font-medium text-text-muted uppercase tracking-wider">Status</th>
+            <th class="px-5 py-2.5 text-xs font-medium text-text-muted uppercase tracking-wider">Customer</th>
+            <th class="px-5 py-2.5 text-xs font-medium text-text-muted uppercase tracking-wider">Route</th>
+            <th class="px-5 py-2.5 text-xs font-medium text-text-muted uppercase tracking-wider">Revenue</th>
+            <th class="px-5 py-2.5 text-xs font-medium text-text-muted uppercase tracking-wider">ETA</th>
+          </tr>
+        </thead>
+        <tbody class="text-sm">
+          <tr class="border-b border-border-ui hover:bg-content-bg/30 cursor-pointer">
+            <td class="px-5 py-3 font-mono text-xs font-medium text-text-primary">LD-2024-0845</td>
+            <td class="px-5 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-success-50 text-success"><span class="w-1.5 h-1.5 rounded-full bg-success"></span>Delivered</span></td>
+            <td class="px-5 py-3 text-text-secondary">Global Foods Co.</td>
+            <td class="px-5 py-3 text-text-secondary">Atlanta, GA &rarr; Miami, FL</td>
+            <td class="px-5 py-3 font-medium text-text-primary">$3,100</td>
+            <td class="px-5 py-3 text-text-muted">--</td>
+          </tr>
+          <tr class="border-b border-border-ui hover:bg-content-bg/30 cursor-pointer">
+            <td class="px-5 py-3 font-mono text-xs font-medium text-text-primary">LD-2024-0846</td>
+            <td class="px-5 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-warning-50 text-warning"><span class="w-1.5 h-1.5 rounded-full bg-warning"></span>Pending</span></td>
+            <td class="px-5 py-3 text-text-secondary">Best Buy Dist.</td>
+            <td class="px-5 py-3 text-text-secondary">Memphis, TN &rarr; Nashville, TN</td>
+            <td class="px-5 py-3 font-medium text-text-primary">$1,800</td>
+            <td class="px-5 py-3 text-text-muted">Feb 20</td>
+          </tr>
+          <!-- SELECTED ROW -->
+          <tr class="border-b border-border-ui bg-primary-50/60 cursor-pointer border-l-[3px] border-l-primary" id="selected-row">
+            <td class="px-5 py-3 font-mono text-xs font-semibold text-primary">LD-2024-0847</td>
+            <td class="px-5 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-600"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>In Transit</span></td>
+            <td class="px-5 py-3 text-text-primary font-medium">Acme Logistics Inc.</td>
+            <td class="px-5 py-3 text-text-secondary">Chicago, IL &rarr; Dallas, TX</td>
+            <td class="px-5 py-3 font-medium text-text-primary">$4,250</td>
+            <td class="px-5 py-3 text-text-secondary">Feb 17</td>
+          </tr>
+          <tr class="border-b border-border-ui hover:bg-content-bg/30 cursor-pointer">
+            <td class="px-5 py-3 font-mono text-xs font-medium text-text-primary">LD-2024-0848</td>
+            <td class="px-5 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-success-50 text-success"><span class="w-1.5 h-1.5 rounded-full bg-success"></span>Delivered</span></td>
+            <td class="px-5 py-3 text-text-secondary">Target Corp.</td>
+            <td class="px-5 py-3 text-text-secondary">Indianapolis, IN &rarr; Columbus, OH</td>
+            <td class="px-5 py-3 font-medium text-text-primary">$2,450</td>
+            <td class="px-5 py-3 text-text-muted">--</td>
+          </tr>
+          <tr class="hover:bg-content-bg/30 cursor-pointer">
+            <td class="px-5 py-3 font-mono text-xs font-medium text-text-primary">LD-2024-0849</td>
+            <td class="px-5 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-600"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>In Transit</span></td>
+            <td class="px-5 py-3 text-text-secondary">Amazon Logistics</td>
+            <td class="px-5 py-3 text-text-secondary">Denver, CO &rarr; Phoenix, AZ</td>
+            <td class="px-5 py-3 font-medium text-text-primary">$3,780</td>
+            <td class="px-5 py-3 text-text-secondary">Feb 19</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ========== DRAWER OVERLAY ========== -->
+<div id="drawer-overlay" class="drawer-overlay open fixed inset-0 bg-black/30 z-40" onclick="closeDrawer()"></div>
+
+<!-- ========== WIDE DRAWER PANEL (560px) ========== -->
+<div id="drawer-panel" class="drawer-panel open fixed top-0 right-0 h-full bg-white shadow-2xl z-50 flex flex-col" style="width: 560px; max-width: 95vw;">
+
+  <!-- ===== HEADER (sticky) ===== -->
+  <div class="flex-shrink-0 bg-white border-b border-border-ui">
+    <!-- Row 1: Load # + Status + Close -->
+    <div class="px-5 pt-4 pb-1.5 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="font-mono font-semibold text-text-primary text-base tracking-tight">#LD-2024-0847</span>
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-600">
+          <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+          In Transit
+        </span>
+      </div>
+      <button onclick="closeDrawer()" class="w-7 h-7 rounded-md hover:bg-content-bg flex items-center justify-center text-text-muted hover:text-text-primary transition-colors" title="Close">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+      </button>
+    </div>
+    <!-- Row 2: Breadcrumb -->
+    <div class="px-5 pb-3 flex items-center gap-1.5 text-xs text-text-muted">
+      <span class="hover:text-text-secondary cursor-pointer">Loads</span>
+      <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+      <span class="hover:text-text-secondary cursor-pointer font-mono text-[11px]">LD-2024-0847</span>
+      <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+      <span class="text-text-secondary font-medium" id="breadcrumb-tab">Overview</span>
+    </div>
+  </div>
+
+  <!-- ===== BODY: Vertical tabs + Content ===== -->
+  <div class="flex-1 flex min-h-0">
+
+    <!-- LEFT: Vertical icon tabs (60px) -->
+    <div class="flex-shrink-0 w-[60px] bg-content-bg border-r border-border-ui py-2 flex flex-col items-center gap-1">
+      <!-- Overview (active) -->
+      <button class="vtab-btn w-12 h-12 rounded-lg flex items-center justify-center bg-primary-50 border-l-[3px] border-l-primary relative transition-colors" data-vtab="overview" data-label="Overview">
+        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+        <span class="vtab-tooltip">Overview</span>
+      </button>
+      <!-- Route -->
+      <button class="vtab-btn w-12 h-12 rounded-lg flex items-center justify-center text-text-muted hover:bg-white hover:text-text-secondary relative transition-colors" data-vtab="route" data-label="Route">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+        <span class="vtab-tooltip">Route</span>
+      </button>
+      <!-- Carrier -->
+      <button class="vtab-btn w-12 h-12 rounded-lg flex items-center justify-center text-text-muted hover:bg-white hover:text-text-secondary relative transition-colors" data-vtab="carrier" data-label="Carrier">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" /></svg>
+        <span class="vtab-tooltip">Carrier</span>
+      </button>
+      <!-- Documents -->
+      <button class="vtab-btn w-12 h-12 rounded-lg flex items-center justify-center text-text-muted hover:bg-white hover:text-text-secondary relative transition-colors" data-vtab="documents" data-label="Documents">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+        <!-- Badge -->
+        <span class="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-primary text-white text-[9px] font-bold flex items-center justify-center">3</span>
+        <span class="vtab-tooltip">Documents</span>
+      </button>
+      <!-- Timeline -->
+      <button class="vtab-btn w-12 h-12 rounded-lg flex items-center justify-center text-text-muted hover:bg-white hover:text-text-secondary relative transition-colors" data-vtab="timeline" data-label="Timeline">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <span class="vtab-tooltip">Timeline</span>
+      </button>
+      <!-- Financials -->
+      <button class="vtab-btn w-12 h-12 rounded-lg flex items-center justify-center text-text-muted hover:bg-white hover:text-text-secondary relative transition-colors" data-vtab="financials" data-label="Financials">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <span class="vtab-tooltip">Financials</span>
+      </button>
+      <!-- Notes -->
+      <button class="vtab-btn w-12 h-12 rounded-lg flex items-center justify-center text-text-muted hover:bg-white hover:text-text-secondary relative transition-colors" data-vtab="notes" data-label="Notes">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+        <span class="vtab-tooltip">Notes</span>
+      </button>
+    </div>
+
+    <!-- RIGHT: Content area (500px) -->
+    <div class="flex-1 overflow-y-auto drawer-scroll bg-content-bg">
+      <div class="p-5 space-y-4">
+
+        <!-- Status Banner -->
+        <div class="bg-blue-50 border border-blue-100 rounded-xl p-4">
+          <div class="flex items-center gap-3 mb-2.5">
+            <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" /></svg>
+            </div>
+            <div>
+              <p class="text-sm font-semibold text-blue-800">In Transit</p>
+              <p class="text-xs text-blue-600">ETA Feb 17, 2:00 PM CST</p>
+            </div>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" style="width: 60%;"></div>
+          </div>
+          <p class="text-[10px] text-blue-500 mt-1.5 text-right font-medium">60% complete</p>
+        </div>
+
+        <!-- Route Card -->
+        <div class="bg-white rounded-xl border border-border-ui p-4">
+          <h3 class="text-xs font-semibold text-text-primary uppercase tracking-wider mb-3">Route</h3>
+          <div class="flex items-stretch gap-3">
+            <!-- Origin -->
+            <div class="flex-1 bg-content-bg rounded-lg p-3 border border-border-ui">
+              <div class="flex items-center gap-2 mb-1">
+                <div class="w-2.5 h-2.5 rounded-full bg-success ring-2 ring-success/20"></div>
+                <span class="text-[10px] uppercase tracking-wider font-semibold text-success">Origin</span>
+              </div>
+              <p class="text-sm font-semibold text-text-primary">Chicago, IL</p>
+              <p class="text-xs text-text-secondary">Acme Warehouse</p>
+              <p class="text-xs text-text-muted mt-1">Feb 15, 8:00 AM</p>
+            </div>
+            <!-- Arrow -->
+            <div class="flex flex-col items-center justify-center px-1">
+              <svg class="w-5 h-5 text-text-muted" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+              <span class="text-[10px] text-text-muted font-medium mt-0.5 text-center leading-tight">925 mi<br/>60%</span>
+            </div>
+            <!-- Destination -->
+            <div class="flex-1 bg-content-bg rounded-lg p-3 border border-border-ui">
+              <div class="flex items-center gap-2 mb-1">
+                <div class="w-2.5 h-2.5 rounded-full bg-primary ring-2 ring-primary/20"></div>
+                <span class="text-[10px] uppercase tracking-wider font-semibold text-primary">Destination</span>
+              </div>
+              <p class="text-sm font-semibold text-text-primary">Dallas, TX</p>
+              <p class="text-xs text-text-secondary">Target DC</p>
+              <p class="text-xs text-text-muted mt-1">Feb 17, 2:00 PM</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Details Grid (3 columns) -->
+        <div class="bg-white rounded-xl border border-border-ui p-4">
+          <h3 class="text-xs font-semibold text-text-primary uppercase tracking-wider mb-3">Load Details</h3>
+          <div class="grid grid-cols-3 gap-x-4 gap-y-3">
+            <!-- Col 1 -->
+            <div>
+              <p class="text-[10px] uppercase tracking-wider font-medium text-text-muted">Customer</p>
+              <p class="text-xs font-medium text-text-primary mt-0.5 leading-tight">Acme Logistics</p>
+            </div>
+            <div>
+              <p class="text-[10px] uppercase tracking-wider font-medium text-text-muted">Carrier</p>
+              <p class="text-xs font-medium text-text-primary mt-0.5 leading-tight">Swift Transportation</p>
+            </div>
+            <div>
+              <p class="text-[10px] uppercase tracking-wider font-medium text-text-muted">Equipment</p>
+              <p class="text-xs font-medium text-text-primary mt-0.5 leading-tight">Dry Van 53'</p>
+            </div>
+
+            <div>
+              <p class="text-[10px] uppercase tracking-wider font-medium text-text-muted">Reference</p>
+              <p class="text-xs font-medium text-text-primary mt-0.5 font-mono">REF-2026-0047</p>
+            </div>
+            <div>
+              <p class="text-[10px] uppercase tracking-wider font-medium text-text-muted">Driver</p>
+              <p class="text-xs font-medium text-text-primary mt-0.5 leading-tight">John Davis</p>
+            </div>
+            <div>
+              <p class="text-[10px] uppercase tracking-wider font-medium text-text-muted">Weight</p>
+              <p class="text-xs font-medium text-text-primary mt-0.5 leading-tight">42,000 lbs</p>
+            </div>
+
+            <div>
+              <p class="text-[10px] uppercase tracking-wider font-medium text-text-muted">PO Number</p>
+              <p class="text-xs font-medium text-text-primary mt-0.5 font-mono">PO-44821</p>
+            </div>
+            <div>
+              <p class="text-[10px] uppercase tracking-wider font-medium text-text-muted">Truck</p>
+              <p class="text-xs font-medium text-text-primary mt-0.5 font-mono">#T-4821</p>
+            </div>
+            <div>
+              <p class="text-[10px] uppercase tracking-wider font-medium text-text-muted">Commodity</p>
+              <p class="text-xs font-medium text-text-primary mt-0.5 leading-tight">Electronics</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Financial Summary -->
+        <div class="bg-white rounded-xl border border-border-ui p-4">
+          <h3 class="text-xs font-semibold text-text-primary uppercase tracking-wider mb-3">Financial Summary</h3>
+          <div class="flex items-stretch rounded-lg border border-border-ui overflow-hidden">
+            <!-- Revenue -->
+            <div class="flex-1 p-3 text-center border-r border-border-ui bg-primary-50/30">
+              <p class="text-[10px] uppercase tracking-wider font-medium text-text-muted">Revenue</p>
+              <p class="text-lg font-bold text-primary mt-0.5">$4,250</p>
+            </div>
+            <!-- Cost -->
+            <div class="flex-1 p-3 text-center border-r border-border-ui">
+              <p class="text-[10px] uppercase tracking-wider font-medium text-text-muted">Cost</p>
+              <p class="text-lg font-bold text-text-primary mt-0.5">$3,400</p>
+            </div>
+            <!-- Margin -->
+            <div class="flex-1 p-3 text-center bg-success-50/30">
+              <p class="text-[10px] uppercase tracking-wider font-medium text-text-muted">Margin</p>
+              <p class="text-lg font-bold text-success mt-0.5">$850 <span class="text-xs font-medium">(20%)</span></p>
+            </div>
+          </div>
+          <p class="text-xs text-text-muted mt-2 text-right">Revenue/mile: <span class="font-medium text-text-secondary">$4.59/mi</span></p>
+        </div>
+
+        <!-- Quick Actions Strip -->
+        <div class="bg-white rounded-xl border border-border-ui p-4">
+          <h3 class="text-xs font-semibold text-text-primary uppercase tracking-wider mb-3">Quick Actions</h3>
+          <div class="grid grid-cols-2 gap-2">
+            <button class="flex items-center gap-2 px-3 py-2.5 text-xs font-medium border border-border-ui rounded-lg text-text-secondary hover:bg-content-bg hover:border-primary/30 hover:text-primary transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+              Add Check Call
+            </button>
+            <button class="flex items-center gap-2 px-3 py-2.5 text-xs font-medium border border-border-ui rounded-lg text-text-secondary hover:bg-content-bg hover:border-primary/30 hover:text-primary transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+              Upload Document
+            </button>
+            <button class="flex items-center gap-2 px-3 py-2.5 text-xs font-medium border border-border-ui rounded-lg text-text-secondary hover:bg-content-bg hover:border-primary/30 hover:text-primary transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+              Send Update
+            </button>
+            <button class="flex items-center gap-2 px-3 py-2.5 text-xs font-medium border border-border-ui rounded-lg text-text-secondary hover:bg-content-bg hover:border-primary/30 hover:text-primary transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" /></svg>
+              Create Invoice
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== FOOTER (sticky) ===== -->
+  <div class="flex-shrink-0 bg-white border-t border-border-ui px-5 py-3 flex items-center gap-3">
+    <button class="flex-1 px-4 py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors flex items-center justify-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+      Open Full Page
+    </button>
+    <button class="px-4 py-2.5 border border-border-ui text-text-secondary text-sm font-medium rounded-lg hover:bg-content-bg transition-colors flex items-center justify-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+      Print
+    </button>
+  </div>
+</div>
+
+<script>
+  // Vertical tab switching
+  document.querySelectorAll('.vtab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      // Reset all
+      document.querySelectorAll('.vtab-btn').forEach(b => {
+        b.classList.remove('bg-primary-50', 'border-l-[3px]', 'border-l-primary');
+        b.classList.add('text-text-muted');
+        // Reset icon color
+        const svg = b.querySelector('svg');
+        if (svg) {
+          svg.classList.remove('text-primary');
+          svg.classList.add('text-text-muted');
+        }
+      });
+      // Activate clicked
+      btn.classList.add('bg-primary-50', 'border-l-[3px]', 'border-l-primary');
+      btn.classList.remove('text-text-muted');
+      const svg = btn.querySelector('svg');
+      if (svg) {
+        svg.classList.remove('text-text-muted');
+        svg.classList.add('text-primary');
+      }
+      // Update breadcrumb
+      const label = btn.getAttribute('data-label');
+      document.getElementById('breadcrumb-tab').textContent = label;
+    });
+  });
+
+  // Drawer open/close
+  function closeDrawer() {
+    document.getElementById('drawer-overlay').classList.remove('open');
+    document.getElementById('drawer-panel').classList.remove('open');
+  }
+
+  function openDrawer() {
+    document.getElementById('drawer-overlay').classList.add('open');
+    document.getElementById('drawer-panel').classList.add('open');
+  }
+
+  // Re-open on clicking selected row
+  document.getElementById('selected-row').addEventListener('click', () => {
+    openDrawer();
+  });
+</script>
+
+</body>
+</html>

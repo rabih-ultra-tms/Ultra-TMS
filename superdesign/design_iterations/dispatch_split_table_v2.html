@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dispatch Board — Split View | Ultra TMS</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-main: #F8F9FA;
+    --bg-filter: #F1F3F5;
+    --surface-white: #FFFFFF;
+    --border-light: #e5e7eb;
+    --border-soft: #DEE2E6;
+    --sapphire-blue: #1D4ED8;
+    --text-primary: #333333;
+    --text-secondary: #6C757D;
+    --text-muted: #adb5bd;
+    --status-active-bg: #E7F3EF;
+    --status-active-text: #065F46;
+    --status-inactive-bg: #F1F3F5;
+    --status-inactive-text: #495057;
+    --status-transit-bg: #DBEAFE;
+    --status-transit-text: #1E40AF;
+    --status-delivered-bg: #DCFCE7;
+    --status-delivered-text: #166534;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg-main);
+    color: var(--text-primary);
+    overflow: hidden;
+    height: 100vh;
+  }
+
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+  }
+  .material-symbols-outlined.filled {
+    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+  }
+
+  /* Custom scrollbar — 4px */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #DEE2E6; border-radius: 9999px; }
+  ::-webkit-scrollbar-thumb:hover { background: #adb5bd; }
+
+  /* Work-hub shadow for left panels */
+  .work-hub-shadow {
+    box-shadow: 1px 0 3px rgba(0,0,0,0.04), 2px 0 8px rgba(0,0,0,0.02);
+  }
+
+  /* Icon sidebar */
+  .icon-sidebar {
+    width: 64px;
+    background: var(--surface-white);
+    border-right: 1px solid var(--border-light);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 0;
+    flex-shrink: 0;
+    z-index: 40;
+  }
+  .icon-sidebar .logo-area {
+    width: 64px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .icon-sidebar .logo-area .material-symbols-outlined {
+    font-size: 26px;
+    color: var(--sapphire-blue);
+    font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+  }
+  .icon-sidebar nav {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding-top: 12px;
+    width: 100%;
+  }
+  .sidebar-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    color: var(--text-secondary);
+    position: relative;
+  }
+  .sidebar-icon:hover {
+    background: var(--bg-main);
+    color: var(--text-primary);
+  }
+  .sidebar-icon.active {
+    background: #EFF6FF;
+    color: var(--sapphire-blue);
+  }
+  .sidebar-icon .material-symbols-outlined {
+    font-size: 22px;
+  }
+  .sidebar-icon .tooltip {
+    display: none;
+    position: absolute;
+    left: calc(100% + 8px);
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 4px 10px;
+    background: #1f2937;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 500;
+    border-radius: 5px;
+    white-space: nowrap;
+    z-index: 50;
+    pointer-events: none;
+  }
+  .sidebar-icon:hover .tooltip { display: block; }
+
+  /* Activities sidebar */
+  .activities-sidebar {
+    width: 280px;
+    background: var(--bg-main);
+    border-right: 1px solid var(--border-light);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .activities-header {
+    height: 48px;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--border-light);
+    background: var(--surface-white);
+  }
+  .section-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    padding: 16px 16px 8px;
+  }
+  .alert-card {
+    margin: 0 12px 6px;
+    padding: 10px 12px;
+    background: var(--surface-white);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .alert-card:hover {
+    border-color: #CBD5E1;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .alert-card .alert-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .alert-card .alert-icon .material-symbols-outlined { font-size: 16px; }
+  .alert-card .alert-text {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1.4;
+  }
+  .alert-card .alert-time {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .quick-action-btn {
+    margin: 0 12px 6px;
+    padding: 8px 12px;
+    background: var(--surface-white);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+  .quick-action-btn:hover {
+    border-color: #CBD5E1;
+    background: var(--surface-white);
+  }
+  .quick-action-btn .material-symbols-outlined {
+    font-size: 18px;
+    color: var(--text-secondary);
+  }
+  .quick-action-count {
+    margin-left: auto;
+    font-size: 10px;
+    font-weight: 600;
+    background: var(--bg-filter);
+    color: var(--text-secondary);
+    padding: 2px 7px;
+    border-radius: 10px;
+  }
+
+  /* Header */
+  .top-header {
+    height: 48px;
+    background: var(--surface-white);
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .page-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .header-btn {
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-light);
+    background: var(--surface-white);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: border-color 0.15s;
+    font-family: inherit;
+  }
+  .header-btn:hover { border-color: #CBD5E1; }
+  .header-btn .material-symbols-outlined { font-size: 16px; }
+  .header-btn-primary {
+    background: var(--sapphire-blue);
+    color: #fff;
+    border-color: var(--sapphire-blue);
+  }
+  .header-btn-primary:hover { opacity: 0.92; border-color: var(--sapphire-blue); }
+
+  /* Filter bar */
+  .filter-bar {
+    height: 44px;
+    background: var(--surface-white);
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .filter-chip {
+    height: 28px;
+    padding: 0 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border-light);
+    background: var(--surface-white);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s;
+    white-space: nowrap;
+    font-family: inherit;
+  }
+  .filter-chip:hover { border-color: #CBD5E1; }
+  .filter-chip.active {
+    background: #EFF6FF;
+    border-color: #BFDBFE;
+    color: var(--sapphire-blue);
+  }
+  .filter-chip .material-symbols-outlined { font-size: 15px; }
+  .filter-search {
+    height: 28px;
+    padding: 0 10px;
+    padding-left: 30px;
+    border-radius: 6px;
+    border: 1px solid var(--border-light);
+    background: var(--bg-main);
+    font-size: 11px;
+    font-family: inherit;
+    color: var(--text-primary);
+    width: 200px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .filter-search:focus { border-color: var(--sapphire-blue); background: var(--surface-white); }
+  .filter-search::placeholder { color: var(--text-muted); }
+  .search-wrapper {
+    position: relative;
+  }
+  .search-wrapper .material-symbols-outlined {
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    color: var(--text-muted);
+  }
+
+  /* Dispatch table */
+  .dispatch-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+  }
+  .dispatch-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg-main);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-light);
+    white-space: nowrap;
+    cursor: default;
+    user-select: none;
+  }
+  .dispatch-table tbody tr {
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .dispatch-table tbody tr:hover td {
+    background: #F8FAFD;
+  }
+  .dispatch-table tbody tr.selected td {
+    background: #F0F4FF;
+  }
+  .dispatch-table tbody td {
+    padding: 9px 12px;
+    font-size: 12px;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-light);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+  }
+
+  /* Status badges */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+  .status-badge .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+  }
+  .status-booked { background: var(--status-inactive-bg); color: var(--status-inactive-text); }
+  .status-booked .dot { background: var(--status-inactive-text); }
+  .status-transit { background: var(--status-transit-bg); color: var(--status-transit-text); }
+  .status-transit .dot { background: var(--status-transit-text); }
+  .status-delivered { background: var(--status-delivered-bg); color: var(--status-delivered-text); }
+  .status-delivered .dot { background: var(--status-delivered-text); }
+  .status-pickup { background: #FEF3C7; color: #92400E; }
+  .status-pickup .dot { background: #92400E; }
+  .status-delayed { background: #FEE2E2; color: #991B1B; }
+  .status-delayed .dot { background: #991B1B; }
+  .status-assigned { background: #E0E7FF; color: #3730A3; }
+  .status-assigned .dot { background: #3730A3; }
+
+  /* Right detail panel */
+  .detail-panel {
+    width: 350px;
+    min-width: 350px;
+    background: var(--surface-white);
+    border-left: 1px solid var(--border-light);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .detail-header {
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid var(--border-light);
+    flex-shrink: 0;
+  }
+  .detail-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border-light);
+    flex-shrink: 0;
+    padding: 0 16px;
+  }
+  .detail-tab {
+    padding: 10px 0;
+    margin-right: 20px;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s;
+  }
+  .detail-tab:hover { color: var(--text-secondary); }
+  .detail-tab.active {
+    color: var(--sapphire-blue);
+    border-bottom-color: var(--sapphire-blue);
+    font-weight: 600;
+  }
+  .detail-section-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    margin-top: 16px;
+  }
+  .detail-section-label:first-child { margin-top: 0; }
+  .detail-field {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 4px 0;
+  }
+  .detail-field-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+  }
+  .detail-field-value {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--text-primary);
+    text-align: right;
+  }
+
+  /* Activity feed */
+  .activity-item {
+    display: flex;
+    gap: 10px;
+    padding: 8px 0;
+  }
+  .activity-dot-line {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    padding-top: 4px;
+  }
+  .activity-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--border-soft);
+    flex-shrink: 0;
+  }
+  .activity-dot.blue { background: var(--sapphire-blue); }
+  .activity-line {
+    width: 1px;
+    flex: 1;
+    background: var(--border-light);
+    margin-top: 4px;
+  }
+  .activity-text {
+    font-size: 11px;
+    color: var(--text-primary);
+    line-height: 1.45;
+  }
+  .activity-time {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 1px;
+  }
+
+  /* Document checks */
+  .doc-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+  }
+  .doc-check {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .doc-check.done { background: var(--status-delivered-bg); color: var(--status-delivered-text); }
+  .doc-check.pending { background: var(--bg-filter); color: var(--text-muted); border: 1px solid var(--border-soft); }
+  .doc-check .material-symbols-outlined { font-size: 14px; }
+  .doc-name { font-size: 11.5px; color: var(--text-primary); }
+  .doc-status { font-size: 10px; margin-left: auto; }
+
+  /* Tab content panels */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Divider */
+  .sidebar-divider {
+    height: 1px;
+    background: var(--border-light);
+    margin: 8px 12px;
+  }
+</style>
+</head>
+<body>
+
+<!-- FULL LAYOUT SHELL -->
+<div style="display:flex; height:100vh; width:100vw;">
+
+  <!-- ICON SIDEBAR (64px) -->
+  <div class="icon-sidebar">
+    <div class="logo-area">
+      <span class="material-symbols-outlined filled">local_shipping</span>
+    </div>
+    <nav>
+      <div class="sidebar-icon" title="Dashboard">
+        <span class="material-symbols-outlined">dashboard</span>
+        <span class="tooltip">Dashboard</span>
+      </div>
+      <div class="sidebar-icon" title="Loads">
+        <span class="material-symbols-outlined">inventory_2</span>
+        <span class="tooltip">Loads</span>
+      </div>
+      <div class="sidebar-icon active" title="Dispatch">
+        <span class="material-symbols-outlined filled">hub</span>
+        <span class="tooltip">Dispatch</span>
+      </div>
+      <div class="sidebar-icon" title="Carriers">
+        <span class="material-symbols-outlined">airport_shuttle</span>
+        <span class="tooltip">Carriers</span>
+      </div>
+      <div class="sidebar-icon" title="Contacts">
+        <span class="material-symbols-outlined">contacts</span>
+        <span class="tooltip">Contacts</span>
+      </div>
+      <div style="flex:1;"></div>
+      <div class="sidebar-icon" title="Settings" style="margin-bottom: 12px;">
+        <span class="material-symbols-outlined">settings</span>
+        <span class="tooltip">Settings</span>
+      </div>
+    </nav>
+  </div>
+
+  <!-- ACTIVITIES SIDEBAR (280px) -->
+  <div class="activities-sidebar work-hub-shadow">
+    <div class="activities-header">
+      <span style="font-size:13px; font-weight:600; color:var(--text-primary);">Dispatch Hub</span>
+    </div>
+    <div style="flex:1; overflow-y:auto; padding-top:4px;">
+
+      <!-- Alerts -->
+      <div class="section-label">Alerts &amp; Notifications</div>
+
+      <div class="alert-card">
+        <div style="display:flex; gap:10px; align-items:flex-start;">
+          <div class="alert-icon" style="background:#DBEAFE;">
+            <span class="material-symbols-outlined" style="color:#1D4ED8; font-size:15px;">schedule</span>
+          </div>
+          <div style="min-width:0;">
+            <div class="alert-text">FM-2025-0871 -- Pickup delayed 45min</div>
+            <div class="alert-time">12 min ago</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="alert-card">
+        <div style="display:flex; gap:10px; align-items:flex-start;">
+          <div class="alert-icon" style="background:#FEF3C7;">
+            <span class="material-symbols-outlined" style="color:#92400E; font-size:15px;">warning</span>
+          </div>
+          <div style="min-width:0;">
+            <div class="alert-text">3 loads unassigned &gt; 30 min</div>
+            <div class="alert-time">28 min ago</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="alert-card">
+        <div style="display:flex; gap:10px; align-items:flex-start;">
+          <div class="alert-icon" style="background:#E0E7FF;">
+            <span class="material-symbols-outlined" style="color:#3730A3; font-size:15px;">info</span>
+          </div>
+          <div style="min-width:0;">
+            <div class="alert-text">Carrier compliance expiring: Werner</div>
+            <div class="alert-time">1 hr ago</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-divider"></div>
+
+      <!-- Quick Actions -->
+      <div class="section-label">Quick Actions</div>
+
+      <div class="quick-action-btn" id="qaUnassigned">
+        <span class="material-symbols-outlined">assignment_late</span>
+        View Unassigned
+        <span class="quick-action-count">3</span>
+      </div>
+      <div class="quick-action-btn" id="qaLate">
+        <span class="material-symbols-outlined">alarm</span>
+        Late Pickups
+        <span class="quick-action-count">1</span>
+      </div>
+      <div class="quick-action-btn" id="qaCarrier">
+        <span class="material-symbols-outlined">gpp_maybe</span>
+        Carrier Issues
+        <span class="quick-action-count">2</span>
+      </div>
+
+      <div class="sidebar-divider"></div>
+
+      <!-- Summary stats -->
+      <div class="section-label">Today's Summary</div>
+      <div style="padding: 0 12px;">
+        <div style="display:flex; justify-content:space-between; padding:5px 0;">
+          <span style="font-size:11px; color:var(--text-secondary);">Active Loads</span>
+          <span style="font-size:12px; font-weight:600; color:var(--text-primary);">15</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; padding:5px 0;">
+          <span style="font-size:11px; color:var(--text-secondary);">In Transit</span>
+          <span style="font-size:12px; font-weight:600; color:var(--status-transit-text);">6</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; padding:5px 0;">
+          <span style="font-size:11px; color:var(--text-secondary);">Delivered Today</span>
+          <span style="font-size:12px; font-weight:600; color:var(--status-delivered-text);">3</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; padding:5px 0;">
+          <span style="font-size:11px; color:var(--text-secondary);">Avg Margin</span>
+          <span style="font-size:12px; font-weight:600; color:var(--text-primary);">18.4%</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT AREA -->
+  <div style="flex:1; display:flex; flex-direction:column; min-width:0;">
+
+    <!-- TOP HEADER -->
+    <div class="top-header">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span class="page-title">Dispatch Board</span>
+        <span style="font-size:11px; color:var(--text-muted); font-weight:400;">15 loads</span>
+      </div>
+      <div class="header-actions">
+        <button class="header-btn">
+          <span class="material-symbols-outlined">download</span>
+          Export
+        </button>
+        <button class="header-btn">
+          <span class="material-symbols-outlined">refresh</span>
+          Refresh
+        </button>
+        <button class="header-btn header-btn-primary">
+          <span class="material-symbols-outlined" style="font-size:16px;">add</span>
+          New Load
+        </button>
+      </div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+      <div class="search-wrapper">
+        <span class="material-symbols-outlined">search</span>
+        <input type="text" class="filter-search" placeholder="Search loads..." id="searchInput">
+      </div>
+      <div style="width:1px; height:20px; background:var(--border-light); margin:0 4px;"></div>
+      <button class="filter-chip active" data-status="all">All</button>
+      <button class="filter-chip" data-status="booked">Booked</button>
+      <button class="filter-chip" data-status="assigned">Assigned</button>
+      <button class="filter-chip" data-status="pickup">At Pickup</button>
+      <button class="filter-chip" data-status="transit">In Transit</button>
+      <button class="filter-chip" data-status="delivered">Delivered</button>
+      <button class="filter-chip" data-status="delayed">Delayed</button>
+      <div style="flex:1;"></div>
+      <button class="filter-chip">
+        <span class="material-symbols-outlined" style="font-size:14px;">tune</span>
+        More Filters
+      </button>
+    </div>
+
+    <!-- TABLE + DETAIL SPLIT -->
+    <div style="flex:1; display:flex; overflow:hidden;">
+
+      <!-- CENTER TABLE -->
+      <div style="flex:1; overflow:auto; min-width:0;" id="tableContainer">
+        <table class="dispatch-table" id="dispatchTable">
+          <thead>
+            <tr>
+              <th style="width:100px;">Status</th>
+              <th style="width:120px;">Load #</th>
+              <th style="width:auto;">Route</th>
+              <th style="width:140px;">Carrier</th>
+              <th style="width:80px; text-align:right;">Rate</th>
+              <th style="width:70px; text-align:right;">Margin</th>
+              <th style="width:100px;">Update</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+          </tbody>
+        </table>
+      </div>
+
+      <!-- RIGHT DETAIL PANEL -->
+      <div class="detail-panel" id="detailPanel">
+        <div class="detail-header" id="detailHeader">
+        </div>
+        <div class="detail-tabs" id="detailTabs">
+          <div class="detail-tab active" data-tab="overview">Overview</div>
+          <div class="detail-tab" data-tab="stops">Stops</div>
+          <div class="detail-tab" data-tab="finance">Finance</div>
+          <div class="detail-tab" data-tab="documents">Documents</div>
+        </div>
+        <div style="flex:1; overflow-y:auto; padding:16px;" id="detailContent">
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ======================================================================
+// MOCK DATA
+// ======================================================================
+var loads = [
+  {
+    id: 'FM-2025-0871',
+    status: 'transit',
+    statusLabel: 'In Transit',
+    origin: 'Chicago, IL',
+    dest: 'Dallas, TX',
+    miles: 785,
+    carrier: 'Swift Transport',
+    carrierMc: 'MC-382910',
+    driver: 'Mike R.',
+    driverPhone: '(555) 123-4567',
+    truck: '#TRK-2847',
+    equipment: "Dry Van, 53', 44,000 lbs",
+    rate: 2450,
+    carrierPay: 1960,
+    pickupDate: 'Feb 7, 8:00 AM',
+    deliveryDate: 'Feb 9, 3:00 PM',
+    update: '5m ago',
+    updateDetail: 'Passed checkpoint -- Oklahoma City, OK',
+    docs: { bol: true, rateConf: true, pod: false },
+    activity: [
+      { text: 'GPS ping -- Oklahoma City, OK (mile 423)', time: '5 min ago', current: true },
+      { text: 'Driver check-in: ETA on schedule', time: '1 hr ago', current: false },
+      { text: 'Departed origin -- Chicago, IL', time: 'Feb 7, 8:22 AM', current: false },
+      { text: 'Loaded at shipper, BOL signed', time: 'Feb 7, 7:45 AM', current: false }
+    ]
+  },
+  {
+    id: 'FM-2025-0872',
+    status: 'transit',
+    statusLabel: 'In Transit',
+    origin: 'Atlanta, GA',
+    dest: 'Miami, FL',
+    miles: 662,
+    carrier: 'JB Hunt',
+    carrierMc: 'MC-115834',
+    driver: 'Carlos M.',
+    driverPhone: '(555) 234-5678',
+    truck: '#TRK-1190',
+    equipment: "Reefer, 53', 42,500 lbs",
+    rate: 2180,
+    carrierPay: 1810,
+    pickupDate: 'Feb 7, 6:00 AM',
+    deliveryDate: 'Feb 8, 4:00 PM',
+    update: '18m ago',
+    updateDetail: 'Passed checkpoint -- Valdosta, GA',
+    docs: { bol: true, rateConf: true, pod: false },
+    activity: [
+      { text: 'GPS ping -- Valdosta, GA (mile 340)', time: '18 min ago', current: true },
+      { text: 'Temperature verified: 34F', time: '45 min ago', current: false },
+      { text: 'Departed origin -- Atlanta, GA', time: 'Feb 7, 6:15 AM', current: false }
+    ]
+  },
+  {
+    id: 'FM-2025-0873',
+    status: 'pickup',
+    statusLabel: 'At Pickup',
+    origin: 'Los Angeles, CA',
+    dest: 'Phoenix, AZ',
+    miles: 373,
+    carrier: 'Werner Enterprises',
+    carrierMc: 'MC-214587',
+    driver: 'James T.',
+    driverPhone: '(555) 345-6789',
+    truck: '#TRK-5523',
+    equipment: "Flatbed, 48', 48,000 lbs",
+    rate: 1650,
+    carrierPay: 1350,
+    pickupDate: 'Feb 8, 7:00 AM',
+    deliveryDate: 'Feb 8, 6:00 PM',
+    update: '3m ago',
+    updateDetail: 'Loading in progress',
+    docs: { bol: false, rateConf: true, pod: false },
+    activity: [
+      { text: 'Loading started at dock 12', time: '3 min ago', current: true },
+      { text: 'Driver arrived at shipper', time: '22 min ago', current: false },
+      { text: 'Carrier dispatched driver', time: 'Feb 7, 5:00 PM', current: false }
+    ]
+  },
+  {
+    id: 'FM-2025-0874',
+    status: 'delivered',
+    statusLabel: 'Delivered',
+    origin: 'Houston, TX',
+    dest: 'New Orleans, LA',
+    miles: 348,
+    carrier: 'Schneider National',
+    carrierMc: 'MC-298746',
+    driver: 'David K.',
+    driverPhone: '(555) 456-7890',
+    truck: '#TRK-3312',
+    equipment: "Dry Van, 53', 44,000 lbs",
+    rate: 1280,
+    carrierPay: 1050,
+    pickupDate: 'Feb 6, 10:00 AM',
+    deliveryDate: 'Feb 7, 2:00 PM',
+    update: '2h ago',
+    updateDetail: 'POD received',
+    docs: { bol: true, rateConf: true, pod: true },
+    activity: [
+      { text: 'POD uploaded by driver', time: '2 hr ago', current: true },
+      { text: 'Delivery confirmed -- New Orleans, LA', time: 'Feb 7, 2:00 PM', current: false },
+      { text: 'Arrived at consignee', time: 'Feb 7, 1:35 PM', current: false }
+    ]
+  },
+  {
+    id: 'FM-2025-0875',
+    status: 'booked',
+    statusLabel: 'Booked',
+    origin: 'Seattle, WA',
+    dest: 'Portland, OR',
+    miles: 174,
+    carrier: '--',
+    carrierMc: '--',
+    driver: '--',
+    driverPhone: '--',
+    truck: '--',
+    equipment: "Dry Van, 53', 44,000 lbs",
+    rate: 890,
+    carrierPay: 0,
+    pickupDate: 'Feb 9, 8:00 AM',
+    deliveryDate: 'Feb 9, 2:00 PM',
+    update: '45m ago',
+    updateDetail: 'Awaiting carrier assignment',
+    docs: { bol: false, rateConf: false, pod: false },
+    activity: [
+      { text: 'Load created and posted to board', time: '45 min ago', current: true },
+      { text: 'Customer rate confirmed -- $890', time: '1 hr ago', current: false }
+    ]
+  },
+  {
+    id: 'FM-2025-0876',
+    status: 'delayed',
+    statusLabel: 'Delayed',
+    origin: 'Denver, CO',
+    dest: 'Kansas City, MO',
+    miles: 604,
+    carrier: 'Heartland Express',
+    carrierMc: 'MC-337291',
+    driver: 'Robert F.',
+    driverPhone: '(555) 567-8901',
+    truck: '#TRK-7781',
+    equipment: "Dry Van, 53', 44,000 lbs",
+    rate: 1920,
+    carrierPay: 1580,
+    pickupDate: 'Feb 7, 12:00 PM',
+    deliveryDate: 'Feb 8, 10:00 AM',
+    update: '12m ago',
+    updateDetail: 'Weather delay -- I-70 closure',
+    docs: { bol: true, rateConf: true, pod: false },
+    activity: [
+      { text: 'Weather delay reported -- I-70 ice closure', time: '12 min ago', current: true },
+      { text: 'Driver parked at truck stop -- Hays, KS', time: '30 min ago', current: false },
+      { text: 'Departed Denver, CO', time: 'Feb 7, 12:18 PM', current: false }
+    ]
+  },
+  {
+    id: 'FM-2025-0877',
+    status: 'transit',
+    statusLabel: 'In Transit',
+    origin: 'Nashville, TN',
+    dest: 'Charlotte, NC',
+    miles: 409,
+    carrier: 'Old Dominion',
+    carrierMc: 'MC-187523',
+    driver: 'Sarah L.',
+    driverPhone: '(555) 678-9012',
+    truck: '#TRK-4456',
+    equipment: "Dry Van, 48', 40,000 lbs",
+    rate: 1540,
+    carrierPay: 1270,
+    pickupDate: 'Feb 7, 2:00 PM',
+    deliveryDate: 'Feb 8, 12:00 PM',
+    update: '25m ago',
+    updateDetail: 'Passed checkpoint -- Knoxville, TN',
+    docs: { bol: true, rateConf: true, pod: false },
+    activity: [
+      { text: 'GPS ping -- Knoxville, TN (mile 180)', time: '25 min ago', current: true },
+      { text: 'Departed origin -- Nashville, TN', time: 'Feb 7, 2:20 PM', current: false }
+    ]
+  },
+  {
+    id: 'FM-2025-0878',
+    status: 'assigned',
+    statusLabel: 'Assigned',
+    origin: 'Detroit, MI',
+    dest: 'Columbus, OH',
+    miles: 201,
+    carrier: 'XPO Logistics',
+    carrierMc: 'MC-445692',
+    driver: 'Tom B.',
+    driverPhone: '(555) 789-0123',
+    truck: '#TRK-6692',
+    equipment: "Dry Van, 53', 44,000 lbs",
+    rate: 1050,
+    carrierPay: 860,
+    pickupDate: 'Feb 8, 10:00 AM',
+    deliveryDate: 'Feb 8, 4:00 PM',
+    update: '1h ago',
+    updateDetail: 'Driver confirmed, en route to shipper',
+    docs: { bol: false, rateConf: true, pod: false },
+    activity: [
+      { text: 'Driver dispatched -- ETA 9:30 AM', time: '1 hr ago', current: true },
+      { text: 'Carrier accepted load', time: '2 hr ago', current: false }
+    ]
+  },
+  {
+    id: 'FM-2025-0879',
+    status: 'delivered',
+    statusLabel: 'Delivered',
+    origin: 'Memphis, TN',
+    dest: 'Birmingham, AL',
+    miles: 243,
+    carrier: 'FedEx Freight',
+    carrierMc: 'MC-102938',
+    driver: 'Andre W.',
+    driverPhone: '(555) 890-1234',
+    truck: '#TRK-2208',
+    equipment: "Dry Van, 53', 44,000 lbs",
+    rate: 980,
+    carrierPay: 790,
+    pickupDate: 'Feb 6, 8:00 AM',
+    deliveryDate: 'Feb 6, 5:00 PM',
+    update: '1d ago',
+    updateDetail: 'Delivered, invoiced',
+    docs: { bol: true, rateConf: true, pod: true },
+    activity: [
+      { text: 'Invoice #INV-4921 generated', time: '1 day ago', current: true },
+      { text: 'POD signed and uploaded', time: 'Feb 6, 5:10 PM', current: false },
+      { text: 'Delivery confirmed -- Birmingham, AL', time: 'Feb 6, 4:52 PM', current: false }
+    ]
+  },
+  {
+    id: 'FM-2025-0880',
+    status: 'booked',
+    statusLabel: 'Booked',
+    origin: 'San Francisco, CA',
+    dest: 'Sacramento, CA',
+    miles: 87,
+    carrier: '--',
+    carrierMc: '--',
+    driver: '--',
+    driverPhone: '--',
+    truck: '--',
+    equipment: "Flatbed, 48', 48,000 lbs",
+    rate: 620,
+    carrierPay: 0,
+    pickupDate: 'Feb 9, 6:00 AM',
+    deliveryDate: 'Feb 9, 10:00 AM',
+    update: '2h ago',
+    updateDetail: 'Awaiting carrier assignment',
+    docs: { bol: false, rateConf: false, pod: false },
+    activity: [
+      { text: 'Load posted to carrier board', time: '2 hr ago', current: true },
+      { text: 'Load booked by sales', time: '3 hr ago', current: false }
+    ]
+  },
+  {
+    id: 'FM-2025-0881',
+    status: 'transit',
+    statusLabel: 'In Transit',
+    origin: 'Minneapolis, MN',
+    dest: 'Milwaukee, WI',
+    miles: 337,
+    carrier: 'Covenant Transport',
+    carrierMc: 'MC-562410',
+    driver: 'Brian P.',
+    driverPhone: '(555) 901-2345',
+    truck: '#TRK-8834',
+    equipment: "Reefer, 53', 42,500 lbs",
+    rate: 1380,
+    carrierPay: 1120,
+    pickupDate: 'Feb 7, 4:00 PM',
+    deliveryDate: 'Feb 8, 8:00 AM',
+    update: '40m ago',
+    updateDetail: 'On schedule -- ETA 7:45 AM',
+    docs: { bol: true, rateConf: true, pod: false },
+    activity: [
+      { text: 'GPS ping -- La Crosse, WI (mile 210)', time: '40 min ago', current: true },
+      { text: 'Departed Minneapolis, MN', time: 'Feb 7, 4:12 PM', current: false }
+    ]
+  },
+  {
+    id: 'FM-2025-0882',
+    status: 'transit',
+    statusLabel: 'In Transit',
+    origin: 'Philadelphia, PA',
+    dest: 'Boston, MA',
+    miles: 306,
+    carrier: 'Estes Express',
+    carrierMc: 'MC-223541',
+    driver: 'Kevin H.',
+    driverPhone: '(555) 012-3456',
+    truck: '#TRK-1157',
+    equipment: "Dry Van, 53', 44,000 lbs",
+    rate: 1290,
+    carrierPay: 1040,
+    pickupDate: 'Feb 8, 5:00 AM',
+    deliveryDate: 'Feb 8, 2:00 PM',
+    update: '8m ago',
+    updateDetail: 'On I-95 N -- near New Haven, CT',
+    docs: { bol: true, rateConf: true, pod: false },
+    activity: [
+      { text: 'GPS ping -- New Haven, CT (mile 140)', time: '8 min ago', current: true },
+      { text: 'Departed Philadelphia, PA', time: 'Feb 8, 5:10 AM', current: false }
+    ]
+  },
+  {
+    id: 'FM-2025-0883',
+    status: 'booked',
+    statusLabel: 'Booked',
+    origin: 'Salt Lake City, UT',
+    dest: 'Boise, ID',
+    miles: 340,
+    carrier: '--',
+    carrierMc: '--',
+    driver: '--',
+    driverPhone: '--',
+    truck: '--',
+    equipment: "Dry Van, 53', 44,000 lbs",
+    rate: 1150,
+    carrierPay: 0,
+    pickupDate: 'Feb 10, 7:00 AM',
+    deliveryDate: 'Feb 10, 3:00 PM',
+    update: '3h ago',
+    updateDetail: 'Awaiting carrier assignment',
+    docs: { bol: false, rateConf: false, pod: false },
+    activity: [
+      { text: 'Load created from customer order', time: '3 hr ago', current: true }
+    ]
+  },
+  {
+    id: 'FM-2025-0884',
+    status: 'delivered',
+    statusLabel: 'Delivered',
+    origin: 'Jacksonville, FL',
+    dest: 'Savannah, GA',
+    miles: 139,
+    carrier: 'Ryder System',
+    carrierMc: 'MC-091547',
+    driver: 'Lisa M.',
+    driverPhone: '(555) 321-6540',
+    truck: '#TRK-9920',
+    equipment: "Dry Van, 48', 40,000 lbs",
+    rate: 720,
+    carrierPay: 580,
+    pickupDate: 'Feb 7, 6:00 AM',
+    deliveryDate: 'Feb 7, 10:00 AM',
+    update: '22h ago',
+    updateDetail: 'Delivered, POD pending',
+    docs: { bol: true, rateConf: true, pod: false },
+    activity: [
+      { text: 'Delivery confirmed -- Savannah, GA', time: 'Feb 7, 9:48 AM', current: true },
+      { text: 'Arrived at consignee', time: 'Feb 7, 9:30 AM', current: false }
+    ]
+  },
+  {
+    id: 'FM-2025-0885',
+    status: 'transit',
+    statusLabel: 'In Transit',
+    origin: 'Indianapolis, IN',
+    dest: 'St. Louis, MO',
+    miles: 243,
+    carrier: 'USXPRESS',
+    carrierMc: 'MC-401827',
+    driver: 'Mark D.',
+    driverPhone: '(555) 654-3210',
+    truck: '#TRK-5501',
+    equipment: "Dry Van, 53', 44,000 lbs",
+    rate: 1060,
+    carrierPay: 870,
+    pickupDate: 'Feb 8, 6:00 AM',
+    deliveryDate: 'Feb 8, 1:00 PM',
+    update: '15m ago',
+    updateDetail: 'On I-70 W -- Terre Haute, IN',
+    docs: { bol: true, rateConf: true, pod: false },
+    activity: [
+      { text: 'GPS ping -- Terre Haute, IN (mile 72)', time: '15 min ago', current: true },
+      { text: 'Departed Indianapolis, IN', time: 'Feb 8, 6:08 AM', current: false }
+    ]
+  }
+];
+
+// ======================================================================
+// STATE
+// ======================================================================
+var selectedLoadId = 'FM-2025-0871';
+var activeTab = 'overview';
+var activeStatusFilter = 'all';
+
+// ======================================================================
+// SAFE DOM HELPERS
+// ======================================================================
+function createTextEl(tag, text, className, styles) {
+  var el = document.createElement(tag);
+  el.textContent = text;
+  if (className) el.className = className;
+  if (styles) Object.assign(el.style, styles);
+  return el;
+}
+
+function createEl(tag, className, styles) {
+  var el = document.createElement(tag);
+  if (className) el.className = className;
+  if (styles) Object.assign(el.style, styles);
+  return el;
+}
+
+function createIcon(name, styles, filled) {
+  var span = document.createElement('span');
+  span.className = 'material-symbols-outlined' + (filled ? ' filled' : '');
+  span.textContent = name;
+  if (styles) Object.assign(span.style, styles);
+  return span;
+}
+
+// ======================================================================
+// RENDER TABLE
+// ======================================================================
+function renderTable() {
+  var tbody = document.getElementById('tableBody');
+  var searchValue = document.getElementById('searchInput').value.toLowerCase();
+  tbody.textContent = '';
+
+  loads.forEach(function(load) {
+    if (activeStatusFilter !== 'all' && load.status !== activeStatusFilter) return;
+
+    if (searchValue) {
+      var searchFields = [load.id, load.origin, load.dest, load.carrier, load.statusLabel].join(' ').toLowerCase();
+      if (searchFields.indexOf(searchValue) === -1) return;
+    }
+
+    var margin = load.carrierPay > 0 ? ((load.rate - load.carrierPay) / load.rate * 100).toFixed(1) : null;
+    var marginFloat = margin !== null ? parseFloat(margin) : null;
+
+    var tr = document.createElement('tr');
+    tr.className = load.id === selectedLoadId ? 'selected' : '';
+    tr.setAttribute('data-id', load.id);
+    tr.addEventListener('click', (function(id) {
+      return function() { selectLoad(id); };
+    })(load.id));
+
+    // Status cell
+    var tdStatus = document.createElement('td');
+    var badge = createEl('span', 'status-badge status-' + load.status);
+    var dot = createEl('span', 'dot');
+    badge.appendChild(dot);
+    badge.appendChild(document.createTextNode(load.statusLabel));
+    tdStatus.appendChild(badge);
+    tr.appendChild(tdStatus);
+
+    // Load # cell
+    var tdId = createTextEl('td', load.id, '', { fontWeight: '500', fontSize: '12px', color: 'var(--text-primary)' });
+    tr.appendChild(tdId);
+
+    // Route cell
+    var tdRoute = document.createElement('td');
+    tdRoute.style.fontSize = '11.5px';
+    var originSpan = createTextEl('span', load.origin, '', { color: 'var(--text-primary)' });
+    var arrowSpan = createTextEl('span', ' \u2192 ', '', { color: 'var(--text-muted)', margin: '0 3px' });
+    var destSpan = createTextEl('span', load.dest, '', { color: 'var(--text-primary)' });
+    var milesSpan = createTextEl('span', load.miles + ' mi', '', { color: 'var(--text-muted)', fontSize: '10px', marginLeft: '4px' });
+    tdRoute.appendChild(originSpan);
+    tdRoute.appendChild(arrowSpan);
+    tdRoute.appendChild(destSpan);
+    tdRoute.appendChild(milesSpan);
+    tr.appendChild(tdRoute);
+
+    // Carrier cell
+    var tdCarrier = createTextEl('td', load.carrier, '', {
+      fontSize: '11.5px',
+      color: load.carrier === '--' ? 'var(--text-muted)' : 'var(--text-primary)'
+    });
+    tr.appendChild(tdCarrier);
+
+    // Rate cell
+    var tdRate = createTextEl('td', '$' + load.rate.toLocaleString(), '', {
+      textAlign: 'right', fontWeight: '500', fontSize: '12px', fontVariantNumeric: 'tabular-nums'
+    });
+    tr.appendChild(tdRate);
+
+    // Margin cell
+    var marginColor = 'var(--text-primary)';
+    var marginText = '--';
+    if (marginFloat !== null) {
+      marginText = margin + '%';
+      if (marginFloat >= 18) marginColor = 'var(--status-delivered-text)';
+      else if (marginFloat < 15) marginColor = '#B91C1C';
+    }
+    var tdMargin = createTextEl('td', marginText, '', {
+      textAlign: 'right', fontSize: '11.5px', fontVariantNumeric: 'tabular-nums', color: marginColor
+    });
+    tr.appendChild(tdMargin);
+
+    // Update cell
+    var tdUpdate = createTextEl('td', load.update, '', { fontSize: '11px', color: 'var(--text-muted)' });
+    tr.appendChild(tdUpdate);
+
+    tbody.appendChild(tr);
+  });
+}
+
+// ======================================================================
+// SELECT LOAD
+// ======================================================================
+function selectLoad(id) {
+  selectedLoadId = id;
+  renderTable();
+  renderDetail();
+}
+
+// ======================================================================
+// RENDER DETAIL PANEL
+// ======================================================================
+function renderDetail() {
+  var load = loads.find(function(l) { return l.id === selectedLoadId; });
+  if (!load) return;
+
+  var margin = load.carrierPay > 0 ? ((load.rate - load.carrierPay) / load.rate * 100).toFixed(1) : null;
+  var marginDollar = load.carrierPay > 0 ? (load.rate - load.carrierPay) : 0;
+  var rpm = load.miles > 0 ? (load.rate / load.miles).toFixed(2) : null;
+
+  // Header
+  var header = document.getElementById('detailHeader');
+  header.textContent = '';
+
+  var headerRow = createEl('div', '', { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' });
+  headerRow.appendChild(createTextEl('span', load.id, '', { fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)' }));
+  var hBadge = createEl('span', 'status-badge status-' + load.status);
+  hBadge.appendChild(createEl('span', 'dot'));
+  hBadge.appendChild(document.createTextNode(load.statusLabel));
+  headerRow.appendChild(hBadge);
+  header.appendChild(headerRow);
+
+  var subText = createTextEl('div', 'Last updated: ' + load.update + ' \u00B7 ' + load.updateDetail, '', { fontSize: '10.5px', color: 'var(--text-muted)' });
+  header.appendChild(subText);
+
+  // Content
+  renderTabContent(load, margin, marginDollar, rpm);
+}
+
+// ======================================================================
+// RENDER TAB CONTENT
+// ======================================================================
+function renderTabContent(load, margin, marginDollar, rpm) {
+  var content = document.getElementById('detailContent');
+  content.textContent = '';
+
+  if (activeTab === 'overview') {
+    renderOverviewTab(content, load);
+  } else if (activeTab === 'stops') {
+    renderStopsTab(content, load);
+  } else if (activeTab === 'finance') {
+    renderFinanceTab(content, load, margin, marginDollar, rpm);
+  } else if (activeTab === 'documents') {
+    renderDocumentsTab(content, load);
+  }
+}
+
+function addSectionLabel(parent, text, extraTop) {
+  var label = createTextEl('div', text, 'detail-section-label');
+  if (extraTop) label.style.marginTop = extraTop;
+  parent.appendChild(label);
+}
+
+function addField(parent, label, value, valueStyle) {
+  var row = createEl('div', 'detail-field');
+  row.appendChild(createTextEl('span', label, 'detail-field-label'));
+  var val = createTextEl('span', value, 'detail-field-value');
+  if (valueStyle) Object.assign(val.style, valueStyle);
+  row.appendChild(val);
+  parent.appendChild(row);
+}
+
+function renderOverviewTab(container, load) {
+  addSectionLabel(container, 'Route');
+  addField(container, 'Origin', load.origin);
+  addField(container, 'Destination', load.dest);
+  addField(container, 'Distance', load.miles + ' mi');
+
+  addSectionLabel(container, 'Timeline');
+  addField(container, 'Pickup', load.pickupDate);
+  addField(container, 'Delivery', load.deliveryDate);
+
+  addSectionLabel(container, 'Carrier & Driver');
+  addField(container, 'Carrier', load.carrier);
+  addField(container, 'MC Number', load.carrierMc);
+  addField(container, 'Driver', load.driver);
+  addField(container, 'Phone', load.driverPhone);
+  addField(container, 'Truck', load.truck);
+
+  addSectionLabel(container, 'Equipment');
+  addField(container, 'Type', load.equipment);
+
+  addSectionLabel(container, 'Recent Activity', '20px');
+  var feedWrap = createEl('div');
+  load.activity.forEach(function(a, i) {
+    var item = createEl('div', 'activity-item');
+    var dotLine = createEl('div', 'activity-dot-line');
+    dotLine.appendChild(createEl('div', 'activity-dot' + (a.current ? ' blue' : '')));
+    if (i < load.activity.length - 1) {
+      dotLine.appendChild(createEl('div', 'activity-line'));
+    }
+    item.appendChild(dotLine);
+
+    var textWrap = createEl('div');
+    textWrap.appendChild(createTextEl('div', a.text, 'activity-text'));
+    textWrap.appendChild(createTextEl('div', a.time, 'activity-time'));
+    item.appendChild(textWrap);
+
+    feedWrap.appendChild(item);
+  });
+  container.appendChild(feedWrap);
+}
+
+function renderStopsTab(container, load) {
+  var refNum = load.id.split('-')[2];
+
+  addSectionLabel(container, 'Pickup Stop');
+  var pickupCard = createEl('div', '', {
+    background: 'var(--bg-main)', border: '1px solid var(--border-light)',
+    borderRadius: '8px', padding: '12px', marginBottom: '12px'
+  });
+  var pickupTop = createEl('div', '', { display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' });
+  pickupTop.appendChild(createIcon('radio_button_checked', { fontSize: '16px', color: 'var(--sapphire-blue)' }));
+  pickupTop.appendChild(createTextEl('span', load.origin, '', { fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)' }));
+  pickupCard.appendChild(pickupTop);
+  var pickupInfo = createEl('div', '', { fontSize: '11px', color: 'var(--text-secondary)', marginLeft: '24px' });
+  pickupInfo.appendChild(createTextEl('div', 'Date: ' + load.pickupDate));
+  var puRef = createTextEl('div', 'Ref: PU-' + refNum, '', { marginTop: '2px' });
+  pickupInfo.appendChild(puRef);
+  pickupCard.appendChild(pickupInfo);
+  container.appendChild(pickupCard);
+
+  var dots = createEl('div', '', { display: 'flex', justifyContent: 'center', margin: '4px 0' });
+  dots.appendChild(createIcon('more_vert', { fontSize: '18px', color: 'var(--text-muted)' }));
+  container.appendChild(dots);
+
+  addSectionLabel(container, 'Delivery Stop', '4px');
+  var delivCard = createEl('div', '', {
+    background: 'var(--bg-main)', border: '1px solid var(--border-light)',
+    borderRadius: '8px', padding: '12px'
+  });
+  var delivTop = createEl('div', '', { display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' });
+  delivTop.appendChild(createIcon('location_on', { fontSize: '16px', color: 'var(--status-delivered-text)' }));
+  delivTop.appendChild(createTextEl('span', load.dest, '', { fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)' }));
+  delivCard.appendChild(delivTop);
+  var delivInfo = createEl('div', '', { fontSize: '11px', color: 'var(--text-secondary)', marginLeft: '24px' });
+  delivInfo.appendChild(createTextEl('div', 'Date: ' + load.deliveryDate));
+  var delRef = createTextEl('div', 'Ref: DEL-' + refNum, '', { marginTop: '2px' });
+  delivInfo.appendChild(delRef);
+  delivCard.appendChild(delivInfo);
+  container.appendChild(delivCard);
+
+  addSectionLabel(container, 'Route Details', '20px');
+  addField(container, 'Total Distance', load.miles + ' mi');
+  addField(container, 'Est. Drive Time', Math.round(load.miles / 55) + ' hrs');
+}
+
+function renderFinanceTab(container, load, margin, marginDollar, rpm) {
+  addSectionLabel(container, 'Revenue');
+  addField(container, 'Customer Rate', '$' + load.rate.toLocaleString(), { fontWeight: '600' });
+  addField(container, 'RPM', rpm !== null ? '$' + rpm : '--');
+
+  addSectionLabel(container, 'Cost');
+  addField(container, 'Carrier Pay', load.carrierPay > 0 ? '$' + load.carrierPay.toLocaleString() : '--');
+  addField(container, 'Accessorials', '$0');
+
+  addSectionLabel(container, 'Margin');
+  var marginFloat = margin !== null ? parseFloat(margin) : null;
+  var marginBg = 'var(--bg-main)';
+  var marginColor = 'var(--text-primary)';
+  if (marginFloat !== null && marginFloat >= 18) { marginBg = 'var(--status-delivered-bg)'; marginColor = 'var(--status-delivered-text)'; }
+  else if (marginFloat !== null && marginFloat < 15) { marginBg = '#FEE2E2'; marginColor = '#B91C1C'; }
+
+  var marginBox = createEl('div', '', {
+    background: marginBg, borderRadius: '8px', padding: '14px', marginTop: '4px'
+  });
+  var mRow1 = createEl('div', '', { display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' });
+  mRow1.appendChild(createTextEl('span', 'Gross Margin', '', { fontSize: '11px', color: 'var(--text-secondary)' }));
+  mRow1.appendChild(createTextEl('span', margin !== null ? margin + '%' : '--', '', { fontSize: '18px', fontWeight: '700', color: marginColor }));
+  marginBox.appendChild(mRow1);
+  var mRow2 = createEl('div', '', { display: 'flex', justifyContent: 'space-between', marginTop: '4px' });
+  mRow2.appendChild(createTextEl('span', 'Dollar Amount', '', { fontSize: '10px', color: 'var(--text-muted)' }));
+  mRow2.appendChild(createTextEl('span', marginDollar > 0 ? '$' + marginDollar.toLocaleString() : '--', '', { fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)' }));
+  marginBox.appendChild(mRow2);
+  container.appendChild(marginBox);
+
+  addSectionLabel(container, 'Payment Status', '20px');
+  addField(container, 'Invoice Status', load.status === 'delivered' ? 'Invoiced' : 'Pending Delivery');
+  addField(container, 'Carrier Payment', load.carrierPay > 0 ? 'Net 30' : '--');
+}
+
+function renderDocumentsTab(container, load) {
+  addSectionLabel(container, 'Load Documents');
+
+  var docData = [
+    { name: 'Bill of Lading (BOL)', done: load.docs.bol },
+    { name: 'Rate Confirmation', done: load.docs.rateConf },
+    { name: 'Proof of Delivery (POD)', done: load.docs.pod }
+  ];
+
+  docData.forEach(function(doc) {
+    var item = createEl('div', 'doc-item');
+    var check = createEl('div', 'doc-check ' + (doc.done ? 'done' : 'pending'));
+    check.appendChild(createIcon(doc.done ? 'check' : 'remove', { fontSize: '14px' }));
+    item.appendChild(check);
+    item.appendChild(createTextEl('span', doc.name, 'doc-name'));
+    var statusEl = createTextEl('span', doc.done ? 'Received' : 'Pending', 'doc-status');
+    statusEl.style.color = doc.done ? 'var(--status-delivered-text)' : 'var(--text-muted)';
+    item.appendChild(statusEl);
+    container.appendChild(item);
+  });
+
+  var divider = createEl('div', '', { height: '1px', background: 'var(--border-light)', margin: '16px 0' });
+  container.appendChild(divider);
+
+  addSectionLabel(container, 'Document Completeness');
+  var doneCount = [load.docs.bol, load.docs.rateConf, load.docs.pod].filter(Boolean).length;
+
+  var progWrap = createEl('div', '', { marginTop: '6px' });
+  var progHeader = createEl('div', '', { display: 'flex', justifyContent: 'space-between', marginBottom: '4px' });
+  progHeader.appendChild(createTextEl('span', 'Progress', '', { fontSize: '11px', color: 'var(--text-secondary)' }));
+  progHeader.appendChild(createTextEl('span', doneCount + '/3', '', { fontSize: '11px', fontWeight: '600', color: 'var(--text-primary)' }));
+  progWrap.appendChild(progHeader);
+
+  var barBg = createEl('div', '', { height: '4px', background: 'var(--bg-filter)', borderRadius: '2px', overflow: 'hidden' });
+  var barFill = createEl('div', '', {
+    height: '100%', width: (doneCount / 3 * 100) + '%',
+    background: doneCount === 3 ? 'var(--status-delivered-text)' : 'var(--sapphire-blue)',
+    borderRadius: '2px', transition: 'width 0.3s'
+  });
+  barBg.appendChild(barFill);
+  progWrap.appendChild(barBg);
+  container.appendChild(progWrap);
+
+  // Warning for delivered loads missing POD
+  if (!load.docs.pod && load.status === 'delivered') {
+    var warning = createEl('div', '', {
+      marginTop: '16px', padding: '10px 12px', background: '#FEF3C7',
+      border: '1px solid #FDE68A', borderRadius: '8px', display: 'flex',
+      gap: '8px', alignItems: 'flex-start'
+    });
+    warning.appendChild(createIcon('warning', { fontSize: '16px', color: '#92400E', flexShrink: '0', marginTop: '1px' }));
+    warning.appendChild(createTextEl('div', 'POD missing for delivered load. Follow up with driver.', '', { fontSize: '11px', color: '#92400E', lineHeight: '1.45' }));
+    container.appendChild(warning);
+  }
+}
+
+// ======================================================================
+// TAB SWITCHING
+// ======================================================================
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.detail-tab').forEach(function(t) {
+    t.classList.toggle('active', t.getAttribute('data-tab') === tab);
+  });
+  renderDetail();
+}
+
+// Attach tab click listeners
+document.querySelectorAll('.detail-tab').forEach(function(t) {
+  t.addEventListener('click', function() {
+    switchTab(this.getAttribute('data-tab'));
+  });
+});
+
+// ======================================================================
+// STATUS FILTER
+// ======================================================================
+function setStatusFilter(el, status) {
+  activeStatusFilter = status;
+  document.querySelectorAll('.filter-chip[data-status]').forEach(function(c) {
+    c.classList.remove('active');
+  });
+  el.classList.add('active');
+  renderTable();
+}
+
+// Attach filter chip listeners
+document.querySelectorAll('.filter-chip[data-status]').forEach(function(chip) {
+  chip.addEventListener('click', function() {
+    setStatusFilter(this, this.getAttribute('data-status'));
+  });
+});
+
+// ======================================================================
+// SEARCH
+// ======================================================================
+document.getElementById('searchInput').addEventListener('input', function() {
+  renderTable();
+});
+
+// ======================================================================
+// QUICK ACTION FILTER (sidebar)
+// ======================================================================
+document.getElementById('qaUnassigned').addEventListener('click', function() {
+  activeStatusFilter = 'booked';
+  document.querySelectorAll('.filter-chip[data-status]').forEach(function(c) { c.classList.remove('active'); });
+  var bookedChip = document.querySelector('.filter-chip[data-status="booked"]');
+  if (bookedChip) bookedChip.classList.add('active');
+  renderTable();
+});
+document.getElementById('qaLate').addEventListener('click', function() {
+  activeStatusFilter = 'delayed';
+  document.querySelectorAll('.filter-chip[data-status]').forEach(function(c) { c.classList.remove('active'); });
+  var chip = document.querySelector('.filter-chip[data-status="delayed"]');
+  if (chip) chip.classList.add('active');
+  renderTable();
+});
+document.getElementById('qaCarrier').addEventListener('click', function() {
+  activeStatusFilter = 'all';
+  document.querySelectorAll('.filter-chip[data-status]').forEach(function(c) { c.classList.remove('active'); });
+  var chip = document.querySelector('.filter-chip[data-status="all"]');
+  if (chip) chip.classList.add('active');
+  document.getElementById('searchInput').value = 'Werner';
+  renderTable();
+});
+
+// ======================================================================
+// INIT
+// ======================================================================
+renderTable();
+renderDetail();
+</script>
+
+</body>
+</html>

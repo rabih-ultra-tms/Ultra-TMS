@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ultra TMS - Dispatch Board (Table View)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        mono: ['JetBrains Mono', 'SF Mono', 'Consolas', 'monospace'],
+      },
+      fontSize: {
+        '2xs': ['0.6875rem', { lineHeight: '1rem' }],
+      },
+    }
+  }
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+  /* Table styles */
+  .dispatch-table { border-collapse: separate; border-spacing: 0; }
+  .dispatch-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: #f9fafb;
+    border-bottom: 2px solid #e5e7eb;
+  }
+  .dispatch-table th {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+  .dispatch-table th:hover { background: #f3f4f6; }
+  .dispatch-table td { white-space: nowrap; }
+
+  /* Resize handle */
+  .resize-handle {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    cursor: col-resize;
+    background: transparent;
+  }
+  .resize-handle:hover, .resize-handle:active { background: #3b82f6; }
+
+  /* Row hover */
+  .table-row:hover td { background: #eff6ff !important; }
+  .table-row.selected td { background: #dbeafe !important; }
+  .table-row.selected { box-shadow: inset 3px 0 0 #2563eb; }
+
+  /* Exception row */
+  .table-row.exception td { background: #fff7ed !important; }
+  .table-row.exception:hover td { background: #ffedd5 !important; }
+  .table-row.at-risk { box-shadow: inset 3px 0 0 #f97316; }
+  .table-row.at-risk td { background: #fff7ed !important; }
+
+  /* Group header */
+  .group-header {
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .group-header:hover { opacity: 0.9; }
+
+  /* Expanded detail row */
+  .detail-row { animation: slideDown 0.2s ease-out; }
+  @keyframes slideDown {
+    from { opacity: 0; max-height: 0; }
+    to { opacity: 1; max-height: 200px; }
+  }
+
+  /* Sidebar nav item */
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    color: #6b7280;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-decoration: none;
+  }
+  .nav-item:hover { background: #f3f4f6; color: #111827; }
+  .nav-item.active { background: #eff6ff; color: #2563eb; font-weight: 600; }
+
+  /* View tab */
+  .view-tab {
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #6b7280;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+  }
+  .view-tab:hover { color: #374151; }
+  .view-tab.active { color: #2563eb; border-bottom-color: #2563eb; }
+
+  /* Filter pill */
+  .filter-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 500;
+    border-radius: 4px;
+    border: 1px solid #e5e7eb;
+    background: white;
+    color: #374151;
+    cursor: pointer;
+  }
+  .filter-pill:hover { border-color: #d1d5db; background: #f9fafb; }
+
+  /* Action button */
+  .action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 500;
+    border-radius: 4px;
+    border: 1px solid #e5e7eb;
+    background: white;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+  .action-btn:hover { border-color: #3b82f6; color: #2563eb; background: #eff6ff; }
+
+  /* Bulk action bar */
+  .bulk-bar {
+    animation: slideUp 0.2s ease-out;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(8px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  /* Slide-in panel */
+  .detail-panel {
+    animation: slideIn 0.25s ease-out;
+  }
+  @keyframes slideIn {
+    from { transform: translateX(20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  /* Pagination */
+  .page-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #6b7280;
+    transition: all 0.1s;
+  }
+  .page-btn:hover { background: #f3f4f6; color: #111827; }
+  .page-btn.active { background: #2563eb; color: white; }
+
+  /* Checkbox */
+  .custom-checkbox {
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid #d1d5db;
+    border-radius: 3px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.1s;
+    flex-shrink: 0;
+  }
+  .custom-checkbox:hover { border-color: #9ca3af; }
+  .custom-checkbox.checked {
+    background: #2563eb;
+    border-color: #2563eb;
+  }
+  .custom-checkbox.indeterminate {
+    background: #2563eb;
+    border-color: #2563eb;
+  }
+
+  /* Status dot */
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* KPI badge */
+  .kpi-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid;
+  }
+
+  /* Timer badge */
+  .timer-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+  }
+</style>
+</head>
+<body class="bg-gray-50 text-gray-900 antialiased h-screen overflow-hidden">
+
+<div class="flex h-screen">
+
+  <!-- ==================== SIDEBAR ==================== -->
+  <aside class="w-60 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
+    <!-- Logo -->
+    <div class="px-5 py-4 border-b border-gray-100">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+          <span class="text-white font-bold text-sm">U</span>
+        </div>
+        <div>
+          <span class="text-sm font-bold text-gray-900 tracking-tight">Ultra TMS</span>
+          <span class="text-2xs text-gray-400 block -mt-0.5">Freight Management</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
+      <a class="nav-item" href="#">
+        <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+        Dashboard
+      </a>
+      <a class="nav-item" href="#">
+        <i data-lucide="file-text" class="w-4 h-4"></i>
+        Orders
+        <span class="ml-auto text-2xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-medium">24</span>
+      </a>
+      <a class="nav-item" href="#">
+        <i data-lucide="package" class="w-4 h-4"></i>
+        Loads
+      </a>
+      <a class="nav-item active" href="#">
+        <i data-lucide="send" class="w-4 h-4"></i>
+        Dispatch Board
+        <span class="ml-auto text-2xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-semibold">110</span>
+      </a>
+      <a class="nav-item" href="#">
+        <i data-lucide="map-pin" class="w-4 h-4"></i>
+        Tracking
+      </a>
+
+      <div class="pt-3 pb-1">
+        <div class="text-[10px] uppercase tracking-wider font-semibold text-gray-400 px-4">Operations</div>
+      </div>
+      <a class="nav-item" href="#">
+        <i data-lucide="truck" class="w-4 h-4"></i>
+        Carriers
+      </a>
+      <a class="nav-item" href="#">
+        <i data-lucide="users" class="w-4 h-4"></i>
+        Customers
+      </a>
+      <a class="nav-item" href="#">
+        <i data-lucide="calculator" class="w-4 h-4"></i>
+        Accounting
+      </a>
+      <a class="nav-item" href="#">
+        <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+        Reports
+      </a>
+      <a class="nav-item" href="#">
+        <i data-lucide="settings" class="w-4 h-4"></i>
+        Settings
+      </a>
+    </nav>
+
+    <!-- User -->
+    <div class="px-3 py-3 border-t border-gray-100">
+      <div class="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-gray-50 cursor-pointer">
+        <div class="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+          <span class="text-white text-2xs font-bold">RA</span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="text-xs font-semibold text-gray-900 truncate">Rabih A.</div>
+          <div class="text-2xs text-gray-400 truncate">Dispatcher</div>
+        </div>
+        <i data-lucide="chevrons-up-down" class="w-3.5 h-3.5 text-gray-400"></i>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==================== MAIN CONTENT ==================== -->
+  <div class="flex-1 flex flex-col min-w-0">
+
+    <!-- ===== TOOLBAR ===== -->
+    <header class="bg-white border-b border-gray-200 flex-shrink-0">
+
+      <!-- Row 1: Title + Primary Actions -->
+      <div class="px-5 pt-4 pb-2 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <h1 class="text-lg font-bold text-gray-900 tracking-tight">Dispatch Board</h1>
+          <span class="text-2xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-medium">110 loads</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="action-btn">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+            Export
+          </button>
+          <button class="action-btn">
+            <i data-lucide="columns-3" class="w-3.5 h-3.5"></i>
+            Columns
+          </button>
+          <button class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded-md hover:bg-blue-700 transition-colors shadow-sm">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            New Load
+          </button>
+        </div>
+      </div>
+
+      <!-- Row 2: View tabs, date, filters, search -->
+      <div class="px-5 flex items-center justify-between border-b border-gray-100">
+        <div class="flex items-center gap-0">
+          <div class="view-tab active">
+            <i data-lucide="table" class="w-3.5 h-3.5 inline mr-1 -mt-0.5"></i>
+            Table
+          </div>
+          <div class="view-tab">
+            <i data-lucide="columns-3" class="w-3.5 h-3.5 inline mr-1 -mt-0.5"></i>
+            Kanban
+          </div>
+          <div class="view-tab">
+            <i data-lucide="gantt-chart" class="w-3.5 h-3.5 inline mr-1 -mt-0.5"></i>
+            Timeline
+          </div>
+          <div class="view-tab">
+            <i data-lucide="map" class="w-3.5 h-3.5 inline mr-1 -mt-0.5"></i>
+            Map
+          </div>
+        </div>
+        <div class="flex items-center gap-2 pb-1.5">
+          <div class="flex items-center gap-1 px-2.5 py-1 bg-gray-50 border border-gray-200 rounded-md text-xs text-gray-600 cursor-pointer hover:border-gray-300">
+            <i data-lucide="calendar" class="w-3 h-3"></i>
+            This Week
+            <i data-lucide="chevron-down" class="w-3 h-3 ml-0.5"></i>
+          </div>
+          <div class="flex items-center gap-1 px-2.5 py-1 bg-gray-50 border border-gray-200 rounded-md text-xs text-gray-600 cursor-pointer hover:border-gray-300">
+            <i data-lucide="filter" class="w-3 h-3"></i>
+            Filter
+            <i data-lucide="chevron-down" class="w-3 h-3 ml-0.5"></i>
+          </div>
+          <div class="flex items-center gap-1 px-2.5 py-1 bg-gray-50 border border-gray-200 rounded-md text-xs text-gray-600 cursor-pointer hover:border-gray-300">
+            <i data-lucide="arrow-up-down" class="w-3 h-3"></i>
+            Group
+            <i data-lucide="chevron-down" class="w-3 h-3 ml-0.5"></i>
+          </div>
+          <div class="relative">
+            <i data-lucide="search" class="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2"></i>
+            <input type="text" placeholder="Search loads..." class="pl-8 pr-3 py-1 text-xs border border-gray-200 rounded-md bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 w-44">
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 3: Active filters + sort -->
+      <div class="px-5 py-1.5 flex items-center gap-2 text-2xs">
+        <span class="text-gray-400 font-medium">Filters:</span>
+        <span class="filter-pill">
+          Status: All Active
+          <i data-lucide="x" class="w-2.5 h-2.5 text-gray-400 hover:text-gray-600 cursor-pointer"></i>
+        </span>
+        <span class="filter-pill">
+          Equipment: All
+          <i data-lucide="x" class="w-2.5 h-2.5 text-gray-400 hover:text-gray-600 cursor-pointer"></i>
+        </span>
+        <span class="filter-pill">
+          Date: Feb 6 - Feb 12
+          <i data-lucide="x" class="w-2.5 h-2.5 text-gray-400 hover:text-gray-600 cursor-pointer"></i>
+        </span>
+        <span class="text-gray-300 mx-1">|</span>
+        <span class="text-gray-500 font-medium flex items-center gap-1">
+          <i data-lucide="arrow-up" class="w-2.5 h-2.5"></i>
+          Sorted by: Pickup Date
+        </span>
+        <span class="ml-auto text-gray-400 cursor-pointer hover:text-gray-600 font-medium">Clear all</span>
+      </div>
+    </header>
+
+    <!-- ===== KPI STRIP ===== -->
+    <div class="bg-white border-b border-gray-200 px-5 py-2 flex items-center gap-2 flex-shrink-0 overflow-x-auto">
+      <span class="kpi-badge bg-gray-50 border-gray-200 text-gray-700">
+        <span class="status-dot bg-gray-400"></span>
+        Unassigned <span class="font-bold text-gray-900">12</span>
+      </span>
+      <span class="kpi-badge bg-purple-50 border-purple-200 text-purple-700">
+        <span class="status-dot bg-purple-500"></span>
+        Tendered <span class="font-bold text-purple-900">8</span>
+      </span>
+      <span class="kpi-badge bg-indigo-50 border-indigo-200 text-indigo-700">
+        <span class="status-dot bg-indigo-500"></span>
+        Dispatched <span class="font-bold text-indigo-900">23</span>
+      </span>
+      <span class="kpi-badge bg-sky-50 border-sky-200 text-sky-700">
+        <span class="status-dot bg-sky-500"></span>
+        In Transit <span class="font-bold text-sky-900">45</span>
+      </span>
+      <span class="kpi-badge bg-lime-50 border-lime-200 text-lime-700">
+        <span class="status-dot bg-lime-500"></span>
+        Delivered <span class="font-bold text-lime-900">15</span>
+      </span>
+      <span class="kpi-badge bg-emerald-50 border-emerald-200 text-emerald-700">
+        <span class="status-dot bg-emerald-500"></span>
+        Completed <span class="font-bold text-emerald-900">28</span>
+      </span>
+      <span class="text-gray-300 mx-0.5">|</span>
+      <span class="kpi-badge bg-orange-50 border-orange-200 text-orange-700">
+        <i data-lucide="alert-triangle" class="w-3 h-3"></i>
+        Exceptions <span class="font-bold text-orange-900">4</span>
+      </span>
+      <span class="kpi-badge bg-red-50 border-red-200 text-red-700">
+        <i data-lucide="flame" class="w-3 h-3"></i>
+        Hot <span class="font-bold text-red-900">2</span>
+      </span>
+    </div>
+
+    <!-- ===== BULK ACTION BAR ===== -->
+    <div class="bulk-bar bg-blue-600 text-white px-5 py-1.5 flex items-center gap-3 flex-shrink-0 text-xs">
+      <div class="custom-checkbox checked" style="border-color: white;">
+        <i data-lucide="minus" class="w-2.5 h-2.5 text-white"></i>
+      </div>
+      <span class="font-semibold">3 selected</span>
+      <span class="text-blue-200">|</span>
+      <button class="px-2 py-0.5 bg-blue-500 hover:bg-blue-400 rounded text-white text-2xs font-medium transition-colors">Assign Carrier</button>
+      <button class="px-2 py-0.5 bg-blue-500 hover:bg-blue-400 rounded text-white text-2xs font-medium transition-colors">Update Status</button>
+      <button class="px-2 py-0.5 bg-blue-500 hover:bg-blue-400 rounded text-white text-2xs font-medium transition-colors">Export</button>
+      <button class="px-2 py-0.5 bg-blue-500 hover:bg-blue-400 rounded text-white text-2xs font-medium transition-colors">Print BOL</button>
+      <span class="ml-auto text-blue-200 cursor-pointer hover:text-white text-2xs">Deselect all</span>
+    </div>
+
+    <!-- ===== MAIN TABLE AREA + RIGHT PANEL ===== -->
+    <div class="flex flex-1 min-h-0">
+
+      <!-- TABLE CONTAINER -->
+      <div class="flex-1 overflow-auto min-w-0">
+        <table class="dispatch-table w-full min-w-[1400px]">
+          <thead>
+            <tr class="text-left">
+              <th class="w-10 px-3 py-2">
+                <div class="custom-checkbox indeterminate">
+                  <i data-lucide="minus" class="w-2.5 h-2.5 text-white"></i>
+                </div>
+              </th>
+              <th class="w-10 px-2 py-2 text-[10px] uppercase tracking-wider font-semibold text-gray-500">
+                <span class="relative">
+                  St.
+                  <div class="resize-handle"></div>
+                </span>
+              </th>
+              <th class="px-3 py-2 text-[10px] uppercase tracking-wider font-semibold text-gray-500 relative" style="min-width:130px">
+                Load #
+                <div class="resize-handle"></div>
+              </th>
+              <th class="px-3 py-2 text-[10px] uppercase tracking-wider font-semibold text-gray-500 relative" style="min-width:220px">
+                Origin &rarr; Destination
+                <div class="resize-handle"></div>
+              </th>
+              <th class="px-3 py-2 text-[10px] uppercase tracking-wider font-semibold text-gray-500 relative" style="min-width:140px">
+                Carrier
+                <div class="resize-handle"></div>
+              </th>
+              <th class="px-3 py-2 text-[10px] uppercase tracking-wider font-semibold text-gray-500 relative" style="min-width:90px">
+                Driver
+                <div class="resize-handle"></div>
+              </th>
+              <th class="px-3 py-2 text-[10px] uppercase tracking-wider font-semibold text-gray-500 relative" style="min-width:80px">
+                Equip
+                <div class="resize-handle"></div>
+              </th>
+              <th class="px-3 py-2 text-[10px] uppercase tracking-wider font-semibold text-gray-500 relative cursor-pointer" style="min-width:72px">
+                Pickup <i data-lucide="arrow-up" class="w-2.5 h-2.5 inline text-blue-500 -mt-0.5"></i>
+                <div class="resize-handle"></div>
+              </th>
+              <th class="px-3 py-2 text-[10px] uppercase tracking-wider font-semibold text-gray-500 relative" style="min-width:72px">
+                Delivery
+                <div class="resize-handle"></div>
+              </th>
+              <th class="px-3 py-2 text-[10px] uppercase tracking-wider font-semibold text-gray-500 text-right relative" style="min-width:72px">
+                Rate
+                <div class="resize-handle"></div>
+              </th>
+              <th class="px-3 py-2 text-[10px] uppercase tracking-wider font-semibold text-gray-500 text-right relative" style="min-width:60px">
+                Margin
+                <div class="resize-handle"></div>
+              </th>
+              <th class="px-3 py-2 text-[10px] uppercase tracking-wider font-semibold text-gray-500 relative" style="min-width:130px">
+                Customer
+                <div class="resize-handle"></div>
+              </th>
+              <th class="px-3 py-2 text-[10px] uppercase tracking-wider font-semibold text-gray-500 relative" style="min-width:80px">
+                Updated
+                <div class="resize-handle"></div>
+              </th>
+              <th class="px-3 py-2 text-[10px] uppercase tracking-wider font-semibold text-gray-500 relative" style="min-width:90px">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <!-- ========== GROUP: UNASSIGNED ========== -->
+            <tr class="group-header">
+              <td colspan="14" class="px-0 py-1">
+                <div class="mx-2 px-3 py-1.5 bg-gray-500 rounded-md flex items-center gap-2 text-white">
+                  <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+                  <span class="font-semibold text-xs uppercase tracking-wide">Unassigned</span>
+                  <span class="text-xs font-normal opacity-80">(12)</span>
+                  <span class="ml-auto text-2xs opacity-70">Needs carrier assignment</span>
+                </div>
+              </td>
+            </tr>
+            <!-- FM-0861 - at risk -->
+            <tr class="table-row at-risk" style="height:36px;">
+              <td class="px-3 py-0"><div class="custom-checkbox"></div></td>
+              <td class="px-2 py-0"><span class="status-dot bg-gray-400"></span></td>
+              <td class="px-3 py-0 text-[13px] font-mono font-medium text-gray-900">FM-2025-0861</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Denver, CO <span class="text-gray-400">&rarr;</span> Salt Lake City, UT</td>
+              <td class="px-3 py-0 text-[13px] text-gray-400">&mdash;</td>
+              <td class="px-3 py-0 text-[13px] text-gray-400">&mdash;</td>
+              <td class="px-3 py-0 text-[12px] text-gray-600">&#10052;&#65039; Reefer</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Feb 9</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Feb 10</td>
+              <td class="px-3 py-0 text-[13px] text-gray-900 text-right font-medium">$2,100</td>
+              <td class="px-3 py-0 text-[13px] text-gray-400 text-right">&mdash;</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">FreshCo Foods</td>
+              <td class="px-3 py-0 text-[13px] text-red-600 font-medium">26h ago <span class="text-orange-500">&#9888;</span></td>
+              <td class="px-3 py-0"><button class="action-btn">Assign <i data-lucide="chevron-down" class="w-2.5 h-2.5"></i></button></td>
+            </tr>
+            <!-- FM-0863 - hot -->
+            <tr class="table-row" style="height:36px; background: white;">
+              <td class="px-3 py-0"><div class="custom-checkbox checked"><i data-lucide="check" class="w-2.5 h-2.5 text-white"></i></div></td>
+              <td class="px-2 py-0"><span class="status-dot bg-gray-400"></span></td>
+              <td class="px-3 py-0 text-[13px] font-mono font-medium text-gray-900"><span class="text-red-500 mr-0.5" title="Hot Load">&#128293;</span> FM-2025-0863</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Memphis, TN <span class="text-gray-400">&rarr;</span> Nashville, TN</td>
+              <td class="px-3 py-0 text-[13px] text-gray-400">&mdash;</td>
+              <td class="px-3 py-0 text-[13px] text-gray-400">&mdash;</td>
+              <td class="px-3 py-0 text-[12px] text-gray-600">&#128230; Dry Van</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Feb 9</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Feb 9</td>
+              <td class="px-3 py-0 text-[13px] text-gray-900 text-right font-medium">$850</td>
+              <td class="px-3 py-0 text-[13px] text-gray-400 text-right">&mdash;</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">AutoParts Direct</td>
+              <td class="px-3 py-0 text-[13px] text-gray-500">4h ago</td>
+              <td class="px-3 py-0"><button class="action-btn">Assign <i data-lucide="chevron-down" class="w-2.5 h-2.5"></i></button></td>
+            </tr>
+            <!-- FM-0865 -->
+            <tr class="table-row" style="height:36px; background: #f9fafb;">
+              <td class="px-3 py-0"><div class="custom-checkbox"></div></td>
+              <td class="px-2 py-0"><span class="status-dot bg-gray-400"></span></td>
+              <td class="px-3 py-0 text-[13px] font-mono font-medium text-gray-900">FM-2025-0865</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Houston, TX <span class="text-gray-400">&rarr;</span> San Antonio, TX</td>
+              <td class="px-3 py-0 text-[13px] text-gray-400">&mdash;</td>
+              <td class="px-3 py-0 text-[13px] text-gray-400">&mdash;</td>
+              <td class="px-3 py-0 text-[12px] text-gray-600">&#11036; Flatbed</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Feb 10</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Feb 10</td>
+              <td class="px-3 py-0 text-[13px] text-gray-900 text-right font-medium">$1,200</td>
+              <td class="px-3 py-0 text-[13px] text-gray-400 text-right">&mdash;</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Steel Dynamics</td>
+              <td class="px-3 py-0 text-[13px] text-gray-500">2h ago</td>
+              <td class="px-3 py-0"><button class="action-btn">Assign <i data-lucide="chevron-down" class="w-2.5 h-2.5"></i></button></td>
+            </tr>
+            <!-- FM-0867 -->
+            <tr class="table-row" style="height:36px; background: white;">
+              <td class="px-3 py-0"><div class="custom-checkbox"></div></td>
+              <td class="px-2 py-0"><span class="status-dot bg-gray-400"></span></td>
+              <td class="px-3 py-0 text-[13px] font-mono font-medium text-gray-900">FM-2025-0867</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Portland, OR <span class="text-gray-400">&rarr;</span> Seattle, WA</td>
+              <td class="px-3 py-0 text-[13px] text-gray-400">&mdash;</td>
+              <td class="px-3 py-0 text-[13px] text-gray-400">&mdash;</td>
+              <td class="px-3 py-0 text-[12px] text-gray-600">&#128230; Dry Van</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Feb 9</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Feb 9</td>
+              <td class="px-3 py-0 text-[13px] text-gray-900 text-right font-medium">$650</td>
+              <td class="px-3 py-0 text-[13px] text-gray-400 text-right">&mdash;</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Pacific Lumber</td>
+              <td class="px-3 py-0 text-[13px] text-gray-500">3h ago</td>
+              <td class="px-3 py-0"><button class="action-btn">Assign <i data-lucide="chevron-down" class="w-2.5 h-2.5"></i></button></td>
+            </tr>
+
+            <!-- ========== GROUP: TENDERED ========== -->
+            <tr class="group-header">
+              <td colspan="14" class="px-0 py-1">
+                <div class="mx-2 px-3 py-1.5 bg-purple-500 rounded-md flex items-center gap-2 text-white">
+                  <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+                  <span class="font-semibold text-xs uppercase tracking-wide">Tendered</span>
+                  <span class="text-xs font-normal opacity-80">(8)</span>
+                  <span class="ml-auto text-2xs opacity-70">Awaiting carrier acceptance</span>
+                </div>
+              </td>
+            </tr>
+            <!-- FM-0855 -->
+            <tr class="table-row" style="height:36px; background: white;">
+              <td class="px-3 py-0"><div class="custom-checkbox"></div></td>
+              <td class="px-2 py-0"><span class="status-dot bg-purple-500"></span></td>
+              <td class="px-3 py-0 text-[13px] font-mono font-medium text-gray-900">FM-2025-0855</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Kansas City, MO <span class="text-gray-400">&rarr;</span> St. Louis, MO</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Heartland Express</td>
+              <td class="px-3 py-0 text-[13px] text-gray-400">&mdash;</td>
+              <td class="px-3 py-0 text-[12px] text-gray-600">&#128230;</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Feb 9</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Feb 9</td>
+              <td class="px-3 py-0 text-[13px] text-gray-900 text-right font-medium">$780</td>
+              <td class="px-3 py-0 text-[13px] text-green-600 text-right font-medium">21%</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Midwest Grain</td>
+              <td class="px-3 py-0 text-[13px] text-gray-500">12m ago</td>
+              <td class="px-3 py-0">
+                <span class="timer-badge bg-purple-100 text-purple-700">&#9201; 28m left</span>
+              </td>
+            </tr>
+            <!-- FM-0858 -->
+            <tr class="table-row" style="height:36px; background: #f9fafb;">
+              <td class="px-3 py-0"><div class="custom-checkbox"></div></td>
+              <td class="px-2 py-0"><span class="status-dot bg-purple-500"></span></td>
+              <td class="px-3 py-0 text-[13px] font-mono font-medium text-gray-900">FM-2025-0858</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Indianapolis, IN <span class="text-gray-400">&rarr;</span> Louisville, KY</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">XPO Logistics</td>
+              <td class="px-3 py-0 text-[13px] text-gray-400">&mdash;</td>
+              <td class="px-3 py-0 text-[12px] text-gray-600">&#10052;&#65039;</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Feb 9</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Feb 10</td>
+              <td class="px-3 py-0 text-[13px] text-gray-900 text-right font-medium">$1,450</td>
+              <td class="px-3 py-0 text-[13px] text-green-600 text-right font-medium">19%</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Pharma Solutions</td>
+              <td class="px-3 py-0 text-[13px] text-gray-500">1h ago</td>
+              <td class="px-3 py-0">
+                <span class="timer-badge bg-red-100 text-red-700">&#9889; 4m left</span>
+              </td>
+            </tr>
+            <!-- FM-0860 -->
+            <tr class="table-row" style="height:36px; background: white;">
+              <td class="px-3 py-0"><div class="custom-checkbox"></div></td>
+              <td class="px-2 py-0"><span class="status-dot bg-purple-500"></span></td>
+              <td class="px-3 py-0 text-[13px] font-mono font-medium text-gray-900">FM-2025-0860</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Charlotte, NC <span class="text-gray-400">&rarr;</span> Raleigh, NC</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Old Dominion</td>
+              <td class="px-3 py-0 text-[13px] text-gray-400">&mdash;</td>
+              <td class="px-3 py-0 text-[12px] text-gray-600">&#128230;</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Feb 10</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Feb 10</td>
+              <td class="px-3 py-0 text-[13px] text-gray-900 text-right font-medium">$550</td>
+              <td class="px-3 py-0 text-[13px] text-green-600 text-right font-medium">22%</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Furniture Mart</td>
+              <td class="px-3 py-0 text-[13px] text-gray-500">8m ago</td>
+              <td class="px-3 py-0">
+                <span class="timer-badge bg-purple-100 text-purple-700">&#9201; 22m left</span>
+              </td>
+            </tr>
+
+            <!-- ========== GROUP: DISPATCHED ========== -->
+            <tr class="group-header">
+              <td colspan="14" class="px-0 py-1">
+                <div class="mx-2 px-3 py-1.5 bg-indigo-500 rounded-md flex items-center gap-2 text-white">
+                  <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+                  <span class="font-semibold text-xs uppercase tracking-wide">Dispatched</span>
+                  <span class="text-xs font-normal opacity-80">(23)</span>
+                  <span class="ml-auto text-2xs opacity-70">Carrier confirmed, awaiting pickup</span>
+                </div>
+              </td>
+            </tr>
+            <!-- FM-0842 -->
+            <tr class="table-row" style="height:36px; background: white;">
+              <td class="px-3 py-0"><div class="custom-checkbox"></div></td>
+              <td class="px-2 py-0"><span class="status-dot bg-indigo-500"></span></td>
+              <td class="px-3 py-0 text-[13px] font-mono font-medium text-gray-900">FM-2025-0842</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Phoenix, AZ <span class="text-gray-400">&rarr;</span> Las Vegas, NV</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Schneider National</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Carlos G.</td>
+              <td class="px-3 py-0 text-[12px] text-gray-600">&#128230;</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Feb 9</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Feb 9</td>
+              <td class="px-3 py-0 text-[13px] text-gray-900 text-right font-medium">$1,100</td>
+              <td class="px-3 py-0 text-[13px] text-green-600 text-right font-medium">20%</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Desert Electronics</td>
+              <td class="px-3 py-0 text-[13px] text-gray-500">25m ago</td>
+              <td class="px-3 py-0"><button class="action-btn">Track <i data-lucide="chevron-down" class="w-2.5 h-2.5"></i></button></td>
+            </tr>
+            <!-- FM-0844 -->
+            <tr class="table-row" style="height:36px; background: #f9fafb;">
+              <td class="px-3 py-0"><div class="custom-checkbox"></div></td>
+              <td class="px-2 py-0"><span class="status-dot bg-indigo-500"></span></td>
+              <td class="px-3 py-0 text-[13px] font-mono font-medium text-gray-900">FM-2025-0844</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Minneapolis, MN <span class="text-gray-400">&rarr;</span> Milwaukee, WI</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Werner Enterprises</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Jake A.</td>
+              <td class="px-3 py-0 text-[12px] text-gray-600">&#10052;&#65039;</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Feb 9</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Feb 9</td>
+              <td class="px-3 py-0 text-[13px] text-gray-900 text-right font-medium">$950</td>
+              <td class="px-3 py-0 text-[13px] text-green-600 text-right font-medium">20%</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Dairy Fresh</td>
+              <td class="px-3 py-0 text-[13px] text-gray-500">10m ago</td>
+              <td class="px-3 py-0"><button class="action-btn">Track <i data-lucide="chevron-down" class="w-2.5 h-2.5"></i></button></td>
+            </tr>
+            <!-- FM-0846 -->
+            <tr class="table-row" style="height:36px; background: white;">
+              <td class="px-3 py-0"><div class="custom-checkbox checked"><i data-lucide="check" class="w-2.5 h-2.5 text-white"></i></div></td>
+              <td class="px-2 py-0"><span class="status-dot bg-indigo-500"></span></td>
+              <td class="px-3 py-0 text-[13px] font-mono font-medium text-gray-900">FM-2025-0846</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Tampa, FL <span class="text-gray-400">&rarr;</span> Jacksonville, FL</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Landstar System</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Rosa M.</td>
+              <td class="px-3 py-0 text-[12px] text-gray-600">&#11036;</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Feb 9</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Feb 9</td>
+              <td class="px-3 py-0 text-[13px] text-gray-900 text-right font-medium">$880</td>
+              <td class="px-3 py-0 text-[13px] text-green-600 text-right font-medium">20%</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Citrus Growers</td>
+              <td class="px-3 py-0 text-[13px] text-gray-500">1h ago</td>
+              <td class="px-3 py-0"><button class="action-btn">Track <i data-lucide="chevron-down" class="w-2.5 h-2.5"></i></button></td>
+            </tr>
+
+            <!-- ========== GROUP: IN TRANSIT ========== -->
+            <tr class="group-header">
+              <td colspan="14" class="px-0 py-1">
+                <div class="mx-2 px-3 py-1.5 bg-sky-500 rounded-md flex items-center gap-2 text-white">
+                  <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+                  <span class="font-semibold text-xs uppercase tracking-wide">In Transit</span>
+                  <span class="text-xs font-normal opacity-80">(45)</span>
+                  <span class="ml-auto text-2xs opacity-70">Currently moving &bull; 3 exceptions</span>
+                </div>
+              </td>
+            </tr>
+            <!-- FM-0847 - SELECTED + EXPANDED + EXCEPTION -->
+            <tr class="table-row selected exception" style="height:36px;" id="row-0847">
+              <td class="px-3 py-0"><div class="custom-checkbox checked"><i data-lucide="check" class="w-2.5 h-2.5 text-white"></i></div></td>
+              <td class="px-2 py-0"><span class="status-dot bg-sky-500" style="box-shadow: 0 0 0 3px rgba(14,165,233,0.2);"></span></td>
+              <td class="px-3 py-0 text-[13px] font-mono font-medium text-gray-900"><span class="text-red-500 mr-0.5">&#128293;</span> FM-2025-0847</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Chicago, IL <span class="text-gray-400">&rarr;</span> Dallas, TX</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Swift Transport</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Mike R.</td>
+              <td class="px-3 py-0 text-[12px] text-gray-600">&#128230;</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Feb 7</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Feb 9</td>
+              <td class="px-3 py-0 text-[13px] text-gray-900 text-right font-medium">$2,450</td>
+              <td class="px-3 py-0 text-[13px] text-green-600 text-right font-medium">20%</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Acme Mfg</td>
+              <td class="px-3 py-0 text-[13px] text-red-600 font-medium">5h ago <span class="text-orange-500">&#9888;</span></td>
+              <td class="px-3 py-0"><button class="action-btn" style="border-color:#3b82f6; color:#2563eb; background:#eff6ff;">Track <i data-lucide="chevron-down" class="w-2.5 h-2.5"></i></button></td>
+            </tr>
+            <!-- EXPANDED DETAIL ROW for FM-0847 -->
+            <tr class="detail-row">
+              <td colspan="14" class="px-0 py-0">
+                <div class="mx-6 mb-1 p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                  <div class="grid grid-cols-6 gap-4 text-xs">
+                    <div>
+                      <span class="text-gray-500 font-medium block mb-0.5">Carrier Contact</span>
+                      <span class="text-gray-900">Dan Morrison</span><br>
+                      <span class="text-blue-600">(312) 555-0847</span>
+                    </div>
+                    <div>
+                      <span class="text-gray-500 font-medium block mb-0.5">Driver Phone</span>
+                      <span class="text-gray-900">Mike Rodriguez</span><br>
+                      <span class="text-blue-600">(312) 555-1234</span>
+                    </div>
+                    <div>
+                      <span class="text-gray-500 font-medium block mb-0.5">Commodity</span>
+                      <span class="text-gray-900">Electronics</span><br>
+                      <span class="text-gray-500">42,000 lbs</span>
+                    </div>
+                    <div>
+                      <span class="text-gray-500 font-medium block mb-0.5">Special Instructions</span>
+                      <span class="text-gray-900">Liftgate required at delivery. Call 30 min before arrival.</span>
+                    </div>
+                    <div>
+                      <span class="text-gray-500 font-medium block mb-0.5">Reference #</span>
+                      <span class="text-gray-900 font-mono">PO-88412</span><br>
+                      <span class="text-gray-500 font-mono">BOL-29381</span>
+                    </div>
+                    <div>
+                      <span class="text-gray-500 font-medium block mb-0.5">Exception</span>
+                      <span class="text-orange-600 font-medium">&#9888; Delayed - Weather</span><br>
+                      <span class="text-gray-500">ETA pushed to Feb 9 PM</span>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            <!-- FM-0832 - exception -->
+            <tr class="table-row exception" style="height:36px;">
+              <td class="px-3 py-0"><div class="custom-checkbox"></div></td>
+              <td class="px-2 py-0"><span class="status-dot bg-sky-500"></span></td>
+              <td class="px-3 py-0 text-[13px] font-mono font-medium text-gray-900">FM-2025-0832</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Los Angeles, CA <span class="text-gray-400">&rarr;</span> Phoenix, AZ</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Knight Logistics</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">James W.</td>
+              <td class="px-3 py-0 text-[12px] text-gray-600">&#10052;&#65039;</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Feb 7</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Feb 8</td>
+              <td class="px-3 py-0 text-[13px] text-gray-900 text-right font-medium">$1,890</td>
+              <td class="px-3 py-0 text-[13px] text-green-600 text-right font-medium">20%</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">SoCal Produce</td>
+              <td class="px-3 py-0 text-[13px] text-red-600 font-medium">2h ago <span class="text-orange-500">&#9888;</span></td>
+              <td class="px-3 py-0"><button class="action-btn">Track <i data-lucide="chevron-down" class="w-2.5 h-2.5"></i></button></td>
+            </tr>
+            <!-- FM-0819 - exception -->
+            <tr class="table-row exception" style="height:36px;">
+              <td class="px-3 py-0"><div class="custom-checkbox"></div></td>
+              <td class="px-2 py-0"><span class="status-dot bg-sky-500"></span></td>
+              <td class="px-3 py-0 text-[13px] font-mono font-medium text-gray-900">FM-2025-0819</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Atlanta, GA <span class="text-gray-400">&rarr;</span> Miami, FL</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">J.B. Hunt</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">David T.</td>
+              <td class="px-3 py-0 text-[12px] text-gray-600">&#11036;</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Feb 7</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Feb 9</td>
+              <td class="px-3 py-0 text-[13px] text-gray-900 text-right font-medium">$3,200</td>
+              <td class="px-3 py-0 text-[13px] text-green-600 text-right font-medium">20%</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Southern Steel</td>
+              <td class="px-3 py-0 text-[13px] text-gray-500">45m ago <span class="text-orange-500">&#9888;</span></td>
+              <td class="px-3 py-0"><button class="action-btn">Track <i data-lucide="chevron-down" class="w-2.5 h-2.5"></i></button></td>
+            </tr>
+            <!-- FM-0856 -->
+            <tr class="table-row" style="height:36px; background: white;">
+              <td class="px-3 py-0"><div class="custom-checkbox"></div></td>
+              <td class="px-2 py-0"><span class="status-dot bg-sky-500"></span></td>
+              <td class="px-3 py-0 text-[13px] font-mono font-medium text-gray-900">FM-2025-0856</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Detroit, MI <span class="text-gray-400">&rarr;</span> Columbus, OH</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Werner</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Tom B.</td>
+              <td class="px-3 py-0 text-[12px] text-gray-600">&#128230;</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Feb 8</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Feb 9</td>
+              <td class="px-3 py-0 text-[13px] text-gray-900 text-right font-medium">$1,100</td>
+              <td class="px-3 py-0 text-[13px] text-green-600 text-right font-medium">20%</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Motor City Auto</td>
+              <td class="px-3 py-0 text-[13px] text-gray-500">30m ago</td>
+              <td class="px-3 py-0"><button class="action-btn">Track <i data-lucide="chevron-down" class="w-2.5 h-2.5"></i></button></td>
+            </tr>
+            <!-- FM-0838 -->
+            <tr class="table-row" style="height:36px; background: #f9fafb;">
+              <td class="px-3 py-0"><div class="custom-checkbox"></div></td>
+              <td class="px-2 py-0"><span class="status-dot bg-sky-500"></span></td>
+              <td class="px-3 py-0 text-[13px] font-mono font-medium text-gray-900">FM-2025-0838</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Newark, NJ <span class="text-gray-400">&rarr;</span> Boston, MA</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Estes Express</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Sean M.</td>
+              <td class="px-3 py-0 text-[12px] text-gray-600">&#128230;</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Feb 8</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">Feb 9</td>
+              <td class="px-3 py-0 text-[13px] text-gray-900 text-right font-medium">$1,350</td>
+              <td class="px-3 py-0 text-[13px] text-green-600 text-right font-medium">20%</td>
+              <td class="px-3 py-0 text-[13px] text-gray-700">East Coast Retail</td>
+              <td class="px-3 py-0 text-[13px] text-gray-500">1h ago</td>
+              <td class="px-3 py-0"><button class="action-btn">Track <i data-lucide="chevron-down" class="w-2.5 h-2.5"></i></button></td>
+            </tr>
+
+            <!-- ========== GROUP: DELIVERED ========== -->
+            <tr class="group-header">
+              <td colspan="14" class="px-0 py-1">
+                <div class="mx-2 px-3 py-1.5 bg-lime-600 rounded-md flex items-center gap-2 text-white">
+                  <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+                  <span class="font-semibold text-xs uppercase tracking-wide">Delivered</span>
+                  <span class="text-xs font-normal opacity-80">(15)</span>
+                  <span class="ml-auto text-2xs opacity-70">Awaiting POD &amp; invoicing</span>
+                </div>
+              </td>
+            </tr>
+            <!-- FM-0820 -->
+            <tr class="table-row" style="height:36px; background: white;">
+              <td class="px-3 py-0"><div class="custom-checkbox"></div></td>
+              <td class="px-2 py-0"><span class="text-lime-600 text-xs font-bold">&#10003;</span></td>
+              <td class="px-3 py-0 text-[13px] font-mono font-medium text-gray-700">FM-2025-0820</td>
+              <td class="px-3 py-0 text-[13px] text-gray-600">Dallas, TX <span class="text-gray-400">&rarr;</span> Oklahoma City, OK</td>
+              <td class="px-3 py-0 text-[13px] text-gray-600">KLLM Transport</td>
+              <td class="px-3 py-0 text-[13px] text-gray-600">Billy R.</td>
+              <td class="px-3 py-0 text-[12px] text-gray-500">&#10052;&#65039;</td>
+              <td class="px-3 py-0 text-[13px] text-gray-600">Feb 7</td>
+              <td class="px-3 py-0 text-[13px] text-gray-600">Feb 8</td>
+              <td class="px-3 py-0 text-[13px] text-gray-800 text-right font-medium">$1,650</td>
+              <td class="px-3 py-0 text-[13px] text-green-600 text-right font-medium">20%</td>
+              <td class="px-3 py-0 text-[13px] text-gray-600">Prairie Foods</td>
+              <td class="px-3 py-0 text-[13px] text-gray-500">2h ago</td>
+              <td class="px-3 py-0"><button class="action-btn">Invoice <i data-lucide="chevron-down" class="w-2.5 h-2.5"></i></button></td>
+            </tr>
+            <!-- FM-0825 -->
+            <tr class="table-row" style="height:36px; background: #f9fafb;">
+              <td class="px-3 py-0"><div class="custom-checkbox"></div></td>
+              <td class="px-2 py-0"><span class="text-lime-600 text-xs font-bold">&#10003;</span></td>
+              <td class="px-3 py-0 text-[13px] font-mono font-medium text-gray-700">FM-2025-0825</td>
+              <td class="px-3 py-0 text-[13px] text-gray-600">San Francisco, CA <span class="text-gray-400">&rarr;</span> Sacramento, CA</td>
+              <td class="px-3 py-0 text-[13px] text-gray-600">FedEx Freight</td>
+              <td class="px-3 py-0 text-[13px] text-gray-600">Lisa C.</td>
+              <td class="px-3 py-0 text-[12px] text-gray-500">&#128230;</td>
+              <td class="px-3 py-0 text-[13px] text-gray-600">Feb 7</td>
+              <td class="px-3 py-0 text-[13px] text-gray-600">Feb 8</td>
+              <td class="px-3 py-0 text-[13px] text-gray-800 text-right font-medium">$580</td>
+              <td class="px-3 py-0 text-[13px] text-green-600 text-right font-medium">21%</td>
+              <td class="px-3 py-0 text-[13px] text-gray-600">Tech Valley</td>
+              <td class="px-3 py-0 text-[13px] text-gray-500">4h ago</td>
+              <td class="px-3 py-0"><button class="action-btn">Invoice <i data-lucide="chevron-down" class="w-2.5 h-2.5"></i></button></td>
+            </tr>
+            <!-- FM-0828 -->
+            <tr class="table-row" style="height:36px; background: white;">
+              <td class="px-3 py-0"><div class="custom-checkbox"></div></td>
+              <td class="px-2 py-0"><span class="text-lime-600 text-xs font-bold">&#10003;</span></td>
+              <td class="px-3 py-0 text-[13px] font-mono font-medium text-gray-700">FM-2025-0828</td>
+              <td class="px-3 py-0 text-[13px] text-gray-600">Pittsburgh, PA <span class="text-gray-400">&rarr;</span> Philadelphia, PA</td>
+              <td class="px-3 py-0 text-[13px] text-gray-600">ABF Freight</td>
+              <td class="px-3 py-0 text-[13px] text-gray-600">Mark S.</td>
+              <td class="px-3 py-0 text-[12px] text-gray-500">&#11036;</td>
+              <td class="px-3 py-0 text-[13px] text-gray-600">Feb 7</td>
+              <td class="px-3 py-0 text-[13px] text-gray-600">Feb 8</td>
+              <td class="px-3 py-0 text-[13px] text-gray-800 text-right font-medium">$1,100</td>
+              <td class="px-3 py-0 text-[13px] text-green-600 text-right font-medium">20%</td>
+              <td class="px-3 py-0 text-[13px] text-gray-600">Penn Steel</td>
+              <td class="px-3 py-0 text-[13px] text-red-600 font-medium">5h ago</td>
+              <td class="px-3 py-0"><button class="action-btn">Invoice <i data-lucide="chevron-down" class="w-2.5 h-2.5"></i></button></td>
+            </tr>
+
+            <!-- ========== GROUP: COMPLETED ========== -->
+            <tr class="group-header">
+              <td colspan="14" class="px-0 py-1">
+                <div class="mx-2 px-3 py-1.5 bg-emerald-500 rounded-md flex items-center gap-2 text-white">
+                  <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                  <span class="font-semibold text-xs uppercase tracking-wide">Completed</span>
+                  <span class="text-xs font-normal opacity-80">(28)</span>
+                  <span class="ml-auto text-2xs opacity-70">Invoiced &amp; closed</span>
+                </div>
+              </td>
+            </tr>
+            <!-- FM-0810 -->
+            <tr class="table-row" style="height:36px; background: white;">
+              <td class="px-3 py-0"><div class="custom-checkbox"></div></td>
+              <td class="px-2 py-0"><span class="text-emerald-500 text-xs font-bold">&#10003;&#10003;</span></td>
+              <td class="px-3 py-0 text-[13px] font-mono font-medium text-gray-500">FM-2025-0810</td>
+              <td class="px-3 py-0 text-[13px] text-gray-500">Nashville, TN <span class="text-gray-300">&rarr;</span> Birmingham, AL</td>
+              <td class="px-3 py-0 text-[13px] text-gray-500">Covenant Transport</td>
+              <td class="px-3 py-0 text-[13px] text-gray-500">Earl J.</td>
+              <td class="px-3 py-0 text-[12px] text-gray-400">&#128230;</td>
+              <td class="px-3 py-0 text-[13px] text-gray-500">Feb 6</td>
+              <td class="px-3 py-0 text-[13px] text-gray-500">Feb 7</td>
+              <td class="px-3 py-0 text-[13px] text-gray-600 text-right font-medium">$920</td>
+              <td class="px-3 py-0 text-[13px] text-green-600 text-right font-medium">20%</td>
+              <td class="px-3 py-0 text-[13px] text-gray-500">Southern Retail</td>
+              <td class="px-3 py-0 text-[13px] text-gray-400">1d ago</td>
+              <td class="px-3 py-0 text-[13px] text-gray-400">&mdash;</td>
+            </tr>
+            <!-- FM-0812 -->
+            <tr class="table-row" style="height:36px; background: #f9fafb;">
+              <td class="px-3 py-0"><div class="custom-checkbox"></div></td>
+              <td class="px-2 py-0"><span class="text-emerald-500 text-xs font-bold">&#10003;&#10003;</span></td>
+              <td class="px-3 py-0 text-[13px] font-mono font-medium text-gray-500">FM-2025-0812</td>
+              <td class="px-3 py-0 text-[13px] text-gray-500">Baltimore, MD <span class="text-gray-300">&rarr;</span> Washington, DC</td>
+              <td class="px-3 py-0 text-[13px] text-gray-500">YRC Freight</td>
+              <td class="px-3 py-0 text-[13px] text-gray-500">Keisha B.</td>
+              <td class="px-3 py-0 text-[12px] text-gray-400">&#128230;</td>
+              <td class="px-3 py-0 text-[13px] text-gray-500">Feb 6</td>
+              <td class="px-3 py-0 text-[13px] text-gray-500">Feb 6</td>
+              <td class="px-3 py-0 text-[13px] text-gray-600 text-right font-medium">$420</td>
+              <td class="px-3 py-0 text-[13px] text-green-600 text-right font-medium">19%</td>
+              <td class="px-3 py-0 text-[13px] text-gray-500">Capital Office</td>
+              <td class="px-3 py-0 text-[13px] text-gray-400">2d ago</td>
+              <td class="px-3 py-0 text-[13px] text-gray-400">&mdash;</td>
+            </tr>
+
+          </tbody>
+        </table>
+
+        <!-- ===== FOOTER ===== -->
+        <div class="sticky bottom-0 bg-white border-t border-gray-200 px-5 py-2 flex items-center justify-between text-xs">
+          <span class="text-gray-500">Showing <span class="font-semibold text-gray-700">20</span> of <span class="font-semibold text-gray-700">110</span> loads</span>
+          <div class="flex items-center gap-1">
+            <button class="page-btn" title="Previous">
+              <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+            </button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn">3</button>
+            <span class="text-gray-400 px-1">...</span>
+            <button class="page-btn">6</button>
+            <button class="page-btn" title="Next">
+              <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+          <span class="text-gray-400 flex items-center gap-1.5">
+            20 per page
+            <i data-lucide="chevron-down" class="w-3 h-3 cursor-pointer"></i>
+          </span>
+        </div>
+      </div>
+
+      <!-- ==================== RIGHT DETAIL PANEL ==================== -->
+      <aside class="detail-panel w-80 bg-white border-l border-gray-200 flex-shrink-0 overflow-y-auto">
+        <!-- Panel Header -->
+        <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
+          <div class="flex items-center gap-2">
+            <span class="text-red-500 text-sm">&#128293;</span>
+            <span class="font-mono font-semibold text-sm text-gray-900">FM-2025-0847</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button class="p-1 rounded hover:bg-gray-100" title="Open full view">
+              <i data-lucide="maximize-2" class="w-3.5 h-3.5 text-gray-400"></i>
+            </button>
+            <button class="p-1 rounded hover:bg-gray-100" title="Close panel">
+              <i data-lucide="x" class="w-3.5 h-3.5 text-gray-400"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Status Badge -->
+        <div class="px-4 py-3 border-b border-gray-100">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-sky-100 text-sky-700 rounded text-2xs font-semibold">
+              <span class="status-dot bg-sky-500" style="width:6px;height:6px;"></span>
+              In Transit
+            </span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-100 text-orange-700 rounded text-2xs font-semibold">
+              &#9888; Delayed
+            </span>
+          </div>
+          <div class="text-[13px] font-medium text-gray-900">Chicago, IL &rarr; Dallas, TX</div>
+          <div class="text-2xs text-gray-500 mt-0.5">917 mi &bull; Est. 14h drive time</div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="px-4 py-2.5 border-b border-gray-100 flex gap-2">
+          <button class="flex-1 px-2 py-1.5 bg-blue-600 text-white text-2xs font-semibold rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center gap-1">
+            <i data-lucide="phone" class="w-3 h-3"></i>
+            Call Driver
+          </button>
+          <button class="flex-1 px-2 py-1.5 border border-gray-200 text-gray-700 text-2xs font-semibold rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center gap-1">
+            <i data-lucide="message-square" class="w-3 h-3"></i>
+            Message
+          </button>
+          <button class="px-2 py-1.5 border border-gray-200 text-gray-700 rounded-md hover:bg-gray-50 transition-colors">
+            <i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+
+        <!-- Timeline -->
+        <div class="px-4 py-3 border-b border-gray-100">
+          <div class="text-2xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Timeline</div>
+          <div class="space-y-2.5">
+            <div class="flex items-start gap-2.5">
+              <div class="mt-0.5 w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                <i data-lucide="check" class="w-3 h-3 text-emerald-600"></i>
+              </div>
+              <div>
+                <div class="text-xs font-medium text-gray-900">Picked up</div>
+                <div class="text-2xs text-gray-500">Feb 7, 8:30 AM &bull; Chicago, IL</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-2.5">
+              <div class="mt-0.5 w-5 h-5 rounded-full bg-sky-100 flex items-center justify-center flex-shrink-0">
+                <i data-lucide="truck" class="w-3 h-3 text-sky-600"></i>
+              </div>
+              <div>
+                <div class="text-xs font-medium text-gray-900">In Transit</div>
+                <div class="text-2xs text-gray-500">Last check-in: Springfield, MO</div>
+                <div class="text-2xs text-orange-600 font-medium mt-0.5">&#9888; Weather delay reported</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-2.5">
+              <div class="mt-0.5 w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                <i data-lucide="map-pin" class="w-3 h-3 text-gray-400"></i>
+              </div>
+              <div>
+                <div class="text-xs font-medium text-gray-400">Delivery</div>
+                <div class="text-2xs text-gray-400">Est. Feb 9, 6:00 PM &bull; Dallas, TX</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Carrier & Driver -->
+        <div class="px-4 py-3 border-b border-gray-100">
+          <div class="text-2xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Carrier & Driver</div>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-gray-500">Carrier</span>
+              <span class="text-xs font-medium text-gray-900">Swift Transport</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-gray-500">MC #</span>
+              <span class="text-xs font-mono text-gray-700">MC-384729</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-gray-500">Contact</span>
+              <span class="text-xs text-blue-600">Dan Morrison</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-gray-500">Driver</span>
+              <span class="text-xs font-medium text-gray-900">Mike Rodriguez</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-gray-500">Phone</span>
+              <span class="text-xs text-blue-600">(312) 555-1234</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-gray-500">Truck</span>
+              <span class="text-xs font-mono text-gray-700">Unit #T-4821</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Financials -->
+        <div class="px-4 py-3 border-b border-gray-100">
+          <div class="text-2xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Financials</div>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-gray-500">Customer Rate</span>
+              <span class="text-xs font-semibold text-gray-900">$2,450.00</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-gray-500">Carrier Cost</span>
+              <span class="text-xs font-medium text-gray-700">$1,960.00</span>
+            </div>
+            <div class="flex items-center justify-between border-t border-gray-100 pt-2">
+              <span class="text-xs font-medium text-gray-700">Margin</span>
+              <span class="text-xs font-bold text-emerald-600">$490.00 (20%)</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-gray-500">RPM</span>
+              <span class="text-xs font-mono text-gray-700">$2.67</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Load Details -->
+        <div class="px-4 py-3 border-b border-gray-100">
+          <div class="text-2xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Load Details</div>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-gray-500">Commodity</span>
+              <span class="text-xs text-gray-900">Electronics</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-gray-500">Weight</span>
+              <span class="text-xs text-gray-900">42,000 lbs</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-gray-500">Equipment</span>
+              <span class="text-xs text-gray-900">Dry Van (53')</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-gray-500">PO #</span>
+              <span class="text-xs font-mono text-gray-700">PO-88412</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-gray-500">BOL #</span>
+              <span class="text-xs font-mono text-gray-700">BOL-29381</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-gray-500">Customer</span>
+              <span class="text-xs font-medium text-gray-900">Acme Mfg</span>
+            </div>
+            <div class="flex items-start justify-between">
+              <span class="text-xs text-gray-500">Notes</span>
+              <span class="text-xs text-gray-700 text-right max-w-[160px]">Liftgate required. Call 30 min before.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel Footer Actions -->
+        <div class="px-4 py-3 space-y-2">
+          <button class="w-full px-3 py-2 border border-gray-200 text-gray-700 text-xs font-medium rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5">
+            <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+            View Full Load Details
+          </button>
+          <button class="w-full px-3 py-2 border border-gray-200 text-gray-700 text-xs font-medium rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5">
+            <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+            Print BOL / Rate Con
+          </button>
+        </div>
+      </aside>
+
+    </div>
+
+    <!-- ===== BOTTOM STATUS BAR ===== -->
+    <div class="bg-gray-50 border-t border-gray-200 px-5 py-1.5 flex items-center justify-between text-2xs text-gray-500 flex-shrink-0">
+      <div class="flex items-center gap-3">
+        <span class="flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="font-medium text-emerald-700">Live</span>
+        </span>
+        <span>Last updated: 2 seconds ago</span>
+        <span class="text-gray-300">|</span>
+        <span>Auto-refresh: 30s</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <span>API: <span class="text-emerald-600 font-medium">Healthy</span></span>
+        <span class="text-gray-300">|</span>
+        <span class="flex items-center gap-1">
+          <i data-lucide="keyboard" class="w-3 h-3"></i>
+          <span class="font-mono text-gray-400">?</span> Shortcuts
+        </span>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Initialize Lucide Icons -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    lucide.createIcons();
+  });
+</script>
+
+</body>
+</html>

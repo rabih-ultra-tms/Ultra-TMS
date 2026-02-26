@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dispatch Board - Split Command Center | Ultra TMS</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  * { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+  body { overflow: hidden; }
+
+  /* Scrollbar styling */
+  .scroll-thin::-webkit-scrollbar { width: 5px; }
+  .scroll-thin::-webkit-scrollbar-track { background: transparent; }
+  .scroll-thin::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 9999px; }
+  .scroll-thin::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+  /* Kanban lane scrollbar */
+  .kanban-lane::-webkit-scrollbar { width: 4px; }
+  .kanban-lane::-webkit-scrollbar-track { background: transparent; }
+  .kanban-lane::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 9999px; }
+
+  /* Resize handle */
+  .resize-handle {
+    width: 4px;
+    cursor: col-resize;
+    background: #e5e7eb;
+    transition: background 0.15s;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .resize-handle:hover, .resize-handle.active {
+    background: #3b82f6;
+  }
+  .resize-handle::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 2px;
+    height: 24px;
+    border-left: 1px dotted #9ca3af;
+    border-right: 1px dotted #9ca3af;
+    gap: 2px;
+  }
+  .resize-handle:hover::after {
+    border-color: #3b82f6;
+  }
+
+  /* Kanban card hover */
+  .kanban-card {
+    transition: box-shadow 0.15s, border-color 0.15s;
+  }
+  .kanban-card:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border-color: #93c5fd;
+  }
+  .kanban-card.selected {
+    border-color: #2563eb;
+    background: #eff6ff;
+    box-shadow: 0 0 0 1px #2563eb;
+  }
+
+  /* Load list item */
+  .load-item {
+    transition: background 0.1s, border-color 0.1s;
+    border-left: 3px solid transparent;
+  }
+  .load-item:hover {
+    background: #f9fafb;
+  }
+  .load-item.selected {
+    background: #eff6ff;
+    border-left-color: #2563eb;
+  }
+
+  /* Sidebar tooltip */
+  .sidebar-item {
+    position: relative;
+  }
+  .sidebar-item .tooltip {
+    display: none;
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 8px;
+    padding: 4px 10px;
+    background: #1f2937;
+    color: white;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 6px;
+    white-space: nowrap;
+    z-index: 50;
+    pointer-events: none;
+  }
+  .sidebar-item:hover .tooltip {
+    display: block;
+  }
+
+  /* KPI badge */
+  .kpi-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  /* Animate detail panel content */
+  .detail-section {
+    animation: fadeSlideIn 0.15s ease-out;
+  }
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Action button */
+  .action-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid #e5e7eb;
+    background: white;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .action-btn:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+  }
+  .action-btn.primary {
+    background: #2563eb;
+    color: white;
+    border-color: #2563eb;
+  }
+  .action-btn.primary:hover {
+    background: #1d4ed8;
+  }
+</style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+
+<!-- APP SHELL -->
+<div class="flex h-screen w-screen overflow-hidden">
+
+  <!-- SIDEBAR (56px, icon-only) -->
+  <aside class="w-14 bg-white border-r border-gray-200 flex flex-col items-center py-3 flex-shrink-0 z-20">
+    <!-- Logo -->
+    <div class="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center mb-6 cursor-pointer">
+      <span class="text-white font-bold text-sm">U</span>
+    </div>
+
+    <!-- Nav Items -->
+    <nav class="flex flex-col items-center gap-1 flex-1">
+      <div class="sidebar-item">
+        <button class="w-10 h-10 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+          <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+        </button>
+        <span class="tooltip">Dashboard</span>
+      </div>
+      <div class="sidebar-item">
+        <button class="w-10 h-10 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+          <i data-lucide="file-text" class="w-5 h-5"></i>
+        </button>
+        <span class="tooltip">Orders</span>
+      </div>
+      <div class="sidebar-item">
+        <button class="w-10 h-10 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+          <i data-lucide="package" class="w-5 h-5"></i>
+        </button>
+        <span class="tooltip">Loads</span>
+      </div>
+      <div class="sidebar-item">
+        <button class="w-10 h-10 rounded-lg flex items-center justify-center bg-blue-50 text-blue-600 transition-colors">
+          <i data-lucide="send" class="w-5 h-5"></i>
+        </button>
+        <span class="tooltip">Dispatch</span>
+      </div>
+      <div class="sidebar-item">
+        <button class="w-10 h-10 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+          <i data-lucide="map-pin" class="w-5 h-5"></i>
+        </button>
+        <span class="tooltip">Tracking</span>
+      </div>
+      <div class="sidebar-item">
+        <button class="w-10 h-10 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+          <i data-lucide="truck" class="w-5 h-5"></i>
+        </button>
+        <span class="tooltip">Carriers</span>
+      </div>
+      <div class="sidebar-item">
+        <button class="w-10 h-10 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+          <i data-lucide="users" class="w-5 h-5"></i>
+        </button>
+        <span class="tooltip">Customers</span>
+      </div>
+    </nav>
+
+    <!-- Bottom -->
+    <div class="flex flex-col items-center gap-1">
+      <div class="sidebar-item">
+        <button class="w-10 h-10 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+          <i data-lucide="settings" class="w-5 h-5"></i>
+        </button>
+        <span class="tooltip">Settings</span>
+      </div>
+      <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mt-2 cursor-pointer">
+        <span class="text-blue-700 text-xs font-semibold">JD</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT AREA -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+
+    <!-- TOP BAR (48px) -->
+    <header class="h-12 bg-white border-b border-gray-200 flex items-center px-4 flex-shrink-0 gap-4 z-10">
+      <!-- Left: Title + View Toggles -->
+      <div class="flex items-center gap-3 flex-shrink-0">
+        <h1 class="text-sm font-semibold text-gray-900">Dispatch Board</h1>
+        <div class="flex items-center bg-gray-100 rounded-lg p-0.5">
+          <button class="px-2.5 py-1 text-xs font-medium rounded-md bg-white shadow-sm text-gray-900">Split</button>
+          <button class="px-2.5 py-1 text-xs font-medium rounded-md text-gray-500 hover:text-gray-700">Kanban</button>
+          <button class="px-2.5 py-1 text-xs font-medium rounded-md text-gray-500 hover:text-gray-700">Table</button>
+          <button class="px-2.5 py-1 text-xs font-medium rounded-md text-gray-500 hover:text-gray-700">Map</button>
+        </div>
+      </div>
+
+      <!-- Center: KPI Badges -->
+      <div class="flex items-center gap-1.5 flex-1 justify-center">
+        <span class="kpi-badge bg-amber-50 text-amber-700 border border-amber-200">UN <span class="text-amber-900">12</span></span>
+        <span class="kpi-badge bg-blue-50 text-blue-700 border border-blue-200">TN <span class="text-blue-900">8</span></span>
+        <span class="kpi-badge bg-violet-50 text-violet-700 border border-violet-200">DS <span class="text-violet-900">23</span></span>
+        <span class="kpi-badge bg-sky-50 text-sky-700 border border-sky-200">IT <span class="text-sky-900">45</span></span>
+        <span class="kpi-badge bg-emerald-50 text-emerald-700 border border-emerald-200">DL <span class="text-emerald-900">15</span></span>
+        <span class="kpi-badge bg-gray-100 text-gray-600 border border-gray-200">TOT <span class="text-gray-900">110</span></span>
+        <span class="kpi-badge bg-red-50 text-red-700 border border-red-200">RISK <span class="text-red-900">3</span></span>
+      </div>
+
+      <!-- Right: Search, Filter, Add -->
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <div class="relative">
+          <i data-lucide="search" class="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400"></i>
+          <input type="text" placeholder="Search loads..." class="pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg w-44 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50">
+        </div>
+        <button class="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">
+          <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
+          Filters
+          <i data-lucide="chevron-down" class="w-3 h-3"></i>
+        </button>
+        <button class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+          New Load
+        </button>
+      </div>
+    </header>
+
+    <!-- THREE-PANEL BODY -->
+    <div class="flex flex-1 overflow-hidden" id="panelContainer">
+
+      <!-- LEFT PANEL: ALL LOADS LIST (280px) -->
+      <div class="flex flex-col bg-white border-r border-gray-200 overflow-hidden" id="leftPanel" style="width: 280px; min-width: 220px; flex-shrink: 0;">
+        <!-- Panel Header (sticky) -->
+        <div class="px-3 py-2.5 border-b border-gray-100 flex-shrink-0">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <h2 class="text-xs font-semibold text-gray-900 uppercase tracking-wide">All Loads</h2>
+              <span class="text-xs font-medium text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">110</span>
+            </div>
+            <button class="text-gray-400 hover:text-gray-600">
+              <i data-lucide="list-filter" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+          <div class="relative">
+            <i data-lucide="search" class="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            <input type="text" placeholder="Filter loads..." class="w-full pl-7 pr-3 py-1.5 text-xs border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-gray-50" id="listSearch">
+          </div>
+        </div>
+
+        <!-- Scrollable Load List -->
+        <div class="flex-1 overflow-y-auto scroll-thin" id="loadList">
+
+          <!-- UNASSIGNED Section -->
+          <div class="sticky top-0 z-[5] bg-white border-b border-gray-100">
+            <div class="flex items-center gap-2 px-3 py-1.5">
+              <div class="w-1.5 h-3.5 rounded-sm bg-amber-500"></div>
+              <span class="text-[11px] font-semibold text-amber-700 uppercase tracking-wider">Unassigned</span>
+              <span class="text-[10px] font-medium text-amber-500 bg-amber-50 px-1.5 py-0.5 rounded-full">12</span>
+            </div>
+          </div>
+          <div class="load-item flex items-center px-3 py-2 cursor-pointer border-b border-gray-50" data-load="FM-0861" onclick="selectLoad(this, 'FM-0861')">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-semibold text-gray-900">FM-0861</span>
+                <span class="text-[10px] text-blue-500">&#10052;</span>
+              </div>
+              <div class="text-[11px] text-gray-500 mt-0.5">DEN &rarr; SLC</div>
+            </div>
+            <span class="text-[10px] text-amber-600 font-medium bg-amber-50 px-1.5 py-0.5 rounded">REEFER</span>
+          </div>
+          <div class="load-item flex items-center px-3 py-2 cursor-pointer border-b border-gray-50" data-load="FM-0863" onclick="selectLoad(this, 'FM-0863')">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-semibold text-gray-900">FM-0863</span>
+                <span class="text-[10px] text-red-500">&#128293;</span>
+              </div>
+              <div class="text-[11px] text-gray-500 mt-0.5">MEM &rarr; NSH</div>
+            </div>
+            <span class="text-[10px] text-red-600 font-medium bg-red-50 px-1.5 py-0.5 rounded">HOT</span>
+          </div>
+          <div class="load-item flex items-center px-3 py-2 cursor-pointer border-b border-gray-50" data-load="FM-0865" onclick="selectLoad(this, 'FM-0865')">
+            <div class="flex-1 min-w-0">
+              <span class="text-xs font-semibold text-gray-900">FM-0865</span>
+              <div class="text-[11px] text-gray-500 mt-0.5">HOU &rarr; SAN</div>
+            </div>
+          </div>
+          <div class="load-item flex items-center px-3 py-2 cursor-pointer border-b border-gray-50" data-load="FM-0867" onclick="selectLoad(this, 'FM-0867')">
+            <div class="flex-1 min-w-0">
+              <span class="text-xs font-semibold text-gray-900">FM-0867</span>
+              <div class="text-[11px] text-gray-500 mt-0.5">PDX &rarr; SEA</div>
+            </div>
+          </div>
+          <div class="load-item flex items-center px-3 py-2 cursor-pointer border-b border-gray-50" data-load="FM-0869" onclick="selectLoad(this, 'FM-0869')">
+            <div class="flex-1 min-w-0">
+              <span class="text-xs font-semibold text-gray-900">FM-0869</span>
+              <div class="text-[11px] text-gray-500 mt-0.5">BOS &rarr; NYC</div>
+            </div>
+          </div>
+          <div class="load-item flex items-center px-3 py-2 cursor-pointer border-b border-gray-50" data-load="FM-0871" onclick="selectLoad(this, 'FM-0871')">
+            <div class="flex-1 min-w-0">
+              <span class="text-xs font-semibold text-gray-900">FM-0871</span>
+              <div class="text-[11px] text-gray-500 mt-0.5">ATL &rarr; JAX</div>
+            </div>
+          </div>
+          <div class="load-item flex items-center px-3 py-2 cursor-pointer border-b border-gray-50" data-load="FM-0873" onclick="selectLoad(this, 'FM-0873')">
+            <div class="flex-1 min-w-0">
+              <span class="text-xs font-semibold text-gray-900">FM-0873</span>
+              <div class="text-[11px] text-gray-500 mt-0.5">PHL &rarr; PIT</div>
+            </div>
+          </div>
+
+          <!-- TENDERED Section -->
+          <div class="sticky top-0 z-[5] bg-white border-b border-gray-100">
+            <div class="flex items-center gap-2 px-3 py-1.5">
+              <div class="w-1.5 h-3.5 rounded-sm bg-blue-500"></div>
+              <span class="text-[11px] font-semibold text-blue-700 uppercase tracking-wider">Tendered</span>
+              <span class="text-[10px] font-medium text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded-full">8</span>
+            </div>
+          </div>
+          <div class="load-item flex items-center px-3 py-2 cursor-pointer border-b border-gray-50" data-load="FM-0855" onclick="selectLoad(this, 'FM-0855')">
+            <div class="flex-1 min-w-0">
+              <span class="text-xs font-semibold text-gray-900">FM-0855</span>
+              <div class="text-[11px] text-gray-500 mt-0.5">KCI &rarr; STL &middot; <span class="text-gray-600">Heartland</span></div>
+            </div>
+          </div>
+          <div class="load-item flex items-center px-3 py-2 cursor-pointer border-b border-gray-50" data-load="FM-0858" onclick="selectLoad(this, 'FM-0858')">
+            <div class="flex-1 min-w-0">
+              <span class="text-xs font-semibold text-gray-900">FM-0858</span>
+              <div class="text-[11px] text-gray-500 mt-0.5">IND &rarr; LOU &middot; <span class="text-gray-600">XPO</span></div>
+            </div>
+          </div>
+          <div class="load-item flex items-center px-3 py-2 cursor-pointer border-b border-gray-50" data-load="FM-0860" onclick="selectLoad(this, 'FM-0860')">
+            <div class="flex-1 min-w-0">
+              <span class="text-xs font-semibold text-gray-900">FM-0860</span>
+              <div class="text-[11px] text-gray-500 mt-0.5">CLT &rarr; RDU &middot; <span class="text-gray-600">Old Dominion</span></div>
+            </div>
+          </div>
+          <div class="load-item flex items-center px-3 py-2 cursor-pointer border-b border-gray-50" data-load="FM-0856" onclick="selectLoad(this, 'FM-0856')">
+            <div class="flex-1 min-w-0">
+              <span class="text-xs font-semibold text-gray-900">FM-0856</span>
+              <div class="text-[11px] text-gray-500 mt-0.5">MSP &rarr; OMH &middot; <span class="text-gray-600">Werner</span></div>
+            </div>
+          </div>
+
+          <!-- DISPATCHED Section -->
+          <div class="sticky top-0 z-[5] bg-white border-b border-gray-100">
+            <div class="flex items-center gap-2 px-3 py-1.5">
+              <div class="w-1.5 h-3.5 rounded-sm bg-violet-500"></div>
+              <span class="text-[11px] font-semibold text-violet-700 uppercase tracking-wider">Dispatched</span>
+              <span class="text-[10px] font-medium text-violet-500 bg-violet-50 px-1.5 py-0.5 rounded-full">23</span>
+            </div>
+          </div>
+          <div class="load-item flex items-center px-3 py-2 cursor-pointer border-b border-gray-50" data-load="FM-0840" onclick="selectLoad(this, 'FM-0840')">
+            <div class="flex-1 min-w-0">
+              <span class="text-xs font-semibold text-gray-900">FM-0840</span>
+              <div class="text-[11px] text-gray-500 mt-0.5">SLC &rarr; BOI &middot; <span class="text-gray-600">J.B. Hunt</span></div>
+            </div>
+          </div>
+          <div class="load-item flex items-center px-3 py-2 cursor-pointer border-b border-gray-50" data-load="FM-0842" onclick="selectLoad(this, 'FM-0842')">
+            <div class="flex-1 min-w-0">
+              <span class="text-xs font-semibold text-gray-900">FM-0842</span>
+              <div class="text-[11px] text-gray-500 mt-0.5">OKC &rarr; TUL &middot; <span class="text-gray-600">Schneider</span></div>
+            </div>
+          </div>
+          <div class="load-item flex items-center px-3 py-2 cursor-pointer border-b border-gray-50" data-load="FM-0844" onclick="selectLoad(this, 'FM-0844')">
+            <div class="flex-1 min-w-0">
+              <span class="text-xs font-semibold text-gray-900">FM-0844</span>
+              <div class="text-[11px] text-gray-500 mt-0.5">MIA &rarr; TPA &middot; <span class="text-gray-600">Heartland</span></div>
+            </div>
+          </div>
+
+          <!-- IN TRANSIT Section -->
+          <div class="sticky top-0 z-[5] bg-white border-b border-gray-100">
+            <div class="flex items-center gap-2 px-3 py-1.5">
+              <div class="w-1.5 h-3.5 rounded-sm bg-sky-500"></div>
+              <span class="text-[11px] font-semibold text-sky-700 uppercase tracking-wider">In Transit</span>
+              <span class="text-[10px] font-medium text-sky-500 bg-sky-50 px-1.5 py-0.5 rounded-full">45</span>
+            </div>
+          </div>
+          <div class="load-item selected flex items-center px-3 py-2 cursor-pointer border-b border-gray-50" data-load="FM-0847" onclick="selectLoad(this, 'FM-0847')">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-semibold text-gray-900">FM-0847</span>
+                <span class="text-[10px] text-amber-500">&#9888;</span>
+              </div>
+              <div class="text-[11px] text-gray-500 mt-0.5">CHI &rarr; DAL &middot; <span class="text-gray-600">Swift</span></div>
+            </div>
+            <span class="text-[10px] text-amber-600 font-medium bg-amber-50 px-1.5 py-0.5 rounded">STALE</span>
+          </div>
+          <div class="load-item flex items-center px-3 py-2 cursor-pointer border-b border-gray-50" data-load="FM-0832" onclick="selectLoad(this, 'FM-0832')">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-semibold text-gray-900">FM-0832</span>
+                <span class="text-[10px] text-amber-500">&#9888;</span>
+              </div>
+              <div class="text-[11px] text-gray-500 mt-0.5">LAX &rarr; PHX &middot; <span class="text-gray-600">Knight</span></div>
+            </div>
+            <span class="text-[10px] text-amber-600 font-medium bg-amber-50 px-1.5 py-0.5 rounded">LATE</span>
+          </div>
+          <div class="load-item flex items-center px-3 py-2 cursor-pointer border-b border-gray-50" data-load="FM-0835" onclick="selectLoad(this, 'FM-0835')">
+            <div class="flex-1 min-w-0">
+              <span class="text-xs font-semibold text-gray-900">FM-0835</span>
+              <div class="text-[11px] text-gray-500 mt-0.5">SEA &rarr; PDX &middot; <span class="text-gray-600">Werner</span></div>
+            </div>
+          </div>
+          <div class="load-item flex items-center px-3 py-2 cursor-pointer border-b border-gray-50" data-load="FM-0838" onclick="selectLoad(this, 'FM-0838')">
+            <div class="flex-1 min-w-0">
+              <span class="text-xs font-semibold text-gray-900">FM-0838</span>
+              <div class="text-[11px] text-gray-500 mt-0.5">DFW &rarr; HOU &middot; <span class="text-gray-600">Landstar</span></div>
+            </div>
+          </div>
+          <div class="load-item flex items-center px-3 py-2 cursor-pointer border-b border-gray-50" data-load="FM-0841" onclick="selectLoad(this, 'FM-0841')">
+            <div class="flex-1 min-w-0">
+              <span class="text-xs font-semibold text-gray-900">FM-0841</span>
+              <div class="text-[11px] text-gray-500 mt-0.5">PHX &rarr; ABQ &middot; <span class="text-gray-600">CRST</span></div>
+            </div>
+          </div>
+          <div class="load-item flex items-center px-3 py-2 cursor-pointer border-b border-gray-50" data-load="FM-0843" onclick="selectLoad(this, 'FM-0843')">
+            <div class="flex-1 min-w-0">
+              <span class="text-xs font-semibold text-gray-900">FM-0843</span>
+              <div class="text-[11px] text-gray-500 mt-0.5">BNA &rarr; ATL &middot; <span class="text-gray-600">XPO</span></div>
+            </div>
+          </div>
+
+          <!-- DELIVERED Section -->
+          <div class="sticky top-0 z-[5] bg-white border-b border-gray-100">
+            <div class="flex items-center gap-2 px-3 py-1.5">
+              <div class="w-1.5 h-3.5 rounded-sm bg-emerald-500"></div>
+              <span class="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider">Delivered</span>
+              <span class="text-[10px] font-medium text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded-full">15</span>
+            </div>
+          </div>
+          <div class="load-item flex items-center px-3 py-2 cursor-pointer border-b border-gray-50" data-load="FM-0820" onclick="selectLoad(this, 'FM-0820')">
+            <div class="flex-1 min-w-0">
+              <span class="text-xs font-semibold text-gray-900">FM-0820</span>
+              <div class="text-[11px] text-gray-500 mt-0.5">NYC &rarr; BOS &middot; <span class="text-gray-600">Schneider</span></div>
+            </div>
+            <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-500 flex-shrink-0"></i>
+          </div>
+          <div class="load-item flex items-center px-3 py-2 cursor-pointer border-b border-gray-50" data-load="FM-0822" onclick="selectLoad(this, 'FM-0822')">
+            <div class="flex-1 min-w-0">
+              <span class="text-xs font-semibold text-gray-900">FM-0822</span>
+              <div class="text-[11px] text-gray-500 mt-0.5">DEN &rarr; OKC &middot; <span class="text-gray-600">J.B. Hunt</span></div>
+            </div>
+            <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-500 flex-shrink-0"></i>
+          </div>
+          <div class="load-item flex items-center px-3 py-2 cursor-pointer border-b border-gray-50" data-load="FM-0825" onclick="selectLoad(this, 'FM-0825')">
+            <div class="flex-1 min-w-0">
+              <span class="text-xs font-semibold text-gray-900">FM-0825</span>
+              <div class="text-[11px] text-gray-500 mt-0.5">STL &rarr; IND &middot; <span class="text-gray-600">Old Dominion</span></div>
+            </div>
+            <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-500 flex-shrink-0"></i>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- RESIZE HANDLE 1 -->
+      <div class="resize-handle" id="resizeLeft" title="Drag to resize"></div>
+
+      <!-- CENTER PANEL: KANBAN BOARD -->
+      <div class="flex-1 flex flex-col overflow-hidden bg-gray-50" id="centerPanel">
+        <!-- Kanban Header -->
+        <div class="px-3 py-2 border-b border-gray-200 bg-white flex items-center justify-between flex-shrink-0">
+          <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Kanban View</span>
+          <div class="flex items-center gap-2">
+            <button class="text-gray-400 hover:text-gray-600"><i data-lucide="minimize-2" class="w-3.5 h-3.5"></i></button>
+            <button class="text-gray-400 hover:text-gray-600"><i data-lucide="maximize-2" class="w-3.5 h-3.5"></i></button>
+          </div>
+        </div>
+        <!-- Kanban Lanes -->
+        <div class="flex-1 overflow-x-auto overflow-y-hidden p-3 flex gap-3" id="kanbanBoard">
+
+          <!-- LANE: Unassigned -->
+          <div class="flex flex-col min-w-[200px] w-[200px] flex-shrink-0">
+            <div class="flex items-center gap-2 mb-2 px-1">
+              <div class="w-2.5 h-2.5 rounded-full bg-amber-500"></div>
+              <span class="text-xs font-semibold text-gray-700">Unassigned</span>
+              <span class="text-[10px] bg-amber-100 text-amber-700 font-semibold px-1.5 py-0.5 rounded-full">12</span>
+            </div>
+            <div class="flex-1 overflow-y-auto kanban-lane space-y-2 pr-1">
+              <div class="kanban-card bg-white border border-gray-200 rounded-lg p-2.5 cursor-pointer" data-load="FM-0861" onclick="selectLoadFromKanban(this, 'FM-0861')">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-[11px] font-semibold text-gray-900">FM-0861</span>
+                  <span class="text-[10px] text-blue-500">&#10052;</span>
+                </div>
+                <div class="text-[11px] text-gray-500">DEN &rarr; SLC</div>
+                <div class="text-[10px] text-amber-600 mt-1 font-medium">UNASSIGNED</div>
+              </div>
+              <div class="kanban-card bg-white border border-gray-200 rounded-lg p-2.5 cursor-pointer" data-load="FM-0863" onclick="selectLoadFromKanban(this, 'FM-0863')">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-[11px] font-semibold text-gray-900">FM-0863</span>
+                  <span class="text-[10px] text-red-500">&#128293;</span>
+                </div>
+                <div class="text-[11px] text-gray-500">MEM &rarr; NSH</div>
+                <div class="text-[10px] text-red-600 mt-1 font-medium">HOT LOAD</div>
+              </div>
+              <div class="kanban-card bg-white border border-gray-200 rounded-lg p-2.5 cursor-pointer" data-load="FM-0865" onclick="selectLoadFromKanban(this, 'FM-0865')">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-[11px] font-semibold text-gray-900">FM-0865</span>
+                </div>
+                <div class="text-[11px] text-gray-500">HOU &rarr; SAN</div>
+                <div class="text-[10px] text-amber-600 mt-1 font-medium">UNASSIGNED</div>
+              </div>
+              <div class="kanban-card bg-white border border-gray-200 rounded-lg p-2.5 cursor-pointer" data-load="FM-0867" onclick="selectLoadFromKanban(this, 'FM-0867')">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-[11px] font-semibold text-gray-900">FM-0867</span>
+                </div>
+                <div class="text-[11px] text-gray-500">PDX &rarr; SEA</div>
+                <div class="text-[10px] text-amber-600 mt-1 font-medium">UNASSIGNED</div>
+              </div>
+              <div class="kanban-card bg-white border border-gray-200 rounded-lg p-2.5 cursor-pointer" data-load="FM-0869" onclick="selectLoadFromKanban(this, 'FM-0869')">
+                <div class="text-[11px] font-semibold text-gray-900 mb-1">FM-0869</div>
+                <div class="text-[11px] text-gray-500">BOS &rarr; NYC</div>
+                <div class="text-[10px] text-amber-600 mt-1 font-medium">UNASSIGNED</div>
+              </div>
+              <div class="kanban-card bg-white border border-gray-200 rounded-lg p-2.5 cursor-pointer" data-load="FM-0871" onclick="selectLoadFromKanban(this, 'FM-0871')">
+                <div class="text-[11px] font-semibold text-gray-900 mb-1">FM-0871</div>
+                <div class="text-[11px] text-gray-500">ATL &rarr; JAX</div>
+                <div class="text-[10px] text-amber-600 mt-1 font-medium">UNASSIGNED</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- LANE: Tendered -->
+          <div class="flex flex-col min-w-[200px] w-[200px] flex-shrink-0">
+            <div class="flex items-center gap-2 mb-2 px-1">
+              <div class="w-2.5 h-2.5 rounded-full bg-blue-500"></div>
+              <span class="text-xs font-semibold text-gray-700">Tendered</span>
+              <span class="text-[10px] bg-blue-100 text-blue-700 font-semibold px-1.5 py-0.5 rounded-full">8</span>
+            </div>
+            <div class="flex-1 overflow-y-auto kanban-lane space-y-2 pr-1">
+              <div class="kanban-card bg-white border border-gray-200 rounded-lg p-2.5 cursor-pointer" data-load="FM-0855" onclick="selectLoadFromKanban(this, 'FM-0855')">
+                <div class="text-[11px] font-semibold text-gray-900 mb-1">FM-0855</div>
+                <div class="text-[11px] text-gray-500">KCI &rarr; STL</div>
+                <div class="text-[10px] text-blue-600 mt-1 font-medium">Heartland Express</div>
+              </div>
+              <div class="kanban-card bg-white border border-gray-200 rounded-lg p-2.5 cursor-pointer" data-load="FM-0858" onclick="selectLoadFromKanban(this, 'FM-0858')">
+                <div class="text-[11px] font-semibold text-gray-900 mb-1">FM-0858</div>
+                <div class="text-[11px] text-gray-500">IND &rarr; LOU</div>
+                <div class="text-[10px] text-blue-600 mt-1 font-medium">XPO Logistics</div>
+              </div>
+              <div class="kanban-card bg-white border border-gray-200 rounded-lg p-2.5 cursor-pointer" data-load="FM-0860" onclick="selectLoadFromKanban(this, 'FM-0860')">
+                <div class="text-[11px] font-semibold text-gray-900 mb-1">FM-0860</div>
+                <div class="text-[11px] text-gray-500">CLT &rarr; RDU</div>
+                <div class="text-[10px] text-blue-600 mt-1 font-medium">Old Dominion</div>
+              </div>
+              <div class="kanban-card bg-white border border-gray-200 rounded-lg p-2.5 cursor-pointer" data-load="FM-0856" onclick="selectLoadFromKanban(this, 'FM-0856')">
+                <div class="text-[11px] font-semibold text-gray-900 mb-1">FM-0856</div>
+                <div class="text-[11px] text-gray-500">MSP &rarr; OMH</div>
+                <div class="text-[10px] text-blue-600 mt-1 font-medium">Werner Enterprises</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- LANE: Dispatched -->
+          <div class="flex flex-col min-w-[200px] w-[200px] flex-shrink-0">
+            <div class="flex items-center gap-2 mb-2 px-1">
+              <div class="w-2.5 h-2.5 rounded-full bg-violet-500"></div>
+              <span class="text-xs font-semibold text-gray-700">Dispatched</span>
+              <span class="text-[10px] bg-violet-100 text-violet-700 font-semibold px-1.5 py-0.5 rounded-full">23</span>
+            </div>
+            <div class="flex-1 overflow-y-auto kanban-lane space-y-2 pr-1">
+              <div class="kanban-card bg-white border border-gray-200 rounded-lg p-2.5 cursor-pointer" data-load="FM-0840" onclick="selectLoadFromKanban(this, 'FM-0840')">
+                <div class="text-[11px] font-semibold text-gray-900 mb-1">FM-0840</div>
+                <div class="text-[11px] text-gray-500">SLC &rarr; BOI</div>
+                <div class="text-[10px] text-violet-600 mt-1 font-medium">J.B. Hunt</div>
+              </div>
+              <div class="kanban-card bg-white border border-gray-200 rounded-lg p-2.5 cursor-pointer" data-load="FM-0842" onclick="selectLoadFromKanban(this, 'FM-0842')">
+                <div class="text-[11px] font-semibold text-gray-900 mb-1">FM-0842</div>
+                <div class="text-[11px] text-gray-500">OKC &rarr; TUL</div>
+                <div class="text-[10px] text-violet-600 mt-1 font-medium">Schneider National</div>
+              </div>
+              <div class="kanban-card bg-white border border-gray-200 rounded-lg p-2.5 cursor-pointer" data-load="FM-0844" onclick="selectLoadFromKanban(this, 'FM-0844')">
+                <div class="text-[11px] font-semibold text-gray-900 mb-1">FM-0844</div>
+                <div class="text-[11px] text-gray-500">MIA &rarr; TPA</div>
+                <div class="text-[10px] text-violet-600 mt-1 font-medium">Heartland Express</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- LANE: In Transit -->
+          <div class="flex flex-col min-w-[200px] w-[200px] flex-shrink-0">
+            <div class="flex items-center gap-2 mb-2 px-1">
+              <div class="w-2.5 h-2.5 rounded-full bg-sky-500"></div>
+              <span class="text-xs font-semibold text-gray-700">In Transit</span>
+              <span class="text-[10px] bg-sky-100 text-sky-700 font-semibold px-1.5 py-0.5 rounded-full">45</span>
+            </div>
+            <div class="flex-1 overflow-y-auto kanban-lane space-y-2 pr-1">
+              <div class="kanban-card selected bg-white border border-gray-200 rounded-lg p-2.5 cursor-pointer" data-load="FM-0847" onclick="selectLoadFromKanban(this, 'FM-0847')">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-[11px] font-semibold text-gray-900">FM-0847</span>
+                  <span class="text-[10px] text-amber-500">&#9888;</span>
+                </div>
+                <div class="text-[11px] text-gray-500">CHI &rarr; DAL</div>
+                <div class="text-[10px] text-sky-600 mt-1 font-medium">Swift Transport</div>
+              </div>
+              <div class="kanban-card bg-white border border-gray-200 rounded-lg p-2.5 cursor-pointer" data-load="FM-0832" onclick="selectLoadFromKanban(this, 'FM-0832')">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-[11px] font-semibold text-gray-900">FM-0832</span>
+                  <span class="text-[10px] text-amber-500">&#9888;</span>
+                </div>
+                <div class="text-[11px] text-gray-500">LAX &rarr; PHX</div>
+                <div class="text-[10px] text-sky-600 mt-1 font-medium">Knight-Swift</div>
+              </div>
+              <div class="kanban-card bg-white border border-gray-200 rounded-lg p-2.5 cursor-pointer" data-load="FM-0835" onclick="selectLoadFromKanban(this, 'FM-0835')">
+                <div class="text-[11px] font-semibold text-gray-900 mb-1">FM-0835</div>
+                <div class="text-[11px] text-gray-500">SEA &rarr; PDX</div>
+                <div class="text-[10px] text-sky-600 mt-1 font-medium">Werner Enterprises</div>
+              </div>
+              <div class="kanban-card bg-white border border-gray-200 rounded-lg p-2.5 cursor-pointer" data-load="FM-0838" onclick="selectLoadFromKanban(this, 'FM-0838')">
+                <div class="text-[11px] font-semibold text-gray-900 mb-1">FM-0838</div>
+                <div class="text-[11px] text-gray-500">DFW &rarr; HOU</div>
+                <div class="text-[10px] text-sky-600 mt-1 font-medium">Landstar System</div>
+              </div>
+              <div class="kanban-card bg-white border border-gray-200 rounded-lg p-2.5 cursor-pointer" data-load="FM-0841" onclick="selectLoadFromKanban(this, 'FM-0841')">
+                <div class="text-[11px] font-semibold text-gray-900 mb-1">FM-0841</div>
+                <div class="text-[11px] text-gray-500">PHX &rarr; ABQ</div>
+                <div class="text-[10px] text-sky-600 mt-1 font-medium">CRST International</div>
+              </div>
+              <div class="kanban-card bg-white border border-gray-200 rounded-lg p-2.5 cursor-pointer" data-load="FM-0843" onclick="selectLoadFromKanban(this, 'FM-0843')">
+                <div class="text-[11px] font-semibold text-gray-900 mb-1">FM-0843</div>
+                <div class="text-[11px] text-gray-500">BNA &rarr; ATL</div>
+                <div class="text-[10px] text-sky-600 mt-1 font-medium">XPO Logistics</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- LANE: Delivered -->
+          <div class="flex flex-col min-w-[200px] w-[200px] flex-shrink-0">
+            <div class="flex items-center gap-2 mb-2 px-1">
+              <div class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+              <span class="text-xs font-semibold text-gray-700">Delivered</span>
+              <span class="text-[10px] bg-emerald-100 text-emerald-700 font-semibold px-1.5 py-0.5 rounded-full">15</span>
+            </div>
+            <div class="flex-1 overflow-y-auto kanban-lane space-y-2 pr-1">
+              <div class="kanban-card bg-white border border-gray-200 rounded-lg p-2.5 cursor-pointer" data-load="FM-0820" onclick="selectLoadFromKanban(this, 'FM-0820')">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-[11px] font-semibold text-gray-900">FM-0820</span>
+                  <i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-500"></i>
+                </div>
+                <div class="text-[11px] text-gray-500">NYC &rarr; BOS</div>
+                <div class="text-[10px] text-emerald-600 mt-1 font-medium">Schneider National</div>
+              </div>
+              <div class="kanban-card bg-white border border-gray-200 rounded-lg p-2.5 cursor-pointer" data-load="FM-0822" onclick="selectLoadFromKanban(this, 'FM-0822')">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-[11px] font-semibold text-gray-900">FM-0822</span>
+                  <i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-500"></i>
+                </div>
+                <div class="text-[11px] text-gray-500">DEN &rarr; OKC</div>
+                <div class="text-[10px] text-emerald-600 mt-1 font-medium">J.B. Hunt</div>
+              </div>
+              <div class="kanban-card bg-white border border-gray-200 rounded-lg p-2.5 cursor-pointer" data-load="FM-0825" onclick="selectLoadFromKanban(this, 'FM-0825')">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-[11px] font-semibold text-gray-900">FM-0825</span>
+                  <i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-500"></i>
+                </div>
+                <div class="text-[11px] text-gray-500">STL &rarr; IND</div>
+                <div class="text-[10px] text-emerald-600 mt-1 font-medium">Old Dominion</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- LANE: Invoiced -->
+          <div class="flex flex-col min-w-[200px] w-[200px] flex-shrink-0">
+            <div class="flex items-center gap-2 mb-2 px-1">
+              <div class="w-2.5 h-2.5 rounded-full bg-gray-400"></div>
+              <span class="text-xs font-semibold text-gray-700">Invoiced</span>
+              <span class="text-[10px] bg-gray-100 text-gray-600 font-semibold px-1.5 py-0.5 rounded-full">7</span>
+            </div>
+            <div class="flex-1 overflow-y-auto kanban-lane space-y-2 pr-1">
+              <div class="kanban-card bg-white border border-gray-200 rounded-lg p-2.5 cursor-pointer opacity-60" data-load="FM-0810" onclick="selectLoadFromKanban(this, 'FM-0810')">
+                <div class="text-[11px] font-semibold text-gray-900 mb-1">FM-0810</div>
+                <div class="text-[11px] text-gray-500">ATL &rarr; MIA</div>
+                <div class="text-[10px] text-gray-500 mt-1 font-medium">Swift Transport</div>
+              </div>
+              <div class="kanban-card bg-white border border-gray-200 rounded-lg p-2.5 cursor-pointer opacity-60" data-load="FM-0812" onclick="selectLoadFromKanban(this, 'FM-0812')">
+                <div class="text-[11px] font-semibold text-gray-900 mb-1">FM-0812</div>
+                <div class="text-[11px] text-gray-500">PIT &rarr; CLE</div>
+                <div class="text-[10px] text-gray-500 mt-1 font-medium">Heartland Express</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- RESIZE HANDLE 2 -->
+      <div class="resize-handle" id="resizeRight" title="Drag to resize"></div>
+
+      <!-- RIGHT PANEL: LOAD DETAIL (360px) -->
+      <div class="flex flex-col bg-white border-l border-gray-200 overflow-hidden" id="rightPanel" style="width: 360px; min-width: 300px; flex-shrink: 0;">
+        <!-- Detail Header (sticky) -->
+        <div class="px-4 py-2.5 border-b border-gray-200 flex items-center justify-between flex-shrink-0 bg-white">
+          <div class="flex items-center gap-2">
+            <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Load Detail</h2>
+          </div>
+          <div class="flex items-center gap-1">
+            <button class="p-1 text-gray-400 hover:text-gray-600 rounded" title="Open in new tab">
+              <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+            </button>
+            <button class="p-1 text-gray-400 hover:text-gray-600 rounded" title="Close panel">
+              <i data-lucide="panel-right-close" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Detail Content (scrollable) -->
+        <div class="flex-1 overflow-y-auto scroll-thin" id="detailContent">
+          <div class="detail-section">
+
+            <!-- Load Header -->
+            <div class="px-4 py-3 border-b border-gray-100">
+              <div class="flex items-center justify-between mb-1">
+                <h3 class="text-base font-bold text-gray-900">FM-2025-0847</h3>
+                <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-sky-100 text-sky-700">IN TRANSIT</span>
+              </div>
+              <div class="text-xs text-gray-500">Created Feb 6, 2025 &middot; Last updated 5h ago</div>
+            </div>
+
+            <!-- Route -->
+            <div class="px-4 py-3 border-b border-gray-100">
+              <div class="flex items-center gap-3">
+                <div class="flex-1">
+                  <div class="text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-0.5">Origin</div>
+                  <div class="text-sm font-semibold text-gray-900">Chicago, IL</div>
+                  <div class="text-xs text-gray-500">60601</div>
+                </div>
+                <div class="flex flex-col items-center gap-0.5 flex-shrink-0">
+                  <div class="text-[10px] text-gray-400 font-medium">917 mi</div>
+                  <div class="flex items-center">
+                    <div class="w-2 h-2 rounded-full bg-sky-500"></div>
+                    <div class="w-16 h-px bg-gray-300 mx-1 relative">
+                      <div class="absolute left-0 top-0 h-full bg-sky-500" style="width:55%"></div>
+                    </div>
+                    <div class="w-2 h-2 rounded-full bg-gray-300 border-2 border-gray-300"></div>
+                  </div>
+                  <div class="text-[10px] text-sky-600 font-medium">55% complete</div>
+                </div>
+                <div class="flex-1 text-right">
+                  <div class="text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-0.5">Destination</div>
+                  <div class="text-sm font-semibold text-gray-900">Dallas, TX</div>
+                  <div class="text-xs text-gray-500">75201</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Customer & Carrier -->
+            <div class="px-4 py-3 border-b border-gray-100 grid grid-cols-2 gap-3">
+              <div>
+                <div class="text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-1">Customer</div>
+                <div class="text-xs font-semibold text-gray-900">Acme Manufacturing</div>
+                <div class="text-[11px] text-gray-500">ACC-2401</div>
+              </div>
+              <div>
+                <div class="text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-1">Carrier</div>
+                <div class="text-xs font-semibold text-gray-900">Swift Transport</div>
+                <div class="text-[11px] text-gray-500">MC-123456</div>
+              </div>
+            </div>
+
+            <!-- Driver & Equipment -->
+            <div class="px-4 py-3 border-b border-gray-100 grid grid-cols-2 gap-3">
+              <div>
+                <div class="text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-1">Driver</div>
+                <div class="text-xs font-semibold text-gray-900">Mike Rodriguez</div>
+                <a href="tel:3125550147" class="text-[11px] text-blue-600 hover:underline flex items-center gap-1">
+                  <i data-lucide="phone" class="w-2.5 h-2.5"></i>
+                  (312) 555-0147
+                </a>
+              </div>
+              <div>
+                <div class="text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-1">Equipment</div>
+                <div class="text-xs font-semibold text-gray-900">Dry Van</div>
+                <div class="text-[11px] text-gray-500">53' Standard</div>
+              </div>
+            </div>
+
+            <!-- Dates -->
+            <div class="px-4 py-3 border-b border-gray-100 grid grid-cols-2 gap-3">
+              <div>
+                <div class="text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-1">Pickup</div>
+                <div class="text-xs font-semibold text-gray-900">Feb 7, 2025</div>
+                <div class="text-[11px] text-gray-500">08:00 AM CST</div>
+              </div>
+              <div>
+                <div class="text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-1">Delivery</div>
+                <div class="text-xs font-semibold text-gray-900">Feb 9, 2025</div>
+                <div class="text-[11px] text-gray-500">02:00 PM CST</div>
+              </div>
+            </div>
+
+            <!-- Financials -->
+            <div class="px-4 py-3 border-b border-gray-100">
+              <div class="text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-2">Financials</div>
+              <div class="grid grid-cols-3 gap-2">
+                <div class="bg-gray-50 rounded-lg p-2 text-center">
+                  <div class="text-[10px] text-gray-500 mb-0.5">Customer Rate</div>
+                  <div class="text-sm font-bold text-gray-900">$2,450</div>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-2 text-center">
+                  <div class="text-[10px] text-gray-500 mb-0.5">Carrier Rate</div>
+                  <div class="text-sm font-bold text-gray-900">$1,960</div>
+                </div>
+                <div class="bg-emerald-50 rounded-lg p-2 text-center">
+                  <div class="text-[10px] text-emerald-600 mb-0.5">Margin</div>
+                  <div class="text-sm font-bold text-emerald-700">$490</div>
+                  <div class="text-[10px] font-semibold text-emerald-600">20.0%</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Weight & Commodity -->
+            <div class="px-4 py-3 border-b border-gray-100 grid grid-cols-2 gap-3">
+              <div>
+                <div class="text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-1">Weight</div>
+                <div class="text-xs font-semibold text-gray-900">42,000 lbs</div>
+              </div>
+              <div>
+                <div class="text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-1">Commodity</div>
+                <div class="text-xs font-semibold text-gray-900">Machine Parts</div>
+              </div>
+            </div>
+
+            <!-- References -->
+            <div class="px-4 py-3 border-b border-gray-100">
+              <div class="text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-1">References</div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-medium text-gray-700 bg-gray-100 px-2 py-0.5 rounded">PO-8920</span>
+                <span class="text-xs font-medium text-gray-700 bg-gray-100 px-2 py-0.5 rounded">BOL-4421</span>
+              </div>
+            </div>
+
+            <!-- ALERTS -->
+            <div class="px-4 py-3 border-b border-gray-100">
+              <div class="bg-red-50 border border-red-200 rounded-lg p-3">
+                <div class="text-[10px] text-red-600 font-semibold uppercase tracking-wide mb-2 flex items-center gap-1">
+                  <i data-lucide="alert-triangle" class="w-3 h-3"></i>
+                  Alerts
+                </div>
+                <div class="space-y-1.5">
+                  <div class="flex items-start gap-2 text-xs text-red-700">
+                    <span class="text-amber-500 flex-shrink-0 mt-0.5">&#9888;</span>
+                    <span>No check call in <strong>5h 23m</strong></span>
+                  </div>
+                  <div class="flex items-start gap-2 text-xs text-red-700">
+                    <span class="text-red-500 flex-shrink-0 mt-0.5">&#128293;</span>
+                    <span>Hot Load &mdash; Priority: <strong>URGENT</strong></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Timeline / Activity -->
+            <div class="px-4 py-3 border-b border-gray-100">
+              <div class="text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-2">Activity Timeline</div>
+              <div class="space-y-0">
+                <!-- Event 1 -->
+                <div class="flex gap-3">
+                  <div class="flex flex-col items-center">
+                    <div class="w-2 h-2 rounded-full bg-sky-500 mt-1"></div>
+                    <div class="w-px flex-1 bg-gray-200"></div>
+                  </div>
+                  <div class="pb-3">
+                    <div class="text-[10px] text-gray-400 font-medium">Feb 8, 9:42 AM</div>
+                    <div class="text-xs text-gray-700">Picked up at <span class="font-medium text-gray-900">Chicago, IL</span></div>
+                  </div>
+                </div>
+                <!-- Event 2 -->
+                <div class="flex gap-3">
+                  <div class="flex flex-col items-center">
+                    <div class="w-2 h-2 rounded-full bg-sky-400 mt-1"></div>
+                    <div class="w-px flex-1 bg-gray-200"></div>
+                  </div>
+                  <div class="pb-3">
+                    <div class="text-[10px] text-gray-400 font-medium">Feb 8, 2:15 PM</div>
+                    <div class="text-xs text-gray-700">Check call: <span class="font-medium text-gray-900">Springfield, IL</span></div>
+                    <div class="text-[10px] text-gray-400">Last known location</div>
+                  </div>
+                </div>
+                <!-- Event 3 (stale) -->
+                <div class="flex gap-3">
+                  <div class="flex flex-col items-center">
+                    <div class="w-2 h-2 rounded-full bg-amber-500 mt-1 animate-pulse"></div>
+                  </div>
+                  <div class="pb-1">
+                    <div class="text-[10px] text-amber-600 font-medium">Feb 8, 7:38 PM</div>
+                    <div class="text-xs text-amber-700 font-medium">No update &mdash; 5h 23m stale</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="px-4 py-3">
+              <div class="grid grid-cols-2 gap-2">
+                <button class="action-btn primary justify-center">
+                  <i data-lucide="map" class="w-3.5 h-3.5"></i>
+                  Track on Map
+                </button>
+                <button class="action-btn justify-center">
+                  <i data-lucide="phone-call" class="w-3.5 h-3.5"></i>
+                  Add Check Call
+                </button>
+                <button class="action-btn justify-center">
+                  <i data-lucide="user" class="w-3.5 h-3.5"></i>
+                  Contact Driver
+                </button>
+                <button class="action-btn justify-center">
+                  <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                  Update ETA
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- JAVASCRIPT -->
+<script>
+// Initialize Lucide icons
+lucide.createIcons();
+
+// ======= LOAD SELECTION =======
+var currentLoadId = 'FM-0847';
+
+function selectLoad(el, loadId) {
+  currentLoadId = loadId;
+  // Clear all selected in list
+  document.querySelectorAll('.load-item').forEach(function(item) { item.classList.remove('selected'); });
+  el.classList.add('selected');
+  // Sync kanban selection
+  syncKanbanSelection(loadId);
+  // Update detail panel
+  updateDetailPanel(loadId);
+}
+
+function selectLoadFromKanban(el, loadId) {
+  currentLoadId = loadId;
+  // Clear all kanban card selections
+  document.querySelectorAll('.kanban-card').forEach(function(card) { card.classList.remove('selected'); });
+  el.classList.add('selected');
+  // Sync list selection
+  syncListSelection(loadId);
+  // Update detail panel
+  updateDetailPanel(loadId);
+}
+
+function syncKanbanSelection(loadId) {
+  document.querySelectorAll('.kanban-card').forEach(function(card) {
+    if (card.dataset.load === loadId) {
+      card.classList.add('selected');
+    } else {
+      card.classList.remove('selected');
+    }
+  });
+}
+
+function syncListSelection(loadId) {
+  document.querySelectorAll('.load-item').forEach(function(item) {
+    if (item.dataset.load === loadId) {
+      item.classList.add('selected');
+    } else {
+      item.classList.remove('selected');
+    }
+  });
+  // Scroll list item into view
+  var listItem = document.querySelector('.load-item[data-load="' + loadId + '"]');
+  if (listItem) {
+    listItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+// ======= LOAD DATA STORE =======
+var loadData = {
+  'FM-0847': {
+    id: 'FM-2025-0847', status: 'IN TRANSIT', statusColor: 'sky',
+    origin: 'Chicago, IL', originZip: '60601', dest: 'Dallas, TX', destZip: '75201',
+    distance: '917 mi', progress: 55,
+    customer: 'Acme Manufacturing', custId: 'ACC-2401',
+    carrier: 'Swift Transport', carrierMc: 'MC-123456',
+    driver: 'Mike Rodriguez', phone: '(312) 555-0147', phoneRaw: '3125550147',
+    equipment: 'Dry Van', equipDetail: "53' Standard",
+    pickup: 'Feb 7, 2025', pickupTime: '08:00 AM CST',
+    delivery: 'Feb 9, 2025', deliveryTime: '02:00 PM CST',
+    custRate: '$2,450', carrierRate: '$1,960', margin: '$490', marginPct: '20.0%',
+    weight: '42,000 lbs', commodity: 'Machine Parts',
+    refs: ['PO-8920', 'BOL-4421'],
+    alerts: [
+      { icon: '\u26A0', iconColor: 'amber', text: 'No check call in <strong>5h 23m</strong>' },
+      { icon: '\uD83D\uDD25', iconColor: 'red', text: 'Hot Load \u2014 Priority: <strong>URGENT</strong>' }
+    ],
+    timeline: [
+      { time: 'Feb 8, 9:42 AM', text: 'Picked up at Chicago, IL', color: 'sky', hasLine: true },
+      { time: 'Feb 8, 2:15 PM', text: 'Check call: Springfield, IL', sub: 'Last known location', color: 'sky', hasLine: true },
+      { time: 'Feb 8, 7:38 PM', text: 'No update \u2014 5h 23m stale', color: 'amber', hasLine: false, pulse: true, isWarning: true }
+    ],
+    created: 'Created Feb 6, 2025 \u00B7 Last updated 5h ago'
+  },
+  'FM-0832': {
+    id: 'FM-2025-0832', status: 'IN TRANSIT', statusColor: 'sky',
+    origin: 'Los Angeles, CA', originZip: '90001', dest: 'Phoenix, AZ', destZip: '85001',
+    distance: '372 mi', progress: 70,
+    customer: 'Global Logistics Inc', custId: 'ACC-1187',
+    carrier: 'Knight-Swift', carrierMc: 'MC-789012',
+    driver: 'James Wilson', phone: '(213) 555-0298', phoneRaw: '2135550298',
+    equipment: 'Flatbed', equipDetail: "48' Step Deck",
+    pickup: 'Feb 7, 2025', pickupTime: '06:00 AM PST',
+    delivery: 'Feb 8, 2025', deliveryTime: '04:00 PM MST',
+    custRate: '$1,850', carrierRate: '$1,500', margin: '$350', marginPct: '18.9%',
+    weight: '38,500 lbs', commodity: 'Steel Beams',
+    refs: ['PO-7721', 'BOL-3319'],
+    alerts: [
+      { icon: '\u26A0', iconColor: 'amber', text: 'Running <strong>2h behind</strong> schedule' }
+    ],
+    timeline: [
+      { time: 'Feb 7, 6:15 AM', text: 'Picked up at Los Angeles, CA', color: 'sky', hasLine: true },
+      { time: 'Feb 7, 11:30 AM', text: 'Check call: Blythe, CA', color: 'sky', hasLine: true },
+      { time: 'Feb 7, 3:45 PM', text: 'Check call: Buckeye, AZ', sub: 'Last known location', color: 'sky', hasLine: false }
+    ],
+    created: 'Created Feb 5, 2025 \u00B7 Last updated 2h ago'
+  },
+  'FM-0861': {
+    id: 'FM-2025-0861', status: 'UNASSIGNED', statusColor: 'amber',
+    origin: 'Denver, CO', originZip: '80201', dest: 'Salt Lake City, UT', destZip: '84101',
+    distance: '525 mi', progress: 0,
+    customer: 'Rocky Mountain Supply', custId: 'ACC-3302',
+    carrier: '\u2014', carrierMc: '\u2014',
+    driver: '\u2014', phone: '\u2014', phoneRaw: '',
+    equipment: 'Reefer', equipDetail: "53' Temperature Controlled",
+    pickup: 'Feb 9, 2025', pickupTime: '06:00 AM MST',
+    delivery: 'Feb 10, 2025', deliveryTime: '12:00 PM MST',
+    custRate: '$2,100', carrierRate: '\u2014', margin: '\u2014', marginPct: '',
+    weight: '35,000 lbs', commodity: 'Frozen Produce',
+    refs: ['PO-9012'],
+    alerts: [
+      { icon: '\u2744', iconColor: 'blue', text: 'Reefer load \u2014 Temp: <strong>-10\u00B0F</strong>' },
+      { icon: '\u26A0', iconColor: 'amber', text: 'No carrier assigned \u2014 <strong>pickup in 18h</strong>' }
+    ],
+    timeline: [
+      { time: 'Feb 7, 4:00 PM', text: 'Load created by dispatch', color: 'gray', hasLine: true },
+      { time: 'Feb 8, 10:00 AM', text: 'Awaiting carrier assignment', color: 'amber', hasLine: false, pulse: true, isWarning: true }
+    ],
+    created: 'Created Feb 7, 2025 \u00B7 Needs carrier ASAP'
+  },
+  'FM-0863': {
+    id: 'FM-2025-0863', status: 'UNASSIGNED', statusColor: 'amber',
+    origin: 'Memphis, TN', originZip: '38101', dest: 'Nashville, TN', destZip: '37201',
+    distance: '213 mi', progress: 0,
+    customer: 'Delta Freight Co', custId: 'ACC-2890',
+    carrier: '\u2014', carrierMc: '\u2014',
+    driver: '\u2014', phone: '\u2014', phoneRaw: '',
+    equipment: 'Dry Van', equipDetail: "53' Standard",
+    pickup: 'Feb 8, 2025', pickupTime: '02:00 PM CST',
+    delivery: 'Feb 8, 2025', deliveryTime: '08:00 PM CST',
+    custRate: '$1,200', carrierRate: '\u2014', margin: '\u2014', marginPct: '',
+    weight: '28,000 lbs', commodity: 'Electronics',
+    refs: ['PO-8845', 'BOL-4410'],
+    alerts: [
+      { icon: '\uD83D\uDD25', iconColor: 'red', text: 'HOT LOAD \u2014 <strong>same-day delivery required</strong>' },
+      { icon: '\u26A0', iconColor: 'amber', text: 'No carrier assigned \u2014 <strong>pickup in 4h</strong>' }
+    ],
+    timeline: [
+      { time: 'Feb 8, 8:00 AM', text: 'Load created \u2014 URGENT', color: 'red', hasLine: true },
+      { time: 'Feb 8, 8:30 AM', text: 'Carrier sourcing in progress', color: 'amber', hasLine: false, pulse: true, isWarning: true }
+    ],
+    created: 'Created Feb 8, 2025 \u00B7 HOT LOAD'
+  }
+};
+
+function updateDetailPanel(loadId) {
+  var data = loadData[loadId];
+  if (!data) {
+    // Show placeholder for loads without detailed data
+    var panel = document.getElementById('detailContent');
+    var placeholder = document.createElement('div');
+    placeholder.className = 'detail-section';
+
+    var headerDiv = document.createElement('div');
+    headerDiv.className = 'px-4 py-3 border-b border-gray-100';
+    var h3 = document.createElement('h3');
+    h3.className = 'text-base font-bold text-gray-900';
+    h3.textContent = 'FM-2025-' + loadId.split('-')[1];
+    headerDiv.appendChild(h3);
+    var sub = document.createElement('div');
+    sub.className = 'text-xs text-gray-500 mt-1';
+    sub.textContent = 'Detailed data not available in this prototype.';
+    headerDiv.appendChild(sub);
+
+    placeholder.appendChild(headerDiv);
+
+    var msgDiv = document.createElement('div');
+    msgDiv.className = 'px-4 py-8 text-center';
+    var msgP = document.createElement('p');
+    msgP.className = 'text-sm text-gray-400';
+    msgP.textContent = 'Select FM-0847, FM-0832, FM-0861, or FM-0863 for full detail view.';
+    msgDiv.appendChild(msgP);
+    placeholder.appendChild(msgDiv);
+
+    while (panel.firstChild) { panel.removeChild(panel.firstChild); }
+    panel.appendChild(placeholder);
+    lucide.createIcons();
+    return;
+  }
+
+  var panel = document.getElementById('detailContent');
+
+  // Build DOM programmatically for safety
+  var section = document.createElement('div');
+  section.className = 'detail-section';
+
+  // === Load Header ===
+  var headerBlock = document.createElement('div');
+  headerBlock.className = 'px-4 py-3 border-b border-gray-100';
+
+  var headerRow = document.createElement('div');
+  headerRow.className = 'flex items-center justify-between mb-1';
+
+  var title = document.createElement('h3');
+  title.className = 'text-base font-bold text-gray-900';
+  title.textContent = data.id;
+
+  var statusBadge = document.createElement('span');
+  var statusClasses = {
+    sky: 'bg-sky-100 text-sky-700', amber: 'bg-amber-100 text-amber-700',
+    emerald: 'bg-emerald-100 text-emerald-700', violet: 'bg-violet-100 text-violet-700',
+    blue: 'bg-blue-100 text-blue-700', gray: 'bg-gray-100 text-gray-700', red: 'bg-red-100 text-red-700'
+  };
+  statusBadge.className = 'text-[11px] font-semibold px-2.5 py-1 rounded-full ' + (statusClasses[data.statusColor] || statusClasses.gray);
+  statusBadge.textContent = data.status;
+
+  headerRow.appendChild(title);
+  headerRow.appendChild(statusBadge);
+  headerBlock.appendChild(headerRow);
+
+  var createdLine = document.createElement('div');
+  createdLine.className = 'text-xs text-gray-500';
+  createdLine.textContent = data.created;
+  headerBlock.appendChild(createdLine);
+  section.appendChild(headerBlock);
+
+  // === Route ===
+  var routeBlock = document.createElement('div');
+  routeBlock.className = 'px-4 py-3 border-b border-gray-100';
+
+  var routeFlex = document.createElement('div');
+  routeFlex.className = 'flex items-center gap-3';
+
+  // Origin
+  var originDiv = document.createElement('div');
+  originDiv.className = 'flex-1';
+  var originLabel = document.createElement('div');
+  originLabel.className = 'text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-0.5';
+  originLabel.textContent = 'Origin';
+  var originCity = document.createElement('div');
+  originCity.className = 'text-sm font-semibold text-gray-900';
+  originCity.textContent = data.origin;
+  var originZip = document.createElement('div');
+  originZip.className = 'text-xs text-gray-500';
+  originZip.textContent = data.originZip;
+  originDiv.appendChild(originLabel);
+  originDiv.appendChild(originCity);
+  originDiv.appendChild(originZip);
+
+  // Progress indicator
+  var progressDiv = document.createElement('div');
+  progressDiv.className = 'flex flex-col items-center gap-0.5 flex-shrink-0';
+  var distLabel = document.createElement('div');
+  distLabel.className = 'text-[10px] text-gray-400 font-medium';
+  distLabel.textContent = data.distance;
+  var progBar = document.createElement('div');
+  progBar.className = 'flex items-center';
+  var dotStart = document.createElement('div');
+  dotStart.className = 'w-2 h-2 rounded-full bg-' + data.statusColor + '-500';
+  var barTrack = document.createElement('div');
+  barTrack.className = 'w-16 h-px bg-gray-300 mx-1 relative';
+  var barFill = document.createElement('div');
+  barFill.className = 'absolute left-0 top-0 h-full bg-' + data.statusColor + '-500';
+  barFill.style.width = data.progress + '%';
+  barTrack.appendChild(barFill);
+  var dotEnd = document.createElement('div');
+  dotEnd.className = 'w-2 h-2 rounded-full bg-gray-300';
+  progBar.appendChild(dotStart);
+  progBar.appendChild(barTrack);
+  progBar.appendChild(dotEnd);
+  var pctLabel = document.createElement('div');
+  pctLabel.className = 'text-[10px] text-' + data.statusColor + '-600 font-medium';
+  pctLabel.textContent = data.progress + '% complete';
+  progressDiv.appendChild(distLabel);
+  progressDiv.appendChild(progBar);
+  progressDiv.appendChild(pctLabel);
+
+  // Destination
+  var destDiv = document.createElement('div');
+  destDiv.className = 'flex-1 text-right';
+  var destLabel = document.createElement('div');
+  destLabel.className = 'text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-0.5';
+  destLabel.textContent = 'Destination';
+  var destCity = document.createElement('div');
+  destCity.className = 'text-sm font-semibold text-gray-900';
+  destCity.textContent = data.dest;
+  var destZipEl = document.createElement('div');
+  destZipEl.className = 'text-xs text-gray-500';
+  destZipEl.textContent = data.destZip;
+  destDiv.appendChild(destLabel);
+  destDiv.appendChild(destCity);
+  destDiv.appendChild(destZipEl);
+
+  routeFlex.appendChild(originDiv);
+  routeFlex.appendChild(progressDiv);
+  routeFlex.appendChild(destDiv);
+  routeBlock.appendChild(routeFlex);
+  section.appendChild(routeBlock);
+
+  // === Helper: create a 2-col info row ===
+  function makeTwoCol(label1, val1, sub1, label2, val2, sub2, options) {
+    var row = document.createElement('div');
+    row.className = 'px-4 py-3 border-b border-gray-100 grid grid-cols-2 gap-3';
+    var col1 = document.createElement('div');
+    var l1 = document.createElement('div'); l1.className = 'text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-1'; l1.textContent = label1;
+    var v1 = document.createElement('div'); v1.className = 'text-xs font-semibold text-gray-900'; v1.textContent = val1;
+    col1.appendChild(l1); col1.appendChild(v1);
+    if (sub1) {
+      if (options && options.phoneLink) {
+        var a = document.createElement('a');
+        a.href = 'tel:' + options.phoneLink;
+        a.className = 'text-[11px] text-blue-600 hover:underline flex items-center gap-1';
+        a.textContent = sub1;
+        col1.appendChild(a);
+      } else {
+        var s1 = document.createElement('div'); s1.className = 'text-[11px] text-gray-500'; s1.textContent = sub1;
+        col1.appendChild(s1);
+      }
+    }
+    var col2 = document.createElement('div');
+    var l2 = document.createElement('div'); l2.className = 'text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-1'; l2.textContent = label2;
+    var v2 = document.createElement('div'); v2.className = 'text-xs font-semibold text-gray-900'; v2.textContent = val2;
+    col2.appendChild(l2); col2.appendChild(v2);
+    if (sub2) {
+      var s2 = document.createElement('div'); s2.className = 'text-[11px] text-gray-500'; s2.textContent = sub2;
+      col2.appendChild(s2);
+    }
+    row.appendChild(col1); row.appendChild(col2);
+    return row;
+  }
+
+  // Customer & Carrier
+  section.appendChild(makeTwoCol('Customer', data.customer, data.custId, 'Carrier', data.carrier, data.carrierMc));
+
+  // Driver & Equipment
+  section.appendChild(makeTwoCol('Driver', data.driver, data.phone, 'Equipment', data.equipment, data.equipDetail, data.phoneRaw ? { phoneLink: data.phoneRaw } : null));
+
+  // Dates
+  section.appendChild(makeTwoCol('Pickup', data.pickup, data.pickupTime, 'Delivery', data.delivery, data.deliveryTime));
+
+  // === Financials ===
+  var finBlock = document.createElement('div');
+  finBlock.className = 'px-4 py-3 border-b border-gray-100';
+  var finLabel = document.createElement('div');
+  finLabel.className = 'text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-2';
+  finLabel.textContent = 'Financials';
+  finBlock.appendChild(finLabel);
+  var finGrid = document.createElement('div');
+  finGrid.className = 'grid grid-cols-3 gap-2';
+
+  function makeFinCard(label, value, isMargin) {
+    var card = document.createElement('div');
+    card.className = (isMargin && data.marginPct) ? 'bg-emerald-50 rounded-lg p-2 text-center' : 'bg-gray-50 rounded-lg p-2 text-center';
+    var cl = document.createElement('div');
+    cl.className = (isMargin && data.marginPct) ? 'text-[10px] text-emerald-600 mb-0.5' : 'text-[10px] text-gray-500 mb-0.5';
+    cl.textContent = label;
+    var cv = document.createElement('div');
+    cv.className = (isMargin && data.marginPct) ? 'text-sm font-bold text-emerald-700' : 'text-sm font-bold text-gray-900';
+    cv.textContent = value;
+    card.appendChild(cl); card.appendChild(cv);
+    if (isMargin && data.marginPct) {
+      var cp = document.createElement('div');
+      cp.className = 'text-[10px] font-semibold text-emerald-600';
+      cp.textContent = data.marginPct;
+      card.appendChild(cp);
+    }
+    return card;
+  }
+
+  finGrid.appendChild(makeFinCard('Customer Rate', data.custRate, false));
+  finGrid.appendChild(makeFinCard('Carrier Rate', data.carrierRate, false));
+  finGrid.appendChild(makeFinCard('Margin', data.margin, true));
+  finBlock.appendChild(finGrid);
+  section.appendChild(finBlock);
+
+  // Weight & Commodity
+  section.appendChild(makeTwoCol('Weight', data.weight, null, 'Commodity', data.commodity, null));
+
+  // === References ===
+  if (data.refs.length > 0) {
+    var refBlock = document.createElement('div');
+    refBlock.className = 'px-4 py-3 border-b border-gray-100';
+    var refLabel = document.createElement('div');
+    refLabel.className = 'text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-1';
+    refLabel.textContent = 'References';
+    refBlock.appendChild(refLabel);
+    var refRow = document.createElement('div');
+    refRow.className = 'flex items-center gap-2';
+    data.refs.forEach(function(r) {
+      var span = document.createElement('span');
+      span.className = 'text-xs font-medium text-gray-700 bg-gray-100 px-2 py-0.5 rounded';
+      span.textContent = r;
+      refRow.appendChild(span);
+    });
+    refBlock.appendChild(refRow);
+    section.appendChild(refBlock);
+  }
+
+  // === Alerts ===
+  if (data.alerts.length > 0) {
+    var alertBlock = document.createElement('div');
+    alertBlock.className = 'px-4 py-3 border-b border-gray-100';
+    var alertBox = document.createElement('div');
+    alertBox.className = 'bg-red-50 border border-red-200 rounded-lg p-3';
+
+    var alertHeader = document.createElement('div');
+    alertHeader.className = 'text-[10px] text-red-600 font-semibold uppercase tracking-wide mb-2 flex items-center gap-1';
+    var alertIcon = document.createElement('i');
+    alertIcon.setAttribute('data-lucide', 'alert-triangle');
+    alertIcon.className = 'w-3 h-3';
+    alertHeader.appendChild(alertIcon);
+    alertHeader.appendChild(document.createTextNode(' Alerts'));
+    alertBox.appendChild(alertHeader);
+
+    var alertList = document.createElement('div');
+    alertList.className = 'space-y-1.5';
+    data.alerts.forEach(function(a) {
+      var alertItem = document.createElement('div');
+      alertItem.className = 'flex items-start gap-2 text-xs text-red-700';
+      var iconSpan = document.createElement('span');
+      iconSpan.className = 'text-' + a.iconColor + '-500 flex-shrink-0 mt-0.5';
+      iconSpan.textContent = a.icon;
+      alertItem.appendChild(iconSpan);
+      var textSpan = document.createElement('span');
+      // Alert text contains safe, hardcoded HTML for bold tags
+      textSpan.textContent = a.text.replace(/<\/?strong>/g, '');
+      alertItem.appendChild(textSpan);
+      alertList.appendChild(alertItem);
+    });
+    alertBox.appendChild(alertList);
+    alertBlock.appendChild(alertBox);
+    section.appendChild(alertBlock);
+  }
+
+  // === Timeline ===
+  var tlBlock = document.createElement('div');
+  tlBlock.className = 'px-4 py-3 border-b border-gray-100';
+  var tlLabel = document.createElement('div');
+  tlLabel.className = 'text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-2';
+  tlLabel.textContent = 'Activity Timeline';
+  tlBlock.appendChild(tlLabel);
+
+  var tlList = document.createElement('div');
+  tlList.className = 'space-y-0';
+  data.timeline.forEach(function(t) {
+    var tlItem = document.createElement('div');
+    tlItem.className = 'flex gap-3';
+
+    var tlDot = document.createElement('div');
+    tlDot.className = 'flex flex-col items-center';
+    var dot = document.createElement('div');
+    var dotColorMap = { sky: 'bg-sky-500', amber: 'bg-amber-500', gray: 'bg-gray-400', red: 'bg-red-500' };
+    dot.className = 'w-2 h-2 rounded-full mt-1 ' + (dotColorMap[t.color] || 'bg-gray-400') + (t.pulse ? ' animate-pulse' : '');
+    tlDot.appendChild(dot);
+    if (t.hasLine) {
+      var line = document.createElement('div');
+      line.className = 'w-px flex-1 bg-gray-200';
+      tlDot.appendChild(line);
+    }
+
+    var tlContent = document.createElement('div');
+    tlContent.className = 'pb-3';
+    var tlTime = document.createElement('div');
+    tlTime.className = 'text-[10px] font-medium ' + (t.isWarning ? 'text-amber-600' : 'text-gray-400');
+    tlTime.textContent = t.time;
+    tlContent.appendChild(tlTime);
+
+    var tlText = document.createElement('div');
+    tlText.className = 'text-xs ' + (t.isWarning ? 'text-amber-700 font-medium' : 'text-gray-700');
+    tlText.textContent = t.text;
+    tlContent.appendChild(tlText);
+
+    if (t.sub) {
+      var tlSub = document.createElement('div');
+      tlSub.className = 'text-[10px] text-gray-400';
+      tlSub.textContent = t.sub;
+      tlContent.appendChild(tlSub);
+    }
+
+    tlItem.appendChild(tlDot);
+    tlItem.appendChild(tlContent);
+    tlList.appendChild(tlItem);
+  });
+  tlBlock.appendChild(tlList);
+  section.appendChild(tlBlock);
+
+  // === Action Buttons ===
+  var actBlock = document.createElement('div');
+  actBlock.className = 'px-4 py-3';
+  var actGrid = document.createElement('div');
+  actGrid.className = 'grid grid-cols-2 gap-2';
+
+  var actions = [
+    { icon: 'map', label: 'Track on Map', primary: true },
+    { icon: 'phone-call', label: 'Add Check Call', primary: false },
+    { icon: 'user', label: 'Contact Driver', primary: false },
+    { icon: 'clock', label: 'Update ETA', primary: false }
+  ];
+  actions.forEach(function(act) {
+    var btn = document.createElement('button');
+    btn.className = 'action-btn justify-center' + (act.primary ? ' primary' : '');
+    var ic = document.createElement('i');
+    ic.setAttribute('data-lucide', act.icon);
+    ic.className = 'w-3.5 h-3.5';
+    btn.appendChild(ic);
+    btn.appendChild(document.createTextNode(' ' + act.label));
+    actGrid.appendChild(btn);
+  });
+  actBlock.appendChild(actGrid);
+  section.appendChild(actBlock);
+
+  // Clear and append
+  while (panel.firstChild) { panel.removeChild(panel.firstChild); }
+  panel.appendChild(section);
+
+  // Re-initialize Lucide icons for new elements
+  lucide.createIcons();
+}
+
+
+// ======= RESIZE HANDLES =======
+function initResize(handleId, panelId, direction) {
+  var handle = document.getElementById(handleId);
+  var isResizing = false;
+  var startX = 0;
+  var startWidth = 0;
+
+  handle.addEventListener('mousedown', function(e) {
+    isResizing = true;
+    startX = e.clientX;
+    var panelEl = document.getElementById(panelId);
+    startWidth = panelEl.offsetWidth;
+    handle.classList.add('active');
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', function(e) {
+    if (!isResizing) return;
+    var panelEl = document.getElementById(panelId);
+    var diff = direction === 'left' ? (e.clientX - startX) : (startX - e.clientX);
+    var minW = parseInt(panelEl.style.minWidth) || 200;
+    var newWidth = Math.max(minW, Math.min(startWidth + diff, 500));
+    panelEl.style.width = newWidth + 'px';
+  });
+
+  document.addEventListener('mouseup', function() {
+    if (isResizing) {
+      isResizing = false;
+      handle.classList.remove('active');
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    }
+  });
+}
+
+initResize('resizeLeft', 'leftPanel', 'left');
+initResize('resizeRight', 'rightPanel', 'right');
+
+
+// ======= LIST SEARCH/FILTER =======
+document.getElementById('listSearch').addEventListener('input', function(e) {
+  var query = e.target.value.toLowerCase();
+  document.querySelectorAll('.load-item').forEach(function(item) {
+    var text = item.textContent.toLowerCase();
+    item.style.display = text.indexOf(query) !== -1 ? '' : 'none';
+  });
+});
+</script>
+</body>
+</html>

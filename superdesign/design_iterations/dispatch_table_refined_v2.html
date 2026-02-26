@@ -1,0 +1,1793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultra TMS - Dispatch Board | Refined Table</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg-main: #F8F9FA;
+            --bg-filter: #F1F3F5;
+            --surface-white: #FFFFFF;
+            --border-light: #e5e7eb;
+            --border-soft: #DEE2E6;
+            --sapphire-blue: #1D4ED8;
+            --text-primary: #333333;
+            --text-secondary: #6C757D;
+            --text-muted: #adb5bd;
+            --status-active-bg: #E7F3EF;
+            --status-active-text: #065F46;
+            --status-inactive-bg: #F1F3F5;
+            --status-inactive-text: #495057;
+            --status-transit-bg: #DBEAFE;
+            --status-transit-text: #1E40AF;
+            --status-delivered-bg: #DCFCE7;
+            --status-delivered-text: #166534;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-main);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-soft); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+        /* Material Symbols sizing */
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 64px;
+            background: var(--surface-white);
+            border-right: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            z-index: 50;
+            box-shadow: 1px 0 3px rgba(0,0,0,0.04);
+        }
+
+        .sidebar-logo {
+            width: 36px;
+            height: 36px;
+            background: var(--sapphire-blue);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 28px;
+        }
+
+        .sidebar-logo span { color: white; font-size: 18px; }
+
+        .sidebar-item {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            margin-bottom: 4px;
+            position: relative;
+        }
+
+        .sidebar-item:hover {
+            background: var(--bg-main);
+            color: var(--text-primary);
+        }
+
+        .sidebar-item.active {
+            background: #EEF2FF;
+            color: var(--sapphire-blue);
+        }
+
+        .sidebar-item .material-symbols-outlined { font-size: 22px; }
+
+        .sidebar-item .badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 8px;
+            height: 8px;
+            background: #EF4444;
+            border-radius: 50%;
+            border: 2px solid var(--surface-white);
+        }
+
+        .sidebar-bottom {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 64px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            height: 48px;
+            min-height: 48px;
+            background: var(--surface-white);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            gap: 16px;
+        }
+
+        .header-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.01em;
+            white-space: nowrap;
+        }
+
+        .header-search {
+            position: relative;
+            flex: 0 1 320px;
+            margin-left: 24px;
+        }
+
+        .header-search input {
+            width: 100%;
+            height: 32px;
+            background: var(--bg-main);
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            padding: 0 12px 0 34px;
+            font-size: 12px;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            transition: all 0.15s ease;
+        }
+
+        .header-search input::placeholder { color: var(--text-muted); }
+        .header-search input:focus {
+            outline: none;
+            border-color: var(--sapphire-blue);
+            background: var(--surface-white);
+            box-shadow: 0 0 0 3px rgba(29,78,216,0.06);
+        }
+
+        .header-search .material-symbols-outlined {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 16px;
+            color: var(--text-muted);
+        }
+
+        .header-search .shortcut {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 10px;
+            color: var(--text-muted);
+            background: var(--surface-white);
+            border: 1px solid var(--border-light);
+            border-radius: 3px;
+            padding: 1px 5px;
+            font-weight: 500;
+        }
+
+        .header-actions {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-new-load {
+            height: 32px;
+            padding: 0 14px;
+            background: var(--sapphire-blue);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s ease;
+        }
+
+        .btn-new-load:hover { background: #1E3FB0; }
+        .btn-new-load .material-symbols-outlined { font-size: 16px; }
+
+        .header-icon-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            position: relative;
+        }
+
+        .header-icon-btn:hover { background: var(--bg-main); color: var(--text-primary); }
+        .header-icon-btn .material-symbols-outlined { font-size: 18px; }
+
+        .header-icon-btn .notif-dot {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 6px;
+            height: 6px;
+            background: #EF4444;
+            border-radius: 50%;
+        }
+
+        .avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366F1, #8B5CF6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        /* Filter Bar */
+        .filter-bar {
+            height: 44px;
+            min-height: 44px;
+            background: var(--surface-white);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            gap: 8px;
+        }
+
+        .filter-chip {
+            height: 28px;
+            padding: 0 12px;
+            background: var(--bg-main);
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 500;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .filter-chip:hover { border-color: var(--border-soft); color: var(--text-primary); }
+
+        .filter-chip.active {
+            background: #EEF2FF;
+            border-color: #C7D2FE;
+            color: var(--sapphire-blue);
+        }
+
+        .filter-chip .material-symbols-outlined { font-size: 14px; }
+
+        .filter-chip .count {
+            background: var(--surface-white);
+            border-radius: 3px;
+            padding: 1px 5px;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .filter-chip.active .count {
+            background: rgba(29,78,216,0.1);
+            color: var(--sapphire-blue);
+        }
+
+        .filter-divider {
+            width: 1px;
+            height: 20px;
+            background: var(--border-light);
+            margin: 0 4px;
+        }
+
+        .clear-filters {
+            font-size: 11px;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0 8px;
+            white-space: nowrap;
+            transition: color 0.15s ease;
+        }
+
+        .clear-filters:hover { color: var(--text-secondary); }
+
+        /* Stats Bar */
+        .stats-bar {
+            height: 40px;
+            min-height: 40px;
+            background: var(--surface-white);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            gap: 24px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .stat-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .stat-divider {
+            width: 1px;
+            height: 16px;
+            background: var(--border-light);
+        }
+
+        .stat-trend {
+            font-size: 10px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .stat-trend.up { color: #059669; }
+        .stat-trend.down { color: #DC2626; }
+        .stat-trend .material-symbols-outlined { font-size: 12px; }
+
+        /* Bulk Action Bar */
+        .bulk-bar {
+            height: 40px;
+            min-height: 40px;
+            background: #EEF2FF;
+            border-bottom: 1px solid #C7D2FE;
+            display: none;
+            align-items: center;
+            padding: 0 24px;
+            gap: 12px;
+            animation: slideDown 0.15s ease;
+        }
+
+        .bulk-bar.visible { display: flex; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .bulk-count {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--sapphire-blue);
+        }
+
+        .bulk-action {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--sapphire-blue);
+            cursor: pointer;
+            padding: 4px 10px;
+            border-radius: 4px;
+            transition: all 0.15s ease;
+        }
+
+        .bulk-action:hover { background: rgba(29,78,216,0.08); }
+
+        .bulk-divider {
+            color: #C7D2FE;
+            font-size: 11px;
+        }
+
+        .bulk-close {
+            margin-left: auto;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            cursor: pointer;
+            color: var(--sapphire-blue);
+            transition: background 0.15s ease;
+        }
+
+        .bulk-close:hover { background: rgba(29,78,216,0.08); }
+        .bulk-close .material-symbols-outlined { font-size: 16px; }
+
+        /* Table Container */
+        .table-container {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: auto;
+            background: var(--bg-main);
+        }
+
+        .dispatch-table {
+            width: 100%;
+            min-width: 1100px;
+            border-collapse: collapse;
+        }
+
+        /* Table Head */
+        .dispatch-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .dispatch-table thead th {
+            background: var(--surface-white);
+            border-bottom: 1px solid var(--border-light);
+            padding: 0 12px;
+            height: 36px;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            text-align: left;
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.15s ease;
+        }
+
+        .dispatch-table thead th:hover { color: var(--text-secondary); }
+
+        .dispatch-table thead th.sorted { color: var(--text-primary); }
+
+        .th-content {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .sort-icon {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            line-height: 0;
+        }
+
+        .sort-icon .material-symbols-outlined {
+            font-size: 12px;
+            color: var(--border-soft);
+            line-height: 8px;
+        }
+
+        .sort-icon .material-symbols-outlined.active { color: var(--sapphire-blue); }
+
+        .th-checkbox {
+            width: 40px;
+            min-width: 40px;
+        }
+
+        /* Section Headers */
+        .section-header td {
+            padding: 0;
+            height: 32px;
+            background: var(--bg-main);
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .section-header-inner {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 12px;
+            height: 100%;
+            position: relative;
+        }
+
+        .section-bar {
+            position: absolute;
+            left: 0;
+            top: 4px;
+            bottom: 4px;
+            width: 3px;
+            border-radius: 0 2px 2px 0;
+        }
+
+        .section-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-left: 12px;
+        }
+
+        .section-label {
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-secondary);
+        }
+
+        .section-count {
+            font-size: 9px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        /* Table Rows */
+        .dispatch-table tbody tr.data-row {
+            background: var(--surface-white);
+            border-bottom: 1px solid var(--border-light);
+            transition: background 0.1s ease;
+            cursor: default;
+        }
+
+        .dispatch-table tbody tr.data-row:hover { background: rgba(248,250,252,0.5); }
+
+        .dispatch-table tbody tr.data-row.at-risk { background: #FEF2F2; }
+        .dispatch-table tbody tr.data-row.at-risk:hover { background: #FEE2E2; }
+
+        .dispatch-table tbody tr.data-row.selected { background: #EEF2FF; }
+        .dispatch-table tbody tr.data-row.selected:hover { background: #E0E7FF; }
+
+        .dispatch-table tbody td {
+            padding: 10px 12px;
+            font-size: 12px;
+            vertical-align: middle;
+        }
+
+        /* Checkbox */
+        .row-checkbox {
+            width: 14px;
+            height: 14px;
+            border: 1.5px solid var(--border-soft);
+            border-radius: 3px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            flex-shrink: 0;
+        }
+
+        .row-checkbox:hover { border-color: var(--sapphire-blue); }
+
+        .row-checkbox.checked {
+            background: var(--sapphire-blue);
+            border-color: var(--sapphire-blue);
+        }
+
+        .row-checkbox.checked::after {
+            content: '';
+            width: 7px;
+            height: 4px;
+            border-left: 1.5px solid white;
+            border-bottom: 1.5px solid white;
+            transform: rotate(-45deg) translateY(-1px);
+        }
+
+        /* Status Cell */
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .status-dot.transit { background: #3B82F6; }
+        .status-dot.unassigned { background: #F59E0B; }
+        .status-dot.tendered { background: #8B5CF6; }
+        .status-dot.dispatched { background: #06B6D4; }
+        .status-dot.delivered { background: #10B981; }
+        .status-dot.at-risk { background: #EF4444; }
+
+        .status-text {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        /* Load # */
+        .load-number {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--sapphire-blue);
+            cursor: pointer;
+            transition: color 0.15s ease;
+        }
+
+        .load-number:hover { color: #1E3FB0; text-decoration: underline; }
+
+        /* Route Cell */
+        .route-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .route-main {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .route-main .material-symbols-outlined {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .route-distance {
+            font-size: 9px;
+            color: var(--text-muted);
+            font-weight: 400;
+            padding-left: 1px;
+        }
+
+        /* Carrier/Driver Cell */
+        .carrier-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+
+        .carrier-name {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .driver-name {
+            font-size: 10px;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .unassigned-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Equipment Cell */
+        .equipment-text {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        /* Date Cell */
+        .date-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+
+        .date-primary {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .date-time {
+            font-size: 9px;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        /* Rate Cell */
+        .rate-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Margin Cell */
+        .margin-text {
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .margin-text.high { color: #15803D; }
+        .margin-text.mid { color: var(--text-primary); }
+        .margin-text.low { color: #DC2626; }
+
+        /* Updated Cell */
+        .updated-cell {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .live-dot {
+            width: 5px;
+            height: 5px;
+            background: #10B981;
+            border-radius: 50%;
+            flex-shrink: 0;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .updated-text {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        /* Pagination */
+        .pagination {
+            height: 44px;
+            min-height: 44px;
+            background: var(--surface-white);
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+        }
+
+        .pagination-info {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .pagination-info strong {
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .page-btn {
+            height: 28px;
+            padding: 0 12px;
+            border: 1px solid var(--border-light);
+            border-radius: 5px;
+            background: var(--surface-white);
+            font-size: 11px;
+            font-weight: 500;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s ease;
+        }
+
+        .page-btn:hover { border-color: var(--border-soft); color: var(--text-primary); }
+        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .page-btn .material-symbols-outlined { font-size: 14px; }
+
+        .page-number {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .page-number:hover { background: var(--bg-main); }
+        .page-number.active {
+            background: var(--sapphire-blue);
+            color: white;
+        }
+
+        /* Section color variants */
+        .section-transit .section-bar, .section-transit .section-dot { background: #3B82F6; }
+        .section-unassigned .section-bar, .section-unassigned .section-dot { background: #F59E0B; }
+        .section-tendered .section-bar, .section-tendered .section-dot { background: #8B5CF6; }
+        .section-dispatched .section-bar, .section-dispatched .section-dot { background: #06B6D4; }
+        .section-delivered .section-bar, .section-delivered .section-dot { background: #10B981; }
+        .section-atrisk .section-bar, .section-atrisk .section-dot { background: #EF4444; }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="sidebar-logo">
+            <span class="material-symbols-outlined" style="font-size:20px;">local_shipping</span>
+        </div>
+        <div class="sidebar-item" title="Dashboard">
+            <span class="material-symbols-outlined">dashboard</span>
+        </div>
+        <div class="sidebar-item active" title="Dispatch">
+            <span class="material-symbols-outlined filled">hub</span>
+        </div>
+        <div class="sidebar-item" title="Loads">
+            <span class="material-symbols-outlined">inventory_2</span>
+        </div>
+        <div class="sidebar-item" title="Carriers">
+            <span class="material-symbols-outlined">directions_bus</span>
+        </div>
+        <div class="sidebar-item" title="Customers">
+            <span class="material-symbols-outlined">group</span>
+            <div class="badge"></div>
+        </div>
+        <div class="sidebar-item" title="Invoices">
+            <span class="material-symbols-outlined">receipt_long</span>
+        </div>
+        <div class="sidebar-item" title="Reports">
+            <span class="material-symbols-outlined">analytics</span>
+        </div>
+        <div class="sidebar-bottom">
+            <div class="sidebar-item" title="Settings">
+                <span class="material-symbols-outlined">settings</span>
+            </div>
+            <div class="sidebar-item" title="Help">
+                <span class="material-symbols-outlined">help</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+
+        <!-- Header -->
+        <header class="header">
+            <span class="header-title">Dispatch Board</span>
+            <div class="header-search">
+                <span class="material-symbols-outlined">search</span>
+                <input type="text" placeholder="Search loads, carriers, routes...">
+                <span class="shortcut">/</span>
+            </div>
+            <div class="header-actions">
+                <button class="btn-new-load">
+                    <span class="material-symbols-outlined">add</span>
+                    New Load
+                </button>
+                <button class="header-icon-btn" title="Refresh">
+                    <span class="material-symbols-outlined">refresh</span>
+                </button>
+                <button class="header-icon-btn" title="Notifications">
+                    <span class="material-symbols-outlined">notifications</span>
+                    <div class="notif-dot"></div>
+                </button>
+                <button class="header-icon-btn" title="Export">
+                    <span class="material-symbols-outlined">download</span>
+                </button>
+                <div class="avatar">JD</div>
+            </div>
+        </header>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <div class="filter-chip active">
+                <span class="material-symbols-outlined">filter_list</span>
+                All Loads
+                <span class="count">571</span>
+            </div>
+            <div class="filter-chip">
+                Today
+            </div>
+            <div class="filter-chip">
+                <span class="material-symbols-outlined">calendar_today</span>
+                Feb 1 - Feb 8
+            </div>
+            <div class="filter-divider"></div>
+            <div class="filter-chip">
+                <span class="material-symbols-outlined">route</span>
+                Lane
+            </div>
+            <div class="filter-chip">
+                <span class="material-symbols-outlined">directions_bus</span>
+                Carrier
+            </div>
+            <div class="filter-chip">
+                <span class="material-symbols-outlined">local_shipping</span>
+                Equipment
+            </div>
+            <div class="filter-chip">
+                <span class="material-symbols-outlined">attach_money</span>
+                Rate Range
+            </div>
+            <div class="filter-divider"></div>
+            <span class="clear-filters">Clear All</span>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-label">Total Revenue</span>
+                <span class="stat-value">$1.47M</span>
+                <span class="stat-trend up">
+                    <span class="material-symbols-outlined">trending_up</span>
+                    +8.2%
+                </span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-label">Avg Margin</span>
+                <span class="stat-value">16.4%</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-label">On-Time</span>
+                <span class="stat-value">94.2%</span>
+                <span class="stat-trend up">
+                    <span class="material-symbols-outlined">trending_up</span>
+                    +1.1%
+                </span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-label">Active Loads</span>
+                <span class="stat-value">57</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-label">At Risk</span>
+                <span class="stat-value" style="color: #DC2626;">2</span>
+            </div>
+        </div>
+
+        <!-- Bulk Action Bar (hidden by default) -->
+        <div class="bulk-bar" id="bulkBar">
+            <span class="bulk-count" id="bulkCount">3 selected</span>
+            <span style="color: #93A3D4; font-size: 11px;">|</span>
+            <span class="bulk-action">Assign Carrier</span>
+            <span class="bulk-divider">|</span>
+            <span class="bulk-action">Update Status</span>
+            <span class="bulk-divider">|</span>
+            <span class="bulk-action">Export</span>
+            <div class="bulk-close" onclick="clearSelection()">
+                <span class="material-symbols-outlined">close</span>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-container">
+            <table class="dispatch-table">
+                <thead>
+                    <tr>
+                        <th class="th-checkbox" style="width: 40px;">
+                            <div class="row-checkbox" id="selectAll" onclick="toggleSelectAll()"></div>
+                        </th>
+                        <th style="width: 100px;">
+                            <div class="th-content">
+                                Status
+                                <div class="sort-icon">
+                                    <span class="material-symbols-outlined">expand_less</span>
+                                    <span class="material-symbols-outlined">expand_more</span>
+                                </div>
+                            </div>
+                        </th>
+                        <th class="sorted" style="width: 90px;">
+                            <div class="th-content">
+                                Load #
+                                <div class="sort-icon">
+                                    <span class="material-symbols-outlined active">expand_less</span>
+                                    <span class="material-symbols-outlined">expand_more</span>
+                                </div>
+                            </div>
+                        </th>
+                        <th style="min-width: 200px;">
+                            <div class="th-content">
+                                Route
+                                <div class="sort-icon">
+                                    <span class="material-symbols-outlined">expand_less</span>
+                                    <span class="material-symbols-outlined">expand_more</span>
+                                </div>
+                            </div>
+                        </th>
+                        <th style="min-width: 140px;">
+                            <div class="th-content">
+                                Carrier / Driver
+                                <div class="sort-icon">
+                                    <span class="material-symbols-outlined">expand_less</span>
+                                    <span class="material-symbols-outlined">expand_more</span>
+                                </div>
+                            </div>
+                        </th>
+                        <th style="width: 90px;">
+                            <div class="th-content">
+                                Equipment
+                                <div class="sort-icon">
+                                    <span class="material-symbols-outlined">expand_less</span>
+                                    <span class="material-symbols-outlined">expand_more</span>
+                                </div>
+                            </div>
+                        </th>
+                        <th style="width: 100px;">
+                            <div class="th-content">
+                                Pickup
+                                <div class="sort-icon">
+                                    <span class="material-symbols-outlined">expand_less</span>
+                                    <span class="material-symbols-outlined">expand_more</span>
+                                </div>
+                            </div>
+                        </th>
+                        <th style="width: 100px;">
+                            <div class="th-content">
+                                Delivery
+                                <div class="sort-icon">
+                                    <span class="material-symbols-outlined">expand_less</span>
+                                    <span class="material-symbols-outlined">expand_more</span>
+                                </div>
+                            </div>
+                        </th>
+                        <th style="width: 80px;">
+                            <div class="th-content">
+                                Rate
+                                <div class="sort-icon">
+                                    <span class="material-symbols-outlined">expand_less</span>
+                                    <span class="material-symbols-outlined">expand_more</span>
+                                </div>
+                            </div>
+                        </th>
+                        <th style="width: 70px;">
+                            <div class="th-content">
+                                Margin
+                                <div class="sort-icon">
+                                    <span class="material-symbols-outlined">expand_less</span>
+                                    <span class="material-symbols-outlined">expand_more</span>
+                                </div>
+                            </div>
+                        </th>
+                        <th style="width: 90px;">
+                            <div class="th-content">
+                                Updated
+                                <div class="sort-icon">
+                                    <span class="material-symbols-outlined">expand_less</span>
+                                    <span class="material-symbols-outlined">expand_more</span>
+                                </div>
+                            </div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    <!-- ===== IN TRANSIT (8) ===== -->
+                    <tr class="section-header">
+                        <td colspan="11">
+                            <div class="section-header-inner section-transit">
+                                <div class="section-bar"></div>
+                                <div class="section-dot"></div>
+                                <span class="section-label">In Transit</span>
+                                <span class="section-count">(8)</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="data-row">
+                        <td><div class="row-checkbox" onclick="toggleCheck(this)"></div></td>
+                        <td><div class="status-indicator"><div class="status-dot transit"></div><span class="status-text">In Transit</span></div></td>
+                        <td><span class="load-number">LD-7842</span></td>
+                        <td>
+                            <div class="route-cell">
+                                <div class="route-main">Chicago, IL <span class="material-symbols-outlined">east</span> Dallas, TX</div>
+                                <div class="route-distance">921 mi</div>
+                            </div>
+                        </td>
+                        <td><div class="carrier-cell"><span class="carrier-name">Swift Transport</span><span class="driver-name">Mike Reynolds</span></div></td>
+                        <td><span class="equipment-text">Dry Van</span></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 6</span><span class="date-time">08:00 AM</span></div></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 8</span><span class="date-time">02:00 PM</span></div></td>
+                        <td><span class="rate-text">$3,450</span></td>
+                        <td><span class="margin-text high">18.2%</span></td>
+                        <td><div class="updated-cell"><div class="live-dot"></div><span class="updated-text">5m ago</span></div></td>
+                    </tr>
+                    <tr class="data-row">
+                        <td><div class="row-checkbox" onclick="toggleCheck(this)"></div></td>
+                        <td><div class="status-indicator"><div class="status-dot transit"></div><span class="status-text">In Transit</span></div></td>
+                        <td><span class="load-number">LD-7838</span></td>
+                        <td>
+                            <div class="route-cell">
+                                <div class="route-main">Atlanta, GA <span class="material-symbols-outlined">east</span> Miami, FL</div>
+                                <div class="route-distance">662 mi</div>
+                            </div>
+                        </td>
+                        <td><div class="carrier-cell"><span class="carrier-name">J.B. Hunt</span><span class="driver-name">Carlos Mendez</span></div></td>
+                        <td><span class="equipment-text">Reefer</span></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 6</span><span class="date-time">11:30 AM</span></div></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 7</span><span class="date-time">06:00 PM</span></div></td>
+                        <td><span class="rate-text">$2,880</span></td>
+                        <td><span class="margin-text high">21.5%</span></td>
+                        <td><div class="updated-cell"><div class="live-dot"></div><span class="updated-text">2m ago</span></div></td>
+                    </tr>
+                    <tr class="data-row">
+                        <td><div class="row-checkbox" onclick="toggleCheck(this)"></div></td>
+                        <td><div class="status-indicator"><div class="status-dot transit"></div><span class="status-text">In Transit</span></div></td>
+                        <td><span class="load-number">LD-7835</span></td>
+                        <td>
+                            <div class="route-cell">
+                                <div class="route-main">Los Angeles, CA <span class="material-symbols-outlined">east</span> Phoenix, AZ</div>
+                                <div class="route-distance">373 mi</div>
+                            </div>
+                        </td>
+                        <td><div class="carrier-cell"><span class="carrier-name">Werner Logistics</span><span class="driver-name">James Park</span></div></td>
+                        <td><span class="equipment-text">Flatbed</span></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 7</span><span class="date-time">06:00 AM</span></div></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 7</span><span class="date-time">04:00 PM</span></div></td>
+                        <td><span class="rate-text">$1,750</span></td>
+                        <td><span class="margin-text mid">14.1%</span></td>
+                        <td><div class="updated-cell"><div class="live-dot"></div><span class="updated-text">8m ago</span></div></td>
+                    </tr>
+                    <tr class="data-row">
+                        <td><div class="row-checkbox" onclick="toggleCheck(this)"></div></td>
+                        <td><div class="status-indicator"><div class="status-dot transit"></div><span class="status-text">In Transit</span></div></td>
+                        <td><span class="load-number">LD-7831</span></td>
+                        <td>
+                            <div class="route-cell">
+                                <div class="route-main">Nashville, TN <span class="material-symbols-outlined">east</span> Memphis, TN</div>
+                                <div class="route-distance">213 mi</div>
+                            </div>
+                        </td>
+                        <td><div class="carrier-cell"><span class="carrier-name">Schneider National</span><span class="driver-name">Tom Bradley</span></div></td>
+                        <td><span class="equipment-text">Dry Van</span></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 7</span><span class="date-time">10:00 AM</span></div></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 7</span><span class="date-time">05:30 PM</span></div></td>
+                        <td><span class="rate-text">$1,120</span></td>
+                        <td><span class="margin-text high">16.8%</span></td>
+                        <td><div class="updated-cell"><span class="updated-text">22m ago</span></div></td>
+                    </tr>
+                    <tr class="data-row">
+                        <td><div class="row-checkbox" onclick="toggleCheck(this)"></div></td>
+                        <td><div class="status-indicator"><div class="status-dot transit"></div><span class="status-text">In Transit</span></div></td>
+                        <td><span class="load-number">LD-7826</span></td>
+                        <td>
+                            <div class="route-cell">
+                                <div class="route-main">Denver, CO <span class="material-symbols-outlined">east</span> Kansas City, MO</div>
+                                <div class="route-distance">605 mi</div>
+                            </div>
+                        </td>
+                        <td><div class="carrier-cell"><span class="carrier-name">XPO Logistics</span><span class="driver-name">Sarah Kim</span></div></td>
+                        <td><span class="equipment-text">Reefer</span></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 6</span><span class="date-time">02:00 PM</span></div></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 8</span><span class="date-time">08:00 AM</span></div></td>
+                        <td><span class="rate-text">$2,650</span></td>
+                        <td><span class="margin-text mid">12.4%</span></td>
+                        <td><div class="updated-cell"><div class="live-dot"></div><span class="updated-text">1m ago</span></div></td>
+                    </tr>
+                    <tr class="data-row">
+                        <td><div class="row-checkbox" onclick="toggleCheck(this)"></div></td>
+                        <td><div class="status-indicator"><div class="status-dot transit"></div><span class="status-text">In Transit</span></div></td>
+                        <td><span class="load-number">LD-7819</span></td>
+                        <td>
+                            <div class="route-cell">
+                                <div class="route-main">Seattle, WA <span class="material-symbols-outlined">east</span> Portland, OR</div>
+                                <div class="route-distance">174 mi</div>
+                            </div>
+                        </td>
+                        <td><div class="carrier-cell"><span class="carrier-name">Heartland Express</span><span class="driver-name">Derek Liu</span></div></td>
+                        <td><span class="equipment-text">Dry Van</span></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 8</span><span class="date-time">07:00 AM</span></div></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 8</span><span class="date-time">12:00 PM</span></div></td>
+                        <td><span class="rate-text">$890</span></td>
+                        <td><span class="margin-text high">22.3%</span></td>
+                        <td><div class="updated-cell"><div class="live-dot"></div><span class="updated-text">12m ago</span></div></td>
+                    </tr>
+                    <tr class="data-row">
+                        <td><div class="row-checkbox" onclick="toggleCheck(this)"></div></td>
+                        <td><div class="status-indicator"><div class="status-dot transit"></div><span class="status-text">In Transit</span></div></td>
+                        <td><span class="load-number">LD-7814</span></td>
+                        <td>
+                            <div class="route-cell">
+                                <div class="route-main">Houston, TX <span class="material-symbols-outlined">east</span> New Orleans, LA</div>
+                                <div class="route-distance">350 mi</div>
+                            </div>
+                        </td>
+                        <td><div class="carrier-cell"><span class="carrier-name">KLLM Transport</span><span class="driver-name">Andre Williams</span></div></td>
+                        <td><span class="equipment-text">Reefer</span></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 7</span><span class="date-time">03:00 PM</span></div></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 8</span><span class="date-time">09:00 AM</span></div></td>
+                        <td><span class="rate-text">$1,680</span></td>
+                        <td><span class="margin-text mid">13.7%</span></td>
+                        <td><div class="updated-cell"><span class="updated-text">35m ago</span></div></td>
+                    </tr>
+                    <tr class="data-row">
+                        <td><div class="row-checkbox" onclick="toggleCheck(this)"></div></td>
+                        <td><div class="status-indicator"><div class="status-dot transit"></div><span class="status-text">In Transit</span></div></td>
+                        <td><span class="load-number">LD-7809</span></td>
+                        <td>
+                            <div class="route-cell">
+                                <div class="route-main">Detroit, MI <span class="material-symbols-outlined">east</span> Columbus, OH</div>
+                                <div class="route-distance">263 mi</div>
+                            </div>
+                        </td>
+                        <td><div class="carrier-cell"><span class="carrier-name">Old Dominion</span><span class="driver-name">Robert Chen</span></div></td>
+                        <td><span class="equipment-text">Flatbed</span></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 8</span><span class="date-time">05:30 AM</span></div></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 8</span><span class="date-time">01:00 PM</span></div></td>
+                        <td><span class="rate-text">$1,340</span></td>
+                        <td><span class="margin-text high">19.6%</span></td>
+                        <td><div class="updated-cell"><div class="live-dot"></div><span class="updated-text">7m ago</span></div></td>
+                    </tr>
+
+                    <!-- ===== UNASSIGNED (4) ===== -->
+                    <tr class="section-header">
+                        <td colspan="11">
+                            <div class="section-header-inner section-unassigned">
+                                <div class="section-bar"></div>
+                                <div class="section-dot"></div>
+                                <span class="section-label">Unassigned</span>
+                                <span class="section-count">(4)</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="data-row">
+                        <td><div class="row-checkbox" onclick="toggleCheck(this)"></div></td>
+                        <td><div class="status-indicator"><div class="status-dot unassigned"></div><span class="status-text">Unassigned</span></div></td>
+                        <td><span class="load-number">LD-7851</span></td>
+                        <td>
+                            <div class="route-cell">
+                                <div class="route-main">San Francisco, CA <span class="material-symbols-outlined">east</span> Reno, NV</div>
+                                <div class="route-distance">218 mi</div>
+                            </div>
+                        </td>
+                        <td><span class="unassigned-label">Unassigned</span></td>
+                        <td><span class="equipment-text">Dry Van</span></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 9</span><span class="date-time">09:00 AM</span></div></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 9</span><span class="date-time">04:00 PM</span></div></td>
+                        <td><span class="rate-text">$1,250</span></td>
+                        <td><span class="margin-text high">17.6%</span></td>
+                        <td><div class="updated-cell"><span class="updated-text">1h ago</span></div></td>
+                    </tr>
+                    <tr class="data-row">
+                        <td><div class="row-checkbox" onclick="toggleCheck(this)"></div></td>
+                        <td><div class="status-indicator"><div class="status-dot unassigned"></div><span class="status-text">Unassigned</span></div></td>
+                        <td><span class="load-number">LD-7849</span></td>
+                        <td>
+                            <div class="route-cell">
+                                <div class="route-main">Philadelphia, PA <span class="material-symbols-outlined">east</span> Boston, MA</div>
+                                <div class="route-distance">306 mi</div>
+                            </div>
+                        </td>
+                        <td><span class="unassigned-label">Unassigned</span></td>
+                        <td><span class="equipment-text">Reefer</span></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 9</span><span class="date-time">07:00 AM</span></div></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 9</span><span class="date-time">03:30 PM</span></div></td>
+                        <td><span class="rate-text">$1,780</span></td>
+                        <td><span class="margin-text mid">14.3%</span></td>
+                        <td><div class="updated-cell"><span class="updated-text">2h ago</span></div></td>
+                    </tr>
+                    <tr class="data-row">
+                        <td><div class="row-checkbox" onclick="toggleCheck(this)"></div></td>
+                        <td><div class="status-indicator"><div class="status-dot unassigned"></div><span class="status-text">Unassigned</span></div></td>
+                        <td><span class="load-number">LD-7847</span></td>
+                        <td>
+                            <div class="route-cell">
+                                <div class="route-main">Minneapolis, MN <span class="material-symbols-outlined">east</span> Milwaukee, WI</div>
+                                <div class="route-distance">337 mi</div>
+                            </div>
+                        </td>
+                        <td><span class="unassigned-label">Unassigned</span></td>
+                        <td><span class="equipment-text">Dry Van</span></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 10</span><span class="date-time">06:00 AM</span></div></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 10</span><span class="date-time">02:00 PM</span></div></td>
+                        <td><span class="rate-text">$1,560</span></td>
+                        <td><span class="margin-text high">15.9%</span></td>
+                        <td><div class="updated-cell"><span class="updated-text">3h ago</span></div></td>
+                    </tr>
+                    <tr class="data-row">
+                        <td><div class="row-checkbox" onclick="toggleCheck(this)"></div></td>
+                        <td><div class="status-indicator"><div class="status-dot unassigned"></div><span class="status-text">Unassigned</span></div></td>
+                        <td><span class="load-number">LD-7845</span></td>
+                        <td>
+                            <div class="route-cell">
+                                <div class="route-main">Charlotte, NC <span class="material-symbols-outlined">east</span> Jacksonville, FL</div>
+                                <div class="route-distance">394 mi</div>
+                            </div>
+                        </td>
+                        <td><span class="unassigned-label">Unassigned</span></td>
+                        <td><span class="equipment-text">Flatbed</span></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 10</span><span class="date-time">08:00 AM</span></div></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 11</span><span class="date-time">10:00 AM</span></div></td>
+                        <td><span class="rate-text">$2,100</span></td>
+                        <td><span class="margin-text low">8.2%</span></td>
+                        <td><div class="updated-cell"><span class="updated-text">4h ago</span></div></td>
+                    </tr>
+
+                    <!-- ===== TENDERED (3) ===== -->
+                    <tr class="section-header">
+                        <td colspan="11">
+                            <div class="section-header-inner section-tendered">
+                                <div class="section-bar"></div>
+                                <div class="section-dot"></div>
+                                <span class="section-label">Tendered</span>
+                                <span class="section-count">(3)</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="data-row">
+                        <td><div class="row-checkbox" onclick="toggleCheck(this)"></div></td>
+                        <td><div class="status-indicator"><div class="status-dot tendered"></div><span class="status-text">Tendered</span></div></td>
+                        <td><span class="load-number">LD-7853</span></td>
+                        <td>
+                            <div class="route-cell">
+                                <div class="route-main">Indianapolis, IN <span class="material-symbols-outlined">east</span> St. Louis, MO</div>
+                                <div class="route-distance">242 mi</div>
+                            </div>
+                        </td>
+                        <td><div class="carrier-cell"><span class="carrier-name">Ryder System</span><span class="driver-name">Pending confirm</span></div></td>
+                        <td><span class="equipment-text">Dry Van</span></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 9</span><span class="date-time">10:00 AM</span></div></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 9</span><span class="date-time">06:00 PM</span></div></td>
+                        <td><span class="rate-text">$1,380</span></td>
+                        <td><span class="margin-text mid">11.2%</span></td>
+                        <td><div class="updated-cell"><span class="updated-text">45m ago</span></div></td>
+                    </tr>
+                    <tr class="data-row">
+                        <td><div class="row-checkbox" onclick="toggleCheck(this)"></div></td>
+                        <td><div class="status-indicator"><div class="status-dot tendered"></div><span class="status-text">Tendered</span></div></td>
+                        <td><span class="load-number">LD-7850</span></td>
+                        <td>
+                            <div class="route-cell">
+                                <div class="route-main">Salt Lake City, UT <span class="material-symbols-outlined">east</span> Boise, ID</div>
+                                <div class="route-distance">340 mi</div>
+                            </div>
+                        </td>
+                        <td><div class="carrier-cell"><span class="carrier-name">Covenant Transport</span><span class="driver-name">Pending confirm</span></div></td>
+                        <td><span class="equipment-text">Reefer</span></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 10</span><span class="date-time">07:30 AM</span></div></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 10</span><span class="date-time">04:00 PM</span></div></td>
+                        <td><span class="rate-text">$1,920</span></td>
+                        <td><span class="margin-text high">16.5%</span></td>
+                        <td><div class="updated-cell"><span class="updated-text">1h ago</span></div></td>
+                    </tr>
+                    <tr class="data-row">
+                        <td><div class="row-checkbox" onclick="toggleCheck(this)"></div></td>
+                        <td><div class="status-indicator"><div class="status-dot tendered"></div><span class="status-text">Tendered</span></div></td>
+                        <td><span class="load-number">LD-7848</span></td>
+                        <td>
+                            <div class="route-cell">
+                                <div class="route-main">Tampa, FL <span class="material-symbols-outlined">east</span> Savannah, GA</div>
+                                <div class="route-distance">408 mi</div>
+                            </div>
+                        </td>
+                        <td><div class="carrier-cell"><span class="carrier-name">USX Intermodal</span><span class="driver-name">Pending confirm</span></div></td>
+                        <td><span class="equipment-text">Dry Van</span></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 9</span><span class="date-time">11:00 AM</span></div></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 10</span><span class="date-time">07:00 AM</span></div></td>
+                        <td><span class="rate-text">$1,850</span></td>
+                        <td><span class="margin-text high">18.9%</span></td>
+                        <td><div class="updated-cell"><span class="updated-text">2h ago</span></div></td>
+                    </tr>
+
+                    <!-- ===== DISPATCHED (4) ===== -->
+                    <tr class="section-header">
+                        <td colspan="11">
+                            <div class="section-header-inner section-dispatched">
+                                <div class="section-bar"></div>
+                                <div class="section-dot"></div>
+                                <span class="section-label">Dispatched</span>
+                                <span class="section-count">(4)</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="data-row">
+                        <td><div class="row-checkbox" onclick="toggleCheck(this)"></div></td>
+                        <td><div class="status-indicator"><div class="status-dot dispatched"></div><span class="status-text">Dispatched</span></div></td>
+                        <td><span class="load-number">LD-7854</span></td>
+                        <td>
+                            <div class="route-cell">
+                                <div class="route-main">Newark, NJ <span class="material-symbols-outlined">east</span> Pittsburgh, PA</div>
+                                <div class="route-distance">370 mi</div>
+                            </div>
+                        </td>
+                        <td><div class="carrier-cell"><span class="carrier-name">FedEx Freight</span><span class="driver-name">Lisa Tran</span></div></td>
+                        <td><span class="equipment-text">Dry Van</span></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 9</span><span class="date-time">06:00 AM</span></div></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 9</span><span class="date-time">04:00 PM</span></div></td>
+                        <td><span class="rate-text">$1,690</span></td>
+                        <td><span class="margin-text mid">13.4%</span></td>
+                        <td><div class="updated-cell"><span class="updated-text">30m ago</span></div></td>
+                    </tr>
+                    <tr class="data-row">
+                        <td><div class="row-checkbox" onclick="toggleCheck(this)"></div></td>
+                        <td><div class="status-indicator"><div class="status-dot dispatched"></div><span class="status-text">Dispatched</span></div></td>
+                        <td><span class="load-number">LD-7852</span></td>
+                        <td>
+                            <div class="route-cell">
+                                <div class="route-main">Oklahoma City, OK <span class="material-symbols-outlined">east</span> Tulsa, OK</div>
+                                <div class="route-distance">107 mi</div>
+                            </div>
+                        </td>
+                        <td><div class="carrier-cell"><span class="carrier-name">ABF Freight</span><span class="driver-name">Tony Garcia</span></div></td>
+                        <td><span class="equipment-text">Flatbed</span></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 9</span><span class="date-time">08:00 AM</span></div></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 9</span><span class="date-time">11:00 AM</span></div></td>
+                        <td><span class="rate-text">$680</span></td>
+                        <td><span class="margin-text high">24.1%</span></td>
+                        <td><div class="updated-cell"><span class="updated-text">55m ago</span></div></td>
+                    </tr>
+                    <tr class="data-row">
+                        <td><div class="row-checkbox" onclick="toggleCheck(this)"></div></td>
+                        <td><div class="status-indicator"><div class="status-dot dispatched"></div><span class="status-text">Dispatched</span></div></td>
+                        <td><span class="load-number">LD-7846</span></td>
+                        <td>
+                            <div class="route-cell">
+                                <div class="route-main">El Paso, TX <span class="material-symbols-outlined">east</span> San Antonio, TX</div>
+                                <div class="route-distance">551 mi</div>
+                            </div>
+                        </td>
+                        <td><div class="carrier-cell"><span class="carrier-name">Saia Inc.</span><span class="driver-name">Maria Santos</span></div></td>
+                        <td><span class="equipment-text">Reefer</span></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 9</span><span class="date-time">05:00 AM</span></div></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 9</span><span class="date-time">06:00 PM</span></div></td>
+                        <td><span class="rate-text">$2,340</span></td>
+                        <td><span class="margin-text high">17.2%</span></td>
+                        <td><div class="updated-cell"><span class="updated-text">1h ago</span></div></td>
+                    </tr>
+                    <tr class="data-row">
+                        <td><div class="row-checkbox" onclick="toggleCheck(this)"></div></td>
+                        <td><div class="status-indicator"><div class="status-dot dispatched"></div><span class="status-text">Dispatched</span></div></td>
+                        <td><span class="load-number">LD-7843</span></td>
+                        <td>
+                            <div class="route-cell">
+                                <div class="route-main">Richmond, VA <span class="material-symbols-outlined">east</span> Raleigh, NC</div>
+                                <div class="route-distance">169 mi</div>
+                            </div>
+                        </td>
+                        <td><div class="carrier-cell"><span class="carrier-name">Estes Express</span><span class="driver-name">Kevin Moore</span></div></td>
+                        <td><span class="equipment-text">Dry Van</span></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 9</span><span class="date-time">09:00 AM</span></div></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 9</span><span class="date-time">02:00 PM</span></div></td>
+                        <td><span class="rate-text">$920</span></td>
+                        <td><span class="margin-text mid">11.8%</span></td>
+                        <td><div class="updated-cell"><span class="updated-text">2h ago</span></div></td>
+                    </tr>
+
+                    <!-- ===== DELIVERED (4) ===== -->
+                    <tr class="section-header">
+                        <td colspan="11">
+                            <div class="section-header-inner section-delivered">
+                                <div class="section-bar"></div>
+                                <div class="section-dot"></div>
+                                <span class="section-label">Delivered</span>
+                                <span class="section-count">(4)</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="data-row">
+                        <td><div class="row-checkbox" onclick="toggleCheck(this)"></div></td>
+                        <td><div class="status-indicator"><div class="status-dot delivered"></div><span class="status-text">Delivered</span></div></td>
+                        <td><span class="load-number">LD-7801</span></td>
+                        <td>
+                            <div class="route-cell">
+                                <div class="route-main">New York, NY <span class="material-symbols-outlined">east</span> Washington, DC</div>
+                                <div class="route-distance">225 mi</div>
+                            </div>
+                        </td>
+                        <td><div class="carrier-cell"><span class="carrier-name">Werner Logistics</span><span class="driver-name">Paul Walker</span></div></td>
+                        <td><span class="equipment-text">Dry Van</span></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 5</span><span class="date-time">07:00 AM</span></div></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 5</span><span class="date-time">03:00 PM</span></div></td>
+                        <td><span class="rate-text">$1,450</span></td>
+                        <td><span class="margin-text high">20.3%</span></td>
+                        <td><div class="updated-cell"><span class="updated-text">2d ago</span></div></td>
+                    </tr>
+                    <tr class="data-row">
+                        <td><div class="row-checkbox" onclick="toggleCheck(this)"></div></td>
+                        <td><div class="status-indicator"><div class="status-dot delivered"></div><span class="status-text">Delivered</span></div></td>
+                        <td><span class="load-number">LD-7798</span></td>
+                        <td>
+                            <div class="route-cell">
+                                <div class="route-main">Cincinnati, OH <span class="material-symbols-outlined">east</span> Louisville, KY</div>
+                                <div class="route-distance">100 mi</div>
+                            </div>
+                        </td>
+                        <td><div class="carrier-cell"><span class="carrier-name">Schneider National</span><span class="driver-name">Amy Davis</span></div></td>
+                        <td><span class="equipment-text">Dry Van</span></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 5</span><span class="date-time">10:00 AM</span></div></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 5</span><span class="date-time">01:30 PM</span></div></td>
+                        <td><span class="rate-text">$620</span></td>
+                        <td><span class="margin-text high">19.4%</span></td>
+                        <td><div class="updated-cell"><span class="updated-text">2d ago</span></div></td>
+                    </tr>
+                    <tr class="data-row">
+                        <td><div class="row-checkbox" onclick="toggleCheck(this)"></div></td>
+                        <td><div class="status-indicator"><div class="status-dot delivered"></div><span class="status-text">Delivered</span></div></td>
+                        <td><span class="load-number">LD-7795</span></td>
+                        <td>
+                            <div class="route-cell">
+                                <div class="route-main">Las Vegas, NV <span class="material-symbols-outlined">east</span> Tucson, AZ</div>
+                                <div class="route-distance">420 mi</div>
+                            </div>
+                        </td>
+                        <td><div class="carrier-cell"><span class="carrier-name">J.B. Hunt</span><span class="driver-name">Nick Patel</span></div></td>
+                        <td><span class="equipment-text">Flatbed</span></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 4</span><span class="date-time">06:00 AM</span></div></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 4</span><span class="date-time">04:00 PM</span></div></td>
+                        <td><span class="rate-text">$2,010</span></td>
+                        <td><span class="margin-text mid">14.7%</span></td>
+                        <td><div class="updated-cell"><span class="updated-text">3d ago</span></div></td>
+                    </tr>
+                    <tr class="data-row">
+                        <td><div class="row-checkbox" onclick="toggleCheck(this)"></div></td>
+                        <td><div class="status-indicator"><div class="status-dot delivered"></div><span class="status-text">Delivered</span></div></td>
+                        <td><span class="load-number">LD-7790</span></td>
+                        <td>
+                            <div class="route-cell">
+                                <div class="route-main">Baltimore, MD <span class="material-symbols-outlined">east</span> Hartford, CT</div>
+                                <div class="route-distance">298 mi</div>
+                            </div>
+                        </td>
+                        <td><div class="carrier-cell"><span class="carrier-name">XPO Logistics</span><span class="driver-name">Dan Fischer</span></div></td>
+                        <td><span class="equipment-text">Reefer</span></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 4</span><span class="date-time">08:00 AM</span></div></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 4</span><span class="date-time">05:00 PM</span></div></td>
+                        <td><span class="rate-text">$1,580</span></td>
+                        <td><span class="margin-text high">16.1%</span></td>
+                        <td><div class="updated-cell"><span class="updated-text">3d ago</span></div></td>
+                    </tr>
+
+                    <!-- ===== AT RISK (2) ===== -->
+                    <tr class="section-header">
+                        <td colspan="11">
+                            <div class="section-header-inner section-atrisk">
+                                <div class="section-bar"></div>
+                                <div class="section-dot"></div>
+                                <span class="section-label">At Risk</span>
+                                <span class="section-count">(2)</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="data-row at-risk">
+                        <td><div class="row-checkbox" onclick="toggleCheck(this)"></div></td>
+                        <td><div class="status-indicator"><div class="status-dot at-risk"></div><span class="status-text">At Risk</span></div></td>
+                        <td><span class="load-number">LD-7822</span></td>
+                        <td>
+                            <div class="route-cell">
+                                <div class="route-main">Cleveland, OH <span class="material-symbols-outlined">east</span> Buffalo, NY</div>
+                                <div class="route-distance">189 mi</div>
+                            </div>
+                        </td>
+                        <td><div class="carrier-cell"><span class="carrier-name">Crete Carrier</span><span class="driver-name">Joe Mitchell</span></div></td>
+                        <td><span class="equipment-text">Reefer</span></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 7</span><span class="date-time">04:00 AM</span></div></td>
+                        <td><div class="date-cell"><span class="date-primary" style="color: #DC2626;">Feb 7</span><span class="date-time" style="color: #DC2626;">12:00 PM (Late)</span></div></td>
+                        <td><span class="rate-text">$1,150</span></td>
+                        <td><span class="margin-text low">7.8%</span></td>
+                        <td><div class="updated-cell"><div class="live-dot" style="background:#EF4444;"></div><span class="updated-text">3m ago</span></div></td>
+                    </tr>
+                    <tr class="data-row at-risk">
+                        <td><div class="row-checkbox" onclick="toggleCheck(this)"></div></td>
+                        <td><div class="status-indicator"><div class="status-dot at-risk"></div><span class="status-text">At Risk</span></div></td>
+                        <td><span class="load-number">LD-7817</span></td>
+                        <td>
+                            <div class="route-cell">
+                                <div class="route-main">Omaha, NE <span class="material-symbols-outlined">east</span> Des Moines, IA</div>
+                                <div class="route-distance">150 mi</div>
+                            </div>
+                        </td>
+                        <td><div class="carrier-cell"><span class="carrier-name">PAM Transport</span><span class="driver-name">Steve Novak</span></div></td>
+                        <td><span class="equipment-text">Dry Van</span></td>
+                        <td><div class="date-cell"><span class="date-primary">Feb 7</span><span class="date-time">09:00 AM</span></div></td>
+                        <td><div class="date-cell"><span class="date-primary" style="color: #DC2626;">Feb 7</span><span class="date-time" style="color: #DC2626;">03:00 PM (Late)</span></div></td>
+                        <td><span class="rate-text">$780</span></td>
+                        <td><span class="margin-text low">6.4%</span></td>
+                        <td><div class="updated-cell"><div class="live-dot" style="background:#EF4444;"></div><span class="updated-text">9m ago</span></div></td>
+                    </tr>
+
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+            <span class="pagination-info">Showing <strong>1-25</strong> of <strong>571</strong> loads</span>
+            <div class="pagination-controls">
+                <button class="page-btn" disabled>
+                    <span class="material-symbols-outlined">chevron_left</span>
+                    Previous
+                </button>
+                <div class="page-number active">1</div>
+                <div class="page-number">2</div>
+                <div class="page-number">3</div>
+                <div class="page-number" style="color: var(--text-muted); cursor: default;">...</div>
+                <div class="page-number">23</div>
+                <button class="page-btn">
+                    Next
+                    <span class="material-symbols-outlined">chevron_right</span>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Track selected rows
+        let selectedCount = 0;
+
+        function toggleCheck(el) {
+            el.classList.toggle('checked');
+            const row = el.closest('tr');
+
+            if (el.classList.contains('checked')) {
+                row.classList.add('selected');
+                selectedCount++;
+            } else {
+                row.classList.remove('selected');
+                selectedCount--;
+            }
+
+            updateBulkBar();
+        }
+
+        function toggleSelectAll() {
+            const selectAllBox = document.getElementById('selectAll');
+            const allCheckboxes = document.querySelectorAll('.data-row .row-checkbox');
+            const isChecked = selectAllBox.classList.contains('checked');
+
+            if (isChecked) {
+                // Deselect all
+                selectAllBox.classList.remove('checked');
+                allCheckboxes.forEach(cb => {
+                    cb.classList.remove('checked');
+                    cb.closest('tr').classList.remove('selected');
+                });
+                selectedCount = 0;
+            } else {
+                // Select all
+                selectAllBox.classList.add('checked');
+                allCheckboxes.forEach(cb => {
+                    cb.classList.add('checked');
+                    cb.closest('tr').classList.add('selected');
+                });
+                selectedCount = allCheckboxes.length;
+            }
+
+            updateBulkBar();
+        }
+
+        function updateBulkBar() {
+            const bulkBar = document.getElementById('bulkBar');
+            const bulkCount = document.getElementById('bulkCount');
+
+            if (selectedCount > 0) {
+                bulkBar.classList.add('visible');
+                bulkCount.textContent = selectedCount + ' selected';
+            } else {
+                bulkBar.classList.remove('visible');
+            }
+        }
+
+        function clearSelection() {
+            const selectAllBox = document.getElementById('selectAll');
+            const allCheckboxes = document.querySelectorAll('.data-row .row-checkbox');
+
+            selectAllBox.classList.remove('checked');
+            allCheckboxes.forEach(cb => {
+                cb.classList.remove('checked');
+                cb.closest('tr').classList.remove('selected');
+            });
+            selectedCount = 0;
+            updateBulkBar();
+        }
+
+        // Sort column click simulation
+        document.querySelectorAll('.dispatch-table thead th').forEach(th => {
+            th.addEventListener('click', function() {
+                // Remove sorted class from all
+                document.querySelectorAll('.dispatch-table thead th').forEach(t => t.classList.remove('sorted'));
+                // Remove active from all sort icons
+                document.querySelectorAll('.sort-icon .material-symbols-outlined').forEach(i => i.classList.remove('active'));
+
+                // Add sorted class to clicked
+                this.classList.add('sorted');
+
+                // Toggle sort direction on clicked column
+                const icons = this.querySelectorAll('.sort-icon .material-symbols-outlined');
+                if (icons.length === 2) {
+                    // Simple toggle — default to ascending
+                    icons[0].classList.add('active');
+                }
+            });
+        });
+
+        // Filter chip toggle
+        document.querySelectorAll('.filter-chip').forEach(chip => {
+            chip.addEventListener('click', function() {
+                this.classList.toggle('active');
+            });
+        });
+
+        // Keyboard shortcut for search
+        document.addEventListener('keydown', function(e) {
+            if (e.key === '/' && !e.ctrlKey && !e.metaKey) {
+                const input = document.querySelector('.header-search input');
+                if (document.activeElement !== input) {
+                    e.preventDefault();
+                    input.focus();
+                }
+            }
+            if (e.key === 'Escape') {
+                document.querySelector('.header-search input').blur();
+            }
+        });
+    </script>
+
+</body>
+</html>

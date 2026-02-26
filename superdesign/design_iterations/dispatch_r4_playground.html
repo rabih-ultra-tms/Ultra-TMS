@@ -1,0 +1,1649 @@
+<!DOCTYPE html>
+<html lang="en" data-accent="navy" data-header="light" data-font="inter" data-cols="grid" data-density="compact" data-zebra="off" data-gh="accent" data-theme="light" data-view="flat" data-sidebar-color="light-gray" data-canvas="blue-gray" data-table-surface="white" data-border-int="standard" data-badge="dot-label" data-th-style="dark" data-load-style="bold" data-hover="glow" data-sidebar-w="standard" data-stats="badges" data-table-radius="sharp" data-row-tint="wash" data-border-color="slate" data-border-width="thin" data-gh-border="subtle" data-group-sep="line">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ultra TMS — Dispatch Board Playground</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* === ACCENT COLORS === */
+[data-accent="indigo"]{--accent:#4F46E5;--accent-light:#EEF2FF;--accent-lighter:rgba(79,70,229,.08);--accent-hover:#4338CA}
+[data-accent="blue"]{--accent:#2563EB;--accent-light:#DBEAFE;--accent-lighter:rgba(37,99,235,.08);--accent-hover:#1D4ED8}
+[data-accent="teal"]{--accent:#0D9488;--accent-light:#CCFBF1;--accent-lighter:rgba(13,148,136,.08);--accent-hover:#0F766E}
+[data-accent="navy"]{--accent:#1E3A5F;--accent-light:#DBEAFE;--accent-lighter:rgba(30,58,95,.08);--accent-hover:#152D4A}
+
+/* === FONTS === */
+[data-font="dm"]{--ff:'DM Sans',sans-serif}
+[data-font="inter"]{--ff:'Inter',sans-serif}
+[data-font="outfit"]{--ff:'Outfit',sans-serif}
+[data-font="manrope"]{--ff:'Manrope',sans-serif}
+
+/* === DENSITY === */
+[data-density="compact"]{--row-h:36px;--cell-py:4px;--cell-fs:12px}
+[data-density="default"]{--row-h:42px;--cell-py:7px;--cell-fs:13px}
+[data-density="spacious"]{--row-h:48px;--cell-py:10px;--cell-fs:13px}
+
+/* === LIGHT THEME === */
+[data-theme="light"]{--bg-canvas:#F8F9FB;--bg-surface:#FFFFFF;--bg-sidebar:#F1F3F5;--bg-hover:rgba(0,0,0,.03);--bg-selected:var(--accent-lighter);--bg-zebra:rgba(0,0,0,.018);--text-primary:#111827;--text-secondary:#6B7280;--text-tertiary:#9CA3AF;--border:#E5E7EB;--border-strong:#D1D5DB;--shadow-sm:0 1px 2px rgba(0,0,0,.05);--shadow-md:0 4px 12px rgba(0,0,0,.08);--shadow-lg:0 12px 40px rgba(0,0,0,.12);--overlay:rgba(0,0,0,.25)}
+
+/* === DARK THEME === */
+[data-theme="dark"]{--bg-canvas:#0F1117;--bg-surface:#1A1D27;--bg-sidebar:#14161E;--bg-hover:rgba(255,255,255,.05);--bg-selected:var(--accent-lighter);--bg-zebra:rgba(255,255,255,.025);--text-primary:#F3F4F6;--text-secondary:#9CA3AF;--text-tertiary:#6B7280;--border:#2D3140;--border-strong:#3D4250;--shadow-sm:0 1px 2px rgba(0,0,0,.3);--shadow-md:0 4px 12px rgba(0,0,0,.4);--shadow-lg:0 12px 40px rgba(0,0,0,.5);--overlay:rgba(0,0,0,.6)}
+
+/* === HEADER STYLES === */
+[data-header="gray"]{--bg-header:var(--bg-sidebar);--header-border:transparent;--header-text:var(--text-primary)}
+[data-header="light"]{--bg-header:var(--bg-canvas);--header-border:transparent;--header-text:var(--text-primary)}
+[data-header="white"]{--bg-header:var(--bg-surface);--header-border:var(--border);--header-text:var(--text-primary)}
+[data-header="slate"]{--bg-header:#334155;--header-border:#475569;--header-text:#F1F5F9}
+[data-header="dark"]{--bg-header:#1F2937;--header-border:#374151;--header-text:#F9FAFB}
+[data-header="accent"]{--bg-header:var(--accent);--header-border:var(--accent-hover);--header-text:#FFFFFF}
+[data-theme="dark"][data-header="slate"]{--bg-header:#1E293B;--header-border:#334155;--header-text:#E2E8F0}
+[data-theme="dark"][data-header="dark"]{--bg-header:#111827;--header-border:#1F2937;--header-text:#F3F4F6}
+[data-theme="dark"][data-header="accent"]{--bg-header:var(--accent);--header-border:var(--accent-hover);--header-text:#FFFFFF}
+
+/* === COLUMN SEPARATORS (unified with border color/width/intensity) === */
+[data-cols="none"]{--col-border:0 solid transparent}
+[data-cols="subtle"]{--col-border:1px solid color-mix(in srgb, var(--b-color,var(--border)) 40%, transparent)}
+[data-cols="clear"]{--col-border:var(--b-w,1px) solid var(--b-color,var(--border))}
+[data-cols="strong"]{--col-border:calc(var(--b-w,1px) + 0.5px) solid var(--b-strong,var(--border-strong))}
+[data-cols="grid"]{--col-border:var(--b-w,1px) solid var(--b-strong,var(--border-strong))}
+[data-cols="grid"] .data-table td{border-bottom:var(--b-w,1px) solid var(--b-strong,var(--border-strong))}
+[data-cols="grid"] .data-table th{border-bottom:var(--b-w,1px) solid var(--b-strong,var(--border-strong))}
+
+/* === BORDER COLOR === */
+[data-border-color="gray"]{--b-color:var(--border);--b-strong:var(--border-strong)}
+[data-border-color="warm"]{--b-color:#DDD5C8;--b-strong:#C4B9A8}
+[data-border-color="cool"]{--b-color:#CBD5E1;--b-strong:#94A3B8}
+[data-border-color="slate"]{--b-color:#94A3B8;--b-strong:#64748B}
+[data-border-color="blue"]{--b-color:#BFDBFE;--b-strong:#93C5FD}
+[data-border-color="accent-tint"]{--b-color:color-mix(in srgb,var(--accent) 15%,var(--border));--b-strong:color-mix(in srgb,var(--accent) 25%,var(--border-strong))}
+
+/* === BORDER WIDTH === */
+[data-border-width="hairline"]{--b-w:0.5px}
+[data-border-width="thin"]{--b-w:1px}
+[data-border-width="medium"]{--b-w:1.5px}
+[data-border-width="thick"]{--b-w:2px}
+[data-border-width="heavy"]{--b-w:3px}
+
+/* === GROUP HEADER BORDER === */
+[data-gh-border="none"] .group-header td{border-bottom:none}
+[data-gh-border="subtle"] .group-header td{border-bottom:var(--b-w,1px) solid var(--b-color,var(--border))}
+[data-gh-border="strong"] .group-header td{border-bottom:2px solid var(--b-strong,var(--border-strong))}
+[data-gh-border="accent"] .group-header td{border-bottom:2px solid var(--gh-color,var(--accent))}
+
+/* === GROUP SEPARATOR === */
+[data-group-sep="none"] .group-spacer{display:none}
+[data-group-sep="line"] .group-spacer{display:table-row;height:0}
+[data-group-sep="line"] .group-spacer td{height:0;padding:0;border-bottom:2px solid var(--b-strong,var(--border-strong));background:transparent !important}
+[data-group-sep="gap"] .group-spacer{display:table-row}
+[data-group-sep="gap"] .group-spacer td{height:12px;padding:0;border:none;background:var(--bg-canvas) !important}
+[data-group-sep="double"] .group-spacer{display:table-row;height:0}
+[data-group-sep="double"] .group-spacer td{height:3px;padding:0;border-top:1px solid var(--border-strong);border-bottom:1px solid var(--border-strong);background:var(--bg-canvas) !important}
+[data-group-sep="accent"] .group-spacer{display:table-row;height:0}
+[data-group-sep="accent"] .group-spacer td{height:2px;padding:0;border:none;background:var(--accent) !important;opacity:.3}
+
+/* === STATUS COLORS === */
+:root{--st-transit:#3B82F6;--st-transit-lt:rgba(59,130,246,.1);--st-transit-bg:rgba(59,130,246,.14);--st-transit-dk:#1E40AF;--st-unassigned:#F59E0B;--st-unassigned-lt:rgba(245,158,11,.1);--st-unassigned-bg:rgba(245,158,11,.14);--st-unassigned-dk:#92400E;--st-tendered:#8B5CF6;--st-tendered-lt:rgba(139,92,246,.1);--st-tendered-bg:rgba(139,92,246,.14);--st-tendered-dk:#5B21B6;--st-dispatched:#06B6D4;--st-dispatched-lt:rgba(6,182,212,.1);--st-dispatched-bg:rgba(6,182,212,.14);--st-dispatched-dk:#155E75;--st-delivered:#10B981;--st-delivered-lt:rgba(16,185,129,.1);--st-delivered-bg:rgba(16,185,129,.14);--st-delivered-dk:#065F46;--st-atrisk:#EF4444;--st-atrisk-lt:rgba(239,68,68,.1);--st-atrisk-bg:rgba(239,68,68,.14);--st-atrisk-dk:#991B1B}
+
+/* === RESET === */
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;font-family:var(--ff);color:var(--text-primary);background:var(--bg-canvas)}
+button,input,select{font-family:var(--ff)}
+
+/* === APP LAYOUT === */
+.app{display:grid;grid-template-columns:64px 1fr;height:100vh}
+
+/* === SIDEBAR === */
+.sidebar{background:var(--bg-sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:4px;z-index:10}
+.sidebar-logo{width:36px;height:36px;border-radius:10px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;margin-bottom:16px}
+.sidebar-nav{display:flex;flex-direction:column;gap:4px;flex:1}
+.sidebar-bottom{display:flex;flex-direction:column;gap:4px;align-items:center}
+.nav-item{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);cursor:pointer;position:relative;transition:all .15s ease;text-decoration:none}
+.nav-item:hover{background:var(--bg-hover);color:var(--text-primary)}
+.nav-item.active{color:var(--accent);background:var(--accent-lighter)}
+.nav-item.active::before{content:'';position:absolute;left:-12px;top:50%;transform:translateY(-50%);width:3px;height:20px;background:var(--accent);border-radius:0 2px 2px 0}
+.nav-item.active svg{fill:var(--accent-lighter);stroke:var(--accent)}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;cursor:pointer}
+
+/* === MAIN === */
+.main{display:flex;flex-direction:column;overflow:hidden;min-width:0}
+
+/* === HEADER === */
+.header{height:48px;background:var(--bg-header);border-bottom:1px solid var(--header-border,var(--border));display:flex;align-items:center;padding:0 20px;gap:16px;flex-shrink:0;color:var(--header-text,var(--text-primary))}
+.header-title{font-size:15px;font-weight:600;white-space:nowrap;color:var(--header-text,var(--text-primary))}
+.header .icon-btn{color:var(--header-text,var(--text-secondary))}
+.header-search input{color:var(--text-primary)}
+.header-search{flex:1;max-width:400px;margin:0 auto;position:relative;display:flex;align-items:center}
+.header-search input{width:100%;height:32px;border:1px solid var(--border);border-radius:8px;padding:0 12px 0 32px;font-size:13px;background:var(--bg-surface);color:var(--text-primary);outline:none;transition:border-color .15s}
+.header-search input:focus{border-color:var(--accent)}
+.header-search svg{position:absolute;left:10px;color:var(--text-tertiary);pointer-events:none}
+.header-search .kbd{position:absolute;right:8px;padding:1px 5px;border:1px solid var(--border);border-radius:4px;font-size:10px;color:var(--text-tertiary);pointer-events:none}
+.header-actions{display:flex;gap:4px;align-items:center}
+.icon-btn{width:32px;height:32px;border:none;background:none;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);cursor:pointer;transition:all .15s}
+.icon-btn:hover{background:var(--bg-hover);color:var(--text-primary)}
+
+/* === FILTERS === */
+.filters{height:44px;background:var(--bg-surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:8px;flex-shrink:0;overflow-x:auto}
+.filter-select{height:30px;padding:0 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-surface);color:var(--text-primary);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;transition:all .15s;font-family:var(--ff)}
+.filter-select:hover{border-color:var(--accent)}
+.filter-select.active{border-color:var(--accent);color:var(--accent);background:var(--accent-lighter)}
+.filter-select svg{width:12px;height:12px;color:var(--text-tertiary)}
+.dropdown-wrap{position:relative}
+.dropdown-menu{position:absolute;top:calc(100% + 4px);left:0;min-width:200px;max-height:300px;overflow-y:auto;background:var(--bg-surface);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow-lg);padding:4px;z-index:100;display:none}
+.dropdown-menu.open{display:block}
+.dropdown-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:4px;font-size:12px;color:var(--text-primary);cursor:pointer;transition:background .1s;font-family:var(--ff)}
+.dropdown-item:hover{background:var(--bg-hover)}
+.dropdown-item input[type="checkbox"]{accent-color:var(--accent);cursor:pointer}
+.filter-input{height:30px;padding:0 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-surface);color:var(--text-secondary);font-size:12px;display:flex;align-items:center;gap:6px;white-space:nowrap;cursor:pointer;transition:border-color .15s}
+.filter-input:hover{border-color:var(--border-strong)}
+.filter-reset{height:30px;padding:0 10px;border:none;background:none;color:var(--accent);font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap}
+.filter-reset:hover{text-decoration:underline}
+.status-dot-sm{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0}
+
+/* === STATS === */
+.stats-bar{height:32px;background:var(--bg-surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;flex-shrink:0;font-size:12px;color:var(--text-secondary);gap:4px}
+.stats-bar .text-danger{color:var(--st-atrisk);font-weight:500}
+
+/* === TOOLBAR (combined with filters) === */
+.toolbar{height:40px;background:var(--bg-surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px 0 20px;flex-shrink:0;gap:6px;position:relative;z-index:20}
+.btn-accent{height:26px;padding:0 12px;border:none;border-radius:6px;background:var(--accent);color:#fff;font-size:12px;font-weight:500;cursor:pointer;transition:background .15s;display:flex;align-items:center;gap:4px}
+.btn-accent:hover{background:var(--accent-hover)}
+.toolbar-right{display:flex;align-items:center;gap:2px}
+.toolbar-sep{width:1px;height:18px;background:var(--border);margin:0 6px}
+.density-btn{width:26px;height:26px;border:none;background:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-tertiary);transition:all .15s}
+.density-btn:hover,.density-btn.active{color:var(--text-primary);background:var(--bg-hover)}
+.density-btn.active{color:var(--accent)}
+.toolbar-btn{height:26px;padding:0 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-surface);color:var(--text-secondary);font-size:11px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:4px;transition:all .15s}
+.toolbar-btn:hover{border-color:var(--accent);color:var(--accent)}
+.toolbar-btn.active{background:var(--accent-lighter);border-color:var(--accent);color:var(--accent)}
+
+/* === TABLE === */
+.table-wrap{flex:1;overflow:auto;background:var(--bg-canvas)}
+.data-table{width:100%;border-collapse:collapse;min-width:1100px}
+.data-table th{position:sticky;top:0;background:var(--bg-surface);height:34px;padding:0 10px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary);border-bottom:var(--b-w,1px) solid var(--b-strong,var(--border-strong));white-space:nowrap;z-index:5;user-select:none}
+.data-table th:not(:last-child){border-right:var(--col-border)}
+.data-table th .sort-arrow{margin-left:2px;opacity:.3;font-size:9px}
+.data-table td{height:var(--row-h);padding:var(--cell-py) 10px;font-size:var(--cell-fs);color:var(--text-primary);border-bottom:var(--b-w,1px) solid var(--b-color,var(--border));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .1s}
+.data-table td:not(:last-child){border-right:var(--col-border)}
+/* grid mode overrides moved to column separator section above */
+
+/* Zebra */
+[data-zebra="on"] .data-row:nth-child(even) td{background:var(--bg-zebra)}
+
+/* Row states */
+.data-row{cursor:pointer;animation:fadeInUp .35s cubic-bezier(.16,1,.3,1) both}
+.data-row.selected td{background:var(--bg-selected)}
+.data-row.focused td{box-shadow:inset 0 0 0 2px var(--accent)}
+.data-row.at-risk td:first-child{box-shadow:inset 3px 0 0 var(--st-atrisk)}
+.cell-id{font-weight:600;color:var(--accent)}
+.cell-check{text-align:center;width:36px}
+.cell-check input{accent-color:var(--accent);cursor:pointer}
+
+/* Status badges */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500;white-space:nowrap}
+.badge-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.badge-transit{background:var(--st-transit-lt);color:var(--st-transit-dk)}.badge-transit .badge-dot{background:var(--st-transit)}
+.badge-unassigned{background:var(--st-unassigned-lt);color:var(--st-unassigned-dk)}.badge-unassigned .badge-dot{background:var(--st-unassigned)}
+.badge-tendered{background:var(--st-tendered-lt);color:var(--st-tendered-dk)}.badge-tendered .badge-dot{background:var(--st-tendered)}
+.badge-dispatched{background:var(--st-dispatched-lt);color:var(--st-dispatched-dk)}.badge-dispatched .badge-dot{background:var(--st-dispatched)}
+.badge-delivered{background:var(--st-delivered-lt);color:var(--st-delivered-dk)}.badge-delivered .badge-dot{background:var(--st-delivered)}
+.badge-atrisk{background:var(--st-atrisk-lt);color:var(--st-atrisk-dk)}.badge-atrisk .badge-dot{background:var(--st-atrisk)}
+/* Dark mode badge overrides */
+[data-theme="dark"] .badge-transit{background:rgba(59,130,246,.18);color:#93BBFD}
+[data-theme="dark"] .badge-unassigned{background:rgba(245,158,11,.18);color:#FBBF24}
+[data-theme="dark"] .badge-tendered{background:rgba(139,92,246,.18);color:#B794F6}
+[data-theme="dark"] .badge-dispatched{background:rgba(6,182,212,.18);color:#22D3EE}
+[data-theme="dark"] .badge-delivered{background:rgba(16,185,129,.18);color:#6EE7B7}
+[data-theme="dark"] .badge-atrisk{background:rgba(239,68,68,.18);color:#FCA5A5}
+
+/* Group headers */
+.group-header td{background:var(--bg-surface) !important;padding:8px 10px;font-size:12px;font-weight:600;color:var(--text-primary);cursor:pointer;user-select:none;border-bottom:1px solid var(--border)}
+.group-header .gh-inner{display:flex;align-items:center;gap:8px}
+.group-header .gh-chevron{font-size:10px;color:var(--text-tertiary);transition:transform .2s}
+.group-header.collapsed .gh-chevron{transform:rotate(-90deg)}
+.group-header .gh-dot{width:8px;height:8px;border-radius:50%}
+.group-header .gh-count{font-weight:400;color:var(--text-tertiary);font-size:11px}
+
+[data-gh="accent"] .group-header td:first-child{box-shadow:inset 4px 0 0 var(--gh-color)}
+[data-gh="filled"] .group-header td{background:var(--gh-light) !important}
+[data-gh="bold"] .group-header td{border-top:2px solid var(--border-strong)}
+
+/* === DRAWER === */
+.drawer-overlay{position:fixed;inset:0;background:var(--overlay);z-index:50;opacity:0;pointer-events:none;transition:opacity .3s}
+.drawer-overlay.open{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:460px;background:var(--bg-surface);z-index:51;transform:translateX(100%);transition:transform .35s cubic-bezier(.32,.72,0,1);display:flex;flex-direction:column;box-shadow:var(--shadow-lg)}
+.drawer.open{transform:translateX(0)}
+
+.drawer-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0}
+.drawer-head-info{flex:1;min-width:0}
+.drawer-head-id{font-size:18px;font-weight:700;margin-bottom:2px;display:inline}
+.drawer-badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;margin-left:8px;vertical-align:middle}
+.drawer-head-actions{display:flex;gap:6px}
+.drawer-head .btn-sm{height:28px;padding:0 10px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--bg-surface);color:var(--text-primary);transition:all .15s}
+.drawer-head .btn-sm:hover{border-color:var(--accent);color:var(--accent)}
+.drawer-head .btn-sm.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.drawer-head .btn-sm.primary:hover{background:var(--accent-hover)}
+.drawer-close{width:28px;height:28px;border:none;background:none;border-radius:6px;cursor:pointer;color:var(--text-secondary);display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .15s}
+.drawer-close:hover{background:var(--bg-hover);color:var(--text-primary)}
+
+.drawer-tabs{display:flex;padding:0 20px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--bg-surface)}
+.tab-btn{padding:10px 14px;border:none;background:none;font-size:12px;font-weight:500;font-family:var(--ff);color:var(--text-tertiary);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;position:relative}
+.tab-btn:hover{color:var(--text-secondary)}
+.tab-btn.active{color:var(--accent);font-weight:600;border-bottom-color:var(--accent)}
+.tab-badge{position:absolute;top:6px;right:4px;width:6px;height:6px;border-radius:50%}
+.tab-badge.warning{background:var(--st-unassigned)}
+.tab-badge.danger{background:var(--st-atrisk)}
+
+/* V5 Drawer Components */
+.quick-actions{display:flex;gap:8px;margin-bottom:16px}
+.quick-action-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;background:var(--bg-canvas);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .15s;font-family:var(--ff)}
+.quick-action-btn:hover{border-color:var(--accent);background:var(--accent-lighter)}
+.quick-action-btn svg{color:var(--text-secondary);width:18px;height:18px}
+.quick-action-btn:hover svg{color:var(--accent)}
+.quick-action-label{font-size:9px;font-weight:500;color:var(--text-tertiary)}
+.quick-action-btn:hover .quick-action-label{color:var(--accent)}
+.route-card{padding:14px;background:var(--bg-canvas);border:1px solid var(--border);border-radius:8px;margin-bottom:16px}
+.route-point{display:flex;align-items:flex-start;gap:12px}
+.route-point-dot{width:10px;height:10px;border-radius:50%;margin-top:4px;flex-shrink:0}
+.route-connector{width:2px;height:20px;background:var(--border);margin:2px 0 2px 4px}
+.route-point-info{flex:1}
+.route-city{font-size:13px;font-weight:600;color:var(--text-primary)}
+.route-date-info{font-size:11px;color:var(--text-secondary);margin-top:1px}
+.route-miles-info{font-size:11px;color:var(--text-tertiary);margin-top:8px;margin-left:22px}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.info-cell{padding:10px 12px;background:var(--bg-canvas);border-radius:6px;border:1px solid var(--border)}
+.info-cell-label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary);margin-bottom:3px}
+.info-cell-value{font-size:13px;font-weight:600;color:var(--text-primary)}
+.field-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)}
+.field-row:last-child{border-bottom:none}
+.field-label{font-size:11px;color:var(--text-tertiary)}
+.field-value{font-size:11px;font-weight:500;color:var(--text-primary)}
+.carrier-card{padding:14px;background:var(--bg-canvas);border:1px solid var(--border);border-radius:8px;margin-bottom:12px}
+.carrier-company{font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:4px}
+.carrier-mc{font-size:11px;color:var(--text-secondary)}
+.compliance-stars{display:flex;gap:2px;font-size:14px}
+.compliance-stars .filled{color:var(--st-unassigned)}
+.compliance-stars .empty{color:var(--border)}
+.timeline{position:relative;padding-left:20px}
+.timeline::before{content:'';position:absolute;left:5px;top:0;bottom:0;width:2px;background:var(--border)}
+.timeline-event{position:relative;padding-bottom:16px;padding-left:16px}
+.timeline-event:last-child{padding-bottom:0}
+.timeline-dot{position:absolute;left:-20px;top:2px;width:12px;height:12px;border-radius:50%;border:2px solid var(--bg-surface)}
+.timeline-dot.completed{background:var(--st-delivered)}
+.timeline-dot.current{background:var(--accent);animation:pulse 2s infinite}
+.timeline-dot.pending{background:var(--border);border-style:dashed}
+.timeline-time{font-size:10px;color:var(--text-tertiary);margin-bottom:2px}
+.timeline-desc{font-size:12px;font-weight:500;color:var(--text-primary)}
+.timeline-desc.pending{color:var(--text-tertiary);font-style:italic}
+.timeline-label{font-size:9px;font-weight:600;padding:1px 6px;border-radius:3px;margin-left:6px}
+.timeline-label.in-progress{background:var(--accent);color:#fff}
+.margin-box{padding:14px;border-radius:8px;text-align:center;margin:12px 0}
+.margin-box-pct{font-size:24px;font-weight:700}
+.margin-box-amt{font-size:12px;font-weight:500;margin-top:2px}
+.doc-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.doc-item:last-child{border-bottom:none}
+.doc-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
+.doc-icon.complete{background:var(--st-delivered);color:#fff}
+.doc-icon.pending{background:var(--bg-canvas);color:var(--text-tertiary)}
+.doc-icon.missing{background:var(--st-atrisk-lt);color:var(--st-atrisk)}
+.doc-info{flex:1}
+.doc-name{font-size:12px;font-weight:500;color:var(--text-primary)}
+.doc-status{font-size:10px;color:var(--text-tertiary);margin-top:1px}
+.doc-progress{height:4px;background:var(--border);border-radius:4px;overflow:hidden;margin:12px 0}
+.doc-progress-fill{height:100%;border-radius:4px}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(79,70,229,.4)}50%{box-shadow:0 0 0 6px rgba(79,70,229,0)}}
+
+.drawer-content{flex:1;overflow-y:auto;padding:16px 20px}
+.section-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);margin-bottom:10px}
+.btn-outline{height:30px;padding:0 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg-surface);color:var(--text-primary);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:4px;font-family:var(--ff)}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+
+/* === SETTINGS DIVIDER LABELS === */
+.sp-divider-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);padding:10px 0 6px;margin-top:4px;border-top:1px solid var(--border);display:block}
+.sp-divider-label:first-child{border-top:none;margin-top:0;padding-top:0}
+
+/* === SETTINGS PANEL === */
+.settings-trigger{position:fixed;bottom:24px;right:24px;width:44px;height:44px;border-radius:12px;background:var(--bg-surface);border:1px solid var(--border);box-shadow:var(--shadow-md);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:100;transition:all .2s;color:var(--text-secondary)}
+.settings-trigger:hover{box-shadow:var(--shadow-lg);color:var(--accent);transform:scale(1.05)}
+.settings-panel{position:fixed;bottom:80px;right:24px;width:300px;max-height:calc(100vh - 120px);background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-lg);z-index:100;overflow-y:auto;transform:scale(.95) translateY(10px);opacity:0;pointer-events:none;transition:all .25s cubic-bezier(.32,.72,0,1);transform-origin:bottom right}
+.settings-panel.open{transform:scale(1) translateY(0);opacity:1;pointer-events:auto}
+.sp-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.sp-title{font-size:13px;font-weight:600}
+.sp-close{width:24px;height:24px;border:none;background:none;cursor:pointer;color:var(--text-tertiary);font-size:16px;display:flex;align-items:center;justify-content:center;border-radius:4px;transition:all .15s}
+.sp-close:hover{background:var(--bg-hover);color:var(--text-primary)}
+.sp-body{padding:14px 16px}
+.sp-section{margin-bottom:14px}
+.sp-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);margin-bottom:6px}
+.sp-options{display:flex;gap:4px;flex-wrap:wrap}
+.sp-opt{padding:4px 9px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);font-size:11px;font-weight:500;cursor:pointer;transition:all .15s;font-family:var(--ff)}
+.sp-opt:hover{border-color:var(--accent);color:var(--accent)}
+.sp-opt.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.sp-colors{display:flex;gap:8px}
+.sp-swatch{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s}
+.sp-swatch.active{box-shadow:0 0 0 2px var(--bg-surface),0 0 0 4px currentColor}
+.sp-swatch:hover{transform:scale(1.15)}
+.sp-copy-btn{width:100%;height:32px;border:1px dashed var(--accent);border-radius:6px;background:var(--accent-lighter);color:var(--accent);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--ff);display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:14px}
+.sp-copy-btn:hover{background:var(--accent);color:#fff;border-style:solid}
+.sp-copy-btn.copied{background:var(--st-delivered);color:#fff;border-color:var(--st-delivered)}
+.sp-preset{width:100%;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--bg-surface);color:var(--text-primary);font-size:11px;font-weight:500;cursor:pointer;transition:all .15s;font-family:var(--ff);display:flex;align-items:center;padding:0 10px;gap:8px;margin-bottom:4px}
+.sp-preset:hover{border-color:var(--accent);color:var(--accent)}
+.sp-preset-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+.sp-toggle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sp-label-inline{font-size:12px;font-weight:500;color:var(--text-primary)}
+.toggle-switch{width:36px;height:20px;border-radius:10px;background:var(--border-strong);cursor:pointer;position:relative;transition:background .2s}
+.toggle-switch.on{background:var(--accent)}
+.toggle-switch::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle-switch.on::after{transform:translateX(16px)}
+
+/* === SIDEBAR COLOR === */
+[data-sidebar-color="light-gray"]{--bg-sidebar:#F1F3F5}
+[data-sidebar-color="warm-gray"]{--bg-sidebar:#F5F3F0}
+[data-sidebar-color="cool-gray"]{--bg-sidebar:#EFF1F5}
+[data-sidebar-color="white"]{--bg-sidebar:#FFFFFF}
+[data-sidebar-color="off-white"]{--bg-sidebar:#FAFAFA}
+[data-theme="dark"][data-sidebar-color="light-gray"]{--bg-sidebar:#14161E}
+[data-theme="dark"][data-sidebar-color="warm-gray"]{--bg-sidebar:#1A1816}
+[data-theme="dark"][data-sidebar-color="cool-gray"]{--bg-sidebar:#13151C}
+[data-theme="dark"][data-sidebar-color="white"]{--bg-sidebar:#1A1D27}
+[data-theme="dark"][data-sidebar-color="off-white"]{--bg-sidebar:#161820}
+
+/* === CANVAS BACKGROUND === */
+[data-theme="light"][data-canvas="white"]{--bg-canvas:#FFFFFF}
+[data-theme="light"][data-canvas="off-white"]{--bg-canvas:#F8F9FB}
+[data-theme="light"][data-canvas="warm"]{--bg-canvas:#FAF9F7}
+[data-theme="light"][data-canvas="slate"]{--bg-canvas:#F1F5F9}
+[data-theme="light"][data-canvas="blue-gray"]{--bg-canvas:#F0F4F8}
+
+/* === TABLE SURFACE === */
+[data-theme="light"][data-table-surface="white"] .data-table td,[data-theme="light"][data-table-surface="white"] .data-table th{--bg-table:#FFFFFF}
+[data-theme="light"][data-table-surface="light-gray"] .data-table td,[data-theme="light"][data-table-surface="light-gray"] .data-table th{--bg-table:#FAFBFC}
+[data-theme="light"][data-table-surface="cream"] .data-table td,[data-theme="light"][data-table-surface="cream"] .data-table th{--bg-table:#FEFDFB}
+[data-table-surface="match"] .data-table td,[data-table-surface="match"] .data-table th{--bg-table:var(--bg-canvas)}
+.data-table th{background:var(--bg-table,var(--bg-surface))}
+.data-row td{background:var(--bg-table,var(--bg-surface))}
+
+/* === BORDER INTENSITY === */
+[data-theme="light"][data-border-int="invisible"]{--border:transparent;--border-strong:transparent}
+[data-theme="light"][data-border-int="whisper"]{--border:rgba(0,0,0,.02);--border-strong:rgba(0,0,0,.04)}
+[data-theme="light"][data-border-int="ghost"]{--border:rgba(0,0,0,.04);--border-strong:rgba(0,0,0,.08)}
+[data-theme="light"][data-border-int="subtle"]{--border:rgba(0,0,0,.08);--border-strong:rgba(0,0,0,.14)}
+[data-theme="light"][data-border-int="standard"]{--border:#E5E7EB;--border-strong:#D1D5DB}
+[data-theme="light"][data-border-int="strong"]{--border:rgba(0,0,0,.18);--border-strong:rgba(0,0,0,.28)}
+[data-theme="light"][data-border-int="bold"]{--border:rgba(0,0,0,.28);--border-strong:rgba(0,0,0,.40)}
+[data-theme="dark"][data-border-int="invisible"]{--border:transparent;--border-strong:transparent}
+[data-theme="dark"][data-border-int="whisper"]{--border:rgba(255,255,255,.02);--border-strong:rgba(255,255,255,.04)}
+[data-theme="dark"][data-border-int="ghost"]{--border:rgba(255,255,255,.04);--border-strong:rgba(255,255,255,.08)}
+[data-theme="dark"][data-border-int="subtle"]{--border:rgba(255,255,255,.08);--border-strong:rgba(255,255,255,.14)}
+[data-theme="dark"][data-border-int="strong"]{--border:rgba(255,255,255,.18);--border-strong:rgba(255,255,255,.28)}
+[data-theme="dark"][data-border-int="bold"]{--border:rgba(255,255,255,.28);--border-strong:rgba(255,255,255,.40)}
+
+/* === BADGE STYLES === */
+/* pill = default (base .badge rules above) — tinted bg, dark text, dot */
+
+/* Refined: R3-premium — stronger bg, bolder text, full pill, 5px dot */
+[data-badge="refined"] .badge{padding:3px 10px;gap:6px;border-radius:100px;font-weight:600;font-size:10.5px}
+[data-badge="refined"] .badge-transit{background:var(--st-transit-bg);color:var(--st-transit-dk)}
+[data-badge="refined"] .badge-unassigned{background:var(--st-unassigned-bg);color:var(--st-unassigned-dk)}
+[data-badge="refined"] .badge-tendered{background:var(--st-tendered-bg);color:var(--st-tendered-dk)}
+[data-badge="refined"] .badge-dispatched{background:var(--st-dispatched-bg);color:var(--st-dispatched-dk)}
+[data-badge="refined"] .badge-delivered{background:var(--st-delivered-bg);color:var(--st-delivered-dk)}
+[data-badge="refined"] .badge-atrisk{background:var(--st-atrisk-bg);color:var(--st-atrisk-dk)}
+[data-badge="refined"] .badge-dot{width:5px;height:5px}
+[data-theme="dark"][data-badge="refined"] .badge-transit{background:rgba(59,130,246,.22);color:#93BBFD}
+[data-theme="dark"][data-badge="refined"] .badge-unassigned{background:rgba(245,158,11,.22);color:#FBBF24}
+[data-theme="dark"][data-badge="refined"] .badge-tendered{background:rgba(139,92,246,.22);color:#B794F6}
+[data-theme="dark"][data-badge="refined"] .badge-dispatched{background:rgba(6,182,212,.22);color:#22D3EE}
+[data-theme="dark"][data-badge="refined"] .badge-delivered{background:rgba(16,185,129,.22);color:#6EE7B7}
+[data-theme="dark"][data-badge="refined"] .badge-atrisk{background:rgba(239,68,68,.22);color:#FCA5A5}
+
+/* Dot Label: V5-style — larger dot, no bg, primary text color, clean */
+[data-badge="dot-label"] .badge{background:none;padding:0;gap:7px;font-weight:600;font-size:12px;color:var(--text-primary)}
+[data-badge="dot-label"] .badge-dot{width:7px;height:7px}
+
+/* Solid: vivid bg, white text, no dot */
+[data-badge="solid"] .badge{font-weight:600}
+[data-badge="solid"] .badge .badge-dot{display:none}
+[data-badge="solid"] .badge-transit{background:var(--st-transit);color:#fff}
+[data-badge="solid"] .badge-unassigned{background:var(--st-unassigned);color:#fff}
+[data-badge="solid"] .badge-tendered{background:var(--st-tendered);color:#fff}
+[data-badge="solid"] .badge-dispatched{background:var(--st-dispatched);color:#fff}
+[data-badge="solid"] .badge-delivered{background:var(--st-delivered);color:#fff}
+[data-badge="solid"] .badge-atrisk{background:var(--st-atrisk);color:#fff}
+
+/* Bordered: transparent bg, colored 2px border, colored text */
+[data-badge="bordered"] .badge{background:transparent;border:1.5px solid currentColor;font-weight:600}
+[data-badge="bordered"] .badge .badge-dot{display:none}
+
+/* Tag: square, uppercase, tiny, very faint bg, corporate */
+[data-badge="tag"] .badge{border-radius:3px;padding:2px 6px;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+[data-badge="tag"] .badge .badge-dot{display:none}
+[data-badge="tag"] .badge-transit{background:rgba(59,130,246,.06);color:var(--st-transit-dk)}
+[data-badge="tag"] .badge-unassigned{background:rgba(245,158,11,.06);color:var(--st-unassigned-dk)}
+[data-badge="tag"] .badge-tendered{background:rgba(139,92,246,.06);color:var(--st-tendered-dk)}
+[data-badge="tag"] .badge-dispatched{background:rgba(6,182,212,.06);color:var(--st-dispatched-dk)}
+[data-badge="tag"] .badge-delivered{background:rgba(16,185,129,.06);color:var(--st-delivered-dk)}
+[data-badge="tag"] .badge-atrisk{background:rgba(239,68,68,.06);color:var(--st-atrisk-dk)}
+[data-theme="dark"][data-badge="tag"] .badge-transit{background:rgba(59,130,246,.1);color:#93BBFD}
+[data-theme="dark"][data-badge="tag"] .badge-unassigned{background:rgba(245,158,11,.1);color:#FBBF24}
+[data-theme="dark"][data-badge="tag"] .badge-tendered{background:rgba(139,92,246,.1);color:#B794F6}
+[data-theme="dark"][data-badge="tag"] .badge-dispatched{background:rgba(6,182,212,.1);color:#22D3EE}
+[data-theme="dark"][data-badge="tag"] .badge-delivered{background:rgba(16,185,129,.1);color:#6EE7B7}
+[data-theme="dark"][data-badge="tag"] .badge-atrisk{background:rgba(239,68,68,.1);color:#FCA5A5}
+
+/* Chip: Google Material chip — pill + thin colored border + faint bg + small dot */
+[data-badge="chip"] .badge{padding:2px 8px;border-radius:100px;gap:5px;font-weight:500}
+[data-badge="chip"] .badge-dot{width:4px;height:4px}
+[data-badge="chip"] .badge-transit{background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.3);color:var(--st-transit-dk)}
+[data-badge="chip"] .badge-unassigned{background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.3);color:var(--st-unassigned-dk)}
+[data-badge="chip"] .badge-tendered{background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.3);color:var(--st-tendered-dk)}
+[data-badge="chip"] .badge-dispatched{background:rgba(6,182,212,.06);border:1px solid rgba(6,182,212,.3);color:var(--st-dispatched-dk)}
+[data-badge="chip"] .badge-delivered{background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.3);color:var(--st-delivered-dk)}
+[data-badge="chip"] .badge-atrisk{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.3);color:var(--st-atrisk-dk)}
+[data-theme="dark"][data-badge="chip"] .badge-transit{background:rgba(59,130,246,.12);border-color:rgba(59,130,246,.35);color:#93BBFD}
+[data-theme="dark"][data-badge="chip"] .badge-unassigned{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.35);color:#FBBF24}
+[data-theme="dark"][data-badge="chip"] .badge-tendered{background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.35);color:#B794F6}
+[data-theme="dark"][data-badge="chip"] .badge-dispatched{background:rgba(6,182,212,.12);border-color:rgba(6,182,212,.35);color:#22D3EE}
+[data-theme="dark"][data-badge="chip"] .badge-delivered{background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.35);color:#6EE7B7}
+[data-theme="dark"][data-badge="chip"] .badge-atrisk{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.35);color:#FCA5A5}
+
+/* Text Only: colored bold text, nothing else */
+[data-badge="text-only"] .badge{background:none;padding:0;gap:0;font-weight:700;font-size:12px}
+[data-badge="text-only"] .badge .badge-dot{display:none}
+
+/* === STATUS ROW TINTING === */
+[data-row-tint="subtle"] .data-row[data-status="transit"] td{background:rgba(59,130,246,.04)}
+[data-row-tint="subtle"] .data-row[data-status="unassigned"] td{background:rgba(245,158,11,.04)}
+[data-row-tint="subtle"] .data-row[data-status="tendered"] td{background:rgba(139,92,246,.04)}
+[data-row-tint="subtle"] .data-row[data-status="dispatched"] td{background:rgba(6,182,212,.04)}
+[data-row-tint="subtle"] .data-row[data-status="delivered"] td{background:rgba(16,185,129,.04)}
+[data-row-tint="stripe"] .data-row[data-status="transit"] td:first-child{box-shadow:inset 3px 0 0 var(--st-transit)}
+[data-row-tint="stripe"] .data-row[data-status="unassigned"] td:first-child{box-shadow:inset 3px 0 0 var(--st-unassigned)}
+[data-row-tint="stripe"] .data-row[data-status="tendered"] td:first-child{box-shadow:inset 3px 0 0 var(--st-tendered)}
+[data-row-tint="stripe"] .data-row[data-status="dispatched"] td:first-child{box-shadow:inset 3px 0 0 var(--st-dispatched)}
+[data-row-tint="stripe"] .data-row[data-status="delivered"] td:first-child{box-shadow:inset 3px 0 0 var(--st-delivered)}
+[data-row-tint="wash"] .data-row[data-status="transit"] td{background:rgba(59,130,246,.08)}
+[data-row-tint="wash"] .data-row[data-status="unassigned"] td{background:rgba(245,158,11,.08)}
+[data-row-tint="wash"] .data-row[data-status="tendered"] td{background:rgba(139,92,246,.08)}
+[data-row-tint="wash"] .data-row[data-status="dispatched"] td{background:rgba(6,182,212,.08)}
+[data-row-tint="wash"] .data-row[data-status="delivered"] td{background:rgba(16,185,129,.08)}
+[data-row-tint="bottom-border"] .data-row[data-status="transit"] td{border-bottom-color:rgba(59,130,246,.3)}
+[data-row-tint="bottom-border"] .data-row[data-status="unassigned"] td{border-bottom-color:rgba(245,158,11,.3)}
+[data-row-tint="bottom-border"] .data-row[data-status="tendered"] td{border-bottom-color:rgba(139,92,246,.3)}
+[data-row-tint="bottom-border"] .data-row[data-status="dispatched"] td{border-bottom-color:rgba(6,182,212,.3)}
+[data-row-tint="bottom-border"] .data-row[data-status="delivered"] td{border-bottom-color:rgba(16,185,129,.3)}
+
+/* === TABLE HEADER STYLE === */
+[data-th-style="gray"] .data-table th{background:var(--bg-canvas)}
+[data-th-style="accent"] .data-table th{background:var(--accent-lighter);color:var(--accent)}
+[data-th-style="accent-line"] .data-table th{border-bottom:2px solid var(--accent)}
+[data-th-style="dark"] .data-table th{background:#1F2937;color:#F9FAFB}
+[data-th-style="dark"] .data-table th .sort-arrow{color:#9CA3AF}
+[data-th-style="bordered"] .data-table th{border-top:2px solid var(--border-strong);border-bottom:2px solid var(--border-strong);font-weight:700;letter-spacing:.07em}
+[data-th-style="floating"] .data-table th{box-shadow:0 2px 4px rgba(0,0,0,.06);border-bottom:none}
+[data-theme="dark"][data-th-style="dark"] .data-table th{background:#111827;color:#E5E7EB}
+
+/* === LOAD # STYLE === */
+[data-load-style="accent"] .cell-id{color:var(--accent);font-weight:600}
+[data-load-style="bold"] .cell-id{color:var(--text-primary);font-weight:700}
+[data-load-style="mono"] .cell-id{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-primary);font-weight:500;letter-spacing:-.02em}
+
+/* === ROW HOVER === */
+/* Hover: Highlight — strong accent tint background */
+[data-hover="highlight"] .data-row:hover td{background:var(--accent-lighter) !important}
+[data-hover="highlight"] .data-row:hover td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+
+/* Hover: Outline — full row border in accent color */
+[data-hover="outline"] .data-row:hover td{box-shadow:inset 0 -2px 0 var(--accent),inset 0 2px 0 var(--accent)}
+[data-hover="outline"] .data-row:hover td:first-child{box-shadow:inset 0 -2px 0 var(--accent),inset 0 2px 0 var(--accent),inset 2px 0 0 var(--accent)}
+[data-hover="outline"] .data-row:hover td:last-child{box-shadow:inset 0 -2px 0 var(--accent),inset 0 2px 0 var(--accent),inset -2px 0 0 var(--accent)}
+
+/* Hover: Bar + Tint — accent left bar + visible background shift */
+[data-hover="bar-tint"] .data-row:hover td{background:var(--accent-lighter) !important}
+[data-hover="bar-tint"] .data-row:hover td:first-child{box-shadow:inset 4px 0 0 var(--accent)}
+
+/* Hover: Bold — strong dark overlay, works on any background */
+[data-hover="bold"] .data-row:hover td{background:rgba(0,0,0,.07) !important}
+[data-theme="dark"] [data-hover="bold"] .data-row:hover td{background:rgba(255,255,255,.08) !important}
+
+/* Hover: Glow — subtle shadow + accent border + tint */
+[data-hover="glow"] .data-row:hover{position:relative;z-index:2}
+[data-hover="glow"] .data-row:hover td{background:var(--accent-lighter) !important;box-shadow:inset 0 -1px 0 var(--accent),inset 0 1px 0 var(--accent)}
+[data-hover="glow"] .data-row:hover td:first-child{box-shadow:inset 0 -1px 0 var(--accent),inset 0 1px 0 var(--accent),inset 2px 0 0 var(--accent)}
+[data-hover="glow"] .data-row:hover td:last-child{box-shadow:inset 0 -1px 0 var(--accent),inset 0 1px 0 var(--accent),inset -2px 0 0 var(--accent)}
+
+/* === SIDEBAR WIDTH === */
+[data-sidebar-w="narrow"] .app{grid-template-columns:52px 1fr}
+[data-sidebar-w="narrow"] .sidebar{width:52px}
+[data-sidebar-w="narrow"] .nav-item{width:36px;height:36px}
+[data-sidebar-w="narrow"] .sidebar-logo{width:30px;height:30px;font-size:13px;border-radius:8px}
+[data-sidebar-w="standard"] .app{grid-template-columns:64px 1fr}
+[data-sidebar-w="wide"] .app{grid-template-columns:200px 1fr}
+[data-sidebar-w="wide"] .sidebar{width:200px;align-items:stretch;padding:12px 8px}
+[data-sidebar-w="wide"] .nav-item{width:auto;justify-content:flex-start;gap:10px;padding:0 12px;border-radius:8px}
+[data-sidebar-w="wide"] .nav-item.active::before{left:-8px}
+[data-sidebar-w="wide"] .nav-label{display:inline}
+[data-sidebar-w="wide"] .sidebar-logo{width:auto;border-radius:8px;padding:0 12px;font-size:14px;justify-content:flex-start;gap:8px}
+.nav-label{display:none;font-size:13px;font-weight:500}
+[data-sidebar-w="wide"] .sidebar-bottom{align-items:stretch}
+
+/* === STATS STYLE === */
+[data-stats="minimal"] .stats-bar{height:24px;font-size:11px;padding:0 20px;opacity:.7}
+[data-stats="badges"] .stats-bar{gap:6px}
+[data-stats="badges"] .stat-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500;background:var(--bg-canvas);border:1px solid var(--border)}
+[data-stats="badges"] .stat-chip .stat-val{font-weight:700}
+[data-stats="hidden"] .stats-bar{display:none}
+
+/* === TABLE BORDER RADIUS === */
+[data-table-radius="subtle"] .table-wrap{border-radius:8px;border:1px solid var(--border);margin:8px 12px;overflow:hidden}
+[data-table-radius="rounded"] .table-wrap{border-radius:14px;border:1px solid var(--border);margin:8px 16px;overflow:hidden}
+[data-table-radius="subtle"] .table-wrap,.data-table,[data-table-radius="rounded"] .table-wrap .data-table{min-width:auto}
+
+/* === ANIMATIONS === */
+@keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">U</div>
+    <nav class="sidebar-nav">
+      <a class="nav-item" title="Dashboard"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></a>
+      <a class="nav-item active" title="Dispatch"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 00-2-2H4a2 2 0 00-2 2v11a1 1 0 001 1h2"/><path d="M15 18h2a1 1 0 001-1v-3.65a1 1 0 00-.22-.624l-3.48-4.35A1 1 0 0013.52 9H12v9"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg></a>
+      <a class="nav-item" title="Loads"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><path d="M3.27 6.96L12 12.01l8.73-5.05"/><path d="M12 22.08V12"/></svg></a>
+      <a class="nav-item" title="Carriers"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></a>
+      <a class="nav-item" title="CRM"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></a>
+      <a class="nav-item" title="Settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></a>
+    </nav>
+    <div class="sidebar-bottom">
+      <a class="nav-item" title="Notifications"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></a>
+      <div class="avatar">R</div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+    <!-- Header -->
+    <header class="header">
+      <h1 class="header-title">Dispatch Board</h1>
+      <div class="header-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search loads...">
+        <span class="kbd">&#8984;K</span>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" title="Refresh"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg></button>
+      </div>
+    </header>
+
+    <!-- Combined Toolbar + Filters (single line) -->
+    <div class="toolbar">
+      <button class="btn-accent" id="new-load-btn">+ New Load</button>
+      <div class="toolbar-sep"></div>
+      <div class="dropdown-wrap" id="status-filter-wrap">
+        <button class="filter-select" id="status-filter-btn"><span id="status-filter-text">All Statuses</span> <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="dropdown-menu" id="status-menu"></div>
+      </div>
+      <div class="dropdown-wrap" id="customer-filter-wrap">
+        <button class="filter-select" id="customer-filter-btn"><span id="customer-filter-text">All Customers</span> <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="dropdown-menu" id="customer-menu"></div>
+      </div>
+      <div class="dropdown-wrap" id="carrier-filter-wrap">
+        <button class="filter-select" id="carrier-filter-btn"><span id="carrier-filter-text">All Carriers</span> <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="dropdown-menu" id="carrier-menu"></div>
+      </div>
+      <div class="dropdown-wrap" id="equip-filter-wrap">
+        <button class="filter-select" id="equip-filter-btn"><span id="equip-filter-text">All Equipment</span> <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="dropdown-menu" id="equip-menu"></div>
+      </div>
+      <div class="filter-input" id="date-filter">&#128197; Pickup: Any date</div>
+      <button class="filter-reset" id="reset-filters">Reset</button>
+      <div style="flex:1"></div>
+      <button class="toolbar-btn" id="group-toggle"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> Group</button>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar" id="stats-bar"></div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <table class="data-table">
+        <colgroup>
+          <col style="width:36px"><col style="width:88px"><col style="width:105px"><col style="width:115px"><col style="width:115px"><col style="width:72px"><col style="width:72px"><col style="width:105px"><col style="width:115px"><col style="width:78px"><col style="width:68px"><col style="width:82px"><col style="width:88px">
+        </colgroup>
+        <thead>
+          <tr>
+            <th><input type="checkbox" id="select-all"></th>
+            <th>Load # <span class="sort-arrow">&#9650;</span></th>
+            <th>Status</th>
+            <th>Origin</th>
+            <th>Destination</th>
+            <th>Pickup</th>
+            <th>Delivery</th>
+            <th>Customer</th>
+            <th>Carrier</th>
+            <th>Equipment</th>
+            <th>Rate</th>
+            <th>Weight</th>
+            <th>Reference</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Drawer Overlay -->
+<div class="drawer-overlay" id="drawer-overlay"></div>
+<div class="drawer" id="drawer"></div>
+
+<!-- Settings -->
+<button class="settings-trigger" id="settings-trigger"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></button>
+<div class="settings-panel" id="settings-panel"></div>
+
+<script>
+/* ========== DATA ========== */
+var LOADS = [
+  {id:'LD-2847',status:'transit',atRisk:true,origin:'Chicago, IL',dest:'Dallas, TX',pickup:'Feb 04',delivery:'Feb 07',customer:'Walmart',carrier:'Werner Enterprises',equip:'Dry Van',rate:4250,weight:38500,ref:'REF-8841',miles:920},
+  {id:'LD-2851',status:'transit',atRisk:false,origin:'Atlanta, GA',dest:'Orlando, FL',pickup:'Feb 05',delivery:'Feb 07',customer:'Target',carrier:'JB Hunt Transport',equip:'Reefer',rate:2850,weight:28000,ref:'REF-8842',miles:440},
+  {id:'LD-2856',status:'transit',atRisk:false,origin:'Newark, NJ',dest:'Boston, MA',pickup:'Feb 06',delivery:'Feb 07',customer:'Amazon',carrier:'Schneider National',equip:'Dry Van',rate:1650,weight:22000,ref:'REF-8843',miles:215},
+  {id:'LD-2860',status:'transit',atRisk:true,origin:'Denver, CO',dest:'Phoenix, AZ',pickup:'Feb 04',delivery:'Feb 08',customer:'Home Depot',carrier:'Swift Transportation',equip:'Flatbed',rate:5100,weight:41000,ref:'REF-8844',miles:600},
+  {id:'LD-2863',status:'transit',atRisk:false,origin:'Memphis, TN',dest:'Nashville, TN',pickup:'Feb 06',delivery:'Feb 07',customer:'Sysco',carrier:'Heartland Express',equip:'Reefer',rate:1200,weight:32000,ref:'REF-8845',miles:210},
+  {id:'LD-2867',status:'transit',atRisk:false,origin:'Seattle, WA',dest:'Portland, OR',pickup:'Feb 07',delivery:'Feb 08',customer:'Costco',carrier:'Old Dominion',equip:'Dry Van',rate:950,weight:18000,ref:'REF-8846',miles:175},
+  {id:'LD-2870',status:'unassigned',atRisk:false,origin:'Houston, TX',dest:'San Antonio, TX',pickup:'Feb 08',delivery:'Feb 09',customer:'PepsiCo',carrier:'\u2014',equip:'Dry Van',rate:1100,weight:24000,ref:'REF-8847',miles:200},
+  {id:'LD-2873',status:'unassigned',atRisk:false,origin:'Los Angeles, CA',dest:'Las Vegas, NV',pickup:'Feb 09',delivery:'Feb 10',customer:'Kroger',carrier:'\u2014',equip:'Reefer',rate:2200,weight:30000,ref:'REF-8848',miles:270},
+  {id:'LD-2876',status:'unassigned',atRisk:false,origin:'Philadelphia, PA',dest:'Pittsburgh, PA',pickup:'Feb 09',delivery:'Feb 11',customer:'General Mills',carrier:'\u2014',equip:'Dry Van',rate:2800,weight:36000,ref:'REF-8849',miles:305},
+  {id:'LD-2879',status:'unassigned',atRisk:false,origin:'Minneapolis, MN',dest:'Milwaukee, WI',pickup:'Feb 10',delivery:'Feb 11',customer:'Unilever',carrier:'\u2014',equip:'Flatbed',rate:1500,weight:28000,ref:'REF-8850',miles:340},
+  {id:'LD-2882',status:'unassigned',atRisk:false,origin:'Detroit, MI',dest:'Cleveland, OH',pickup:'Feb 10',delivery:'Feb 11',customer:'Ford Motor Co',carrier:'\u2014',equip:'Step Deck',rate:1900,weight:42000,ref:'REF-8851',miles:170},
+  {id:'LD-2885',status:'tendered',atRisk:false,origin:'Kansas City, MO',dest:'St. Louis, MO',pickup:'Feb 08',delivery:'Feb 09',customer:'P&G',carrier:'Landstar System',equip:'Dry Van',rate:1050,weight:20000,ref:'REF-8852',miles:250},
+  {id:'LD-2888',status:'tendered',atRisk:false,origin:'Charlotte, NC',dest:'Raleigh, NC',pickup:'Feb 09',delivery:'Feb 10',customer:'Walmart',carrier:'XPO Logistics',equip:'Dry Van',rate:850,weight:18000,ref:'REF-8853',miles:170},
+  {id:'LD-2891',status:'tendered',atRisk:false,origin:'Jacksonville, FL',dest:'Miami, FL',pickup:'Feb 09',delivery:'Feb 11',customer:'Amazon',carrier:'Knight-Swift',equip:'Reefer',rate:2400,weight:26000,ref:'REF-8854',miles:345},
+  {id:'LD-2894',status:'tendered',atRisk:false,origin:'Columbus, OH',dest:'Cincinnati, OH',pickup:'Feb 10',delivery:'Feb 11',customer:'Target',carrier:'USX Express',equip:'Dry Van',rate:1100,weight:22000,ref:'REF-8855',miles:110},
+  {id:'LD-2897',status:'dispatched',atRisk:false,origin:'Indianapolis, IN',dest:'Louisville, KY',pickup:'Feb 07',delivery:'Feb 08',customer:'Sysco',carrier:'Werner Enterprises',equip:'Reefer',rate:1300,weight:30000,ref:'REF-8856',miles:115},
+  {id:'LD-2900',status:'dispatched',atRisk:false,origin:'Sacramento, CA',dest:'Oakland, CA',pickup:'Feb 08',delivery:'Feb 08',customer:'Costco',carrier:'JB Hunt Transport',equip:'Dry Van',rate:650,weight:15000,ref:'REF-8857',miles:88},
+  {id:'LD-2903',status:'dispatched',atRisk:false,origin:'Tampa, FL',dest:'Tallahassee, FL',pickup:'Feb 08',delivery:'Feb 09',customer:'PepsiCo',carrier:'Schneider National',equip:'Dry Van',rate:1800,weight:34000,ref:'REF-8858',miles:275},
+  {id:'LD-2906',status:'dispatched',atRisk:false,origin:'Buffalo, NY',dest:'Rochester, NY',pickup:'Feb 09',delivery:'Feb 09',customer:'Kroger',carrier:'Swift Transportation',equip:'Reefer',rate:750,weight:18000,ref:'REF-8859',miles:75},
+  {id:'LD-2909',status:'dispatched',atRisk:false,origin:'Albuquerque, NM',dest:'El Paso, TX',pickup:'Feb 08',delivery:'Feb 09',customer:'Home Depot',carrier:'Heartland Express',equip:'Flatbed',rate:2100,weight:38000,ref:'REF-8860',miles:265},
+  {id:'LD-2912',status:'dispatched',atRisk:false,origin:'Salt Lake City, UT',dest:'Boise, ID',pickup:'Feb 09',delivery:'Feb 10',customer:'General Mills',carrier:'Old Dominion',equip:'Dry Van',rate:2400,weight:28000,ref:'REF-8861',miles:340},
+  {id:'LD-2915',status:'dispatched',atRisk:false,origin:'Richmond, VA',dest:'Norfolk, VA',pickup:'Feb 09',delivery:'Feb 09',customer:'Unilever',carrier:'Landstar System',equip:'Tanker',rate:1600,weight:44000,ref:'REF-8862',miles:95},
+  {id:'LD-2918',status:'delivered',atRisk:false,origin:'Baltimore, MD',dest:'Washington, DC',pickup:'Feb 03',delivery:'Feb 04',customer:'Amazon',carrier:'XPO Logistics',equip:'Dry Van',rate:850,weight:16000,ref:'REF-8863',miles:40},
+  {id:'LD-2921',status:'delivered',atRisk:false,origin:'Austin, TX',dest:'Fort Worth, TX',pickup:'Feb 03',delivery:'Feb 04',customer:'Walmart',carrier:'Knight-Swift',equip:'Dry Van',rate:1400,weight:26000,ref:'REF-8864',miles:190},
+  {id:'LD-2924',status:'delivered',atRisk:false,origin:'San Diego, CA',dest:'Fresno, CA',pickup:'Feb 02',delivery:'Feb 04',customer:'Target',carrier:'USX Express',equip:'Reefer',rate:3200,weight:32000,ref:'REF-8865',miles:330},
+  {id:'LD-2927',status:'delivered',atRisk:false,origin:'New Orleans, LA',dest:'Baton Rouge, LA',pickup:'Feb 04',delivery:'Feb 05',customer:'Sysco',carrier:'Werner Enterprises',equip:'Reefer',rate:700,weight:20000,ref:'REF-8866',miles:80},
+  {id:'LD-2930',status:'delivered',atRisk:false,origin:'Hartford, CT',dest:'Providence, RI',pickup:'Feb 04',delivery:'Feb 05',customer:'P&G',carrier:'JB Hunt Transport',equip:'Dry Van',rate:650,weight:18000,ref:'REF-8867',miles:100},
+  {id:'LD-2933',status:'delivered',atRisk:false,origin:'Omaha, NE',dest:'Des Moines, IA',pickup:'Feb 03',delivery:'Feb 04',customer:'General Mills',carrier:'Schneider National',equip:'Dry Van',rate:950,weight:24000,ref:'REF-8868',miles:150},
+  {id:'LD-2936',status:'delivered',atRisk:false,origin:'Tucson, AZ',dest:'Flagstaff, AZ',pickup:'Feb 02',delivery:'Feb 03',customer:'Costco',carrier:'Swift Transportation',equip:'Flatbed',rate:2800,weight:40000,ref:'REF-8869',miles:260},
+  {id:'LD-2939',status:'delivered',atRisk:false,origin:'Spokane, WA',dest:'Billings, MT',pickup:'Feb 01',delivery:'Feb 03',customer:'Ford Motor Co',carrier:'Heartland Express',equip:'Step Deck',rate:3800,weight:42000,ref:'REF-8870',miles:550}
+];
+
+var STATUS_ORDER = ['transit','unassigned','tendered','dispatched','delivered'];
+var STATUS_LABELS = {transit:'In Transit',unassigned:'Unassigned',tendered:'Tendered',dispatched:'Dispatched',delivered:'Delivered'};
+var STATUS_COLORS = {transit:'var(--st-transit)',unassigned:'var(--st-unassigned)',tendered:'var(--st-tendered)',dispatched:'var(--st-dispatched)',delivered:'var(--st-delivered)'};
+var STATUS_LT = {transit:'var(--st-transit-lt)',unassigned:'var(--st-unassigned-lt)',tendered:'var(--st-tendered-lt)',dispatched:'var(--st-dispatched-lt)',delivered:'var(--st-delivered-lt)'};
+
+var activeStatuses = new Set(STATUS_ORDER.slice());
+var activeCustomers = new Set();
+var activeCarriers = new Set();
+var activeEquipment = new Set();
+// Populate from LOADS
+LOADS.forEach(function(l) { activeCustomers.add(l.customer); activeCarriers.add(l.carrier); activeEquipment.add(l.equip); });
+var allCustomers = Array.from(activeCustomers).sort();
+var allCarriers = Array.from(activeCarriers).sort();
+var allEquipment = Array.from(activeEquipment).sort();
+var drawerOpen = false;
+var settingsOpen = false;
+var focusedRow = -1;
+var currentLoad = null;
+var collapsedGroups = new Set();
+
+/* ========== HELPERS ========== */
+function h(tag, cls, txt) {
+  var el = document.createElement(tag);
+  if (cls) el.className = cls;
+  if (txt !== undefined) el.textContent = txt;
+  return el;
+}
+function clear(el) { while (el.firstChild) el.removeChild(el.firstChild); }
+function $(id) { return document.getElementById(id); }
+function attr(key) { return document.documentElement.getAttribute('data-' + key); }
+function setAttr(key, val) { document.documentElement.setAttribute('data-' + key, val); }
+
+/* ========== STATUS BADGE ========== */
+function buildBadge(status, atRisk) {
+  var s = atRisk ? 'atrisk' : status;
+  var b = h('span', 'badge badge-' + s);
+  b.appendChild(h('span', 'badge-dot'));
+  b.appendChild(document.createTextNode(atRisk ? 'At Risk' : STATUS_LABELS[status]));
+  return b;
+}
+
+/* ========== TABLE RENDERING ========== */
+function getFiltered() {
+  return LOADS.filter(function(l) {
+    return activeStatuses.has(l.status) && activeCustomers.has(l.customer) && activeCarriers.has(l.carrier) && activeEquipment.has(l.equip);
+  });
+}
+
+function renderTable() {
+  var tbody = $('table-body');
+  clear(tbody);
+  var loads = getFiltered();
+  var view = attr('view');
+  focusedRow = -1;
+
+  if (view === 'grouped') {
+    var groups = {};
+    STATUS_ORDER.forEach(function(s) { groups[s] = []; });
+    loads.forEach(function(l) { groups[l.status].push(l); });
+    var idx = 0;
+    var isFirst = true;
+    STATUS_ORDER.forEach(function(st) {
+      if (!groups[st].length) return;
+      if (!isFirst) {
+        var spacer = h('tr', 'group-spacer');
+        var spacerTd = document.createElement('td');
+        spacerTd.setAttribute('colspan', '13');
+        spacer.appendChild(spacerTd);
+        tbody.appendChild(spacer);
+      }
+      isFirst = false;
+      var gh = buildGroupHeader(st, groups[st].length);
+      tbody.appendChild(gh);
+      var rows = [];
+      groups[st].forEach(function(load) {
+        var row = buildRow(load, idx++);
+        row.setAttribute('data-group', st);
+        if (collapsedGroups.has(st)) row.style.display = 'none';
+        rows.push(row);
+        tbody.appendChild(row);
+      });
+      gh.addEventListener('click', function() {
+        var collapsed = collapsedGroups.has(st);
+        if (collapsed) collapsedGroups.delete(st); else collapsedGroups.add(st);
+        gh.classList.toggle('collapsed', !collapsed);
+        rows.forEach(function(r) { r.style.display = collapsed ? '' : 'none'; });
+      });
+    });
+  } else {
+    loads.sort(function(a, b) { return a.id.localeCompare(b.id); });
+    loads.forEach(function(load, i) { tbody.appendChild(buildRow(load, i)); });
+  }
+}
+
+function buildGroupHeader(status, count) {
+  var tr = h('tr', 'group-header');
+  var td = document.createElement('td');
+  td.setAttribute('colspan', '13');
+  td.style.setProperty('--gh-color', STATUS_COLORS[status]);
+  td.style.setProperty('--gh-light', STATUS_LT[status]);
+  tr.style.setProperty('--gh-color', STATUS_COLORS[status]);
+  tr.style.setProperty('--gh-light', STATUS_LT[status]);
+  var inner = h('div', 'gh-inner');
+  var chev = h('span', 'gh-chevron', '\u25BC');
+  inner.appendChild(chev);
+  var dot = h('span', 'gh-dot');
+  dot.style.background = STATUS_COLORS[status];
+  inner.appendChild(dot);
+  inner.appendChild(document.createTextNode(STATUS_LABELS[status] + ' '));
+  inner.appendChild(h('span', 'gh-count', '(' + count + ')'));
+  td.appendChild(inner);
+  tr.appendChild(td);
+  if (collapsedGroups.has(status)) tr.classList.add('collapsed');
+  return tr;
+}
+
+function buildRow(load, index) {
+  var tr = h('tr', 'data-row' + (load.atRisk ? ' at-risk' : ''));
+  tr.setAttribute('data-id', load.id);
+  tr.setAttribute('data-status', load.status);
+  tr.style.animationDelay = (index * 0.02) + 's';
+
+  var td0 = h('td', 'cell-check');
+  var cb = document.createElement('input');
+  cb.type = 'checkbox';
+  cb.className = 'row-check';
+  cb.addEventListener('click', function(e) { e.stopPropagation(); tr.classList.toggle('selected', cb.checked); });
+  td0.appendChild(cb);
+  tr.appendChild(td0);
+
+  var td1 = h('td', 'cell-id', load.id);
+  tr.appendChild(td1);
+
+  var td2 = h('td');
+  td2.appendChild(buildBadge(load.status, load.atRisk));
+  tr.appendChild(td2);
+
+  tr.appendChild(h('td', '', load.origin));
+  tr.appendChild(h('td', '', load.dest));
+  tr.appendChild(h('td', '', load.pickup));
+  tr.appendChild(h('td', '', load.delivery));
+  tr.appendChild(h('td', '', load.customer));
+  tr.appendChild(h('td', '', load.carrier));
+  tr.appendChild(h('td', '', load.equip));
+  tr.appendChild(h('td', '', '$' + load.rate.toLocaleString()));
+  tr.appendChild(h('td', '', load.weight.toLocaleString() + ' lbs'));
+  tr.appendChild(h('td', '', load.ref));
+
+  tr.addEventListener('click', function() { openDrawer(load); });
+  return tr;
+}
+
+/* ========== DRAWER (V5 Refined Style) ========== */
+var activeDrawerTab = 'overview';
+
+function openDrawer(load) {
+  currentLoad = load;
+  drawerOpen = true;
+  activeDrawerTab = 'overview';
+  renderDrawer(load);
+  $('drawer-overlay').classList.add('open');
+  $('drawer').classList.add('open');
+}
+
+function closeDrawer() {
+  drawerOpen = false;
+  $('drawer-overlay').classList.remove('open');
+  $('drawer').classList.remove('open');
+}
+
+function hasMissingDocs(load) {
+  var bolDone = load.status === 'delivered' || load.status === 'transit' || load.status === 'dispatched';
+  var rateDone = load.status !== 'unassigned';
+  var podDone = load.status === 'delivered';
+  return !(bolDone && rateDone && podDone);
+}
+
+function renderDrawer(load) {
+  var drawer = $('drawer');
+  clear(drawer);
+  if (!load) return;
+  var color = STATUS_COLORS[load.status] || '#6B7280';
+
+  /* Header */
+  var head = h('div', 'drawer-head');
+  var titleWrap = h('div', 'drawer-head-info');
+  titleWrap.appendChild(h('div', 'drawer-head-id', load.id));
+  var badge = h('span', 'drawer-badge');
+  badge.textContent = STATUS_LABELS[load.status] || load.status;
+  badge.style.backgroundColor = color + '20';
+  badge.style.color = color;
+  titleWrap.appendChild(badge);
+  head.appendChild(titleWrap);
+
+  var actions = h('div', 'drawer-head-actions');
+  actions.appendChild(h('button', 'btn-sm', 'Edit Load'));
+  actions.appendChild(h('button', 'btn-sm primary', 'Assign Carrier'));
+  head.appendChild(actions);
+
+  var closeBtn = h('button', 'drawer-close', '\u00D7');
+  closeBtn.addEventListener('click', closeDrawer);
+  head.appendChild(closeBtn);
+  drawer.appendChild(head);
+
+  /* Tabs with notification badges */
+  var tabBar = h('div', 'drawer-tabs');
+  var tabDefs = [
+    {key:'overview', label:'Overview'},
+    {key:'carrier', label:'Carrier', badgeType: load.carrier === '\u2014' ? 'warning' : null},
+    {key:'timeline', label:'Timeline'},
+    {key:'finance', label:'Finance'},
+    {key:'documents', label:'Documents', badgeType: hasMissingDocs(load) ? 'danger' : null}
+  ];
+
+  tabDefs.forEach(function(t) {
+    var tab = h('button', 'tab-btn' + (activeDrawerTab === t.key ? ' active' : ''), t.label);
+    if (t.badgeType) {
+      var tbadge = h('span', 'tab-badge ' + t.badgeType);
+      tab.style.position = 'relative';
+      tab.appendChild(tbadge);
+    }
+    tab.addEventListener('click', function() {
+      activeDrawerTab = t.key;
+      renderDrawer(load);
+    });
+    tabBar.appendChild(tab);
+  });
+  drawer.appendChild(tabBar);
+
+  /* Content */
+  var content = h('div', 'drawer-content');
+  switch (activeDrawerTab) {
+    case 'overview': renderOverviewTab(load, content); break;
+    case 'carrier': renderCarrierTab(load, content); break;
+    case 'timeline': renderTimelineTab(load, content); break;
+    case 'finance': renderFinanceTab(load, content); break;
+    case 'documents': renderDocumentsTab(load, content); break;
+  }
+  drawer.appendChild(content);
+}
+
+/* --- Tab 1: Overview --- */
+function renderOverviewTab(load, c) {
+  /* Quick Actions */
+  c.appendChild(h('div', 'section-label', 'Quick Actions'));
+  var qaBar = h('div', 'quick-actions');
+  [{ic:'\u260E',l:'Call'},{ic:'\u2709',l:'Email'},{ic:'\uD83D\uDCAC',l:'Message'},{ic:'\u270F',l:'Edit'},{ic:'\uD83D\uDCCD',l:'Track'}].forEach(function(qa) {
+    var btn = h('div', 'quick-action-btn');
+    var ico = h('span', '', qa.ic);
+    ico.style.fontSize = '16px';
+    btn.appendChild(ico);
+    btn.appendChild(h('span', 'quick-action-label', qa.l));
+    qaBar.appendChild(btn);
+  });
+  c.appendChild(qaBar);
+
+  /* Route Card */
+  c.appendChild(h('div', 'section-label', 'Route'));
+  var routeCard = h('div', 'route-card');
+
+  var originPt = h('div', 'route-point');
+  var oDot = h('div', 'route-point-dot');
+  oDot.style.backgroundColor = 'var(--accent)';
+  originPt.appendChild(oDot);
+  var oInfo = h('div', 'route-point-info');
+  oInfo.appendChild(h('div', 'route-city', load.origin));
+  oInfo.appendChild(h('div', 'route-date-info', load.pickup));
+  originPt.appendChild(oInfo);
+  routeCard.appendChild(originPt);
+
+  var conn = h('div', 'route-connector');
+  conn.style.marginLeft = '4px';
+  routeCard.appendChild(conn);
+
+  var destPt = h('div', 'route-point');
+  var dDot = h('div', 'route-point-dot');
+  dDot.style.backgroundColor = 'var(--st-delivered)';
+  destPt.appendChild(dDot);
+  var dInfo = h('div', 'route-point-info');
+  dInfo.appendChild(h('div', 'route-city', load.dest));
+  dInfo.appendChild(h('div', 'route-date-info', load.delivery));
+  destPt.appendChild(dInfo);
+  routeCard.appendChild(destPt);
+
+  var milesInfo = h('div', 'route-miles-info');
+  var driveH = Math.round(load.miles / 55);
+  var rpm = (load.rate / load.miles).toFixed(2);
+  milesInfo.textContent = load.miles.toLocaleString() + ' miles \u00B7 ~' + driveH + 'h drive \u00B7 $' + rpm + '/mi';
+  routeCard.appendChild(milesInfo);
+  c.appendChild(routeCard);
+
+  /* Equipment */
+  var eqLabel = h('div', 'section-label', 'Equipment');
+  eqLabel.style.marginTop = '16px';
+  c.appendChild(eqLabel);
+  var eqGrid = h('div', 'info-grid');
+  [['Type', load.equip],['Temp Control', load.equip === 'Reefer' ? 'Required' : 'N/A']].forEach(function(f) {
+    var cell = h('div', 'info-cell');
+    cell.appendChild(h('div', 'info-cell-label', f[0]));
+    cell.appendChild(h('div', 'info-cell-value', f[1]));
+    eqGrid.appendChild(cell);
+  });
+  c.appendChild(eqGrid);
+
+  /* Customer */
+  var custLabel = h('div', 'section-label', 'Customer');
+  custLabel.style.marginTop = '16px';
+  c.appendChild(custLabel);
+  [['Company', load.customer],['Reference', load.ref],['Weight', load.weight.toLocaleString() + ' lbs']].forEach(function(f) {
+    var row = h('div', 'field-row');
+    row.appendChild(h('span', 'field-label', f[0]));
+    row.appendChild(h('span', 'field-value', f[1]));
+    c.appendChild(row);
+  });
+}
+
+/* --- Tab 2: Carrier --- */
+function renderCarrierTab(load, c) {
+  if (load.carrier === '\u2014') {
+    var card = h('div', '');
+    card.style.cssText = 'text-align:center;padding:32px 16px;color:var(--text-tertiary)';
+    card.appendChild(h('div', '', '\uD83D\uDE9A'));
+    card.firstChild.style.cssText = 'font-size:32px;margin-bottom:12px;opacity:.5';
+    card.appendChild(h('div', '', 'No carrier assigned to this load'));
+    card.lastChild.style.cssText = 'font-size:13px;margin-bottom:16px';
+    var findBtn = h('button', 'btn-sm primary', 'Find Carrier');
+    findBtn.style.margin = '0 auto';
+    card.appendChild(findBtn);
+    var postBtn = h('button', 'btn-outline', 'Post to Load Board');
+    postBtn.style.cssText = 'margin:8px auto 0;display:block';
+    card.appendChild(postBtn);
+    c.appendChild(card);
+    return;
+  }
+
+  c.appendChild(h('div', 'section-label', 'Carrier Information'));
+  var carrierCard = h('div', '');
+  carrierCard.style.cssText = 'padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:12px';
+  var cName = h('div', '', load.carrier);
+  cName.style.cssText = 'font-size:15px;font-weight:600;margin-bottom:4px';
+  carrierCard.appendChild(cName);
+  var mcNum = 'MC-' + (100000 + Math.floor(Math.random()*900000));
+  var dotNum = 'DOT-' + (1000000 + Math.floor(Math.random()*9000000));
+  var mcLine = h('div', '', mcNum + ' \u00B7 ' + dotNum);
+  mcLine.style.cssText = 'font-size:12px;color:var(--text-tertiary);margin-bottom:10px';
+  carrierCard.appendChild(mcLine);
+
+  [['Safety', 'Satisfactory'],['Insurance', 'Active']].forEach(function(f) {
+    var row = h('div', 'field-row');
+    row.appendChild(h('span', 'field-label', f[0]));
+    var val = h('span', 'field-value', f[1]);
+    if (f[1] === 'Active') val.style.color = 'var(--st-delivered)';
+    row.appendChild(val);
+    carrierCard.appendChild(row);
+  });
+  c.appendChild(carrierCard);
+
+  /* Contact */
+  var contactLabel = h('div', 'section-label', 'Contact');
+  contactLabel.style.marginTop = '12px';
+  c.appendChild(contactLabel);
+  [['Phone', '(555) 432-' + (1000 + Math.floor(Math.random()*9000))],['Email', 'dispatch@carrier.com'],['On-Time %', '94.7%']].forEach(function(f) {
+    var row = h('div', 'field-row');
+    row.appendChild(h('span', 'field-label', f[0]));
+    var val = h('span', 'field-value', f[1]);
+    if (f[0] === 'On-Time %') val.style.color = 'var(--st-delivered)';
+    row.appendChild(val);
+    c.appendChild(row);
+  });
+
+  var changeBtn = h('button', 'btn-outline', 'Change Carrier');
+  changeBtn.style.cssText = 'margin-top:16px;width:100%;justify-content:center';
+  c.appendChild(changeBtn);
+}
+
+/* --- Tab 3: Timeline --- */
+function renderTimelineTab(load, c) {
+  c.appendChild(h('div', 'section-label', 'Load Timeline'));
+  var tl = h('div', 'timeline');
+  var events = getTimelineEvents(load);
+
+  events.forEach(function(evt) {
+    var item = h('div', 'timeline-event');
+    item.appendChild(h('div', 'timeline-dot ' + evt.state));
+    var time = h('div', 'timeline-time');
+    time.textContent = evt.time;
+    item.appendChild(time);
+    var desc = h('div', 'timeline-desc' + (evt.state === 'pending' ? ' pending' : ''));
+    desc.textContent = evt.desc;
+    item.appendChild(desc);
+    if (evt.label) {
+      var labelEl = h('span', 'timeline-label ' + evt.labelClass);
+      labelEl.textContent = evt.label;
+      item.appendChild(labelEl);
+    }
+    tl.appendChild(item);
+  });
+  c.appendChild(tl);
+}
+
+function getTimelineEvents(load) {
+  var evts = [];
+  evts.push({state:'completed', time:'Feb 1, 9:15 AM', desc:'Load created'});
+
+  if (load.status === 'unassigned') {
+    evts.push({state:'pending', time:'Awaiting', desc:'Carrier assignment'});
+    evts.push({state:'pending', time:'Awaiting', desc:'Dispatch'});
+    evts.push({state:'pending', time:'Awaiting', desc:'Pickup'});
+    evts.push({state:'pending', time:'Awaiting', desc:'Delivery'});
+    return evts;
+  }
+  evts.push({state:'completed', time:'Feb 2, 2:30 PM', desc:'Tendered to ' + load.carrier});
+
+  if (load.status === 'tendered') {
+    evts.push({state:'current', time:'Pending', desc:'Awaiting tender acceptance', label:'In Progress', labelClass:'in-progress'});
+    evts.push({state:'pending', time:load.pickup, desc:'Pickup at ' + load.origin});
+    evts.push({state:'pending', time:load.delivery, desc:'Delivery at ' + load.dest});
+    return evts;
+  }
+  evts.push({state:'completed', time:'Feb 3, 8:00 AM', desc:'Dispatched'});
+
+  if (load.status === 'dispatched') {
+    evts.push({state:'current', time:'Now', desc:'En route to pickup', label:'In Progress', labelClass:'in-progress'});
+    evts.push({state:'pending', time:load.pickup, desc:'Pickup at ' + load.origin});
+    evts.push({state:'pending', time:load.delivery, desc:'Delivery at ' + load.dest});
+    return evts;
+  }
+  evts.push({state:'completed', time:load.pickup + ', 10:45 AM', desc:'Picked up at ' + load.origin});
+
+  if (load.status === 'transit') {
+    evts.push({state:'completed', time:load.pickup + ', 2:45 PM', desc:'GPS checkpoint \u2014 on schedule'});
+    evts.push({state:'current', time:'Now', desc:'In transit to ' + load.dest, label:'In Progress', labelClass:'in-progress'});
+    evts.push({state:'pending', time:load.delivery, desc:'Delivery at ' + load.dest});
+    evts.push({state:'pending', time:'Awaiting', desc:'POD upload'});
+    return evts;
+  }
+  /* delivered */
+  evts.push({state:'completed', time:load.delivery + ', 3:20 PM', desc:'Delivered at ' + load.dest});
+  evts.push({state:'completed', time:load.delivery + ', 4:00 PM', desc:'POD uploaded'});
+  evts.push({state:'completed', time:load.delivery + ', 5:00 PM', desc:'Invoice generated'});
+  return evts;
+}
+
+/* --- Tab 4: Finance --- */
+function renderFinanceTab(load, c) {
+  var lineHaul = Math.round(load.rate * 0.85);
+  var fuel = Math.round(load.rate * 0.10);
+  var access = load.rate - lineHaul - fuel;
+  var carrierCost = Math.round(load.rate * 0.83);
+  var margin = load.rate - carrierCost;
+  var marginPct = ((margin / load.rate) * 100).toFixed(1);
+
+  /* Revenue */
+  c.appendChild(h('div', 'section-label', 'Revenue'));
+  [['Line Haul','$'+lineHaul.toLocaleString()],['Fuel Surcharge','$'+fuel.toLocaleString()],['Accessorials','$'+access.toLocaleString()]].forEach(function(r) {
+    var row = h('div', 'field-row');
+    row.appendChild(h('span', 'field-label', r[0]));
+    row.appendChild(h('span', 'field-value', r[1]));
+    c.appendChild(row);
+  });
+  var totalRow = h('div', 'field-row');
+  totalRow.style.cssText = 'border-top:1px solid var(--border);padding-top:8px;margin-top:4px;font-weight:600';
+  totalRow.appendChild(h('span', 'field-label', 'Total Revenue'));
+  totalRow.appendChild(h('span', 'field-value', '$'+load.rate.toLocaleString()));
+  c.appendChild(totalRow);
+
+  /* Cost */
+  var costLabel = h('div', 'section-label', 'Cost');
+  costLabel.style.marginTop = '16px';
+  c.appendChild(costLabel);
+  [['Carrier Pay','$'+carrierCost.toLocaleString()],['Fuel Advance','$'+Math.round(carrierCost*0.03).toLocaleString()]].forEach(function(r) {
+    var row = h('div', 'field-row');
+    row.appendChild(h('span', 'field-label', r[0]));
+    row.appendChild(h('span', 'field-value', r[1]));
+    c.appendChild(row);
+  });
+
+  /* Margin box */
+  var mbox = h('div', 'margin-box');
+  if (parseFloat(marginPct) >= 16) {
+    mbox.style.backgroundColor = 'rgba(16,185,129,.08)';
+    mbox.style.borderColor = 'var(--st-delivered)';
+  } else if (parseFloat(marginPct) >= 10) {
+    mbox.style.backgroundColor = 'rgba(59,130,246,.08)';
+    mbox.style.borderColor = 'var(--st-transit)';
+  } else {
+    mbox.style.backgroundColor = 'rgba(239,68,68,.08)';
+    mbox.style.borderColor = 'var(--st-atrisk)';
+  }
+  var pctEl = h('div', 'margin-box-pct', marginPct + '%');
+  pctEl.style.color = parseFloat(marginPct) >= 16 ? 'var(--st-delivered)' : parseFloat(marginPct) >= 10 ? 'var(--st-transit)' : 'var(--st-atrisk)';
+  mbox.appendChild(pctEl);
+  mbox.appendChild(h('div', 'margin-box-amt', '$'+margin.toLocaleString()+' margin'));
+  c.appendChild(mbox);
+
+  /* Payment */
+  var payLabel = h('div', 'section-label', 'Payment Status');
+  payLabel.style.marginTop = '12px';
+  c.appendChild(payLabel);
+  var invStatus = load.status === 'delivered' ? 'Invoiced' : 'Pending';
+  var cpStatus = load.status === 'delivered' ? 'Paid' : 'Pending';
+  [['Invoice', invStatus],['Carrier Payment', cpStatus]].forEach(function(r) {
+    var row = h('div', 'field-row');
+    row.appendChild(h('span', 'field-label', r[0]));
+    var val = h('span', 'field-value', r[1]);
+    if (r[1] === 'Paid' || r[1] === 'Invoiced') val.style.color = 'var(--st-delivered)';
+    row.appendChild(val);
+    c.appendChild(row);
+  });
+}
+
+/* --- Tab 5: Documents --- */
+function renderDocumentsTab(load, c) {
+  c.appendChild(h('div', 'section-label', 'Documents'));
+  var docs = [
+    {name:'Rate Confirmation', complete: load.status !== 'unassigned'},
+    {name:'Bill of Lading (BOL)', complete: load.status === 'delivered' || load.status === 'transit' || load.status === 'dispatched'},
+    {name:'Proof of Delivery (POD)', complete: load.status === 'delivered'},
+    {name:'Insurance Certificate', complete: load.carrier !== '\u2014'}
+  ];
+
+  var doneCount = 0;
+  docs.forEach(function(d) {
+    var item = h('div', 'doc-item');
+    var icon = h('div', 'doc-icon ' + (d.complete ? 'complete' : 'pending'));
+    icon.textContent = d.complete ? '\u2713' : '\u23F3';
+    item.appendChild(icon);
+    var info = h('div', 'doc-info');
+    info.appendChild(h('div', 'doc-name', d.name));
+    info.appendChild(h('div', 'doc-status', d.complete ? 'Uploaded' : 'Pending'));
+    item.appendChild(info);
+    if (d.complete) doneCount++;
+    c.appendChild(item);
+  });
+
+  /* Progress bar */
+  var pct = Math.round((doneCount / docs.length) * 100);
+  var bar = h('div', 'doc-progress');
+  var fill = h('div', 'doc-progress-fill');
+  fill.style.width = pct + '%';
+  fill.style.backgroundColor = pct === 100 ? 'var(--st-delivered)' : pct >= 50 ? 'var(--accent)' : 'var(--st-atrisk)';
+  bar.appendChild(fill);
+  c.appendChild(bar);
+  var pctText = h('div', '');
+  pctText.style.cssText = 'font-size:11px;color:var(--text-tertiary);margin-top:4px;margin-bottom:16px';
+  pctText.textContent = doneCount + ' of ' + docs.length + ' documents (' + pct + '%)';
+  c.appendChild(pctText);
+
+  var uploadBtn = h('button', 'btn-outline', '+ Upload Document');
+  uploadBtn.style.cssText = 'width:100%;justify-content:center';
+  c.appendChild(uploadBtn);
+}
+
+/* ========== STATUS FILTER ========== */
+function buildStatusFilter() {
+  var menu = $('status-menu');
+  var counts = {};
+  LOADS.forEach(function(l) { counts[l.status] = (counts[l.status]||0) + 1; });
+
+  STATUS_ORDER.forEach(function(st) {
+    var item = h('label', 'dropdown-item');
+    var cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = true;
+    cb.addEventListener('change', function() {
+      if (cb.checked) activeStatuses.add(st); else activeStatuses.delete(st);
+      updateFilterText();
+      renderTable();
+      updateStatsBar();
+    });
+    item.appendChild(cb);
+    var dot = h('span', 'status-dot-sm');
+    dot.style.background = STATUS_COLORS[st];
+    item.appendChild(dot);
+    item.appendChild(document.createTextNode(' ' + STATUS_LABELS[st] + ' (' + (counts[st]||0) + ')'));
+    menu.appendChild(item);
+  });
+
+  $('status-filter-btn').addEventListener('click', function(e) {
+    e.stopPropagation();
+    document.querySelectorAll('.dropdown-menu').forEach(function(m) { if (m.id !== 'status-menu') m.classList.remove('open'); });
+    menu.classList.toggle('open');
+  });
+  menu.addEventListener('click', function(e) { e.stopPropagation(); });
+}
+
+function updateFilterText() {
+  var txt = $('status-filter-text');
+  var btn = $('status-filter-btn');
+  if (activeStatuses.size === 5) txt.textContent = 'All Statuses';
+  else if (activeStatuses.size === 0) txt.textContent = 'No Status';
+  else if (activeStatuses.size === 1) {
+    var names = [];
+    activeStatuses.forEach(function(s) { names.push(STATUS_LABELS[s]); });
+    txt.textContent = names[0];
+  } else txt.textContent = activeStatuses.size + ' Selected';
+  btn.classList.toggle('active', activeStatuses.size < 5);
+}
+
+/* ========== FILTER DROPDOWNS ========== */
+function buildFilterDropdown(menuId, btnId, textId, items, activeSet, allLabel) {
+  var menu = $(menuId);
+  var btn = $(btnId);
+  items.forEach(function(name) {
+    var item = h('label', 'dropdown-item');
+    var cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = true;
+    cb.addEventListener('change', function() {
+      if (cb.checked) activeSet.add(name); else activeSet.delete(name);
+      updateFilterLabel(textId, activeSet, items.length, allLabel);
+      renderTable();
+      updateStatsBar();
+    });
+    item.appendChild(cb);
+    item.appendChild(document.createTextNode(' ' + name));
+    menu.appendChild(item);
+  });
+  btn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    // close other menus
+    document.querySelectorAll('.dropdown-menu').forEach(function(m) { if (m.id !== menuId) m.classList.remove('open'); });
+    menu.classList.toggle('open');
+  });
+  menu.addEventListener('click', function(e) { e.stopPropagation(); });
+}
+
+function updateFilterLabel(textId, activeSet, total, allLabel) {
+  var txt = $(textId);
+  if (activeSet.size === total) txt.textContent = allLabel;
+  else if (activeSet.size === 0) txt.textContent = 'None';
+  else if (activeSet.size === 1) txt.textContent = Array.from(activeSet)[0];
+  else txt.textContent = activeSet.size + ' Selected';
+  txt.parentElement.classList.toggle('active', activeSet.size < total);
+}
+
+function buildAllFilters() {
+  buildFilterDropdown('customer-menu','customer-filter-btn','customer-filter-text', allCustomers, activeCustomers, 'All Customers');
+  buildFilterDropdown('carrier-menu','carrier-filter-btn','carrier-filter-text', allCarriers, activeCarriers, 'All Carriers');
+  buildFilterDropdown('equip-menu','equip-filter-btn','equip-filter-text', allEquipment, activeEquipment, 'All Equipment');
+
+  // Close all menus on outside click
+  document.addEventListener('click', function() {
+    document.querySelectorAll('.dropdown-menu').forEach(function(m) { m.classList.remove('open'); });
+  });
+
+  // Reset button
+  $('reset-filters').addEventListener('click', function() {
+    activeStatuses = new Set(STATUS_ORDER.slice());
+    activeCustomers = new Set(allCustomers);
+    activeCarriers = new Set(allCarriers);
+    activeEquipment = new Set(allEquipment);
+    // Re-check all checkboxes
+    document.querySelectorAll('.dropdown-menu input[type="checkbox"]').forEach(function(cb) { cb.checked = true; });
+    updateFilterText();
+    updateFilterLabel('customer-filter-text', activeCustomers, allCustomers.length, 'All Customers');
+    updateFilterLabel('carrier-filter-text', activeCarriers, allCarriers.length, 'All Carriers');
+    updateFilterLabel('equip-filter-text', activeEquipment, allEquipment.length, 'All Equipment');
+    renderTable();
+    updateStatsBar();
+  });
+}
+
+/* ========== SETTINGS PANEL ========== */
+function buildSettingsPanel() {
+  var panel = $('settings-panel');
+
+  var head = h('div','sp-head');
+  head.appendChild(h('span','sp-title','Design Playground'));
+  var cl = h('button','sp-close','\u00D7');
+  cl.addEventListener('click', toggleSettings);
+  head.appendChild(cl);
+  panel.appendChild(head);
+
+  var body = h('div','sp-body');
+
+  // === COPY PREFERENCES BUTTON ===
+  var copyBtn = h('button','sp-copy-btn','\uD83D\uDCCB Copy My Preferences');
+  copyBtn.addEventListener('click', function() {
+    var attrs = document.documentElement.attributes;
+    var prefs = [];
+    for (var i = 0; i < attrs.length; i++) {
+      if (attrs[i].name.indexOf('data-') === 0) {
+        var key = attrs[i].name.replace('data-','');
+        prefs.push(key + ': ' + attrs[i].value);
+      }
+    }
+    var text = 'My R4 Playground Preferences:\n' + prefs.join('\n');
+    navigator.clipboard.writeText(text).then(function() {
+      copyBtn.textContent = '\u2713 Copied!';
+      copyBtn.classList.add('copied');
+      setTimeout(function() {
+        copyBtn.textContent = '\uD83D\uDCCB Copy My Preferences';
+        copyBtn.classList.remove('copied');
+      }, 2000);
+    });
+  });
+  body.appendChild(copyBtn);
+
+  // === PRESETS ===
+  body.appendChild(h('div','sp-divider-label','PRESETS'));
+  var presets = [
+    {name:'Rabih V1',dot:'#1E3A5F',s:{accent:'navy',header:'light',font:'inter',cols:'grid',density:'compact',zebra:'off',gh:'accent',theme:'light',view:'flat','sidebar-color':'light-gray',canvas:'blue-gray','table-surface':'white','border-int':'standard',badge:'dot-label','th-style':'dark','load-style':'bold',hover:'glow','sidebar-w':'standard',stats:'badges','table-radius':'sharp','row-tint':'wash','border-color':'slate','border-width':'thin','gh-border':'subtle','group-sep':'line'}},
+    {name:'Samsara Clean',dot:'#0D9488',s:{accent:'teal',header:'white',font:'dm',density:'default',gh:'accent','sidebar-color':'cool-gray',canvas:'off-white','table-surface':'white','border-int':'standard','th-style':'gray',badge:'refined','row-tint':'off',cols:'clear','border-color':'gray','border-width':'thin','gh-border':'subtle','group-sep':'gap',hover:'highlight',theme:'light'}},
+    {name:'Enterprise Pro',dot:'#1E3A5F',s:{accent:'navy',header:'slate',font:'manrope',density:'default',gh:'filled','sidebar-color':'cool-gray',canvas:'white','table-surface':'white','border-int':'strong','th-style':'dark',badge:'tag','row-tint':'subtle',cols:'clear','border-color':'cool','border-width':'medium','gh-border':'strong','group-sep':'line',hover:'outline',theme:'light'}},
+    {name:'Stripe Minimal',dot:'#4F46E5',s:{accent:'indigo',header:'white',font:'inter',density:'spacious',gh:'bold','sidebar-color':'white',canvas:'white','table-surface':'white','border-int':'ghost','th-style':'accent-line',badge:'chip','row-tint':'off',cols:'subtle','border-color':'gray','border-width':'thin','gh-border':'none','group-sep':'gap',hover:'glow',theme:'light'}},
+    {name:'DAT Bold',dot:'#2563EB',s:{accent:'blue',header:'light',font:'outfit',density:'compact',gh:'accent','sidebar-color':'light-gray',canvas:'off-white','table-surface':'white','border-int':'standard','th-style':'bordered',badge:'dot-label','row-tint':'wash',cols:'grid','border-color':'cool','border-width':'medium','gh-border':'subtle','group-sep':'line',hover:'bar-tint',theme:'light'}},
+    {name:'Dark Command',dot:'#8B5CF6',s:{accent:'indigo',header:'dark',font:'dm',density:'compact',gh:'filled','sidebar-color':'cool-gray',canvas:'off-white','table-surface':'white','border-int':'standard','th-style':'accent',badge:'solid','row-tint':'subtle',cols:'clear',theme:'dark','border-color':'gray','border-width':'thin','gh-border':'accent','group-sep':'none',hover:'bold'}}
+  ];
+  presets.forEach(function(p) {
+    var btn = h('button','sp-preset');
+    var dot = h('span','sp-preset-dot');
+    dot.style.background = p.dot;
+    btn.appendChild(dot);
+    btn.appendChild(document.createTextNode(p.name));
+    btn.addEventListener('click', function() {
+      Object.keys(p.s).forEach(function(k) { setAttr(k, p.s[k]); });
+      renderTable();
+      updateStatsBar();
+      updateNavLabels();
+      // Rebuild settings panel to reflect new values
+      clear(panel);
+      buildSettingsPanel();
+    });
+    body.appendChild(btn);
+  });
+  body.appendChild(h('div','sp-section'));
+
+  // Accent Color
+  body.appendChild(buildSpLabel('Accent Color'));
+  var colors = h('div','sp-colors');
+  [{k:'indigo',c:'#4F46E5'},{k:'blue',c:'#2563EB'},{k:'teal',c:'#0D9488'},{k:'navy',c:'#1E3A5F'}].forEach(function(item) {
+    var sw = h('div','sp-swatch' + (attr('accent')===item.k?' active':''));
+    sw.style.background = item.c;
+    sw.style.color = item.c;
+    sw.addEventListener('click', function() {
+      setAttr('accent', item.k);
+      colors.querySelectorAll('.sp-swatch').forEach(function(s){s.classList.remove('active')});
+      sw.classList.add('active');
+    });
+    colors.appendChild(sw);
+  });
+  body.appendChild(colors);
+  body.appendChild(h('div','sp-section'));
+
+  // Options helper
+  function addOpts(label, dataKey, opts, onChange) {
+    body.appendChild(buildSpLabel(label));
+    var wrap = h('div','sp-options');
+    opts.forEach(function(o) {
+      var btn = h('button','sp-opt'+(attr(dataKey)===o.k?' active':''),o.l);
+      btn.addEventListener('click', function() {
+        setAttr(dataKey, o.k);
+        wrap.querySelectorAll('.sp-opt').forEach(function(b){b.classList.remove('active')});
+        btn.classList.add('active');
+        if (onChange) onChange(o.k);
+      });
+      wrap.appendChild(btn);
+    });
+    body.appendChild(wrap);
+    body.appendChild(h('div','sp-section'));
+  }
+
+  // --- Section: CORE ---
+  body.appendChild(h('div','sp-divider-label','CORE'));
+  addOpts('Header', 'header', [{k:'gray',l:'Sidebar Gray'},{k:'light',l:'Light Gray'},{k:'white',l:'White'},{k:'slate',l:'Slate'},{k:'dark',l:'Dark'},{k:'accent',l:'Accent'}]);
+  addOpts('Font Family', 'font', [{k:'dm',l:'DM Sans'},{k:'inter',l:'Inter'},{k:'outfit',l:'Outfit'},{k:'manrope',l:'Manrope'}]);
+  addOpts('View Mode', 'view', [{k:'flat',l:'Flat List'},{k:'grouped',l:'Grouped'}], function(v) {
+    $('group-toggle').classList.toggle('active', v==='grouped');
+    renderTable();
+  });
+  body.appendChild(buildToggle('Dark Mode', attr('theme')==='dark', function(on) { setAttr('theme', on?'dark':'light'); }));
+
+  // --- Section: COLORS ---
+  body.appendChild(h('div','sp-divider-label','COLORS & SURFACES'));
+  addOpts('Sidebar Color', 'sidebar-color', [{k:'light-gray',l:'Light Gray'},{k:'warm-gray',l:'Warm'},{k:'cool-gray',l:'Cool'},{k:'white',l:'White'},{k:'off-white',l:'Off-White'}]);
+  addOpts('Page Background', 'canvas', [{k:'white',l:'White'},{k:'off-white',l:'Off-White'},{k:'warm',l:'Warm Beige'},{k:'slate',l:'Cool Slate'},{k:'blue-gray',l:'Blue Gray'}]);
+  addOpts('Table Surface', 'table-surface', [{k:'white',l:'White'},{k:'light-gray',l:'Light Gray'},{k:'cream',l:'Cream'},{k:'match',l:'Match Page'}]);
+  addOpts('Border Intensity', 'border-int', [{k:'invisible',l:'None'},{k:'whisper',l:'Whisper'},{k:'ghost',l:'Ghost'},{k:'subtle',l:'Subtle'},{k:'standard',l:'Standard'},{k:'strong',l:'Strong'},{k:'bold',l:'Bold'}]);
+
+  // --- Section: BORDERS ---
+  body.appendChild(h('div','sp-divider-label','CELL BORDERS'));
+  addOpts('Grid Color', 'border-color', [{k:'gray',l:'Gray'},{k:'warm',l:'Warm'},{k:'cool',l:'Cool'},{k:'slate',l:'Slate'},{k:'blue',l:'Blue'},{k:'accent-tint',l:'Accent'}]);
+  addOpts('Grid Weight', 'border-width', [{k:'hairline',l:'Hairline'},{k:'thin',l:'Thin (1px)'},{k:'medium',l:'Medium (1.5)'},{k:'thick',l:'Thick (2px)'},{k:'heavy',l:'Heavy (3px)'}]);
+  addOpts('Column Lines', 'cols', [{k:'none',l:'None'},{k:'subtle',l:'Subtle'},{k:'clear',l:'Match Row'},{k:'strong',l:'Strong'},{k:'grid',l:'Full Grid'}]);
+
+  // --- Section: TABLE ---
+  body.appendChild(h('div','sp-divider-label','TABLE'));
+  addOpts('Row Density', 'density', [{k:'compact',l:'Compact'},{k:'default',l:'Default'},{k:'spacious',l:'Spacious'}]);
+  body.appendChild(buildToggle('Zebra Striping', attr('zebra')==='on', function(on) { setAttr('zebra', on?'on':'off'); }));
+  addOpts('Table Header', 'th-style', [{k:'white',l:'White'},{k:'gray',l:'Gray'},{k:'accent',l:'Accent Tint'},{k:'accent-line',l:'Accent Line'},{k:'dark',l:'Dark'},{k:'bordered',l:'Bordered'},{k:'floating',l:'Floating'}]);
+  addOpts('Table Radius', 'table-radius', [{k:'sharp',l:'Sharp'},{k:'subtle',l:'Subtle (6px)'},{k:'rounded',l:'Rounded (14px)'}]);
+
+  // --- Section: GROUPS ---
+  body.appendChild(h('div','sp-divider-label','GROUPS'));
+  addOpts('Group Headers', 'gh', [{k:'accent',l:'Accent Bar'},{k:'filled',l:'Filled'},{k:'bold',l:'Bold'}]);
+  addOpts('Group Header Border', 'gh-border', [{k:'none',l:'None'},{k:'subtle',l:'Subtle'},{k:'strong',l:'Strong'},{k:'accent',l:'Accent'}]);
+  addOpts('Group Separator', 'group-sep', [{k:'none',l:'None'},{k:'line',l:'Line'},{k:'gap',l:'Gap'},{k:'double',l:'Double'},{k:'accent',l:'Accent'}], function() { renderTable(); });
+
+  // --- Section: COMPONENTS ---
+  body.appendChild(h('div','sp-divider-label','COMPONENTS'));
+  addOpts('Status Badge', 'badge', [{k:'pill',l:'Tinted Pill'},{k:'refined',l:'Refined Pill'},{k:'dot-label',l:'Dot + Label'},{k:'solid',l:'Solid'},{k:'bordered',l:'Bordered'},{k:'tag',l:'Tag'},{k:'chip',l:'Chip'},{k:'text-only',l:'Text Only'}]);
+  addOpts('Load # Style', 'load-style', [{k:'accent',l:'Accent Link'},{k:'bold',l:'Bold Dark'},{k:'mono',l:'Monospace'}]);
+  addOpts('Row Hover', 'hover', [{k:'highlight',l:'Highlight'},{k:'outline',l:'Outline'},{k:'bar-tint',l:'Bar + Tint'},{k:'bold',l:'Bold'},{k:'glow',l:'Glow'}]);
+  addOpts('Row Tinting', 'row-tint', [{k:'off',l:'Off'},{k:'subtle',l:'Subtle'},{k:'stripe',l:'Left Border'},{k:'wash',l:'Wash'},{k:'bottom-border',l:'Bottom'}]);
+
+  // --- Section: LAYOUT ---
+  body.appendChild(h('div','sp-divider-label','LAYOUT'));
+  addOpts('Sidebar Width', 'sidebar-w', [{k:'narrow',l:'Narrow (52)'},{k:'standard',l:'Standard (64)'},{k:'wide',l:'Wide (200)'}], function() { updateNavLabels(); });
+  addOpts('Stats Bar', 'stats', [{k:'minimal',l:'Minimal'},{k:'badges',l:'Badge Chips'},{k:'hidden',l:'Hidden'}], function() { updateStatsBar(); });
+
+  panel.appendChild(body);
+}
+
+function buildSpLabel(text) {
+  return h('div','sp-label',text);
+}
+
+function buildToggle(label, isOn, onChange) {
+  var row = h('div','sp-toggle-row');
+  row.appendChild(h('span','sp-label-inline',label));
+  var sw = h('div','toggle-switch'+(isOn?' on':''));
+  sw.addEventListener('click', function() {
+    sw.classList.toggle('on');
+    onChange(sw.classList.contains('on'));
+  });
+  row.appendChild(sw);
+  return row;
+}
+
+function toggleSettings() {
+  settingsOpen = !settingsOpen;
+  $('settings-panel').classList.toggle('open', settingsOpen);
+}
+
+/* ========== NAV LABELS (for wide sidebar) ========== */
+var NAV_LABELS = ['Dashboard','Dispatch','Loads','Carriers','CRM','Settings'];
+function updateNavLabels() {
+  var navItems = document.querySelectorAll('.sidebar-nav .nav-item');
+  navItems.forEach(function(item, i) {
+    var existing = item.querySelector('.nav-label');
+    if (existing) item.removeChild(existing);
+    if (attr('sidebar-w') === 'wide') {
+      var label = h('span','nav-label', NAV_LABELS[i] || '');
+      item.appendChild(label);
+    }
+  });
+  // Also update sidebar logo text for wide mode
+  var logo = document.querySelector('.sidebar-logo');
+  var logoLabel = logo.querySelector('.nav-label');
+  if (logoLabel) logo.removeChild(logoLabel);
+  if (attr('sidebar-w') === 'wide') {
+    var lt = h('span','nav-label','Ultra TMS');
+    lt.style.fontWeight = '600';
+    logo.appendChild(lt);
+  }
+  // Update bottom nav items
+  var bottomItems = document.querySelectorAll('.sidebar-bottom .nav-item');
+  bottomItems.forEach(function(item) {
+    var existing = item.querySelector('.nav-label');
+    if (existing) item.removeChild(existing);
+    if (attr('sidebar-w') === 'wide') {
+      item.appendChild(h('span','nav-label','Alerts'));
+    }
+  });
+}
+
+/* ========== STATS RENDERING ========== */
+function updateStatsBar() {
+  var bar = document.querySelector('.stats-bar');
+  if (!bar) return;
+  var mode = attr('stats');
+  while (bar.firstChild) bar.removeChild(bar.firstChild);
+
+  var filtered = getFiltered();
+  var loadCount = filtered.length;
+  var totalRev = 0;
+  var riskCount = 0;
+  filtered.forEach(function(l) { totalRev += l.rate; if (l.atRisk) riskCount++; });
+  var revStr = totalRev >= 1000000 ? '$' + (totalRev/1000000).toFixed(1) + 'M' : '$' + Math.round(totalRev/1000) + 'K';
+
+  if (mode === 'minimal') {
+    var span = h('span','');
+    span.appendChild(document.createTextNode(loadCount + ' loads \u00B7 ' + revStr + ' revenue \u00B7 94.2% on-time \u00B7 16.8% avg margin \u00B7 '));
+    var danger = h('span','text-danger', riskCount + ' at risk');
+    span.appendChild(danger);
+    bar.appendChild(span);
+  } else if (mode === 'badges') {
+    var stats = [
+      {label:loadCount + ' loads',color:'var(--accent)'},
+      {label:revStr + ' revenue',color:'var(--st-delivered)'},
+      {label:'94.2% on-time',color:'var(--st-transit)'},
+      {label:'16.8% margin',color:'var(--st-dispatched)'},
+      {label:riskCount + ' at risk',color:'var(--st-atrisk)'}
+    ];
+    stats.forEach(function(s) {
+      var chip = h('span','stat-chip',s.label);
+      chip.style.cssText = 'display:inline-flex;align-items:center;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:500;background:'+s.color+'12;color:'+s.color+';border:1px solid '+s.color+'30';
+      bar.appendChild(chip);
+    });
+  }
+  // mode === 'hidden' — CSS hides it, no content needed
+}
+
+/* ========== EVENT HANDLERS ========== */
+function initEvents() {
+  $('settings-trigger').addEventListener('click', toggleSettings);
+  $('drawer-overlay').addEventListener('click', closeDrawer);
+
+  // Group toggle
+  $('group-toggle').addEventListener('click', function() {
+    var current = attr('view');
+    var next = current === 'flat' ? 'grouped' : 'flat';
+    setAttr('view', next);
+    this.classList.toggle('active', next==='grouped');
+    renderTable();
+  });
+
+  // Select all
+  $('select-all').addEventListener('change', function() {
+    var checked = this.checked;
+    document.querySelectorAll('.row-check').forEach(function(cb) {
+      cb.checked = checked;
+      cb.closest('.data-row').classList.toggle('selected', checked);
+    });
+  });
+
+  // Keyboard nav
+  document.addEventListener('keydown', function(e) {
+    if (e.target.tagName === 'INPUT' && e.target.type !== 'checkbox') return;
+    if (drawerOpen && e.key === 'Escape') { closeDrawer(); return; }
+    if (settingsOpen && e.key === 'Escape') { toggleSettings(); return; }
+
+    var rows = document.querySelectorAll('.data-row');
+    if (!rows.length) return;
+
+    if (e.key === 'j' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      focusedRow = Math.min(focusedRow + 1, rows.length - 1);
+      highlightFocused(rows);
+    } else if (e.key === 'k' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      focusedRow = Math.max(focusedRow - 1, 0);
+      highlightFocused(rows);
+    } else if (e.key === 'Enter' && focusedRow >= 0 && focusedRow < rows.length) {
+      rows[focusedRow].click();
+    }
+  });
+}
+
+function highlightFocused(rows) {
+  rows.forEach(function(r) { r.classList.remove('focused'); });
+  if (focusedRow >= 0 && focusedRow < rows.length) {
+    rows[focusedRow].classList.add('focused');
+    rows[focusedRow].scrollIntoView({ block: 'nearest' });
+  }
+}
+
+/* ========== INIT ========== */
+buildStatusFilter();
+buildAllFilters();
+buildSettingsPanel();
+renderTable();
+updateNavLabels();
+updateStatsBar();
+initEvents();
+</script>
+</body>
+</html>

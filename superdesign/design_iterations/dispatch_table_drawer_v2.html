@@ -1,0 +1,1822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultra TMS - Dispatch Board</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg-main: #F8F9FA;
+            --bg-filter: #F1F3F5;
+            --surface-white: #FFFFFF;
+            --border-light: #e5e7eb;
+            --border-soft: #DEE2E6;
+            --sapphire-blue: #1D4ED8;
+            --text-primary: #333333;
+            --text-secondary: #6C757D;
+            --text-muted: #adb5bd;
+            --status-active-bg: #E7F3EF;
+            --status-active-text: #065F46;
+            --status-inactive-bg: #F1F3F5;
+            --status-inactive-text: #495057;
+            --status-transit-bg: #DBEAFE;
+            --status-transit-text: #1E40AF;
+            --status-delivered-bg: #DCFCE7;
+            --status-delivered-text: #166534;
+            --status-unassigned-bg: #FEF3C7;
+            --status-unassigned-text: #92400E;
+            --status-tendered-bg: #EDE9FE;
+            --status-tendered-text: #5B21B6;
+            --status-completed-bg: #F1F3F5;
+            --status-completed-text: #495057;
+            --status-cancelled-bg: #FEE2E2;
+            --status-cancelled-text: #991B1B;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-main);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+        }
+
+        /* Custom Scrollbar - Stitch Premium style */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-soft);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 64px;
+            background: var(--surface-white);
+            border-right: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px 0;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 50;
+        }
+
+        .sidebar-logo {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            color: var(--sapphire-blue);
+        }
+
+        .sidebar-logo .material-symbols-outlined {
+            font-size: 28px;
+            font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 28;
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            flex: 1;
+        }
+
+        .sidebar-item {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.15s ease;
+        }
+
+        .sidebar-item:hover {
+            background: var(--bg-main);
+            color: var(--text-primary);
+        }
+
+        .sidebar-item.active {
+            background: var(--sapphire-blue);
+            color: #FFFFFF;
+        }
+
+        .sidebar-item .material-symbols-outlined {
+            font-size: 20px;
+        }
+
+        .sidebar-bottom {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 64px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            height: 48px;
+            background: var(--surface-white);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            gap: 16px;
+            flex-shrink: 0;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap;
+        }
+
+        .header-title .material-symbols-outlined {
+            font-size: 18px;
+            color: var(--sapphire-blue);
+        }
+
+        .header-search {
+            flex: 1;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .header-search input {
+            width: 100%;
+            height: 32px;
+            background: var(--bg-main);
+            border: 1px solid transparent;
+            border-radius: 9999px;
+            padding: 0 12px 0 34px;
+            font-size: 12px;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            outline: none;
+            transition: border-color 0.15s ease;
+        }
+
+        .header-search input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .header-search input:focus {
+            border-color: var(--sapphire-blue);
+            background: var(--surface-white);
+        }
+
+        .header-search .material-symbols-outlined {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 16px;
+            color: var(--text-muted);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-left: auto;
+        }
+
+        .btn-new-load {
+            height: 32px;
+            padding: 0 16px;
+            background: var(--sapphire-blue);
+            color: #FFFFFF;
+            border: none;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: background 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .btn-new-load:hover {
+            background: #1740b0;
+        }
+
+        .btn-new-load .material-symbols-outlined {
+            font-size: 16px;
+        }
+
+        .header-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 9999px;
+            background: var(--bg-filter);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        /* Filter Bar */
+        .filter-bar {
+            height: 56px;
+            background: var(--surface-white);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .filter-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+        }
+
+        .filter-chip {
+            height: 30px;
+            padding: 0 14px;
+            border: 1px solid var(--border-soft);
+            border-radius: 9999px;
+            background: var(--surface-white);
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s ease;
+            font-family: 'Inter', sans-serif;
+            white-space: nowrap;
+            position: relative;
+        }
+
+        .filter-chip:hover {
+            border-color: var(--sapphire-blue);
+            color: var(--sapphire-blue);
+        }
+
+        .filter-chip .material-symbols-outlined {
+            font-size: 14px;
+        }
+
+        .filter-chip-dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            background: var(--surface-white);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            min-width: 160px;
+            z-index: 40;
+            padding: 4px 0;
+        }
+
+        .filter-chip:hover .filter-chip-dropdown {
+            display: block;
+        }
+
+        .filter-chip-dropdown-item {
+            padding: 8px 14px;
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: background 0.1s ease;
+        }
+
+        .filter-chip-dropdown-item:hover {
+            background: var(--bg-main);
+        }
+
+        .filter-clear {
+            margin-left: auto;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: color 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .filter-clear:hover {
+            color: var(--sapphire-blue);
+        }
+
+        /* Stats Strip */
+        .stats-strip {
+            height: 36px;
+            background: var(--surface-white);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            gap: 24px;
+            flex-shrink: 0;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stat-label {
+            font-size: 9px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .stat-value {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .stat-divider {
+            width: 1px;
+            height: 16px;
+            background: var(--border-light);
+        }
+
+        /* Table Container */
+        .table-container {
+            flex: 1;
+            overflow: auto;
+            position: relative;
+        }
+
+        /* Data Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .data-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .data-table thead th {
+            background: var(--surface-white);
+            border-bottom: 1px solid var(--border-light);
+            padding: 10px 12px;
+            text-align: left;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            white-space: nowrap;
+        }
+
+        .data-table thead th:first-child {
+            padding-left: 24px;
+        }
+
+        .data-table thead th:last-child {
+            padding-right: 24px;
+        }
+
+        .data-table tbody tr {
+            border-bottom: 1px solid var(--border-light);
+            cursor: pointer;
+            transition: background 0.1s ease;
+        }
+
+        .data-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .data-table tbody tr.active-row {
+            background: #F0F4FF;
+        }
+
+        .data-table tbody td {
+            padding: 10px 12px;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .data-table tbody td:first-child {
+            padding-left: 24px;
+        }
+
+        .data-table tbody td:last-child {
+            padding-right: 24px;
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            height: 20px;
+            padding: 0 8px;
+            border-radius: 9999px;
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .status-in-transit {
+            background: var(--status-transit-bg);
+            color: var(--status-transit-text);
+        }
+
+        .status-delivered {
+            background: var(--status-delivered-bg);
+            color: var(--status-delivered-text);
+        }
+
+        .status-unassigned {
+            background: var(--status-unassigned-bg);
+            color: var(--status-unassigned-text);
+        }
+
+        .status-tendered {
+            background: var(--status-tendered-bg);
+            color: var(--status-tendered-text);
+        }
+
+        .status-completed {
+            background: var(--status-completed-bg);
+            color: var(--status-completed-text);
+        }
+
+        .status-cancelled {
+            background: var(--status-cancelled-bg);
+            color: var(--status-cancelled-text);
+        }
+
+        /* Cell Styles */
+        .cell-load {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .cell-route-main {
+            font-size: 11px;
+            color: var(--text-primary);
+        }
+
+        .cell-route-sub {
+            font-size: 9px;
+            color: var(--text-muted);
+            margin-top: 1px;
+        }
+
+        .cell-carrier {
+            font-size: 11px;
+            color: var(--text-primary);
+        }
+
+        .cell-driver {
+            font-size: 11px;
+            color: var(--text-primary);
+        }
+
+        .cell-driver-empty {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .cell-equipment {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .cell-date {
+            font-size: 11px;
+            color: var(--text-primary);
+        }
+
+        .cell-date-sub {
+            font-size: 9px;
+            color: var(--text-muted);
+            margin-top: 1px;
+        }
+
+        .cell-rate {
+            font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .margin-good { color: #059669; }
+        .margin-mid { color: #D97706; }
+        .margin-low { color: #DC2626; }
+
+        .cell-update {
+            font-size: 9px;
+            color: var(--text-muted);
+        }
+
+        .cell-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .action-btn {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all 0.15s ease;
+        }
+
+        .action-btn:hover {
+            background: var(--bg-main);
+            color: var(--text-secondary);
+        }
+
+        .action-btn .material-symbols-outlined {
+            font-size: 16px;
+        }
+
+        /* Drawer Overlay */
+        .drawer-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 60;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .drawer-overlay.open {
+            pointer-events: auto;
+            opacity: 1;
+        }
+
+        .drawer-overlay-bg {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.08);
+        }
+
+        /* Side Drawer */
+        .side-drawer {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 420px;
+            background: var(--surface-white);
+            border-left: 1px solid var(--border-light);
+            box-shadow: -8px 0 24px rgba(0, 0, 0, 0.06);
+            z-index: 70;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .side-drawer.open {
+            transform: translateX(0);
+        }
+
+        .drawer-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .drawer-header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .drawer-load-id {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .drawer-close {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.15s ease;
+        }
+
+        .drawer-close:hover {
+            background: var(--bg-main);
+            color: var(--text-primary);
+        }
+
+        .drawer-close .material-symbols-outlined {
+            font-size: 18px;
+        }
+
+        /* Drawer Tabs */
+        .drawer-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-light);
+            padding: 0 20px;
+            flex-shrink: 0;
+        }
+
+        .drawer-tab {
+            padding: 10px 0;
+            margin-right: 24px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.15s ease;
+        }
+
+        .drawer-tab:hover {
+            color: var(--text-secondary);
+        }
+
+        .drawer-tab.active {
+            color: var(--sapphire-blue);
+            border-bottom-color: var(--sapphire-blue);
+        }
+
+        /* Drawer Content */
+        .drawer-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .drawer-section {
+            margin-bottom: 24px;
+        }
+
+        .drawer-section-title {
+            font-size: 9px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 12px;
+        }
+
+        .drawer-route-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .drawer-route-icon {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            background: var(--bg-main);
+            flex-shrink: 0;
+        }
+
+        .drawer-route-icon .material-symbols-outlined {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .drawer-route-icon.origin .material-symbols-outlined {
+            color: var(--sapphire-blue);
+        }
+
+        .drawer-route-icon.destination .material-symbols-outlined {
+            color: #059669;
+        }
+
+        .drawer-route-label {
+            font-size: 9px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .drawer-route-city {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-top: 2px;
+        }
+
+        .drawer-route-date {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .drawer-route-connector {
+            width: 1px;
+            height: 16px;
+            background: var(--border-soft);
+            margin-left: 14px;
+        }
+
+        .drawer-detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .drawer-detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .drawer-detail-label {
+            font-size: 9px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .drawer-detail-value {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .drawer-financial-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .drawer-financial-item {
+            padding: 10px 12px;
+            background: var(--bg-main);
+            border-radius: 8px;
+        }
+
+        .drawer-financial-label {
+            font-size: 9px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .drawer-financial-value {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-top: 2px;
+            font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+        }
+
+        .drawer-financial-value.margin-positive {
+            color: #059669;
+        }
+
+        .drawer-equipment-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .drawer-equipment-tag {
+            height: 26px;
+            padding: 0 10px;
+            background: var(--bg-main);
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+        }
+
+        .drawer-divider {
+            height: 1px;
+            background: var(--border-light);
+            margin: 0 -20px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <span class="material-symbols-outlined">local_shipping</span>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-item" title="Dashboard">
+                <span class="material-symbols-outlined">dashboard</span>
+            </div>
+            <div class="sidebar-item" title="Loads">
+                <span class="material-symbols-outlined">inventory_2</span>
+            </div>
+            <div class="sidebar-item active" title="Dispatch">
+                <span class="material-symbols-outlined">route</span>
+            </div>
+            <div class="sidebar-item" title="Companies">
+                <span class="material-symbols-outlined">corporate_fare</span>
+            </div>
+            <div class="sidebar-item" title="Contacts">
+                <span class="material-symbols-outlined">contacts</span>
+            </div>
+        </nav>
+        <div class="sidebar-bottom">
+            <div class="sidebar-item" title="Settings">
+                <span class="material-symbols-outlined">settings</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+
+        <!-- Header -->
+        <header class="header">
+            <div class="header-title">
+                <span class="material-symbols-outlined">route</span>
+                Dispatch Board
+            </div>
+            <div class="header-search">
+                <span class="material-symbols-outlined">search</span>
+                <input type="text" placeholder="Search loads, carriers, routes...">
+            </div>
+            <div class="header-right">
+                <button class="btn-new-load">
+                    <span class="material-symbols-outlined">add</span>
+                    New Load
+                </button>
+                <div class="header-avatar">RP</div>
+            </div>
+        </header>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <span class="filter-label">Filters</span>
+            <div class="filter-chip">
+                Status
+                <span class="material-symbols-outlined">expand_more</span>
+                <div class="filter-chip-dropdown">
+                    <div class="filter-chip-dropdown-item">All Statuses</div>
+                    <div class="filter-chip-dropdown-item">In Transit</div>
+                    <div class="filter-chip-dropdown-item">Unassigned</div>
+                    <div class="filter-chip-dropdown-item">Tendered</div>
+                    <div class="filter-chip-dropdown-item">Delivered</div>
+                    <div class="filter-chip-dropdown-item">Completed</div>
+                    <div class="filter-chip-dropdown-item">Cancelled</div>
+                </div>
+            </div>
+            <div class="filter-chip">
+                Carrier
+                <span class="material-symbols-outlined">expand_more</span>
+                <div class="filter-chip-dropdown">
+                    <div class="filter-chip-dropdown-item">All Carriers</div>
+                    <div class="filter-chip-dropdown-item">Swift Transport</div>
+                    <div class="filter-chip-dropdown-item">Werner</div>
+                    <div class="filter-chip-dropdown-item">J.B. Hunt</div>
+                    <div class="filter-chip-dropdown-item">Schneider</div>
+                    <div class="filter-chip-dropdown-item">XPO Logistics</div>
+                </div>
+            </div>
+            <div class="filter-chip">
+                Region
+                <span class="material-symbols-outlined">expand_more</span>
+                <div class="filter-chip-dropdown">
+                    <div class="filter-chip-dropdown-item">All Regions</div>
+                    <div class="filter-chip-dropdown-item">Northeast</div>
+                    <div class="filter-chip-dropdown-item">Southeast</div>
+                    <div class="filter-chip-dropdown-item">Midwest</div>
+                    <div class="filter-chip-dropdown-item">Southwest</div>
+                    <div class="filter-chip-dropdown-item">West Coast</div>
+                </div>
+            </div>
+            <div class="filter-chip">
+                Equipment
+                <span class="material-symbols-outlined">expand_more</span>
+                <div class="filter-chip-dropdown">
+                    <div class="filter-chip-dropdown-item">All Equipment</div>
+                    <div class="filter-chip-dropdown-item">Dry Van</div>
+                    <div class="filter-chip-dropdown-item">Reefer</div>
+                    <div class="filter-chip-dropdown-item">Flatbed</div>
+                    <div class="filter-chip-dropdown-item">Tanker</div>
+                    <div class="filter-chip-dropdown-item">Intermodal</div>
+                </div>
+            </div>
+            <span class="filter-clear">Clear All</span>
+        </div>
+
+        <!-- Stats Strip -->
+        <div class="stats-strip">
+            <div class="stat-item">
+                <span class="stat-label">Total Loads</span>
+                <span class="stat-value">571</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-label">In Transit</span>
+                <span class="stat-value">45</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-label">Unassigned</span>
+                <span class="stat-value">12</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-label">Delivered</span>
+                <span class="stat-value">380</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-label">At Risk</span>
+                <span class="stat-value" style="color: #DC2626;">3</span>
+            </div>
+        </div>
+
+        <!-- Table Container -->
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Load #</th>
+                        <th>Route</th>
+                        <th>Carrier</th>
+                        <th>Driver</th>
+                        <th>Equipment</th>
+                        <th>Pickup</th>
+                        <th>Delivery</th>
+                        <th>Rate</th>
+                        <th>Margin</th>
+                        <th>Last Update</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <!-- Drawer Overlay -->
+    <div class="drawer-overlay" id="drawerOverlay">
+        <div class="drawer-overlay-bg" id="drawerOverlayBg"></div>
+    </div>
+
+    <!-- Side Drawer -->
+    <div class="side-drawer" id="sideDrawer">
+        <div class="drawer-header">
+            <div class="drawer-header-left">
+                <span class="drawer-load-id" id="drawerLoadId">FM-2025-0871</span>
+                <span class="status-badge" id="drawerStatusBadge">In Transit</span>
+            </div>
+            <button class="drawer-close" id="drawerClose">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="drawer-tabs">
+            <div class="drawer-tab active" data-tab="overview">Overview</div>
+            <div class="drawer-tab" data-tab="stops">Stops</div>
+            <div class="drawer-tab" data-tab="documents">Documents</div>
+            <div class="drawer-tab" data-tab="activity">Activity</div>
+        </div>
+        <div class="drawer-content" id="drawerContent">
+        </div>
+    </div>
+
+    <script>
+        // ── Mock Data ──
+        const loads = [
+            {
+                id: 'FM-2025-0871', status: 'In Transit',
+                origin: 'Chicago, IL', destination: 'Dallas, TX', miles: 921,
+                carrier: 'Swift Transport', carrierMC: 'MC-133655',
+                driver: 'James Rodriguez', driverPhone: '(312) 555-0147', truckNum: 'SW-4821',
+                equipment: 'Dry Van', equipmentSize: "53'", loadType: 'Full Truckload',
+                pickupDate: 'Feb 7, 2025', pickupTime: '06:00 AM',
+                deliveryDate: 'Feb 8, 2025', deliveryTime: '02:00 PM',
+                rate: 2450, carrierPay: 1960, margin: 20, rpm: 2.66,
+                lastUpdate: '5m ago'
+            },
+            {
+                id: 'FM-2025-0872', status: 'In Transit',
+                origin: 'Atlanta, GA', destination: 'Miami, FL', miles: 662,
+                carrier: 'Werner', carrierMC: 'MC-115890',
+                driver: 'Marcus Thompson', driverPhone: '(404) 555-0283', truckNum: 'WN-7734',
+                equipment: 'Reefer', equipmentSize: "53'", loadType: 'Full Truckload',
+                pickupDate: 'Feb 7, 2025', pickupTime: '08:00 AM',
+                deliveryDate: 'Feb 8, 2025', deliveryTime: '06:00 PM',
+                rate: 1875, carrierPay: 1500, margin: 20, rpm: 2.83,
+                lastUpdate: '12m ago'
+            },
+            {
+                id: 'FM-2025-0873', status: 'Unassigned',
+                origin: 'Denver, CO', destination: 'Salt Lake City, UT', miles: 526,
+                carrier: '\u2014', carrierMC: '\u2014',
+                driver: '', driverPhone: '\u2014', truckNum: '\u2014',
+                equipment: 'Flatbed', equipmentSize: "48'", loadType: 'Full Truckload',
+                pickupDate: 'Feb 9, 2025', pickupTime: '07:00 AM',
+                deliveryDate: 'Feb 10, 2025', deliveryTime: '11:00 AM',
+                rate: 1650, carrierPay: 0, margin: 0, rpm: 3.14,
+                lastUpdate: '1h ago'
+            },
+            {
+                id: 'FM-2025-0874', status: 'Delivered',
+                origin: 'Los Angeles, CA', destination: 'Phoenix, AZ', miles: 373,
+                carrier: 'J.B. Hunt', carrierMC: 'MC-210345',
+                driver: 'Carlos Mendez', driverPhone: '(213) 555-0891', truckNum: 'JBH-1192',
+                equipment: 'Dry Van', equipmentSize: "53'", loadType: 'Full Truckload',
+                pickupDate: 'Feb 5, 2025', pickupTime: '05:00 AM',
+                deliveryDate: 'Feb 5, 2025', deliveryTime: '04:30 PM',
+                rate: 980, carrierPay: 735, margin: 25, rpm: 2.63,
+                lastUpdate: '2d ago'
+            },
+            {
+                id: 'FM-2025-0875', status: 'In Transit',
+                origin: 'New York, NY', destination: 'Boston, MA', miles: 215,
+                carrier: 'Old Dominion', carrierMC: 'MC-089201',
+                driver: "Kevin O'Brien", driverPhone: '(718) 555-0432', truckNum: 'OD-5567',
+                equipment: 'Dry Van', equipmentSize: "28'", loadType: 'LTL',
+                pickupDate: 'Feb 8, 2025', pickupTime: '04:00 AM',
+                deliveryDate: 'Feb 8, 2025', deliveryTime: '12:00 PM',
+                rate: 650, carrierPay: 520, margin: 20, rpm: 3.02,
+                lastUpdate: '2m ago'
+            },
+            {
+                id: 'FM-2025-0876', status: 'Tendered',
+                origin: 'Houston, TX', destination: 'Denver, CO', miles: 1032,
+                carrier: 'Schneider', carrierMC: 'MC-178902',
+                driver: 'Robert Williams', driverPhone: '(713) 555-0674', truckNum: 'SCH-3301',
+                equipment: 'Tanker', equipmentSize: "42'", loadType: 'Full Truckload',
+                pickupDate: 'Feb 9, 2025', pickupTime: '06:00 AM',
+                deliveryDate: 'Feb 10, 2025', deliveryTime: '08:00 PM',
+                rate: 3800, carrierPay: 3230, margin: 15, rpm: 3.68,
+                lastUpdate: '25m ago'
+            },
+            {
+                id: 'FM-2025-0877', status: 'Completed',
+                origin: 'Memphis, TN', destination: 'Nashville, TN', miles: 213,
+                carrier: 'Heartland', carrierMC: 'MC-256100',
+                driver: 'David Chen', driverPhone: '(901) 555-0118', truckNum: 'HL-8854',
+                equipment: 'Dry Van', equipmentSize: "53'", loadType: 'Full Truckload',
+                pickupDate: 'Feb 4, 2025', pickupTime: '09:00 AM',
+                deliveryDate: 'Feb 4, 2025', deliveryTime: '02:00 PM',
+                rate: 750, carrierPay: 600, margin: 20, rpm: 3.52,
+                lastUpdate: '4d ago'
+            },
+            {
+                id: 'FM-2025-0878', status: 'In Transit',
+                origin: 'Portland, OR', destination: 'Seattle, WA', miles: 174,
+                carrier: 'XPO Logistics', carrierMC: 'MC-302456',
+                driver: 'Brian Foster', driverPhone: '(503) 555-0927', truckNum: 'XPO-4412',
+                equipment: 'Reefer', equipmentSize: "48'", loadType: 'Full Truckload',
+                pickupDate: 'Feb 8, 2025', pickupTime: '03:00 AM',
+                deliveryDate: 'Feb 8, 2025', deliveryTime: '09:00 AM',
+                rate: 875, carrierPay: 656, margin: 25, rpm: 5.03,
+                lastUpdate: '8m ago'
+            },
+            {
+                id: 'FM-2025-0879', status: 'Unassigned',
+                origin: 'Minneapolis, MN', destination: 'Milwaukee, WI', miles: 337,
+                carrier: '\u2014', carrierMC: '\u2014',
+                driver: '', driverPhone: '\u2014', truckNum: '\u2014',
+                equipment: 'Dry Van', equipmentSize: "53'", loadType: 'Full Truckload',
+                pickupDate: 'Feb 10, 2025', pickupTime: '07:00 AM',
+                deliveryDate: 'Feb 10, 2025', deliveryTime: '03:00 PM',
+                rate: 1100, carrierPay: 0, margin: 0, rpm: 3.26,
+                lastUpdate: '45m ago'
+            },
+            {
+                id: 'FM-2025-0880', status: 'Delivered',
+                origin: 'San Antonio, TX', destination: 'El Paso, TX', miles: 551,
+                carrier: 'Landstar', carrierMC: 'MC-143782',
+                driver: 'Miguel Alvarez', driverPhone: '(210) 555-0356', truckNum: 'LS-6678',
+                equipment: 'Flatbed', equipmentSize: "48'", loadType: 'Full Truckload',
+                pickupDate: 'Feb 6, 2025', pickupTime: '06:00 AM',
+                deliveryDate: 'Feb 6, 2025', deliveryTime: '06:00 PM',
+                rate: 1425, carrierPay: 1211, margin: 15, rpm: 2.59,
+                lastUpdate: '1d ago'
+            },
+            {
+                id: 'FM-2025-0881', status: 'Completed',
+                origin: 'Jacksonville, FL', destination: 'Charlotte, NC', miles: 392,
+                carrier: 'Estes', carrierMC: 'MC-087445',
+                driver: 'Andre Jackson', driverPhone: '(904) 555-0742', truckNum: 'ES-2290',
+                equipment: 'Dry Van', equipmentSize: "53'", loadType: 'Full Truckload',
+                pickupDate: 'Feb 3, 2025', pickupTime: '08:00 AM',
+                deliveryDate: 'Feb 3, 2025', deliveryTime: '08:00 PM',
+                rate: 1050, carrierPay: 892, margin: 15, rpm: 2.68,
+                lastUpdate: '5d ago'
+            },
+            {
+                id: 'FM-2025-0882', status: 'Tendered',
+                origin: 'Kansas City, MO', destination: 'Omaha, NE', miles: 189,
+                carrier: 'FedEx Freight', carrierMC: 'MC-441239',
+                driver: 'Tom Brewer', driverPhone: '(816) 555-0563', truckNum: 'FXF-9912',
+                equipment: 'Dry Van', equipmentSize: "28'", loadType: 'LTL',
+                pickupDate: 'Feb 9, 2025', pickupTime: '10:00 AM',
+                deliveryDate: 'Feb 9, 2025', deliveryTime: '04:00 PM',
+                rate: 720, carrierPay: 648, margin: 10, rpm: 3.81,
+                lastUpdate: '18m ago'
+            },
+            {
+                id: 'FM-2025-0883', status: 'In Transit',
+                origin: 'Sacramento, CA', destination: 'Reno, NV', miles: 135,
+                carrier: 'Swift Transport', carrierMC: 'MC-133655',
+                driver: 'Larry Kim', driverPhone: '(916) 555-0201', truckNum: 'SW-3397',
+                equipment: 'Intermodal', equipmentSize: "40'", loadType: 'Container',
+                pickupDate: 'Feb 8, 2025', pickupTime: '05:00 AM',
+                deliveryDate: 'Feb 8, 2025', deliveryTime: '11:00 AM',
+                rate: 890, carrierPay: 712, margin: 20, rpm: 6.59,
+                lastUpdate: '3m ago'
+            },
+            {
+                id: 'FM-2025-0884', status: 'Cancelled',
+                origin: 'Pittsburgh, PA', destination: 'Columbus, OH', miles: 185,
+                carrier: 'Werner', carrierMC: 'MC-115890',
+                driver: '\u2014', driverPhone: '\u2014', truckNum: '\u2014',
+                equipment: 'Dry Van', equipmentSize: "53'", loadType: 'Full Truckload',
+                pickupDate: 'Feb 8, 2025', pickupTime: '07:00 AM',
+                deliveryDate: 'Feb 8, 2025', deliveryTime: '01:00 PM',
+                rate: 680, carrierPay: 0, margin: 0, rpm: 3.68,
+                lastUpdate: '3h ago'
+            },
+            {
+                id: 'FM-2025-0885', status: 'Unassigned',
+                origin: 'Baltimore, MD', destination: 'Philadelphia, PA', miles: 101,
+                carrier: '\u2014', carrierMC: '\u2014',
+                driver: '', driverPhone: '\u2014', truckNum: '\u2014',
+                equipment: 'Reefer', equipmentSize: "48'", loadType: 'Full Truckload',
+                pickupDate: 'Feb 11, 2025', pickupTime: '06:00 AM',
+                deliveryDate: 'Feb 11, 2025', deliveryTime: '10:00 AM',
+                rate: 725, carrierPay: 0, margin: 0, rpm: 7.18,
+                lastUpdate: '2h ago'
+            },
+            {
+                id: 'FM-2025-0886', status: 'Completed',
+                origin: 'Detroit, MI', destination: 'Indianapolis, IN', miles: 287,
+                carrier: 'J.B. Hunt', carrierMC: 'MC-210345',
+                driver: 'Steve Nguyen', driverPhone: '(313) 555-0498', truckNum: 'JBH-5571',
+                equipment: 'Dry Van', equipmentSize: "53'", loadType: 'Full Truckload',
+                pickupDate: 'Feb 2, 2025', pickupTime: '07:00 AM',
+                deliveryDate: 'Feb 2, 2025', deliveryTime: '03:00 PM',
+                rate: 820, carrierPay: 771, margin: 6, rpm: 2.86,
+                lastUpdate: '6d ago'
+            },
+            {
+                id: 'FM-2025-0887', status: 'Delivered',
+                origin: 'Albuquerque, NM', destination: 'Tucson, AZ', miles: 450,
+                carrier: 'Schneider', carrierMC: 'MC-178902',
+                driver: 'Paul Martinez', driverPhone: '(505) 555-0837', truckNum: 'SCH-1128',
+                equipment: 'Tanker', equipmentSize: "42'", loadType: 'Full Truckload',
+                pickupDate: 'Feb 5, 2025', pickupTime: '05:00 AM',
+                deliveryDate: 'Feb 5, 2025', deliveryTime: '05:00 PM',
+                rate: 2100, carrierPay: 1554, margin: 26, rpm: 4.67,
+                lastUpdate: '3d ago'
+            },
+            {
+                id: 'FM-2025-0888', status: 'Completed',
+                origin: 'Louisville, KY', destination: 'St. Louis, MO', miles: 264,
+                carrier: 'Heartland', carrierMC: 'MC-256100',
+                driver: 'Ray Patterson', driverPhone: '(502) 555-0619', truckNum: 'HL-4401',
+                equipment: 'Dry Van', equipmentSize: "53'", loadType: 'Full Truckload',
+                pickupDate: 'Feb 1, 2025', pickupTime: '08:00 AM',
+                deliveryDate: 'Feb 1, 2025', deliveryTime: '04:00 PM',
+                rate: 780, carrierPay: 694, margin: 11, rpm: 2.95,
+                lastUpdate: '7d ago'
+            },
+            {
+                id: 'FM-2025-0889', status: 'In Transit',
+                origin: 'Tampa, FL', destination: 'New Orleans, LA', miles: 645,
+                carrier: 'Landstar', carrierMC: 'MC-143782',
+                driver: 'William Davis', driverPhone: '(813) 555-0154', truckNum: 'LS-8820',
+                equipment: 'Flatbed', equipmentSize: "48'", loadType: 'Full Truckload',
+                pickupDate: 'Feb 7, 2025', pickupTime: '04:00 AM',
+                deliveryDate: 'Feb 8, 2025', deliveryTime: '10:00 AM',
+                rate: 4800, carrierPay: 3456, margin: 28, rpm: 7.44,
+                lastUpdate: '15m ago'
+            }
+        ];
+
+        // ── Helpers ──
+        function getStatusClass(status) {
+            var map = {
+                'In Transit': 'status-in-transit',
+                'Delivered': 'status-delivered',
+                'Unassigned': 'status-unassigned',
+                'Tendered': 'status-tendered',
+                'Completed': 'status-completed',
+                'Cancelled': 'status-cancelled'
+            };
+            return map[status] || 'status-completed';
+        }
+
+        function getMarginClass(margin) {
+            if (margin === 0) return 'margin-low';
+            if (margin > 15) return 'margin-good';
+            if (margin >= 10) return 'margin-mid';
+            return 'margin-low';
+        }
+
+        function escapeHtml(text) {
+            var div = document.createElement('div');
+            div.textContent = text;
+            return div.textContent;
+        }
+
+        // ── Build table rows with DOM methods ──
+        function renderTable() {
+            var tbody = document.getElementById('tableBody');
+            while (tbody.firstChild) {
+                tbody.removeChild(tbody.firstChild);
+            }
+
+            loads.forEach(function(load, i) {
+                var tr = document.createElement('tr');
+                tr.setAttribute('data-index', i);
+                tr.addEventListener('click', function() { openDrawer(i); });
+
+                // Status cell
+                var tdStatus = document.createElement('td');
+                var badge = document.createElement('span');
+                badge.className = 'status-badge ' + getStatusClass(load.status);
+                badge.textContent = load.status;
+                tdStatus.appendChild(badge);
+                tr.appendChild(tdStatus);
+
+                // Load # cell
+                var tdLoad = document.createElement('td');
+                var loadSpan = document.createElement('span');
+                loadSpan.className = 'cell-load';
+                loadSpan.textContent = load.id;
+                tdLoad.appendChild(loadSpan);
+                tr.appendChild(tdLoad);
+
+                // Route cell
+                var tdRoute = document.createElement('td');
+                var routeMain = document.createElement('div');
+                routeMain.className = 'cell-route-main';
+                routeMain.textContent = load.origin + ' \u2192 ' + load.destination;
+                tdRoute.appendChild(routeMain);
+                var routeSub = document.createElement('div');
+                routeSub.className = 'cell-route-sub';
+                routeSub.textContent = load.miles.toLocaleString() + ' mi';
+                tdRoute.appendChild(routeSub);
+                tr.appendChild(tdRoute);
+
+                // Carrier cell
+                var tdCarrier = document.createElement('td');
+                var carrierSpan = document.createElement('span');
+                carrierSpan.className = 'cell-carrier';
+                carrierSpan.textContent = load.carrier;
+                tdCarrier.appendChild(carrierSpan);
+                tr.appendChild(tdCarrier);
+
+                // Driver cell
+                var tdDriver = document.createElement('td');
+                var driverSpan = document.createElement('span');
+                if (load.driver && load.driver !== '\u2014') {
+                    driverSpan.className = 'cell-driver';
+                    driverSpan.textContent = load.driver;
+                } else {
+                    driverSpan.className = 'cell-driver-empty';
+                    driverSpan.textContent = load.status === 'Unassigned' ? 'Unassigned' : '\u2014';
+                }
+                tdDriver.appendChild(driverSpan);
+                tr.appendChild(tdDriver);
+
+                // Equipment cell
+                var tdEquip = document.createElement('td');
+                var equipSpan = document.createElement('span');
+                equipSpan.className = 'cell-equipment';
+                equipSpan.textContent = load.equipment;
+                tdEquip.appendChild(equipSpan);
+                tr.appendChild(tdEquip);
+
+                // Pickup cell
+                var tdPickup = document.createElement('td');
+                var pickDate = document.createElement('div');
+                pickDate.className = 'cell-date';
+                pickDate.textContent = load.pickupDate;
+                tdPickup.appendChild(pickDate);
+                var pickTime = document.createElement('div');
+                pickTime.className = 'cell-date-sub';
+                pickTime.textContent = load.pickupTime;
+                tdPickup.appendChild(pickTime);
+                tr.appendChild(tdPickup);
+
+                // Delivery cell
+                var tdDel = document.createElement('td');
+                var delDate = document.createElement('div');
+                delDate.className = 'cell-date';
+                delDate.textContent = load.deliveryDate;
+                tdDel.appendChild(delDate);
+                var delTime = document.createElement('div');
+                delTime.className = 'cell-date-sub';
+                delTime.textContent = load.deliveryTime;
+                tdDel.appendChild(delTime);
+                tr.appendChild(tdDel);
+
+                // Rate cell
+                var tdRate = document.createElement('td');
+                var rateSpan = document.createElement('span');
+                rateSpan.className = 'cell-rate';
+                rateSpan.textContent = '$' + load.rate.toLocaleString();
+                tdRate.appendChild(rateSpan);
+                tr.appendChild(tdRate);
+
+                // Margin cell
+                var tdMargin = document.createElement('td');
+                var marginSpan = document.createElement('span');
+                marginSpan.className = 'cell-rate ' + getMarginClass(load.margin);
+                marginSpan.textContent = load.margin > 0 ? load.margin + '%' : '\u2014';
+                tdMargin.appendChild(marginSpan);
+                tr.appendChild(tdMargin);
+
+                // Last Update cell
+                var tdUpdate = document.createElement('td');
+                var updateSpan = document.createElement('span');
+                updateSpan.className = 'cell-update';
+                updateSpan.textContent = load.lastUpdate;
+                tdUpdate.appendChild(updateSpan);
+                tr.appendChild(tdUpdate);
+
+                // Actions cell
+                var tdActions = document.createElement('td');
+                var actionsDiv = document.createElement('div');
+                actionsDiv.className = 'cell-actions';
+
+                var editBtn = document.createElement('button');
+                editBtn.className = 'action-btn';
+                editBtn.title = 'Edit';
+                editBtn.addEventListener('click', function(e) { e.stopPropagation(); });
+                var editIcon = document.createElement('span');
+                editIcon.className = 'material-symbols-outlined';
+                editIcon.textContent = 'edit';
+                editBtn.appendChild(editIcon);
+                actionsDiv.appendChild(editBtn);
+
+                var moreBtn = document.createElement('button');
+                moreBtn.className = 'action-btn';
+                moreBtn.title = 'More';
+                moreBtn.addEventListener('click', function(e) { e.stopPropagation(); });
+                var moreIcon = document.createElement('span');
+                moreIcon.className = 'material-symbols-outlined';
+                moreIcon.textContent = 'more_horiz';
+                moreBtn.appendChild(moreIcon);
+                actionsDiv.appendChild(moreBtn);
+
+                tdActions.appendChild(actionsDiv);
+                tr.appendChild(tdActions);
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        // ── Drawer state ──
+        var activeRowIndex = null;
+
+        function openDrawer(index) {
+            var load = loads[index];
+
+            // Highlight row
+            document.querySelectorAll('.data-table tbody tr').forEach(function(tr) {
+                tr.classList.remove('active-row');
+            });
+            document.querySelector('.data-table tbody tr[data-index="' + index + '"]').classList.add('active-row');
+            activeRowIndex = index;
+
+            // Set header
+            document.getElementById('drawerLoadId').textContent = load.id;
+            var badge = document.getElementById('drawerStatusBadge');
+            badge.textContent = load.status;
+            badge.className = 'status-badge ' + getStatusClass(load.status);
+
+            // Render overview tab
+            renderDrawerOverview(load);
+
+            // Reset tabs
+            document.querySelectorAll('.drawer-tab').forEach(function(t) { t.classList.remove('active'); });
+            document.querySelector('.drawer-tab[data-tab="overview"]').classList.add('active');
+
+            // Open drawer
+            document.getElementById('sideDrawer').classList.add('open');
+            document.getElementById('drawerOverlay').classList.add('open');
+        }
+
+        function closeDrawer() {
+            document.getElementById('sideDrawer').classList.remove('open');
+            document.getElementById('drawerOverlay').classList.remove('open');
+            document.querySelectorAll('.data-table tbody tr').forEach(function(tr) {
+                tr.classList.remove('active-row');
+            });
+            activeRowIndex = null;
+        }
+
+        // ── Drawer content builders (DOM-based) ──
+
+        function createEl(tag, className, textContent) {
+            var el = document.createElement(tag);
+            if (className) el.className = className;
+            if (textContent !== undefined) el.textContent = textContent;
+            return el;
+        }
+
+        function createIcon(iconName, style) {
+            var span = document.createElement('span');
+            span.className = 'material-symbols-outlined';
+            span.textContent = iconName;
+            if (style) {
+                Object.keys(style).forEach(function(k) { span.style[k] = style[k]; });
+            }
+            return span;
+        }
+
+        function renderDrawerOverview(load) {
+            var content = document.getElementById('drawerContent');
+            while (content.firstChild) content.removeChild(content.firstChild);
+
+            var marginAmount = load.rate - load.carrierPay;
+
+            // Route section
+            var routeSection = createEl('div', 'drawer-section');
+            routeSection.appendChild(createEl('div', 'drawer-section-title', 'Route'));
+
+            // Origin
+            var originItem = createEl('div', 'drawer-route-item');
+            var originIcon = createEl('div', 'drawer-route-icon origin');
+            originIcon.appendChild(createIcon('trip_origin'));
+            originItem.appendChild(originIcon);
+            var originInfo = createEl('div');
+            originInfo.appendChild(createEl('div', 'drawer-route-label', 'Origin'));
+            originInfo.appendChild(createEl('div', 'drawer-route-city', load.origin));
+            originInfo.appendChild(createEl('div', 'drawer-route-date', load.pickupDate + ' at ' + load.pickupTime));
+            originItem.appendChild(originInfo);
+            routeSection.appendChild(originItem);
+
+            // Connector
+            routeSection.appendChild(createEl('div', 'drawer-route-connector'));
+
+            // Destination
+            var destItem = createEl('div', 'drawer-route-item');
+            var destIcon = createEl('div', 'drawer-route-icon destination');
+            destIcon.appendChild(createIcon('location_on'));
+            destItem.appendChild(destIcon);
+            var destInfo = createEl('div');
+            destInfo.appendChild(createEl('div', 'drawer-route-label', 'Destination'));
+            destInfo.appendChild(createEl('div', 'drawer-route-city', load.destination));
+            destInfo.appendChild(createEl('div', 'drawer-route-date', load.deliveryDate + ' at ' + load.deliveryTime));
+            destItem.appendChild(destInfo);
+            routeSection.appendChild(destItem);
+
+            var milesEl = createEl('div', null, load.miles.toLocaleString() + ' miles');
+            milesEl.style.marginTop = '8px';
+            milesEl.style.fontSize = '11px';
+            milesEl.style.color = 'var(--text-muted)';
+            routeSection.appendChild(milesEl);
+            content.appendChild(routeSection);
+
+            // Divider
+            var div1 = createEl('div', 'drawer-divider');
+            div1.style.marginBottom = '24px';
+            content.appendChild(div1);
+
+            // Carrier section
+            var carrierSection = createEl('div', 'drawer-section');
+            carrierSection.appendChild(createEl('div', 'drawer-section-title', 'Carrier'));
+            var detailGrid = createEl('div', 'drawer-detail-grid');
+
+            var fields = [
+                ['Carrier', load.carrier],
+                ['MC #', load.carrierMC],
+                ['Driver', load.driver || '\u2014'],
+                ['Phone', load.driverPhone],
+                ['Truck #', load.truckNum]
+            ];
+            fields.forEach(function(f) {
+                var item = createEl('div', 'drawer-detail-item');
+                item.appendChild(createEl('span', 'drawer-detail-label', f[0]));
+                item.appendChild(createEl('span', 'drawer-detail-value', f[1]));
+                detailGrid.appendChild(item);
+            });
+            carrierSection.appendChild(detailGrid);
+            content.appendChild(carrierSection);
+
+            // Divider
+            var div2 = createEl('div', 'drawer-divider');
+            div2.style.marginBottom = '24px';
+            content.appendChild(div2);
+
+            // Financial section
+            var finSection = createEl('div', 'drawer-section');
+            finSection.appendChild(createEl('div', 'drawer-section-title', 'Financial'));
+            var finGrid = createEl('div', 'drawer-financial-grid');
+
+            var finFields = [
+                ['Rate', '$' + load.rate.toLocaleString(), ''],
+                ['Carrier Pay', load.carrierPay > 0 ? '$' + load.carrierPay.toLocaleString() : '\u2014', ''],
+                ['Margin', marginAmount > 0 ? '$' + marginAmount.toLocaleString() + ' (' + load.margin + '%)' : '\u2014', marginAmount > 0 ? 'margin-positive' : ''],
+                ['RPM', '$' + load.rpm.toFixed(2), '']
+            ];
+            finFields.forEach(function(f) {
+                var item = createEl('div', 'drawer-financial-item');
+                item.appendChild(createEl('div', 'drawer-financial-label', f[0]));
+                var val = createEl('div', 'drawer-financial-value' + (f[2] ? ' ' + f[2] : ''), f[1]);
+                item.appendChild(val);
+                finGrid.appendChild(item);
+            });
+            finSection.appendChild(finGrid);
+            content.appendChild(finSection);
+
+            // Divider
+            var div3 = createEl('div', 'drawer-divider');
+            div3.style.marginBottom = '24px';
+            content.appendChild(div3);
+
+            // Equipment section
+            var equipSection = createEl('div', 'drawer-section');
+            equipSection.appendChild(createEl('div', 'drawer-section-title', 'Equipment'));
+            var tagsDiv = createEl('div', 'drawer-equipment-tags');
+            [load.equipment, load.equipmentSize, load.loadType].forEach(function(tag) {
+                tagsDiv.appendChild(createEl('div', 'drawer-equipment-tag', tag));
+            });
+            equipSection.appendChild(tagsDiv);
+            content.appendChild(equipSection);
+        }
+
+        function renderDrawerStops(load) {
+            var content = document.getElementById('drawerContent');
+            while (content.firstChild) content.removeChild(content.firstChild);
+
+            // Pickup stop
+            var pickupSection = createEl('div', 'drawer-section');
+            pickupSection.appendChild(createEl('div', 'drawer-section-title', 'Pickup Stop'));
+            var pickupItem = createEl('div', 'drawer-route-item');
+            var pickupIcon = createEl('div', 'drawer-route-icon origin');
+            pickupIcon.appendChild(createIcon('trip_origin'));
+            pickupItem.appendChild(pickupIcon);
+            var pickupInfo = createEl('div');
+            pickupInfo.appendChild(createEl('div', 'drawer-route-city', load.origin));
+            pickupInfo.appendChild(createEl('div', 'drawer-route-date', load.pickupDate + ' at ' + load.pickupTime));
+            var pickupMeta = createEl('div', null, 'Stop 1 of 2 \u00b7 Loading');
+            pickupMeta.style.marginTop = '6px';
+            pickupMeta.style.fontSize = '11px';
+            pickupMeta.style.color = 'var(--text-secondary)';
+            pickupInfo.appendChild(pickupMeta);
+            pickupItem.appendChild(pickupInfo);
+            pickupSection.appendChild(pickupItem);
+            content.appendChild(pickupSection);
+
+            // Divider
+            var div1 = createEl('div', 'drawer-divider');
+            div1.style.marginBottom = '24px';
+            content.appendChild(div1);
+
+            // Delivery stop
+            var delSection = createEl('div', 'drawer-section');
+            delSection.appendChild(createEl('div', 'drawer-section-title', 'Delivery Stop'));
+            var delItem = createEl('div', 'drawer-route-item');
+            var delIcon = createEl('div', 'drawer-route-icon destination');
+            delIcon.appendChild(createIcon('location_on'));
+            delItem.appendChild(delIcon);
+            var delInfo = createEl('div');
+            delInfo.appendChild(createEl('div', 'drawer-route-city', load.destination));
+            delInfo.appendChild(createEl('div', 'drawer-route-date', load.deliveryDate + ' at ' + load.deliveryTime));
+            var delMeta = createEl('div', null, 'Stop 2 of 2 \u00b7 Unloading');
+            delMeta.style.marginTop = '6px';
+            delMeta.style.fontSize = '11px';
+            delMeta.style.color = 'var(--text-secondary)';
+            delInfo.appendChild(delMeta);
+            delItem.appendChild(delInfo);
+            delSection.appendChild(delItem);
+            content.appendChild(delSection);
+        }
+
+        function renderDrawerDocuments(load) {
+            var content = document.getElementById('drawerContent');
+            while (content.firstChild) content.removeChild(content.firstChild);
+
+            var section = createEl('div', 'drawer-section');
+            section.appendChild(createEl('div', 'drawer-section-title', 'Documents'));
+            var list = createEl('div');
+            list.style.display = 'flex';
+            list.style.flexDirection = 'column';
+            list.style.gap = '8px';
+
+            var docs = [
+                { name: 'Rate Confirmation', size: 'PDF \u00b7 124 KB' },
+                { name: 'Bill of Lading', size: 'PDF \u00b7 89 KB' }
+            ];
+            if (load.status === 'Delivered' || load.status === 'Completed') {
+                docs.push({ name: 'Proof of Delivery', size: 'PDF \u00b7 256 KB' });
+            }
+
+            docs.forEach(function(doc) {
+                var row = createEl('div');
+                row.style.display = 'flex';
+                row.style.alignItems = 'center';
+                row.style.justifyContent = 'space-between';
+                row.style.padding = '10px 12px';
+                row.style.background = 'var(--bg-main)';
+                row.style.borderRadius = '8px';
+
+                var left = createEl('div');
+                left.style.display = 'flex';
+                left.style.alignItems = 'center';
+                left.style.gap = '8px';
+                left.appendChild(createIcon('description', { fontSize: '16px', color: 'var(--text-secondary)' }));
+                var nameEl = createEl('span', null, doc.name);
+                nameEl.style.fontSize = '12px';
+                nameEl.style.fontWeight = '500';
+                nameEl.style.color = 'var(--text-primary)';
+                left.appendChild(nameEl);
+                row.appendChild(left);
+
+                var sizeEl = createEl('span', null, doc.size);
+                sizeEl.style.fontSize = '10px';
+                sizeEl.style.color = 'var(--text-muted)';
+                row.appendChild(sizeEl);
+
+                list.appendChild(row);
+            });
+
+            section.appendChild(list);
+            content.appendChild(section);
+        }
+
+        function renderDrawerActivity(load) {
+            var content = document.getElementById('drawerContent');
+            while (content.firstChild) content.removeChild(content.firstChild);
+
+            var activities = [];
+
+            if (load.status === 'Completed' || load.status === 'Delivered') {
+                activities.push({ icon: 'check_circle', text: 'Load ' + load.status.toLowerCase(), time: load.lastUpdate, color: '#059669' });
+                activities.push({ icon: 'local_shipping', text: 'Arrived at ' + load.destination, time: '1d ago', color: 'var(--sapphire-blue)' });
+            }
+            if (load.status === 'In Transit') {
+                activities.push({ icon: 'local_shipping', text: 'In transit to ' + load.destination, time: load.lastUpdate, color: 'var(--sapphire-blue)' });
+                activities.push({ icon: 'check_circle', text: 'Picked up at ' + load.origin, time: '6h ago', color: '#059669' });
+            }
+            if (load.status === 'Tendered') {
+                activities.push({ icon: 'send', text: 'Tendered to ' + load.carrier, time: load.lastUpdate, color: '#5B21B6' });
+            }
+            if (load.status === 'Unassigned') {
+                activities.push({ icon: 'add_circle', text: 'Load created', time: load.lastUpdate, color: 'var(--text-muted)' });
+            }
+            if (load.status === 'Cancelled') {
+                activities.push({ icon: 'cancel', text: 'Load cancelled', time: load.lastUpdate, color: '#DC2626' });
+            }
+            activities.push({ icon: 'add_circle', text: 'Load created', time: '2d ago', color: 'var(--text-muted)' });
+
+            var section = createEl('div', 'drawer-section');
+            section.appendChild(createEl('div', 'drawer-section-title', 'Activity Log'));
+            var list = createEl('div');
+            list.style.display = 'flex';
+            list.style.flexDirection = 'column';
+            list.style.gap = '16px';
+
+            activities.forEach(function(a) {
+                var row = createEl('div');
+                row.style.display = 'flex';
+                row.style.alignItems = 'flex-start';
+                row.style.gap = '10px';
+
+                row.appendChild(createIcon(a.icon, { fontSize: '16px', color: a.color, marginTop: '1px' }));
+
+                var infoDiv = createEl('div');
+                var textEl = createEl('div', null, a.text);
+                textEl.style.fontSize = '12px';
+                textEl.style.fontWeight = '500';
+                textEl.style.color = 'var(--text-primary)';
+                infoDiv.appendChild(textEl);
+
+                var timeEl = createEl('div', null, a.time);
+                timeEl.style.fontSize = '10px';
+                timeEl.style.color = 'var(--text-muted)';
+                timeEl.style.marginTop = '2px';
+                infoDiv.appendChild(timeEl);
+
+                row.appendChild(infoDiv);
+                list.appendChild(row);
+            });
+
+            section.appendChild(list);
+            content.appendChild(section);
+        }
+
+        // ── Tab switching ──
+        document.querySelectorAll('.drawer-tab').forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                if (activeRowIndex === null) return;
+                var load = loads[activeRowIndex];
+                document.querySelectorAll('.drawer-tab').forEach(function(t) { t.classList.remove('active'); });
+                tab.classList.add('active');
+                var tabName = tab.getAttribute('data-tab');
+                if (tabName === 'overview') renderDrawerOverview(load);
+                else if (tabName === 'stops') renderDrawerStops(load);
+                else if (tabName === 'documents') renderDrawerDocuments(load);
+                else if (tabName === 'activity') renderDrawerActivity(load);
+            });
+        });
+
+        // ── Close drawer ──
+        document.getElementById('drawerClose').addEventListener('click', closeDrawer);
+        document.getElementById('drawerOverlayBg').addEventListener('click', closeDrawer);
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeDrawer();
+        });
+
+        // ── Init ──
+        renderTable();
+    </script>
+
+</body>
+</html>

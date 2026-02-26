@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TMS Components — Filters, Pickers & Dropdowns</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { inter: ['Inter', 'sans-serif'] },
+          colors: {
+            primary: '#4f46e5',
+            'primary-light': '#eef2ff',
+            'primary-50': '#e0e7ff',
+            sidebar: '#1a1f36',
+            'sidebar-active': '#252b45',
+            content: '#f0f1f5',
+            card: '#ffffff',
+            border: '#e2e4ea',
+            'text-primary': '#1e2235',
+            'text-secondary': '#6b7194',
+            'text-muted': '#9ca3c0',
+            success: '#10b981',
+            warning: '#f59e0b',
+            danger: '#ef4444',
+            info: '#06b6d4',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    body { background: #f0f1f5; }
+    .chip-remove:hover { background: rgba(79,70,229,0.15); }
+    .dropdown-item:hover { background: #f0f1f5; }
+    .calendar-day:hover:not(.selected):not(.range-between):not(.disabled) { background: #f0f1f5; border-radius: 6px; }
+    .search-result:hover { background: #f0f1f5; }
+    .filter-checkbox:checked { accent-color: #4f46e5; }
+    .toggle-switch { transition: background-color 0.2s, transform 0.2s; }
+  </style>
+</head>
+<body class="min-h-screen p-8">
+
+  <!-- Page Header -->
+  <div class="max-w-7xl mx-auto mb-8">
+    <h1 class="text-2xl font-bold text-text-primary">Filters, Pickers & Dropdowns</h1>
+    <p class="text-text-secondary mt-1">Interactive UI components for TMS dispatcher workflows</p>
+  </div>
+
+  <div class="max-w-7xl mx-auto space-y-10">
+
+    <!-- ========================================== -->
+    <!-- SECTION 1: FILTER BARS                     -->
+    <!-- ========================================== -->
+    <div>
+      <h2 class="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
+        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+        Section 1 — Filter Bars
+      </h2>
+
+      <!-- Variant A: Inline Filters -->
+      <div class="bg-card rounded-xl border border-border p-6 mb-4">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-sm font-semibold text-text-primary uppercase tracking-wide">Variant A: Inline Filters</span>
+        </div>
+        <div class="flex items-center gap-3 flex-wrap">
+          <!-- Search Input -->
+          <div class="relative flex-shrink-0" style="min-width:220px;">
+            <svg class="w-4 h-4 text-text-muted absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" placeholder="Search loads..." class="w-full pl-9 pr-3 py-2 text-sm border border-border rounded-lg bg-white text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+          </div>
+
+          <!-- Status Multi-select -->
+          <div class="flex items-center gap-1.5 px-3 py-1.5 border border-border rounded-lg bg-white text-sm">
+            <span class="text-text-secondary text-xs font-medium mr-1">Status:</span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-primary-light text-primary rounded-md text-xs font-medium">
+              In Transit
+              <button class="chip-remove rounded p-0.5"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+            </span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-primary-light text-primary rounded-md text-xs font-medium">
+              Delivered
+              <button class="chip-remove rounded p-0.5"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+            </span>
+            <svg class="w-4 h-4 text-text-muted ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </div>
+
+          <!-- Date Range -->
+          <div class="flex items-center gap-2 px-3 py-2 border border-border rounded-lg bg-white text-sm text-text-primary">
+            <svg class="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <span>Feb 1 — Feb 15</span>
+            <svg class="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </div>
+
+          <!-- Equipment Dropdown -->
+          <div class="flex items-center gap-2 px-3 py-2 border border-border rounded-lg bg-white text-sm text-text-primary">
+            <span>Equipment</span>
+            <svg class="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </div>
+
+          <!-- Clear All -->
+          <button class="text-sm text-primary hover:text-primary/80 font-medium ml-auto">Clear all</button>
+        </div>
+      </div>
+
+      <!-- Variant B: Filter Chips -->
+      <div class="bg-card rounded-xl border border-border p-6 mb-4">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-sm font-semibold text-text-primary uppercase tracking-wide">Variant B: Filter Chips</span>
+        </div>
+        <!-- Search bar -->
+        <div class="relative mb-3" style="max-width:400px;">
+          <svg class="w-4 h-4 text-text-muted absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input type="text" placeholder="Search loads, carriers, customers..." class="w-full pl-9 pr-3 py-2 text-sm border border-border rounded-lg bg-white text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+        </div>
+        <!-- Chips row -->
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-light text-primary border border-primary/20 rounded-full text-xs font-medium">
+            Status: In Transit
+            <button class="chip-remove rounded-full p-0.5 hover:bg-primary/10"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+          </span>
+          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-light text-primary border border-primary/20 rounded-full text-xs font-medium">
+            Date: Feb 1–15
+            <button class="chip-remove rounded-full p-0.5 hover:bg-primary/10"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+          </span>
+          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-light text-primary border border-primary/20 rounded-full text-xs font-medium">
+            Equipment: Dry Van
+            <button class="chip-remove rounded-full p-0.5 hover:bg-primary/10"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+          </span>
+          <button class="inline-flex items-center gap-1 px-3 py-1.5 border border-dashed border-text-muted rounded-full text-xs font-medium text-text-secondary hover:border-primary hover:text-primary">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Add Filter
+          </button>
+        </div>
+      </div>
+
+      <!-- Variant C: Advanced Filter Panel -->
+      <div class="bg-card rounded-xl border border-border p-6">
+        <div class="flex items-center justify-between mb-4">
+          <span class="text-sm font-semibold text-text-primary uppercase tracking-wide">Variant C: Advanced Filter Panel</span>
+        </div>
+        <!-- Trigger button -->
+        <button class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium mb-4 hover:bg-primary/90">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+          Filters
+          <span class="bg-white/20 text-white text-xs px-1.5 py-0.5 rounded-full">3</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+
+        <!-- Expanded panel -->
+        <div class="border border-border rounded-xl bg-content/50 p-5">
+          <div class="grid grid-cols-3 gap-5">
+            <!-- Status -->
+            <div>
+              <label class="block text-xs font-semibold text-text-secondary uppercase tracking-wide mb-2">Status</label>
+              <div class="space-y-2">
+                <label class="flex items-center gap-2 text-sm text-text-primary"><input type="checkbox" checked class="filter-checkbox w-4 h-4 rounded" /> Available</label>
+                <label class="flex items-center gap-2 text-sm text-text-primary"><input type="checkbox" checked class="filter-checkbox w-4 h-4 rounded" /> In Transit</label>
+                <label class="flex items-center gap-2 text-sm text-text-primary"><input type="checkbox" class="filter-checkbox w-4 h-4 rounded" /> Delivered</label>
+                <label class="flex items-center gap-2 text-sm text-text-primary"><input type="checkbox" class="filter-checkbox w-4 h-4 rounded" /> Cancelled</label>
+              </div>
+            </div>
+            <!-- Date Range -->
+            <div>
+              <label class="block text-xs font-semibold text-text-secondary uppercase tracking-wide mb-2">Date Range</label>
+              <div class="space-y-2">
+                <div>
+                  <label class="text-xs text-text-muted">From</label>
+                  <input type="text" value="02/01/2026" class="w-full px-3 py-1.5 text-sm border border-border rounded-lg bg-white text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+                </div>
+                <div>
+                  <label class="text-xs text-text-muted">To</label>
+                  <input type="text" value="02/15/2026" class="w-full px-3 py-1.5 text-sm border border-border rounded-lg bg-white text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+                </div>
+              </div>
+            </div>
+            <!-- Equipment -->
+            <div>
+              <label class="block text-xs font-semibold text-text-secondary uppercase tracking-wide mb-2">Equipment</label>
+              <div class="space-y-2">
+                <label class="flex items-center gap-2 text-sm text-text-primary"><input type="checkbox" checked class="filter-checkbox w-4 h-4 rounded" /> Dry Van</label>
+                <label class="flex items-center gap-2 text-sm text-text-primary"><input type="checkbox" class="filter-checkbox w-4 h-4 rounded" /> Reefer</label>
+                <label class="flex items-center gap-2 text-sm text-text-primary"><input type="checkbox" class="filter-checkbox w-4 h-4 rounded" /> Flatbed</label>
+                <label class="flex items-center gap-2 text-sm text-text-primary"><input type="checkbox" class="filter-checkbox w-4 h-4 rounded" /> Step Deck</label>
+              </div>
+            </div>
+            <!-- Customer -->
+            <div>
+              <label class="block text-xs font-semibold text-text-secondary uppercase tracking-wide mb-2">Customer</label>
+              <div class="relative">
+                <svg class="w-4 h-4 text-text-muted absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <input type="text" placeholder="Search customers..." class="w-full pl-9 pr-3 py-1.5 text-sm border border-border rounded-lg bg-white text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+              </div>
+            </div>
+            <!-- Carrier -->
+            <div>
+              <label class="block text-xs font-semibold text-text-secondary uppercase tracking-wide mb-2">Carrier</label>
+              <div class="relative">
+                <svg class="w-4 h-4 text-text-muted absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <input type="text" placeholder="Search carriers..." class="w-full pl-9 pr-3 py-1.5 text-sm border border-border rounded-lg bg-white text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+              </div>
+            </div>
+            <!-- Revenue Range -->
+            <div>
+              <label class="block text-xs font-semibold text-text-secondary uppercase tracking-wide mb-2">Revenue Range</label>
+              <div class="flex gap-2">
+                <div class="relative flex-1">
+                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-sm">$</span>
+                  <input type="text" placeholder="Min" class="w-full pl-7 pr-3 py-1.5 text-sm border border-border rounded-lg bg-white text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+                </div>
+                <div class="relative flex-1">
+                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-sm">$</span>
+                  <input type="text" placeholder="Max" class="w-full pl-7 pr-3 py-1.5 text-sm border border-border rounded-lg bg-white text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Actions -->
+          <div class="flex items-center justify-end gap-3 mt-5 pt-4 border-t border-border">
+            <button class="px-4 py-2 text-sm text-text-secondary hover:text-text-primary font-medium">Reset</button>
+            <button class="px-5 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90">Apply Filters</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SECTION 2: DROPDOWNS                       -->
+    <!-- ========================================== -->
+    <div>
+      <h2 class="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
+        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"/></svg>
+        Section 2 — Dropdowns
+      </h2>
+
+      <div class="grid grid-cols-2 gap-4">
+
+        <!-- Basic Dropdown -->
+        <div class="bg-card rounded-xl border border-border p-6">
+          <span class="text-sm font-semibold text-text-primary uppercase tracking-wide block mb-4">Basic Dropdown</span>
+          <div class="flex gap-6">
+            <!-- Closed state -->
+            <div class="flex-1">
+              <p class="text-xs text-text-muted mb-2">Closed</p>
+              <div class="flex items-center justify-between px-3 py-2 border border-border rounded-lg bg-white text-sm text-text-primary cursor-pointer">
+                <span>Select status...</span>
+                <svg class="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+              </div>
+            </div>
+            <!-- Open state -->
+            <div class="flex-1">
+              <p class="text-xs text-text-muted mb-2">Open</p>
+              <div class="relative">
+                <div class="flex items-center justify-between px-3 py-2 border border-primary rounded-lg bg-white text-sm text-text-primary ring-2 ring-primary/20">
+                  <span>In Transit</span>
+                  <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+                </div>
+                <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-border rounded-lg shadow-lg z-10 py-1">
+                  <div class="dropdown-item px-3 py-2 text-sm text-text-primary cursor-pointer">Available</div>
+                  <div class="dropdown-item px-3 py-2 text-sm text-text-primary cursor-pointer flex items-center justify-between bg-primary-light">
+                    <span class="font-medium">In Transit</span>
+                    <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                  </div>
+                  <div class="dropdown-item px-3 py-2 text-sm text-text-primary cursor-pointer">Delivered</div>
+                  <div class="dropdown-item px-3 py-2 text-sm text-text-primary cursor-pointer">Cancelled</div>
+                  <div class="dropdown-item px-3 py-2 text-sm text-text-primary cursor-pointer">Invoiced</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Searchable Dropdown -->
+        <div class="bg-card rounded-xl border border-border p-6">
+          <span class="text-sm font-semibold text-text-primary uppercase tracking-wide block mb-4">Searchable Dropdown</span>
+          <div class="flex gap-6">
+            <!-- With results -->
+            <div class="flex-1">
+              <p class="text-xs text-text-muted mb-2">With Results</p>
+              <div class="relative">
+                <div class="flex items-center justify-between px-3 py-2 border border-primary rounded-lg bg-white text-sm ring-2 ring-primary/20">
+                  <span class="text-text-primary">Chi...</span>
+                  <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+                </div>
+                <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-border rounded-lg shadow-lg z-10">
+                  <div class="p-2 border-b border-border">
+                    <div class="relative">
+                      <svg class="w-4 h-4 text-text-muted absolute left-2.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                      <input type="text" value="Chi" class="w-full pl-8 pr-3 py-1.5 text-sm border border-border rounded bg-content/50 text-text-primary focus:outline-none" />
+                    </div>
+                  </div>
+                  <div class="py-1">
+                    <div class="dropdown-item px-3 py-2 text-sm text-text-primary cursor-pointer"><span class="font-medium text-primary">Chi</span>cago, IL</div>
+                    <div class="dropdown-item px-3 py-2 text-sm text-text-primary cursor-pointer"><span class="font-medium text-primary">Chi</span>no, CA</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- No results -->
+            <div class="flex-1">
+              <p class="text-xs text-text-muted mb-2">Empty State</p>
+              <div class="relative">
+                <div class="flex items-center justify-between px-3 py-2 border border-primary rounded-lg bg-white text-sm ring-2 ring-primary/20">
+                  <span class="text-text-primary">xyz...</span>
+                  <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+                </div>
+                <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-border rounded-lg shadow-lg z-10">
+                  <div class="p-2 border-b border-border">
+                    <div class="relative">
+                      <svg class="w-4 h-4 text-text-muted absolute left-2.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                      <input type="text" value="xyz" class="w-full pl-8 pr-3 py-1.5 text-sm border border-border rounded bg-content/50 text-text-primary focus:outline-none" />
+                    </div>
+                  </div>
+                  <div class="py-6 text-center">
+                    <svg class="w-8 h-8 text-text-muted mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <p class="text-sm text-text-muted">No results found</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Multi-select Dropdown -->
+        <div class="bg-card rounded-xl border border-border p-6">
+          <span class="text-sm font-semibold text-text-primary uppercase tracking-wide block mb-4">Multi-Select Dropdown</span>
+          <div class="relative" style="max-width:300px;">
+            <div class="flex items-center justify-between px-3 py-2 border border-primary rounded-lg bg-white text-sm ring-2 ring-primary/20">
+              <span class="text-text-primary font-medium">3 selected</span>
+              <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+            </div>
+            <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-border rounded-lg shadow-lg z-10 py-1">
+              <label class="flex items-center gap-2 px-3 py-2 text-sm text-text-primary cursor-pointer dropdown-item">
+                <input type="checkbox" checked class="filter-checkbox w-4 h-4 rounded" /> Dry Van
+              </label>
+              <label class="flex items-center gap-2 px-3 py-2 text-sm text-text-primary cursor-pointer dropdown-item">
+                <input type="checkbox" checked class="filter-checkbox w-4 h-4 rounded" /> Reefer
+              </label>
+              <label class="flex items-center gap-2 px-3 py-2 text-sm text-text-primary cursor-pointer dropdown-item">
+                <input type="checkbox" checked class="filter-checkbox w-4 h-4 rounded" /> Flatbed
+              </label>
+              <label class="flex items-center gap-2 px-3 py-2 text-sm text-text-primary cursor-pointer dropdown-item">
+                <input type="checkbox" class="filter-checkbox w-4 h-4 rounded" /> Step Deck
+              </label>
+              <label class="flex items-center gap-2 px-3 py-2 text-sm text-text-primary cursor-pointer dropdown-item">
+                <input type="checkbox" class="filter-checkbox w-4 h-4 rounded" /> Tanker
+              </label>
+            </div>
+            <!-- Selected chips below -->
+            <div class="flex gap-1.5 mt-2 flex-wrap">
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-primary-light text-primary rounded text-xs font-medium">Dry Van <button class="chip-remove rounded p-0.5"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></span>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-primary-light text-primary rounded text-xs font-medium">Reefer <button class="chip-remove rounded p-0.5"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></span>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-primary-light text-primary rounded text-xs font-medium">Flatbed <button class="chip-remove rounded p-0.5"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grouped Dropdown -->
+        <div class="bg-card rounded-xl border border-border p-6">
+          <span class="text-sm font-semibold text-text-primary uppercase tracking-wide block mb-4">Grouped Dropdown</span>
+          <div class="relative" style="max-width:300px;">
+            <div class="flex items-center justify-between px-3 py-2 border border-primary rounded-lg bg-white text-sm ring-2 ring-primary/20">
+              <span class="text-text-primary">Select status...</span>
+              <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+            </div>
+            <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-border rounded-lg shadow-lg z-10 py-1">
+              <div class="px-3 pt-2 pb-1">
+                <span class="text-[10px] font-bold text-text-muted uppercase tracking-widest">Active Statuses</span>
+              </div>
+              <div class="dropdown-item px-3 py-2 text-sm text-text-primary cursor-pointer flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-info"></span> Available
+              </div>
+              <div class="dropdown-item px-3 py-2 text-sm text-text-primary cursor-pointer flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-primary"></span> Booked
+              </div>
+              <div class="dropdown-item px-3 py-2 text-sm text-text-primary cursor-pointer flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-warning"></span> In Transit
+              </div>
+              <div class="dropdown-item px-3 py-2 text-sm text-text-primary cursor-pointer flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-success"></span> At Pickup
+              </div>
+              <div class="border-t border-border my-1"></div>
+              <div class="px-3 pt-2 pb-1">
+                <span class="text-[10px] font-bold text-text-muted uppercase tracking-widest">Completed Statuses</span>
+              </div>
+              <div class="dropdown-item px-3 py-2 text-sm text-text-primary cursor-pointer flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-success"></span> Delivered
+              </div>
+              <div class="dropdown-item px-3 py-2 text-sm text-text-primary cursor-pointer flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-text-muted"></span> Invoiced
+              </div>
+              <div class="dropdown-item px-3 py-2 text-sm text-text-primary cursor-pointer flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-danger"></span> Cancelled
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SECTION 3: DATE PICKERS                    -->
+    <!-- ========================================== -->
+    <div>
+      <h2 class="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
+        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        Section 3 — Date Pickers
+      </h2>
+
+      <div class="grid grid-cols-2 gap-4">
+
+        <!-- Single Date Picker -->
+        <div class="bg-card rounded-xl border border-border p-6">
+          <span class="text-sm font-semibold text-text-primary uppercase tracking-wide block mb-4">Single Date Picker</span>
+          <div class="inline-block">
+            <!-- Input -->
+            <div class="flex items-center gap-2 px-3 py-2 border border-primary rounded-lg bg-white text-sm ring-2 ring-primary/20 mb-3" style="width:220px;">
+              <svg class="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              <span class="text-text-primary">Feb 18, 2026</span>
+            </div>
+            <!-- Calendar -->
+            <div class="border border-border rounded-xl bg-white shadow-lg p-4" style="width:300px;">
+              <!-- Header -->
+              <div class="flex items-center justify-between mb-3">
+                <button class="p-1 hover:bg-content rounded-lg">
+                  <svg class="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                <span class="text-sm font-semibold text-text-primary">February 2026</span>
+                <button class="p-1 hover:bg-content rounded-lg">
+                  <svg class="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </button>
+              </div>
+              <!-- Day headers -->
+              <div class="grid grid-cols-7 gap-0 mb-1">
+                <div class="text-center text-[10px] font-semibold text-text-muted uppercase py-1">Su</div>
+                <div class="text-center text-[10px] font-semibold text-text-muted uppercase py-1">Mo</div>
+                <div class="text-center text-[10px] font-semibold text-text-muted uppercase py-1">Tu</div>
+                <div class="text-center text-[10px] font-semibold text-text-muted uppercase py-1">We</div>
+                <div class="text-center text-[10px] font-semibold text-text-muted uppercase py-1">Th</div>
+                <div class="text-center text-[10px] font-semibold text-text-muted uppercase py-1">Fr</div>
+                <div class="text-center text-[10px] font-semibold text-text-muted uppercase py-1">Sa</div>
+              </div>
+              <!-- Days grid — Feb 2026 starts on Sunday -->
+              <div class="grid grid-cols-7 gap-0">
+                <!-- Week 1 -->
+                <div class="calendar-day text-center text-sm py-1.5 cursor-pointer text-text-primary rounded-md">1</div>
+                <div class="calendar-day text-center text-sm py-1.5 cursor-pointer text-text-primary rounded-md">2</div>
+                <div class="calendar-day text-center text-sm py-1.5 cursor-pointer text-text-primary rounded-md">3</div>
+                <div class="calendar-day text-center text-sm py-1.5 cursor-pointer text-text-primary rounded-md">4</div>
+                <div class="calendar-day text-center text-sm py-1.5 cursor-pointer text-text-primary rounded-md">5</div>
+                <div class="calendar-day text-center text-sm py-1.5 cursor-pointer text-text-primary rounded-md">6</div>
+                <div class="calendar-day text-center text-sm py-1.5 cursor-pointer text-text-primary rounded-md">7</div>
+                <!-- Week 2 -->
+                <div class="calendar-day text-center text-sm py-1.5 cursor-pointer text-text-primary rounded-md">8</div>
+                <div class="calendar-day text-center text-sm py-1.5 cursor-pointer text-text-primary rounded-md">9</div>
+                <div class="calendar-day text-center text-sm py-1.5 cursor-pointer text-text-primary rounded-md">10</div>
+                <div class="calendar-day text-center text-sm py-1.5 cursor-pointer text-text-primary rounded-md">11</div>
+                <div class="calendar-day text-center text-sm py-1.5 cursor-pointer text-text-primary rounded-md">12</div>
+                <div class="calendar-day text-center text-sm py-1.5 cursor-pointer text-text-primary rounded-md">13</div>
+                <div class="calendar-day text-center text-sm py-1.5 cursor-pointer text-text-primary rounded-md">14</div>
+                <!-- Week 3 -->
+                <div class="calendar-day text-center text-sm py-1.5 cursor-pointer text-text-primary rounded-md">15</div>
+                <div class="calendar-day text-center text-sm py-1.5 cursor-pointer text-text-primary rounded-md">16</div>
+                <div class="calendar-day text-center text-sm py-1.5 cursor-pointer text-text-primary rounded-md">17</div>
+                <!-- Today - ring highlight -->
+                <div class="calendar-day selected text-center text-sm py-1.5 cursor-pointer bg-primary text-white rounded-md font-semibold">18</div>
+                <div class="calendar-day text-center text-sm py-1.5 cursor-pointer text-text-primary rounded-md">19</div>
+                <div class="calendar-day text-center text-sm py-1.5 cursor-pointer text-text-primary rounded-md">20</div>
+                <div class="calendar-day text-center text-sm py-1.5 cursor-pointer text-text-primary rounded-md">21</div>
+                <!-- Week 4 -->
+                <div class="calendar-day text-center text-sm py-1.5 cursor-pointer text-text-primary rounded-md">22</div>
+                <div class="calendar-day text-center text-sm py-1.5 cursor-pointer text-text-primary rounded-md">23</div>
+                <div class="calendar-day text-center text-sm py-1.5 cursor-pointer text-text-primary rounded-md">24</div>
+                <div class="calendar-day text-center text-sm py-1.5 cursor-pointer text-text-primary rounded-md">25</div>
+                <div class="calendar-day text-center text-sm py-1.5 cursor-pointer text-text-primary rounded-md">26</div>
+                <div class="calendar-day text-center text-sm py-1.5 cursor-pointer text-text-primary rounded-md">27</div>
+                <div class="calendar-day text-center text-sm py-1.5 cursor-pointer text-text-primary rounded-md">28</div>
+              </div>
+              <!-- Quick shortcuts -->
+              <div class="flex gap-2 mt-3 pt-3 border-t border-border">
+                <button class="px-3 py-1 text-xs font-medium text-primary bg-primary-light rounded-md hover:bg-primary-50">Today</button>
+                <button class="px-3 py-1 text-xs font-medium text-text-secondary bg-content rounded-md hover:bg-border">Tomorrow</button>
+                <button class="px-3 py-1 text-xs font-medium text-text-secondary bg-content rounded-md hover:bg-border">Next Week</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Date Range Picker -->
+        <div class="bg-card rounded-xl border border-border p-6">
+          <span class="text-sm font-semibold text-text-primary uppercase tracking-wide block mb-4">Date Range Picker</span>
+          <div class="border border-border rounded-xl bg-white shadow-lg overflow-hidden" style="max-width:580px;">
+            <div class="flex">
+              <!-- Presets sidebar -->
+              <div class="w-36 bg-content/50 border-r border-border py-3 flex-shrink-0">
+                <div class="space-y-0.5 px-2">
+                  <button class="w-full text-left px-3 py-1.5 text-xs font-medium text-text-secondary rounded hover:bg-white hover:text-text-primary">Today</button>
+                  <button class="w-full text-left px-3 py-1.5 text-xs font-medium text-text-secondary rounded hover:bg-white hover:text-text-primary">Last 7 days</button>
+                  <button class="w-full text-left px-3 py-1.5 text-xs font-medium bg-primary text-white rounded">This month</button>
+                  <button class="w-full text-left px-3 py-1.5 text-xs font-medium text-text-secondary rounded hover:bg-white hover:text-text-primary">Last month</button>
+                  <button class="w-full text-left px-3 py-1.5 text-xs font-medium text-text-secondary rounded hover:bg-white hover:text-text-primary">This quarter</button>
+                  <button class="w-full text-left px-3 py-1.5 text-xs font-medium text-text-secondary rounded hover:bg-white hover:text-text-primary">Custom</button>
+                </div>
+              </div>
+              <!-- Two-month calendar -->
+              <div class="flex-1 p-4">
+                <div class="flex gap-6">
+                  <!-- February -->
+                  <div class="flex-1">
+                    <div class="flex items-center justify-between mb-2">
+                      <button class="p-0.5 hover:bg-content rounded">
+                        <svg class="w-4 h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                      </button>
+                      <span class="text-xs font-semibold text-text-primary">Feb 2026</span>
+                      <div class="w-4"></div>
+                    </div>
+                    <div class="grid grid-cols-7 gap-0 mb-0.5">
+                      <div class="text-center text-[9px] font-semibold text-text-muted py-0.5">S</div>
+                      <div class="text-center text-[9px] font-semibold text-text-muted py-0.5">M</div>
+                      <div class="text-center text-[9px] font-semibold text-text-muted py-0.5">T</div>
+                      <div class="text-center text-[9px] font-semibold text-text-muted py-0.5">W</div>
+                      <div class="text-center text-[9px] font-semibold text-text-muted py-0.5">T</div>
+                      <div class="text-center text-[9px] font-semibold text-text-muted py-0.5">F</div>
+                      <div class="text-center text-[9px] font-semibold text-text-muted py-0.5">S</div>
+                    </div>
+                    <div class="grid grid-cols-7 gap-0">
+                      <!-- Start date: Feb 1 = Sunday -->
+                      <div class="text-center text-xs py-1 cursor-pointer bg-primary text-white rounded-l-md font-semibold">1</div>
+                      <div class="text-center text-xs py-1 cursor-pointer bg-primary-50 text-primary">2</div>
+                      <div class="text-center text-xs py-1 cursor-pointer bg-primary-50 text-primary">3</div>
+                      <div class="text-center text-xs py-1 cursor-pointer bg-primary-50 text-primary">4</div>
+                      <div class="text-center text-xs py-1 cursor-pointer bg-primary-50 text-primary">5</div>
+                      <div class="text-center text-xs py-1 cursor-pointer bg-primary-50 text-primary">6</div>
+                      <div class="text-center text-xs py-1 cursor-pointer bg-primary-50 text-primary">7</div>
+                      <div class="text-center text-xs py-1 cursor-pointer bg-primary-50 text-primary">8</div>
+                      <div class="text-center text-xs py-1 cursor-pointer bg-primary-50 text-primary">9</div>
+                      <div class="text-center text-xs py-1 cursor-pointer bg-primary-50 text-primary">10</div>
+                      <div class="text-center text-xs py-1 cursor-pointer bg-primary-50 text-primary">11</div>
+                      <div class="text-center text-xs py-1 cursor-pointer bg-primary-50 text-primary">12</div>
+                      <div class="text-center text-xs py-1 cursor-pointer bg-primary-50 text-primary">13</div>
+                      <div class="text-center text-xs py-1 cursor-pointer bg-primary-50 text-primary">14</div>
+                      <div class="text-center text-xs py-1 cursor-pointer bg-primary-50 text-primary">15</div>
+                      <div class="text-center text-xs py-1 cursor-pointer bg-primary-50 text-primary">16</div>
+                      <div class="text-center text-xs py-1 cursor-pointer bg-primary-50 text-primary">17</div>
+                      <div class="text-center text-xs py-1 cursor-pointer bg-primary-50 text-primary">18</div>
+                      <div class="text-center text-xs py-1 cursor-pointer bg-primary-50 text-primary">19</div>
+                      <div class="text-center text-xs py-1 cursor-pointer bg-primary-50 text-primary">20</div>
+                      <div class="text-center text-xs py-1 cursor-pointer bg-primary-50 text-primary">21</div>
+                      <div class="text-center text-xs py-1 cursor-pointer bg-primary-50 text-primary">22</div>
+                      <div class="text-center text-xs py-1 cursor-pointer bg-primary-50 text-primary">23</div>
+                      <div class="text-center text-xs py-1 cursor-pointer bg-primary-50 text-primary">24</div>
+                      <div class="text-center text-xs py-1 cursor-pointer bg-primary-50 text-primary">25</div>
+                      <div class="text-center text-xs py-1 cursor-pointer bg-primary-50 text-primary">26</div>
+                      <div class="text-center text-xs py-1 cursor-pointer bg-primary-50 text-primary">27</div>
+                      <div class="text-center text-xs py-1 cursor-pointer bg-primary text-white rounded-r-md font-semibold">28</div>
+                    </div>
+                  </div>
+                  <!-- March -->
+                  <div class="flex-1">
+                    <div class="flex items-center justify-between mb-2">
+                      <div class="w-4"></div>
+                      <span class="text-xs font-semibold text-text-primary">Mar 2026</span>
+                      <button class="p-0.5 hover:bg-content rounded">
+                        <svg class="w-4 h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                      </button>
+                    </div>
+                    <div class="grid grid-cols-7 gap-0 mb-0.5">
+                      <div class="text-center text-[9px] font-semibold text-text-muted py-0.5">S</div>
+                      <div class="text-center text-[9px] font-semibold text-text-muted py-0.5">M</div>
+                      <div class="text-center text-[9px] font-semibold text-text-muted py-0.5">T</div>
+                      <div class="text-center text-[9px] font-semibold text-text-muted py-0.5">W</div>
+                      <div class="text-center text-[9px] font-semibold text-text-muted py-0.5">T</div>
+                      <div class="text-center text-[9px] font-semibold text-text-muted py-0.5">F</div>
+                      <div class="text-center text-[9px] font-semibold text-text-muted py-0.5">S</div>
+                    </div>
+                    <div class="grid grid-cols-7 gap-0">
+                      <!-- Mar 2026 starts on Sunday -->
+                      <div class="text-center text-xs py-1 cursor-pointer text-text-primary rounded hover:bg-content">1</div>
+                      <div class="text-center text-xs py-1 cursor-pointer text-text-primary rounded hover:bg-content">2</div>
+                      <div class="text-center text-xs py-1 cursor-pointer text-text-primary rounded hover:bg-content">3</div>
+                      <div class="text-center text-xs py-1 cursor-pointer text-text-primary rounded hover:bg-content">4</div>
+                      <div class="text-center text-xs py-1 cursor-pointer text-text-primary rounded hover:bg-content">5</div>
+                      <div class="text-center text-xs py-1 cursor-pointer text-text-primary rounded hover:bg-content">6</div>
+                      <div class="text-center text-xs py-1 cursor-pointer text-text-primary rounded hover:bg-content">7</div>
+                      <div class="text-center text-xs py-1 cursor-pointer text-text-primary rounded hover:bg-content">8</div>
+                      <div class="text-center text-xs py-1 cursor-pointer text-text-primary rounded hover:bg-content">9</div>
+                      <div class="text-center text-xs py-1 cursor-pointer text-text-primary rounded hover:bg-content">10</div>
+                      <div class="text-center text-xs py-1 cursor-pointer text-text-primary rounded hover:bg-content">11</div>
+                      <div class="text-center text-xs py-1 cursor-pointer text-text-primary rounded hover:bg-content">12</div>
+                      <div class="text-center text-xs py-1 cursor-pointer text-text-primary rounded hover:bg-content">13</div>
+                      <div class="text-center text-xs py-1 cursor-pointer text-text-primary rounded hover:bg-content">14</div>
+                      <div class="text-center text-xs py-1 cursor-pointer text-text-primary rounded hover:bg-content">15</div>
+                      <div class="text-center text-xs py-1 cursor-pointer text-text-primary rounded hover:bg-content">16</div>
+                      <div class="text-center text-xs py-1 cursor-pointer text-text-primary rounded hover:bg-content">17</div>
+                      <div class="text-center text-xs py-1 cursor-pointer text-text-primary rounded hover:bg-content">18</div>
+                      <div class="text-center text-xs py-1 cursor-pointer text-text-primary rounded hover:bg-content">19</div>
+                      <div class="text-center text-xs py-1 cursor-pointer text-text-primary rounded hover:bg-content">20</div>
+                      <div class="text-center text-xs py-1 cursor-pointer text-text-primary rounded hover:bg-content">21</div>
+                      <div class="text-center text-xs py-1 cursor-pointer text-text-primary rounded hover:bg-content">22</div>
+                      <div class="text-center text-xs py-1 cursor-pointer text-text-primary rounded hover:bg-content">23</div>
+                      <div class="text-center text-xs py-1 cursor-pointer text-text-primary rounded hover:bg-content">24</div>
+                      <div class="text-center text-xs py-1 cursor-pointer text-text-primary rounded hover:bg-content">25</div>
+                      <div class="text-center text-xs py-1 cursor-pointer text-text-primary rounded hover:bg-content">26</div>
+                      <div class="text-center text-xs py-1 cursor-pointer text-text-primary rounded hover:bg-content">27</div>
+                      <div class="text-center text-xs py-1 cursor-pointer text-text-primary rounded hover:bg-content">28</div>
+                      <div class="text-center text-xs py-1 cursor-pointer text-text-primary rounded hover:bg-content">29</div>
+                      <div class="text-center text-xs py-1 cursor-pointer text-text-primary rounded hover:bg-content">30</div>
+                      <div class="text-center text-xs py-1 cursor-pointer text-text-primary rounded hover:bg-content">31</div>
+                    </div>
+                  </div>
+                </div>
+                <!-- Selected range display -->
+                <div class="flex items-center justify-between mt-3 pt-3 border-t border-border">
+                  <span class="text-xs text-text-secondary">Feb 1, 2026 — Feb 28, 2026</span>
+                  <div class="flex gap-2">
+                    <button class="px-3 py-1 text-xs font-medium text-text-secondary hover:text-text-primary">Cancel</button>
+                    <button class="px-3 py-1 text-xs font-medium bg-primary text-white rounded-md hover:bg-primary/90">Apply</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SECTION 4: SEARCH INPUTS                   -->
+    <!-- ========================================== -->
+    <div>
+      <h2 class="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
+        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        Section 4 — Search Inputs
+      </h2>
+
+      <div class="grid grid-cols-2 gap-4">
+
+        <!-- Global Search -->
+        <div class="bg-card rounded-xl border border-border p-6">
+          <span class="text-sm font-semibold text-text-primary uppercase tracking-wide block mb-4">Global Search</span>
+          <div class="relative">
+            <div class="relative">
+              <svg class="w-5 h-5 text-text-muted absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              <input type="text" value="Acme" class="w-full pl-11 pr-4 py-2.5 text-sm border border-primary rounded-xl bg-white text-text-primary ring-2 ring-primary/20 focus:outline-none" placeholder="Search loads, carriers, customers..." />
+              <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] text-text-muted bg-content px-1.5 py-0.5 rounded border border-border font-mono">Ctrl+K</span>
+            </div>
+            <!-- Results dropdown -->
+            <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-border rounded-xl shadow-xl z-20">
+              <!-- Loads section -->
+              <div class="px-3 pt-3 pb-1">
+                <span class="text-[10px] font-bold text-text-muted uppercase tracking-widest">Loads</span>
+              </div>
+              <div class="search-result flex items-center gap-3 px-3 py-2.5 cursor-pointer">
+                <div class="w-8 h-8 rounded-lg bg-primary-light flex items-center justify-center flex-shrink-0">
+                  <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10m10 0h-4m0 0H5m5 0a1 1 0 001 1h1a1 1 0 001-1m-5 0v-1h7V5h2l3 5v6h-2"/></svg>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-text-primary">LD-2024-1847 — <span class="font-semibold text-primary">Acme</span> Corp</p>
+                  <p class="text-xs text-text-muted">Chicago, IL to Dallas, TX &middot; In Transit</p>
+                </div>
+              </div>
+              <div class="search-result flex items-center gap-3 px-3 py-2.5 cursor-pointer">
+                <div class="w-8 h-8 rounded-lg bg-primary-light flex items-center justify-center flex-shrink-0">
+                  <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10m10 0h-4m0 0H5m5 0a1 1 0 001 1h1a1 1 0 001-1m-5 0v-1h7V5h2l3 5v6h-2"/></svg>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-text-primary">LD-2024-1590 — <span class="font-semibold text-primary">Acme</span> Logistics</p>
+                  <p class="text-xs text-text-muted">Atlanta, GA to Miami, FL &middot; Delivered</p>
+                </div>
+              </div>
+              <div class="border-t border-border"></div>
+              <!-- Carriers section -->
+              <div class="px-3 pt-3 pb-1">
+                <span class="text-[10px] font-bold text-text-muted uppercase tracking-widest">Carriers</span>
+              </div>
+              <div class="search-result flex items-center gap-3 px-3 py-2.5 cursor-pointer">
+                <div class="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-4 h-4 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-text-primary"><span class="font-semibold text-primary">Acme</span> Transport LLC</p>
+                  <p class="text-xs text-text-muted">MC# 892541 &middot; 4.8 rating</p>
+                </div>
+              </div>
+              <div class="border-t border-border"></div>
+              <!-- Customers section -->
+              <div class="px-3 pt-3 pb-1">
+                <span class="text-[10px] font-bold text-text-muted uppercase tracking-widest">Customers</span>
+              </div>
+              <div class="search-result flex items-center gap-3 px-3 py-2.5 cursor-pointer rounded-b-xl">
+                <div class="w-8 h-8 rounded-lg bg-info/10 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-4 h-4 text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-text-primary"><span class="font-semibold text-primary">Acme</span> Corporation</p>
+                  <p class="text-xs text-text-muted">Chicago, IL &middot; 142 loads</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Entity Search -->
+        <div class="bg-card rounded-xl border border-border p-6">
+          <span class="text-sm font-semibold text-text-primary uppercase tracking-wide block mb-4">Entity Search — Carrier Lookup</span>
+          <div class="relative" style="max-width:380px;">
+            <div class="relative">
+              <svg class="w-4 h-4 text-text-muted absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              <input type="text" value="Swift" class="w-full pl-9 pr-3 py-2 text-sm border border-primary rounded-lg bg-white text-text-primary ring-2 ring-primary/20 focus:outline-none" placeholder="Search carriers..." />
+            </div>
+            <!-- Results as cards -->
+            <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-border rounded-xl shadow-lg z-10 p-2 space-y-1.5">
+              <div class="search-result p-3 rounded-lg cursor-pointer border border-transparent hover:border-border">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-sm font-semibold text-text-primary">Swift Transportation</span>
+                  <span class="flex items-center gap-0.5 text-xs text-warning">
+                    <svg class="w-3 h-3 fill-warning" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                    4.6
+                  </span>
+                </div>
+                <div class="flex items-center gap-3 text-xs text-text-muted">
+                  <span>MC# 133913</span>
+                  <span class="w-1 h-1 rounded-full bg-text-muted"></span>
+                  <span>Phoenix, AZ</span>
+                </div>
+              </div>
+              <div class="search-result p-3 rounded-lg cursor-pointer border border-transparent hover:border-border">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-sm font-semibold text-text-primary">Swift Carriers Inc</span>
+                  <span class="flex items-center gap-0.5 text-xs text-warning">
+                    <svg class="w-3 h-3 fill-warning" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                    3.9
+                  </span>
+                </div>
+                <div class="flex items-center gap-3 text-xs text-text-muted">
+                  <span>MC# 456712</span>
+                  <span class="w-1 h-1 rounded-full bg-text-muted"></span>
+                  <span>Memphis, TN</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SECTION 5: TOGGLE & SELECTION COMPONENTS   -->
+    <!-- ========================================== -->
+    <div>
+      <h2 class="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
+        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+        Section 5 — Toggle & Selection Components
+      </h2>
+
+      <div class="grid grid-cols-3 gap-4">
+
+        <!-- Status Selector -->
+        <div class="bg-card rounded-xl border border-border p-6">
+          <span class="text-sm font-semibold text-text-primary uppercase tracking-wide block mb-4">Status Selector</span>
+          <div class="inline-flex items-center bg-content rounded-lg p-1">
+            <button class="px-4 py-1.5 text-sm font-medium text-text-secondary rounded-md hover:text-text-primary">All</button>
+            <button class="px-4 py-1.5 text-sm font-medium bg-primary text-white rounded-md shadow-sm">Active</button>
+            <button class="px-4 py-1.5 text-sm font-medium text-text-secondary rounded-md hover:text-text-primary">Completed</button>
+            <button class="px-4 py-1.5 text-sm font-medium text-text-secondary rounded-md hover:text-text-primary">Cancelled</button>
+          </div>
+          <!-- Secondary variant -->
+          <div class="mt-4">
+            <p class="text-xs text-text-muted mb-2">Outline variant</p>
+            <div class="inline-flex items-center border border-border rounded-lg overflow-hidden">
+              <button class="px-4 py-1.5 text-sm font-medium text-text-secondary border-r border-border hover:bg-content">All</button>
+              <button class="px-4 py-1.5 text-sm font-medium bg-primary/5 text-primary border-r border-border">Active</button>
+              <button class="px-4 py-1.5 text-sm font-medium text-text-secondary border-r border-border hover:bg-content">Completed</button>
+              <button class="px-4 py-1.5 text-sm font-medium text-text-secondary hover:bg-content">Cancelled</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- View Mode Toggle -->
+        <div class="bg-card rounded-xl border border-border p-6">
+          <span class="text-sm font-semibold text-text-primary uppercase tracking-wide block mb-4">View Mode Toggle</span>
+          <div class="inline-flex items-center bg-content rounded-lg p-1 gap-0.5">
+            <!-- List (active) -->
+            <button class="p-2 bg-primary text-white rounded-md shadow-sm" title="List View">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+            </button>
+            <!-- Grid -->
+            <button class="p-2 text-text-secondary hover:text-text-primary rounded-md" title="Grid View">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+            </button>
+            <!-- Map -->
+            <button class="p-2 text-text-secondary hover:text-text-primary rounded-md" title="Map View">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+            </button>
+          </div>
+          <!-- With labels -->
+          <div class="mt-4">
+            <p class="text-xs text-text-muted mb-2">With labels</p>
+            <div class="inline-flex items-center bg-content rounded-lg p-1 gap-0.5">
+              <button class="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-md shadow-sm text-xs font-medium">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                List
+              </button>
+              <button class="flex items-center gap-1.5 px-3 py-1.5 text-text-secondary rounded-md text-xs font-medium hover:text-text-primary">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                Grid
+              </button>
+              <button class="flex items-center gap-1.5 px-3 py-1.5 text-text-secondary rounded-md text-xs font-medium hover:text-text-primary">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                Map
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Yes/No Toggle -->
+        <div class="bg-card rounded-xl border border-border p-6">
+          <span class="text-sm font-semibold text-text-primary uppercase tracking-wide block mb-4">Toggle Switches</span>
+          <div class="space-y-4">
+            <!-- On state -->
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-text-primary">Hazmat Load</p>
+                <p class="text-xs text-text-muted">Requires special endorsement</p>
+              </div>
+              <div class="w-11 h-6 bg-primary rounded-full relative cursor-pointer">
+                <div class="absolute top-0.5 right-0.5 w-5 h-5 bg-white rounded-full shadow transition-all"></div>
+              </div>
+            </div>
+            <!-- Off state -->
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-text-primary">Temperature Controlled</p>
+                <p class="text-xs text-text-muted">Reefer required</p>
+              </div>
+              <div class="w-11 h-6 bg-text-muted/40 rounded-full relative cursor-pointer">
+                <div class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-all"></div>
+              </div>
+            </div>
+            <!-- On state success variant -->
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-text-primary">Auto-dispatch</p>
+                <p class="text-xs text-text-muted">Automatically assign carriers</p>
+              </div>
+              <div class="w-11 h-6 bg-success rounded-full relative cursor-pointer">
+                <div class="absolute top-0.5 right-0.5 w-5 h-5 bg-white rounded-full shadow transition-all"></div>
+              </div>
+            </div>
+            <!-- Disabled state -->
+            <div class="flex items-center justify-between opacity-50">
+              <div>
+                <p class="text-sm font-medium text-text-primary">GPS Tracking</p>
+                <p class="text-xs text-text-muted">Requires integration setup</p>
+              </div>
+              <div class="w-11 h-6 bg-text-muted/30 rounded-full relative cursor-not-allowed">
+                <div class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-all"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="max-w-7xl mx-auto mt-12 mb-8 text-center">
+    <p class="text-xs text-text-muted">Ultra TMS Design System — Filters, Pickers & Dropdowns — Component Showcase 1/2</p>
+  </div>
+
+</body>
+</html>

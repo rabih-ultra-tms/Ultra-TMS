@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ultra TMS Dashboard — Map Command Center</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: { sans: ['Inter', 'sans-serif'] },
+      colors: {
+        primary: '#4f46e5',
+        sidebar: '#1a1f36',
+        'sidebar-active': '#252b45',
+        surface: '#f0f1f5',
+        card: '#ffffff',
+        border: '#e2e4ea',
+        'txt-primary': '#1e2235',
+        'txt-secondary': '#6b7194',
+        'txt-muted': '#9ca3c0',
+        success: '#10b981',
+        warning: '#f59e0b',
+        danger: '#ef4444',
+        info: '#06b6d4',
+      }
+    }
+  }
+}
+</script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; }
+
+  @keyframes pulse-red {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  .pulse-red { animation: pulse-red 1.5s ease-in-out infinite; }
+
+  @keyframes ticker-scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .grid-pattern {
+    background-image:
+      linear-gradient(rgba(79,70,229,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(79,70,229,0.06) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .map-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    position: absolute;
+    box-shadow: 0 0 6px rgba(0,0,0,0.2);
+  }
+
+  .map-dot::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    opacity: 0.3;
+  }
+</style>
+</head>
+<body class="bg-surface text-txt-primary">
+<div class="flex h-screen overflow-hidden">
+
+  <!-- Sidebar -->
+  <aside class="w-[220px] bg-sidebar flex flex-col flex-shrink-0">
+    <!-- Logo -->
+    <div class="flex items-center gap-2.5 px-5 h-16 border-b border-white/10">
+      <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </div>
+      <span class="text-white font-semibold text-base tracking-tight">Ultra TMS</span>
+    </div>
+    <!-- Nav -->
+    <nav class="flex-1 py-4 px-3 space-y-1">
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-md bg-sidebar-active text-white text-sm font-medium border-l-[3px] border-primary -ml-[3px]">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-txt-muted hover:text-white hover:bg-sidebar-active text-sm transition-colors">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M9 17H5a2 2 0 00-2 2v0a2 2 0 002 2h14a2 2 0 002-2v0a2 2 0 00-2-2h-4m-6-4l3-8 3 8m-6-4h6"/></svg>
+        Dispatch
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-txt-muted hover:text-white hover:bg-sidebar-active text-sm transition-colors">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M20 8H4m16 0v10a2 2 0 01-2 2H6a2 2 0 01-2-2V8m16 0l-2-4H6L4 8m6 4h4"/></svg>
+        Loads
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-txt-muted hover:text-white hover:bg-sidebar-active text-sm transition-colors">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zm10 0a2 2 0 11-4 0 2 2 0 014 0z"/><path d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10m0 0h10m0 0h1l3-3V8h-4"/></svg>
+        Carriers
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-txt-muted hover:text-white hover:bg-sidebar-active text-sm transition-colors">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2m8-10a4 4 0 100-8 4 4 0 000 8zm10 10v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"/></svg>
+        Customers
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-txt-muted hover:text-white hover:bg-sidebar-active text-sm transition-colors">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M9 12h6m-3-3v6m-7 4h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        Quotes
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-txt-muted hover:text-white hover:bg-sidebar-active text-sm transition-colors">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
+        Accounting
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-txt-muted hover:text-white hover:bg-sidebar-active text-sm transition-colors">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0h6m0 0v-4a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        Reports
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-txt-muted hover:text-white hover:bg-sidebar-active text-sm transition-colors">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.573-1.066z"/><circle cx="12" cy="12" r="3"/></svg>
+        Settings
+      </a>
+    </nav>
+    <!-- User -->
+    <div class="px-4 py-4 border-t border-white/10 flex items-center gap-3">
+      <div class="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white text-sm font-semibold">RK</div>
+      <div class="flex-1 min-w-0">
+        <div class="text-white text-sm font-medium truncate">Rabih K.</div>
+        <div class="text-txt-muted text-xs truncate">Admin</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+
+    <!-- Stats Ticker Strip -->
+    <div class="bg-sidebar text-white h-10 flex items-center overflow-hidden flex-shrink-0 border-b border-white/10">
+      <div class="flex items-center gap-8 px-6 whitespace-nowrap text-sm">
+        <div class="flex items-center gap-2">
+          <span class="text-txt-muted text-xs uppercase tracking-wider font-medium">Active Loads</span>
+          <span class="font-semibold text-white">247</span>
+        </div>
+        <div class="w-px h-4 bg-white/20"></div>
+        <div class="flex items-center gap-2">
+          <span class="text-txt-muted text-xs uppercase tracking-wider font-medium">In Transit</span>
+          <span class="font-semibold text-info">134</span>
+        </div>
+        <div class="w-px h-4 bg-white/20"></div>
+        <div class="flex items-center gap-2">
+          <span class="text-txt-muted text-xs uppercase tracking-wider font-medium">Pickups Today</span>
+          <span class="font-semibold text-white">28</span>
+        </div>
+        <div class="w-px h-4 bg-white/20"></div>
+        <div class="flex items-center gap-2">
+          <span class="text-txt-muted text-xs uppercase tracking-wider font-medium">Deliveries Today</span>
+          <span class="font-semibold text-white">31</span>
+        </div>
+        <div class="w-px h-4 bg-white/20"></div>
+        <div class="flex items-center gap-2">
+          <span class="text-txt-muted text-xs uppercase tracking-wider font-medium">At Risk</span>
+          <span class="font-semibold text-danger pulse-red">5</span>
+        </div>
+        <div class="w-px h-4 bg-white/20"></div>
+        <div class="flex items-center gap-2">
+          <span class="text-txt-muted text-xs uppercase tracking-wider font-medium">Revenue MTD</span>
+          <span class="font-semibold text-success">$1.24M</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Page Header -->
+    <div class="flex items-center justify-between px-6 h-14 bg-card border-b border-border flex-shrink-0">
+      <div>
+        <h1 class="text-lg font-semibold text-txt-primary">Command Center</h1>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-xs text-txt-muted">Last updated: 2 min ago</span>
+        <div class="w-2 h-2 rounded-full bg-success animate-pulse"></div>
+        <span class="text-xs text-success font-medium">Live</span>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="flex-1 overflow-y-auto p-6">
+
+      <!-- Main 60/40 Split -->
+      <div class="flex gap-6" style="min-height: 500px;">
+
+        <!-- LEFT: Map Area (60%) -->
+        <div class="w-[60%] flex-shrink-0">
+          <div class="bg-card rounded-xl border border-border overflow-hidden h-full">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-border">
+              <h2 class="text-sm font-semibold text-txt-primary">Fleet Map</h2>
+              <div class="flex items-center gap-2">
+                <button class="text-xs text-txt-secondary hover:text-primary px-2 py-1 rounded bg-surface">Satellite</button>
+                <button class="text-xs text-white bg-primary px-2 py-1 rounded font-medium">Map</button>
+              </div>
+            </div>
+            <div class="relative bg-[#e8eaf0] grid-pattern" style="height: 500px;">
+              <!-- Map dots representing loads -->
+              <!-- In Transit (blue) -->
+              <div class="map-dot bg-info text-info" style="top: 18%; left: 25%;"></div>
+              <div class="map-dot bg-info text-info" style="top: 32%; left: 55%;"></div>
+              <div class="map-dot bg-info text-info" style="top: 45%; left: 38%;"></div>
+              <div class="map-dot bg-info text-info" style="top: 28%; left: 72%;"></div>
+              <div class="map-dot bg-info text-info" style="top: 55%; left: 60%;"></div>
+              <div class="map-dot bg-info text-info" style="top: 40%; left: 15%;"></div>
+              <div class="map-dot bg-info text-info" style="top: 62%; left: 45%;"></div>
+              <div class="map-dot bg-info text-info" style="top: 22%; left: 42%;"></div>
+
+              <!-- Delivered (green) -->
+              <div class="map-dot bg-success text-success" style="top: 35%; left: 80%;"></div>
+              <div class="map-dot bg-success text-success" style="top: 50%; left: 20%;"></div>
+              <div class="map-dot bg-success text-success" style="top: 70%; left: 65%;"></div>
+              <div class="map-dot bg-success text-success" style="top: 15%; left: 60%;"></div>
+
+              <!-- Pickup Pending (amber) -->
+              <div class="map-dot bg-warning text-warning" style="top: 42%; left: 48%;"></div>
+              <div class="map-dot bg-warning text-warning" style="top: 60%; left: 30%;"></div>
+              <div class="map-dot bg-warning text-warning" style="top: 25%; left: 35%;"></div>
+
+              <!-- At Risk (red) -->
+              <div class="map-dot bg-danger text-danger pulse-red" style="top: 48%; left: 70%;"></div>
+              <div class="map-dot bg-danger text-danger pulse-red" style="top: 38%; left: 28%;"></div>
+
+              <!-- Route lines suggestion -->
+              <svg class="absolute inset-0 w-full h-full pointer-events-none" style="opacity: 0.15;">
+                <line x1="25%" y1="18%" x2="55%" y2="32%" stroke="#4f46e5" stroke-width="2" stroke-dasharray="6,4"/>
+                <line x1="55%" y1="32%" x2="38%" y2="45%" stroke="#4f46e5" stroke-width="2" stroke-dasharray="6,4"/>
+                <line x1="15%" y1="40%" x2="48%" y2="42%" stroke="#4f46e5" stroke-width="2" stroke-dasharray="6,4"/>
+                <line x1="72%" y1="28%" x2="60%" y2="55%" stroke="#4f46e5" stroke-width="2" stroke-dasharray="6,4"/>
+              </svg>
+
+              <!-- Legend overlay -->
+              <div class="absolute bottom-4 left-4 bg-white/95 backdrop-blur rounded-lg p-3 shadow-lg border border-border">
+                <div class="text-xs font-semibold text-txt-primary mb-2">Legend</div>
+                <div class="space-y-1.5">
+                  <div class="flex items-center gap-2 text-xs text-txt-secondary">
+                    <div class="w-2.5 h-2.5 rounded-full bg-info"></div>
+                    In Transit (134)
+                  </div>
+                  <div class="flex items-center gap-2 text-xs text-txt-secondary">
+                    <div class="w-2.5 h-2.5 rounded-full bg-success"></div>
+                    Delivered (82)
+                  </div>
+                  <div class="flex items-center gap-2 text-xs text-txt-secondary">
+                    <div class="w-2.5 h-2.5 rounded-full bg-warning"></div>
+                    Pickup Pending (26)
+                  </div>
+                  <div class="flex items-center gap-2 text-xs text-txt-secondary">
+                    <div class="w-2.5 h-2.5 rounded-full bg-danger"></div>
+                    At Risk (5)
+                  </div>
+                </div>
+              </div>
+
+              <!-- Zoom controls -->
+              <div class="absolute top-4 right-4 flex flex-col gap-1">
+                <button class="w-8 h-8 bg-white rounded shadow border border-border flex items-center justify-center text-txt-secondary hover:text-primary">
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 5v14m-7-7h14"/></svg>
+                </button>
+                <button class="w-8 h-8 bg-white rounded shadow border border-border flex items-center justify-center text-txt-secondary hover:text-primary">
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Stacked Cards (40%) -->
+        <div class="flex-1 flex flex-col gap-5">
+
+          <!-- Needs Attention Card -->
+          <div class="bg-card rounded-xl border border-border flex-1 flex flex-col">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-border">
+              <div class="flex items-center gap-2">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#ef4444" stroke-width="2"><path d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <h2 class="text-sm font-semibold text-txt-primary">Needs Attention</h2>
+              </div>
+              <span class="text-xs font-medium text-danger bg-danger/10 px-2 py-0.5 rounded-full">4 alerts</span>
+            </div>
+            <div class="flex-1 overflow-auto">
+              <!-- Alert Row 1 -->
+              <div class="flex items-center gap-3 px-4 py-3 border-b border-border hover:bg-surface/50 transition-colors">
+                <div class="w-7 h-7 rounded-full bg-danger/10 flex items-center justify-center flex-shrink-0">
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#ef4444" stroke-width="2"><path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-sm font-medium text-txt-primary">LD-2024-0851</div>
+                  <div class="text-xs text-danger">Delivery 3h overdue — no driver update</div>
+                </div>
+                <button class="text-xs font-medium text-primary hover:text-primary/80 bg-primary/5 px-2.5 py-1 rounded flex-shrink-0">Contact</button>
+              </div>
+              <!-- Alert Row 2 -->
+              <div class="flex items-center gap-3 px-4 py-3 border-b border-border hover:bg-surface/50 transition-colors">
+                <div class="w-7 h-7 rounded-full bg-danger/10 flex items-center justify-center flex-shrink-0">
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#ef4444" stroke-width="2"><path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-sm font-medium text-txt-primary">LD-2024-0839</div>
+                  <div class="text-xs text-danger">Carrier insurance expired today</div>
+                </div>
+                <button class="text-xs font-medium text-primary hover:text-primary/80 bg-primary/5 px-2.5 py-1 rounded flex-shrink-0">Review</button>
+              </div>
+              <!-- Alert Row 3 -->
+              <div class="flex items-center gap-3 px-4 py-3 border-b border-border hover:bg-surface/50 transition-colors">
+                <div class="w-7 h-7 rounded-full bg-warning/10 flex items-center justify-center flex-shrink-0">
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#f59e0b" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-sm font-medium text-txt-primary">LD-2024-0862</div>
+                  <div class="text-xs text-warning">Weather delay — ETA pushed 4h</div>
+                </div>
+                <button class="text-xs font-medium text-primary hover:text-primary/80 bg-primary/5 px-2.5 py-1 rounded flex-shrink-0">Update</button>
+              </div>
+              <!-- Alert Row 4 -->
+              <div class="flex items-center gap-3 px-4 py-3 hover:bg-surface/50 transition-colors">
+                <div class="w-7 h-7 rounded-full bg-warning/10 flex items-center justify-center flex-shrink-0">
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#f59e0b" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-sm font-medium text-txt-primary">LD-2024-0870</div>
+                  <div class="text-xs text-warning">Pickup appointment in 30 min — driver 45 min out</div>
+                </div>
+                <button class="text-xs font-medium text-primary hover:text-primary/80 bg-primary/5 px-2.5 py-1 rounded flex-shrink-0">Reschedule</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Upcoming Events Card -->
+          <div class="bg-card rounded-xl border border-border flex-1 flex flex-col">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-border">
+              <div class="flex items-center gap-2">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#4f46e5" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                <h2 class="text-sm font-semibold text-txt-primary">Upcoming</h2>
+              </div>
+              <a href="#" class="text-xs text-primary font-medium hover:underline">View All</a>
+            </div>
+            <div class="flex-1 overflow-auto px-4 py-3">
+              <!-- Timeline -->
+              <div class="relative">
+                <!-- Timeline line -->
+                <div class="absolute left-[5px] top-2 bottom-2 w-px bg-border"></div>
+
+                <!-- Event 1 -->
+                <div class="relative flex items-start gap-3 pb-4">
+                  <div class="w-[11px] h-[11px] rounded-full bg-success border-2 border-white shadow-sm mt-0.5 z-10 flex-shrink-0"></div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between">
+                      <span class="text-sm font-medium text-txt-primary">Pickup — LD-0853</span>
+                      <span class="text-xs text-txt-muted">10:30 AM</span>
+                    </div>
+                    <div class="text-xs text-txt-secondary mt-0.5">Dallas, TX &rarr; Memphis, TN</div>
+                  </div>
+                </div>
+
+                <!-- Event 2 -->
+                <div class="relative flex items-start gap-3 pb-4">
+                  <div class="w-[11px] h-[11px] rounded-full bg-info border-2 border-white shadow-sm mt-0.5 z-10 flex-shrink-0"></div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between">
+                      <span class="text-sm font-medium text-txt-primary">Delivery — LD-0847</span>
+                      <span class="text-xs text-txt-muted">11:00 AM</span>
+                    </div>
+                    <div class="text-xs text-txt-secondary mt-0.5">Chicago, IL</div>
+                  </div>
+                </div>
+
+                <!-- Event 3 -->
+                <div class="relative flex items-start gap-3 pb-4">
+                  <div class="w-[11px] h-[11px] rounded-full bg-success border-2 border-white shadow-sm mt-0.5 z-10 flex-shrink-0"></div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between">
+                      <span class="text-sm font-medium text-txt-primary">Pickup — LD-0858</span>
+                      <span class="text-xs text-txt-muted">12:15 PM</span>
+                    </div>
+                    <div class="text-xs text-txt-secondary mt-0.5">Atlanta, GA &rarr; Charlotte, NC</div>
+                  </div>
+                </div>
+
+                <!-- Event 4 -->
+                <div class="relative flex items-start gap-3 pb-4">
+                  <div class="w-[11px] h-[11px] rounded-full bg-info border-2 border-white shadow-sm mt-0.5 z-10 flex-shrink-0"></div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between">
+                      <span class="text-sm font-medium text-txt-primary">Delivery — LD-0844</span>
+                      <span class="text-xs text-txt-muted">1:45 PM</span>
+                    </div>
+                    <div class="text-xs text-txt-secondary mt-0.5">Phoenix, AZ</div>
+                  </div>
+                </div>
+
+                <!-- Event 5 -->
+                <div class="relative flex items-start gap-3">
+                  <div class="w-[11px] h-[11px] rounded-full bg-warning border-2 border-white shadow-sm mt-0.5 z-10 flex-shrink-0"></div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between">
+                      <span class="text-sm font-medium text-txt-primary">Pickup — LD-0871</span>
+                      <span class="text-xs text-txt-muted">3:00 PM</span>
+                    </div>
+                    <div class="text-xs text-txt-secondary mt-0.5">Denver, CO &rarr; Salt Lake City, UT</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom KPI Row -->
+      <div class="grid grid-cols-4 gap-5 mt-6">
+        <!-- On-Time % -->
+        <div class="bg-card rounded-xl border border-border p-4">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-medium text-txt-muted uppercase tracking-wider">On-Time %</span>
+            <div class="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#10b981" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+          </div>
+          <div class="text-2xl font-bold text-txt-primary">94.2%</div>
+          <div class="flex items-center gap-1 mt-1">
+            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#10b981" stroke-width="2.5"><path d="M5 15l7-7 7 7"/></svg>
+            <span class="text-xs font-medium text-success">+1.3%</span>
+            <span class="text-xs text-txt-muted">vs last week</span>
+          </div>
+        </div>
+
+        <!-- Avg Transit Time -->
+        <div class="bg-card rounded-xl border border-border p-4">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-medium text-txt-muted uppercase tracking-wider">Avg Transit</span>
+            <div class="w-8 h-8 rounded-lg bg-info/10 flex items-center justify-center">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#06b6d4" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+          </div>
+          <div class="text-2xl font-bold text-txt-primary">2.4 days</div>
+          <div class="flex items-center gap-1 mt-1">
+            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#10b981" stroke-width="2.5"><path d="M5 15l7-7 7 7"/></svg>
+            <span class="text-xs font-medium text-success">-0.2d</span>
+            <span class="text-xs text-txt-muted">faster this month</span>
+          </div>
+        </div>
+
+        <!-- Revenue/Load -->
+        <div class="bg-card rounded-xl border border-border p-4">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-medium text-txt-muted uppercase tracking-wider">Revenue/Load</span>
+            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#4f46e5" stroke-width="2"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
+            </div>
+          </div>
+          <div class="text-2xl font-bold text-txt-primary">$5,020</div>
+          <div class="flex items-center gap-1 mt-1">
+            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#10b981" stroke-width="2.5"><path d="M5 15l7-7 7 7"/></svg>
+            <span class="text-xs font-medium text-success">+$180</span>
+            <span class="text-xs text-txt-muted">vs prior month</span>
+          </div>
+        </div>
+
+        <!-- Carrier Utilization -->
+        <div class="bg-card rounded-xl border border-border p-4">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-medium text-txt-muted uppercase tracking-wider">Carrier Util.</span>
+            <div class="w-8 h-8 rounded-lg bg-warning/10 flex items-center justify-center">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#f59e0b" stroke-width="2"><path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zm10 0a2 2 0 11-4 0 2 2 0 014 0z"/><path d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10m0 0h10m0 0h1l3-3V8h-4"/></svg>
+            </div>
+          </div>
+          <div class="text-2xl font-bold text-txt-primary">78%</div>
+          <div class="flex items-center gap-1 mt-1">
+            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#ef4444" stroke-width="2.5"><path d="M19 9l-7 7-7-7"/></svg>
+            <span class="text-xs font-medium text-danger">-3%</span>
+            <span class="text-xs text-txt-muted">vs last week</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

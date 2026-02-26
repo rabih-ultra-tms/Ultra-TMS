@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ultra TMS — Dispatch Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+<style>
+/* =====================================================================
+   DESIGN TOKENS
+   ===================================================================== */
+:root {
+    --accent: #4F46E5;
+    --accent-hover: #4338CA;
+    --accent-light: #EEF2FF;
+    --accent-lighter: #F5F3FF;
+    --accent-border: #C7D2FE;
+    --accent-text: #3730A3;
+
+    --surface: #FFFFFF;
+    --canvas: #F9FAFB;
+    --sidebar-bg: #F3F4F8;
+    --sidebar-hover: #EAEBF2;
+    --sidebar-active: #E0E2F0;
+    --sidebar-border: #E2E4ED;
+
+    --text-1: #111827;
+    --text-2: #4B5563;
+    --text-3: #9CA3AF;
+    --text-inverse: #FFFFFF;
+
+    --border-1: #E5E7EB;
+    --border-2: #F3F4F6;
+    --border-col: rgba(0,0,0,0.06);
+    --border-col-header: rgba(0,0,0,0.08);
+
+    --shadow-xs: 0 1px 2px rgba(0,0,0,0.03);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.07);
+    --shadow-lg: 0 12px 32px rgba(0,0,0,0.12);
+    --shadow-drawer: -8px 0 32px rgba(0,0,0,0.12);
+
+    --r-sm: 4px;
+    --r: 6px;
+    --r-lg: 8px;
+    --r-xl: 12px;
+    --r-pill: 100px;
+
+    --st-transit: #2563EB;
+    --st-transit-bg: #EFF6FF;
+    --st-transit-text: #1E40AF;
+    --st-unassigned: #D97706;
+    --st-unassigned-bg: #FFFBEB;
+    --st-unassigned-text: #92400E;
+    --st-tendered: #7C3AED;
+    --st-tendered-bg: #F5F3FF;
+    --st-tendered-text: #5B21B6;
+    --st-dispatched: #0891B2;
+    --st-dispatched-bg: #ECFEFF;
+    --st-dispatched-text: #155E75;
+    --st-delivered: #059669;
+    --st-delivered-bg: #ECFDF5;
+    --st-delivered-text: #065F46;
+    --st-atrisk: #DC2626;
+    --st-atrisk-bg: #FEF2F2;
+    --st-atrisk-text: #991B1B;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+    height: 100%; overflow: hidden;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 13px; line-height: 1.5;
+    color: var(--text-1); background: var(--canvas);
+    -webkit-font-smoothing: antialiased;
+}
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20; }
+
+.app { display: flex; height: 100vh; }
+
+/* SIDEBAR */
+.sidebar {
+    width: 64px; min-width: 64px; height: 100vh;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--sidebar-border);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 16px 0 12px; z-index: 40;
+}
+.sidebar-logo {
+    width: 36px; height: 36px;
+    background: var(--accent); border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(79,70,229,0.25);
+}
+.sidebar-logo .material-symbols-outlined { color: #fff; font-size: 19px; }
+.sidebar-nav { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.sidebar-bottom { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.nav-item {
+    width: 40px; height: 40px; border-radius: var(--r-lg);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; position: relative; color: var(--text-3);
+    transition: all 0.15s ease;
+}
+.nav-item:hover { background: var(--sidebar-hover); color: var(--text-2); }
+.nav-item.active { background: var(--sidebar-active); color: var(--accent); }
+.nav-item.active::before {
+    content: ''; position: absolute; left: -12px; top: 10px;
+    width: 3px; height: 20px;
+    background: var(--accent); border-radius: 0 2px 2px 0;
+}
+.nav-item .material-symbols-outlined { font-size: 20px; }
+.nav-badge {
+    position: absolute; top: 6px; right: 5px;
+    width: 8px; height: 8px;
+    background: var(--st-atrisk); border-radius: 50%;
+    border: 2px solid var(--sidebar-bg);
+}
+.sidebar-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, #6366F1, #8B5CF6);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 11px; font-weight: 600; cursor: pointer;
+}
+
+/* MAIN */
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+/* HEADER */
+.header {
+    height: 48px; min-height: 48px;
+    display: flex; align-items: center;
+    padding: 0 20px; gap: 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border-1);
+}
+.header-title { font-size: 14px; font-weight: 600; color: var(--text-1); white-space: nowrap; letter-spacing: -0.01em; }
+.header-search { flex: 1; max-width: 320px; margin: 0 auto; position: relative; }
+.header-search input {
+    width: 100%; height: 32px; padding: 0 36px 0 32px;
+    border: 1px solid var(--border-1); border-radius: var(--r);
+    background: var(--canvas); color: var(--text-1);
+    font-size: 12px; font-family: inherit; outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.header-search input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+.header-search input::placeholder { color: var(--text-3); }
+.header-search .s-icon { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); font-size: 16px; color: var(--text-3); pointer-events: none; }
+.header-search .s-shortcut { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 10px; color: var(--text-3); background: var(--surface); border: 1px solid var(--border-1); border-radius: var(--r-sm); padding: 1px 5px; line-height: 1.4; }
+.header-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+
+.btn-primary {
+    height: 30px; padding: 0 14px;
+    background: var(--accent); color: var(--text-inverse);
+    border: none; border-radius: var(--r);
+    font-size: 12px; font-weight: 500; font-family: inherit;
+    cursor: pointer; display: flex; align-items: center; gap: 5px;
+    transition: background 0.15s ease, box-shadow 0.15s ease; white-space: nowrap;
+}
+.btn-primary:hover { background: var(--accent-hover); box-shadow: var(--shadow-sm); }
+.btn-primary .material-symbols-outlined { font-size: 15px; }
+.btn-ghost {
+    height: 30px; padding: 0 10px;
+    background: transparent; color: var(--text-2);
+    border: 1px solid var(--border-1); border-radius: var(--r);
+    font-size: 12px; font-weight: 500; font-family: inherit;
+    cursor: pointer; display: flex; align-items: center; gap: 4px;
+    transition: all 0.15s ease; white-space: nowrap;
+}
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+.icon-btn {
+    width: 30px; height: 30px; border: none; border-radius: var(--r);
+    background: transparent; color: var(--text-3);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.12s ease; position: relative;
+}
+.icon-btn:hover { background: var(--canvas); color: var(--text-2); }
+.icon-btn .material-symbols-outlined { font-size: 18px; }
+.icon-btn .notif-dot { position: absolute; top: 5px; right: 5px; width: 6px; height: 6px; background: var(--st-atrisk); border-radius: 50%; }
+
+/* FILTER BAR */
+.filter-bar {
+    height: 44px; min-height: 44px;
+    display: flex; align-items: center;
+    padding: 0 20px; gap: 6px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border-2);
+}
+.filter-pill {
+    height: 28px; padding: 0 12px;
+    border: 1px solid var(--border-1); border-radius: var(--r-pill);
+    background: var(--surface); color: var(--text-2);
+    font-size: 11.5px; font-weight: 500; font-family: inherit;
+    cursor: pointer; display: flex; align-items: center; gap: 5px;
+    transition: all 0.15s ease; white-space: nowrap;
+}
+.filter-pill:hover { border-color: var(--text-3); color: var(--text-1); }
+.filter-pill.active { background: var(--accent); border-color: var(--accent); color: var(--text-inverse); }
+.filter-pill .pill-count { font-size: 10px; font-weight: 600; background: rgba(0,0,0,0.06); border-radius: 10px; padding: 0 5px; line-height: 18px; }
+.filter-pill.active .pill-count { background: rgba(255,255,255,0.2); }
+.filter-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.filter-sep { width: 1px; height: 20px; background: var(--border-1); margin: 0 6px; flex-shrink: 0; }
+.filter-right { margin-left: auto; display: flex; align-items: center; gap: 4px; }
+.density-group { display: flex; border: 1px solid var(--border-1); border-radius: var(--r); overflow: hidden; }
+.density-btn {
+    width: 26px; height: 26px; border: none;
+    background: var(--surface); color: var(--text-3);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.12s ease; border-right: 1px solid var(--border-1);
+}
+.density-btn:last-child { border-right: none; }
+.density-btn:hover { color: var(--text-2); }
+.density-btn.active { background: var(--accent-light); color: var(--accent); }
+.density-btn .material-symbols-outlined { font-size: 14px; }
+
+/* STATS BAR */
+.stats-bar {
+    height: 36px; min-height: 36px;
+    display: flex; align-items: center;
+    padding: 0 20px; gap: 24px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border-1);
+}
+.stat-item { display: flex; align-items: center; gap: 6px; }
+.stat-label { font-size: 11px; color: var(--text-3); font-weight: 400; }
+.stat-value { font-size: 11px; color: var(--text-1); font-weight: 600; }
+.stat-sep { width: 1px; height: 16px; background: var(--border-2); }
+.stat-danger .stat-value { color: var(--st-atrisk); }
+
+/* TABLE */
+.table-wrap { flex: 1; overflow: auto; background: var(--canvas); }
+.data-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.data-table thead { position: sticky; top: 0; z-index: 10; }
+.data-table thead th {
+    background: var(--canvas);
+    border-bottom: 1px solid var(--border-1);
+    border-right: 1px solid var(--border-col-header);
+    padding: 0 12px; height: 34px;
+    font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--text-3); white-space: nowrap;
+    text-align: left; vertical-align: middle; user-select: none;
+}
+.data-table thead th:last-child { border-right: none; }
+.data-table thead th.sortable { cursor: pointer; }
+.data-table thead th.sortable:hover { color: var(--text-2); }
+.th-inner { display: flex; align-items: center; gap: 3px; }
+.sort-icon { display: flex; flex-direction: column; line-height: 0; }
+.sort-icon .material-symbols-outlined { font-size: 12px; color: var(--border-1); line-height: 7px; }
+
+.col-check { width: 40px; } .col-status { width: 115px; } .col-load { width: 82px; }
+.col-origin { width: 120px; } .col-dest { width: 120px; }
+.col-pickup { width: 88px; } .col-delivery { width: 88px; }
+.col-customer { width: 130px; } .col-carrier { width: 130px; }
+.col-equip { width: 88px; } .col-rate { width: 76px; text-align: right; }
+.col-weight { width: 76px; text-align: right; } .col-ref { width: 82px; }
+
+/* Group Header */
+.group-row { cursor: pointer; user-select: none; }
+.group-row td {
+    background: var(--surface); padding: 0 12px; height: 32px;
+    border-bottom: 1px solid var(--border-1);
+    transition: background 0.1s ease;
+}
+.group-row:hover td { background: var(--canvas); }
+.group-inner { display: flex; align-items: center; gap: 8px; }
+.group-dot { width: 7px; height: 7px; border-radius: 50%; }
+.group-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.group-count { font-size: 10px; font-weight: 500; color: var(--text-3); background: var(--canvas); border-radius: 10px; padding: 0 7px; line-height: 18px; }
+.group-chevron { margin-left: auto; display: flex; color: var(--text-3); transition: transform 0.2s ease; }
+.group-chevron.collapsed { transform: rotate(-90deg); }
+.group-chevron .material-symbols-outlined { font-size: 16px; }
+
+/* Data Row */
+.data-row { cursor: pointer; transition: background 0.08s ease; }
+.data-row td {
+    padding: 0 12px; height: 42px;
+    border-bottom: 1px solid var(--border-2);
+    border-right: 1px solid var(--border-col);
+    vertical-align: middle; font-size: 12px; color: var(--text-1);
+    background: var(--surface); transition: background 0.08s ease;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.data-row td:last-child { border-right: none; }
+.data-row:hover td { background: #F8F9FB; }
+.data-row.selected td { background: var(--accent-light); }
+.data-row.at-risk td { background: var(--st-atrisk-bg); }
+.data-row.at-risk td:first-child { box-shadow: inset 3px 0 0 var(--st-atrisk); }
+.data-row.at-risk:hover td { background: #FDE8E8; }
+.data-row.focused td { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.density-compact .data-row td { height: 34px; font-size: 11px; }
+.density-spacious .data-row td { height: 50px; font-size: 13px; }
+
+.check-box {
+    width: 15px; height: 15px;
+    border: 1.5px solid var(--border-1); border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.12s ease; flex-shrink: 0;
+}
+.check-box:hover { border-color: var(--accent); }
+.check-box.checked { background: var(--accent); border-color: var(--accent); }
+.check-box.checked .material-symbols-outlined { font-size: 13px; color: white; font-variation-settings: 'FILL' 1, 'wght' 600; }
+
+.status-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 2px 8px; border-radius: var(--r-pill);
+    font-size: 10.5px; font-weight: 500; line-height: 1; white-space: nowrap;
+}
+.status-badge .s-dot { width: 5px; height: 5px; border-radius: 50%; }
+.badge-transit { background: var(--st-transit-bg); color: var(--st-transit-text); }
+.badge-transit .s-dot { background: var(--st-transit); }
+.badge-unassigned { background: var(--st-unassigned-bg); color: var(--st-unassigned-text); }
+.badge-unassigned .s-dot { background: var(--st-unassigned); }
+.badge-tendered { background: var(--st-tendered-bg); color: var(--st-tendered-text); }
+.badge-tendered .s-dot { background: var(--st-tendered); }
+.badge-dispatched { background: var(--st-dispatched-bg); color: var(--st-dispatched-text); }
+.badge-dispatched .s-dot { background: var(--st-dispatched); }
+.badge-delivered { background: var(--st-delivered-bg); color: var(--st-delivered-text); }
+.badge-delivered .s-dot { background: var(--st-delivered); }
+.badge-atrisk { background: var(--st-atrisk-bg); color: var(--st-atrisk-text); }
+.badge-atrisk .s-dot { background: var(--st-atrisk); }
+
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+.animate-row { animation: fadeInUp 0.2s ease both; }
+
+/* DRAWER */
+.drawer-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,0.15); backdrop-filter: blur(2px);
+    opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+}
+.drawer-overlay.open { opacity: 1; pointer-events: auto; }
+.drawer-panel {
+    position: fixed; top: 0; right: 0; bottom: 0;
+    width: 440px; background: var(--surface);
+    box-shadow: var(--shadow-drawer);
+    transform: translateX(100%);
+    transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+    display: flex; flex-direction: column; z-index: 101;
+}
+.drawer-overlay.open .drawer-panel { transform: translateX(0); }
+.drawer-header {
+    height: 52px; min-height: 52px;
+    display: flex; align-items: center;
+    padding: 0 20px; gap: 12px;
+    border-bottom: 1px solid var(--border-1);
+}
+.drawer-title { font-size: 14px; font-weight: 600; color: var(--text-1); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.drawer-close {
+    width: 28px; height: 28px; border-radius: var(--r);
+    border: none; background: transparent; color: var(--text-3);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.12s ease;
+}
+.drawer-close:hover { background: var(--canvas); color: var(--text-1); }
+.drawer-close .material-symbols-outlined { font-size: 18px; }
+.drawer-tabs {
+    display: flex; padding: 0 20px;
+    border-bottom: 1px solid var(--border-1); gap: 0;
+}
+.drawer-tab {
+    padding: 10px 14px; font-size: 12px; font-weight: 500;
+    color: var(--text-3); cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s ease; white-space: nowrap;
+    background: none; border-top: none; border-left: none; border-right: none; font-family: inherit;
+}
+.drawer-tab:hover { color: var(--text-2); }
+.drawer-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.drawer-body { flex: 1; overflow-y: auto; padding: 20px; }
+
+.quick-actions { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+.qa-btn {
+    height: 32px; padding: 0 12px;
+    border: 1px solid var(--border-1); border-radius: var(--r);
+    background: var(--surface); color: var(--text-2);
+    font-size: 11px; font-weight: 500; font-family: inherit;
+    cursor: pointer; display: flex; align-items: center; gap: 5px;
+    transition: all 0.12s ease;
+}
+.qa-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+.qa-btn .material-symbols-outlined { font-size: 14px; }
+.route-card {
+    padding: 16px; background: var(--canvas);
+    border: 1px solid var(--border-1); border-radius: var(--r-lg);
+    margin-bottom: 16px;
+}
+.route-point { display: flex; align-items: center; gap: 10px; }
+.route-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.route-dot.origin { background: var(--accent); }
+.route-dot.dest { background: var(--st-delivered); }
+.route-city { font-size: 13px; font-weight: 600; color: var(--text-1); }
+.route-date { font-size: 11px; color: var(--text-3); }
+.route-line { width: 1px; height: 20px; background: var(--border-1); margin-left: 3.5px; }
+.info-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 1px; background: var(--border-2);
+    border: 1px solid var(--border-2); border-radius: var(--r-lg);
+    overflow: hidden; margin-bottom: 16px;
+}
+.info-cell { padding: 10px 12px; background: var(--surface); }
+.info-label { font-size: 10px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 2px; }
+.info-value { font-size: 12px; font-weight: 500; color: var(--text-1); }
+
+/* BULK BAR */
+.bulk-bar {
+    position: fixed; bottom: 20px; left: 50%;
+    transform: translateX(calc(-50% + 32px));
+    background: var(--text-1); color: white;
+    padding: 0 6px 0 16px; height: 40px;
+    border-radius: var(--r-xl);
+    display: flex; align-items: center; gap: 12px;
+    box-shadow: var(--shadow-lg); z-index: 30;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+}
+.bulk-bar.visible { opacity: 1; pointer-events: auto; }
+.bulk-count { font-size: 12px; font-weight: 500; white-space: nowrap; }
+.bulk-sep { width: 1px; height: 20px; background: rgba(255,255,255,0.2); }
+.bulk-btn {
+    height: 30px; padding: 0 12px; border: none;
+    border-radius: var(--r); background: rgba(255,255,255,0.12);
+    color: white; font-size: 11px; font-weight: 500;
+    font-family: inherit; cursor: pointer;
+    display: flex; align-items: center; gap: 4px;
+    transition: background 0.12s ease;
+}
+.bulk-btn:hover { background: rgba(255,255,255,0.2); }
+.bulk-btn .material-symbols-outlined { font-size: 14px; }
+.bulk-close {
+    width: 30px; height: 30px; border: none; border-radius: var(--r);
+    background: rgba(255,255,255,0.08); color: white;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background 0.12s ease;
+}
+.bulk-close:hover { background: rgba(255,255,255,0.15); }
+
+/* PAGINATION */
+.pagination {
+    height: 40px; min-height: 40px;
+    display: flex; align-items: center;
+    padding: 0 20px; gap: 8px;
+    background: var(--surface);
+    border-top: 1px solid var(--border-1);
+    font-size: 11px; color: var(--text-3);
+}
+.pagination-info { flex: 1; }
+.pagination-pages { display: flex; gap: 2px; }
+.page-btn {
+    width: 28px; height: 28px; border: none;
+    border-radius: var(--r-sm); background: transparent;
+    color: var(--text-2); font-size: 11px; font-weight: 500;
+    font-family: inherit; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.12s ease;
+}
+.page-btn:hover { background: var(--canvas); }
+.page-btn.active { background: var(--accent); color: white; }
+.page-btn.disabled { opacity: 0.3; cursor: default; }
+</style>
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar">
+        <div class="sidebar-logo"><span class="material-symbols-outlined">local_shipping</span></div>
+        <nav class="sidebar-nav">
+            <div class="nav-item" title="Dashboard"><span class="material-symbols-outlined">dashboard</span></div>
+            <div class="nav-item active" title="Dispatch"><span class="material-symbols-outlined">assignment</span></div>
+            <div class="nav-item" title="Loads"><span class="material-symbols-outlined">inventory_2</span></div>
+            <div class="nav-item" title="Carriers"><span class="material-symbols-outlined">local_shipping</span></div>
+            <div class="nav-item" title="CRM"><span class="material-symbols-outlined">group</span></div>
+            <div class="nav-item" title="Settings"><span class="material-symbols-outlined">settings</span></div>
+        </nav>
+        <div class="sidebar-bottom">
+            <div class="nav-item" title="Notifications"><span class="material-symbols-outlined">notifications</span><span class="nav-badge"></span></div>
+            <div class="sidebar-avatar">RK</div>
+        </div>
+    </aside>
+
+    <div class="main">
+        <header class="header">
+            <span class="header-title">Dispatch Board</span>
+            <div class="header-search">
+                <span class="material-symbols-outlined s-icon">search</span>
+                <input type="text" placeholder="Search loads, carriers, customers...">
+                <span class="s-shortcut">&#8984;K</span>
+            </div>
+            <div class="header-actions">
+                <button class="icon-btn" title="Refresh"><span class="material-symbols-outlined">refresh</span></button>
+                <button class="icon-btn" title="Notifications"><span class="material-symbols-outlined">notifications</span><span class="notif-dot"></span></button>
+                <button class="btn-primary" id="newLoadBtn"><span class="material-symbols-outlined">add</span>New Load</button>
+            </div>
+        </header>
+
+        <div class="filter-bar" id="filterBar"></div>
+
+        <div class="stats-bar">
+            <div class="stat-item"><span class="stat-label">Loads</span><span class="stat-value">152</span></div>
+            <div class="stat-sep"></div>
+            <div class="stat-item"><span class="stat-label">Revenue</span><span class="stat-value">$847K</span></div>
+            <div class="stat-sep"></div>
+            <div class="stat-item"><span class="stat-label">On-time</span><span class="stat-value">94.2%</span></div>
+            <div class="stat-sep"></div>
+            <div class="stat-item"><span class="stat-label">Avg Margin</span><span class="stat-value">16.8%</span></div>
+            <div class="stat-sep"></div>
+            <div class="stat-item stat-danger"><span class="stat-label">At Risk</span><span class="stat-value">3</span></div>
+        </div>
+
+        <div class="table-wrap" id="tableWrap">
+            <table class="data-table" id="dataTable">
+                <thead id="tableHead"></thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+
+        <div class="pagination">
+            <span class="pagination-info">Showing 1-25 of 152 loads</span>
+            <div class="pagination-pages">
+                <button class="page-btn disabled"><span class="material-symbols-outlined" style="font-size:14px">chevron_left</span></button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <button class="page-btn">...</button>
+                <button class="page-btn">7</button>
+                <button class="page-btn"><span class="material-symbols-outlined" style="font-size:14px">chevron_right</span></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="bulk-bar" id="bulkBar">
+    <span class="bulk-count" id="bulkCount">0 selected</span>
+    <div class="bulk-sep"></div>
+    <button class="bulk-btn"><span class="material-symbols-outlined">person_add</span>Assign</button>
+    <button class="bulk-btn"><span class="material-symbols-outlined">send</span>Tender</button>
+    <button class="bulk-btn"><span class="material-symbols-outlined">edit</span>Edit</button>
+    <button class="bulk-close" id="bulkClose"><span class="material-symbols-outlined" style="font-size:16px">close</span></button>
+</div>
+
+<div class="drawer-overlay" id="drawerOverlay">
+    <div class="drawer-panel">
+        <div class="drawer-header">
+            <span class="drawer-title" id="drawerTitle"></span>
+            <span class="status-badge badge-transit" id="drawerBadge"><span class="s-dot"></span></span>
+            <button class="drawer-close" id="drawerClose"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <div class="drawer-tabs">
+            <button class="drawer-tab active" data-tab="overview">Overview</button>
+            <button class="drawer-tab" data-tab="carrier">Carrier</button>
+            <button class="drawer-tab" data-tab="timeline">Timeline</button>
+            <button class="drawer-tab" data-tab="finance">Finance</button>
+            <button class="drawer-tab" data-tab="documents">Documents</button>
+        </div>
+        <div class="drawer-body" id="drawerBody"></div>
+    </div>
+</div>
+
+<script>
+var statusConfig = {
+    transit: { label: 'In Transit', badge: 'badge-transit', color: '#2563EB' },
+    unassigned: { label: 'Unassigned', badge: 'badge-unassigned', color: '#D97706' },
+    tendered: { label: 'Tendered', badge: 'badge-tendered', color: '#7C3AED' },
+    dispatched: { label: 'Dispatched', badge: 'badge-dispatched', color: '#0891B2' },
+    delivered: { label: 'Delivered', badge: 'badge-delivered', color: '#059669' }
+};
+var loads = [
+    { id:'LD-2847', status:'transit', origin:'Chicago, IL', dest:'Dallas, TX', pickup:'Feb 7', delivery:'Feb 9', customer:'Apex Industries', carrier:'Swift Transport', equip:'Dry Van', rate:3200, weight:42000, ref:'PO-88912', atrisk:true },
+    { id:'LD-2851', status:'transit', origin:'Atlanta, GA', dest:'Miami, FL', pickup:'Feb 7', delivery:'Feb 8', customer:'Southern Foods', carrier:'JB Hunt', equip:'Reefer', rate:2800, weight:38000, ref:'PO-88920', atrisk:true },
+    { id:'LD-2853', status:'transit', origin:'Memphis, TN', dest:'Houston, TX', pickup:'Feb 6', delivery:'Feb 8', customer:'Delta Mfg Co', carrier:'Werner Enterprises', equip:'Dry Van', rate:2450, weight:35000, ref:'PO-88935', atrisk:false },
+    { id:'LD-2860', status:'transit', origin:'Phoenix, AZ', dest:'Denver, CO', pickup:'Feb 8', delivery:'Feb 10', customer:'Summit Retail', carrier:'Schneider National', equip:'Flatbed', rate:4100, weight:44000, ref:'PO-88941', atrisk:false },
+    { id:'LD-2862', status:'transit', origin:'Newark, NJ', dest:'Charlotte, NC', pickup:'Feb 8', delivery:'Feb 9', customer:'Eastern Pharma', carrier:'XPO Logistics', equip:'Reefer', rate:3650, weight:28000, ref:'PO-88950', atrisk:false },
+    { id:'LD-2870', status:'unassigned', origin:'Los Angeles, CA', dest:'Seattle, WA', pickup:'Feb 10', delivery:'Feb 12', customer:'Pacific Goods', carrier:'\u2014', equip:'Dry Van', rate:4800, weight:40000, ref:'PO-89001', atrisk:false },
+    { id:'LD-2871', status:'unassigned', origin:'Nashville, TN', dest:'St. Louis, MO', pickup:'Feb 10', delivery:'Feb 11', customer:'MidSouth Supply', carrier:'\u2014', equip:'Dry Van', rate:1950, weight:32000, ref:'PO-89005', atrisk:false },
+    { id:'LD-2873', status:'unassigned', origin:'Portland, OR', dest:'Sacramento, CA', pickup:'Feb 11', delivery:'Feb 12', customer:'Green Valley Co', carrier:'\u2014', equip:'Flatbed', rate:2200, weight:36000, ref:'PO-89010', atrisk:false },
+    { id:'LD-2875', status:'unassigned', origin:'Indianapolis, IN', dest:'Columbus, OH', pickup:'Feb 11', delivery:'Feb 11', customer:'Heartland Dist', carrier:'\u2014', equip:'Dry Van', rate:1400, weight:22000, ref:'PO-89015', atrisk:false },
+    { id:'LD-2840', status:'tendered', origin:'Kansas City, MO', dest:'Omaha, NE', pickup:'Feb 9', delivery:'Feb 10', customer:'Plains Logistics', carrier:'Heartland Express', equip:'Dry Van', rate:1800, weight:30000, ref:'PO-88900', atrisk:false },
+    { id:'LD-2842', status:'tendered', origin:'San Antonio, TX', dest:'El Paso, TX', pickup:'Feb 9', delivery:'Feb 10', customer:'Border Freight', carrier:'KLLM Transport', equip:'Reefer', rate:2600, weight:34000, ref:'PO-88905', atrisk:false },
+    { id:'LD-2844', status:'tendered', origin:'Minneapolis, MN', dest:'Milwaukee, WI', pickup:'Feb 10', delivery:'Feb 10', customer:'North Star Foods', carrier:'Ryder System', equip:'Dry Van', rate:1200, weight:26000, ref:'PO-88908', atrisk:false },
+    { id:'LD-2820', status:'dispatched', origin:'Detroit, MI', dest:'Pittsburgh, PA', pickup:'Feb 8', delivery:'Feb 9', customer:'Great Lakes Auto', carrier:'FedEx Freight', equip:'Flatbed', rate:2100, weight:38000, ref:'PO-88850', atrisk:false },
+    { id:'LD-2822', status:'dispatched', origin:'Salt Lake City, UT', dest:'Boise, ID', pickup:'Feb 8', delivery:'Feb 9', customer:'Mountain West Co', carrier:'Old Dominion', equip:'Dry Van', rate:2350, weight:33000, ref:'PO-88855', atrisk:false },
+    { id:'LD-2824', status:'dispatched', origin:'Tampa, FL', dest:'Jacksonville, FL', pickup:'Feb 9', delivery:'Feb 9', customer:'Sunshine Dist', carrier:'Estes Express', equip:'Dry Van', rate:1100, weight:24000, ref:'PO-88860', atrisk:false },
+    { id:'LD-2826', status:'dispatched', origin:'Richmond, VA', dest:'Philadelphia, PA', pickup:'Feb 8', delivery:'Feb 9', customer:'Colonial Supply', carrier:'ABF Freight', equip:'Dry Van', rate:1650, weight:29000, ref:'PO-88865', atrisk:false },
+    { id:'LD-2828', status:'dispatched', origin:'Raleigh, NC', dest:'Charleston, SC', pickup:'Feb 9', delivery:'Feb 10', customer:'Carolina Mfg', carrier:'Saia Inc', equip:'Reefer', rate:1850, weight:31000, ref:'PO-88870', atrisk:false },
+    { id:'LD-2830', status:'dispatched', origin:'Albuquerque, NM', dest:'Tucson, AZ', pickup:'Feb 9', delivery:'Feb 10', customer:'Desert Supply', carrier:'YRC Worldwide', equip:'Flatbed', rate:2750, weight:42000, ref:'PO-88875', atrisk:false },
+    { id:'LD-2790', status:'delivered', origin:'Boston, MA', dest:'New York, NY', pickup:'Feb 5', delivery:'Feb 5', customer:'Northeast Retail', carrier:'Con-way Freight', equip:'Dry Van', rate:1500, weight:25000, ref:'PO-88780', atrisk:false },
+    { id:'LD-2792', status:'delivered', origin:'Cleveland, OH', dest:'Buffalo, NY', pickup:'Feb 4', delivery:'Feb 5', customer:'Erie Industrial', carrier:'Holland Motor', equip:'Dry Van', rate:1350, weight:27000, ref:'PO-88785', atrisk:false },
+    { id:'LD-2794', status:'delivered', origin:'San Diego, CA', dest:'Las Vegas, NV', pickup:'Feb 5', delivery:'Feb 6', customer:'Pacific Tech', carrier:'Averitt Express', equip:'Dry Van', rate:1900, weight:30000, ref:'PO-88790', atrisk:false },
+    { id:'LD-2796', status:'delivered', origin:'Louisville, KY', dest:'Cincinnati, OH', pickup:'Feb 4', delivery:'Feb 4', customer:'Bluegrass Supply', carrier:'UPS Freight', equip:'Reefer', rate:1100, weight:22000, ref:'PO-88795', atrisk:false },
+    { id:'LD-2798', status:'delivered', origin:'Oklahoma City, OK', dest:'Tulsa, OK', pickup:'Feb 5', delivery:'Feb 5', customer:'Plains Energy', carrier:'Covenant Trans', equip:'Dry Van', rate:850, weight:18000, ref:'PO-88800', atrisk:false },
+    { id:'LD-2800', status:'delivered', origin:'Baltimore, MD', dest:'Washington, DC', pickup:'Feb 6', delivery:'Feb 6', customer:'Capital Goods', carrier:'Southeastern Frt', equip:'Dry Van', rate:750, weight:20000, ref:'PO-88805', atrisk:false },
+    { id:'LD-2802', status:'delivered', origin:'New Orleans, LA', dest:'Baton Rouge, LA', pickup:'Feb 6', delivery:'Feb 6', customer:'Gulf Coast Dist', carrier:'AAA Cooper', equip:'Flatbed', rate:980, weight:35000, ref:'PO-88810', atrisk:false }
+];
+
+var filterStatus = 'all', expandedGroups = { transit:true, unassigned:true, tendered:true, dispatched:true, delivered:true };
+var selectedIds = {}, focusedIndex = -1, grouped = true;
+var columns = [
+    { key:'check', label:'', cls:'col-check', sortable:false },
+    { key:'status', label:'Status', cls:'col-status', sortable:true },
+    { key:'load', label:'Load #', cls:'col-load', sortable:true },
+    { key:'origin', label:'Origin', cls:'col-origin', sortable:true },
+    { key:'dest', label:'Destination', cls:'col-dest', sortable:true },
+    { key:'pickup', label:'Pickup', cls:'col-pickup', sortable:true },
+    { key:'delivery', label:'Delivery', cls:'col-delivery', sortable:true },
+    { key:'customer', label:'Customer', cls:'col-customer', sortable:true },
+    { key:'carrier', label:'Carrier', cls:'col-carrier', sortable:true },
+    { key:'equip', label:'Equipment', cls:'col-equip', sortable:true },
+    { key:'rate', label:'Rate', cls:'col-rate', sortable:true },
+    { key:'weight', label:'Weight', cls:'col-weight', sortable:true },
+    { key:'ref', label:'Reference', cls:'col-ref', sortable:true }
+];
+
+function el(tag, cls, attrs) { var e = document.createElement(tag); if (cls) e.className = cls; if (attrs) Object.keys(attrs).forEach(function(k) { e.setAttribute(k, attrs[k]); }); return e; }
+function ic(name) { var s = el('span', 'material-symbols-outlined'); s.textContent = name; return s; }
+function money(n) { return '$' + n.toLocaleString(); }
+function wt(n) { return n.toLocaleString() + ' lbs'; }
+
+function renderFilters() {
+    var bar = document.getElementById('filterBar');
+    while (bar.firstChild) bar.removeChild(bar.firstChild);
+    var filters = [
+        { key:'all', label:'All', count:loads.length, color:null },
+        { key:'transit', label:'In Transit', count:loads.filter(function(l){return l.status==='transit'}).length, color:'var(--st-transit)' },
+        { key:'unassigned', label:'Unassigned', count:loads.filter(function(l){return l.status==='unassigned'}).length, color:'var(--st-unassigned)' },
+        { key:'tendered', label:'Tendered', count:loads.filter(function(l){return l.status==='tendered'}).length, color:'var(--st-tendered)' },
+        { key:'dispatched', label:'Dispatched', count:loads.filter(function(l){return l.status==='dispatched'}).length, color:'var(--st-dispatched)' },
+        { key:'delivered', label:'Delivered', count:loads.filter(function(l){return l.status==='delivered'}).length, color:'var(--st-delivered)' },
+        { key:'atrisk', label:'At Risk', count:loads.filter(function(l){return l.atrisk}).length, color:'var(--st-atrisk)' }
+    ];
+    filters.forEach(function(f) {
+        var pill = el('button', 'filter-pill' + (filterStatus === f.key ? ' active' : ''));
+        if (f.color && filterStatus !== f.key) { var dot = el('span', 'filter-dot'); dot.style.background = f.color; pill.appendChild(dot); }
+        pill.appendChild(document.createTextNode(f.label + ' '));
+        var cnt = el('span', 'pill-count'); cnt.textContent = f.count; pill.appendChild(cnt);
+        pill.addEventListener('click', function() { filterStatus = f.key; renderFilters(); renderTable(); });
+        bar.appendChild(pill);
+    });
+    bar.appendChild(el('div', 'filter-sep'));
+    var right = el('div', 'filter-right');
+    var grpBtn = el('button', 'btn-ghost');
+    grpBtn.appendChild(ic(grouped ? 'view_agenda' : 'view_list'));
+    grpBtn.appendChild(document.createTextNode(grouped ? 'Grouped' : 'Flat'));
+    grpBtn.addEventListener('click', function() { grouped = !grouped; renderFilters(); renderTable(); });
+    right.appendChild(grpBtn);
+    var dg = el('div', 'density-group');
+    ['density_small','density_medium','density_large'].forEach(function(icn, i) {
+        var db = el('button', 'density-btn' + (i===1 ? ' active' : ''));
+        var dIcon = ic(icn); dIcon.style.fontSize = '14px'; db.appendChild(dIcon);
+        db.addEventListener('click', function() {
+            dg.querySelectorAll('.density-btn').forEach(function(b){b.classList.remove('active')});
+            db.classList.add('active');
+            var wrap = document.getElementById('tableWrap');
+            wrap.classList.remove('density-compact','density-spacious');
+            if (i===0) wrap.classList.add('density-compact');
+            if (i===2) wrap.classList.add('density-spacious');
+        });
+        dg.appendChild(db);
+    });
+    right.appendChild(dg);
+    bar.appendChild(right);
+}
+
+function renderHeader() {
+    var head = document.getElementById('tableHead');
+    while (head.firstChild) head.removeChild(head.firstChild);
+    var tr = el('tr');
+    columns.forEach(function(col) {
+        var th = el('th', col.cls + (col.sortable ? ' sortable' : ''));
+        if (col.key === 'check') {
+            var cb = el('div', 'check-box');
+            cb.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var all = loads.every(function(l){return selectedIds[l.id]});
+                if (all) { selectedIds = {}; } else { loads.forEach(function(l){selectedIds[l.id]=true}); }
+                renderTable(); updateBulk();
+            });
+            th.appendChild(cb);
+        } else {
+            var inner = el('div', 'th-inner');
+            inner.appendChild(document.createTextNode(col.label));
+            if (col.sortable) {
+                var si = el('span', 'sort-icon');
+                var up = ic('expand_less'); up.classList.add('up');
+                var dn = ic('expand_more'); dn.classList.add('down');
+                si.appendChild(up); si.appendChild(dn); inner.appendChild(si);
+            }
+            th.appendChild(inner);
+        }
+        tr.appendChild(th);
+    });
+    head.appendChild(tr);
+}
+
+function renderTable() {
+    var body = document.getElementById('tableBody');
+    while (body.firstChild) body.removeChild(body.firstChild);
+    var filtered = loads;
+    if (filterStatus === 'atrisk') filtered = loads.filter(function(l){return l.atrisk});
+    else if (filterStatus !== 'all') filtered = loads.filter(function(l){return l.status===filterStatus});
+
+    if (grouped && filterStatus !== 'atrisk') {
+        var groups = {};
+        filtered.forEach(function(l) { if (!groups[l.status]) groups[l.status]=[]; groups[l.status].push(l); });
+        var order = ['transit','unassigned','tendered','dispatched','delivered'];
+        var idx = 0;
+        order.forEach(function(sKey) {
+            var grp = groups[sKey];
+            if (!grp || !grp.length) return;
+            var cfg = statusConfig[sKey];
+            var expanded = expandedGroups[sKey];
+            var gr = el('tr', 'group-row');
+            var gtd = el('td', '', { colspan: columns.length.toString() });
+            gtd.style.position = 'relative';
+            var bar = document.createElement('span');
+            bar.style.cssText = 'position:absolute;left:0;top:4px;bottom:4px;width:3px;border-radius:0 2px 2px 0;background:' + cfg.color;
+            gtd.appendChild(bar);
+            var inner = el('div', 'group-inner'); inner.style.paddingLeft = '8px';
+            var dot = el('span', 'group-dot'); dot.style.background = cfg.color; inner.appendChild(dot);
+            var lbl = el('span', 'group-label'); lbl.textContent = cfg.label; lbl.style.color = cfg.color; inner.appendChild(lbl);
+            var cnt = el('span', 'group-count'); cnt.textContent = grp.length; inner.appendChild(cnt);
+            var chev = el('span', 'group-chevron' + (expanded ? '' : ' collapsed')); chev.appendChild(ic('expand_less')); inner.appendChild(chev);
+            gtd.appendChild(inner); gr.appendChild(gtd); body.appendChild(gr);
+            (function(k, ch) { gr.addEventListener('click', function() { expandedGroups[k] = !expandedGroups[k]; ch.classList.toggle('collapsed'); renderTable(); }); })(sKey, chev);
+            if (expanded) grp.forEach(function(load) { body.appendChild(buildRow(load, idx++)); });
+        });
+    } else {
+        filtered.forEach(function(load, i) { body.appendChild(buildRow(load, i)); });
+    }
+}
+
+function buildRow(load, idx) {
+    var cls = 'data-row' + (selectedIds[load.id] ? ' selected' : '') + (load.atrisk ? ' at-risk' : '');
+    var row = el('tr', cls); row.setAttribute('data-id', load.id);
+    row.style.animationDelay = (idx * 0.015) + 's'; row.classList.add('animate-row');
+    columns.forEach(function(col) {
+        var td = el('td', col.cls);
+        switch (col.key) {
+            case 'check':
+                var cb = el('div', 'check-box' + (selectedIds[load.id] ? ' checked' : ''));
+                if (selectedIds[load.id]) { var ci = ic('check'); ci.style.cssText = 'font-size:13px;color:white;font-variation-settings:"FILL" 1,"wght" 600'; cb.appendChild(ci); }
+                cb.addEventListener('click', function(e) { e.stopPropagation(); if (selectedIds[load.id]) delete selectedIds[load.id]; else selectedIds[load.id]=true; renderTable(); updateBulk(); });
+                td.appendChild(cb); break;
+            case 'status':
+                var st = load.atrisk ? 'atrisk' : load.status;
+                var badge = el('span', 'status-badge ' + (load.atrisk ? 'badge-atrisk' : statusConfig[load.status].badge));
+                var sDot = el('span', 's-dot'); badge.appendChild(sDot);
+                badge.appendChild(document.createTextNode(load.atrisk ? 'At Risk' : statusConfig[load.status].label));
+                td.appendChild(badge); break;
+            case 'load': td.textContent = load.id; td.style.fontWeight = '500'; td.style.color = 'var(--accent-text)'; break;
+            case 'origin': td.textContent = load.origin; break;
+            case 'dest': td.textContent = load.dest; break;
+            case 'pickup': td.textContent = load.pickup; td.style.color = 'var(--text-2)'; break;
+            case 'delivery': td.textContent = load.delivery; td.style.color = 'var(--text-2)'; break;
+            case 'customer': td.textContent = load.customer; break;
+            case 'carrier': td.textContent = load.carrier; if (load.carrier === '\u2014') td.style.color = 'var(--text-3)'; break;
+            case 'equip': td.textContent = load.equip; td.style.color = 'var(--text-2)'; break;
+            case 'rate': td.textContent = money(load.rate); td.style.fontVariantNumeric = 'tabular-nums'; td.style.fontWeight = '500'; break;
+            case 'weight': td.textContent = wt(load.weight); td.style.fontVariantNumeric = 'tabular-nums'; td.style.color = 'var(--text-2)'; break;
+            case 'ref': td.textContent = load.ref; td.style.color = 'var(--text-2)'; td.style.fontSize = '11px'; break;
+        }
+        row.appendChild(td);
+    });
+    row.addEventListener('click', function() { openDrawer(load); });
+    return row;
+}
+
+function updateBulk() {
+    var count = Object.keys(selectedIds).length;
+    document.getElementById('bulkCount').textContent = count + ' selected';
+    document.getElementById('bulkBar').classList.toggle('visible', count > 0);
+}
+document.getElementById('bulkClose').addEventListener('click', function() { selectedIds = {}; renderTable(); updateBulk(); });
+
+function openDrawer(load) {
+    var overlay = document.getElementById('drawerOverlay');
+    document.getElementById('drawerTitle').textContent = load.id + ' \u2014 ' + load.origin + ' \u2192 ' + load.dest;
+    var badge = document.getElementById('drawerBadge');
+    var cfg = statusConfig[load.status];
+    badge.className = 'status-badge ' + (load.atrisk ? 'badge-atrisk' : cfg.badge);
+    while (badge.firstChild) badge.removeChild(badge.firstChild);
+    badge.appendChild(el('span', 's-dot'));
+    badge.appendChild(document.createTextNode(load.atrisk ? 'At Risk' : cfg.label));
+    renderDrawerContent(load);
+    overlay.classList.add('open');
+    document.querySelectorAll('.drawer-tab').forEach(function(t){t.classList.remove('active')});
+    document.querySelector('.drawer-tab[data-tab="overview"]').classList.add('active');
+}
+function closeDrawer() { document.getElementById('drawerOverlay').classList.remove('open'); }
+document.getElementById('drawerClose').addEventListener('click', closeDrawer);
+document.getElementById('drawerOverlay').addEventListener('click', function(e) { if (e.target === this) closeDrawer(); });
+document.querySelectorAll('.drawer-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+        document.querySelectorAll('.drawer-tab').forEach(function(t){t.classList.remove('active')});
+        tab.classList.add('active');
+    });
+});
+
+function renderDrawerContent(load) {
+    var body = document.getElementById('drawerBody');
+    while (body.firstChild) body.removeChild(body.firstChild);
+    var qa = el('div', 'quick-actions');
+    [['send','Tender'],['person_add','Assign'],['edit_note','Edit'],['content_copy','Duplicate']].forEach(function(a) {
+        var btn = el('button', 'qa-btn'); btn.appendChild(ic(a[0])); btn.appendChild(document.createTextNode(a[1])); qa.appendChild(btn);
+    });
+    body.appendChild(qa);
+    var rc = el('div', 'route-card');
+    var p1 = el('div', 'route-point'); p1.appendChild(el('span', 'route-dot origin'));
+    var c1 = el('span', 'route-city'); c1.textContent = load.origin; p1.appendChild(c1);
+    var dt1 = el('span', 'route-date'); dt1.textContent = load.pickup; p1.appendChild(dt1);
+    rc.appendChild(p1); rc.appendChild(el('div', 'route-line'));
+    var p2 = el('div', 'route-point'); p2.appendChild(el('span', 'route-dot dest'));
+    var c2 = el('span', 'route-city'); c2.textContent = load.dest; p2.appendChild(c2);
+    var dt2 = el('span', 'route-date'); dt2.textContent = load.delivery; p2.appendChild(dt2);
+    rc.appendChild(p2); body.appendChild(rc);
+    var ig = el('div', 'info-grid');
+    [['Customer',load.customer],['Carrier',load.carrier],['Equipment',load.equip],['Rate',money(load.rate)],['Weight',wt(load.weight)],['Reference',load.ref],['Status',statusConfig[load.status].label],['Risk',load.atrisk?'At Risk':'Normal']].forEach(function(f) {
+        var cell = el('div', 'info-cell');
+        var lb = el('div', 'info-label'); lb.textContent = f[0]; cell.appendChild(lb);
+        var vl = el('div', 'info-value'); vl.textContent = f[1]; cell.appendChild(vl);
+        ig.appendChild(cell);
+    });
+    body.appendChild(ig);
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { closeDrawer(); return; }
+    var rows = document.querySelectorAll('.data-row');
+    if (!rows.length) return;
+    if (e.key === 'j' || e.key === 'ArrowDown') { e.preventDefault(); if (focusedIndex < rows.length-1) focusedIndex++; updateFocus(rows); }
+    if (e.key === 'k' || e.key === 'ArrowUp') { e.preventDefault(); if (focusedIndex > 0) focusedIndex--; updateFocus(rows); }
+    if (e.key === 'Enter' && focusedIndex >= 0) {
+        var id = rows[focusedIndex].getAttribute('data-id');
+        var load = loads.find(function(l){return l.id===id});
+        if (load) openDrawer(load);
+    }
+});
+function updateFocus(rows) {
+    rows.forEach(function(r){r.classList.remove('focused')});
+    if (focusedIndex >= 0 && focusedIndex < rows.length) { rows[focusedIndex].classList.add('focused'); rows[focusedIndex].scrollIntoView({block:'nearest'}); }
+}
+
+renderFilters(); renderHeader(); renderTable();
+</script>
+</body>
+</html>

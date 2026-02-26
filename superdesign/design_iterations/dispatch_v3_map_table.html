@@ -1,0 +1,2828 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ultra TMS — Dispatch Board (Map + Table)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+<style>
+/* ========== THEME VARIABLES ========== */
+[data-theme="light"] {
+    --bg-main: #F8F9FA;
+    --bg-sidebar: #FFFFFF;
+    --bg-surface: #FFFFFF;
+    --bg-hover: #F1F5F9;
+    --bg-selected: #EFF6FF;
+    --bg-filter: #F1F3F5;
+    --bg-map: #E8EDF3;
+    --border: #e5e7eb;
+    --border-soft: #DEE2E6;
+    --sapphire: #1D4ED8;
+    --sapphire-light: #DBEAFE;
+    --text-primary: #333333;
+    --text-secondary: #6C757D;
+    --text-muted: #adb5bd;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07);
+}
+[data-theme="dark"] {
+    --bg-main: #0F1117;
+    --bg-sidebar: #1A1D27;
+    --bg-surface: #1A1D27;
+    --bg-hover: #252836;
+    --bg-selected: #1E2A4A;
+    --bg-filter: #252836;
+    --bg-map: #151822;
+    --border: #2A2D3A;
+    --border-soft: #353849;
+    --sapphire: #3B82F6;
+    --sapphire-light: #1E3A5F;
+    --text-primary: #E8E9ED;
+    --text-secondary: #9CA3AF;
+    --text-muted: #6B7280;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.4);
+}
+
+:root {
+    --status-transit: #3B82F6;
+    --status-unassigned: #F59E0B;
+    --status-tendered: #8B5CF6;
+    --status-dispatched: #06B6D4;
+    --status-delivered: #10B981;
+    --status-atrisk: #EF4444;
+    --sidebar-width: 64px;
+    --header-height: 56px;
+    --stats-height: 40px;
+    --ease-out: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ========== RESET & BASE ========== */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    height: 100%;
+    transition: background-color 0.2s var(--ease-out), color 0.2s var(--ease-out);
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-main);
+    color: var(--text-primary);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.2s var(--ease-out), color 0.2s var(--ease-out);
+}
+
+/* ========== CUSTOM SCROLLBAR ========== */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+
+/* ========== SIDEBAR ========== */
+.sidebar {
+    width: var(--sidebar-width);
+    height: 100vh;
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 0;
+    flex-shrink: 0;
+    z-index: 50;
+    transition: background-color 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
+}
+
+.sidebar-logo {
+    width: 36px;
+    height: 36px;
+    background: var(--sapphire);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    cursor: pointer;
+    transition: background-color 0.2s var(--ease-out);
+}
+
+.sidebar-logo .material-symbols-outlined {
+    color: #FFFFFF;
+    font-size: 20px;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    align-items: center;
+    width: 100%;
+    padding: 0 10px;
+}
+
+.sidebar-btn {
+    width: 42px;
+    height: 42px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all 0.15s var(--ease-out);
+    position: relative;
+}
+
+.sidebar-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.sidebar-btn.active {
+    background: var(--sapphire);
+    color: #FFFFFF;
+}
+
+.sidebar-btn .material-symbols-outlined {
+    font-size: 22px;
+}
+
+.sidebar-btn .tooltip-text {
+    position: absolute;
+    left: 54px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s var(--ease-out);
+    box-shadow: var(--shadow-md);
+    z-index: 100;
+}
+
+.sidebar-btn:hover .tooltip-text {
+    opacity: 1;
+}
+
+.sidebar-bottom {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 0 10px;
+}
+
+.sidebar-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--sapphire), #8B5CF6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: #FFFFFF;
+    cursor: pointer;
+}
+
+.theme-toggle {
+    width: 34px;
+    height: 34px;
+    border: none;
+    background: var(--bg-filter);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all 0.15s var(--ease-out);
+}
+
+.theme-toggle:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.theme-toggle .material-symbols-outlined {
+    font-size: 18px;
+}
+
+/* ========== MAIN AREA ========== */
+.main-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    min-width: 0;
+}
+
+/* ========== HEADER ========== */
+.header {
+    height: var(--header-height);
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 16px;
+    flex-shrink: 0;
+    transition: background-color 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
+}
+
+.header-title-group {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.header-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.header-breadcrumb {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.header-breadcrumb .sep {
+    font-size: 10px;
+}
+
+.header-search {
+    width: 250px;
+    height: 34px;
+    background: var(--bg-filter);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0 12px 0 34px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text-primary);
+    outline: none;
+    transition: all 0.2s var(--ease-out);
+}
+
+.header-search:focus {
+    border-color: var(--sapphire);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.header-search::placeholder {
+    color: var(--text-muted);
+}
+
+.header-search-wrap {
+    position: relative;
+    margin-left: auto;
+}
+
+.header-search-wrap .material-symbols-outlined {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.header-filters {
+    display: flex;
+    gap: 6px;
+}
+
+.filter-btn {
+    height: 34px;
+    padding: 0 14px;
+    background: var(--bg-filter);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: inherit;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s var(--ease-out);
+}
+
+.filter-btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-soft);
+}
+
+.filter-btn .material-symbols-outlined {
+    font-size: 15px;
+}
+
+.btn-primary {
+    height: 34px;
+    padding: 0 18px;
+    background: var(--sapphire);
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    color: #FFFFFF;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s var(--ease-out);
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.btn-primary .material-symbols-outlined {
+    font-size: 16px;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.header-icon-btn {
+    width: 34px;
+    height: 34px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-secondary);
+    position: relative;
+    transition: all 0.15s var(--ease-out);
+}
+
+.header-icon-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.header-icon-btn .material-symbols-outlined {
+    font-size: 20px;
+}
+
+.notification-dot {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 7px;
+    height: 7px;
+    background: var(--status-atrisk);
+    border-radius: 50%;
+    border: 1.5px solid var(--bg-surface);
+}
+
+.header-user-menu {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--sapphire), #8B5CF6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: #FFFFFF;
+    cursor: pointer;
+    border: none;
+}
+
+/* ========== STATS STRIP ========== */
+.stats-strip {
+    height: var(--stats-height);
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 32px;
+    flex-shrink: 0;
+    transition: background-color 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+}
+
+.stat-label {
+    color: var(--text-secondary);
+    font-weight: 400;
+}
+
+.stat-value {
+    color: var(--sapphire);
+    font-weight: 600;
+}
+
+.stat-divider {
+    width: 1px;
+    height: 16px;
+    background: var(--border);
+}
+
+/* ========== MAP SECTION ========== */
+.map-section {
+    position: relative;
+    background: var(--bg-map);
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+    transition: height 0.3s var(--ease-out), background-color 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
+    flex-shrink: 0;
+}
+
+.map-section.collapsed {
+    height: 40px !important;
+}
+
+.map-collapsed-bar {
+    display: none;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.map-section.collapsed .map-collapsed-bar {
+    display: flex;
+}
+
+.map-section.collapsed .map-container,
+.map-section.collapsed .map-legend,
+.map-section.collapsed .map-collapse-btn {
+    display: none;
+}
+
+.map-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.map-container svg {
+    width: 100%;
+    height: 100%;
+}
+
+.map-grid-pattern {
+    opacity: 0.08;
+}
+
+[data-theme="light"] .map-grid-pattern {
+    opacity: 0.15;
+}
+
+.map-legend {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    box-shadow: var(--shadow-md);
+    z-index: 10;
+    transition: background-color 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.map-collapse-btn {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 22px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 14px;
+    z-index: 10;
+    transition: all 0.15s var(--ease-out);
+}
+
+.map-collapse-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.map-collapse-btn .material-symbols-outlined {
+    font-size: 16px;
+    transition: transform 0.3s var(--ease-out);
+}
+
+/* Map tooltip */
+.map-tooltip {
+    position: absolute;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: var(--text-primary);
+    pointer-events: none;
+    white-space: nowrap;
+    box-shadow: var(--shadow-md);
+    z-index: 20;
+    opacity: 0;
+    transition: opacity 0.15s var(--ease-out);
+}
+
+.map-tooltip.visible {
+    opacity: 1;
+}
+
+.map-tooltip-id {
+    font-weight: 600;
+    color: var(--sapphire);
+}
+
+.map-tooltip-route {
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+/* Pulse animation for in-transit dots */
+@keyframes pulse-ring {
+    0% { transform: scale(1); opacity: 0.6; }
+    100% { transform: scale(2.2); opacity: 0; }
+}
+
+.map-dot-pulse {
+    animation: pulse-ring 2s ease-out infinite;
+    transform-origin: center;
+    transform-box: fill-box;
+}
+
+/* Glow effect for selected dot */
+.map-dot-glow {
+    filter: drop-shadow(0 0 6px currentColor) drop-shadow(0 0 12px currentColor);
+}
+
+/* ========== TABLE SECTION ========== */
+.table-section {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: var(--bg-main);
+    transition: background-color 0.2s var(--ease-out);
+}
+
+/* Accordion Group */
+.table-group {
+    border-bottom: 1px solid var(--border);
+    transition: border-color 0.2s var(--ease-out);
+}
+
+.table-group-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 20px;
+    height: 38px;
+    background: var(--bg-surface);
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid var(--border);
+    transition: all 0.15s var(--ease-out);
+}
+
+.table-group-header:hover {
+    background: var(--bg-hover);
+}
+
+.group-color-bar {
+    width: 4px;
+    height: 20px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.group-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.group-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.group-count {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+.group-chevron {
+    margin-left: auto;
+    color: var(--text-muted);
+    transition: transform 0.25s var(--ease-out);
+}
+
+.group-chevron .material-symbols-outlined {
+    font-size: 18px;
+}
+
+.table-group.collapsed .group-chevron {
+    transform: rotate(-90deg);
+}
+
+.table-group-body {
+    overflow: hidden;
+    transition: max-height 0.3s var(--ease-out);
+}
+
+.table-group.collapsed .table-group-body {
+    max-height: 0 !important;
+}
+
+/* Table */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table thead th {
+    position: sticky;
+    top: 0;
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 12px;
+    height: 34px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    transition: all 0.15s var(--ease-out);
+}
+
+.data-table thead th:hover {
+    color: var(--text-primary);
+}
+
+.th-content {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.sort-icon {
+    font-size: 14px;
+    opacity: 0.3;
+    transition: opacity 0.15s var(--ease-out);
+}
+
+.data-table thead th:hover .sort-icon {
+    opacity: 0.7;
+}
+
+.data-table thead th.sorted .sort-icon {
+    opacity: 1;
+    color: var(--sapphire);
+}
+
+.data-table tbody tr {
+    height: 42px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.1s var(--ease-out);
+    position: relative;
+}
+
+.data-table tbody tr:hover {
+    background: var(--bg-hover);
+}
+
+.data-table tbody tr.selected {
+    background: var(--bg-selected);
+}
+
+.data-table tbody tr.selected::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--sapphire);
+}
+
+.data-table tbody td {
+    padding: 0 12px;
+    font-size: 13px;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+
+.td-checkbox {
+    width: 24px;
+    padding-left: 20px !important;
+}
+
+.td-checkbox input[type="checkbox"] {
+    width: 15px;
+    height: 15px;
+    accent-color: var(--sapphire);
+    cursor: pointer;
+}
+
+.load-link {
+    color: var(--sapphire);
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.load-link:hover {
+    text-decoration: underline;
+}
+
+.route-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+}
+
+.route-cities {
+    font-size: 13px;
+}
+
+.route-miles {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.carrier-cell {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+}
+
+.carrier-name {
+    font-size: 13px;
+}
+
+.driver-name {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.td-rate {
+    text-align: right;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.td-updated {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.equipment-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    background: var(--bg-filter);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+}
+
+/* ========== BULK ACTION BAR ========== */
+.bulk-bar {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(calc(-50% + 32px));
+    background: var(--sapphire);
+    color: #FFFFFF;
+    border-radius: 12px;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    z-index: 40;
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s var(--ease-out);
+}
+
+.bulk-bar.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.bulk-bar-btn {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    border-radius: 6px;
+    padding: 5px 14px;
+    color: #FFFFFF;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background 0.15s var(--ease-out);
+}
+
+.bulk-bar-btn:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+.bulk-bar-btn .material-symbols-outlined {
+    font-size: 15px;
+}
+
+/* ========== DRAWER OVERLAY ========== */
+.drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 60;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s var(--ease-out);
+}
+
+.drawer-backdrop.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 420px;
+    height: 100vh;
+    background: var(--bg-surface);
+    border-left: 1px solid var(--border);
+    z-index: 70;
+    transform: translateX(100%);
+    transition: transform 0.3s var(--ease-out), background-color 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
+    display: flex;
+    flex-direction: column;
+    box-shadow: -8px 0 24px rgba(0,0,0,0.15);
+}
+
+.drawer.open {
+    transform: translateX(0);
+}
+
+.drawer-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.drawer-load-id {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--sapphire);
+}
+
+.drawer-status-badge {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #FFFFFF;
+}
+
+.drawer-close-btn {
+    margin-left: auto;
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: var(--bg-filter);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all 0.15s var(--ease-out);
+}
+
+.drawer-close-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.drawer-close-btn .material-symbols-outlined {
+    font-size: 18px;
+}
+
+/* Drawer tabs */
+.drawer-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.drawer-tab {
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-family: inherit;
+    position: relative;
+    transition: color 0.15s var(--ease-out);
+}
+
+.drawer-tab:hover {
+    color: var(--text-primary);
+}
+
+.drawer-tab.active {
+    color: var(--sapphire);
+}
+
+.drawer-tab-indicator {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    background: var(--sapphire);
+    border-radius: 1px 1px 0 0;
+    transition: left 0.25s var(--ease-out), width 0.25s var(--ease-out);
+}
+
+/* Drawer content */
+.drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.drawer-tab-panel {
+    display: none;
+}
+
+.drawer-tab-panel.active {
+    display: block;
+}
+
+/* Overview panel */
+.overview-section {
+    margin-bottom: 20px;
+}
+
+.overview-section-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+}
+
+.overview-mini-map {
+    width: 100%;
+    height: 100px;
+    background: var(--bg-map);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    margin-bottom: 16px;
+    overflow: hidden;
+}
+
+.overview-detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+}
+
+.overview-detail-label {
+    color: var(--text-secondary);
+}
+
+.overview-detail-value {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* Stops panel */
+.stops-timeline {
+    position: relative;
+    padding-left: 24px;
+}
+
+.stops-timeline::before {
+    content: '';
+    position: absolute;
+    left: 7px;
+    top: 8px;
+    bottom: 8px;
+    width: 2px;
+    background: var(--border);
+}
+
+.stop-item {
+    position: relative;
+    padding: 12px 0;
+}
+
+.stop-dot {
+    position: absolute;
+    left: -24px;
+    top: 16px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--bg-surface);
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.stop-dot.completed {
+    background: var(--status-delivered);
+    border-color: var(--status-delivered);
+}
+
+.stop-dot.in-progress {
+    background: var(--status-transit);
+    border-color: var(--status-transit);
+}
+
+.stop-dot.pending {
+    background: var(--bg-surface);
+    border-color: var(--text-muted);
+}
+
+.stop-dot .material-symbols-outlined {
+    font-size: 10px;
+    color: #FFFFFF;
+}
+
+.stop-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+.stop-address {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.stop-datetime {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+.stop-status-text {
+    font-size: 11px;
+    font-weight: 500;
+    margin-top: 4px;
+}
+
+/* Finance panel */
+.finance-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.finance-card {
+    background: var(--bg-filter);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+}
+
+.finance-card-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+.finance-card-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.finance-card-value.positive {
+    color: var(--status-delivered);
+}
+
+.finance-line-items {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.finance-line-items th {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-align: left;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+}
+
+.finance-line-items td {
+    font-size: 13px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-primary);
+}
+
+.finance-line-items td:last-child {
+    text-align: right;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Documents panel */
+.doc-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.doc-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.doc-icon.completed {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--status-delivered);
+}
+
+.doc-icon.pending {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--status-unassigned);
+}
+
+.doc-icon .material-symbols-outlined {
+    font-size: 18px;
+}
+
+.doc-info {
+    flex: 1;
+}
+
+.doc-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.doc-status-text {
+    font-size: 11px;
+    margin-top: 1px;
+}
+
+.doc-status-text.completed {
+    color: var(--status-delivered);
+}
+
+.doc-status-text.pending {
+    color: var(--status-unassigned);
+}
+
+.doc-upload-btn {
+    margin-top: 16px;
+    width: 100%;
+    height: 38px;
+    background: var(--bg-filter);
+    border: 1px dashed var(--border-soft);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.15s var(--ease-out);
+}
+
+.doc-upload-btn:hover {
+    border-color: var(--sapphire);
+    color: var(--sapphire);
+    background: var(--bg-hover);
+}
+
+.doc-upload-btn .material-symbols-outlined {
+    font-size: 16px;
+}
+
+/* ========== MISC ========== */
+.material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.material-symbols-outlined.filled {
+    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+</style>
+</head>
+<body>
+<script>
+(function() {
+    'use strict';
+
+    /* ======================================================================
+       DATA
+    ====================================================================== */
+    var CITIES = {
+        'Chicago': { x: 62, y: 28 },
+        'Miami': { x: 75, y: 82 },
+        'Atlanta': { x: 68, y: 60 },
+        'New York': { x: 80, y: 30 },
+        'Dallas': { x: 48, y: 65 },
+        'Phoenix': { x: 25, y: 65 },
+        'Denver': { x: 35, y: 40 },
+        'Seattle': { x: 15, y: 15 },
+        'Memphis': { x: 60, y: 55 },
+        'Boston': { x: 83, y: 22 },
+        'Houston': { x: 48, y: 75 },
+        'Nashville': { x: 63, y: 52 },
+        'Portland': { x: 14, y: 20 },
+        'Salt Lake': { x: 27, y: 38 },
+        'Minneapolis': { x: 52, y: 22 },
+        'Detroit': { x: 67, y: 28 },
+        'Los Angeles': { x: 18, y: 62 },
+        'San Francisco': { x: 12, y: 48 },
+        'Philadelphia': { x: 79, y: 33 },
+        'Washington DC': { x: 76, y: 38 },
+        'Columbus': { x: 68, y: 35 },
+        'Indianapolis': { x: 63, y: 38 },
+        'Las Vegas': { x: 22, y: 55 },
+        'St Louis': { x: 56, y: 42 },
+        'Kansas City': { x: 50, y: 40 },
+        'Omaha': { x: 47, y: 32 },
+        'Des Moines': { x: 50, y: 30 },
+        'Richmond': { x: 75, y: 42 },
+        'Charlotte': { x: 73, y: 52 }
+    };
+
+    var STATUS_MAP = {
+        'In Transit': { color: 'var(--status-transit)', raw: '#3B82F6', key: 'transit' },
+        'Unassigned': { color: 'var(--status-unassigned)', raw: '#F59E0B', key: 'unassigned' },
+        'Tendered': { color: 'var(--status-tendered)', raw: '#8B5CF6', key: 'tendered' },
+        'Dispatched': { color: 'var(--status-dispatched)', raw: '#06B6D4', key: 'dispatched' },
+        'Delivered': { color: 'var(--status-delivered)', raw: '#10B981', key: 'delivered' }
+    };
+
+    var LOADS = [
+        { id: 'LD-2024-1847', origin: 'Chicago', originState: 'IL', dest: 'Miami', destState: 'FL', miles: 1380, carrier: 'Swift Transport', driver: 'Mike Johnson', equipment: "Dry Van 53'", pickupDate: 'Jan 15', pickupTime: '08:00', deliveryDate: 'Jan 17', deliveryTime: '14:00', rate: 4250, margin: 18.2, status: 'In Transit', updated: '45min ago' },
+        { id: 'LD-2024-1852', origin: 'Atlanta', originState: 'GA', dest: 'New York', destState: 'NY', miles: 880, carrier: 'Werner Logistics', driver: 'Sarah Chen', equipment: "Reefer 53'", pickupDate: 'Jan 15', pickupTime: '06:00', deliveryDate: 'Jan 16', deliveryTime: '18:00', rate: 3800, margin: 15.1, status: 'In Transit', updated: '2h ago' },
+        { id: 'LD-2024-1855', origin: 'Dallas', originState: 'TX', dest: 'Phoenix', destState: 'AZ', miles: 1065, carrier: 'JB Hunt', driver: 'Carlos Rivera', equipment: "Flatbed 48'", pickupDate: 'Jan 15', pickupTime: '10:00', deliveryDate: 'Jan 17', deliveryTime: '08:00', rate: 3200, margin: 12.8, status: 'In Transit', updated: '1h ago' },
+        { id: 'LD-2024-1861', origin: 'Denver', originState: 'CO', dest: 'Seattle', destState: 'WA', miles: 1320, carrier: 'Schneider', driver: 'Amy Walsh', equipment: "Dry Van 53'", pickupDate: 'Jan 14', pickupTime: '14:00', deliveryDate: 'Jan 16', deliveryTime: '20:00', rate: 4100, margin: 16.5, status: 'In Transit', updated: '30min ago' },
+        { id: 'LD-2024-1863', origin: 'Memphis', originState: 'TN', dest: 'Boston', destState: 'MA', miles: 1340, carrier: 'XPO Logistics', driver: 'James Lee', equipment: "Reefer 53'", pickupDate: 'Jan 15', pickupTime: '05:00', deliveryDate: 'Jan 17', deliveryTime: '12:00', rate: 4500, margin: 19.3, status: 'In Transit', updated: '15min ago' },
+        { id: 'LD-2024-1870', origin: 'Houston', originState: 'TX', dest: 'Nashville', destState: 'TN', miles: 790, carrier: 'Heartland', driver: 'David Kim', equipment: "Dry Van 53'", pickupDate: 'Jan 15', pickupTime: '09:00', deliveryDate: 'Jan 16', deliveryTime: '16:00', rate: 2800, margin: 14.0, status: 'In Transit', updated: '3h ago' },
+        { id: 'LD-2024-1873', origin: 'Portland', originState: 'OR', dest: 'Salt Lake', destState: 'UT', miles: 770, carrier: 'Werner Logistics', driver: 'Lisa Park', equipment: "Flatbed 48'", pickupDate: 'Jan 15', pickupTime: '07:00', deliveryDate: 'Jan 16', deliveryTime: '15:00', rate: 2950, margin: 13.2, status: 'In Transit', updated: '20min ago' },
+        { id: 'LD-2024-1879', origin: 'Minneapolis', originState: 'MN', dest: 'Detroit', destState: 'MI', miles: 690, carrier: 'Schneider', driver: 'Tom Wilson', equipment: "Dry Van 53'", pickupDate: 'Jan 15', pickupTime: '11:00', deliveryDate: 'Jan 16', deliveryTime: '09:00', rate: 2400, margin: 11.5, status: 'In Transit', updated: '1h ago' },
+        { id: 'LD-2024-1880', origin: 'Los Angeles', originState: 'CA', dest: 'Chicago', destState: 'IL', miles: 2015, carrier: '\u2014', driver: '\u2014', equipment: "Dry Van 53'", pickupDate: 'Jan 16', pickupTime: '06:00', deliveryDate: 'Jan 18', deliveryTime: '18:00', rate: 5200, margin: null, status: 'Unassigned', updated: '5h ago' },
+        { id: 'LD-2024-1882', origin: 'San Francisco', originState: 'CA', dest: 'Denver', destState: 'CO', miles: 1235, carrier: '\u2014', driver: '\u2014', equipment: "Reefer 53'", pickupDate: 'Jan 16', pickupTime: '08:00', deliveryDate: 'Jan 18', deliveryTime: '10:00', rate: 3900, margin: null, status: 'Unassigned', updated: '4h ago' },
+        { id: 'LD-2024-1884', origin: 'New York', originState: 'NY', dest: 'Atlanta', destState: 'GA', miles: 880, carrier: '\u2014', driver: '\u2014', equipment: "Dry Van 53'", pickupDate: 'Jan 16', pickupTime: '10:00', deliveryDate: 'Jan 17', deliveryTime: '20:00', rate: 3100, margin: null, status: 'Unassigned', updated: '3h ago' },
+        { id: 'LD-2024-1886', origin: 'Phoenix', originState: 'AZ', dest: 'Houston', destState: 'TX', miles: 1175, carrier: '\u2014', driver: '\u2014', equipment: "Flatbed 48'", pickupDate: 'Jan 16', pickupTime: '07:00', deliveryDate: 'Jan 18', deliveryTime: '08:00', rate: 3600, margin: null, status: 'Unassigned', updated: '2h ago' },
+        { id: 'LD-2024-1888', origin: 'Seattle', originState: 'WA', dest: 'Portland', destState: 'OR', miles: 175, carrier: '\u2014', driver: '\u2014', equipment: "Dry Van 26'", pickupDate: 'Jan 16', pickupTime: '14:00', deliveryDate: 'Jan 16', deliveryTime: '18:00', rate: 800, margin: null, status: 'Unassigned', updated: '1h ago' },
+        { id: 'LD-2024-1890', origin: 'Nashville', originState: 'TN', dest: 'Dallas', destState: 'TX', miles: 660, carrier: 'Heartland', driver: '\u2014', equipment: "Dry Van 53'", pickupDate: 'Jan 16', pickupTime: '06:00', deliveryDate: 'Jan 17', deliveryTime: '10:00', rate: 2600, margin: 15.8, status: 'Tendered', updated: '6h ago' },
+        { id: 'LD-2024-1892', origin: 'Boston', originState: 'MA', dest: 'Philadelphia', destState: 'PA', miles: 310, carrier: 'JB Hunt', driver: '\u2014', equipment: "Reefer 48'", pickupDate: 'Jan 16', pickupTime: '09:00', deliveryDate: 'Jan 16', deliveryTime: '16:00', rate: 1400, margin: 12.1, status: 'Tendered', updated: '5h ago' },
+        { id: 'LD-2024-1894', origin: 'Detroit', originState: 'MI', dest: 'Columbus', destState: 'OH', miles: 265, carrier: 'Swift Transport', driver: '\u2014', equipment: "Dry Van 53'", pickupDate: 'Jan 16', pickupTime: '11:00', deliveryDate: 'Jan 16', deliveryTime: '18:00', rate: 1100, margin: 10.5, status: 'Tendered', updated: '4h ago' },
+        { id: 'LD-2024-1896', origin: 'Salt Lake', originState: 'UT', dest: 'Las Vegas', destState: 'NV', miles: 420, carrier: 'XPO Logistics', driver: '\u2014', equipment: "Flatbed 48'", pickupDate: 'Jan 16', pickupTime: '08:00', deliveryDate: 'Jan 17', deliveryTime: '06:00', rate: 1800, margin: 14.2, status: 'Tendered', updated: '3h ago' },
+        { id: 'LD-2024-1900', origin: 'Philadelphia', originState: 'PA', dest: 'Washington DC', destState: '', miles: 140, carrier: 'Werner Logistics', driver: 'Robert Yang', equipment: "Dry Van 53'", pickupDate: 'Jan 16', pickupTime: '06:00', deliveryDate: 'Jan 16', deliveryTime: '12:00', rate: 900, margin: 16.7, status: 'Dispatched', updated: '8h ago' },
+        { id: 'LD-2024-1902', origin: 'Columbus', originState: 'OH', dest: 'Indianapolis', destState: 'IN', miles: 175, carrier: 'Schneider', driver: 'Maria Santos', equipment: "Reefer 48'", pickupDate: 'Jan 16', pickupTime: '07:00', deliveryDate: 'Jan 16', deliveryTime: '13:00', rate: 1050, margin: 13.3, status: 'Dispatched', updated: '7h ago' },
+        { id: 'LD-2024-1904', origin: 'Las Vegas', originState: 'NV', dest: 'Los Angeles', destState: 'CA', miles: 270, carrier: 'JB Hunt', driver: 'Kevin Brown', equipment: "Dry Van 53'", pickupDate: 'Jan 16', pickupTime: '10:00', deliveryDate: 'Jan 16', deliveryTime: '16:00', rate: 1200, margin: 11.7, status: 'Dispatched', updated: '6h ago' },
+        { id: 'LD-2024-1906', origin: 'Indianapolis', originState: 'IN', dest: 'St Louis', destState: 'MO', miles: 240, carrier: 'Heartland', driver: 'Anna Liu', equipment: "Flatbed 48'", pickupDate: 'Jan 16', pickupTime: '08:00', deliveryDate: 'Jan 16', deliveryTime: '14:00', rate: 1050, margin: 12.4, status: 'Dispatched', updated: '5h ago' },
+        { id: 'LD-2024-1908', origin: 'Washington DC', originState: '', dest: 'Richmond', destState: 'VA', miles: 110, carrier: 'Swift Transport', driver: 'Paul Martin', equipment: "Dry Van 26'", pickupDate: 'Jan 16', pickupTime: '09:00', deliveryDate: 'Jan 16', deliveryTime: '13:00', rate: 650, margin: 15.4, status: 'Dispatched', updated: '4h ago' },
+        { id: 'LD-2024-1830', origin: 'Kansas City', originState: 'MO', dest: 'Omaha', destState: 'NE', miles: 190, carrier: 'XPO Logistics', driver: 'Steve Clark', equipment: "Dry Van 53'", pickupDate: 'Jan 14', pickupTime: '06:00', deliveryDate: 'Jan 14', deliveryTime: '12:00', rate: 1100, margin: 17.3, status: 'Delivered', updated: '1d ago' },
+        { id: 'LD-2024-1832', origin: 'Omaha', originState: 'NE', dest: 'Des Moines', destState: 'IA', miles: 150, carrier: 'Werner Logistics', driver: 'Jenny Wu', equipment: "Reefer 48'", pickupDate: 'Jan 14', pickupTime: '08:00', deliveryDate: 'Jan 14', deliveryTime: '14:00', rate: 950, margin: 13.7, status: 'Delivered', updated: '1d ago' },
+        { id: 'LD-2024-1834', origin: 'Richmond', originState: 'VA', dest: 'Charlotte', destState: 'NC', miles: 330, carrier: 'Schneider', driver: 'Alex Rivera', equipment: "Dry Van 53'", pickupDate: 'Jan 14', pickupTime: '07:00', deliveryDate: 'Jan 14', deliveryTime: '16:00', rate: 1400, margin: 14.3, status: 'Delivered', updated: '2d ago' }
+    ];
+
+    var STATUS_ORDER = ['In Transit', 'Unassigned', 'Tendered', 'Dispatched', 'Delivered'];
+
+    var NAV_ITEMS = [
+        { icon: 'dashboard', label: 'Dashboard', active: false },
+        { icon: 'local_shipping', label: 'Dispatch', active: true },
+        { icon: 'inventory_2', label: 'Loads', active: false },
+        { icon: 'groups', label: 'Carriers', active: false },
+        { icon: 'person', label: 'Customers', active: false },
+        { icon: 'bar_chart', label: 'Reports', active: false },
+        { icon: 'settings', label: 'Settings', active: false }
+    ];
+
+    /* ======================================================================
+       HELPERS
+    ====================================================================== */
+    function makeEl(tag, cls, attrs) {
+        var e = document.createElement(tag);
+        if (cls) e.className = cls;
+        if (attrs) {
+            for (var k in attrs) {
+                if (k === 'textContent') e.textContent = attrs[k];
+                else if (k === 'style') e.style.cssText = attrs[k];
+                else e.setAttribute(k, attrs[k]);
+            }
+        }
+        return e;
+    }
+
+    function makeIcon(name, extra) {
+        var s = makeEl('span', 'material-symbols-outlined' + (extra ? ' ' + extra : ''));
+        s.textContent = name;
+        return s;
+    }
+
+    function formatCurrency(n) {
+        return '$' + n.toLocaleString('en-US');
+    }
+
+    function statusColor(status) {
+        return STATUS_MAP[status] ? STATUS_MAP[status].color : 'var(--text-muted)';
+    }
+
+    function statusRaw(status) {
+        return STATUS_MAP[status] ? STATUS_MAP[status].raw : '#6B7280';
+    }
+
+    function clearChildren(node) {
+        while (node.firstChild) {
+            node.removeChild(node.firstChild);
+        }
+    }
+
+    /* ======================================================================
+       STATE
+    ====================================================================== */
+    var state = {
+        selectedLoads: new Set(),
+        selectedRow: null,
+        drawerOpen: false,
+        drawerLoad: null,
+        drawerTab: 0,
+        mapCollapsed: false,
+        searchQuery: '',
+        sortCol: null,
+        sortDir: 'asc',
+        collapsedGroups: new Set(),
+        highlightedDotId: null
+    };
+
+    /* ======================================================================
+       BUILD: SIDEBAR
+    ====================================================================== */
+    function buildSidebar() {
+        var sb = makeEl('aside', 'sidebar');
+
+        var logo = makeEl('div', 'sidebar-logo');
+        logo.appendChild(makeIcon('local_shipping'));
+        sb.appendChild(logo);
+
+        var nav = makeEl('nav', 'sidebar-nav');
+        NAV_ITEMS.forEach(function(item) {
+            var btn = makeEl('button', 'sidebar-btn' + (item.active ? ' active' : ''));
+            btn.appendChild(makeIcon(item.icon));
+            var tip = makeEl('span', 'tooltip-text');
+            tip.textContent = item.label;
+            btn.appendChild(tip);
+            nav.appendChild(btn);
+        });
+        sb.appendChild(nav);
+
+        var bottom = makeEl('div', 'sidebar-bottom');
+        var avatar = makeEl('div', 'sidebar-avatar');
+        avatar.textContent = 'RU';
+        bottom.appendChild(avatar);
+
+        var themeBtn = makeEl('button', 'theme-toggle');
+        themeBtn.id = 'themeToggle';
+        var currentTheme = localStorage.getItem('ultra-tms-theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        themeBtn.appendChild(makeIcon(currentTheme === 'dark' ? 'light_mode' : 'dark_mode'));
+        themeBtn.addEventListener('click', function() {
+            var cur = document.documentElement.getAttribute('data-theme');
+            var next = cur === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('ultra-tms-theme', next);
+            clearChildren(themeBtn);
+            themeBtn.appendChild(makeIcon(next === 'dark' ? 'light_mode' : 'dark_mode'));
+        });
+        bottom.appendChild(themeBtn);
+        sb.appendChild(bottom);
+
+        return sb;
+    }
+
+    /* ======================================================================
+       BUILD: HEADER
+    ====================================================================== */
+    function buildHeader() {
+        var h = makeEl('header', 'header');
+
+        var titleGroup = makeEl('div', 'header-title-group');
+        var title = makeEl('span', 'header-title');
+        title.textContent = 'Dispatch Board';
+        titleGroup.appendChild(title);
+
+        var bc = makeEl('span', 'header-breadcrumb');
+        bc.appendChild(document.createTextNode('Operations'));
+        var sep = makeEl('span', 'sep');
+        sep.textContent = ' / ';
+        bc.appendChild(sep);
+        var bcActive = makeEl('span');
+        bcActive.textContent = ' Map + Table';
+        bcActive.style.color = 'var(--text-primary)';
+        bc.appendChild(bcActive);
+        titleGroup.appendChild(bc);
+        h.appendChild(titleGroup);
+
+        var searchWrap = makeEl('div', 'header-search-wrap');
+        searchWrap.appendChild(makeIcon('search'));
+        var searchInput = makeEl('input', 'header-search');
+        searchInput.type = 'text';
+        searchInput.placeholder = 'Search loads, carriers...';
+        searchInput.id = 'searchInput';
+        searchInput.addEventListener('input', function() {
+            state.searchQuery = this.value.toLowerCase();
+            filterAndRender();
+        });
+        searchWrap.appendChild(searchInput);
+        h.appendChild(searchWrap);
+
+        var filters = makeEl('div', 'header-filters');
+        ['Status', 'Date', 'Equipment'].forEach(function(label) {
+            var btn = makeEl('button', 'filter-btn');
+            btn.appendChild(makeIcon('tune'));
+            btn.appendChild(document.createTextNode(label));
+            filters.appendChild(btn);
+        });
+        h.appendChild(filters);
+
+        var newBtn = makeEl('button', 'btn-primary');
+        newBtn.appendChild(makeIcon('add'));
+        newBtn.appendChild(document.createTextNode('New Load'));
+        h.appendChild(newBtn);
+
+        var actions = makeEl('div', 'header-actions');
+
+        var bellBtn = makeEl('button', 'header-icon-btn');
+        bellBtn.appendChild(makeIcon('notifications'));
+        var dot = makeEl('span', 'notification-dot');
+        bellBtn.appendChild(dot);
+        actions.appendChild(bellBtn);
+
+        var userMenu = makeEl('button', 'header-user-menu');
+        userMenu.textContent = 'RU';
+        actions.appendChild(userMenu);
+
+        h.appendChild(actions);
+        return h;
+    }
+
+    /* ======================================================================
+       BUILD: STATS STRIP
+    ====================================================================== */
+    function buildStatsStrip() {
+        var strip = makeEl('div', 'stats-strip');
+
+        var stats = [
+            { label: 'Total', value: '57' },
+            { label: 'In Transit', value: '8' },
+            { label: 'Unassigned', value: '5' },
+            { label: 'On-Time', value: '94.2%' },
+            { label: 'Revenue', value: '$1.47M' }
+        ];
+
+        stats.forEach(function(s, i) {
+            if (i > 0) {
+                strip.appendChild(makeEl('div', 'stat-divider'));
+            }
+            var item = makeEl('div', 'stat-item');
+            var label = makeEl('span', 'stat-label');
+            label.textContent = s.label + ':';
+            item.appendChild(label);
+            var val = makeEl('span', 'stat-value');
+            val.textContent = s.value;
+            item.appendChild(val);
+            strip.appendChild(item);
+        });
+
+        return strip;
+    }
+
+    /* ======================================================================
+       BUILD: MAP SECTION
+    ====================================================================== */
+    var mapDots = {};
+    var mapTooltipEl;
+
+    function buildMapSection() {
+        var section = makeEl('div', 'map-section');
+        section.id = 'mapSection';
+
+        // Collapsed bar
+        var collapsedBar = makeEl('div', 'map-collapsed-bar');
+        collapsedBar.appendChild(makeIcon('map'));
+        collapsedBar.appendChild(document.createTextNode('Map View'));
+        collapsedBar.appendChild(makeIcon('expand_less'));
+        collapsedBar.addEventListener('click', function() {
+            toggleMap();
+        });
+        section.appendChild(collapsedBar);
+
+        // Map container
+        var container = makeEl('div', 'map-container');
+        container.id = 'mapContainer';
+
+        var svgNS = 'http://www.w3.org/2000/svg';
+        var svg = document.createElementNS(svgNS, 'svg');
+        svg.setAttribute('viewBox', '0 0 1000 500');
+        svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+        svg.style.width = '100%';
+        svg.style.height = '100%';
+
+        // Defs: grid pattern
+        var defs = document.createElementNS(svgNS, 'defs');
+        var pattern = document.createElementNS(svgNS, 'pattern');
+        pattern.setAttribute('id', 'gridPattern');
+        pattern.setAttribute('width', '30');
+        pattern.setAttribute('height', '30');
+        pattern.setAttribute('patternUnits', 'userSpaceOnUse');
+        var gridLine = document.createElementNS(svgNS, 'path');
+        gridLine.setAttribute('d', 'M 30 0 L 0 0 0 30');
+        gridLine.setAttribute('fill', 'none');
+        gridLine.setAttribute('stroke', 'currentColor');
+        gridLine.setAttribute('stroke-width', '0.5');
+        gridLine.setAttribute('opacity', '0.15');
+        pattern.appendChild(gridLine);
+        defs.appendChild(pattern);
+        svg.appendChild(defs);
+
+        // Background rect
+        var bgRect = document.createElementNS(svgNS, 'rect');
+        bgRect.setAttribute('width', '1000');
+        bgRect.setAttribute('height', '500');
+        bgRect.setAttribute('fill', 'var(--bg-map)');
+        svg.appendChild(bgRect);
+
+        // Grid overlay
+        var gridRect = document.createElementNS(svgNS, 'rect');
+        gridRect.setAttribute('width', '1000');
+        gridRect.setAttribute('height', '500');
+        gridRect.setAttribute('fill', 'url(#gridPattern)');
+        gridRect.classList.add('map-grid-pattern');
+        svg.appendChild(gridRect);
+
+        // Simplified continental US outline
+        var usOutline = document.createElementNS(svgNS, 'path');
+        usOutline.setAttribute('d',
+            'M 130,120 C 135,105 145,90 155,72 C 160,65 170,58 178,62 C 182,70 178,85 172,98 ' +
+            'C 168,108 160,118 158,128 C 156,142 150,155 142,172 C 135,190 125,215 118,238 ' +
+            'C 112,258 108,275 105,298 C 103,315 106,330 115,345 C 125,358 138,368 155,378 ' +
+            'C 170,385 188,388 205,382 C 218,376 230,365 242,352 C 252,340 265,332 278,328 ' +
+            'C 295,336 310,348 328,362 C 345,374 365,384 388,392 C 410,398 432,398 455,394 ' +
+            'C 475,388 492,380 508,372 C 522,366 535,368 550,374 C 565,380 580,382 598,378 ' +
+            'C 615,372 630,362 645,350 C 658,338 670,325 680,312 C 688,298 694,282 700,265 ' +
+            'C 706,250 715,238 728,230 C 738,224 748,222 755,228 C 762,238 768,252 778,262 ' +
+            'C 786,268 792,265 798,255 C 806,240 815,225 822,210 C 830,195 836,180 840,168 ' +
+            'C 842,155 838,142 828,132 C 818,124 806,118 792,116 C 778,115 765,118 754,126 ' +
+            'C 744,134 736,142 725,145 C 712,146 698,140 682,132 C 665,122 645,114 625,108 ' +
+            'C 602,102 578,98 555,95 C 530,92 505,90 480,88 C 455,87 430,86 405,87 ' +
+            'C 378,88 352,92 328,96 C 305,100 280,105 258,110 C 235,115 212,118 190,120 ' +
+            'C 168,122 148,122 130,120 Z'
+        );
+        usOutline.setAttribute('fill', 'var(--bg-map)');
+        usOutline.setAttribute('stroke', 'var(--border-soft)');
+        usOutline.setAttribute('stroke-width', '1.8');
+        usOutline.setAttribute('opacity', '0.85');
+        svg.appendChild(usOutline);
+
+        // Subtle interior state suggestion lines
+        var interiorLines = [
+            { d: 'M 500,88 Q 502,180 505,380', o: '0.15' },
+            { d: 'M 400,87 Q 405,200 420,395', o: '0.12' },
+            { d: 'M 300,98 Q 308,220 328,362', o: '0.12' },
+            { d: 'M 600,105 Q 608,220 615,372', o: '0.12' },
+            { d: 'M 200,120 Q 205,250 210,382', o: '0.12' },
+            { d: 'M 700,140 Q 698,200 695,265', o: '0.12' },
+            { d: 'M 550,95 Q 555,230 560,378', o: '0.1' },
+            { d: 'M 350,94 Q 355,230 365,390', o: '0.1' },
+            { d: 'M 650,112 Q 655,220 662,345', o: '0.1' },
+            { d: 'M 148,135 Q 400,130 840,160', o: '0.08' },
+            { d: 'M 125,230 Q 450,210 830,195', o: '0.08' },
+            { d: 'M 108,310 Q 450,290 780,265', o: '0.08' },
+            { d: 'M 135,360 Q 450,360 690,310', o: '0.06' }
+        ];
+
+        interiorLines.forEach(function(line) {
+            var p = document.createElementNS(svgNS, 'path');
+            p.setAttribute('d', line.d);
+            p.setAttribute('fill', 'none');
+            p.setAttribute('stroke', 'var(--border)');
+            p.setAttribute('stroke-width', '0.5');
+            p.setAttribute('opacity', line.o);
+            p.setAttribute('stroke-dasharray', '5,5');
+            svg.appendChild(p);
+        });
+
+        // Route lines (curved) for in-transit loads
+        var routeGroup = document.createElementNS(svgNS, 'g');
+        routeGroup.id = 'routeLines';
+
+        LOADS.forEach(function(load) {
+            if (load.status === 'In Transit') {
+                var orig = CITIES[load.origin];
+                var dest = CITIES[load.dest];
+                if (orig && dest) {
+                    var x1 = orig.x * 10;
+                    var y1 = orig.y * 5;
+                    var x2 = dest.x * 10;
+                    var y2 = dest.y * 5;
+                    var mx = (x1 + x2) / 2;
+                    var my = (y1 + y2) / 2 - Math.abs(x2 - x1) * 0.18;
+                    var routePath = document.createElementNS(svgNS, 'path');
+                    routePath.setAttribute('d', 'M ' + x1 + ',' + y1 + ' Q ' + mx + ',' + my + ' ' + x2 + ',' + y2);
+                    routePath.setAttribute('fill', 'none');
+                    routePath.setAttribute('stroke', statusRaw(load.status));
+                    routePath.setAttribute('stroke-width', '2');
+                    routePath.setAttribute('opacity', '0.25');
+                    routePath.setAttribute('stroke-linecap', 'round');
+                    routeGroup.appendChild(routePath);
+                }
+            }
+        });
+        svg.appendChild(routeGroup);
+
+        // Destination dots (smaller, transparent)
+        LOADS.forEach(function(load) {
+            if (load.status === 'In Transit') {
+                var dest = CITIES[load.dest];
+                if (dest) {
+                    var cx = dest.x * 10;
+                    var cy = dest.y * 5;
+                    var destDot = document.createElementNS(svgNS, 'circle');
+                    destDot.setAttribute('cx', cx);
+                    destDot.setAttribute('cy', cy);
+                    destDot.setAttribute('r', '3');
+                    destDot.setAttribute('fill', statusRaw(load.status));
+                    destDot.setAttribute('opacity', '0.3');
+                    destDot.setAttribute('stroke', statusRaw(load.status));
+                    destDot.setAttribute('stroke-width', '1');
+                    svg.appendChild(destDot);
+                }
+            }
+        });
+
+        // Origin dots for all loads
+        var dotsGroup = document.createElementNS(svgNS, 'g');
+        dotsGroup.id = 'mapDots';
+
+        LOADS.forEach(function(load) {
+            var city = CITIES[load.origin];
+            if (!city) return;
+            var cx = city.x * 10;
+            var cy = city.y * 5;
+            var color = statusRaw(load.status);
+
+            var dotG = document.createElementNS(svgNS, 'g');
+            dotG.setAttribute('data-load-id', load.id);
+            dotG.style.cursor = 'pointer';
+
+            // Pulse ring for in-transit
+            if (load.status === 'In Transit') {
+                var pulseCircle = document.createElementNS(svgNS, 'circle');
+                pulseCircle.setAttribute('cx', cx);
+                pulseCircle.setAttribute('cy', cy);
+                pulseCircle.setAttribute('r', '5');
+                pulseCircle.setAttribute('fill', color);
+                pulseCircle.setAttribute('opacity', '0.4');
+                pulseCircle.classList.add('map-dot-pulse');
+                dotG.appendChild(pulseCircle);
+            }
+
+            // Main dot
+            var mainDot = document.createElementNS(svgNS, 'circle');
+            mainDot.setAttribute('cx', cx);
+            mainDot.setAttribute('cy', cy);
+            mainDot.setAttribute('r', '5');
+            mainDot.setAttribute('fill', color);
+            dotG.appendChild(mainDot);
+
+            // Hover target (larger invisible)
+            var hitArea = document.createElementNS(svgNS, 'circle');
+            hitArea.setAttribute('cx', cx);
+            hitArea.setAttribute('cy', cy);
+            hitArea.setAttribute('r', '14');
+            hitArea.setAttribute('fill', 'transparent');
+            dotG.appendChild(hitArea);
+
+            dotG.addEventListener('mouseenter', function(e) {
+                showMapTooltip(load, e);
+            });
+            dotG.addEventListener('mouseleave', function() {
+                hideMapTooltip();
+            });
+            dotG.addEventListener('click', function() {
+                selectLoadFromMap(load);
+            });
+
+            dotsGroup.appendChild(dotG);
+            mapDots[load.id] = dotG;
+        });
+        svg.appendChild(dotsGroup);
+
+        container.appendChild(svg);
+        section.appendChild(container);
+
+        // Legend
+        var legend = makeEl('div', 'map-legend');
+        STATUS_ORDER.forEach(function(s) {
+            var item = makeEl('div', 'legend-item');
+            var d = makeEl('div', 'legend-dot');
+            d.style.background = statusRaw(s);
+            item.appendChild(d);
+            item.appendChild(document.createTextNode(s));
+            legend.appendChild(item);
+        });
+        section.appendChild(legend);
+
+        // Collapse button
+        var collapseBtn = makeEl('div', 'map-collapse-btn');
+        collapseBtn.id = 'mapCollapseBtn';
+        collapseBtn.appendChild(makeIcon('expand_more'));
+        collapseBtn.addEventListener('click', function() {
+            toggleMap();
+        });
+        section.appendChild(collapseBtn);
+
+        // Tooltip
+        mapTooltipEl = makeEl('div', 'map-tooltip');
+        var ttId = makeEl('div', 'map-tooltip-id');
+        ttId.id = 'mapTooltipId';
+        mapTooltipEl.appendChild(ttId);
+        var ttRoute = makeEl('div', 'map-tooltip-route');
+        ttRoute.id = 'mapTooltipRoute';
+        mapTooltipEl.appendChild(ttRoute);
+        section.appendChild(mapTooltipEl);
+
+        return section;
+    }
+
+    function showMapTooltip(load, e) {
+        var section = document.getElementById('mapSection');
+        var rect = section.getBoundingClientRect();
+        var x = e.clientX - rect.left + 15;
+        var y = e.clientY - rect.top - 20;
+
+        // Prevent tooltip from going off-screen right
+        if (x + 180 > rect.width) {
+            x = e.clientX - rect.left - 180;
+        }
+
+        document.getElementById('mapTooltipId').textContent = load.id;
+        document.getElementById('mapTooltipRoute').textContent = load.origin + ' \u2192 ' + load.dest;
+        mapTooltipEl.style.left = x + 'px';
+        mapTooltipEl.style.top = y + 'px';
+        mapTooltipEl.classList.add('visible');
+    }
+
+    function hideMapTooltip() {
+        mapTooltipEl.classList.remove('visible');
+    }
+
+    function toggleMap() {
+        var section = document.getElementById('mapSection');
+        state.mapCollapsed = !state.mapCollapsed;
+        if (state.mapCollapsed) {
+            section.classList.add('collapsed');
+        } else {
+            section.classList.remove('collapsed');
+            setMapHeight();
+        }
+    }
+
+    function highlightMapDot(loadId) {
+        // Clear previous
+        if (state.highlightedDotId && mapDots[state.highlightedDotId]) {
+            mapDots[state.highlightedDotId].classList.remove('map-dot-glow');
+        }
+        state.highlightedDotId = loadId;
+        if (loadId && mapDots[loadId]) {
+            mapDots[loadId].classList.add('map-dot-glow');
+        }
+    }
+
+    function selectLoadFromMap(load) {
+        openDrawer(load);
+        highlightTableRow(load.id);
+        highlightMapDot(load.id);
+    }
+
+    /* ======================================================================
+       BUILD: TABLE SECTION
+    ====================================================================== */
+    var tableBodyRefs = {};
+
+    function buildTableSection() {
+        var section = makeEl('div', 'table-section');
+        section.id = 'tableSection';
+        renderTableGroups(section);
+        return section;
+    }
+
+    function renderTableGroups(container) {
+        clearChildren(container);
+        tableBodyRefs = {};
+
+        // Group loads by status
+        var groups = {};
+        STATUS_ORDER.forEach(function(s) { groups[s] = []; });
+
+        var filtered = getFilteredLoads();
+        filtered.forEach(function(load) {
+            if (groups[load.status]) {
+                groups[load.status].push(load);
+            }
+        });
+
+        STATUS_ORDER.forEach(function(statusName) {
+            var loadsInGroup = groups[statusName];
+            if (loadsInGroup.length === 0) return;
+
+            var group = makeEl('div', 'table-group');
+            if (state.collapsedGroups.has(statusName)) {
+                group.classList.add('collapsed');
+            }
+            group.setAttribute('data-status', statusName);
+
+            // Group header
+            var header = makeEl('div', 'table-group-header');
+            header.addEventListener('click', function() {
+                if (state.collapsedGroups.has(statusName)) {
+                    state.collapsedGroups.delete(statusName);
+                    group.classList.remove('collapsed');
+                } else {
+                    state.collapsedGroups.add(statusName);
+                    group.classList.add('collapsed');
+                }
+                updateGroupBodyHeight(statusName);
+            });
+
+            var colorBar = makeEl('div', 'group-color-bar');
+            colorBar.style.background = statusColor(statusName);
+            header.appendChild(colorBar);
+
+            var gdot = makeEl('div', 'group-dot');
+            gdot.style.background = statusColor(statusName);
+            header.appendChild(gdot);
+
+            var label = makeEl('span', 'group-label');
+            label.textContent = statusName;
+            header.appendChild(label);
+
+            var count = makeEl('span', 'group-count');
+            count.textContent = '(' + loadsInGroup.length + ')';
+            header.appendChild(count);
+
+            var chevron = makeEl('span', 'group-chevron');
+            chevron.appendChild(makeIcon('expand_more'));
+            header.appendChild(chevron);
+
+            group.appendChild(header);
+
+            // Group body
+            var body = makeEl('div', 'table-group-body');
+            body.id = 'groupBody_' + statusName.replace(/\s/g, '');
+
+            var table = makeEl('table', 'data-table');
+
+            // Table head
+            var thead = makeEl('thead');
+            var headRow = makeEl('tr');
+            var columns = [
+                { key: 'checkbox', label: '', width: '24px', sortable: false },
+                { key: 'id', label: 'Load #', width: '110px', sortable: true },
+                { key: 'route', label: 'Route', width: '180px', sortable: true },
+                { key: 'carrier', label: 'Carrier / Driver', width: '150px', sortable: true },
+                { key: 'equipment', label: 'Equipment', width: '100px', sortable: true },
+                { key: 'pickup', label: 'Pickup', width: '105px', sortable: true },
+                { key: 'delivery', label: 'Delivery', width: '105px', sortable: true },
+                { key: 'rate', label: 'Rate', width: '85px', sortable: true },
+                { key: 'updated', label: 'Updated', width: '85px', sortable: true }
+            ];
+
+            columns.forEach(function(col) {
+                var th = makeEl('th');
+                th.style.width = col.width;
+                if (col.key === 'rate') th.style.textAlign = 'right';
+
+                if (col.key === 'checkbox') {
+                    var cbAll = makeEl('input');
+                    cbAll.type = 'checkbox';
+                    cbAll.style.cssText = 'width:15px;height:15px;accent-color:var(--sapphire);cursor:pointer;';
+                    cbAll.addEventListener('change', function() {
+                        var checked = this.checked;
+                        loadsInGroup.forEach(function(l) {
+                            if (checked) state.selectedLoads.add(l.id);
+                            else state.selectedLoads.delete(l.id);
+                        });
+                        refreshCheckboxes();
+                        updateBulkBar();
+                    });
+                    th.appendChild(cbAll);
+                } else {
+                    var thContent = makeEl('div', 'th-content');
+                    thContent.appendChild(document.createTextNode(col.label));
+                    if (col.sortable) {
+                        thContent.appendChild(makeIcon('unfold_more', 'sort-icon'));
+                        th.addEventListener('click', function() {
+                            handleSort(col.key);
+                        });
+                    }
+                    th.appendChild(thContent);
+                }
+
+                headRow.appendChild(th);
+            });
+            thead.appendChild(headRow);
+            table.appendChild(thead);
+
+            // Table body
+            var tbody = makeEl('tbody');
+            loadsInGroup.forEach(function(load) {
+                tbody.appendChild(buildTableRow(load));
+            });
+            table.appendChild(tbody);
+
+            body.appendChild(table);
+            group.appendChild(body);
+            container.appendChild(group);
+
+            tableBodyRefs[statusName] = body;
+
+            // Set initial max-height
+            requestAnimationFrame(function() {
+                if (!state.collapsedGroups.has(statusName)) {
+                    body.style.maxHeight = body.scrollHeight + 'px';
+                }
+            });
+        });
+    }
+
+    function buildTableRow(load) {
+        var row = makeEl('tr');
+        row.setAttribute('data-load-id', load.id);
+        if (state.selectedRow === load.id) row.classList.add('selected');
+
+        // Checkbox
+        var tdCb = makeEl('td', 'td-checkbox');
+        var cb = makeEl('input');
+        cb.type = 'checkbox';
+        cb.checked = state.selectedLoads.has(load.id);
+        cb.addEventListener('change', function(e) {
+            e.stopPropagation();
+            if (this.checked) state.selectedLoads.add(load.id);
+            else state.selectedLoads.delete(load.id);
+            updateBulkBar();
+        });
+        cb.addEventListener('click', function(e) { e.stopPropagation(); });
+        tdCb.appendChild(cb);
+        row.appendChild(tdCb);
+
+        // Load #
+        var tdId = makeEl('td');
+        var loadLink = makeEl('span', 'load-link');
+        loadLink.textContent = load.id;
+        tdId.appendChild(loadLink);
+        row.appendChild(tdId);
+
+        // Route
+        var tdRoute = makeEl('td');
+        var routeWrap = makeEl('div', 'route-text');
+        var cities = makeEl('span', 'route-cities');
+        cities.textContent = load.origin + ' \u2192 ' + load.dest;
+        routeWrap.appendChild(cities);
+        var miles = makeEl('span', 'route-miles');
+        miles.textContent = load.miles.toLocaleString() + ' mi';
+        routeWrap.appendChild(miles);
+        tdRoute.appendChild(routeWrap);
+        row.appendChild(tdRoute);
+
+        // Carrier / Driver
+        var tdCarrier = makeEl('td');
+        var carrierWrap = makeEl('div', 'carrier-cell');
+        var cName = makeEl('span', 'carrier-name');
+        cName.textContent = load.carrier;
+        carrierWrap.appendChild(cName);
+        var dName = makeEl('span', 'driver-name');
+        dName.textContent = load.driver;
+        carrierWrap.appendChild(dName);
+        tdCarrier.appendChild(carrierWrap);
+        row.appendChild(tdCarrier);
+
+        // Equipment
+        var tdEquip = makeEl('td');
+        var badge = makeEl('span', 'equipment-badge');
+        badge.textContent = load.equipment;
+        tdEquip.appendChild(badge);
+        row.appendChild(tdEquip);
+
+        // Pickup
+        var tdPickup = makeEl('td');
+        tdPickup.textContent = load.pickupDate + ' ' + load.pickupTime;
+        tdPickup.style.fontSize = '12px';
+        row.appendChild(tdPickup);
+
+        // Delivery
+        var tdDelivery = makeEl('td');
+        tdDelivery.textContent = load.deliveryDate + ' ' + load.deliveryTime;
+        tdDelivery.style.fontSize = '12px';
+        row.appendChild(tdDelivery);
+
+        // Rate
+        var tdRate = makeEl('td', 'td-rate');
+        tdRate.textContent = formatCurrency(load.rate);
+        row.appendChild(tdRate);
+
+        // Updated
+        var tdUpdated = makeEl('td', 'td-updated');
+        tdUpdated.textContent = load.updated;
+        row.appendChild(tdUpdated);
+
+        // Row click handler
+        row.addEventListener('click', function() {
+            openDrawer(load);
+            highlightTableRow(load.id);
+            highlightMapDot(load.id);
+        });
+
+        return row;
+    }
+
+    function highlightTableRow(loadId) {
+        var prev = document.querySelector('.data-table tbody tr.selected');
+        if (prev) prev.classList.remove('selected');
+        state.selectedRow = loadId;
+        var next = document.querySelector('tr[data-load-id="' + loadId + '"]');
+        if (next) {
+            next.classList.add('selected');
+            next.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }
+
+    function refreshCheckboxes() {
+        var checkboxes = document.querySelectorAll('.data-table tbody input[type="checkbox"]');
+        checkboxes.forEach(function(cb) {
+            var row = cb.closest('tr');
+            if (row) {
+                var id = row.getAttribute('data-load-id');
+                cb.checked = state.selectedLoads.has(id);
+            }
+        });
+    }
+
+    function updateGroupBodyHeight(statusName) {
+        var body = tableBodyRefs[statusName];
+        if (!body) return;
+        if (state.collapsedGroups.has(statusName)) {
+            body.style.maxHeight = '0';
+        } else {
+            body.style.maxHeight = body.scrollHeight + 'px';
+        }
+    }
+
+    function getFilteredLoads() {
+        if (!state.searchQuery) return LOADS.slice();
+        return LOADS.filter(function(load) {
+            var q = state.searchQuery;
+            return load.id.toLowerCase().indexOf(q) !== -1 ||
+                load.origin.toLowerCase().indexOf(q) !== -1 ||
+                load.dest.toLowerCase().indexOf(q) !== -1 ||
+                load.carrier.toLowerCase().indexOf(q) !== -1 ||
+                load.driver.toLowerCase().indexOf(q) !== -1 ||
+                load.equipment.toLowerCase().indexOf(q) !== -1;
+        });
+    }
+
+    function filterAndRender() {
+        var section = document.getElementById('tableSection');
+        renderTableGroups(section);
+    }
+
+    function handleSort(colKey) {
+        if (state.sortCol === colKey) {
+            state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+            state.sortCol = colKey;
+            state.sortDir = 'asc';
+        }
+
+        LOADS.sort(function(a, b) {
+            var va, vb;
+            switch (colKey) {
+                case 'id': va = a.id; vb = b.id; break;
+                case 'route': va = a.origin; vb = b.origin; break;
+                case 'carrier': va = a.carrier; vb = b.carrier; break;
+                case 'equipment': va = a.equipment; vb = b.equipment; break;
+                case 'pickup': va = a.pickupDate + a.pickupTime; vb = b.pickupDate + b.pickupTime; break;
+                case 'delivery': va = a.deliveryDate + a.deliveryTime; vb = b.deliveryDate + b.deliveryTime; break;
+                case 'rate': va = a.rate; vb = b.rate; break;
+                case 'updated': va = a.updated; vb = b.updated; break;
+                default: return 0;
+            }
+            if (typeof va === 'number') {
+                return state.sortDir === 'asc' ? va - vb : vb - va;
+            }
+            va = String(va);
+            vb = String(vb);
+            return state.sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+        });
+
+        filterAndRender();
+    }
+
+    /* ======================================================================
+       BUILD: BULK ACTION BAR
+    ====================================================================== */
+    function buildBulkBar() {
+        var bar = makeEl('div', 'bulk-bar');
+        bar.id = 'bulkBar';
+
+        var countSpan = makeEl('span');
+        countSpan.id = 'bulkCount';
+        countSpan.textContent = '0 selected';
+        bar.appendChild(countSpan);
+
+        var actions = [
+            { icon: 'person_add', label: 'Assign' },
+            { icon: 'sync', label: 'Update Status' },
+            { icon: 'download', label: 'Export' }
+        ];
+
+        actions.forEach(function(a) {
+            var btn = makeEl('button', 'bulk-bar-btn');
+            btn.appendChild(makeIcon(a.icon));
+            btn.appendChild(document.createTextNode(a.label));
+            bar.appendChild(btn);
+        });
+
+        var btnClear = makeEl('button', 'bulk-bar-btn');
+        btnClear.appendChild(makeIcon('close'));
+        btnClear.appendChild(document.createTextNode('Clear'));
+        btnClear.addEventListener('click', function() {
+            state.selectedLoads.clear();
+            refreshCheckboxes();
+            updateBulkBar();
+        });
+        bar.appendChild(btnClear);
+
+        return bar;
+    }
+
+    function updateBulkBar() {
+        var bar = document.getElementById('bulkBar');
+        var count = document.getElementById('bulkCount');
+        if (state.selectedLoads.size > 0) {
+            bar.classList.add('visible');
+            count.textContent = state.selectedLoads.size + ' selected';
+        } else {
+            bar.classList.remove('visible');
+        }
+    }
+
+    /* ======================================================================
+       BUILD: DRAWER
+    ====================================================================== */
+    var drawerEl, backdropEl;
+
+    function buildDrawer() {
+        backdropEl = makeEl('div', 'drawer-backdrop');
+        backdropEl.id = 'drawerBackdrop';
+        backdropEl.addEventListener('click', closeDrawer);
+
+        drawerEl = makeEl('div', 'drawer');
+        drawerEl.id = 'drawer';
+
+        return { backdrop: backdropEl, drawer: drawerEl };
+    }
+
+    function openDrawer(load) {
+        state.drawerOpen = true;
+        state.drawerLoad = load;
+        state.drawerTab = 0;
+
+        // Rebuild drawer content safely
+        clearChildren(drawerEl);
+
+        // Header
+        var header = makeEl('div', 'drawer-header');
+
+        var loadIdSpan = makeEl('span', 'drawer-load-id');
+        loadIdSpan.textContent = load.id;
+        header.appendChild(loadIdSpan);
+
+        var badge = makeEl('span', 'drawer-status-badge');
+        badge.textContent = load.status;
+        badge.style.background = statusRaw(load.status);
+        header.appendChild(badge);
+
+        var closeBtn = makeEl('button', 'drawer-close-btn');
+        closeBtn.appendChild(makeIcon('close'));
+        closeBtn.addEventListener('click', closeDrawer);
+        header.appendChild(closeBtn);
+
+        drawerEl.appendChild(header);
+
+        // Tabs
+        var tabNames = ['Overview', 'Stops', 'Finance', 'Documents'];
+        var tabsContainer = makeEl('div', 'drawer-tabs');
+
+        var indicator = makeEl('div', 'drawer-tab-indicator');
+        indicator.id = 'drawerTabIndicator';
+
+        tabNames.forEach(function(name, i) {
+            var tab = makeEl('button', 'drawer-tab' + (i === 0 ? ' active' : ''));
+            tab.textContent = name;
+            tab.setAttribute('data-tab-idx', String(i));
+            tab.addEventListener('click', function() {
+                switchDrawerTab(i);
+            });
+            tabsContainer.appendChild(tab);
+        });
+        tabsContainer.appendChild(indicator);
+        drawerEl.appendChild(tabsContainer);
+
+        // Body
+        var body = makeEl('div', 'drawer-body');
+        body.id = 'drawerBody';
+
+        body.appendChild(buildOverviewPanel(load));
+        body.appendChild(buildStopsPanel(load));
+        body.appendChild(buildFinancePanel(load));
+        body.appendChild(buildDocumentsPanel(load));
+
+        drawerEl.appendChild(body);
+
+        // Show drawer
+        backdropEl.classList.add('visible');
+        drawerEl.classList.add('open');
+
+        // Position tab indicator
+        requestAnimationFrame(function() {
+            positionTabIndicator(0);
+        });
+    }
+
+    function closeDrawer() {
+        state.drawerOpen = false;
+        state.drawerLoad = null;
+        backdropEl.classList.remove('visible');
+        drawerEl.classList.remove('open');
+        highlightMapDot(null);
+        var prev = document.querySelector('.data-table tbody tr.selected');
+        if (prev) prev.classList.remove('selected');
+        state.selectedRow = null;
+    }
+
+    function switchDrawerTab(idx) {
+        state.drawerTab = idx;
+        var tabs = drawerEl.querySelectorAll('.drawer-tab');
+        tabs.forEach(function(t, i) {
+            if (i === idx) t.classList.add('active');
+            else t.classList.remove('active');
+        });
+
+        var panels = drawerEl.querySelectorAll('.drawer-tab-panel');
+        panels.forEach(function(p, i) {
+            if (i === idx) p.classList.add('active');
+            else p.classList.remove('active');
+        });
+
+        positionTabIndicator(idx);
+    }
+
+    function positionTabIndicator(idx) {
+        var tabs = drawerEl.querySelectorAll('.drawer-tab');
+        var indicator = document.getElementById('drawerTabIndicator');
+        if (!tabs[idx] || !indicator) return;
+        var tab = tabs[idx];
+        indicator.style.width = tab.offsetWidth + 'px';
+        indicator.style.left = tab.offsetLeft + 'px';
+    }
+
+    /* ---- Drawer Panels ---- */
+
+    function buildOverviewPanel(load) {
+        var panel = makeEl('div', 'drawer-tab-panel active');
+
+        // Mini map
+        var mapSection = makeEl('div', 'overview-section');
+        var mapTitle = makeEl('div', 'overview-section-title');
+        mapTitle.textContent = 'Route';
+        mapSection.appendChild(mapTitle);
+
+        var miniMap = makeEl('div', 'overview-mini-map');
+        var svgNS = 'http://www.w3.org/2000/svg';
+        var svg = document.createElementNS(svgNS, 'svg');
+        svg.setAttribute('viewBox', '0 0 380 100');
+        svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+        svg.style.width = '100%';
+        svg.style.height = '100%';
+
+        var origCity = CITIES[load.origin];
+        var destCity = CITIES[load.dest];
+        if (origCity && destCity) {
+            var x1 = 40 + (origCity.x / 100) * 300;
+            var y1 = 10 + (origCity.y / 100) * 80;
+            var x2 = 40 + (destCity.x / 100) * 300;
+            var y2 = 10 + (destCity.y / 100) * 80;
+            var mx = (x1 + x2) / 2;
+            var my = Math.min(y1, y2) - 20;
+
+            var route = document.createElementNS(svgNS, 'path');
+            route.setAttribute('d', 'M ' + x1 + ',' + y1 + ' Q ' + mx + ',' + my + ' ' + x2 + ',' + y2);
+            route.setAttribute('fill', 'none');
+            route.setAttribute('stroke', statusRaw(load.status));
+            route.setAttribute('stroke-width', '2');
+            route.setAttribute('stroke-dasharray', '6,3');
+            route.setAttribute('opacity', '0.6');
+            svg.appendChild(route);
+
+            var d1 = document.createElementNS(svgNS, 'circle');
+            d1.setAttribute('cx', String(x1));
+            d1.setAttribute('cy', String(y1));
+            d1.setAttribute('r', '4');
+            d1.setAttribute('fill', statusRaw(load.status));
+            svg.appendChild(d1);
+
+            var d2 = document.createElementNS(svgNS, 'circle');
+            d2.setAttribute('cx', String(x2));
+            d2.setAttribute('cy', String(y2));
+            d2.setAttribute('r', '4');
+            d2.setAttribute('fill', statusRaw(load.status));
+            svg.appendChild(d2);
+
+            var t1 = document.createElementNS(svgNS, 'text');
+            t1.setAttribute('x', String(x1));
+            t1.setAttribute('y', String(y1 + 14));
+            t1.setAttribute('text-anchor', 'middle');
+            t1.setAttribute('fill', 'var(--text-secondary)');
+            t1.setAttribute('font-size', '9');
+            t1.setAttribute('font-family', 'Inter, sans-serif');
+            t1.textContent = load.origin;
+            svg.appendChild(t1);
+
+            var t2 = document.createElementNS(svgNS, 'text');
+            t2.setAttribute('x', String(x2));
+            t2.setAttribute('y', String(y2 + 14));
+            t2.setAttribute('text-anchor', 'middle');
+            t2.setAttribute('fill', 'var(--text-secondary)');
+            t2.setAttribute('font-size', '9');
+            t2.setAttribute('font-family', 'Inter, sans-serif');
+            t2.textContent = load.dest;
+            svg.appendChild(t2);
+        }
+        miniMap.appendChild(svg);
+        mapSection.appendChild(miniMap);
+        panel.appendChild(mapSection);
+
+        // Details section
+        var detailsSection = makeEl('div', 'overview-section');
+        var detailsTitle = makeEl('div', 'overview-section-title');
+        detailsTitle.textContent = 'Details';
+        detailsSection.appendChild(detailsTitle);
+
+        var details = [
+            ['Origin', load.origin + (load.originState ? ', ' + load.originState : '')],
+            ['Destination', load.dest + (load.destState ? ', ' + load.destState : '')],
+            ['Distance', load.miles.toLocaleString() + ' miles'],
+            ['Carrier', load.carrier],
+            ['Driver', load.driver],
+            ['Equipment', load.equipment],
+            ['Pickup', load.pickupDate + ' at ' + load.pickupTime],
+            ['Delivery', load.deliveryDate + ' at ' + load.deliveryTime],
+            ['Rate', formatCurrency(load.rate)],
+            ['Status', load.status]
+        ];
+
+        details.forEach(function(d) {
+            var row = makeEl('div', 'overview-detail-row');
+            var lbl = makeEl('span', 'overview-detail-label');
+            lbl.textContent = d[0];
+            row.appendChild(lbl);
+            var val = makeEl('span', 'overview-detail-value');
+            val.textContent = d[1];
+            row.appendChild(val);
+            detailsSection.appendChild(row);
+        });
+
+        panel.appendChild(detailsSection);
+        return panel;
+    }
+
+    function buildStopsPanel(load) {
+        var panel = makeEl('div', 'drawer-tab-panel');
+
+        var timeline = makeEl('div', 'stops-timeline');
+
+        // Pickup stop
+        var pickupItem = makeEl('div', 'stop-item');
+        var pickupDot = makeEl('div', 'stop-dot completed');
+        pickupDot.appendChild(makeIcon('check'));
+        pickupItem.appendChild(pickupDot);
+
+        var pickupLabel = makeEl('div', 'stop-label');
+        pickupLabel.textContent = 'Pickup';
+        pickupItem.appendChild(pickupLabel);
+
+        var pickupAddr = makeEl('div', 'stop-address');
+        pickupAddr.textContent = load.origin + (load.originState ? ', ' + load.originState : '');
+        pickupItem.appendChild(pickupAddr);
+
+        var pickupDT = makeEl('div', 'stop-datetime');
+        pickupDT.textContent = load.pickupDate + ' at ' + load.pickupTime;
+        pickupItem.appendChild(pickupDT);
+
+        var pickupStatus = makeEl('div', 'stop-status-text');
+        pickupStatus.textContent = 'Completed';
+        pickupStatus.style.color = 'var(--status-delivered)';
+        pickupItem.appendChild(pickupStatus);
+        timeline.appendChild(pickupItem);
+
+        // In Transit checkpoint
+        if (load.status === 'In Transit') {
+            var transitItem = makeEl('div', 'stop-item');
+            var transitDot = makeEl('div', 'stop-dot in-progress');
+            transitItem.appendChild(transitDot);
+
+            var transitLabel = makeEl('div', 'stop-label');
+            transitLabel.textContent = 'In Transit';
+            transitItem.appendChild(transitLabel);
+
+            var transitAddr = makeEl('div', 'stop-address');
+            transitAddr.textContent = 'En route to ' + load.dest;
+            transitItem.appendChild(transitAddr);
+
+            var transitDT = makeEl('div', 'stop-datetime');
+            transitDT.textContent = 'Last update: ' + load.updated;
+            transitItem.appendChild(transitDT);
+
+            var transitStatus = makeEl('div', 'stop-status-text');
+            transitStatus.textContent = 'In Progress';
+            transitStatus.style.color = 'var(--status-transit)';
+            transitItem.appendChild(transitStatus);
+            timeline.appendChild(transitItem);
+        }
+
+        // Delivery stop
+        var deliveryItem = makeEl('div', 'stop-item');
+        var deliveryDotClass = load.status === 'Delivered' ? 'completed' : 'pending';
+        var deliveryDot = makeEl('div', 'stop-dot ' + deliveryDotClass);
+        if (load.status === 'Delivered') {
+            deliveryDot.appendChild(makeIcon('check'));
+        }
+        deliveryItem.appendChild(deliveryDot);
+
+        var deliveryLabel = makeEl('div', 'stop-label');
+        deliveryLabel.textContent = 'Delivery';
+        deliveryItem.appendChild(deliveryLabel);
+
+        var deliveryAddr = makeEl('div', 'stop-address');
+        deliveryAddr.textContent = load.dest + (load.destState ? ', ' + load.destState : '');
+        deliveryItem.appendChild(deliveryAddr);
+
+        var deliveryDT = makeEl('div', 'stop-datetime');
+        deliveryDT.textContent = load.deliveryDate + ' at ' + load.deliveryTime;
+        deliveryItem.appendChild(deliveryDT);
+
+        var deliveryStatus = makeEl('div', 'stop-status-text');
+        if (load.status === 'Delivered') {
+            deliveryStatus.textContent = 'Completed';
+            deliveryStatus.style.color = 'var(--status-delivered)';
+        } else {
+            deliveryStatus.textContent = 'Pending';
+            deliveryStatus.style.color = 'var(--text-muted)';
+        }
+        deliveryItem.appendChild(deliveryStatus);
+        timeline.appendChild(deliveryItem);
+
+        panel.appendChild(timeline);
+        return panel;
+    }
+
+    function buildFinancePanel(load) {
+        var panel = makeEl('div', 'drawer-tab-panel');
+
+        var carrierCost = load.margin !== null ? Math.round(load.rate * (1 - load.margin / 100)) : null;
+        var marginAmount = carrierCost !== null ? load.rate - carrierCost : null;
+
+        // Summary cards
+        var summary = makeEl('div', 'finance-summary');
+
+        var card1 = makeEl('div', 'finance-card');
+        var label1 = makeEl('div', 'finance-card-label');
+        label1.textContent = 'Rate';
+        card1.appendChild(label1);
+        var val1 = makeEl('div', 'finance-card-value');
+        val1.textContent = formatCurrency(load.rate);
+        card1.appendChild(val1);
+        summary.appendChild(card1);
+
+        var card2 = makeEl('div', 'finance-card');
+        var label2 = makeEl('div', 'finance-card-label');
+        label2.textContent = 'Carrier Cost';
+        card2.appendChild(label2);
+        var val2 = makeEl('div', 'finance-card-value');
+        val2.textContent = carrierCost !== null ? formatCurrency(carrierCost) : '\u2014';
+        card2.appendChild(val2);
+        summary.appendChild(card2);
+
+        var card3 = makeEl('div', 'finance-card');
+        var label3 = makeEl('div', 'finance-card-label');
+        label3.textContent = 'Margin';
+        card3.appendChild(label3);
+        var val3 = makeEl('div', 'finance-card-value positive');
+        val3.textContent = marginAmount !== null ? formatCurrency(marginAmount) + ' (' + load.margin + '%)' : '\u2014';
+        card3.appendChild(val3);
+        summary.appendChild(card3);
+
+        panel.appendChild(summary);
+
+        // Line items
+        var lineTitle = makeEl('div', 'overview-section-title');
+        lineTitle.textContent = 'Line Items';
+        lineTitle.style.marginBottom = '8px';
+        panel.appendChild(lineTitle);
+
+        var table = makeEl('table', 'finance-line-items');
+
+        var thead = makeEl('thead');
+        var thRow = makeEl('tr');
+        ['Item', 'Amount'].forEach(function(h) {
+            var th = makeEl('th');
+            th.textContent = h;
+            thRow.appendChild(th);
+        });
+        thead.appendChild(thRow);
+        table.appendChild(thead);
+
+        var tbody = makeEl('tbody');
+        var lineItems = [
+            ['Linehaul', formatCurrency(Math.round(load.rate * 0.82))],
+            ['Fuel Surcharge', formatCurrency(Math.round(load.rate * 0.12))],
+            ['Accessorial', formatCurrency(Math.round(load.rate * 0.04))],
+            ['Detention', formatCurrency(Math.round(load.rate * 0.02))]
+        ];
+
+        lineItems.forEach(function(li) {
+            var tr = makeEl('tr');
+            var td1 = makeEl('td');
+            td1.textContent = li[0];
+            tr.appendChild(td1);
+            var td2 = makeEl('td');
+            td2.textContent = li[1];
+            tr.appendChild(td2);
+            tbody.appendChild(tr);
+        });
+
+        // Total row
+        var trTotal = makeEl('tr');
+        var tdTotal1 = makeEl('td');
+        tdTotal1.textContent = 'Total';
+        tdTotal1.style.fontWeight = '600';
+        trTotal.appendChild(tdTotal1);
+        var tdTotal2 = makeEl('td');
+        tdTotal2.textContent = formatCurrency(load.rate);
+        tdTotal2.style.fontWeight = '700';
+        tdTotal2.style.color = 'var(--sapphire)';
+        trTotal.appendChild(tdTotal2);
+        tbody.appendChild(trTotal);
+
+        table.appendChild(tbody);
+        panel.appendChild(table);
+
+        return panel;
+    }
+
+    function buildDocumentsPanel(load) {
+        var panel = makeEl('div', 'drawer-tab-panel');
+
+        var docs = [
+            { name: 'Bill of Lading (BOL)', status: 'completed', iconName: 'description' },
+            { name: 'Proof of Delivery (POD)', status: load.status === 'Delivered' ? 'completed' : 'pending', iconName: 'receipt_long' },
+            { name: 'Rate Confirmation', status: 'completed', iconName: 'request_quote' },
+            { name: 'Certificate of Insurance', status: 'completed', iconName: 'verified_user' }
+        ];
+
+        docs.forEach(function(doc) {
+            var item = makeEl('div', 'doc-item');
+
+            var iconWrap = makeEl('div', 'doc-icon ' + doc.status);
+            iconWrap.appendChild(makeIcon(doc.iconName));
+            item.appendChild(iconWrap);
+
+            var info = makeEl('div', 'doc-info');
+            var name = makeEl('div', 'doc-name');
+            name.textContent = doc.name;
+            info.appendChild(name);
+            var statusText = makeEl('div', 'doc-status-text ' + doc.status);
+            statusText.textContent = doc.status === 'completed' ? 'Uploaded' : 'Pending upload';
+            info.appendChild(statusText);
+            item.appendChild(info);
+
+            if (doc.status === 'completed') {
+                var checkIc = makeIcon('check_circle', 'filled');
+                checkIc.style.color = 'var(--status-delivered)';
+                checkIc.style.fontSize = '18px';
+                item.appendChild(checkIc);
+            } else {
+                var pendingIc = makeIcon('schedule');
+                pendingIc.style.color = 'var(--status-unassigned)';
+                pendingIc.style.fontSize = '18px';
+                item.appendChild(pendingIc);
+            }
+
+            panel.appendChild(item);
+        });
+
+        var uploadBtn = makeEl('button', 'doc-upload-btn');
+        uploadBtn.appendChild(makeIcon('upload'));
+        uploadBtn.appendChild(document.createTextNode('Upload Document'));
+        panel.appendChild(uploadBtn);
+
+        return panel;
+    }
+
+    /* ======================================================================
+       KEYBOARD HANDLER
+    ====================================================================== */
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && state.drawerOpen) {
+            closeDrawer();
+        }
+    });
+
+    /* ======================================================================
+       INIT
+    ====================================================================== */
+    function setMapHeight() {
+        var mapSection = document.getElementById('mapSection');
+        if (!mapSection || state.mapCollapsed) return;
+        var headerH = 56;
+        var statsH = 40;
+        var available = window.innerHeight - headerH - statsH;
+        var mapH = Math.max(280, Math.floor(available * 0.4));
+        mapSection.style.height = mapH + 'px';
+        mapSection.setAttribute('data-full-height', String(mapH));
+    }
+
+    function init() {
+        // Apply saved theme
+        var savedTheme = localStorage.getItem('ultra-tms-theme');
+        if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+
+        // Build sidebar
+        document.body.appendChild(buildSidebar());
+
+        // Build main area
+        var main = makeEl('div', 'main-area');
+        main.appendChild(buildHeader());
+        main.appendChild(buildStatsStrip());
+        main.appendChild(buildMapSection());
+        main.appendChild(buildTableSection());
+        document.body.appendChild(main);
+
+        // Bulk bar
+        document.body.appendChild(buildBulkBar());
+
+        // Drawer
+        var drawerParts = buildDrawer();
+        document.body.appendChild(drawerParts.backdrop);
+        document.body.appendChild(drawerParts.drawer);
+
+        // Set map height
+        requestAnimationFrame(function() {
+            setMapHeight();
+            window.addEventListener('resize', setMapHeight);
+        });
+    }
+
+    init();
+})();
+</script>
+</body>
+</html>

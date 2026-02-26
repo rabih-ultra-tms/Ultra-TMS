@@ -1,0 +1,2007 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ultra TMS - Dispatch Board | V1: Refined Command</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    [data-theme="light"] {
+        --bg-main: #F8F9FA;
+        --bg-filter: #F1F3F5;
+        --surface: #FFFFFF;
+        --surface-hover: #F8FAFD;
+        --surface-selected: #F0F4FF;
+        --border: #e5e7eb;
+        --border-soft: #DEE2E6;
+        --sapphire: #1D4ED8;
+        --sapphire-hover: #1E3FB0;
+        --sapphire-light: #EEF2FF;
+        --sapphire-border: #C7D2FE;
+        --text-primary: #333333;
+        --text-secondary: #6C757D;
+        --text-muted: #adb5bd;
+        --danger: #DC2626;
+        --danger-bg: #FEF2F2;
+        --success: #059669;
+        --success-bg: #DCFCE7;
+    }
+
+    [data-theme="dark"] {
+        --bg-main: #0F1117;
+        --bg-filter: #161923;
+        --surface: #1A1D27;
+        --surface-hover: #22253A;
+        --surface-selected: #1E2744;
+        --border: #2A2D3A;
+        --border-soft: #353849;
+        --sapphire: #3B82F6;
+        --sapphire-hover: #2563EB;
+        --sapphire-light: #1E2744;
+        --sapphire-border: #1E3A5F;
+        --text-primary: #E8E9ED;
+        --text-secondary: #9CA3AF;
+        --text-muted: #6B7280;
+        --danger: #EF4444;
+        --danger-bg: #1F1215;
+        --success: #10B981;
+        --success-bg: #0F1F17;
+    }
+
+    body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        background-color: var(--bg-main);
+        color: var(--text-primary);
+        overflow: hidden;
+        height: 100vh;
+        transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-soft); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+    }
+
+    .sidebar {
+        position: fixed;
+        left: 0; top: 0;
+        width: 64px; height: 100vh;
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        display: flex; flex-direction: column;
+        align-items: center;
+        padding: 12px 0;
+        z-index: 50;
+        box-shadow: 2px 0 8px rgba(0,0,0,0.04);
+        transition: background-color 0.2s ease;
+    }
+
+    .sidebar-logo {
+        width: 36px; height: 36px;
+        background: var(--sapphire);
+        border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        margin-bottom: 20px;
+        flex-shrink: 0;
+    }
+    .sidebar-logo .material-symbols-outlined { color: #fff; font-size: 20px; }
+
+    .sidebar-nav { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .sidebar-bottom { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+
+    .nav-item {
+        width: 40px; height: 40px;
+        border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer;
+        position: relative;
+        color: var(--text-muted);
+        transition: background-color 0.15s ease, color 0.15s ease;
+    }
+    .nav-item:hover { background: var(--bg-main); color: var(--text-secondary); }
+    .nav-item.active { background: var(--sapphire-light); color: var(--sapphire); }
+    .nav-item .material-symbols-outlined { font-size: 20px; }
+
+    .nav-dot {
+        position: absolute; top: 6px; right: 6px;
+        width: 8px; height: 8px;
+        background: var(--danger);
+        border-radius: 50%;
+        border: 2px solid var(--surface);
+    }
+
+    .main-content {
+        margin-left: 64px;
+        height: 100vh;
+        display: flex; flex-direction: column;
+        transition: background-color 0.2s ease;
+    }
+
+    .header {
+        height: 48px;
+        display: flex; align-items: center;
+        padding: 0 20px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface);
+        gap: 16px;
+        flex-shrink: 0;
+        transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+    .header-title { font-size: 14px; font-weight: 600; color: var(--text-primary); white-space: nowrap; }
+
+    .header-search {
+        flex: 1; max-width: 320px; margin: 0 auto;
+        position: relative;
+    }
+    .header-search input {
+        width: 100%;
+        height: 32px;
+        padding: 0 36px 0 32px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--bg-main);
+        color: var(--text-primary);
+        font-size: 12px;
+        font-family: 'Inter', sans-serif;
+        outline: none;
+        transition: border-color 0.15s ease, background-color 0.2s ease;
+    }
+    .header-search input:focus { border-color: var(--sapphire); }
+    .header-search input::placeholder { color: var(--text-muted); }
+    .header-search .search-icon {
+        position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
+        font-size: 16px; color: var(--text-muted);
+    }
+    .header-search .search-shortcut {
+        position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+        font-size: 10px; color: var(--text-muted);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 1px 5px;
+        font-family: 'Inter', sans-serif;
+        line-height: 1.4;
+    }
+
+    .header-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+
+    .btn-primary {
+        height: 30px;
+        padding: 0 14px;
+        background: var(--sapphire);
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        display: flex; align-items: center; gap: 4px;
+        transition: background-color 0.15s ease;
+        white-space: nowrap;
+    }
+    .btn-primary:hover { background: var(--sapphire-hover); }
+    .btn-primary .material-symbols-outlined { font-size: 16px; }
+
+    .icon-btn {
+        width: 32px; height: 32px;
+        border: none;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--text-secondary);
+        cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        position: relative;
+        transition: background-color 0.15s ease, color 0.15s ease;
+    }
+    .icon-btn:hover { background: var(--bg-main); color: var(--text-primary); }
+    .icon-btn .material-symbols-outlined { font-size: 18px; }
+
+    .notif-dot {
+        position: absolute; top: 5px; right: 5px;
+        width: 7px; height: 7px;
+        background: var(--danger);
+        border-radius: 50%;
+    }
+
+    .avatar {
+        width: 28px; height: 28px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #7C3AED, #3B82F6);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 11px; font-weight: 600; color: #fff;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+
+    .filter-bar {
+        height: 44px;
+        display: flex; align-items: center;
+        padding: 0 20px;
+        gap: 6px;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg-filter);
+        flex-shrink: 0;
+        overflow-x: auto;
+        transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+    .filter-bar::-webkit-scrollbar { height: 0; }
+
+    .filter-chip {
+        height: 28px;
+        padding: 0 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--surface);
+        color: var(--text-secondary);
+        font-size: 11px;
+        font-weight: 500;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        display: flex; align-items: center; gap: 4px;
+        white-space: nowrap;
+        transition: all 0.15s ease;
+        flex-shrink: 0;
+    }
+    .filter-chip:hover { border-color: var(--sapphire-border); color: var(--text-primary); }
+    .filter-chip.active {
+        background: var(--sapphire-light);
+        border-color: var(--sapphire-border);
+        color: var(--sapphire);
+    }
+    .filter-chip .material-symbols-outlined { font-size: 14px; }
+    .filter-chip .chip-count {
+        background: var(--sapphire);
+        color: #fff;
+        font-size: 9px;
+        font-weight: 600;
+        padding: 1px 5px;
+        border-radius: 10px;
+        line-height: 1.4;
+    }
+
+    .filter-divider {
+        width: 1px; height: 20px;
+        background: var(--border-soft);
+        flex-shrink: 0;
+    }
+
+    .filter-clear {
+        font-size: 11px;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+        background: none; border: none;
+        white-space: nowrap;
+        padding: 0 4px;
+        transition: color 0.15s ease;
+    }
+    .filter-clear:hover { color: var(--danger); }
+
+    .stats-bar {
+        height: 40px;
+        display: flex; align-items: center;
+        padding: 0 20px;
+        gap: 0;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface);
+        flex-shrink: 0;
+        transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .stat-item {
+        display: flex; align-items: center; gap: 8px;
+        padding: 0 16px;
+        border-right: 1px solid var(--border);
+    }
+    .stat-item:last-child { border-right: none; }
+    .stat-item:first-child { padding-left: 0; }
+
+    .stat-label {
+        font-size: 10px; font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        white-space: nowrap;
+    }
+    .stat-value {
+        font-size: 13px; font-weight: 700;
+        color: var(--text-primary);
+        white-space: nowrap;
+    }
+    .stat-trend {
+        font-size: 10px; font-weight: 600;
+        display: flex; align-items: center; gap: 1px;
+    }
+    .stat-trend.up { color: var(--success); }
+    .stat-trend.down { color: var(--danger); }
+    .stat-trend .material-symbols-outlined { font-size: 13px; }
+
+    .bulk-bar {
+        height: 40px;
+        display: none;
+        align-items: center;
+        padding: 0 20px;
+        gap: 12px;
+        background: var(--sapphire-light);
+        border-bottom: 1px solid var(--sapphire-border);
+        flex-shrink: 0;
+        transition: background-color 0.2s ease;
+    }
+    .bulk-bar.visible { display: flex; }
+
+    .bulk-count {
+        font-size: 12px; font-weight: 600;
+        color: var(--sapphire);
+    }
+    .bulk-action {
+        height: 26px; padding: 0 10px;
+        border: 1px solid var(--sapphire-border);
+        border-radius: 5px;
+        background: var(--surface);
+        color: var(--sapphire);
+        font-size: 11px; font-weight: 500;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        display: flex; align-items: center; gap: 4px;
+        transition: background-color 0.15s ease;
+    }
+    .bulk-action:hover { background: var(--sapphire-light); }
+    .bulk-action .material-symbols-outlined { font-size: 14px; }
+    .bulk-close {
+        margin-left: auto;
+        background: none; border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        display: flex; align-items: center;
+    }
+    .bulk-close:hover { color: var(--text-primary); }
+    .bulk-close .material-symbols-outlined { font-size: 16px; }
+
+    .table-container {
+        flex: 1;
+        overflow: auto;
+        background: var(--bg-main);
+        transition: background-color 0.2s ease;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+
+    .data-table thead { position: sticky; top: 0; z-index: 10; }
+    .data-table thead th {
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        padding: 0 8px;
+        height: 36px;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        text-align: left;
+        white-space: nowrap;
+        transition: background-color 0.2s ease;
+        user-select: none;
+    }
+    .data-table thead th.sortable { cursor: pointer; }
+    .data-table thead th.sortable:hover { color: var(--text-secondary); }
+
+    .th-content { display: flex; align-items: center; gap: 2px; }
+    .sort-arrows { display: flex; flex-direction: column; gap: 0; line-height: 0; }
+    .sort-arrows .material-symbols-outlined {
+        font-size: 12px;
+        color: var(--border-soft);
+        line-height: 8px;
+        transition: color 0.15s ease;
+    }
+    .sort-arrows .material-symbols-outlined.active { color: var(--sapphire); }
+
+    .col-check { width: 40px; }
+    .col-status { width: 100px; }
+    .col-loadid { width: 110px; }
+    .col-route { min-width: 200px; }
+    .col-carrier { min-width: 140px; }
+    .col-equip { width: 90px; }
+    .col-pickup { width: 100px; }
+    .col-delivery { width: 100px; }
+    .col-rate { width: 80px; }
+    .col-margin { width: 70px; }
+    .col-updated { width: 90px; }
+
+    .group-header {
+        cursor: pointer;
+        user-select: none;
+    }
+    .group-header td {
+        background: var(--bg-filter);
+        padding: 0 12px;
+        height: 32px;
+        border-bottom: 1px solid var(--border);
+        transition: background-color 0.2s ease;
+    }
+    .group-header:hover td { background: var(--surface-hover); }
+
+    .group-inner {
+        display: flex; align-items: center; gap: 8px;
+    }
+    .group-bar {
+        width: 3px; height: 16px; border-radius: 2px;
+    }
+    .group-dot {
+        width: 6px; height: 6px; border-radius: 50%;
+    }
+    .group-label {
+        font-size: 9px; font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+    .group-count {
+        font-size: 9px; font-weight: 600;
+        color: var(--text-muted);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 1px 6px;
+        line-height: 1.4;
+    }
+    .group-chevron {
+        margin-left: auto;
+        color: var(--text-muted);
+        transition: transform 0.3s ease;
+    }
+    .group-chevron.collapsed { transform: rotate(180deg); }
+    .group-chevron .material-symbols-outlined { font-size: 16px; }
+
+    .data-row {
+        cursor: pointer;
+        transition: background-color 0.1s ease;
+    }
+    .data-row td {
+        padding: 0 8px;
+        height: 44px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+        font-size: 12px;
+        transition: background-color 0.2s ease;
+    }
+    .data-row:hover td { background: var(--surface-hover); }
+    .data-row.selected td { background: var(--surface-selected); }
+    .data-row.at-risk td { background: var(--danger-bg); }
+    .data-row.at-risk:hover td { background: var(--danger-bg); }
+
+    .custom-check {
+        width: 14px; height: 14px;
+        border: 1.5px solid var(--border-soft);
+        border-radius: 3px;
+        cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: all 0.15s ease;
+        flex-shrink: 0;
+    }
+    .custom-check:hover { border-color: var(--sapphire); }
+    .custom-check.checked {
+        background: var(--sapphire);
+        border-color: var(--sapphire);
+    }
+    .custom-check.checked .material-symbols-outlined {
+        font-size: 11px; color: #fff;
+    }
+
+    .status-cell { display: flex; align-items: center; gap: 6px; }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .status-text { font-size: 11px; font-weight: 500; }
+
+    .load-id {
+        font-size: 12px; font-weight: 600;
+        color: var(--sapphire);
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .load-id:hover { text-decoration: underline; }
+
+    .route-main { font-size: 12px; font-weight: 500; color: var(--text-primary); }
+    .route-miles { font-size: 9px; color: var(--text-muted); margin-top: 1px; }
+
+    .carrier-name { font-size: 12px; font-weight: 500; color: var(--text-primary); }
+    .driver-name { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+    .unassigned-text { font-size: 12px; font-style: italic; color: var(--text-muted); }
+
+    .equip-text { font-size: 11px; color: var(--text-secondary); }
+
+    .date-main { font-size: 11px; font-weight: 500; color: var(--text-primary); }
+    .date-time { font-size: 9px; color: var(--text-muted); margin-top: 1px; }
+    .date-late { color: var(--danger) !important; }
+
+    .rate-text { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+
+    .margin-text { font-size: 11px; font-weight: 600; }
+    .margin-green { color: var(--success); }
+    .margin-normal { color: var(--text-primary); }
+    .margin-red { color: var(--danger); }
+
+    .updated-cell { display: flex; align-items: center; gap: 5px; }
+    .updated-text { font-size: 11px; color: var(--text-muted); }
+    .live-dot {
+        width: 6px; height: 6px;
+        background: var(--success);
+        border-radius: 50%;
+        animation: pulse-green 2s infinite;
+    }
+    @keyframes pulse-green {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+    }
+
+    .pagination {
+        height: 44px;
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 0 20px;
+        border-top: 1px solid var(--border);
+        background: var(--surface);
+        flex-shrink: 0;
+        transition: background-color 0.2s ease;
+    }
+    .pag-info { font-size: 12px; color: var(--text-muted); }
+    .pag-controls { display: flex; align-items: center; gap: 2px; }
+    .pag-btn {
+        min-width: 28px; height: 28px;
+        padding: 0 6px;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        background: var(--surface);
+        color: var(--text-secondary);
+        font-size: 11px; font-weight: 500;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: all 0.15s ease;
+    }
+    .pag-btn:hover { border-color: var(--sapphire-border); color: var(--sapphire); }
+    .pag-btn.active {
+        background: var(--sapphire);
+        border-color: var(--sapphire);
+        color: #fff;
+    }
+    .pag-btn.disabled {
+        opacity: 0.4;
+        cursor: default;
+        pointer-events: none;
+    }
+    .pag-btn .material-symbols-outlined { font-size: 16px; }
+    .pag-ellipsis {
+        min-width: 28px; height: 28px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 11px; color: var(--text-muted);
+    }
+
+    .drawer-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.3);
+        z-index: 100;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+    }
+    .drawer-backdrop.open { opacity: 1; pointer-events: auto; }
+
+    [data-theme="dark"] .drawer-backdrop.open { background: rgba(0,0,0,0.5); }
+
+    .drawer {
+        position: fixed;
+        top: 0; right: 0;
+        width: 420px; height: 100vh;
+        background: var(--surface);
+        z-index: 101;
+        transform: translateX(100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex; flex-direction: column;
+        border-left: 1px solid var(--border);
+        box-shadow: -4px 0 20px rgba(0,0,0,0.08);
+    }
+    .drawer.open { transform: translateX(0); }
+
+    .drawer-header {
+        height: 52px;
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 0 20px;
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+    }
+    .drawer-title-wrap { display: flex; align-items: center; gap: 10px; }
+    .drawer-title { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+    .drawer-badge {
+        font-size: 10px; font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+    .drawer-close {
+        width: 28px; height: 28px;
+        border: none; border-radius: 6px;
+        background: transparent;
+        color: var(--text-muted);
+        cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: background-color 0.15s ease, color 0.15s ease;
+    }
+    .drawer-close:hover { background: var(--bg-main); color: var(--text-primary); }
+    .drawer-close .material-symbols-outlined { font-size: 18px; }
+
+    .drawer-tabs {
+        display: flex;
+        border-bottom: 1px solid var(--border);
+        padding: 0 20px;
+        flex-shrink: 0;
+    }
+    .drawer-tab {
+        padding: 10px 14px;
+        font-size: 12px; font-weight: 500;
+        color: var(--text-muted);
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        transition: color 0.15s ease, border-color 0.15s ease;
+        background: none; border-top: none; border-left: none; border-right: none;
+        font-family: 'Inter', sans-serif;
+    }
+    .drawer-tab:hover { color: var(--text-secondary); }
+    .drawer-tab.active { color: var(--sapphire); border-bottom-color: var(--sapphire); }
+
+    .drawer-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px 20px;
+    }
+
+    .drawer-section { margin-bottom: 20px; }
+    .drawer-section-title {
+        font-size: 10px; font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+        margin-bottom: 10px;
+    }
+
+    .route-visual {
+        display: flex; flex-direction: column; gap: 0;
+    }
+    .route-point {
+        display: flex; align-items: flex-start; gap: 10px;
+    }
+    .route-icon-wrap {
+        display: flex; flex-direction: column; align-items: center;
+    }
+    .route-icon {
+        width: 28px; height: 28px;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .route-icon .material-symbols-outlined { font-size: 15px; color: #fff; }
+    .route-icon.origin { background: #3B82F6; }
+    .route-icon.dest { background: #10B981; }
+    .route-connector {
+        width: 2px; height: 24px;
+        background: var(--border-soft);
+        margin: 2px 0;
+    }
+    .route-point-info { flex: 1; }
+    .route-city { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .route-date-info { font-size: 11px; color: var(--text-secondary); margin-top: 1px; }
+    .route-miles-info {
+        font-size: 11px; color: var(--text-muted);
+        margin-top: 8px; margin-left: 38px;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+    .info-cell {
+        padding: 10px 12px;
+        background: var(--bg-main);
+        border-radius: 6px;
+        border: 1px solid var(--border);
+    }
+    .info-cell-label {
+        font-size: 9px; font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        margin-bottom: 3px;
+    }
+    .info-cell-value {
+        font-size: 13px; font-weight: 600;
+        color: var(--text-primary);
+    }
+    .info-cell-sub {
+        font-size: 10px;
+        color: var(--text-secondary);
+        margin-top: 1px;
+    }
+
+    .field-row {
+        display: flex; justify-content: space-between;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--border);
+    }
+    .field-row:last-child { border-bottom: none; }
+    .field-label { font-size: 11px; color: var(--text-muted); }
+    .field-value { font-size: 11px; font-weight: 500; color: var(--text-primary); }
+
+    .tag-list { display: flex; gap: 6px; flex-wrap: wrap; }
+    .tag-item {
+        font-size: 11px; font-weight: 500;
+        padding: 4px 10px;
+        background: var(--bg-main);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        color: var(--text-secondary);
+    }
+
+    .stop-card {
+        padding: 12px;
+        background: var(--bg-main);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+    }
+    .stop-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .stop-type-icon {
+        width: 22px; height: 22px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .stop-type-icon .material-symbols-outlined { font-size: 13px; color: #fff; }
+    .stop-type-icon.pickup { background: #3B82F6; }
+    .stop-type-icon.delivery { background: #10B981; }
+    .stop-type-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+    .stop-city { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .stop-date { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+    .stop-ref { font-size: 10px; color: var(--text-muted); margin-top: 4px; }
+
+    .stop-connector {
+        display: flex; flex-direction: column; align-items: center;
+        padding: 4px 0 4px 10px;
+    }
+    .stop-dots {
+        display: flex; flex-direction: column; gap: 3px; align-items: center;
+    }
+    .stop-dot-small {
+        width: 4px; height: 4px;
+        background: var(--border-soft);
+        border-radius: 50%;
+    }
+
+    .finance-section { margin-bottom: 16px; }
+    .finance-header {
+        font-size: 10px; font-weight: 600;
+        text-transform: uppercase; letter-spacing: 0.05em;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+    }
+    .finance-row {
+        display: flex; justify-content: space-between;
+        padding: 5px 0;
+    }
+    .finance-label { font-size: 11px; color: var(--text-secondary); }
+    .finance-value { font-size: 11px; font-weight: 600; color: var(--text-primary); }
+
+    .margin-box {
+        padding: 14px;
+        border-radius: 8px;
+        text-align: center;
+        margin: 12px 0;
+    }
+    .margin-box-pct { font-size: 24px; font-weight: 700; }
+    .margin-box-amt { font-size: 12px; font-weight: 500; margin-top: 2px; }
+
+    .doc-item {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border);
+    }
+    .doc-item:last-child { border-bottom: none; }
+    .doc-icon {
+        width: 28px; height: 28px; border-radius: 6px;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .doc-icon.complete { background: var(--success-bg); color: var(--success); }
+    .doc-icon.pending { background: var(--bg-main); color: var(--text-muted); }
+    .doc-icon .material-symbols-outlined { font-size: 16px; }
+    .doc-name { font-size: 12px; font-weight: 500; color: var(--text-primary); }
+    .doc-status { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+    .doc-info { flex: 1; }
+
+    .doc-progress {
+        height: 4px;
+        background: var(--border);
+        border-radius: 4px;
+        overflow: hidden;
+        margin: 12px 0;
+    }
+    .doc-progress-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+
+    .doc-warning {
+        padding: 10px 12px;
+        background: var(--danger-bg);
+        border: 1px solid var(--danger);
+        border-radius: 6px;
+        display: flex; align-items: flex-start; gap: 8px;
+        margin-top: 10px;
+    }
+    .doc-warning .material-symbols-outlined { font-size: 16px; color: var(--danger); flex-shrink: 0; margin-top: 1px; }
+    .doc-warning-text { font-size: 11px; color: var(--danger); line-height: 1.4; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+(function() {
+    'use strict';
+
+    var loads = [
+        { id: 'LD-7842', status: 'transit', origin: 'Chicago, IL', dest: 'Dallas, TX', miles: 921, carrier: 'Swift Transport', driver: 'Mike Reynolds', equipment: 'Dry Van', pickupDate: 'Feb 6', pickupTime: '08:00 AM', delivDate: 'Feb 8', delivTime: '02:00 PM', rate: 3450, carrierPay: 2822, margin: 18.2, updated: '5m ago', live: true },
+        { id: 'LD-7838', status: 'transit', origin: 'Atlanta, GA', dest: 'Miami, FL', miles: 662, carrier: 'J.B. Hunt', driver: 'Carlos Mendez', equipment: 'Reefer', pickupDate: 'Feb 6', pickupTime: '11:30 AM', delivDate: 'Feb 7', delivTime: '06:00 PM', rate: 2880, carrierPay: 2261, margin: 21.5, updated: '2m ago', live: true },
+        { id: 'LD-7835', status: 'transit', origin: 'Los Angeles, CA', dest: 'Phoenix, AZ', miles: 373, carrier: 'Werner Logistics', driver: 'James Park', equipment: 'Flatbed', pickupDate: 'Feb 7', pickupTime: '06:00 AM', delivDate: 'Feb 7', delivTime: '04:00 PM', rate: 1750, carrierPay: 1503, margin: 14.1, updated: '8m ago', live: true },
+        { id: 'LD-7831', status: 'transit', origin: 'Nashville, TN', dest: 'Memphis, TN', miles: 213, carrier: 'Schneider National', driver: 'Tom Bradley', equipment: 'Dry Van', pickupDate: 'Feb 7', pickupTime: '10:00 AM', delivDate: 'Feb 7', delivTime: '05:30 PM', rate: 1120, carrierPay: 932, margin: 16.8, updated: '22m ago', live: false },
+        { id: 'LD-7826', status: 'transit', origin: 'Denver, CO', dest: 'Kansas City, MO', miles: 605, carrier: 'XPO Logistics', driver: 'Sarah Kim', equipment: 'Reefer', pickupDate: 'Feb 6', pickupTime: '02:00 PM', delivDate: 'Feb 8', delivTime: '08:00 AM', rate: 2650, carrierPay: 2322, margin: 12.4, updated: '1m ago', live: true },
+        { id: 'LD-7819', status: 'transit', origin: 'Seattle, WA', dest: 'Portland, OR', miles: 174, carrier: 'Heartland Express', driver: 'Derek Liu', equipment: 'Dry Van', pickupDate: 'Feb 8', pickupTime: '07:00 AM', delivDate: 'Feb 8', delivTime: '12:00 PM', rate: 890, carrierPay: 691, margin: 22.3, updated: '12m ago', live: true },
+        { id: 'LD-7814', status: 'transit', origin: 'Houston, TX', dest: 'New Orleans, LA', miles: 350, carrier: 'KLLM Transport', driver: 'Andre Williams', equipment: 'Reefer', pickupDate: 'Feb 7', pickupTime: '03:00 PM', delivDate: 'Feb 8', delivTime: '09:00 AM', rate: 1680, carrierPay: 1450, margin: 13.7, updated: '35m ago', live: false },
+        { id: 'LD-7809', status: 'transit', origin: 'Detroit, MI', dest: 'Columbus, OH', miles: 263, carrier: 'Old Dominion', driver: 'Robert Chen', equipment: 'Flatbed', pickupDate: 'Feb 8', pickupTime: '05:30 AM', delivDate: 'Feb 8', delivTime: '01:00 PM', rate: 1340, carrierPay: 1077, margin: 19.6, updated: '7m ago', live: true },
+        { id: 'LD-7851', status: 'unassigned', origin: 'San Francisco, CA', dest: 'Reno, NV', miles: 218, carrier: '', driver: '', equipment: 'Dry Van', pickupDate: 'Feb 9', pickupTime: '09:00 AM', delivDate: 'Feb 9', delivTime: '04:00 PM', rate: 1250, carrierPay: 0, margin: 0, updated: '1h ago', live: false },
+        { id: 'LD-7849', status: 'unassigned', origin: 'Philadelphia, PA', dest: 'Boston, MA', miles: 306, carrier: '', driver: '', equipment: 'Reefer', pickupDate: 'Feb 9', pickupTime: '07:00 AM', delivDate: 'Feb 9', delivTime: '03:30 PM', rate: 1780, carrierPay: 0, margin: 0, updated: '2h ago', live: false },
+        { id: 'LD-7847', status: 'unassigned', origin: 'Minneapolis, MN', dest: 'Milwaukee, WI', miles: 337, carrier: '', driver: '', equipment: 'Dry Van', pickupDate: 'Feb 10', pickupTime: '06:00 AM', delivDate: 'Feb 10', delivTime: '02:00 PM', rate: 1560, carrierPay: 0, margin: 0, updated: '3h ago', live: false },
+        { id: 'LD-7845', status: 'unassigned', origin: 'Charlotte, NC', dest: 'Jacksonville, FL', miles: 394, carrier: '', driver: '', equipment: 'Flatbed', pickupDate: 'Feb 10', pickupTime: '08:00 AM', delivDate: 'Feb 11', delivTime: '10:00 AM', rate: 2100, carrierPay: 0, margin: 0, updated: '4h ago', live: false },
+        { id: 'LD-7853', status: 'tendered', origin: 'Indianapolis, IN', dest: 'St. Louis, MO', miles: 242, carrier: 'Ryder System', driver: 'Pending', equipment: 'Dry Van', pickupDate: 'Feb 9', pickupTime: '10:00 AM', delivDate: 'Feb 9', delivTime: '06:00 PM', rate: 1380, carrierPay: 1226, margin: 11.2, updated: '45m ago', live: false },
+        { id: 'LD-7850', status: 'tendered', origin: 'Salt Lake City, UT', dest: 'Boise, ID', miles: 340, carrier: 'Covenant Transport', driver: 'Pending', equipment: 'Reefer', pickupDate: 'Feb 10', pickupTime: '07:30 AM', delivDate: 'Feb 10', delivTime: '04:00 PM', rate: 1920, carrierPay: 1603, margin: 16.5, updated: '1h ago', live: false },
+        { id: 'LD-7848', status: 'tendered', origin: 'Tampa, FL', dest: 'Savannah, GA', miles: 408, carrier: 'USX Intermodal', driver: 'Pending', equipment: 'Dry Van', pickupDate: 'Feb 9', pickupTime: '11:00 AM', delivDate: 'Feb 10', delivTime: '07:00 AM', rate: 1850, carrierPay: 1500, margin: 18.9, updated: '2h ago', live: false },
+        { id: 'LD-7854', status: 'dispatched', origin: 'Newark, NJ', dest: 'Pittsburgh, PA', miles: 370, carrier: 'FedEx Freight', driver: 'Lisa Tran', equipment: 'Dry Van', pickupDate: 'Feb 9', pickupTime: '06:00 AM', delivDate: 'Feb 9', delivTime: '04:00 PM', rate: 1690, carrierPay: 1463, margin: 13.4, updated: '30m ago', live: false },
+        { id: 'LD-7852', status: 'dispatched', origin: 'Oklahoma City, OK', dest: 'Tulsa, OK', miles: 107, carrier: 'ABF Freight', driver: 'Tony Garcia', equipment: 'Flatbed', pickupDate: 'Feb 9', pickupTime: '08:00 AM', delivDate: 'Feb 9', delivTime: '11:00 AM', rate: 680, carrierPay: 516, margin: 24.1, updated: '55m ago', live: false },
+        { id: 'LD-7846', status: 'dispatched', origin: 'El Paso, TX', dest: 'San Antonio, TX', miles: 551, carrier: 'Saia Inc.', driver: 'Maria Santos', equipment: 'Reefer', pickupDate: 'Feb 9', pickupTime: '05:00 AM', delivDate: 'Feb 9', delivTime: '06:00 PM', rate: 2340, carrierPay: 1937, margin: 17.2, updated: '1h ago', live: false },
+        { id: 'LD-7843', status: 'dispatched', origin: 'Richmond, VA', dest: 'Raleigh, NC', miles: 169, carrier: 'Estes Express', driver: 'Kevin Moore', equipment: 'Dry Van', pickupDate: 'Feb 9', pickupTime: '09:00 AM', delivDate: 'Feb 9', delivTime: '02:00 PM', rate: 920, carrierPay: 812, margin: 11.8, updated: '2h ago', live: false },
+        { id: 'LD-7801', status: 'delivered', origin: 'New York, NY', dest: 'Washington, DC', miles: 225, carrier: 'Werner Logistics', driver: 'Paul Walker', equipment: 'Dry Van', pickupDate: 'Feb 5', pickupTime: '07:00 AM', delivDate: 'Feb 5', delivTime: '03:00 PM', rate: 1450, carrierPay: 1156, margin: 20.3, updated: '2d ago', live: false },
+        { id: 'LD-7798', status: 'delivered', origin: 'Cincinnati, OH', dest: 'Louisville, KY', miles: 100, carrier: 'Schneider National', driver: 'Amy Davis', equipment: 'Dry Van', pickupDate: 'Feb 5', pickupTime: '10:00 AM', delivDate: 'Feb 5', delivTime: '01:30 PM', rate: 620, carrierPay: 500, margin: 19.4, updated: '2d ago', live: false },
+        { id: 'LD-7795', status: 'delivered', origin: 'Las Vegas, NV', dest: 'Tucson, AZ', miles: 420, carrier: 'J.B. Hunt', driver: 'Nick Patel', equipment: 'Flatbed', pickupDate: 'Feb 4', pickupTime: '06:00 AM', delivDate: 'Feb 4', delivTime: '04:00 PM', rate: 2010, carrierPay: 1714, margin: 14.7, updated: '3d ago', live: false },
+        { id: 'LD-7790', status: 'delivered', origin: 'Baltimore, MD', dest: 'Hartford, CT', miles: 298, carrier: 'XPO Logistics', driver: 'Dan Fischer', equipment: 'Reefer', pickupDate: 'Feb 4', pickupTime: '08:00 AM', delivDate: 'Feb 4', delivTime: '05:00 PM', rate: 1580, carrierPay: 1326, margin: 16.1, updated: '3d ago', live: false },
+        { id: 'LD-7822', status: 'atrisk', origin: 'Cleveland, OH', dest: 'Buffalo, NY', miles: 189, carrier: 'Crete Carrier', driver: 'Joe Mitchell', equipment: 'Reefer', pickupDate: 'Feb 7', pickupTime: '04:00 AM', delivDate: 'Feb 7', delivTime: '12:00 PM', rate: 1150, carrierPay: 1060, margin: 7.8, updated: '3m ago', live: true, late: true },
+        { id: 'LD-7817', status: 'atrisk', origin: 'Omaha, NE', dest: 'Des Moines, IA', miles: 150, carrier: 'PAM Transport', driver: 'Steve Novak', equipment: 'Dry Van', pickupDate: 'Feb 7', pickupTime: '09:00 AM', delivDate: 'Feb 7', delivTime: '03:00 PM', rate: 780, carrierPay: 730, margin: 6.4, updated: '9m ago', live: true, late: true }
+    ];
+
+    var statusConfig = {
+        transit:    { label: 'In Transit',  color: '#3B82F6', order: 0 },
+        unassigned: { label: 'Unassigned',  color: '#F59E0B', order: 1 },
+        tendered:   { label: 'Tendered',    color: '#8B5CF6', order: 2 },
+        dispatched: { label: 'Dispatched',  color: '#06B6D4', order: 3 },
+        delivered:  { label: 'Delivered',   color: '#10B981', order: 4 },
+        atrisk:     { label: 'At Risk',     color: '#EF4444', order: 5 }
+    };
+
+    var selectedIds = {};
+    var expandedGroups = { transit: true, unassigned: true, tendered: true, dispatched: true, delivered: true, atrisk: true };
+    var activeSort = { col: 'loadid', dir: 'asc' };
+    var activeDrawerLoad = null;
+    var activeDrawerTab = 'overview';
+
+    function el(tag, cls, attrs) {
+        var e = document.createElement(tag);
+        if (cls) e.className = cls;
+        if (attrs) {
+            for (var k in attrs) {
+                if (k === 'textContent') e.textContent = attrs[k];
+                else e.setAttribute(k, attrs[k]);
+            }
+        }
+        return e;
+    }
+
+    function icon(name, size) {
+        var s = el('span', 'material-symbols-outlined');
+        s.textContent = name;
+        if (size) s.style.fontSize = size + 'px';
+        return s;
+    }
+
+    function formatCurrency(n) {
+        return '$' + n.toLocaleString('en-US');
+    }
+
+    function getMarginClass(m) {
+        if (m >= 16) return 'margin-green';
+        if (m >= 10) return 'margin-normal';
+        return 'margin-red';
+    }
+
+    function groupLoads() {
+        var groups = {};
+        for (var k in statusConfig) groups[k] = [];
+        loads.forEach(function(l) { if (groups[l.status]) groups[l.status].push(l); });
+        return groups;
+    }
+
+    function getSelectedCount() {
+        var c = 0;
+        for (var k in selectedIds) if (selectedIds[k]) c++;
+        return c;
+    }
+
+    function initTheme() {
+        var saved = localStorage.getItem('ultra-tms-theme');
+        if (saved) document.documentElement.setAttribute('data-theme', saved);
+    }
+    function toggleTheme() {
+        var current = document.documentElement.getAttribute('data-theme');
+        var next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('ultra-tms-theme', next);
+        var btn = document.getElementById('theme-toggle-icon');
+        if (btn) btn.textContent = next === 'dark' ? 'light_mode' : 'dark_mode';
+    }
+    initTheme();
+
+    function buildSidebar() {
+        var sb = el('div', 'sidebar');
+
+        var logo = el('div', 'sidebar-logo');
+        logo.appendChild(icon('local_shipping'));
+        sb.appendChild(logo);
+
+        var navItems = [
+            { ic: 'dashboard', label: 'Dashboard' },
+            { ic: 'hub', label: 'Dispatch', active: true, dot: true },
+            { ic: 'inventory_2', label: 'Loads' },
+            { ic: 'local_shipping', label: 'Carriers' },
+            { ic: 'people', label: 'Customers' },
+            { ic: 'receipt_long', label: 'Invoices' },
+            { ic: 'bar_chart', label: 'Reports' }
+        ];
+        var bottomItems = [
+            { ic: 'settings', label: 'Settings' },
+            { ic: 'help', label: 'Help' }
+        ];
+
+        var nav = el('div', 'sidebar-nav');
+        navItems.forEach(function(item) {
+            var ni = el('div', 'nav-item' + (item.active ? ' active' : ''));
+            ni.title = item.label;
+            ni.appendChild(icon(item.ic));
+            if (item.dot) {
+                var dot = el('div', 'nav-dot');
+                ni.appendChild(dot);
+            }
+            nav.appendChild(ni);
+        });
+        sb.appendChild(nav);
+
+        var bottom = el('div', 'sidebar-bottom');
+        bottomItems.forEach(function(item) {
+            var ni = el('div', 'nav-item');
+            ni.title = item.label;
+            ni.appendChild(icon(item.ic));
+            bottom.appendChild(ni);
+        });
+        sb.appendChild(bottom);
+
+        return sb;
+    }
+
+    function buildHeader() {
+        var hdr = el('div', 'header');
+
+        var title = el('div', 'header-title');
+        title.textContent = 'Dispatch Board';
+        hdr.appendChild(title);
+
+        var searchWrap = el('div', 'header-search');
+        var searchIcon = icon('search');
+        searchIcon.className += ' search-icon';
+        searchWrap.appendChild(searchIcon);
+        var searchInput = el('input', '', { type: 'text', placeholder: 'Search loads, carriers, routes...' });
+        searchWrap.appendChild(searchInput);
+        var shortcut = el('span', 'search-shortcut');
+        shortcut.textContent = '/';
+        searchWrap.appendChild(shortcut);
+        hdr.appendChild(searchWrap);
+
+        var actions = el('div', 'header-actions');
+
+        var newLoadBtn = el('button', 'btn-primary');
+        newLoadBtn.appendChild(icon('add'));
+        newLoadBtn.appendChild(document.createTextNode('New Load'));
+        actions.appendChild(newLoadBtn);
+
+        var refreshBtn = el('button', 'icon-btn');
+        refreshBtn.appendChild(icon('refresh'));
+        refreshBtn.title = 'Refresh';
+        actions.appendChild(refreshBtn);
+
+        var notifBtn = el('button', 'icon-btn');
+        notifBtn.appendChild(icon('notifications'));
+        var notifDot = el('span', 'notif-dot');
+        notifBtn.appendChild(notifDot);
+        notifBtn.title = 'Notifications';
+        actions.appendChild(notifBtn);
+
+        var dlBtn = el('button', 'icon-btn');
+        dlBtn.appendChild(icon('download'));
+        dlBtn.title = 'Download';
+        actions.appendChild(dlBtn);
+
+        var themeBtn = el('button', 'icon-btn');
+        themeBtn.title = 'Toggle Theme';
+        var currentTheme = document.documentElement.getAttribute('data-theme');
+        var themeIcon = icon(currentTheme === 'dark' ? 'light_mode' : 'dark_mode');
+        themeIcon.id = 'theme-toggle-icon';
+        themeBtn.appendChild(themeIcon);
+        themeBtn.addEventListener('click', toggleTheme);
+        actions.appendChild(themeBtn);
+
+        var avatar = el('div', 'avatar');
+        avatar.textContent = 'JD';
+        actions.appendChild(avatar);
+
+        hdr.appendChild(actions);
+        return hdr;
+    }
+
+    function buildFilterBar() {
+        var fb = el('div', 'filter-bar');
+
+        var chips = [
+            { label: 'All Loads', ic: 'list', active: true, count: '571' },
+            { label: 'Today', ic: 'today' },
+            { label: 'Feb 4 - Feb 10', ic: 'date_range' }
+        ];
+        chips.forEach(function(c) {
+            var chip = el('button', 'filter-chip' + (c.active ? ' active' : ''));
+            chip.appendChild(icon(c.ic));
+            chip.appendChild(document.createTextNode(c.label));
+            if (c.count) {
+                var badge = el('span', 'chip-count');
+                badge.textContent = c.count;
+                chip.appendChild(badge);
+            }
+            fb.appendChild(chip);
+        });
+
+        fb.appendChild(el('div', 'filter-divider'));
+
+        var filters = [
+            { label: 'Lane', ic: 'route' },
+            { label: 'Carrier', ic: 'local_shipping' },
+            { label: 'Equipment', ic: 'rv_hookup' },
+            { label: 'Rate Range', ic: 'attach_money' }
+        ];
+        filters.forEach(function(f) {
+            var chip = el('button', 'filter-chip');
+            chip.appendChild(icon(f.ic));
+            chip.appendChild(document.createTextNode(f.label));
+            var chev = icon('expand_more');
+            chev.style.fontSize = '14px';
+            chip.appendChild(chev);
+            fb.appendChild(chip);
+        });
+
+        fb.appendChild(el('div', 'filter-divider'));
+
+        var clear = el('button', 'filter-clear');
+        clear.textContent = 'Clear All';
+        fb.appendChild(clear);
+
+        return fb;
+    }
+
+    function buildStatsBar() {
+        var sb = el('div', 'stats-bar');
+
+        var stats = [
+            { label: 'Total Revenue', value: '$1.47M', trend: '+8.2%', dir: 'up' },
+            { label: 'Avg Margin', value: '16.4%' },
+            { label: 'On-Time', value: '94.2%', trend: '+1.1%', dir: 'up' },
+            { label: 'Active Loads', value: '57' },
+            { label: 'At Risk', value: '2', danger: true }
+        ];
+
+        stats.forEach(function(s) {
+            var item = el('div', 'stat-item');
+            var lbl = el('span', 'stat-label');
+            lbl.textContent = s.label;
+            item.appendChild(lbl);
+            var val = el('span', 'stat-value');
+            val.textContent = s.value;
+            if (s.danger) val.style.color = 'var(--danger)';
+            item.appendChild(val);
+            if (s.trend) {
+                var trend = el('span', 'stat-trend ' + s.dir);
+                trend.appendChild(icon(s.dir === 'up' ? 'trending_up' : 'trending_down'));
+                trend.appendChild(document.createTextNode(s.trend));
+                item.appendChild(trend);
+            }
+            sb.appendChild(item);
+        });
+
+        return sb;
+    }
+
+    function buildBulkBar() {
+        var bb = el('div', 'bulk-bar');
+        bb.id = 'bulk-bar';
+
+        var count = el('span', 'bulk-count');
+        count.id = 'bulk-count';
+        count.textContent = '0 selected';
+        bb.appendChild(count);
+
+        var actions = [
+            { label: 'Assign Carrier', ic: 'person_add' },
+            { label: 'Update Status', ic: 'sync' },
+            { label: 'Export', ic: 'download' }
+        ];
+        actions.forEach(function(a) {
+            var btn = el('button', 'bulk-action');
+            btn.appendChild(icon(a.ic));
+            btn.appendChild(document.createTextNode(a.label));
+            bb.appendChild(btn);
+        });
+
+        var closeBtn = el('button', 'bulk-close');
+        closeBtn.appendChild(icon('close'));
+        closeBtn.addEventListener('click', function() {
+            selectedIds = {};
+            updateBulkBar();
+            renderTable();
+        });
+        bb.appendChild(closeBtn);
+
+        return bb;
+    }
+
+    function updateBulkBar() {
+        var c = getSelectedCount();
+        var bar = document.getElementById('bulk-bar');
+        var countEl = document.getElementById('bulk-count');
+        if (c > 0) {
+            bar.classList.add('visible');
+            countEl.textContent = c + ' selected';
+        } else {
+            bar.classList.remove('visible');
+        }
+        var sa = document.getElementById('select-all-check');
+        if (sa) {
+            if (c === loads.length) {
+                sa.classList.add('checked');
+                if (!sa.querySelector('.material-symbols-outlined')) sa.appendChild(icon('check'));
+            } else {
+                sa.classList.remove('checked');
+                var saIcon = sa.querySelector('.material-symbols-outlined');
+                if (saIcon) sa.removeChild(saIcon);
+            }
+        }
+    }
+
+    var tableBody;
+    var columns = [
+        { key: 'check', label: '', cls: 'col-check', sortable: false },
+        { key: 'status', label: 'Status', cls: 'col-status', sortable: true },
+        { key: 'loadid', label: 'Load #', cls: 'col-loadid', sortable: true },
+        { key: 'route', label: 'Route', cls: 'col-route', sortable: true },
+        { key: 'carrier', label: 'Carrier / Driver', cls: 'col-carrier', sortable: true },
+        { key: 'equip', label: 'Equipment', cls: 'col-equip', sortable: true },
+        { key: 'pickup', label: 'Pickup', cls: 'col-pickup', sortable: true },
+        { key: 'delivery', label: 'Delivery', cls: 'col-delivery', sortable: true },
+        { key: 'rate', label: 'Rate', cls: 'col-rate', sortable: true },
+        { key: 'margin', label: 'Margin', cls: 'col-margin', sortable: true },
+        { key: 'updated', label: 'Updated', cls: 'col-updated', sortable: true }
+    ];
+
+    function buildTable() {
+        var container = el('div', 'table-container');
+        var table = el('table', 'data-table');
+
+        var thead = el('thead');
+        var headRow = el('tr');
+
+        columns.forEach(function(col) {
+            var th = el('th', col.cls + (col.sortable ? ' sortable' : ''));
+
+            if (col.key === 'check') {
+                var cb = el('div', 'custom-check');
+                cb.id = 'select-all-check';
+                cb.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var allSelected = getSelectedCount() === loads.length;
+                    if (allSelected) {
+                        selectedIds = {};
+                    } else {
+                        loads.forEach(function(l) { selectedIds[l.id] = true; });
+                    }
+                    updateBulkBar();
+                    renderTable();
+                });
+                th.appendChild(cb);
+            } else {
+                var content = el('div', 'th-content');
+                content.appendChild(document.createTextNode(col.label));
+
+                if (col.sortable) {
+                    var arrows = el('div', 'sort-arrows');
+                    var up = icon('expand_less');
+                    var down = icon('expand_more');
+                    if (activeSort.col === col.key && activeSort.dir === 'asc') up.classList.add('active');
+                    if (activeSort.col === col.key && activeSort.dir === 'desc') down.classList.add('active');
+                    arrows.appendChild(up);
+                    arrows.appendChild(down);
+                    content.appendChild(arrows);
+
+                    (function(colKey) {
+                        th.addEventListener('click', function() {
+                            if (activeSort.col === colKey) {
+                                activeSort.dir = activeSort.dir === 'asc' ? 'desc' : 'asc';
+                            } else {
+                                activeSort.col = colKey;
+                                activeSort.dir = 'asc';
+                            }
+                            renderTable();
+                        });
+                    })(col.key);
+                }
+
+                th.appendChild(content);
+            }
+
+            headRow.appendChild(th);
+        });
+
+        thead.appendChild(headRow);
+        table.appendChild(thead);
+
+        tableBody = el('tbody');
+        table.appendChild(tableBody);
+        container.appendChild(table);
+
+        renderTable();
+        return container;
+    }
+
+    function renderTable() {
+        while (tableBody.firstChild) tableBody.removeChild(tableBody.firstChild);
+
+        var groups = groupLoads();
+        var statusOrder = ['transit', 'unassigned', 'tendered', 'dispatched', 'delivered', 'atrisk'];
+
+        var allArrows = document.querySelectorAll('.sort-arrows .material-symbols-outlined');
+        allArrows.forEach(function(a) { a.classList.remove('active'); });
+        var ths = document.querySelectorAll('.data-table thead th.sortable');
+        ths.forEach(function(th, i) {
+            var colKey = columns[i + 1].key;
+            if (colKey === activeSort.col) {
+                var arrowEls = th.querySelectorAll('.sort-arrows .material-symbols-outlined');
+                if (activeSort.dir === 'asc' && arrowEls[0]) arrowEls[0].classList.add('active');
+                if (activeSort.dir === 'desc' && arrowEls[1]) arrowEls[1].classList.add('active');
+            }
+        });
+
+        statusOrder.forEach(function(statusKey) {
+            var groupLoadsArr = groups[statusKey];
+            if (!groupLoadsArr || groupLoadsArr.length === 0) return;
+
+            var cfg = statusConfig[statusKey];
+            var expanded = expandedGroups[statusKey];
+
+            var ghRow = el('tr', 'group-header');
+            var ghTd = el('td', '', { colspan: columns.length.toString() });
+
+            var inner = el('div', 'group-inner');
+
+            var bar = el('div', 'group-bar');
+            bar.style.backgroundColor = cfg.color;
+            inner.appendChild(bar);
+
+            var dot = el('div', 'group-dot');
+            dot.style.backgroundColor = cfg.color;
+            inner.appendChild(dot);
+
+            var label = el('span', 'group-label');
+            label.textContent = cfg.label;
+            label.style.color = cfg.color;
+            inner.appendChild(label);
+
+            var cnt = el('span', 'group-count');
+            cnt.textContent = groupLoadsArr.length;
+            inner.appendChild(cnt);
+
+            var chevron = el('div', 'group-chevron' + (expanded ? '' : ' collapsed'));
+            chevron.appendChild(icon('expand_less'));
+            inner.appendChild(chevron);
+
+            ghTd.appendChild(inner);
+            ghRow.appendChild(ghTd);
+            tableBody.appendChild(ghRow);
+
+            if (expanded) {
+                groupLoadsArr.forEach(function(load) {
+                    tableBody.appendChild(buildDataRow(load));
+                });
+            }
+
+            (function(key, chev) {
+                ghRow.addEventListener('click', function() {
+                    expandedGroups[key] = !expandedGroups[key];
+                    if (expandedGroups[key]) {
+                        chev.classList.remove('collapsed');
+                    } else {
+                        chev.classList.add('collapsed');
+                    }
+                    renderTable();
+                });
+            })(statusKey, chevron);
+        });
+
+        var sa = document.getElementById('select-all-check');
+        if (sa) {
+            var c = getSelectedCount();
+            if (c === loads.length && c > 0) {
+                sa.classList.add('checked');
+                if (!sa.querySelector('.material-symbols-outlined')) sa.appendChild(icon('check'));
+            } else {
+                sa.classList.remove('checked');
+                var saIcon = sa.querySelector('.material-symbols-outlined');
+                if (saIcon) sa.removeChild(saIcon);
+            }
+        }
+    }
+
+    function buildDataRow(load) {
+        var row = el('tr', 'data-row' + (selectedIds[load.id] ? ' selected' : '') + (load.status === 'atrisk' ? ' at-risk' : ''));
+        var cfg = statusConfig[load.status];
+
+        var tdCheck = el('td', 'col-check');
+        var cb = el('div', 'custom-check' + (selectedIds[load.id] ? ' checked' : ''));
+        if (selectedIds[load.id]) cb.appendChild(icon('check'));
+        cb.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (selectedIds[load.id]) {
+                delete selectedIds[load.id];
+            } else {
+                selectedIds[load.id] = true;
+            }
+            updateBulkBar();
+            renderTable();
+        });
+        tdCheck.appendChild(cb);
+        row.appendChild(tdCheck);
+
+        var tdStatus = el('td', 'col-status');
+        var statusDiv = el('div', 'status-cell');
+        var sDot = el('div', 'status-dot');
+        sDot.style.backgroundColor = cfg.color;
+        statusDiv.appendChild(sDot);
+        var sText = el('span', 'status-text');
+        sText.textContent = cfg.label;
+        sText.style.color = cfg.color;
+        statusDiv.appendChild(sText);
+        tdStatus.appendChild(statusDiv);
+        row.appendChild(tdStatus);
+
+        var tdLoad = el('td', 'col-loadid');
+        var loadLink = el('span', 'load-id');
+        loadLink.textContent = load.id;
+        tdLoad.appendChild(loadLink);
+        row.appendChild(tdLoad);
+
+        var tdRoute = el('td', 'col-route');
+        var routeMain = el('div', 'route-main');
+        routeMain.textContent = load.origin + ' \u2192 ' + load.dest;
+        tdRoute.appendChild(routeMain);
+        var routeMi = el('div', 'route-miles');
+        routeMi.textContent = load.miles.toLocaleString() + ' mi';
+        tdRoute.appendChild(routeMi);
+        row.appendChild(tdRoute);
+
+        var tdCarrier = el('td', 'col-carrier');
+        if (load.carrier) {
+            var cName = el('div', 'carrier-name');
+            cName.textContent = load.carrier;
+            tdCarrier.appendChild(cName);
+            var dName = el('div', 'driver-name');
+            dName.textContent = load.driver;
+            tdCarrier.appendChild(dName);
+        } else {
+            var unassigned = el('div', 'unassigned-text');
+            unassigned.textContent = 'Unassigned';
+            tdCarrier.appendChild(unassigned);
+        }
+        row.appendChild(tdCarrier);
+
+        var tdEquip = el('td', 'col-equip');
+        var equipText = el('span', 'equip-text');
+        equipText.textContent = load.equipment;
+        tdEquip.appendChild(equipText);
+        row.appendChild(tdEquip);
+
+        var tdPickup = el('td', 'col-pickup');
+        var pDate = el('div', 'date-main');
+        pDate.textContent = load.pickupDate;
+        tdPickup.appendChild(pDate);
+        var pTime = el('div', 'date-time');
+        pTime.textContent = load.pickupTime;
+        tdPickup.appendChild(pTime);
+        row.appendChild(tdPickup);
+
+        var tdDeliv = el('td', 'col-delivery');
+        var dDate = el('div', 'date-main' + (load.late ? ' date-late' : ''));
+        dDate.textContent = load.delivDate;
+        tdDeliv.appendChild(dDate);
+        var dTime = el('div', 'date-time' + (load.late ? ' date-late' : ''));
+        dTime.textContent = load.delivTime;
+        tdDeliv.appendChild(dTime);
+        row.appendChild(tdDeliv);
+
+        var tdRate = el('td', 'col-rate');
+        var rText = el('span', 'rate-text');
+        rText.textContent = formatCurrency(load.rate);
+        tdRate.appendChild(rText);
+        row.appendChild(tdRate);
+
+        var tdMargin = el('td', 'col-margin');
+        var mText = el('span', 'margin-text ' + getMarginClass(load.margin));
+        mText.textContent = load.margin > 0 ? load.margin.toFixed(1) + '%' : '\u2014';
+        tdMargin.appendChild(mText);
+        row.appendChild(tdMargin);
+
+        var tdUpdated = el('td', 'col-updated');
+        var updDiv = el('div', 'updated-cell');
+        if (load.live) {
+            var liveDot = el('div', 'live-dot');
+            updDiv.appendChild(liveDot);
+        }
+        var updText = el('span', 'updated-text');
+        updText.textContent = load.updated;
+        updDiv.appendChild(updText);
+        tdUpdated.appendChild(updDiv);
+        row.appendChild(tdUpdated);
+
+        row.addEventListener('click', function() {
+            openDrawer(load);
+        });
+
+        return row;
+    }
+
+    function buildPagination() {
+        var pag = el('div', 'pagination');
+
+        var info = el('span', 'pag-info');
+        info.textContent = 'Showing 1\u201325 of 571 loads';
+        pag.appendChild(info);
+
+        var controls = el('div', 'pag-controls');
+
+        var prevBtn = el('button', 'pag-btn disabled');
+        prevBtn.appendChild(icon('chevron_left'));
+        controls.appendChild(prevBtn);
+
+        var pages = [1, 2, 3, '...', 23];
+        pages.forEach(function(p) {
+            if (p === '...') {
+                var ell = el('span', 'pag-ellipsis');
+                ell.textContent = '...';
+                controls.appendChild(ell);
+            } else {
+                var btn = el('button', 'pag-btn' + (p === 1 ? ' active' : ''));
+                btn.textContent = p;
+                controls.appendChild(btn);
+            }
+        });
+
+        var nextBtn = el('button', 'pag-btn');
+        nextBtn.appendChild(icon('chevron_right'));
+        controls.appendChild(nextBtn);
+
+        pag.appendChild(controls);
+        return pag;
+    }
+
+    var drawerEl, drawerBackdrop, drawerContentEl;
+
+    function buildDrawerShell() {
+        drawerBackdrop = el('div', 'drawer-backdrop');
+        drawerBackdrop.addEventListener('click', closeDrawer);
+        document.getElementById('app').appendChild(drawerBackdrop);
+
+        drawerEl = el('div', 'drawer');
+        drawerEl.id = 'side-drawer';
+        document.getElementById('app').appendChild(drawerEl);
+    }
+
+    function openDrawer(load) {
+        activeDrawerLoad = load;
+        activeDrawerTab = 'overview';
+        renderDrawer();
+        drawerEl.classList.add('open');
+        drawerBackdrop.classList.add('open');
+    }
+
+    function closeDrawer() {
+        drawerEl.classList.remove('open');
+        drawerBackdrop.classList.remove('open');
+        activeDrawerLoad = null;
+    }
+
+    function renderDrawer() {
+        while (drawerEl.firstChild) drawerEl.removeChild(drawerEl.firstChild);
+        if (!activeDrawerLoad) return;
+
+        var load = activeDrawerLoad;
+        var cfg = statusConfig[load.status];
+
+        var header = el('div', 'drawer-header');
+        var titleWrap = el('div', 'drawer-title-wrap');
+        var title = el('span', 'drawer-title');
+        title.textContent = load.id;
+        titleWrap.appendChild(title);
+
+        var badge = el('span', 'drawer-badge');
+        badge.textContent = cfg.label;
+        badge.style.backgroundColor = cfg.color + '20';
+        badge.style.color = cfg.color;
+        titleWrap.appendChild(badge);
+        header.appendChild(titleWrap);
+
+        var closeBtn = el('button', 'drawer-close');
+        closeBtn.appendChild(icon('close'));
+        closeBtn.addEventListener('click', closeDrawer);
+        header.appendChild(closeBtn);
+        drawerEl.appendChild(header);
+
+        var tabs = el('div', 'drawer-tabs');
+        var tabNames = ['overview', 'stops', 'finance', 'documents'];
+        var tabLabels = ['Overview', 'Stops', 'Finance', 'Documents'];
+        tabNames.forEach(function(t, i) {
+            var tab = el('button', 'drawer-tab' + (activeDrawerTab === t ? ' active' : ''));
+            tab.textContent = tabLabels[i];
+            tab.addEventListener('click', function() {
+                activeDrawerTab = t;
+                renderDrawer();
+            });
+            tabs.appendChild(tab);
+        });
+        drawerEl.appendChild(tabs);
+
+        drawerContentEl = el('div', 'drawer-content');
+        switch (activeDrawerTab) {
+            case 'overview': renderOverviewTab(load); break;
+            case 'stops': renderStopsTab(load); break;
+            case 'finance': renderFinanceTab(load); break;
+            case 'documents': renderDocumentsTab(load); break;
+        }
+        drawerEl.appendChild(drawerContentEl);
+    }
+
+    function renderOverviewTab(load) {
+        var section1 = el('div', 'drawer-section');
+        var s1Title = el('div', 'drawer-section-title');
+        s1Title.textContent = 'Route';
+        section1.appendChild(s1Title);
+
+        var rv = el('div', 'route-visual');
+
+        var originPoint = el('div', 'route-point');
+        var originIconWrap = el('div', 'route-icon-wrap');
+        var originIcon = el('div', 'route-icon origin');
+        originIcon.appendChild(icon('radio_button_checked'));
+        originIconWrap.appendChild(originIcon);
+        var connector = el('div', 'route-connector');
+        originIconWrap.appendChild(connector);
+        originPoint.appendChild(originIconWrap);
+        var originInfo = el('div', 'route-point-info');
+        var oCity = el('div', 'route-city');
+        oCity.textContent = load.origin;
+        originInfo.appendChild(oCity);
+        var oDate = el('div', 'route-date-info');
+        oDate.textContent = load.pickupDate + ' at ' + load.pickupTime;
+        originInfo.appendChild(oDate);
+        originPoint.appendChild(originInfo);
+        rv.appendChild(originPoint);
+
+        var destPoint = el('div', 'route-point');
+        var destIconWrap = el('div', 'route-icon-wrap');
+        var destIcon = el('div', 'route-icon dest');
+        destIcon.appendChild(icon('location_on'));
+        destIconWrap.appendChild(destIcon);
+        destPoint.appendChild(destIconWrap);
+        var destInfo = el('div', 'route-point-info');
+        var dCity = el('div', 'route-city');
+        dCity.textContent = load.dest;
+        destInfo.appendChild(dCity);
+        var dDate = el('div', 'route-date-info');
+        dDate.textContent = load.delivDate + ' at ' + load.delivTime;
+        if (load.late) dDate.style.color = 'var(--danger)';
+        destInfo.appendChild(dDate);
+        destPoint.appendChild(destInfo);
+        rv.appendChild(destPoint);
+
+        var milesInfo = el('div', 'route-miles-info');
+        milesInfo.textContent = load.miles.toLocaleString() + ' miles total';
+        rv.appendChild(milesInfo);
+
+        section1.appendChild(rv);
+        drawerContentEl.appendChild(section1);
+
+        var section2 = el('div', 'drawer-section');
+        var s2Title = el('div', 'drawer-section-title');
+        s2Title.textContent = 'Carrier';
+        section2.appendChild(s2Title);
+
+        var mcNum = 'MC-' + (100000 + Math.abs(hashStr(load.id + 'mc')) % 900000);
+        var phone = '(555) ' + (100 + Math.abs(hashStr(load.id + 'ph')) % 900) + '-' + (1000 + Math.abs(hashStr(load.id + 'ph2')) % 9000);
+        var truckNum = 'TRK-' + (1000 + Math.abs(hashStr(load.id + 'trk')) % 9000);
+
+        var carrierFields = [
+            { label: 'Carrier', value: load.carrier || 'Unassigned' },
+            { label: 'MC #', value: load.carrier ? mcNum : '\u2014' },
+            { label: 'Driver', value: load.driver || '\u2014' },
+            { label: 'Phone', value: load.driver && load.driver !== 'Pending' ? phone : '\u2014' },
+            { label: 'Truck #', value: load.driver && load.driver !== 'Pending' ? truckNum : '\u2014' }
+        ];
+        carrierFields.forEach(function(f) {
+            var row = el('div', 'field-row');
+            var lbl = el('span', 'field-label');
+            lbl.textContent = f.label;
+            row.appendChild(lbl);
+            var val = el('span', 'field-value');
+            val.textContent = f.value;
+            if (f.value === 'Unassigned') { val.style.fontStyle = 'italic'; val.style.color = 'var(--text-muted)'; }
+            row.appendChild(val);
+            section2.appendChild(row);
+        });
+        drawerContentEl.appendChild(section2);
+
+        var section3 = el('div', 'drawer-section');
+        var s3Title = el('div', 'drawer-section-title');
+        s3Title.textContent = 'Financial';
+        section3.appendChild(s3Title);
+
+        var grid = el('div', 'info-grid');
+        var marginDollars = load.rate - load.carrierPay;
+        var rpm = load.miles > 0 ? (load.rate / load.miles).toFixed(2) : '0.00';
+
+        var cells = [
+            { label: 'Rate', value: formatCurrency(load.rate) },
+            { label: 'Carrier Pay', value: load.carrierPay > 0 ? formatCurrency(load.carrierPay) : '\u2014' },
+            { label: 'Margin', value: load.margin > 0 ? formatCurrency(marginDollars) : '\u2014', sub: load.margin > 0 ? load.margin.toFixed(1) + '%' : '' },
+            { label: 'RPM', value: '$' + rpm }
+        ];
+
+        cells.forEach(function(c) {
+            var cell = el('div', 'info-cell');
+            var lbl = el('div', 'info-cell-label');
+            lbl.textContent = c.label;
+            cell.appendChild(lbl);
+            var val = el('div', 'info-cell-value');
+            val.textContent = c.value;
+            if (c.label === 'Margin' && load.margin > 0) {
+                val.style.color = load.margin >= 16 ? 'var(--success)' : load.margin >= 10 ? 'var(--text-primary)' : 'var(--danger)';
+            }
+            cell.appendChild(val);
+            if (c.sub) {
+                var sub = el('div', 'info-cell-sub');
+                sub.textContent = c.sub;
+                cell.appendChild(sub);
+            }
+            grid.appendChild(cell);
+        });
+
+        section3.appendChild(grid);
+        drawerContentEl.appendChild(section3);
+
+        var section4 = el('div', 'drawer-section');
+        var s4Title = el('div', 'drawer-section-title');
+        s4Title.textContent = 'Equipment';
+        section4.appendChild(s4Title);
+        var tagList = el('div', 'tag-list');
+        var tag = el('span', 'tag-item');
+        tag.textContent = load.equipment;
+        tagList.appendChild(tag);
+        if (load.equipment === 'Reefer') {
+            var tag2 = el('span', 'tag-item');
+            tag2.textContent = 'Temperature Controlled';
+            tagList.appendChild(tag2);
+        }
+        if (load.equipment === 'Flatbed') {
+            var tag3 = el('span', 'tag-item');
+            tag3.textContent = 'Oversized OK';
+            tagList.appendChild(tag3);
+        }
+        section4.appendChild(tagList);
+        drawerContentEl.appendChild(section4);
+    }
+
+    function hashStr(s) {
+        var h = 0;
+        for (var i = 0; i < s.length; i++) {
+            h = ((h << 5) - h) + s.charCodeAt(i);
+            h |= 0;
+        }
+        return h;
+    }
+
+    function renderStopsTab(load) {
+        var pickupCard = el('div', 'stop-card');
+        var pHeader = el('div', 'stop-header');
+        var pIcon = el('div', 'stop-type-icon pickup');
+        pIcon.appendChild(icon('radio_button_checked'));
+        pHeader.appendChild(pIcon);
+        var pLabel = el('span', 'stop-type-label');
+        pLabel.textContent = 'Pickup';
+        pHeader.appendChild(pLabel);
+        pickupCard.appendChild(pHeader);
+        var pCity = el('div', 'stop-city');
+        pCity.textContent = load.origin;
+        pickupCard.appendChild(pCity);
+        var pDate = el('div', 'stop-date');
+        pDate.textContent = load.pickupDate + ' at ' + load.pickupTime;
+        pickupCard.appendChild(pDate);
+        var pRef = el('div', 'stop-ref');
+        pRef.textContent = 'Ref# PU-' + load.id.replace('LD-', '') + '-A';
+        pickupCard.appendChild(pRef);
+        drawerContentEl.appendChild(pickupCard);
+
+        var conn = el('div', 'stop-connector');
+        var dots = el('div', 'stop-dots');
+        for (var i = 0; i < 4; i++) {
+            dots.appendChild(el('div', 'stop-dot-small'));
+        }
+        conn.appendChild(dots);
+        drawerContentEl.appendChild(conn);
+
+        var delivCard = el('div', 'stop-card');
+        var dHeader = el('div', 'stop-header');
+        var dIcon = el('div', 'stop-type-icon delivery');
+        dIcon.appendChild(icon('location_on'));
+        dHeader.appendChild(dIcon);
+        var dLabel = el('span', 'stop-type-label');
+        dLabel.textContent = 'Delivery';
+        dHeader.appendChild(dLabel);
+        delivCard.appendChild(dHeader);
+        var dCity = el('div', 'stop-city');
+        dCity.textContent = load.dest;
+        delivCard.appendChild(dCity);
+        var dDate = el('div', 'stop-date');
+        dDate.textContent = load.delivDate + ' at ' + load.delivTime;
+        if (load.late) dDate.style.color = 'var(--danger)';
+        delivCard.appendChild(dDate);
+        var dRef = el('div', 'stop-ref');
+        dRef.textContent = 'Ref# DL-' + load.id.replace('LD-', '') + '-B';
+        delivCard.appendChild(dRef);
+        drawerContentEl.appendChild(delivCard);
+
+        var section = el('div', 'drawer-section');
+        section.style.marginTop = '16px';
+        var sTitle = el('div', 'drawer-section-title');
+        sTitle.textContent = 'Route Details';
+        section.appendChild(sTitle);
+
+        var grid = el('div', 'info-grid');
+        var distCell = el('div', 'info-cell');
+        var distLabel = el('div', 'info-cell-label');
+        distLabel.textContent = 'Total Distance';
+        distCell.appendChild(distLabel);
+        var distVal = el('div', 'info-cell-value');
+        distVal.textContent = load.miles.toLocaleString() + ' mi';
+        distCell.appendChild(distVal);
+        grid.appendChild(distCell);
+
+        var timeCell = el('div', 'info-cell');
+        var timeLabel = el('div', 'info-cell-label');
+        timeLabel.textContent = 'Est. Drive Time';
+        timeCell.appendChild(timeLabel);
+        var driveHours = Math.round(load.miles / 55);
+        var driveMins = Math.abs(hashStr(load.id + 'time')) % 59;
+        var timeVal = el('div', 'info-cell-value');
+        timeVal.textContent = driveHours + 'h ' + driveMins + 'm';
+        timeCell.appendChild(timeVal);
+        grid.appendChild(timeCell);
+
+        section.appendChild(grid);
+        drawerContentEl.appendChild(section);
+    }
+
+    function renderFinanceTab(load) {
+        var revSection = el('div', 'finance-section');
+        var revHeader = el('div', 'finance-header');
+        revHeader.textContent = 'Revenue';
+        revSection.appendChild(revHeader);
+        var rpm = load.miles > 0 ? (load.rate / load.miles).toFixed(2) : '0.00';
+        var revRows = [
+            { label: 'Customer Rate', value: formatCurrency(load.rate) },
+            { label: 'RPM', value: '$' + rpm }
+        ];
+        revRows.forEach(function(r) {
+            var row = el('div', 'finance-row');
+            var lbl = el('span', 'finance-label');
+            lbl.textContent = r.label;
+            row.appendChild(lbl);
+            var val = el('span', 'finance-value');
+            val.textContent = r.value;
+            row.appendChild(val);
+            revSection.appendChild(row);
+        });
+        drawerContentEl.appendChild(revSection);
+
+        var costSection = el('div', 'finance-section');
+        var costHeader = el('div', 'finance-header');
+        costHeader.textContent = 'Cost';
+        costSection.appendChild(costHeader);
+        var accAmount = load.carrierPay > 0 ? Math.floor(load.carrierPay * 0.03) : 0;
+        var costRows = [
+            { label: 'Carrier Pay', value: load.carrierPay > 0 ? formatCurrency(load.carrierPay) : '\u2014' },
+            { label: 'Accessorials', value: accAmount > 0 ? formatCurrency(accAmount) : '\u2014' }
+        ];
+        costRows.forEach(function(r) {
+            var row = el('div', 'finance-row');
+            var lbl = el('span', 'finance-label');
+            lbl.textContent = r.label;
+            row.appendChild(lbl);
+            var val = el('span', 'finance-value');
+            val.textContent = r.value;
+            row.appendChild(val);
+            costSection.appendChild(row);
+        });
+        drawerContentEl.appendChild(costSection);
+
+        var marginDollars = load.rate - load.carrierPay;
+        var marginBox = el('div', 'margin-box');
+        if (load.margin >= 16) {
+            marginBox.style.backgroundColor = 'var(--success-bg)';
+            marginBox.style.border = '1px solid var(--success)';
+        } else if (load.margin >= 10) {
+            marginBox.style.backgroundColor = 'var(--sapphire-light)';
+            marginBox.style.border = '1px solid var(--sapphire-border)';
+        } else if (load.margin > 0) {
+            marginBox.style.backgroundColor = 'var(--danger-bg)';
+            marginBox.style.border = '1px solid var(--danger)';
+        } else {
+            marginBox.style.backgroundColor = 'var(--bg-main)';
+            marginBox.style.border = '1px solid var(--border)';
+        }
+
+        var pctEl = el('div', 'margin-box-pct');
+        pctEl.textContent = load.margin > 0 ? load.margin.toFixed(1) + '%' : '\u2014';
+        if (load.margin >= 16) pctEl.style.color = 'var(--success)';
+        else if (load.margin >= 10) pctEl.style.color = 'var(--sapphire)';
+        else if (load.margin > 0) pctEl.style.color = 'var(--danger)';
+        else pctEl.style.color = 'var(--text-muted)';
+        marginBox.appendChild(pctEl);
+
+        var amtEl = el('div', 'margin-box-amt');
+        amtEl.textContent = load.margin > 0 ? formatCurrency(marginDollars) + ' margin' : 'No carrier assigned';
+        amtEl.style.color = 'var(--text-secondary)';
+        marginBox.appendChild(amtEl);
+        drawerContentEl.appendChild(marginBox);
+
+        var paySection = el('div', 'finance-section');
+        var payHeader = el('div', 'finance-header');
+        payHeader.textContent = 'Payment Status';
+        paySection.appendChild(payHeader);
+        var invoiceStatus = load.status === 'delivered' ? 'Invoiced' : 'Pending';
+        var carrierPayStatus = load.status === 'delivered' ? 'Paid' : 'Pending';
+        var payRows = [
+            { label: 'Invoice Status', value: invoiceStatus },
+            { label: 'Carrier Payment', value: carrierPayStatus }
+        ];
+        payRows.forEach(function(r) {
+            var row = el('div', 'finance-row');
+            var lbl = el('span', 'finance-label');
+            lbl.textContent = r.label;
+            row.appendChild(lbl);
+            var val = el('span', 'finance-value');
+            val.textContent = r.value;
+            if (r.value === 'Paid' || r.value === 'Invoiced') val.style.color = 'var(--success)';
+            row.appendChild(val);
+            paySection.appendChild(row);
+        });
+        drawerContentEl.appendChild(paySection);
+    }
+
+    function renderDocumentsTab(load) {
+        var docs = [
+            { name: 'Bill of Lading (BOL)', complete: load.status === 'delivered' || load.status === 'transit' || load.status === 'dispatched' },
+            { name: 'Rate Confirmation', complete: load.status !== 'unassigned' },
+            { name: 'Proof of Delivery (POD)', complete: load.status === 'delivered' }
+        ];
+
+        var completedCount = 0;
+        docs.forEach(function(d) {
+            var item = el('div', 'doc-item');
+            var docIcon = el('div', 'doc-icon ' + (d.complete ? 'complete' : 'pending'));
+            docIcon.appendChild(icon(d.complete ? 'check_circle' : 'schedule'));
+            item.appendChild(docIcon);
+            var info = el('div', 'doc-info');
+            var name = el('div', 'doc-name');
+            name.textContent = d.name;
+            info.appendChild(name);
+            var status = el('div', 'doc-status');
+            status.textContent = d.complete ? 'Uploaded' : 'Pending';
+            info.appendChild(status);
+            item.appendChild(info);
+            drawerContentEl.appendChild(item);
+            if (d.complete) completedCount++;
+        });
+
+        var progressLabel = el('div', 'drawer-section-title');
+        progressLabel.textContent = 'Document Completeness';
+        progressLabel.style.marginTop = '16px';
+        drawerContentEl.appendChild(progressLabel);
+
+        var progressBar = el('div', 'doc-progress');
+        var fill = el('div', 'doc-progress-fill');
+        var pct = Math.round((completedCount / docs.length) * 100);
+        fill.style.width = pct + '%';
+        fill.style.backgroundColor = pct === 100 ? 'var(--success)' : pct >= 50 ? 'var(--sapphire)' : 'var(--danger)';
+        progressBar.appendChild(fill);
+        drawerContentEl.appendChild(progressBar);
+
+        var pctText = el('div', '');
+        pctText.style.fontSize = '11px';
+        pctText.style.color = 'var(--text-muted)';
+        pctText.style.marginTop = '4px';
+        pctText.textContent = completedCount + ' of ' + docs.length + ' documents (' + pct + '%)';
+        drawerContentEl.appendChild(pctText);
+
+        if (load.status !== 'delivered' && load.status !== 'unassigned') {
+            var warning = el('div', 'doc-warning');
+            warning.appendChild(icon('warning'));
+            var wText = el('div', 'doc-warning-text');
+            wText.textContent = 'POD is required upon delivery. Ensure the driver uploads the signed POD document.';
+            warning.appendChild(wText);
+            drawerContentEl.appendChild(warning);
+        }
+    }
+
+    function buildApp() {
+        var app = document.getElementById('app');
+        app.appendChild(buildSidebar());
+        var main = el('div', 'main-content');
+        main.appendChild(buildHeader());
+        main.appendChild(buildFilterBar());
+        main.appendChild(buildStatsBar());
+        main.appendChild(buildBulkBar());
+        main.appendChild(buildTable());
+        main.appendChild(buildPagination());
+        app.appendChild(main);
+        buildDrawerShell();
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeDrawer();
+        if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+            e.preventDefault();
+            var searchInput = document.querySelector('.header-search input');
+            if (searchInput) searchInput.focus();
+        }
+    });
+
+    buildApp();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dispatch Board - Ultra TMS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontSize: {
+            'xs2': '11px',
+            'xs': '12px',
+            'sm': '13px',
+            'base': '13px',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-size: 13px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+    .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+    .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+    .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+    .load-card { transition: box-shadow 0.15s ease, transform 0.1s ease; cursor: grab; }
+    .load-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-1px); }
+    .load-id { font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace; }
+    .kanban-col { min-width: 300px; max-width: 320px; }
+    .nav-item { transition: all 0.1s ease; }
+    .nav-item:hover { background: #f9fafb; }
+    .context-menu { display: none; }
+    .context-trigger:hover .context-menu,
+    .context-trigger:focus-within .context-menu { display: block; }
+    @keyframes pulse-subtle { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+    .pulse-subtle { animation: pulse-subtle 2s ease-in-out infinite; }
+    .filter-chip { transition: all 0.1s ease; }
+    .filter-chip:hover { background: #eff6ff; border-color: #bfdbfe; }
+    .us-map-dot { position: absolute; width: 6px; height: 6px; border-radius: 50%; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-700 antialiased overflow-hidden h-screen">
+
+  <!-- LAYOUT WRAPPER -->
+  <div class="flex h-screen">
+
+    <!-- ==================== SIDEBAR ==================== -->
+    <aside class="w-60 bg-white border-r border-gray-200 flex flex-col flex-shrink-0 h-screen">
+      <!-- Logo -->
+      <div class="h-14 flex items-center px-5 border-b border-gray-100">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+            <span class="text-white font-bold text-sm">U</span>
+          </div>
+          <span class="font-bold text-gray-900 text-[15px] tracking-tight">Ultra TMS</span>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="flex-1 py-3 px-3 overflow-y-auto">
+        <div class="mb-1">
+          <span class="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Operations</span>
+        </div>
+
+        <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-md text-gray-600 text-[13px]">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+          Dashboard
+        </a>
+        <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-md text-gray-600 text-[13px]">
+          <i data-lucide="file-text" class="w-4 h-4"></i>
+          Orders
+        </a>
+        <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-md text-gray-600 text-[13px]">
+          <i data-lucide="truck" class="w-4 h-4"></i>
+          Loads
+        </a>
+        <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-md bg-blue-50 text-blue-600 font-medium text-[13px] border-l-[3px] border-blue-600 -ml-[3px]">
+          <i data-lucide="columns-3" class="w-4 h-4"></i>
+          Dispatch Board
+        </a>
+        <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-md text-gray-600 text-[13px]">
+          <i data-lucide="map-pin" class="w-4 h-4"></i>
+          Tracking
+        </a>
+        <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-md text-gray-600 text-[13px]">
+          <i data-lucide="phone" class="w-4 h-4"></i>
+          Check Calls
+        </a>
+
+        <div class="mt-5 mb-1">
+          <span class="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Management</span>
+        </div>
+        <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-md text-gray-600 text-[13px]">
+          <i data-lucide="building-2" class="w-4 h-4"></i>
+          Carriers
+        </a>
+        <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-md text-gray-600 text-[13px]">
+          <i data-lucide="users" class="w-4 h-4"></i>
+          Customers
+        </a>
+        <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-md text-gray-600 text-[13px]">
+          <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+          Reports
+        </a>
+        <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-md text-gray-600 text-[13px]">
+          <i data-lucide="settings" class="w-4 h-4"></i>
+          Settings
+        </a>
+      </nav>
+
+      <!-- User -->
+      <div class="border-t border-gray-200 px-4 py-3">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+            <span class="text-blue-700 font-semibold text-xs">MR</span>
+          </div>
+          <div class="min-w-0">
+            <div class="text-[13px] font-medium text-gray-900 truncate">Maria Rodriguez</div>
+            <div class="text-[11px] text-gray-400">Dispatcher</div>
+          </div>
+          <button class="ml-auto text-gray-400 hover:text-gray-600">
+            <i data-lucide="chevron-down" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <main class="flex-1 flex flex-col min-w-0 h-screen">
+
+      <!-- TOOLBAR -->
+      <div class="bg-white border-b border-gray-200 flex-shrink-0">
+
+        <!-- Row 1: Breadcrumb + Actions -->
+        <div class="flex items-center justify-between px-5 h-11 border-b border-gray-100">
+          <div class="flex items-center gap-1.5 text-[12px]">
+            <span class="text-gray-400">TMS Core</span>
+            <i data-lucide="chevron-right" class="w-3 h-3 text-gray-300"></i>
+            <span class="text-gray-700 font-medium">Dispatch Board</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] text-gray-500 border border-gray-200 rounded-md hover:bg-gray-50">
+              <i data-lucide="download" class="w-3.5 h-3.5"></i>
+              Export
+            </button>
+            <button class="flex items-center gap-1.5 px-3 py-1.5 text-[12px] text-white bg-blue-600 rounded-md hover:bg-blue-700 font-medium">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              New Load
+            </button>
+          </div>
+        </div>
+
+        <!-- Row 2: View Toggle, Date, Filters, Search -->
+        <div class="flex items-center gap-3 px-5 h-10 border-b border-gray-100">
+          <!-- View Toggle -->
+          <div class="flex items-center bg-gray-100 rounded-md p-0.5">
+            <button class="px-2.5 py-1 text-[12px] font-medium text-white bg-blue-600 rounded">
+              <span class="flex items-center gap-1"><i data-lucide="kanban" class="w-3.5 h-3.5"></i> Kanban</span>
+            </button>
+            <button class="px-2.5 py-1 text-[12px] text-gray-500 hover:text-gray-700 rounded">
+              <span class="flex items-center gap-1"><i data-lucide="gantt-chart" class="w-3.5 h-3.5"></i> Timeline</span>
+            </button>
+            <button class="px-2.5 py-1 text-[12px] text-gray-500 hover:text-gray-700 rounded">
+              <span class="flex items-center gap-1"><i data-lucide="map" class="w-3.5 h-3.5"></i> Map</span>
+            </button>
+          </div>
+
+          <div class="w-px h-5 bg-gray-200"></div>
+
+          <!-- Date Range -->
+          <button class="flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] text-gray-600 border border-gray-200 rounded-md hover:bg-gray-50">
+            <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+            This Week
+            <i data-lucide="chevron-down" class="w-3 h-3 text-gray-400"></i>
+          </button>
+
+          <!-- Filters -->
+          <button class="filter-chip flex items-center gap-1 px-2.5 py-1.5 text-[12px] text-gray-600 border border-gray-200 rounded-md">
+            Equipment: <span class="font-medium">All</span>
+            <i data-lucide="chevron-down" class="w-3 h-3 text-gray-400"></i>
+          </button>
+          <button class="filter-chip flex items-center gap-1 px-2.5 py-1.5 text-[12px] text-gray-600 border border-gray-200 rounded-md">
+            Carrier: <span class="font-medium">All</span>
+            <i data-lucide="chevron-down" class="w-3 h-3 text-gray-400"></i>
+          </button>
+          <button class="filter-chip flex items-center gap-1 px-2.5 py-1.5 text-[12px] text-gray-600 border border-gray-200 rounded-md">
+            Lane: <span class="font-medium">All</span>
+            <i data-lucide="chevron-down" class="w-3 h-3 text-gray-400"></i>
+          </button>
+
+          <!-- Search -->
+          <div class="relative ml-auto">
+            <i data-lucide="search" class="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2"></i>
+            <input type="text" placeholder="Search loads, carriers..." class="pl-8 pr-3 py-1.5 text-[12px] border border-gray-200 rounded-md w-52 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" />
+          </div>
+
+          <!-- Bulk Actions -->
+          <button class="flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] text-gray-500 border border-gray-200 rounded-md hover:bg-gray-50">
+            Bulk Actions
+            <i data-lucide="chevron-down" class="w-3 h-3 text-gray-400"></i>
+          </button>
+        </div>
+
+        <!-- Row 3: Saved Filters -->
+        <div class="flex items-center gap-2 px-5 h-9">
+          <span class="text-[11px] text-gray-400 mr-1">Saved:</span>
+          <button class="px-2.5 py-1 text-[12px] text-gray-600 bg-gray-100 rounded-full hover:bg-gray-200">My Loads</button>
+          <button class="px-2.5 py-1 text-[12px] text-gray-600 bg-gray-100 rounded-full hover:bg-gray-200">Urgent</button>
+          <button class="px-2.5 py-1 text-[12px] text-white bg-blue-600 rounded-full font-medium">Unassigned</button>
+          <button class="px-2.5 py-1 text-[12px] text-gray-600 bg-gray-100 rounded-full hover:bg-gray-200">At Risk</button>
+          <button class="px-2.5 py-1 text-[12px] text-gray-600 bg-gray-100 rounded-full hover:bg-gray-200">Expiring Tenders</button>
+        </div>
+      </div>
+
+      <!-- KPI STRIP -->
+      <div class="bg-white border-b border-gray-200 px-5 py-2.5 flex-shrink-0">
+        <div class="grid grid-cols-8 gap-2.5">
+          <!-- Unassigned -->
+          <div class="bg-gray-100 rounded-lg px-3 py-2 text-center">
+            <div class="text-[20px] font-bold text-gray-700">12</div>
+            <div class="text-[11px] text-gray-500 font-medium">Unassigned</div>
+          </div>
+          <!-- Tendered -->
+          <div class="bg-purple-50 rounded-lg px-3 py-2 text-center">
+            <div class="text-[20px] font-bold text-purple-700">8</div>
+            <div class="text-[11px] text-purple-600 font-medium">Tendered</div>
+          </div>
+          <!-- Dispatched -->
+          <div class="bg-indigo-50 rounded-lg px-3 py-2 text-center">
+            <div class="text-[20px] font-bold text-indigo-700">23</div>
+            <div class="text-[11px] text-indigo-600 font-medium">Dispatched</div>
+          </div>
+          <!-- In Transit -->
+          <div class="bg-sky-50 rounded-lg px-3 py-2 text-center">
+            <div class="text-[20px] font-bold text-sky-700">45</div>
+            <div class="text-[11px] text-sky-600 font-medium">In Transit</div>
+          </div>
+          <!-- At Stop -->
+          <div class="bg-amber-50 rounded-lg px-3 py-2 text-center">
+            <div class="text-[20px] font-bold text-amber-700">7</div>
+            <div class="text-[11px] text-amber-600 font-medium">At Stop</div>
+          </div>
+          <!-- Delivered -->
+          <div class="bg-lime-50 rounded-lg px-3 py-2 text-center">
+            <div class="text-[20px] font-bold text-lime-700">15</div>
+            <div class="text-[11px] text-lime-600 font-medium">Delivered</div>
+          </div>
+          <!-- Total -->
+          <div class="bg-white border border-gray-200 rounded-lg px-3 py-2 text-center">
+            <div class="text-[20px] font-bold text-gray-700">110</div>
+            <div class="text-[11px] text-gray-500 font-medium">Total</div>
+          </div>
+          <!-- At Risk -->
+          <div class="bg-red-50 rounded-lg px-3 py-2 text-center">
+            <div class="text-[20px] font-bold text-red-600">3</div>
+            <div class="text-[11px] text-red-500 font-medium">At Risk</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== KANBAN BOARD ==================== -->
+      <div class="flex-1 overflow-x-auto overflow-y-hidden px-5 py-4 scrollbar-thin">
+        <div class="flex gap-4 h-full">
+
+          <!-- ===== COLUMN: UNASSIGNED ===== -->
+          <div class="kanban-col flex flex-col flex-shrink-0">
+            <div class="border-t-4 border-gray-400 rounded-t-lg"></div>
+            <div class="flex items-center justify-between px-3 py-2 bg-white border-x border-gray-200">
+              <div class="flex items-center gap-2">
+                <span class="font-semibold text-gray-700 text-[13px]">Unassigned</span>
+                <span class="bg-gray-200 text-gray-600 text-[11px] font-medium px-1.5 py-0.5 rounded-full">4</span>
+              </div>
+              <button class="text-gray-400 hover:text-gray-600"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
+            </div>
+            <div class="flex-1 bg-gray-50 border-x border-b border-gray-200 rounded-b-lg p-2 space-y-2 overflow-y-auto scrollbar-thin">
+
+              <!-- Card: FM-2025-0861 - AT RISK -->
+              <div class="load-card bg-orange-50 rounded-lg border border-orange-200 border-l-[3px] border-l-orange-500 p-3">
+                <div class="flex items-center justify-between mb-1.5">
+                  <div class="flex items-center gap-1.5">
+                    <span class="load-id text-[12px] font-semibold text-blue-600">FM-2025-0861</span>
+                    <span title="Reefer">&#10052;&#65039;</span>
+                  </div>
+                  <span class="text-[10px] bg-orange-100 text-orange-700 font-semibold px-1.5 py-0.5 rounded">AT RISK</span>
+                </div>
+                <div class="text-[12px] text-gray-700 mb-1">Denver, CO <span class="text-gray-400 mx-0.5">&rarr;</span> Salt Lake City, UT</div>
+                <div class="text-[12px] text-red-600 font-semibold mb-1.5">UNASSIGNED</div>
+                <div class="flex items-center gap-2 text-[11px] text-gray-500 mb-1.5">
+                  <span>PU: Feb 9</span>
+                  <span class="text-gray-300">|</span>
+                  <span>Del: Feb 10</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-[12px] font-semibold text-gray-700">$2,100</span>
+                  <span class="text-[11px] text-gray-400">FreshCo Foods</span>
+                </div>
+                <div class="flex items-center justify-between mt-1.5 pt-1.5 border-t border-orange-200">
+                  <span class="text-[10px] text-orange-600 font-medium pulse-subtle">26h unassigned</span>
+                </div>
+              </div>
+
+              <!-- Card: FM-2025-0863 - HOT LOAD -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 border-l-[3px] border-l-gray-400 p-3">
+                <div class="flex items-center justify-between mb-1.5">
+                  <div class="flex items-center gap-1.5">
+                    <span class="load-id text-[12px] font-semibold text-blue-600">FM-2025-0863</span>
+                    <span title="Dry Van">&#128230;</span>
+                  </div>
+                  <span class="text-[10px] bg-red-100 text-red-700 font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5">&#128293; HOT</span>
+                </div>
+                <div class="text-[12px] text-gray-700 mb-1">Memphis, TN <span class="text-gray-400 mx-0.5">&rarr;</span> Nashville, TN</div>
+                <div class="text-[12px] text-red-600 font-semibold mb-1.5">UNASSIGNED</div>
+                <div class="flex items-center gap-2 text-[11px] text-gray-500 mb-1.5">
+                  <span>PU: Feb 9</span>
+                  <span class="text-gray-300">|</span>
+                  <span>Del: Feb 9</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-[12px] font-semibold text-gray-700">$850</span>
+                  <span class="text-[11px] text-gray-400">AutoParts Direct</span>
+                </div>
+              </div>
+
+              <!-- Card: FM-2025-0865 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 border-l-[3px] border-l-gray-400 p-3">
+                <div class="flex items-center justify-between mb-1.5">
+                  <div class="flex items-center gap-1.5">
+                    <span class="load-id text-[12px] font-semibold text-blue-600">FM-2025-0865</span>
+                    <span title="Flatbed">&#128307;</span>
+                  </div>
+                </div>
+                <div class="text-[12px] text-gray-700 mb-1">Houston, TX <span class="text-gray-400 mx-0.5">&rarr;</span> San Antonio, TX</div>
+                <div class="text-[12px] text-red-600 font-semibold mb-1.5">UNASSIGNED</div>
+                <div class="flex items-center gap-2 text-[11px] text-gray-500 mb-1.5">
+                  <span>PU: Feb 10</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-[12px] font-semibold text-gray-700">$1,200</span>
+                  <span class="text-[11px] text-gray-400">Steel Dynamics</span>
+                </div>
+              </div>
+
+              <!-- Card: FM-2025-0867 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 border-l-[3px] border-l-gray-400 p-3">
+                <div class="flex items-center justify-between mb-1.5">
+                  <div class="flex items-center gap-1.5">
+                    <span class="load-id text-[12px] font-semibold text-blue-600">FM-2025-0867</span>
+                    <span title="Dry Van">&#128230;</span>
+                  </div>
+                </div>
+                <div class="text-[12px] text-gray-700 mb-1">Portland, OR <span class="text-gray-400 mx-0.5">&rarr;</span> Seattle, WA</div>
+                <div class="text-[12px] text-red-600 font-semibold mb-1.5">UNASSIGNED</div>
+                <div class="flex items-center gap-2 text-[11px] text-gray-500 mb-1.5">
+                  <span>PU: Feb 9</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-[12px] font-semibold text-gray-700">$650</span>
+                  <span class="text-[11px] text-gray-400">Pacific Lumber</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ===== COLUMN: TENDERED ===== -->
+          <div class="kanban-col flex flex-col flex-shrink-0">
+            <div class="border-t-4 border-purple-500 rounded-t-lg"></div>
+            <div class="flex items-center justify-between px-3 py-2 bg-white border-x border-gray-200">
+              <div class="flex items-center gap-2">
+                <span class="font-semibold text-gray-700 text-[13px]">Tendered</span>
+                <span class="bg-purple-100 text-purple-600 text-[11px] font-medium px-1.5 py-0.5 rounded-full">3</span>
+              </div>
+              <button class="text-gray-400 hover:text-gray-600"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
+            </div>
+            <div class="flex-1 bg-gray-50 border-x border-b border-gray-200 rounded-b-lg p-2 space-y-2 overflow-y-auto scrollbar-thin">
+
+              <!-- Card: FM-2025-0855 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 border-l-[3px] border-l-purple-500 p-3">
+                <div class="flex items-center justify-between mb-1.5">
+                  <div class="flex items-center gap-1.5">
+                    <span class="load-id text-[12px] font-semibold text-blue-600">FM-2025-0855</span>
+                    <span title="Dry Van">&#128230;</span>
+                  </div>
+                  <span class="text-[10px] bg-purple-100 text-purple-700 font-medium px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                    <i data-lucide="clock" class="w-3 h-3"></i> 28m
+                  </span>
+                </div>
+                <div class="text-[12px] text-gray-700 mb-1">Kansas City, MO <span class="text-gray-400 mx-0.5">&rarr;</span> St. Louis, MO</div>
+                <div class="text-[12px] text-gray-600 font-medium mb-1">Heartland Express</div>
+                <div class="flex items-center gap-2 text-[11px] text-gray-500 mb-1.5">
+                  <span>PU: Feb 9</span>
+                  <span class="text-gray-300">|</span>
+                  <span>Del: Feb 9</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <span class="text-[12px] font-semibold text-gray-700">$780</span>
+                    <span class="text-[11px] text-green-600 font-medium ml-1">$620 (21%)</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between mt-1.5 pt-1.5 border-t border-gray-100">
+                  <span class="text-[11px] text-gray-400">Midwest Grain</span>
+                </div>
+              </div>
+
+              <!-- Card: FM-2025-0858 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 border-l-[3px] border-l-purple-500 p-3">
+                <div class="flex items-center justify-between mb-1.5">
+                  <div class="flex items-center gap-1.5">
+                    <span class="load-id text-[12px] font-semibold text-blue-600">FM-2025-0858</span>
+                    <span title="Reefer">&#10052;&#65039;</span>
+                  </div>
+                  <span class="text-[10px] bg-red-100 text-red-700 font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 pulse-subtle">
+                    <i data-lucide="clock" class="w-3 h-3"></i> 4m
+                  </span>
+                </div>
+                <div class="text-[12px] text-gray-700 mb-1">Indianapolis, IN <span class="text-gray-400 mx-0.5">&rarr;</span> Louisville, KY</div>
+                <div class="text-[12px] text-gray-600 font-medium mb-1">XPO Logistics</div>
+                <div class="flex items-center gap-2 text-[11px] text-gray-500 mb-1.5">
+                  <span>PU: Feb 9</span>
+                  <span class="text-gray-300">|</span>
+                  <span>Del: Feb 10</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <span class="text-[12px] font-semibold text-gray-700">$1,450</span>
+                    <span class="text-[11px] text-green-600 font-medium ml-1">$1,180 (19%)</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between mt-1.5 pt-1.5 border-t border-gray-100">
+                  <span class="text-[11px] text-gray-400">Pharma Solutions</span>
+                </div>
+              </div>
+
+              <!-- Card: FM-2025-0860 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 border-l-[3px] border-l-purple-500 p-3">
+                <div class="flex items-center justify-between mb-1.5">
+                  <div class="flex items-center gap-1.5">
+                    <span class="load-id text-[12px] font-semibold text-blue-600">FM-2025-0860</span>
+                    <span title="Dry Van">&#128230;</span>
+                  </div>
+                  <span class="text-[10px] bg-purple-100 text-purple-700 font-medium px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                    <i data-lucide="clock" class="w-3 h-3"></i> 22m
+                  </span>
+                </div>
+                <div class="text-[12px] text-gray-700 mb-1">Charlotte, NC <span class="text-gray-400 mx-0.5">&rarr;</span> Raleigh, NC</div>
+                <div class="text-[12px] text-gray-600 font-medium mb-1">Old Dominion</div>
+                <div class="flex items-center gap-2 text-[11px] text-gray-500 mb-1.5">
+                  <span>PU: Feb 9</span>
+                  <span class="text-gray-300">|</span>
+                  <span>Del: Feb 9</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <span class="text-[12px] font-semibold text-gray-700">$550</span>
+                    <span class="text-[11px] text-green-600 font-medium ml-1">$430 (22%)</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between mt-1.5 pt-1.5 border-t border-gray-100">
+                  <span class="text-[11px] text-gray-400">Furniture Mart</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ===== COLUMN: DISPATCHED ===== -->
+          <div class="kanban-col flex flex-col flex-shrink-0">
+            <div class="border-t-4 border-indigo-500 rounded-t-lg"></div>
+            <div class="flex items-center justify-between px-3 py-2 bg-white border-x border-gray-200">
+              <div class="flex items-center gap-2">
+                <span class="font-semibold text-gray-700 text-[13px]">Dispatched</span>
+                <span class="bg-indigo-100 text-indigo-600 text-[11px] font-medium px-1.5 py-0.5 rounded-full">3</span>
+              </div>
+              <button class="text-gray-400 hover:text-gray-600"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
+            </div>
+            <div class="flex-1 bg-gray-50 border-x border-b border-gray-200 rounded-b-lg p-2 space-y-2 overflow-y-auto scrollbar-thin">
+
+              <!-- Card: FM-2025-0842 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 border-l-[3px] border-l-indigo-500 p-3">
+                <div class="flex items-center justify-between mb-1.5">
+                  <div class="flex items-center gap-1.5">
+                    <span class="load-id text-[12px] font-semibold text-blue-600">FM-2025-0842</span>
+                    <span title="Dry Van">&#128230;</span>
+                  </div>
+                </div>
+                <div class="text-[12px] text-gray-700 mb-1">Phoenix, AZ <span class="text-gray-400 mx-0.5">&rarr;</span> Las Vegas, NV</div>
+                <div class="text-[12px] text-gray-600 font-medium mb-0.5">Schneider National</div>
+                <div class="text-[11px] text-gray-400 mb-1.5">Driver: Carlos G.</div>
+                <div class="flex items-center gap-2 text-[11px] text-gray-500 mb-1.5">
+                  <span>PU: Feb 8</span>
+                  <span class="text-gray-300">|</span>
+                  <span>Del: Feb 9</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <span class="text-[12px] font-semibold text-gray-700">$1,100</span>
+                    <span class="text-[11px] text-green-600 font-medium ml-1">$880 (20%)</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between mt-1.5 pt-1.5 border-t border-gray-100">
+                  <span class="text-[11px] text-gray-400">Desert Electronics</span>
+                </div>
+              </div>
+
+              <!-- Card: FM-2025-0844 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 border-l-[3px] border-l-indigo-500 p-3">
+                <div class="flex items-center justify-between mb-1.5">
+                  <div class="flex items-center gap-1.5">
+                    <span class="load-id text-[12px] font-semibold text-blue-600">FM-2025-0844</span>
+                    <span title="Reefer">&#10052;&#65039;</span>
+                  </div>
+                </div>
+                <div class="text-[12px] text-gray-700 mb-1">Minneapolis, MN <span class="text-gray-400 mx-0.5">&rarr;</span> Milwaukee, WI</div>
+                <div class="text-[12px] text-gray-600 font-medium mb-0.5">Werner Enterprises</div>
+                <div class="text-[11px] text-gray-400 mb-1.5">Driver: Jake A.</div>
+                <div class="flex items-center gap-2 text-[11px] text-gray-500 mb-1.5">
+                  <span>PU: Feb 8</span>
+                  <span class="text-gray-300">|</span>
+                  <span>Del: Feb 9</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <span class="text-[12px] font-semibold text-gray-700">$950</span>
+                    <span class="text-[11px] text-green-600 font-medium ml-1">$760 (20%)</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between mt-1.5 pt-1.5 border-t border-gray-100">
+                  <span class="text-[11px] text-gray-400">Dairy Fresh</span>
+                </div>
+              </div>
+
+              <!-- Card: FM-2025-0846 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 border-l-[3px] border-l-indigo-500 p-3">
+                <div class="flex items-center justify-between mb-1.5">
+                  <div class="flex items-center gap-1.5">
+                    <span class="load-id text-[12px] font-semibold text-blue-600">FM-2025-0846</span>
+                    <span title="Flatbed">&#128307;</span>
+                  </div>
+                </div>
+                <div class="text-[12px] text-gray-700 mb-1">Tampa, FL <span class="text-gray-400 mx-0.5">&rarr;</span> Jacksonville, FL</div>
+                <div class="text-[12px] text-gray-600 font-medium mb-0.5">Landstar System</div>
+                <div class="text-[11px] text-gray-400 mb-1.5">Driver: Rosa M.</div>
+                <div class="flex items-center gap-2 text-[11px] text-gray-500 mb-1.5">
+                  <span>PU: Feb 8</span>
+                  <span class="text-gray-300">|</span>
+                  <span>Del: Feb 9</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <span class="text-[12px] font-semibold text-gray-700">$880</span>
+                    <span class="text-[11px] text-green-600 font-medium ml-1">$700 (20%)</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between mt-1.5 pt-1.5 border-t border-gray-100">
+                  <span class="text-[11px] text-gray-400">Citrus Growers</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ===== COLUMN: IN TRANSIT ===== -->
+          <div class="kanban-col flex flex-col flex-shrink-0">
+            <div class="border-t-4 border-sky-500 rounded-t-lg"></div>
+            <div class="flex items-center justify-between px-3 py-2 bg-white border-x border-gray-200">
+              <div class="flex items-center gap-2">
+                <span class="font-semibold text-gray-700 text-[13px]">In Transit</span>
+                <span class="bg-sky-100 text-sky-600 text-[11px] font-medium px-1.5 py-0.5 rounded-full">5</span>
+              </div>
+              <button class="text-gray-400 hover:text-gray-600"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
+            </div>
+            <div class="flex-1 bg-gray-50 border-x border-b border-gray-200 rounded-b-lg p-2 space-y-2 overflow-y-auto scrollbar-thin">
+
+              <!-- Card: FM-2025-0847 - HOT + EXCEPTION + STALE CHECK CALL -->
+              <div class="load-card context-trigger relative bg-white rounded-lg border border-orange-200 border-l-[3px] border-l-orange-500 p-3" tabindex="0">
+                <div class="flex items-center justify-between mb-1.5">
+                  <div class="flex items-center gap-1.5">
+                    <span class="load-id text-[12px] font-semibold text-blue-600">FM-2025-0847</span>
+                    <span title="Dry Van">&#128230;</span>
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <span class="text-[10px] bg-red-100 text-red-700 font-bold px-1.5 py-0.5 rounded">&#128293; HOT</span>
+                    <span class="text-[10px] bg-amber-100 text-amber-700 font-bold px-1 py-0.5 rounded">&#9888;&#65039;</span>
+                  </div>
+                </div>
+                <div class="text-[12px] text-gray-700 mb-1">Chicago, IL <span class="text-gray-400 mx-0.5">&rarr;</span> Dallas, TX</div>
+                <div class="text-[12px] text-gray-600 font-medium mb-0.5">Swift Transport</div>
+                <div class="text-[11px] text-gray-400 mb-1.5">Driver: Mike R.</div>
+                <div class="flex items-center gap-2 text-[11px] text-gray-500 mb-1.5">
+                  <span>PU: Feb 7</span>
+                  <span class="text-gray-300">|</span>
+                  <span>Del: Feb 9</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <span class="text-[12px] font-semibold text-gray-700">$2,450</span>
+                    <span class="text-[11px] text-green-600 font-medium ml-1">$1,960 (20%)</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between mt-1.5 pt-1.5 border-t border-gray-100">
+                  <span class="text-[11px] text-gray-400">Acme Mfg</span>
+                  <span class="text-[10px] text-red-600 font-semibold">5h ago</span>
+                </div>
+
+                <!-- Context Menu (hover/focus activated) -->
+                <div class="context-menu absolute top-full right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50 py-1">
+                  <a href="#" class="flex items-center gap-2 px-3 py-1.5 text-[12px] text-gray-700 hover:bg-gray-50">
+                    <i data-lucide="user-plus" class="w-3.5 h-3.5 text-gray-400"></i> Assign Carrier
+                  </a>
+                  <a href="#" class="flex items-center gap-2 px-3 py-1.5 text-[12px] text-gray-700 hover:bg-gray-50">
+                    <i data-lucide="map-pin" class="w-3.5 h-3.5 text-gray-400"></i> Track on Map
+                  </a>
+                  <a href="#" class="flex items-center gap-2 px-3 py-1.5 text-[12px] text-gray-700 hover:bg-gray-50">
+                    <i data-lucide="phone" class="w-3.5 h-3.5 text-gray-400"></i> Add Check Call
+                  </a>
+                  <a href="#" class="flex items-center gap-2 px-3 py-1.5 text-[12px] text-gray-700 hover:bg-gray-50">
+                    <i data-lucide="map" class="w-3.5 h-3.5 text-gray-400"></i> View Stops
+                  </a>
+                  <a href="#" class="flex items-center gap-2 px-3 py-1.5 text-[12px] text-gray-700 hover:bg-gray-50">
+                    <i data-lucide="phone-call" class="w-3.5 h-3.5 text-gray-400"></i> Contact Driver
+                  </a>
+                  <div class="border-t border-gray-100 my-1"></div>
+                  <a href="#" class="flex items-center gap-2 px-3 py-1.5 text-[12px] text-gray-700 hover:bg-gray-50">
+                    <i data-lucide="external-link" class="w-3.5 h-3.5 text-gray-400"></i> View Detail
+                  </a>
+                </div>
+              </div>
+
+              <!-- Card: FM-2025-0832 - ETA Late -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 border-l-[3px] border-l-sky-500 p-3">
+                <div class="flex items-center justify-between mb-1.5">
+                  <div class="flex items-center gap-1.5">
+                    <span class="load-id text-[12px] font-semibold text-blue-600">FM-2025-0832</span>
+                    <span title="Dry Van">&#128230;</span>
+                  </div>
+                  <span class="text-[10px] bg-amber-100 text-amber-700 font-medium px-1.5 py-0.5 rounded">&#9888;&#65039; ETA Late</span>
+                </div>
+                <div class="text-[12px] text-gray-700 mb-1">Los Angeles, CA <span class="text-gray-400 mx-0.5">&rarr;</span> Phoenix, AZ</div>
+                <div class="text-[12px] text-gray-600 font-medium mb-0.5">Knight Logistics</div>
+                <div class="text-[11px] text-gray-400 mb-1.5">Driver: James W.</div>
+                <div class="flex items-center gap-2 text-[11px] text-gray-500 mb-1.5">
+                  <span>PU: Feb 7</span>
+                  <span class="text-gray-300">|</span>
+                  <span>Del: Feb 8</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <span class="text-[12px] font-semibold text-gray-700">$1,890</span>
+                    <span class="text-[11px] text-green-600 font-medium ml-1">$1,510 (20%)</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between mt-1.5 pt-1.5 border-t border-gray-100">
+                  <span class="text-[11px] text-gray-400">SoCal Produce</span>
+                  <span class="text-[10px] text-gray-400">2h ago</span>
+                </div>
+              </div>
+
+              <!-- Card: FM-2025-0819 - Detention -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 border-l-[3px] border-l-sky-500 p-3">
+                <div class="flex items-center justify-between mb-1.5">
+                  <div class="flex items-center gap-1.5">
+                    <span class="load-id text-[12px] font-semibold text-blue-600">FM-2025-0819</span>
+                    <span title="Flatbed">&#128307;</span>
+                  </div>
+                  <span class="text-[10px] bg-amber-100 text-amber-700 font-medium px-1.5 py-0.5 rounded">&#9888;&#65039; Detention 2h15m</span>
+                </div>
+                <div class="text-[12px] text-gray-700 mb-1">Atlanta, GA <span class="text-gray-400 mx-0.5">&rarr;</span> Miami, FL</div>
+                <div class="text-[12px] text-gray-600 font-medium mb-0.5">J.B. Hunt</div>
+                <div class="text-[11px] text-gray-400 mb-1.5">Driver: David T.</div>
+                <div class="flex items-center gap-2 text-[11px] text-gray-500 mb-1.5">
+                  <span>PU: Feb 7</span>
+                  <span class="text-gray-300">|</span>
+                  <span>Del: Feb 9</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <span class="text-[12px] font-semibold text-gray-700">$3,200</span>
+                    <span class="text-[11px] text-green-600 font-medium ml-1">$2,560 (20%)</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between mt-1.5 pt-1.5 border-t border-gray-100">
+                  <span class="text-[11px] text-gray-400">Southern Steel</span>
+                  <span class="text-[10px] text-gray-400">45m ago</span>
+                </div>
+              </div>
+
+              <!-- Card: FM-2025-0856 - Normal -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 border-l-[3px] border-l-sky-500 p-3">
+                <div class="flex items-center justify-between mb-1.5">
+                  <div class="flex items-center gap-1.5">
+                    <span class="load-id text-[12px] font-semibold text-blue-600">FM-2025-0856</span>
+                    <span title="Dry Van">&#128230;</span>
+                  </div>
+                </div>
+                <div class="text-[12px] text-gray-700 mb-1">Detroit, MI <span class="text-gray-400 mx-0.5">&rarr;</span> Columbus, OH</div>
+                <div class="text-[12px] text-gray-600 font-medium mb-0.5">Werner</div>
+                <div class="text-[11px] text-gray-400 mb-1.5">Driver: Tom B.</div>
+                <div class="flex items-center gap-2 text-[11px] text-gray-500 mb-1.5">
+                  <span>PU: Feb 8</span>
+                  <span class="text-gray-300">|</span>
+                  <span>Del: Feb 9</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <span class="text-[12px] font-semibold text-gray-700">$1,100</span>
+                    <span class="text-[11px] text-green-600 font-medium ml-1">$880 (20%)</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between mt-1.5 pt-1.5 border-t border-gray-100">
+                  <span class="text-[11px] text-gray-400">Motor City Auto</span>
+                  <span class="text-[10px] text-gray-400">30m ago</span>
+                </div>
+              </div>
+
+              <!-- Card: FM-2025-0838 - Normal -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 border-l-[3px] border-l-sky-500 p-3">
+                <div class="flex items-center justify-between mb-1.5">
+                  <div class="flex items-center gap-1.5">
+                    <span class="load-id text-[12px] font-semibold text-blue-600">FM-2025-0838</span>
+                    <span title="Dry Van">&#128230;</span>
+                  </div>
+                </div>
+                <div class="text-[12px] text-gray-700 mb-1">Newark, NJ <span class="text-gray-400 mx-0.5">&rarr;</span> Boston, MA</div>
+                <div class="text-[12px] text-gray-600 font-medium mb-0.5">Estes Express</div>
+                <div class="text-[11px] text-gray-400 mb-1.5">Driver: Sean M.</div>
+                <div class="flex items-center gap-2 text-[11px] text-gray-500 mb-1.5">
+                  <span>PU: Feb 8</span>
+                  <span class="text-gray-300">|</span>
+                  <span>Del: Feb 9</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <span class="text-[12px] font-semibold text-gray-700">$1,350</span>
+                    <span class="text-[11px] text-green-600 font-medium ml-1">$1,080 (20%)</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between mt-1.5 pt-1.5 border-t border-gray-100">
+                  <span class="text-[11px] text-gray-400">East Coast Retail</span>
+                  <span class="text-[10px] text-gray-400">1h ago</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ===== COLUMN: DELIVERED ===== -->
+          <div class="kanban-col flex flex-col flex-shrink-0">
+            <div class="border-t-4 border-lime-500 rounded-t-lg"></div>
+            <div class="flex items-center justify-between px-3 py-2 bg-white border-x border-gray-200">
+              <div class="flex items-center gap-2">
+                <span class="font-semibold text-gray-700 text-[13px]">Delivered</span>
+                <span class="bg-lime-100 text-lime-600 text-[11px] font-medium px-1.5 py-0.5 rounded-full">3</span>
+              </div>
+              <button class="text-gray-400 hover:text-gray-600"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
+            </div>
+            <div class="flex-1 bg-gray-50 border-x border-b border-gray-200 rounded-b-lg p-2 space-y-2 overflow-y-auto scrollbar-thin">
+
+              <!-- Card: FM-2025-0820 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 border-l-[3px] border-l-lime-500 p-3">
+                <div class="flex items-center justify-between mb-1.5">
+                  <div class="flex items-center gap-1.5">
+                    <span class="load-id text-[12px] font-semibold text-blue-600">FM-2025-0820</span>
+                    <span title="Dry Van">&#128230;</span>
+                  </div>
+                  <span class="text-[10px] bg-lime-100 text-lime-700 font-medium px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                    <i data-lucide="check" class="w-3 h-3"></i> On Time
+                  </span>
+                </div>
+                <div class="text-[12px] text-gray-700 mb-1">Dallas, TX <span class="text-gray-400 mx-0.5">&rarr;</span> Oklahoma City, OK</div>
+                <div class="text-[12px] text-gray-600 font-medium mb-1">KLLM Transport</div>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <span class="text-[12px] font-semibold text-gray-700">$1,650</span>
+                    <span class="text-[11px] text-green-600 font-medium ml-1">$1,320 (20%)</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between mt-1.5 pt-1.5 border-t border-gray-100">
+                  <span class="text-[11px] text-gray-400">Prairie Foods</span>
+                  <span class="text-[10px] text-gray-400">Today 9:15 AM</span>
+                </div>
+              </div>
+
+              <!-- Card: FM-2025-0825 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 border-l-[3px] border-l-lime-500 p-3">
+                <div class="flex items-center justify-between mb-1.5">
+                  <div class="flex items-center gap-1.5">
+                    <span class="load-id text-[12px] font-semibold text-blue-600">FM-2025-0825</span>
+                    <span title="Dry Van">&#128230;</span>
+                  </div>
+                  <span class="text-[10px] bg-lime-100 text-lime-700 font-medium px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                    <i data-lucide="check" class="w-3 h-3"></i> On Time
+                  </span>
+                </div>
+                <div class="text-[12px] text-gray-700 mb-1">San Francisco, CA <span class="text-gray-400 mx-0.5">&rarr;</span> Sacramento, CA</div>
+                <div class="text-[12px] text-gray-600 font-medium mb-1">FedEx Freight</div>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <span class="text-[12px] font-semibold text-gray-700">$580</span>
+                    <span class="text-[11px] text-green-600 font-medium ml-1">$460 (21%)</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between mt-1.5 pt-1.5 border-t border-gray-100">
+                  <span class="text-[11px] text-gray-400">Tech Valley</span>
+                  <span class="text-[10px] text-gray-400">Today 8:40 AM</span>
+                </div>
+              </div>
+
+              <!-- Card: FM-2025-0828 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 border-l-[3px] border-l-lime-500 p-3">
+                <div class="flex items-center justify-between mb-1.5">
+                  <div class="flex items-center gap-1.5">
+                    <span class="load-id text-[12px] font-semibold text-blue-600">FM-2025-0828</span>
+                    <span title="Flatbed">&#128307;</span>
+                  </div>
+                  <span class="text-[10px] bg-lime-100 text-lime-700 font-medium px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                    <i data-lucide="check" class="w-3 h-3"></i> On Time
+                  </span>
+                </div>
+                <div class="text-[12px] text-gray-700 mb-1">Pittsburgh, PA <span class="text-gray-400 mx-0.5">&rarr;</span> Philadelphia, PA</div>
+                <div class="text-[12px] text-gray-600 font-medium mb-1">ABF Freight</div>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <span class="text-[12px] font-semibold text-gray-700">$1,100</span>
+                    <span class="text-[11px] text-green-600 font-medium ml-1">$880 (20%)</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between mt-1.5 pt-1.5 border-t border-gray-100">
+                  <span class="text-[11px] text-gray-400">Penn Steel</span>
+                  <span class="text-[10px] text-gray-400">Today 7:55 AM</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ===== COLUMN: COMPLETED ===== -->
+          <div class="kanban-col flex flex-col flex-shrink-0">
+            <div class="border-t-4 border-green-500 rounded-t-lg"></div>
+            <div class="flex items-center justify-between px-3 py-2 bg-white border-x border-gray-200">
+              <div class="flex items-center gap-2">
+                <span class="font-semibold text-gray-700 text-[13px]">Completed</span>
+                <span class="bg-green-100 text-green-600 text-[11px] font-medium px-1.5 py-0.5 rounded-full">2</span>
+              </div>
+              <button class="text-gray-400 hover:text-gray-600"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
+            </div>
+            <div class="flex-1 bg-gray-50 border-x border-b border-gray-200 rounded-b-lg p-2 space-y-2 overflow-y-auto scrollbar-thin">
+
+              <!-- Card: FM-2025-0810 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 border-l-[3px] border-l-green-500 p-3 opacity-75">
+                <div class="flex items-center justify-between mb-1.5">
+                  <div class="flex items-center gap-1.5">
+                    <span class="load-id text-[12px] font-semibold text-blue-600">FM-2025-0810</span>
+                    <span title="Dry Van">&#128230;</span>
+                  </div>
+                  <span class="text-[10px] bg-green-100 text-green-700 font-medium px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                    <i data-lucide="check-check" class="w-3 h-3"></i> Done
+                  </span>
+                </div>
+                <div class="text-[12px] text-gray-700 mb-1">Nashville, TN <span class="text-gray-400 mx-0.5">&rarr;</span> Birmingham, AL</div>
+                <div class="text-[12px] text-gray-600 font-medium mb-1">Covenant Transport</div>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <span class="text-[12px] font-semibold text-gray-700">$920</span>
+                    <span class="text-[11px] text-green-600 font-medium ml-1">$740 (20%)</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between mt-1.5 pt-1.5 border-t border-gray-100">
+                  <span class="text-[11px] text-gray-400">Southern Retail</span>
+                  <span class="text-[10px] text-gray-400">Feb 7</span>
+                </div>
+              </div>
+
+              <!-- Card: FM-2025-0812 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 border-l-[3px] border-l-green-500 p-3 opacity-75">
+                <div class="flex items-center justify-between mb-1.5">
+                  <div class="flex items-center gap-1.5">
+                    <span class="load-id text-[12px] font-semibold text-blue-600">FM-2025-0812</span>
+                    <span title="Dry Van">&#128230;</span>
+                  </div>
+                  <span class="text-[10px] bg-green-100 text-green-700 font-medium px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                    <i data-lucide="check-check" class="w-3 h-3"></i> Done
+                  </span>
+                </div>
+                <div class="text-[12px] text-gray-700 mb-1">Baltimore, MD <span class="text-gray-400 mx-0.5">&rarr;</span> Washington, DC</div>
+                <div class="text-[12px] text-gray-600 font-medium mb-1">YRC Freight</div>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <span class="text-[12px] font-semibold text-gray-700">$420</span>
+                    <span class="text-[11px] text-green-600 font-medium ml-1">$340 (19%)</span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between mt-1.5 pt-1.5 border-t border-gray-100">
+                  <span class="text-[11px] text-gray-400">Capital Office</span>
+                  <span class="text-[10px] text-gray-400">Feb 6</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div><!-- /flex gap-4 -->
+      </div><!-- /kanban wrapper -->
+
+    </main>
+  </div><!-- /layout wrapper -->
+
+  <!-- ==================== MINI MAP ==================== -->
+  <div class="fixed bottom-4 right-4 w-[210px] h-[160px] bg-white rounded-lg shadow-lg border border-gray-200 z-40 overflow-hidden">
+    <div class="px-2.5 py-1.5 border-b border-gray-100 flex items-center justify-between">
+      <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Live Map</span>
+      <button class="text-gray-400 hover:text-gray-600"><i data-lucide="maximize-2" class="w-3 h-3"></i></button>
+    </div>
+    <div class="relative w-full h-[130px] bg-gray-50 p-2">
+      <!-- Simplified US outline using SVG -->
+      <svg viewBox="0 0 200 130" class="w-full h-full opacity-20" fill="none" stroke="#94a3b8" stroke-width="1.5">
+        <path d="M20 40 L30 30 L50 28 L65 25 L80 22 L95 20 L105 22 L115 18 L130 20 L140 25 L155 22 L165 28 L175 35 L180 45 L178 55 L175 65 L180 75 L175 85 L165 90 L155 95 L140 92 L125 95 L110 100 L95 98 L80 100 L65 95 L50 98 L40 92 L30 88 L25 78 L20 65 L18 55 L20 45 Z" />
+      </svg>
+      <!-- Dots representing loads -->
+      <!-- Chicago (In Transit) -->
+      <div class="us-map-dot bg-sky-500" style="left:55%; top:28%" title="Chicago, IL - FM-0847"></div>
+      <!-- Dallas -->
+      <div class="us-map-dot bg-sky-500" style="left:48%; top:65%" title="Dallas, TX"></div>
+      <!-- Denver (Unassigned) -->
+      <div class="us-map-dot bg-gray-400" style="left:35%; top:35%" title="Denver, CO - FM-0861"></div>
+      <!-- LA (In Transit) -->
+      <div class="us-map-dot bg-sky-500" style="left:15%; top:55%" title="LA, CA - FM-0832"></div>
+      <!-- Phoenix -->
+      <div class="us-map-dot bg-indigo-500" style="left:22%; top:60%" title="Phoenix, AZ - FM-0842"></div>
+      <!-- Atlanta (In Transit) -->
+      <div class="us-map-dot bg-sky-500" style="left:65%; top:60%" title="Atlanta, GA - FM-0819"></div>
+      <!-- Memphis (Unassigned) -->
+      <div class="us-map-dot bg-gray-400" style="left:55%; top:52%" title="Memphis, TN"></div>
+      <!-- Detroit (In Transit) -->
+      <div class="us-map-dot bg-sky-500" style="left:62%; top:30%" title="Detroit, MI - FM-0856"></div>
+      <!-- Newark (In Transit) -->
+      <div class="us-map-dot bg-sky-500" style="left:78%; top:28%" title="Newark, NJ - FM-0838"></div>
+      <!-- Kansas City (Tendered) -->
+      <div class="us-map-dot bg-purple-500" style="left:48%; top:40%" title="Kansas City, MO - FM-0855"></div>
+      <!-- Houston (Unassigned) -->
+      <div class="us-map-dot bg-gray-400" style="left:43%; top:75%" title="Houston, TX - FM-0865"></div>
+      <!-- Tampa (Dispatched) -->
+      <div class="us-map-dot bg-indigo-500" style="left:70%; top:80%" title="Tampa, FL - FM-0846"></div>
+      <!-- Portland (Unassigned) -->
+      <div class="us-map-dot bg-gray-400" style="left:12%; top:20%" title="Portland, OR - FM-0867"></div>
+      <!-- Minneapolis (Dispatched) -->
+      <div class="us-map-dot bg-indigo-500" style="left:48%; top:22%" title="Minneapolis, MN - FM-0844"></div>
+      <!-- Charlotte (Tendered) -->
+      <div class="us-map-dot bg-purple-500" style="left:72%; top:52%" title="Charlotte, NC - FM-0860"></div>
+      <!-- Indianapolis (Tendered) -->
+      <div class="us-map-dot bg-purple-500" style="left:60%; top:38%" title="Indianapolis, IN - FM-0858"></div>
+
+      <!-- Legend -->
+      <div class="absolute bottom-1 left-1 flex items-center gap-2">
+        <div class="flex items-center gap-0.5"><div class="w-2 h-2 rounded-full bg-gray-400"></div><span class="text-[8px] text-gray-400">Unasgn</span></div>
+        <div class="flex items-center gap-0.5"><div class="w-2 h-2 rounded-full bg-purple-500"></div><span class="text-[8px] text-gray-400">Tender</span></div>
+        <div class="flex items-center gap-0.5"><div class="w-2 h-2 rounded-full bg-sky-500"></div><span class="text-[8px] text-gray-400">Transit</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Initialize Lucide icons -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      lucide.createIcons();
+    });
+  </script>
+
+</body>
+</html>

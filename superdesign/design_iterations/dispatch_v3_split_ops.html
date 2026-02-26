@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ultra TMS - Dispatch Board V2: Split Ops</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+
+[data-theme="light"] {
+    --bg-main: #F8F9FA; --bg-filter: #F1F3F5; --surface: #FFFFFF;
+    --surface-hover: #F8FAFD; --surface-selected: #F0F4FF;
+    --border: #e5e7eb; --border-soft: #DEE2E6;
+    --sapphire: #1D4ED8; --sapphire-hover: #1E3FB0;
+    --sapphire-light: #EEF2FF; --sapphire-border: #C7D2FE;
+    --text-primary: #333333; --text-secondary: #6C757D; --text-muted: #adb5bd;
+    --danger: #DC2626; --danger-bg: #FEF2F2;
+    --success: #059669; --success-bg: #DCFCE7;
+    --scrollbar-thumb: #CED4DA; --scrollbar-track: #F1F3F5;
+    --sidebar-bg: #1E293B; --sidebar-icon: #94A3B8; --sidebar-active: #FFFFFF;
+    --group-header-bg: #F8F9FA;
+    --panel-header-bg: #F8F9FA;
+    --tab-bg: #FFFFFF;
+    --badge-text-light: #FFFFFF;
+    --input-bg: #F1F3F5;
+}
+[data-theme="dark"] {
+    --bg-main: #0F1117; --bg-filter: #161923; --surface: #1A1D27;
+    --surface-hover: #22253A; --surface-selected: #1E2744;
+    --border: #2A2D3A; --border-soft: #353849;
+    --sapphire: #3B82F6; --sapphire-hover: #2563EB;
+    --sapphire-light: #1E2744; --sapphire-border: #1E3A5F;
+    --text-primary: #E8E9ED; --text-secondary: #9CA3AF; --text-muted: #6B7280;
+    --danger: #EF4444; --danger-bg: #1F1215;
+    --success: #10B981; --success-bg: #0F1F17;
+    --scrollbar-thumb: #353849; --scrollbar-track: #161923;
+    --sidebar-bg: #0B0D14; --sidebar-icon: #6B7280; --sidebar-active: #FFFFFF;
+    --group-header-bg: #161923;
+    --panel-header-bg: #161923;
+    --tab-bg: #1A1D27;
+    --badge-text-light: #FFFFFF;
+    --input-bg: #22253A;
+}
+
+body {
+    background: var(--bg-main);
+    color: var(--text-primary);
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+.material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+    vertical-align: middle;
+}
+.material-symbols-outlined.filled {
+    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 64px; height: 100vh; background: var(--sidebar-bg);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 12px 0; flex-shrink: 0; z-index: 50;
+    border-right: 1px solid var(--border);
+}
+.sidebar-logo {
+    width: 40px; height: 40px; background: var(--sapphire); border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 24px; flex-shrink: 0;
+}
+.sidebar-logo span { color: #FFFFFF; font-weight: 700; font-size: 16px; }
+.sidebar-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; width: 100%; padding: 0 8px; }
+.sidebar-item {
+    width: 48px; height: 48px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.15s ease; position: relative;
+    color: var(--sidebar-icon);
+}
+.sidebar-item:hover { background: rgba(255,255,255,0.08); color: var(--sidebar-active); }
+.sidebar-item.active {
+    background: rgba(59,130,246,0.15); color: var(--sapphire);
+}
+.sidebar-item.active::before {
+    content: ''; position: absolute; left: -8px; top: 50%; transform: translateY(-50%);
+    width: 3px; height: 24px; background: var(--sapphire); border-radius: 0 3px 3px 0;
+}
+.sidebar-bottom { display: flex; flex-direction: column; gap: 4px; width: 100%; padding: 0 8px; }
+.sidebar-item .material-symbols-outlined { font-size: 22px; }
+
+/* Main layout */
+.main-wrapper {
+    display: flex; flex: 1; height: 100vh; overflow: hidden;
+}
+.table-section {
+    flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden;
+}
+.detail-panel {
+    width: 350px; flex-shrink: 0; border-left: 1px solid var(--border);
+    background: var(--surface); display: flex; flex-direction: column;
+    overflow: hidden;
+}
+
+/* Header */
+.top-header {
+    height: 48px; display: flex; align-items: center; padding: 0 20px;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    gap: 12px; flex-shrink: 0;
+}
+.header-title { font-size: 15px; font-weight: 700; color: var(--text-primary); white-space: nowrap; }
+.header-count {
+    font-size: 11px; font-weight: 600; color: var(--sapphire);
+    background: var(--sapphire-light); border: 1px solid var(--sapphire-border);
+    padding: 1px 8px; border-radius: 10px;
+}
+.header-search {
+    height: 32px; padding: 0 10px 0 32px; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--input-bg);
+    color: var(--text-primary); font-size: 12px; width: 200px;
+    outline: none; transition: border-color 0.15s;
+}
+.header-search:focus { border-color: var(--sapphire); }
+.header-search-wrap { position: relative; }
+.header-search-wrap .material-symbols-outlined {
+    position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
+    font-size: 16px; color: var(--text-muted);
+}
+.header-spacer { flex: 1; }
+.header-btn {
+    height: 32px; padding: 0 12px; border-radius: 6px; font-size: 12px; font-weight: 600;
+    display: flex; align-items: center; gap: 6px; cursor: pointer;
+    border: none; transition: all 0.15s ease;
+}
+.header-btn-primary {
+    background: var(--sapphire); color: #FFFFFF;
+}
+.header-btn-primary:hover { background: var(--sapphire-hover); }
+.header-btn-icon {
+    width: 32px; height: 32px; padding: 0; border-radius: 6px;
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text-secondary); display: flex; align-items: center;
+    justify-content: center; cursor: pointer; transition: all 0.15s;
+}
+.header-btn-icon:hover { background: var(--surface-hover); color: var(--text-primary); }
+.header-btn-icon .material-symbols-outlined { font-size: 18px; }
+.header-avatar {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--sapphire), #7C3AED);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600; color: #FFFFFF; cursor: pointer;
+}
+.notification-dot {
+    position: relative;
+}
+.notification-dot::after {
+    content: ''; position: absolute; top: 5px; right: 5px;
+    width: 7px; height: 7px; background: var(--danger); border-radius: 50%;
+    border: 2px solid var(--surface);
+}
+
+/* Filter Bar */
+.filter-bar {
+    height: 44px; display: flex; align-items: center; padding: 0 20px;
+    background: var(--bg-filter); border-bottom: 1px solid var(--border);
+    gap: 6px; flex-shrink: 0; overflow-x: auto;
+}
+.filter-chip {
+    height: 30px; padding: 0 12px; border-radius: 6px; font-size: 12px; font-weight: 500;
+    display: flex; align-items: center; gap: 6px; cursor: pointer;
+    border: 1px solid var(--border); background: transparent;
+    color: var(--text-secondary); transition: all 0.15s; white-space: nowrap;
+    flex-shrink: 0;
+}
+.filter-chip:hover { border-color: var(--sapphire-border); color: var(--text-primary); }
+.filter-chip.active {
+    background: var(--sapphire); color: #FFFFFF; border-color: var(--sapphire);
+}
+.filter-chip .chip-count {
+    font-size: 10px; font-weight: 700; padding: 0 5px; border-radius: 4px;
+    background: rgba(255,255,255,0.2);
+}
+.filter-chip:not(.active) .chip-count {
+    background: var(--bg-filter); color: var(--text-muted);
+}
+.filter-more {
+    height: 30px; padding: 0 10px; border-radius: 6px; font-size: 12px; font-weight: 500;
+    display: flex; align-items: center; gap: 4px; cursor: pointer;
+    border: 1px dashed var(--border); background: transparent;
+    color: var(--text-muted); transition: all 0.15s; white-space: nowrap;
+    margin-left: auto; flex-shrink: 0;
+}
+.filter-more:hover { border-color: var(--text-secondary); color: var(--text-secondary); }
+
+/* Stats Strip */
+.stats-strip {
+    height: 36px; display: flex; align-items: center; padding: 0 20px;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    gap: 20px; flex-shrink: 0; font-size: 12px;
+}
+.stat-item { display: flex; align-items: center; gap: 5px; }
+.stat-label { color: var(--text-muted); font-weight: 400; }
+.stat-value { color: var(--text-primary); font-weight: 600; }
+.stat-value.danger { color: var(--danger); }
+.stat-sep { width: 1px; height: 16px; background: var(--border); }
+
+/* Table */
+.table-container { flex: 1; overflow-y: auto; overflow-x: hidden; }
+
+.group-header {
+    height: 36px; display: flex; align-items: center; padding: 0 20px;
+    background: var(--group-header-bg); border-bottom: 1px solid var(--border);
+    cursor: pointer; user-select: none; position: sticky; top: 0; z-index: 5;
+    gap: 8px;
+}
+.group-header:hover { background: var(--surface-hover); }
+.group-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.group-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.group-count {
+    font-size: 10px; font-weight: 600; color: var(--text-muted);
+    background: var(--bg-filter); padding: 1px 6px; border-radius: 4px;
+}
+.group-chevron {
+    margin-left: auto; color: var(--text-muted); transition: transform 0.2s;
+    font-size: 18px;
+}
+.group-header.collapsed .group-chevron { transform: rotate(-90deg); }
+.group-rows { overflow: hidden; transition: max-height 0.3s ease; }
+.group-rows.collapsed { max-height: 0 !important; }
+
+/* Table header */
+.table-head {
+    display: grid;
+    grid-template-columns: 40px 84px 90px 1fr 140px 80px 70px 72px;
+    height: 32px; align-items: center; padding: 0 20px;
+    background: var(--bg-filter); border-bottom: 1px solid var(--border);
+    font-size: 10px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--text-muted);
+    position: sticky; top: 0; z-index: 10;
+}
+.table-head > div { padding: 0 4px; }
+
+/* Table row */
+.table-row {
+    display: grid;
+    grid-template-columns: 40px 84px 90px 1fr 140px 80px 70px 72px;
+    min-height: 44px; align-items: center; padding: 0 20px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer; transition: background 0.1s;
+    font-size: 13px;
+}
+.table-row > div { padding: 0 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.table-row:hover { background: var(--surface-hover); }
+.table-row.selected { background: var(--surface-selected); }
+.table-row.at-risk { background: var(--danger-bg); }
+.table-row.at-risk:hover { background: var(--danger-bg); }
+.table-row.at-risk.selected { background: var(--surface-selected); }
+
+.row-checkbox {
+    width: 16px; height: 16px; border-radius: 4px;
+    border: 1.5px solid var(--border-soft); cursor: pointer;
+    appearance: none; -webkit-appearance: none; background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.1s; position: relative;
+}
+.row-checkbox:checked {
+    background: var(--sapphire); border-color: var(--sapphire);
+}
+.row-checkbox:checked::after {
+    content: ''; display: block; width: 4px; height: 7px;
+    border: solid #fff; border-width: 0 1.5px 1.5px 0;
+    transform: rotate(45deg); position: absolute; top: 2px;
+}
+
+.status-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 8px; border-radius: 5px; font-size: 11px; font-weight: 600;
+    white-space: nowrap;
+}
+.status-badge .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.status-badge.transit { background: rgba(59,130,246,0.12); color: #3B82F6; }
+.status-badge.transit .dot { background: #3B82F6; }
+.status-badge.unassigned { background: rgba(245,158,11,0.12); color: #F59E0B; }
+.status-badge.unassigned .dot { background: #F59E0B; }
+.status-badge.tendered { background: rgba(139,92,246,0.12); color: #8B5CF6; }
+.status-badge.tendered .dot { background: #8B5CF6; }
+.status-badge.dispatched { background: rgba(6,182,212,0.12); color: #06B6D4; }
+.status-badge.dispatched .dot { background: #06B6D4; }
+.status-badge.delivered { background: rgba(16,185,129,0.12); color: #10B981; }
+.status-badge.delivered .dot { background: #10B981; }
+.status-badge.atrisk { background: rgba(239,68,68,0.12); color: #EF4444; }
+.status-badge.atrisk .dot { background: #EF4444; }
+
+.live-dot {
+    width: 6px; height: 6px; border-radius: 50%; background: #10B981;
+    animation: pulse-live 2s ease-in-out infinite; display: inline-block;
+    margin-right: 4px; vertical-align: middle;
+}
+@keyframes pulse-live { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+.load-id { font-weight: 600; color: var(--sapphire); font-size: 13px; }
+.route-text { color: var(--text-secondary); font-size: 12px; }
+.route-arrow { color: var(--text-muted); margin: 0 2px; }
+.carrier-text { color: var(--text-primary); font-size: 12px; }
+.carrier-empty { color: var(--text-muted); font-style: italic; font-size: 12px; }
+.rate-text { font-weight: 600; font-size: 12px; }
+.margin-text { font-weight: 600; font-size: 12px; }
+.margin-good { color: var(--success); }
+.margin-low { color: var(--danger); }
+.updated-text { color: var(--text-muted); font-size: 11px; }
+
+/* Pagination */
+.pagination-bar {
+    height: 44px; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px; background: var(--surface); border-top: 1px solid var(--border);
+    font-size: 12px; color: var(--text-secondary); flex-shrink: 0;
+}
+.pagination-info { font-weight: 400; }
+.pagination-controls { display: flex; align-items: center; gap: 4px; }
+.page-btn {
+    height: 28px; min-width: 28px; padding: 0 8px; border-radius: 5px;
+    border: 1px solid var(--border); background: transparent;
+    color: var(--text-secondary); font-size: 12px; font-weight: 500;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.1s;
+}
+.page-btn:hover { background: var(--surface-hover); }
+.page-btn.active { background: var(--sapphire); color: #fff; border-color: var(--sapphire); }
+.page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Bulk action bar */
+.bulk-bar {
+    height: 44px; display: flex; align-items: center; padding: 0 20px;
+    background: var(--sapphire); gap: 12px; flex-shrink: 0;
+    animation: slideDown 0.2s ease;
+}
+@keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } }
+.bulk-bar-text { color: #FFFFFF; font-size: 13px; font-weight: 600; }
+.bulk-bar-btn {
+    height: 28px; padding: 0 10px; border-radius: 5px; font-size: 12px; font-weight: 500;
+    border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1);
+    color: #FFFFFF; cursor: pointer; transition: all 0.1s;
+}
+.bulk-bar-btn:hover { background: rgba(255,255,255,0.2); }
+.bulk-bar-close {
+    margin-left: auto; background: none; border: none; color: rgba(255,255,255,0.7);
+    cursor: pointer; display: flex; align-items: center;
+}
+.bulk-bar-close:hover { color: #FFFFFF; }
+
+/* Detail Panel */
+.panel-header {
+    padding: 16px 20px 12px; border-bottom: 1px solid var(--border);
+    background: var(--panel-header-bg); flex-shrink: 0;
+}
+.panel-load-id { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+.panel-subtitle { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+.panel-tabs {
+    display: flex; border-bottom: 1px solid var(--border);
+    background: var(--tab-bg); flex-shrink: 0;
+}
+.panel-tab {
+    flex: 1; height: 38px; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 500; color: var(--text-secondary);
+    cursor: pointer; border-bottom: 2px solid transparent;
+    transition: all 0.15s; background: none; border-top: none;
+    border-left: none; border-right: none;
+}
+.panel-tab:hover { color: var(--text-primary); }
+.panel-tab.active { color: var(--sapphire); border-bottom-color: var(--sapphire); font-weight: 600; }
+
+.panel-content {
+    flex: 1; overflow-y: auto; padding: 16px 20px;
+}
+
+/* Panel sections */
+.panel-section { margin-bottom: 20px; }
+.panel-section-title {
+    font-size: 10px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 10px;
+}
+.panel-field { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.panel-field-label { font-size: 12px; color: var(--text-secondary); }
+.panel-field-value { font-size: 12px; font-weight: 500; color: var(--text-primary); text-align: right; }
+
+.panel-route-card {
+    background: var(--bg-main); border-radius: 8px; padding: 14px;
+    border: 1px solid var(--border);
+}
+.panel-route-point { display: flex; align-items: flex-start; gap: 10px; }
+.panel-route-icon {
+    width: 28px; height: 28px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; flex-shrink: 0;
+}
+.panel-route-icon .material-symbols-outlined { font-size: 16px; }
+.panel-route-icon.origin { background: rgba(59,130,246,0.12); color: #3B82F6; }
+.panel-route-icon.dest { background: rgba(16,185,129,0.12); color: #10B981; }
+.panel-route-city { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.panel-route-date { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+.panel-route-connector {
+    width: 2px; height: 20px; background: var(--border-soft);
+    margin-left: 13px; margin-top: 4px; margin-bottom: 4px;
+}
+.panel-route-distance {
+    display: flex; align-items: center; gap: 4px;
+    margin-left: 38px; margin-top: 6px;
+    font-size: 11px; color: var(--text-muted);
+}
+
+/* Activity feed */
+.activity-item { display: flex; gap: 10px; margin-bottom: 12px; position: relative; }
+.activity-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    flex-shrink: 0; margin-top: 5px; position: relative; z-index: 1;
+}
+.activity-dot.current { background: var(--sapphire); }
+.activity-dot.past { background: var(--border-soft); }
+.activity-line {
+    position: absolute; left: 3px; top: 15px; bottom: -8px;
+    width: 2px; background: var(--border-soft);
+}
+.activity-item:last-child .activity-line { display: none; }
+.activity-text { font-size: 12px; color: var(--text-primary); line-height: 1.4; }
+.activity-time { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+
+/* Stop cards */
+.stop-card {
+    background: var(--bg-main); border-radius: 8px; padding: 14px;
+    border: 1px solid var(--border);
+}
+.stop-connector {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 4px 0; margin-left: 13px;
+}
+.stop-connector-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--border-soft); margin: 2px 0; }
+
+/* Finance */
+.finance-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0; border-bottom: 1px solid var(--border);
+}
+.finance-row:last-child { border-bottom: none; }
+.finance-label { font-size: 12px; color: var(--text-secondary); }
+.finance-value { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.margin-box {
+    border-radius: 8px; padding: 14px; text-align: center; margin-top: 12px;
+}
+.margin-box.positive { background: var(--success-bg); }
+.margin-box.negative { background: var(--danger-bg); }
+.margin-box-pct { font-size: 22px; font-weight: 700; }
+.margin-box-pct.positive { color: var(--success); }
+.margin-box-pct.negative { color: var(--danger); }
+.margin-box-amt { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+
+/* Documents */
+.doc-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+}
+.doc-item:last-child { border-bottom: none; }
+.doc-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+.doc-icon.complete { background: var(--success-bg); color: var(--success); }
+.doc-icon.pending { background: var(--bg-filter); color: var(--text-muted); }
+.doc-icon .material-symbols-outlined { font-size: 16px; }
+.doc-name { font-size: 12px; font-weight: 500; color: var(--text-primary); flex: 1; }
+.doc-status { font-size: 11px; font-weight: 500; }
+.doc-status.complete { color: var(--success); }
+.doc-status.pending { color: var(--text-muted); }
+.doc-progress-bar {
+    height: 4px; border-radius: 2px; background: var(--border);
+    margin-top: 12px; overflow: hidden;
+}
+.doc-progress-fill {
+    height: 100%; border-radius: 2px; background: var(--sapphire);
+    transition: width 0.3s;
+}
+.doc-warning {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 10px; border-radius: 6px; margin-top: 10px;
+    background: var(--danger-bg); font-size: 11px; color: var(--danger);
+}
+.doc-warning .material-symbols-outlined { font-size: 16px; }
+
+/* Equipment tag */
+.equip-tag {
+    display: inline-flex; align-items: center; padding: 2px 8px;
+    border-radius: 4px; font-size: 11px; font-weight: 500;
+    background: var(--bg-filter); color: var(--text-secondary);
+    border: 1px solid var(--border);
+}
+</style>
+</head>
+<body>
+<div id="app" style="display:flex; height:100vh;"></div>
+<script>
+"use strict";
+
+// --- DATA ---
+var loads = [
+    { id: 'LD-7842', status: 'transit', origin: 'Chicago, IL', dest: 'Dallas, TX', miles: 921, carrier: 'Swift Transport', carrierMc: 'MC-382910', driver: 'Mike Reynolds', driverPhone: '(555) 123-4567', truck: '#TRK-2847', equipment: "Dry Van, 53', 44,000 lbs", pickupDate: 'Feb 6', pickupTime: '08:00 AM', delivDate: 'Feb 8', delivTime: '02:00 PM', rate: 3450, carrierPay: 2822, margin: 18.2, updated: '5m ago', live: true, docs: { bol: true, rateConf: true, pod: false }, activity: [{ text: 'GPS ping - Oklahoma City, OK', time: '5 min ago', current: true }, { text: 'Driver check-in: on schedule', time: '1 hr ago' }, { text: 'Departed Chicago, IL', time: 'Feb 6, 8:22 AM' }] },
+    { id: 'LD-7838', status: 'transit', origin: 'Atlanta, GA', dest: 'Miami, FL', miles: 662, carrier: 'J.B. Hunt', carrierMc: 'MC-115834', driver: 'Carlos Mendez', driverPhone: '(555) 234-5678', truck: '#TRK-1190', equipment: "Reefer, 53', 42,500 lbs", pickupDate: 'Feb 6', pickupTime: '11:30 AM', delivDate: 'Feb 7', delivTime: '06:00 PM', rate: 2880, carrierPay: 2261, margin: 21.5, updated: '2m ago', live: true, docs: { bol: true, rateConf: true, pod: false }, activity: [{ text: 'GPS ping - Valdosta, GA', time: '2 min ago', current: true }, { text: 'Temperature check: 34F', time: '45 min ago' }] },
+    { id: 'LD-7835', status: 'transit', origin: 'Los Angeles, CA', dest: 'Phoenix, AZ', miles: 373, carrier: 'Werner Logistics', carrierMc: 'MC-214587', driver: 'James Park', driverPhone: '(555) 345-6789', truck: '#TRK-5523', equipment: "Flatbed, 48', 48,000 lbs", pickupDate: 'Feb 7', pickupTime: '06:00 AM', delivDate: 'Feb 7', delivTime: '04:00 PM', rate: 1750, carrierPay: 1503, margin: 14.1, updated: '8m ago', live: true, docs: { bol: true, rateConf: true, pod: false }, activity: [{ text: 'In transit on I-10 E', time: '8 min ago', current: true }] },
+    { id: 'LD-7831', status: 'transit', origin: 'Nashville, TN', dest: 'Memphis, TN', miles: 213, carrier: 'Schneider National', carrierMc: 'MC-298746', driver: 'Tom Bradley', driverPhone: '(555) 456-7890', truck: '#TRK-3312', equipment: "Dry Van, 53', 44,000 lbs", pickupDate: 'Feb 7', pickupTime: '10:00 AM', delivDate: 'Feb 7', delivTime: '05:30 PM', rate: 1120, carrierPay: 932, margin: 16.8, updated: '22m ago', live: false, docs: { bol: true, rateConf: true, pod: false }, activity: [{ text: 'Passed Jackson, TN', time: '22 min ago', current: true }] },
+    { id: 'LD-7826', status: 'transit', origin: 'Denver, CO', dest: 'Kansas City, MO', miles: 605, carrier: 'XPO Logistics', carrierMc: 'MC-445692', driver: 'Sarah Kim', driverPhone: '(555) 567-8901', truck: '#TRK-6692', equipment: "Reefer, 53', 42,500 lbs", pickupDate: 'Feb 6', pickupTime: '02:00 PM', delivDate: 'Feb 8', delivTime: '08:00 AM', rate: 2650, carrierPay: 2322, margin: 12.4, updated: '1m ago', live: true, docs: { bol: true, rateConf: true, pod: false }, activity: [{ text: 'GPS ping near Salina, KS', time: '1 min ago', current: true }] },
+    { id: 'LD-7819', status: 'transit', origin: 'Seattle, WA', dest: 'Portland, OR', miles: 174, carrier: 'Heartland Express', carrierMc: 'MC-337291', driver: 'Derek Liu', driverPhone: '(555) 678-9012', truck: '#TRK-7781', equipment: "Dry Van, 53', 44,000 lbs", pickupDate: 'Feb 8', pickupTime: '07:00 AM', delivDate: 'Feb 8', delivTime: '12:00 PM', rate: 890, carrierPay: 691, margin: 22.3, updated: '12m ago', live: true, docs: { bol: true, rateConf: true, pod: false }, activity: [{ text: 'On I-5 S, mile 90', time: '12 min ago', current: true }] },
+    { id: 'LD-7814', status: 'transit', origin: 'Houston, TX', dest: 'New Orleans, LA', miles: 350, carrier: 'KLLM Transport', carrierMc: 'MC-201834', driver: 'Andre Williams', driverPhone: '(555) 789-0123', truck: '#TRK-9923', equipment: "Reefer, 53', 42,500 lbs", pickupDate: 'Feb 7', pickupTime: '03:00 PM', delivDate: 'Feb 8', delivTime: '09:00 AM', rate: 1680, carrierPay: 1450, margin: 13.7, updated: '35m ago', live: false, docs: { bol: true, rateConf: true, pod: false }, activity: [{ text: 'Passed Lake Charles, LA', time: '35 min ago', current: true }] },
+    { id: 'LD-7809', status: 'transit', origin: 'Detroit, MI', dest: 'Columbus, OH', miles: 263, carrier: 'Old Dominion', carrierMc: 'MC-187523', driver: 'Robert Chen', driverPhone: '(555) 890-1234', truck: '#TRK-4456', equipment: "Flatbed, 48', 48,000 lbs", pickupDate: 'Feb 8', pickupTime: '05:30 AM', delivDate: 'Feb 8', delivTime: '01:00 PM', rate: 1340, carrierPay: 1077, margin: 19.6, updated: '7m ago', live: true, docs: { bol: true, rateConf: true, pod: false }, activity: [{ text: 'GPS ping - Lima, OH', time: '7 min ago', current: true }] },
+    { id: 'LD-7851', status: 'unassigned', origin: 'San Francisco, CA', dest: 'Reno, NV', miles: 218, carrier: '', carrierMc: '', driver: '', driverPhone: '', truck: '', equipment: "Dry Van, 53'", pickupDate: 'Feb 9', pickupTime: '09:00 AM', delivDate: 'Feb 9', delivTime: '04:00 PM', rate: 1250, carrierPay: 0, margin: 0, updated: '1h ago', live: false, docs: { bol: false, rateConf: false, pod: false }, activity: [{ text: 'Load posted to board', time: '1 hr ago', current: true }] },
+    { id: 'LD-7849', status: 'unassigned', origin: 'Philadelphia, PA', dest: 'Boston, MA', miles: 306, carrier: '', carrierMc: '', driver: '', driverPhone: '', truck: '', equipment: "Reefer, 53'", pickupDate: 'Feb 9', pickupTime: '07:00 AM', delivDate: 'Feb 9', delivTime: '03:30 PM', rate: 1780, carrierPay: 0, margin: 0, updated: '2h ago', live: false, docs: { bol: false, rateConf: false, pod: false }, activity: [{ text: 'Load created', time: '2 hr ago', current: true }] },
+    { id: 'LD-7847', status: 'unassigned', origin: 'Minneapolis, MN', dest: 'Milwaukee, WI', miles: 337, carrier: '', carrierMc: '', driver: '', driverPhone: '', truck: '', equipment: "Dry Van, 53'", pickupDate: 'Feb 10', pickupTime: '06:00 AM', delivDate: 'Feb 10', delivTime: '02:00 PM', rate: 1560, carrierPay: 0, margin: 0, updated: '3h ago', live: false, docs: { bol: false, rateConf: false, pod: false }, activity: [{ text: 'Load created', time: '3 hr ago', current: true }] },
+    { id: 'LD-7845', status: 'unassigned', origin: 'Charlotte, NC', dest: 'Jacksonville, FL', miles: 394, carrier: '', carrierMc: '', driver: '', driverPhone: '', truck: '', equipment: "Flatbed, 48'", pickupDate: 'Feb 10', pickupTime: '08:00 AM', delivDate: 'Feb 11', delivTime: '10:00 AM', rate: 2100, carrierPay: 0, margin: 0, updated: '4h ago', live: false, docs: { bol: false, rateConf: false, pod: false }, activity: [{ text: 'Load created', time: '4 hr ago', current: true }] },
+    { id: 'LD-7853', status: 'tendered', origin: 'Indianapolis, IN', dest: 'St. Louis, MO', miles: 242, carrier: 'Ryder System', carrierMc: 'MC-091547', driver: 'Pending', driverPhone: '', truck: '', equipment: "Dry Van, 53'", pickupDate: 'Feb 9', pickupTime: '10:00 AM', delivDate: 'Feb 9', delivTime: '06:00 PM', rate: 1380, carrierPay: 1226, margin: 11.2, updated: '45m ago', live: false, docs: { bol: false, rateConf: true, pod: false }, activity: [{ text: 'Tendered to Ryder', time: '45 min ago', current: true }] },
+    { id: 'LD-7850', status: 'tendered', origin: 'Salt Lake City, UT', dest: 'Boise, ID', miles: 340, carrier: 'Covenant Transport', carrierMc: 'MC-562410', driver: 'Pending', driverPhone: '', truck: '', equipment: "Reefer, 53'", pickupDate: 'Feb 10', pickupTime: '07:30 AM', delivDate: 'Feb 10', delivTime: '04:00 PM', rate: 1920, carrierPay: 1603, margin: 16.5, updated: '1h ago', live: false, docs: { bol: false, rateConf: true, pod: false }, activity: [{ text: 'Tendered to Covenant', time: '1 hr ago', current: true }] },
+    { id: 'LD-7848', status: 'tendered', origin: 'Tampa, FL', dest: 'Savannah, GA', miles: 408, carrier: 'USX Intermodal', carrierMc: 'MC-401827', driver: 'Pending', driverPhone: '', truck: '', equipment: "Dry Van, 53'", pickupDate: 'Feb 9', pickupTime: '11:00 AM', delivDate: 'Feb 10', delivTime: '07:00 AM', rate: 1850, carrierPay: 1500, margin: 18.9, updated: '2h ago', live: false, docs: { bol: false, rateConf: true, pod: false }, activity: [{ text: 'Tendered to USX', time: '2 hr ago', current: true }] },
+    { id: 'LD-7854', status: 'dispatched', origin: 'Newark, NJ', dest: 'Pittsburgh, PA', miles: 370, carrier: 'FedEx Freight', carrierMc: 'MC-102938', driver: 'Lisa Tran', driverPhone: '(555) 321-6540', truck: '#TRK-9920', equipment: "Dry Van, 53'", pickupDate: 'Feb 9', pickupTime: '06:00 AM', delivDate: 'Feb 9', delivTime: '04:00 PM', rate: 1690, carrierPay: 1463, margin: 13.4, updated: '30m ago', live: false, docs: { bol: false, rateConf: true, pod: false }, activity: [{ text: 'Driver dispatched', time: '30 min ago', current: true }] },
+    { id: 'LD-7852', status: 'dispatched', origin: 'Oklahoma City, OK', dest: 'Tulsa, OK', miles: 107, carrier: 'ABF Freight', carrierMc: 'MC-334521', driver: 'Tony Garcia', driverPhone: '(555) 432-1098', truck: '#TRK-3345', equipment: "Flatbed, 48'", pickupDate: 'Feb 9', pickupTime: '08:00 AM', delivDate: 'Feb 9', delivTime: '11:00 AM', rate: 680, carrierPay: 516, margin: 24.1, updated: '55m ago', live: false, docs: { bol: false, rateConf: true, pod: false }, activity: [{ text: 'Driver confirmed', time: '55 min ago', current: true }] },
+    { id: 'LD-7846', status: 'dispatched', origin: 'El Paso, TX', dest: 'San Antonio, TX', miles: 551, carrier: 'Saia Inc.', carrierMc: 'MC-276103', driver: 'Maria Santos', driverPhone: '(555) 543-2109', truck: '#TRK-8812', equipment: "Reefer, 53'", pickupDate: 'Feb 9', pickupTime: '05:00 AM', delivDate: 'Feb 9', delivTime: '06:00 PM', rate: 2340, carrierPay: 1937, margin: 17.2, updated: '1h ago', live: false, docs: { bol: false, rateConf: true, pod: false }, activity: [{ text: 'Driver en route to shipper', time: '1 hr ago', current: true }] },
+    { id: 'LD-7843', status: 'dispatched', origin: 'Richmond, VA', dest: 'Raleigh, NC', miles: 169, carrier: 'Estes Express', carrierMc: 'MC-223541', driver: 'Kevin Moore', driverPhone: '(555) 654-3210', truck: '#TRK-1157', equipment: "Dry Van, 53'", pickupDate: 'Feb 9', pickupTime: '09:00 AM', delivDate: 'Feb 9', delivTime: '02:00 PM', rate: 920, carrierPay: 812, margin: 11.8, updated: '2h ago', live: false, docs: { bol: false, rateConf: true, pod: false }, activity: [{ text: 'Carrier accepted', time: '2 hr ago', current: true }] },
+    { id: 'LD-7801', status: 'delivered', origin: 'New York, NY', dest: 'Washington, DC', miles: 225, carrier: 'Werner Logistics', carrierMc: 'MC-214587', driver: 'Paul Walker', driverPhone: '(555) 765-4321', truck: '#TRK-5523', equipment: "Dry Van, 53'", pickupDate: 'Feb 5', pickupTime: '07:00 AM', delivDate: 'Feb 5', delivTime: '03:00 PM', rate: 1450, carrierPay: 1156, margin: 20.3, updated: '2d ago', live: false, docs: { bol: true, rateConf: true, pod: true }, activity: [{ text: 'POD uploaded', time: '2 days ago', current: true }, { text: 'Delivered', time: 'Feb 5, 2:52 PM' }] },
+    { id: 'LD-7798', status: 'delivered', origin: 'Cincinnati, OH', dest: 'Louisville, KY', miles: 100, carrier: 'Schneider National', carrierMc: 'MC-298746', driver: 'Amy Davis', driverPhone: '(555) 876-5432', truck: '#TRK-3312', equipment: "Dry Van, 53'", pickupDate: 'Feb 5', pickupTime: '10:00 AM', delivDate: 'Feb 5', delivTime: '01:30 PM', rate: 620, carrierPay: 500, margin: 19.4, updated: '2d ago', live: false, docs: { bol: true, rateConf: true, pod: true }, activity: [{ text: 'Invoice generated', time: '2 days ago', current: true }] },
+    { id: 'LD-7795', status: 'delivered', origin: 'Las Vegas, NV', dest: 'Tucson, AZ', miles: 420, carrier: 'J.B. Hunt', carrierMc: 'MC-115834', driver: 'Nick Patel', driverPhone: '(555) 987-6543', truck: '#TRK-1190', equipment: "Flatbed, 48'", pickupDate: 'Feb 4', pickupTime: '06:00 AM', delivDate: 'Feb 4', delivTime: '04:00 PM', rate: 2010, carrierPay: 1714, margin: 14.7, updated: '3d ago', live: false, docs: { bol: true, rateConf: true, pod: false }, activity: [{ text: 'Delivered, POD pending', time: '3 days ago', current: true }] },
+    { id: 'LD-7790', status: 'delivered', origin: 'Baltimore, MD', dest: 'Hartford, CT', miles: 298, carrier: 'XPO Logistics', carrierMc: 'MC-445692', driver: 'Dan Fischer', driverPhone: '(555) 098-7654', truck: '#TRK-6692', equipment: "Reefer, 53'", pickupDate: 'Feb 4', pickupTime: '08:00 AM', delivDate: 'Feb 4', delivTime: '05:00 PM', rate: 1580, carrierPay: 1326, margin: 16.1, updated: '3d ago', live: false, docs: { bol: true, rateConf: true, pod: true }, activity: [{ text: 'Invoice generated', time: '3 days ago', current: true }] },
+    { id: 'LD-7822', status: 'atrisk', origin: 'Cleveland, OH', dest: 'Buffalo, NY', miles: 189, carrier: 'Crete Carrier', carrierMc: 'MC-189234', driver: 'Joe Mitchell', driverPhone: '(555) 109-8765', truck: '#TRK-2267', equipment: "Reefer, 53'", pickupDate: 'Feb 7', pickupTime: '04:00 AM', delivDate: 'Feb 7', delivTime: '12:00 PM', rate: 1150, carrierPay: 1060, margin: 7.8, updated: '3m ago', live: true, late: true, docs: { bol: true, rateConf: true, pod: false }, activity: [{ text: 'LATE - stuck at weigh station', time: '3 min ago', current: true }] },
+    { id: 'LD-7817', status: 'atrisk', origin: 'Omaha, NE', dest: 'Des Moines, IA', miles: 150, carrier: 'PAM Transport', carrierMc: 'MC-456789', driver: 'Steve Novak', driverPhone: '(555) 210-9876', truck: '#TRK-7789', equipment: "Dry Van, 53'", pickupDate: 'Feb 7', pickupTime: '09:00 AM', delivDate: 'Feb 7', delivTime: '03:00 PM', rate: 780, carrierPay: 730, margin: 6.4, updated: '9m ago', live: true, late: true, docs: { bol: true, rateConf: true, pod: false }, activity: [{ text: 'Weather delay - I-80', time: '9 min ago', current: true }] }
+];
+
+var statusMeta = {
+    transit:    { label: 'In Transit',  color: '#3B82F6', order: 1 },
+    unassigned: { label: 'Unassigned',  color: '#F59E0B', order: 2 },
+    tendered:   { label: 'Tendered',    color: '#8B5CF6', order: 3 },
+    dispatched: { label: 'Dispatched',  color: '#06B6D4', order: 4 },
+    delivered:  { label: 'Delivered',   color: '#10B981', order: 5 },
+    atrisk:     { label: 'At Risk',     color: '#EF4444', order: 0 }
+};
+
+var filterLabels = [
+    { key: 'all', label: 'All' },
+    { key: 'transit', label: 'In Transit' },
+    { key: 'unassigned', label: 'Unassigned' },
+    { key: 'tendered', label: 'Tendered' },
+    { key: 'dispatched', label: 'Dispatched' },
+    { key: 'delivered', label: 'Delivered' },
+    { key: 'atrisk', label: 'At Risk' }
+];
+
+// --- STATE ---
+var state = {
+    selectedId: loads[0].id,
+    activeFilter: 'all',
+    searchQuery: '',
+    activeTab: 'overview',
+    checkedIds: new Set(),
+    collapsedGroups: new Set(),
+    theme: localStorage.getItem('ultra-tms-theme') || 'dark'
+};
+
+// --- HELPERS ---
+function el(tag, attrs, children) {
+    var e = document.createElement(tag);
+    if (attrs) {
+        Object.keys(attrs).forEach(function(k) {
+            if (k === 'className') e.className = attrs[k];
+            else if (k === 'style' && typeof attrs[k] === 'object') Object.assign(e.style, attrs[k]);
+            else if (k.indexOf('on') === 0) e.addEventListener(k.slice(2).toLowerCase(), attrs[k]);
+            else if (k === 'textContent') e.textContent = attrs[k];
+            else if (k === 'htmlFor') e.htmlFor = attrs[k];
+            else if (k === 'checked') e.checked = attrs[k];
+            else if (k === 'type') e.type = attrs[k];
+            else if (k === 'placeholder') e.placeholder = attrs[k];
+            else if (k === 'disabled') e.disabled = attrs[k];
+            else if (k === 'value') e.value = attrs[k];
+            else e.setAttribute(k, attrs[k]);
+        });
+    }
+    if (children) {
+        (Array.isArray(children) ? children : [children]).forEach(function(c) {
+            if (c == null) return;
+            if (typeof c === 'string') e.appendChild(document.createTextNode(c));
+            else e.appendChild(c);
+        });
+    }
+    return e;
+}
+
+function icon(name, filled) {
+    var s = el('span', { className: 'material-symbols-outlined' + (filled ? ' filled' : '') });
+    s.textContent = name;
+    return s;
+}
+
+function fmt(n) { return '$' + n.toLocaleString(); }
+
+function getFiltered() {
+    var q = state.searchQuery.toLowerCase();
+    return loads.filter(function(l) {
+        if (state.activeFilter !== 'all' && l.status !== state.activeFilter) return false;
+        if (q) {
+            return l.id.toLowerCase().indexOf(q) >= 0 ||
+                   l.origin.toLowerCase().indexOf(q) >= 0 ||
+                   l.dest.toLowerCase().indexOf(q) >= 0 ||
+                   l.carrier.toLowerCase().indexOf(q) >= 0;
+        }
+        return true;
+    });
+}
+
+function getGroups(filtered) {
+    var grouped = {};
+    var order = ['atrisk', 'transit', 'unassigned', 'tendered', 'dispatched', 'delivered'];
+    filtered.forEach(function(l) {
+        if (!grouped[l.status]) grouped[l.status] = [];
+        grouped[l.status].push(l);
+    });
+    var result = [];
+    order.forEach(function(s) {
+        if (grouped[s]) result.push({ status: s, loads: grouped[s] });
+    });
+    return result;
+}
+
+function getStatusCounts() {
+    var counts = { all: loads.length };
+    loads.forEach(function(l) { counts[l.status] = (counts[l.status] || 0) + 1; });
+    return counts;
+}
+
+function getSelectedLoad() {
+    return loads.find(function(l) { return l.id === state.selectedId; });
+}
+
+// --- THEME ---
+function applyTheme() {
+    document.documentElement.setAttribute('data-theme', state.theme);
+    localStorage.setItem('ultra-tms-theme', state.theme);
+}
+applyTheme();
+
+// --- BUILD UI ---
+function buildSidebar() {
+    var sb = el('div', { className: 'sidebar' });
+    var logo = el('div', { className: 'sidebar-logo' }, [el('span', { textContent: 'U' })]);
+    sb.appendChild(logo);
+
+    var nav = el('div', { className: 'sidebar-nav' });
+    var navItems = [
+        { icon: 'dashboard', label: 'Dashboard' },
+        { icon: 'local_shipping', label: 'Dispatch', active: true },
+        { icon: 'inventory_2', label: 'Loads' },
+        { icon: 'groups', label: 'Carriers' },
+        { icon: 'business', label: 'Customers' },
+        { icon: 'receipt_long', label: 'Invoices' },
+        { icon: 'bar_chart', label: 'Reports' }
+    ];
+    navItems.forEach(function(item) {
+        var si = el('div', { className: 'sidebar-item' + (item.active ? ' active' : ''), title: item.label });
+        si.appendChild(icon(item.icon, item.active));
+        nav.appendChild(si);
+    });
+    sb.appendChild(nav);
+
+    var bottom = el('div', { className: 'sidebar-bottom' });
+    var settingsItem = el('div', { className: 'sidebar-item', title: 'Settings' });
+    settingsItem.appendChild(icon('settings'));
+    bottom.appendChild(settingsItem);
+    var helpItem = el('div', { className: 'sidebar-item', title: 'Help' });
+    helpItem.appendChild(icon('help'));
+    bottom.appendChild(helpItem);
+    sb.appendChild(bottom);
+
+    return sb;
+}
+
+function buildHeader() {
+    var h = el('div', { className: 'top-header' });
+    h.appendChild(el('div', { className: 'header-title', textContent: 'Dispatch Board' }));
+    h.appendChild(el('div', { className: 'header-count', textContent: '571 loads' }));
+
+    var searchWrap = el('div', { className: 'header-search-wrap' });
+    searchWrap.appendChild(icon('search'));
+    var searchInput = el('input', { className: 'header-search', type: 'text', placeholder: 'Search loads...' });
+    searchInput.addEventListener('input', function() {
+        state.searchQuery = searchInput.value;
+        renderTable();
+    });
+    searchWrap.appendChild(searchInput);
+    h.appendChild(searchWrap);
+
+    h.appendChild(el('div', { className: 'header-spacer' }));
+
+    var newBtn = el('button', { className: 'header-btn header-btn-primary' });
+    newBtn.appendChild(icon('add'));
+    newBtn.appendChild(document.createTextNode('New Load'));
+    h.appendChild(newBtn);
+
+    var refreshBtn = el('button', { className: 'header-btn-icon', title: 'Refresh' });
+    refreshBtn.appendChild(icon('refresh'));
+    h.appendChild(refreshBtn);
+
+    var notifBtn = el('button', { className: 'header-btn-icon notification-dot', title: 'Notifications' });
+    notifBtn.appendChild(icon('notifications'));
+    h.appendChild(notifBtn);
+
+    var dlBtn = el('button', { className: 'header-btn-icon', title: 'Download' });
+    dlBtn.appendChild(icon('download'));
+    h.appendChild(dlBtn);
+
+    var themeBtn = el('button', { className: 'header-btn-icon', title: 'Toggle Theme', onClick: function() {
+        state.theme = state.theme === 'dark' ? 'light' : 'dark';
+        applyTheme();
+        themeBtn.replaceChildren(icon(state.theme === 'dark' ? 'light_mode' : 'dark_mode'));
+    }});
+    themeBtn.appendChild(icon(state.theme === 'dark' ? 'light_mode' : 'dark_mode'));
+    h.appendChild(themeBtn);
+
+    h.appendChild(el('div', { className: 'header-avatar', textContent: 'JD' }));
+
+    return h;
+}
+
+function buildFilterBar() {
+    var fb = el('div', { className: 'filter-bar' });
+    var counts = getStatusCounts();
+
+    filterLabels.forEach(function(f) {
+        var chip = el('button', { className: 'filter-chip' + (state.activeFilter === f.key ? ' active' : '') });
+        chip.appendChild(document.createTextNode(f.label));
+        var cnt = el('span', { className: 'chip-count', textContent: String(counts[f.key] || 0) });
+        chip.appendChild(cnt);
+        chip.addEventListener('click', function() {
+            state.activeFilter = f.key;
+            renderFilterBar();
+            renderTable();
+        });
+        fb.appendChild(chip);
+    });
+
+    var more = el('button', { className: 'filter-more' });
+    more.appendChild(icon('tune'));
+    more.appendChild(document.createTextNode('More Filters'));
+    fb.appendChild(more);
+
+    return fb;
+}
+
+function buildStatsStrip() {
+    var ss = el('div', { className: 'stats-strip' });
+    var counts = getStatusCounts();
+    var totalMargin = 0; var marginCount = 0;
+    loads.forEach(function(l) { if (l.margin > 0) { totalMargin += l.margin; marginCount++; } });
+    var avgMargin = marginCount > 0 ? (totalMargin / marginCount).toFixed(1) : '0.0';
+
+    var stats = [
+        { label: 'Active', value: String(counts.transit + counts.dispatched + (counts.atrisk || 0) + (counts.tendered || 0)), cls: '' },
+        { label: 'Transit', value: String(counts.transit || 0), cls: '' },
+        { label: 'Unassigned', value: String(counts.unassigned || 0), cls: '' },
+        { label: 'At Risk', value: String(counts.atrisk || 0), cls: 'danger' },
+        { label: 'Avg Margin', value: avgMargin + '%', cls: '' }
+    ];
+
+    stats.forEach(function(s, i) {
+        if (i > 0) ss.appendChild(el('div', { className: 'stat-sep' }));
+        var item = el('div', { className: 'stat-item' });
+        item.appendChild(el('span', { className: 'stat-label', textContent: s.label }));
+        item.appendChild(el('span', { className: 'stat-value' + (s.cls ? ' ' + s.cls : ''), textContent: s.value }));
+        ss.appendChild(item);
+    });
+
+    return ss;
+}
+
+function buildTableHead() {
+    var th = el('div', { className: 'table-head' });
+    var cols = ['', 'Status', 'Load #', 'Route', 'Carrier', 'Rate', 'Margin', 'Updated'];
+    cols.forEach(function(c, i) {
+        if (i === 0) {
+            var cbWrap = el('div');
+            var cb = el('input', { className: 'row-checkbox', type: 'checkbox' });
+            cb.addEventListener('change', function() {
+                var filtered = getFiltered();
+                if (cb.checked) {
+                    filtered.forEach(function(l) { state.checkedIds.add(l.id); });
+                } else {
+                    state.checkedIds.clear();
+                }
+                renderTable();
+            });
+            cbWrap.appendChild(cb);
+            th.appendChild(cbWrap);
+        } else {
+            th.appendChild(el('div', { textContent: c }));
+        }
+    });
+    return th;
+}
+
+function buildTableRow(load) {
+    var isSelected = state.selectedId === load.id;
+    var isRisk = load.status === 'atrisk';
+    var cls = 'table-row' + (isSelected ? ' selected' : '') + (isRisk ? ' at-risk' : '');
+    var row = el('div', { className: cls });
+
+    row.addEventListener('click', function(e) {
+        if (e.target.type === 'checkbox') return;
+        state.selectedId = load.id;
+        state.activeTab = 'overview';
+        renderTable();
+        renderDetailPanel();
+    });
+
+    // Checkbox
+    var cbDiv = el('div');
+    var cb = el('input', { className: 'row-checkbox', type: 'checkbox', checked: state.checkedIds.has(load.id) });
+    cb.addEventListener('change', function(e) {
+        e.stopPropagation();
+        if (cb.checked) state.checkedIds.add(load.id);
+        else state.checkedIds.delete(load.id);
+        renderBulkBar();
+    });
+    cbDiv.appendChild(cb);
+    row.appendChild(cbDiv);
+
+    // Status
+    var badge = el('div', { className: 'status-badge ' + load.status });
+    var dot = el('span', { className: 'dot' });
+    badge.appendChild(dot);
+    badge.appendChild(document.createTextNode(statusMeta[load.status].label));
+    var statusDiv = el('div');
+    statusDiv.appendChild(badge);
+    row.appendChild(statusDiv);
+
+    // Load #
+    var idDiv = el('div');
+    if (load.live) {
+        idDiv.appendChild(el('span', { className: 'live-dot' }));
+    }
+    idDiv.appendChild(el('span', { className: 'load-id', textContent: load.id }));
+    row.appendChild(idDiv);
+
+    // Route
+    var routeDiv = el('div', { className: 'route-text' });
+    routeDiv.appendChild(document.createTextNode(load.origin));
+    routeDiv.appendChild(el('span', { className: 'route-arrow', textContent: ' \u2192 ' }));
+    routeDiv.appendChild(document.createTextNode(load.dest));
+    row.appendChild(routeDiv);
+
+    // Carrier
+    var carrierDiv = el('div');
+    if (load.carrier) {
+        carrierDiv.appendChild(el('span', { className: 'carrier-text', textContent: load.carrier }));
+    } else {
+        carrierDiv.appendChild(el('span', { className: 'carrier-empty', textContent: 'Unassigned' }));
+    }
+    row.appendChild(carrierDiv);
+
+    // Rate
+    row.appendChild(el('div', { className: 'rate-text', textContent: fmt(load.rate) }));
+
+    // Margin
+    var marginDiv = el('div');
+    if (load.margin > 0) {
+        var mCls = load.margin >= 10 ? 'margin-good' : 'margin-low';
+        marginDiv.appendChild(el('span', { className: 'margin-text ' + mCls, textContent: load.margin + '%' }));
+    } else {
+        marginDiv.appendChild(el('span', { className: 'margin-text', style: { color: 'var(--text-muted)' }, textContent: '--' }));
+    }
+    row.appendChild(marginDiv);
+
+    // Updated
+    row.appendChild(el('div', { className: 'updated-text', textContent: load.updated }));
+
+    return row;
+}
+
+function buildGroupHeader(status, count) {
+    var meta = statusMeta[status];
+    var collapsed = state.collapsedGroups.has(status);
+    var gh = el('div', { className: 'group-header' + (collapsed ? ' collapsed' : '') });
+    gh.appendChild(el('div', { className: 'group-dot', style: { background: meta.color } }));
+    gh.appendChild(el('div', { className: 'group-label', style: { color: meta.color }, textContent: meta.label }));
+    gh.appendChild(el('div', { className: 'group-count', textContent: String(count) }));
+    var chevron = icon('expand_more');
+    chevron.className += ' group-chevron';
+    gh.appendChild(chevron);
+
+    gh.addEventListener('click', function() {
+        if (state.collapsedGroups.has(status)) {
+            state.collapsedGroups.delete(status);
+        } else {
+            state.collapsedGroups.add(status);
+        }
+        renderTable();
+    });
+
+    return gh;
+}
+
+var tableContainerRef = null;
+var bulkBarRef = null;
+var filterBarRef = null;
+var detailPanelRef = null;
+
+function renderTable() {
+    if (!tableContainerRef) return;
+    tableContainerRef.replaceChildren();
+
+    // Table head
+    tableContainerRef.appendChild(buildTableHead());
+
+    var filtered = getFiltered();
+    var groups = getGroups(filtered);
+
+    groups.forEach(function(g) {
+        tableContainerRef.appendChild(buildGroupHeader(g.status, g.loads.length));
+        var rowsWrap = el('div', { className: 'group-rows' + (state.collapsedGroups.has(g.status) ? ' collapsed' : '') });
+        if (!state.collapsedGroups.has(g.status)) {
+            g.loads.forEach(function(l) { rowsWrap.appendChild(buildTableRow(l)); });
+        }
+        // set max-height for animation
+        if (!state.collapsedGroups.has(g.status)) {
+            rowsWrap.style.maxHeight = (g.loads.length * 60) + 'px';
+        }
+        tableContainerRef.appendChild(rowsWrap);
+    });
+
+    renderBulkBar();
+}
+
+function renderFilterBar() {
+    if (!filterBarRef) return;
+    var newFb = buildFilterBar();
+    filterBarRef.replaceWith(newFb);
+    filterBarRef = newFb;
+}
+
+function renderBulkBar() {
+    if (!bulkBarRef) return;
+    bulkBarRef.replaceChildren();
+    if (state.checkedIds.size > 0) {
+        bulkBarRef.style.display = 'flex';
+        bulkBarRef.appendChild(el('span', { className: 'bulk-bar-text', textContent: state.checkedIds.size + ' load' + (state.checkedIds.size > 1 ? 's' : '') + ' selected' }));
+        ['Assign Carrier', 'Update Status', 'Export'].forEach(function(label) {
+            bulkBarRef.appendChild(el('button', { className: 'bulk-bar-btn', textContent: label }));
+        });
+        var closeBtn = el('button', { className: 'bulk-bar-close', onClick: function() {
+            state.checkedIds.clear();
+            renderTable();
+        }});
+        closeBtn.appendChild(icon('close'));
+        bulkBarRef.appendChild(closeBtn);
+    } else {
+        bulkBarRef.style.display = 'none';
+    }
+}
+
+// --- DETAIL PANEL ---
+function buildPanelOverviewTab(load) {
+    var content = el('div');
+
+    // Route section
+    var routeSection = el('div', { className: 'panel-section' });
+    routeSection.appendChild(el('div', { className: 'panel-section-title', textContent: 'Route' }));
+    var routeCard = el('div', { className: 'panel-route-card' });
+
+    // Origin
+    var originPt = el('div', { className: 'panel-route-point' });
+    var originIcon = el('div', { className: 'panel-route-icon origin' });
+    originIcon.appendChild(icon('radio_button_checked'));
+    originPt.appendChild(originIcon);
+    var originInfo = el('div');
+    originInfo.appendChild(el('div', { className: 'panel-route-city', textContent: load.origin }));
+    originInfo.appendChild(el('div', { className: 'panel-route-date', textContent: load.pickupDate + ' \u00b7 ' + load.pickupTime }));
+    originPt.appendChild(originInfo);
+    routeCard.appendChild(originPt);
+
+    // Connector
+    routeCard.appendChild(el('div', { className: 'panel-route-connector' }));
+
+    // Dest
+    var destPt = el('div', { className: 'panel-route-point' });
+    var destIcon = el('div', { className: 'panel-route-icon dest' });
+    destIcon.appendChild(icon('location_on'));
+    destPt.appendChild(destIcon);
+    var destInfo = el('div');
+    destInfo.appendChild(el('div', { className: 'panel-route-city', textContent: load.dest }));
+    destInfo.appendChild(el('div', { className: 'panel-route-date', textContent: load.delivDate + ' \u00b7 ' + load.delivTime }));
+    destPt.appendChild(destInfo);
+    routeCard.appendChild(destPt);
+
+    // Distance
+    var distRow = el('div', { className: 'panel-route-distance' });
+    distRow.appendChild(icon('straighten'));
+    distRow.appendChild(document.createTextNode(load.miles + ' mi'));
+    routeCard.appendChild(distRow);
+
+    routeSection.appendChild(routeCard);
+    content.appendChild(routeSection);
+
+    // Carrier & Driver section
+    var carrierSection = el('div', { className: 'panel-section' });
+    carrierSection.appendChild(el('div', { className: 'panel-section-title', textContent: 'Carrier & Driver' }));
+
+    var fields = [];
+    if (load.carrier) {
+        fields.push({ label: 'Carrier', value: load.carrier });
+        fields.push({ label: 'MC#', value: load.carrierMc });
+    } else {
+        fields.push({ label: 'Carrier', value: 'Unassigned' });
+    }
+    if (load.driver && load.driver !== 'Pending') {
+        fields.push({ label: 'Driver', value: load.driver });
+        fields.push({ label: 'Phone', value: load.driverPhone });
+        fields.push({ label: 'Truck', value: load.truck });
+    } else if (load.driver === 'Pending') {
+        fields.push({ label: 'Driver', value: 'Pending assignment' });
+    }
+
+    fields.forEach(function(f) {
+        var row = el('div', { className: 'panel-field' });
+        row.appendChild(el('span', { className: 'panel-field-label', textContent: f.label }));
+        row.appendChild(el('span', { className: 'panel-field-value', textContent: f.value }));
+        carrierSection.appendChild(row);
+    });
+    content.appendChild(carrierSection);
+
+    // Equipment
+    var equipSection = el('div', { className: 'panel-section' });
+    equipSection.appendChild(el('div', { className: 'panel-section-title', textContent: 'Equipment' }));
+    equipSection.appendChild(el('span', { className: 'equip-tag', textContent: load.equipment }));
+    content.appendChild(equipSection);
+
+    // Activity
+    var actSection = el('div', { className: 'panel-section' });
+    actSection.appendChild(el('div', { className: 'panel-section-title', textContent: 'Recent Activity' }));
+
+    load.activity.forEach(function(a, i) {
+        var item = el('div', { className: 'activity-item' });
+        var dotEl = el('div', { className: 'activity-dot ' + (a.current ? 'current' : 'past') });
+        item.appendChild(dotEl);
+        if (i < load.activity.length - 1) {
+            item.appendChild(el('div', { className: 'activity-line' }));
+        }
+        var textWrap = el('div');
+        textWrap.appendChild(el('div', { className: 'activity-text', textContent: a.text }));
+        textWrap.appendChild(el('div', { className: 'activity-time', textContent: a.time }));
+        item.appendChild(textWrap);
+        actSection.appendChild(item);
+    });
+
+    content.appendChild(actSection);
+    return content;
+}
+
+function buildPanelStopsTab(load) {
+    var content = el('div');
+
+    // Pickup card
+    var pickSection = el('div', { className: 'panel-section' });
+    pickSection.appendChild(el('div', { className: 'panel-section-title', textContent: 'Pickup' }));
+    var pickCard = el('div', { className: 'stop-card' });
+    var pickRow = el('div', { className: 'panel-route-point' });
+    var pickIcon = el('div', { className: 'panel-route-icon origin' });
+    pickIcon.appendChild(icon('radio_button_checked'));
+    pickRow.appendChild(pickIcon);
+    var pickInfo = el('div');
+    pickInfo.appendChild(el('div', { className: 'panel-route-city', textContent: load.origin }));
+    pickInfo.appendChild(el('div', { className: 'panel-route-date', textContent: load.pickupDate + ' \u00b7 ' + load.pickupTime }));
+    pickRow.appendChild(pickInfo);
+    pickCard.appendChild(pickRow);
+    pickSection.appendChild(pickCard);
+    content.appendChild(pickSection);
+
+    // Connector
+    var conn = el('div', { className: 'stop-connector' });
+    for (var i = 0; i < 3; i++) conn.appendChild(el('div', { className: 'stop-connector-dot' }));
+    content.appendChild(conn);
+
+    // Delivery card
+    var delivSection = el('div', { className: 'panel-section' });
+    delivSection.appendChild(el('div', { className: 'panel-section-title', textContent: 'Delivery' }));
+    var delivCard = el('div', { className: 'stop-card' });
+    var delivRow = el('div', { className: 'panel-route-point' });
+    var delivIcon = el('div', { className: 'panel-route-icon dest' });
+    delivIcon.appendChild(icon('location_on'));
+    delivRow.appendChild(delivIcon);
+    var delivInfo = el('div');
+    delivInfo.appendChild(el('div', { className: 'panel-route-city', textContent: load.dest }));
+    delivInfo.appendChild(el('div', { className: 'panel-route-date', textContent: load.delivDate + ' \u00b7 ' + load.delivTime }));
+    delivRow.appendChild(delivInfo);
+    delivCard.appendChild(delivRow);
+    delivSection.appendChild(delivCard);
+    content.appendChild(delivSection);
+
+    // Route details
+    var routeSection = el('div', { className: 'panel-section' });
+    routeSection.appendChild(el('div', { className: 'panel-section-title', textContent: 'Route Details' }));
+    var detailFields = [
+        { label: 'Distance', value: load.miles + ' mi' },
+        { label: 'Equipment', value: load.equipment },
+        { label: 'Pickup', value: load.pickupDate + ', ' + load.pickupTime },
+        { label: 'Delivery', value: load.delivDate + ', ' + load.delivTime }
+    ];
+    detailFields.forEach(function(f) {
+        var row = el('div', { className: 'panel-field' });
+        row.appendChild(el('span', { className: 'panel-field-label', textContent: f.label }));
+        row.appendChild(el('span', { className: 'panel-field-value', textContent: f.value }));
+        routeSection.appendChild(row);
+    });
+    content.appendChild(routeSection);
+
+    return content;
+}
+
+function buildPanelFinanceTab(load) {
+    var content = el('div');
+
+    // Revenue
+    var revSection = el('div', { className: 'panel-section' });
+    revSection.appendChild(el('div', { className: 'panel-section-title', textContent: 'Revenue' }));
+    var revFields = [
+        { label: 'Customer Rate', value: fmt(load.rate) },
+        { label: 'RPM', value: '$' + (load.rate / load.miles).toFixed(2) }
+    ];
+    revFields.forEach(function(f) {
+        var row = el('div', { className: 'finance-row' });
+        row.appendChild(el('span', { className: 'finance-label', textContent: f.label }));
+        row.appendChild(el('span', { className: 'finance-value', textContent: f.value }));
+        revSection.appendChild(row);
+    });
+    content.appendChild(revSection);
+
+    // Cost
+    var costSection = el('div', { className: 'panel-section' });
+    costSection.appendChild(el('div', { className: 'panel-section-title', textContent: 'Cost' }));
+    var costFields = [
+        { label: 'Carrier Pay', value: load.carrierPay > 0 ? fmt(load.carrierPay) : '--' },
+        { label: 'Accessorials', value: '$0' }
+    ];
+    costFields.forEach(function(f) {
+        var row = el('div', { className: 'finance-row' });
+        row.appendChild(el('span', { className: 'finance-label', textContent: f.label }));
+        row.appendChild(el('span', { className: 'finance-value', textContent: f.value }));
+        costSection.appendChild(row);
+    });
+    content.appendChild(costSection);
+
+    // Margin box
+    var marginAmt = load.rate - load.carrierPay;
+    var isPositive = load.margin >= 10;
+    var mBox = el('div', { className: 'margin-box ' + (isPositive ? 'positive' : 'negative') });
+    mBox.appendChild(el('div', { className: 'margin-box-pct ' + (isPositive ? 'positive' : 'negative'), textContent: load.margin > 0 ? load.margin + '%' : '--' }));
+    mBox.appendChild(el('div', { className: 'margin-box-amt', textContent: load.carrierPay > 0 ? fmt(marginAmt) + ' margin' : 'No carrier assigned' }));
+    content.appendChild(mBox);
+
+    // Payment status
+    var paySection = el('div', { className: 'panel-section', style: { marginTop: '20px' } });
+    paySection.appendChild(el('div', { className: 'panel-section-title', textContent: 'Payment Status' }));
+    var payRow = el('div', { className: 'panel-field' });
+    payRow.appendChild(el('span', { className: 'panel-field-label', textContent: 'Status' }));
+    var payVal = load.status === 'delivered' ? 'Ready to invoice' : 'Pending delivery';
+    payRow.appendChild(el('span', { className: 'panel-field-value', textContent: payVal }));
+    paySection.appendChild(payRow);
+    content.appendChild(paySection);
+
+    return content;
+}
+
+function buildPanelDocsTab(load) {
+    var content = el('div');
+    var docSection = el('div', { className: 'panel-section' });
+    docSection.appendChild(el('div', { className: 'panel-section-title', textContent: 'Documents' }));
+
+    var docs = [
+        { name: 'Bill of Lading (BOL)', done: load.docs.bol },
+        { name: 'Rate Confirmation', done: load.docs.rateConf },
+        { name: 'Proof of Delivery (POD)', done: load.docs.pod }
+    ];
+
+    var doneCount = 0;
+    docs.forEach(function(d) {
+        if (d.done) doneCount++;
+        var item = el('div', { className: 'doc-item' });
+        var iconDiv = el('div', { className: 'doc-icon ' + (d.done ? 'complete' : 'pending') });
+        iconDiv.appendChild(icon(d.done ? 'check_circle' : 'pending'));
+        item.appendChild(iconDiv);
+        item.appendChild(el('span', { className: 'doc-name', textContent: d.name }));
+        item.appendChild(el('span', { className: 'doc-status ' + (d.done ? 'complete' : 'pending'), textContent: d.done ? 'Complete' : 'Pending' }));
+        docSection.appendChild(item);
+    });
+
+    // Progress bar
+    var pbar = el('div', { className: 'doc-progress-bar' });
+    var pfill = el('div', { className: 'doc-progress-fill', style: { width: Math.round((doneCount / 3) * 100) + '%' } });
+    pbar.appendChild(pfill);
+    docSection.appendChild(pbar);
+    docSection.appendChild(el('div', { style: { fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px' }, textContent: doneCount + ' of 3 documents' }));
+
+    // Warning for delivered without POD
+    if (load.status === 'delivered' && !load.docs.pod) {
+        var warn = el('div', { className: 'doc-warning' });
+        warn.appendChild(icon('warning'));
+        warn.appendChild(document.createTextNode('Missing POD - required for invoicing'));
+        docSection.appendChild(warn);
+    }
+
+    content.appendChild(docSection);
+    return content;
+}
+
+function renderDetailPanel() {
+    if (!detailPanelRef) return;
+    detailPanelRef.replaceChildren();
+
+    var load = getSelectedLoad();
+    if (!load) return;
+
+    // Header
+    var ph = el('div', { className: 'panel-header' });
+    var headerTop = el('div', { style: { display: 'flex', alignItems: 'center', gap: '10px' } });
+    headerTop.appendChild(el('span', { className: 'panel-load-id', textContent: load.id }));
+    var badge = el('span', { className: 'status-badge ' + load.status });
+    var dot = el('span', { className: 'dot' });
+    badge.appendChild(dot);
+    badge.appendChild(document.createTextNode(statusMeta[load.status].label));
+    headerTop.appendChild(badge);
+    ph.appendChild(headerTop);
+    ph.appendChild(el('div', { className: 'panel-subtitle', textContent: 'Last updated: ' + load.updated }));
+    detailPanelRef.appendChild(ph);
+
+    // Tabs
+    var tabBar = el('div', { className: 'panel-tabs' });
+    var tabs = [
+        { key: 'overview', label: 'Overview' },
+        { key: 'stops', label: 'Stops' },
+        { key: 'finance', label: 'Finance' },
+        { key: 'documents', label: 'Documents' }
+    ];
+    tabs.forEach(function(t) {
+        var tab = el('button', { className: 'panel-tab' + (state.activeTab === t.key ? ' active' : ''), textContent: t.label });
+        tab.addEventListener('click', function() {
+            state.activeTab = t.key;
+            renderDetailPanel();
+        });
+        tabBar.appendChild(tab);
+    });
+    detailPanelRef.appendChild(tabBar);
+
+    // Content
+    var pc = el('div', { className: 'panel-content' });
+    if (state.activeTab === 'overview') pc.appendChild(buildPanelOverviewTab(load));
+    else if (state.activeTab === 'stops') pc.appendChild(buildPanelStopsTab(load));
+    else if (state.activeTab === 'finance') pc.appendChild(buildPanelFinanceTab(load));
+    else if (state.activeTab === 'documents') pc.appendChild(buildPanelDocsTab(load));
+    detailPanelRef.appendChild(pc);
+}
+
+function buildPagination() {
+    var pg = el('div', { className: 'pagination-bar' });
+    pg.appendChild(el('span', { className: 'pagination-info', textContent: 'Showing 1-25 of 571' }));
+    var controls = el('div', { className: 'pagination-controls' });
+    var prevBtn = el('button', { className: 'page-btn', disabled: true });
+    prevBtn.appendChild(icon('chevron_left'));
+    controls.appendChild(prevBtn);
+    [1, 2, 3, '...', 23].forEach(function(p) {
+        controls.appendChild(el('button', { className: 'page-btn' + (p === 1 ? ' active' : ''), textContent: String(p) }));
+    });
+    var nextBtn = el('button', { className: 'page-btn' });
+    nextBtn.appendChild(icon('chevron_right'));
+    controls.appendChild(nextBtn);
+    pg.appendChild(controls);
+    return pg;
+}
+
+// --- ASSEMBLE ---
+function buildApp() {
+    var app = document.getElementById('app');
+    app.replaceChildren();
+
+    // Sidebar
+    app.appendChild(buildSidebar());
+
+    // Main wrapper
+    var main = el('div', { className: 'main-wrapper' });
+
+    // Table section
+    var tableSection = el('div', { className: 'table-section' });
+
+    // Header
+    tableSection.appendChild(buildHeader());
+
+    // Filter bar
+    filterBarRef = buildFilterBar();
+    tableSection.appendChild(filterBarRef);
+
+    // Bulk bar
+    bulkBarRef = el('div', { className: 'bulk-bar', style: { display: 'none' } });
+    tableSection.appendChild(bulkBarRef);
+
+    // Stats
+    tableSection.appendChild(buildStatsStrip());
+
+    // Table container
+    tableContainerRef = el('div', { className: 'table-container' });
+    tableSection.appendChild(tableContainerRef);
+
+    // Pagination
+    tableSection.appendChild(buildPagination());
+
+    main.appendChild(tableSection);
+
+    // Detail panel
+    detailPanelRef = el('div', { className: 'detail-panel' });
+    main.appendChild(detailPanelRef);
+
+    app.appendChild(main);
+
+    // Initial render
+    renderTable();
+    renderDetailPanel();
+}
+
+buildApp();
+</script>
+</body>
+</html>

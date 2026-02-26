@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ultra TMS - Dispatch Board (Dense Mode)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* System font stack for maximum crispness */
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+
+    /* Scrollbar styling for lanes */
+    .lane-scroll::-webkit-scrollbar { width: 4px; }
+    .lane-scroll::-webkit-scrollbar-track { background: transparent; }
+    .lane-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+    .lane-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* Horizontal scroll for board */
+    .board-scroll::-webkit-scrollbar { height: 6px; }
+    .board-scroll::-webkit-scrollbar-track { background: #f8fafc; }
+    .board-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+    /* Row hover expand animation */
+    .load-row { transition: all 0.1s ease; }
+    .load-row:hover { z-index: 10; position: relative; }
+    .load-row .expand-detail { max-height: 0; overflow: hidden; transition: max-height 0.15s ease; }
+    .load-row:hover .expand-detail { max-height: 28px; }
+
+    /* Click highlight */
+    .load-row.selected { background-color: #eff6ff !important; }
+
+    /* Exception row pulse */
+    @keyframes subtlePulse { 0%,100%{opacity:1} 50%{opacity:0.85} }
+    .exception-row { animation: subtlePulse 3s ease-in-out infinite; }
+
+    /* Monospace numbers for alignment */
+    .num { font-variant-numeric: tabular-nums; }
+
+    /* Sidebar tooltip */
+    .sidebar-item { position: relative; }
+    .sidebar-item .tip { display: none; position: absolute; left: 56px; top: 50%; transform: translateY(-50%); background: #1e293b; color: #f8fafc; font-size: 11px; padding: 2px 8px; border-radius: 4px; white-space: nowrap; z-index: 100; }
+    .sidebar-item:hover .tip { display: block; }
+
+    /* Compact text */
+    .text-2xs { font-size: 0.65rem; line-height: 0.85rem; }
+  </style>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { 50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8' },
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-gray-50 text-gray-800 text-xs overflow-hidden h-screen flex">
+
+  <!-- ===== SIDEBAR (56px, icon-only) ===== -->
+  <aside class="w-14 bg-white border-r border-gray-200 flex flex-col items-center py-2 shrink-0 z-50">
+    <!-- Logo -->
+    <div class="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center mb-4">
+      <i data-lucide="truck" class="w-5 h-5 text-white"></i>
+    </div>
+
+    <!-- Nav Icons -->
+    <nav class="flex flex-col gap-1 flex-1">
+      <div class="sidebar-item">
+        <button class="w-9 h-9 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
+          <i data-lucide="layout-dashboard" class="w-[18px] h-[18px]"></i>
+        </button>
+        <span class="tip">Dashboard</span>
+      </div>
+      <div class="sidebar-item">
+        <button class="w-9 h-9 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
+          <i data-lucide="file-text" class="w-[18px] h-[18px]"></i>
+        </button>
+        <span class="tip">Orders</span>
+      </div>
+      <div class="sidebar-item">
+        <button class="w-9 h-9 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
+          <i data-lucide="package" class="w-[18px] h-[18px]"></i>
+        </button>
+        <span class="tip">Loads</span>
+      </div>
+      <div class="sidebar-item">
+        <button class="w-9 h-9 rounded-lg flex items-center justify-center bg-blue-50 text-blue-600 transition-colors">
+          <i data-lucide="send" class="w-[18px] h-[18px]"></i>
+        </button>
+        <span class="tip">Dispatch</span>
+      </div>
+      <div class="sidebar-item">
+        <button class="w-9 h-9 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
+          <i data-lucide="map-pin" class="w-[18px] h-[18px]"></i>
+        </button>
+        <span class="tip">Tracking</span>
+      </div>
+      <div class="sidebar-item">
+        <button class="w-9 h-9 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
+          <i data-lucide="users" class="w-[18px] h-[18px]"></i>
+        </button>
+        <span class="tip">Carriers</span>
+      </div>
+      <div class="sidebar-item">
+        <button class="w-9 h-9 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
+          <i data-lucide="bar-chart-3" class="w-[18px] h-[18px]"></i>
+        </button>
+        <span class="tip">Reports</span>
+      </div>
+    </nav>
+
+    <!-- Bottom icons -->
+    <div class="flex flex-col gap-1 mt-auto">
+      <div class="sidebar-item">
+        <button class="w-9 h-9 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
+          <i data-lucide="settings" class="w-[18px] h-[18px]"></i>
+        </button>
+        <span class="tip">Settings</span>
+      </div>
+      <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xs font-semibold mx-auto mt-1" title="Mike D.">MD</div>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+    <!-- ===== TOOLBAR + KPI (combined single strip) ===== -->
+    <div class="bg-white border-b border-gray-200 px-3 py-1.5 flex items-center gap-2 shrink-0">
+      <!-- View toggles -->
+      <div class="flex items-center bg-gray-100 rounded-md p-0.5 gap-0.5">
+        <button class="px-1.5 py-1 rounded bg-white shadow-sm text-blue-600" title="Kanban">
+          <i data-lucide="columns-3" class="w-3.5 h-3.5"></i>
+        </button>
+        <button class="px-1.5 py-1 rounded text-gray-400 hover:text-gray-600" title="Timeline">
+          <i data-lucide="gantt-chart" class="w-3.5 h-3.5"></i>
+        </button>
+        <button class="px-1.5 py-1 rounded text-gray-400 hover:text-gray-600" title="Map">
+          <i data-lucide="map" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+
+      <!-- Date range -->
+      <button class="flex items-center gap-1 px-2 py-1 bg-gray-50 border border-gray-200 rounded-md text-gray-600 hover:bg-gray-100 text-xs">
+        <i data-lucide="calendar" class="w-3 h-3"></i>
+        <span class="font-medium">This Week</span>
+        <i data-lucide="chevron-down" class="w-3 h-3"></i>
+      </button>
+
+      <!-- Divider -->
+      <div class="w-px h-5 bg-gray-200"></div>
+
+      <!-- Filter chips -->
+      <div class="flex items-center gap-1">
+        <button class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200 text-2xs font-medium flex items-center gap-1">
+          Hot Loads
+          <i data-lucide="x" class="w-2.5 h-2.5"></i>
+        </button>
+        <button class="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-2xs font-medium flex items-center gap-1">
+          Exceptions
+          <i data-lucide="x" class="w-2.5 h-2.5"></i>
+        </button>
+        <button class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200 text-2xs font-medium flex items-center gap-1 hover:bg-gray-200">
+          <i data-lucide="plus" class="w-2.5 h-2.5"></i>
+          Filter
+        </button>
+      </div>
+
+      <!-- Spacer -->
+      <div class="flex-1"></div>
+
+      <!-- KPI Strip (inline) -->
+      <div class="flex items-center gap-3 text-2xs font-medium num border-l border-gray-200 pl-3 mr-2">
+        <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-gray-400 inline-block"></span><span class="text-gray-500">UN</span><span class="text-gray-800 font-bold">4</span></span>
+        <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-yellow-400 inline-block"></span><span class="text-gray-500">TN</span><span class="text-gray-800 font-bold">3</span></span>
+        <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-400 inline-block"></span><span class="text-gray-500">DS</span><span class="text-gray-800 font-bold">3</span></span>
+        <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-indigo-500 inline-block"></span><span class="text-gray-500">IT</span><span class="text-gray-800 font-bold">5</span></span>
+        <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span><span class="text-gray-500">DL</span><span class="text-gray-800 font-bold">3</span></span>
+        <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-green-600 inline-block"></span><span class="text-gray-500">CP</span><span class="text-gray-800 font-bold">2</span></span>
+        <div class="w-px h-4 bg-gray-200"></div>
+        <span class="flex items-center gap-1"><span class="text-gray-500">TOT</span><span class="text-gray-900 font-bold">20</span></span>
+        <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-red-500 inline-block"></span><span class="text-red-600">RISK</span><span class="text-red-600 font-bold">3</span></span>
+      </div>
+
+      <!-- Divider -->
+      <div class="w-px h-5 bg-gray-200"></div>
+
+      <!-- Search -->
+      <div class="relative">
+        <i data-lucide="search" class="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"></i>
+        <input type="text" placeholder="Search loads..." class="pl-7 pr-2 py-1 w-32 bg-gray-50 border border-gray-200 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400" />
+      </div>
+
+      <!-- New button -->
+      <button class="flex items-center gap-1 px-2.5 py-1 bg-blue-600 text-white rounded-md text-xs font-medium hover:bg-blue-700 transition-colors shadow-sm">
+        <i data-lucide="plus" class="w-3 h-3"></i>
+        New
+      </button>
+
+      <!-- Bulk actions -->
+      <button class="flex items-center gap-1 px-2 py-1 border border-gray-200 rounded-md text-gray-500 text-xs hover:bg-gray-50">
+        <i data-lucide="check-square" class="w-3 h-3"></i>
+        Bulk
+      </button>
+    </div>
+
+    <!-- ===== KANBAN BOARD ===== -->
+    <div class="flex-1 overflow-x-auto overflow-y-hidden board-scroll p-2 flex gap-2" id="board">
+
+      <!-- === LANE: UNASSIGNED === -->
+      <div class="flex flex-col min-w-[260px] w-[260px] shrink-0 bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <!-- Lane header -->
+        <div class="px-3 py-1.5 border-b border-gray-200 flex items-center justify-between shrink-0" style="border-top: 3px solid #9ca3af;">
+          <div class="flex items-center gap-1.5">
+            <span class="font-semibold text-gray-700 text-xs uppercase tracking-wide">Unassigned</span>
+            <span class="bg-gray-100 text-gray-600 rounded-full px-1.5 py-0 text-2xs font-bold num">4</span>
+          </div>
+          <button class="text-gray-400 hover:text-gray-600"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button>
+        </div>
+        <!-- Column header row -->
+        <div class="px-2 py-0.5 flex items-center text-2xs text-gray-400 font-medium uppercase tracking-wider border-b border-gray-100 bg-gray-50 shrink-0">
+          <span class="w-[60px]">Load</span>
+          <span class="w-[72px]">Route</span>
+          <span class="flex-1">Carrier</span>
+          <span class="w-[36px] text-right">Date</span>
+          <span class="w-[42px] text-right">Rate</span>
+          <span class="w-[14px]"></span>
+        </div>
+        <!-- Rows -->
+        <div class="flex-1 overflow-y-auto lane-scroll">
+          <!-- Row 1 - EXCEPTION (26h stale) -->
+          <div class="load-row exception-row cursor-pointer border-b border-gray-100 bg-amber-50 hover:bg-amber-100" onclick="selectRow(this)">
+            <div class="px-2 py-[3px] flex items-center gap-0 text-2xs">
+              <span class="w-[60px] font-mono font-semibold text-gray-800">FM-0861</span>
+              <span class="w-[72px] text-gray-600 truncate">DEN<span class="text-gray-300 mx-px">&rarr;</span>SLC</span>
+              <span class="flex-1 text-gray-400">&mdash;</span>
+              <span class="w-[36px] text-right text-gray-500 num">Feb 9</span>
+              <span class="w-[42px] text-right font-semibold text-gray-800 num">$2.1K</span>
+              <span class="w-[14px] text-center" title="Reefer">&#10052;&#65039;</span>
+            </div>
+            <div class="px-2 flex items-center gap-2 text-2xs">
+              <span class="text-amber-600 font-medium">&#9888; 26h stale</span>
+              <span class="text-gray-400">CO&rarr;UT</span>
+            </div>
+            <div class="expand-detail px-2 flex items-center gap-2 text-2xs text-gray-400">
+              <span>Customer: Acme Corp</span>
+              <span>&bull;</span>
+              <span>FTL Reefer</span>
+            </div>
+          </div>
+          <!-- Row 2 - HOT -->
+          <div class="load-row cursor-pointer border-b border-gray-100 bg-white hover:bg-gray-50" onclick="selectRow(this)">
+            <div class="px-2 py-[3px] flex items-center gap-0 text-2xs">
+              <span class="w-[60px] font-mono font-semibold text-gray-800 flex items-center gap-0.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-red-500 inline-block shrink-0"></span>
+                FM-0863
+              </span>
+              <span class="w-[72px] text-gray-600 truncate">MEM<span class="text-gray-300 mx-px">&rarr;</span>NSH</span>
+              <span class="flex-1 text-gray-400">&mdash;</span>
+              <span class="w-[36px] text-right text-gray-500 num">Feb 9</span>
+              <span class="w-[42px] text-right font-semibold text-gray-800 num">$850</span>
+              <span class="w-[14px] text-center" title="Dry Van">&#128230;</span>
+            </div>
+            <div class="expand-detail px-2 flex items-center gap-2 text-2xs text-gray-400">
+              <span>Customer: Memphis Freight</span>
+              <span>&bull;</span>
+              <span>FTL Dry Van</span>
+            </div>
+          </div>
+          <!-- Row 3 -->
+          <div class="load-row cursor-pointer border-b border-gray-100 bg-gray-50/50 hover:bg-gray-100" onclick="selectRow(this)">
+            <div class="px-2 py-[3px] flex items-center gap-0 text-2xs">
+              <span class="w-[60px] font-mono font-semibold text-gray-800">FM-0865</span>
+              <span class="w-[72px] text-gray-600 truncate">HOU<span class="text-gray-300 mx-px">&rarr;</span>SAN</span>
+              <span class="flex-1 text-gray-400">&mdash;</span>
+              <span class="w-[36px] text-right text-gray-500 num">Feb10</span>
+              <span class="w-[42px] text-right font-semibold text-gray-800 num">$1.2K</span>
+              <span class="w-[14px] text-center" title="Flatbed">&#9632;</span>
+            </div>
+            <div class="expand-detail px-2 flex items-center gap-2 text-2xs text-gray-400">
+              <span>Customer: TX Logistics</span>
+              <span>&bull;</span>
+              <span>FTL Flatbed</span>
+            </div>
+          </div>
+          <!-- Row 4 -->
+          <div class="load-row cursor-pointer border-b border-gray-100 bg-white hover:bg-gray-50" onclick="selectRow(this)">
+            <div class="px-2 py-[3px] flex items-center gap-0 text-2xs">
+              <span class="w-[60px] font-mono font-semibold text-gray-800">FM-0867</span>
+              <span class="w-[72px] text-gray-600 truncate">PDX<span class="text-gray-300 mx-px">&rarr;</span>SEA</span>
+              <span class="flex-1 text-gray-400">&mdash;</span>
+              <span class="w-[36px] text-right text-gray-500 num">Feb 9</span>
+              <span class="w-[42px] text-right font-semibold text-gray-800 num">$650</span>
+              <span class="w-[14px] text-center" title="Dry Van">&#128230;</span>
+            </div>
+            <div class="expand-detail px-2 flex items-center gap-2 text-2xs text-gray-400">
+              <span>Customer: Pacific NW Dist</span>
+              <span>&bull;</span>
+              <span>FTL Dry Van</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- === LANE: TENDERED === -->
+      <div class="flex flex-col min-w-[280px] w-[280px] shrink-0 bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div class="px-3 py-1.5 border-b border-gray-200 flex items-center justify-between shrink-0" style="border-top: 3px solid #eab308;">
+          <div class="flex items-center gap-1.5">
+            <span class="font-semibold text-gray-700 text-xs uppercase tracking-wide">Tendered</span>
+            <span class="bg-yellow-100 text-yellow-700 rounded-full px-1.5 py-0 text-2xs font-bold num">3</span>
+          </div>
+          <button class="text-gray-400 hover:text-gray-600"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button>
+        </div>
+        <div class="px-2 py-0.5 flex items-center text-2xs text-gray-400 font-medium uppercase tracking-wider border-b border-gray-100 bg-gray-50 shrink-0">
+          <span class="w-[60px]">Load</span>
+          <span class="w-[70px]">Route</span>
+          <span class="w-[52px]">Carrier</span>
+          <span class="flex-1 text-right">Rate</span>
+          <span class="w-[28px] text-right">Mgn</span>
+          <span class="w-[30px] text-right">Wait</span>
+        </div>
+        <div class="flex-1 overflow-y-auto lane-scroll">
+          <!-- FM-0855 -->
+          <div class="load-row cursor-pointer border-b border-gray-100 bg-white hover:bg-gray-50" onclick="selectRow(this)">
+            <div class="px-2 py-[3px] flex items-center gap-0 text-2xs">
+              <span class="w-[60px] font-mono font-semibold text-gray-800">FM-0855</span>
+              <span class="w-[70px] text-gray-600 truncate">KCI<span class="text-gray-300 mx-px">&rarr;</span>STL</span>
+              <span class="w-[52px] text-gray-600 truncate font-medium">Hrtlnd</span>
+              <span class="flex-1 text-right font-semibold text-gray-800 num">$780</span>
+              <span class="w-[28px] text-right text-emerald-600 font-semibold num">21%</span>
+              <span class="w-[30px] text-right text-gray-500 num">28m</span>
+            </div>
+            <div class="expand-detail px-2 flex items-center gap-2 text-2xs text-gray-400">
+              <span>Heartland Express</span>
+              <span>&bull;</span>
+              <span>Feb 9</span>
+              <span>&bull;</span>
+              <span>Dry Van</span>
+            </div>
+          </div>
+          <!-- FM-0858 -->
+          <div class="load-row cursor-pointer border-b border-gray-100 bg-gray-50/50 hover:bg-gray-100" onclick="selectRow(this)">
+            <div class="px-2 py-[3px] flex items-center gap-0 text-2xs">
+              <span class="w-[60px] font-mono font-semibold text-gray-800">FM-0858</span>
+              <span class="w-[70px] text-gray-600 truncate">IND<span class="text-gray-300 mx-px">&rarr;</span>LOU</span>
+              <span class="w-[52px] text-gray-600 truncate font-medium">XPO</span>
+              <span class="flex-1 text-right font-semibold text-gray-800 num">$1.5K</span>
+              <span class="w-[28px] text-right text-emerald-600 font-semibold num">19%</span>
+              <span class="w-[30px] text-right text-amber-600 font-bold num flex items-center justify-end gap-0.5">
+                <svg class="w-2.5 h-2.5 text-amber-500" viewBox="0 0 24 24" fill="currentColor"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                4m
+              </span>
+            </div>
+            <div class="expand-detail px-2 flex items-center gap-2 text-2xs text-gray-400">
+              <span>XPO Logistics</span>
+              <span>&bull;</span>
+              <span>Feb 9</span>
+              <span>&bull;</span>
+              <span>Reefer</span>
+            </div>
+          </div>
+          <!-- FM-0860 -->
+          <div class="load-row cursor-pointer border-b border-gray-100 bg-white hover:bg-gray-50" onclick="selectRow(this)">
+            <div class="px-2 py-[3px] flex items-center gap-0 text-2xs">
+              <span class="w-[60px] font-mono font-semibold text-gray-800">FM-0860</span>
+              <span class="w-[70px] text-gray-600 truncate">CLT<span class="text-gray-300 mx-px">&rarr;</span>RDU</span>
+              <span class="w-[52px] text-gray-600 truncate font-medium">OldDom</span>
+              <span class="flex-1 text-right font-semibold text-gray-800 num">$550</span>
+              <span class="w-[28px] text-right text-emerald-600 font-semibold num">22%</span>
+              <span class="w-[30px] text-right text-gray-500 num">22m</span>
+            </div>
+            <div class="expand-detail px-2 flex items-center gap-2 text-2xs text-gray-400">
+              <span>Old Dominion</span>
+              <span>&bull;</span>
+              <span>Feb 10</span>
+              <span>&bull;</span>
+              <span>Dry Van</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- === LANE: DISPATCHED === -->
+      <div class="flex flex-col min-w-[280px] w-[280px] shrink-0 bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div class="px-3 py-1.5 border-b border-gray-200 flex items-center justify-between shrink-0" style="border-top: 3px solid #3b82f6;">
+          <div class="flex items-center gap-1.5">
+            <span class="font-semibold text-gray-700 text-xs uppercase tracking-wide">Dispatched</span>
+            <span class="bg-blue-100 text-blue-700 rounded-full px-1.5 py-0 text-2xs font-bold num">3</span>
+          </div>
+          <button class="text-gray-400 hover:text-gray-600"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button>
+        </div>
+        <div class="px-2 py-0.5 flex items-center text-2xs text-gray-400 font-medium uppercase tracking-wider border-b border-gray-100 bg-gray-50 shrink-0">
+          <span class="w-[60px]">Load</span>
+          <span class="w-[70px]">Route</span>
+          <span class="w-[54px]">Carrier</span>
+          <span class="flex-1 text-right">Rate</span>
+          <span class="w-[28px] text-right">Mgn</span>
+          <span class="w-[14px]"></span>
+        </div>
+        <div class="flex-1 overflow-y-auto lane-scroll">
+          <!-- FM-0842 -->
+          <div class="load-row cursor-pointer border-b border-gray-100 bg-white hover:bg-gray-50" onclick="selectRow(this)">
+            <div class="px-2 py-[3px] flex items-center gap-0 text-2xs">
+              <span class="w-[60px] font-mono font-semibold text-gray-800">FM-0842</span>
+              <span class="w-[70px] text-gray-600 truncate">PHX<span class="text-gray-300 mx-px">&rarr;</span>LAS</span>
+              <span class="w-[54px] text-gray-600 truncate font-medium">Schndr</span>
+              <span class="flex-1 text-right font-semibold text-gray-800 num">$1.1K</span>
+              <span class="w-[28px] text-right text-emerald-600 font-semibold num">20%</span>
+              <span class="w-[14px] text-center" title="Dry Van">&#128230;</span>
+            </div>
+            <div class="expand-detail px-2 flex items-center gap-2 text-2xs text-gray-400">
+              <span>Schneider National</span>
+              <span>&bull;</span>
+              <span>Feb 9</span>
+              <span>&bull;</span>
+              <span>Driver: J. Martinez</span>
+            </div>
+          </div>
+          <!-- FM-0844 -->
+          <div class="load-row cursor-pointer border-b border-gray-100 bg-gray-50/50 hover:bg-gray-100" onclick="selectRow(this)">
+            <div class="px-2 py-[3px] flex items-center gap-0 text-2xs">
+              <span class="w-[60px] font-mono font-semibold text-gray-800">FM-0844</span>
+              <span class="w-[70px] text-gray-600 truncate">MSP<span class="text-gray-300 mx-px">&rarr;</span>MKE</span>
+              <span class="w-[54px] text-gray-600 truncate font-medium">Werner</span>
+              <span class="flex-1 text-right font-semibold text-gray-800 num">$950</span>
+              <span class="w-[28px] text-right text-emerald-600 font-semibold num">20%</span>
+              <span class="w-[14px] text-center" title="Reefer">&#10052;&#65039;</span>
+            </div>
+            <div class="expand-detail px-2 flex items-center gap-2 text-2xs text-gray-400">
+              <span>Werner Enterprises</span>
+              <span>&bull;</span>
+              <span>Feb 9</span>
+              <span>&bull;</span>
+              <span>Driver: T. Johnson</span>
+            </div>
+          </div>
+          <!-- FM-0846 -->
+          <div class="load-row cursor-pointer border-b border-gray-100 bg-white hover:bg-gray-50" onclick="selectRow(this)">
+            <div class="px-2 py-[3px] flex items-center gap-0 text-2xs">
+              <span class="w-[60px] font-mono font-semibold text-gray-800">FM-0846</span>
+              <span class="w-[70px] text-gray-600 truncate">TPA<span class="text-gray-300 mx-px">&rarr;</span>JAX</span>
+              <span class="w-[54px] text-gray-600 truncate font-medium">Lndstr</span>
+              <span class="flex-1 text-right font-semibold text-gray-800 num">$880</span>
+              <span class="w-[28px] text-right text-emerald-600 font-semibold num">20%</span>
+              <span class="w-[14px] text-center" title="Flatbed">&#9632;</span>
+            </div>
+            <div class="expand-detail px-2 flex items-center gap-2 text-2xs text-gray-400">
+              <span>Landstar System</span>
+              <span>&bull;</span>
+              <span>Feb 9</span>
+              <span>&bull;</span>
+              <span>Driver: R. Davis</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- === LANE: IN TRANSIT === -->
+      <div class="flex flex-col min-w-[310px] w-[310px] shrink-0 bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div class="px-3 py-1.5 border-b border-gray-200 flex items-center justify-between shrink-0" style="border-top: 3px solid #6366f1;">
+          <div class="flex items-center gap-1.5">
+            <span class="font-semibold text-gray-700 text-xs uppercase tracking-wide">In Transit</span>
+            <span class="bg-indigo-100 text-indigo-700 rounded-full px-1.5 py-0 text-2xs font-bold num">5</span>
+            <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" title="3 exceptions"></span>
+          </div>
+          <button class="text-gray-400 hover:text-gray-600"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button>
+        </div>
+        <div class="px-2 py-0.5 flex items-center text-2xs text-gray-400 font-medium uppercase tracking-wider border-b border-gray-100 bg-gray-50 shrink-0">
+          <span class="w-[60px]">Load</span>
+          <span class="w-[70px]">Route</span>
+          <span class="w-[50px]">Carrier</span>
+          <span class="w-[52px]">Dates</span>
+          <span class="flex-1 text-right">Rate</span>
+          <span class="w-[14px]"></span>
+          <span class="w-[60px] text-right">Status</span>
+        </div>
+        <div class="flex-1 overflow-y-auto lane-scroll">
+          <!-- FM-0847 - HOT + 5h stale -->
+          <div class="load-row exception-row cursor-pointer border-b border-gray-100 bg-red-50 hover:bg-red-100" onclick="selectRow(this)">
+            <div class="px-2 py-[3px] flex items-center gap-0 text-2xs">
+              <span class="w-[60px] font-mono font-semibold text-gray-800 flex items-center gap-0.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-red-500 inline-block shrink-0"></span>
+                FM-0847
+              </span>
+              <span class="w-[70px] text-gray-600 truncate">CHI<span class="text-gray-300 mx-px">&rarr;</span>DAL</span>
+              <span class="w-[50px] text-gray-600 truncate font-medium">Swift</span>
+              <span class="w-[52px] text-gray-500 num">Feb 7-9</span>
+              <span class="flex-1 text-right font-semibold text-gray-800 num">$2.5K</span>
+              <span class="w-[14px] text-center">&#128230;</span>
+              <span class="w-[60px] text-right text-red-600 font-semibold">&#128293; 5h stale</span>
+            </div>
+            <div class="expand-detail px-2 flex items-center gap-2 text-2xs text-gray-400">
+              <span>Swift Transportation</span>
+              <span>&bull;</span>
+              <span>Driver: K. Williams</span>
+              <span>&bull;</span>
+              <span class="text-red-500 font-medium">GPS signal lost</span>
+            </div>
+          </div>
+          <!-- FM-0832 - ETA late -->
+          <div class="load-row exception-row cursor-pointer border-b border-gray-100 bg-amber-50 hover:bg-amber-100" onclick="selectRow(this)">
+            <div class="px-2 py-[3px] flex items-center gap-0 text-2xs">
+              <span class="w-[60px] font-mono font-semibold text-gray-800">FM-0832</span>
+              <span class="w-[70px] text-gray-600 truncate">LAX<span class="text-gray-300 mx-px">&rarr;</span>PHX</span>
+              <span class="w-[50px] text-gray-600 truncate font-medium">Knight</span>
+              <span class="w-[52px] text-gray-500 num">Feb 7-8</span>
+              <span class="flex-1 text-right font-semibold text-gray-800 num">$1.9K</span>
+              <span class="w-[14px] text-center">&#10052;&#65039;</span>
+              <span class="w-[60px] text-right text-amber-600 font-semibold">&#9888; ETA late</span>
+            </div>
+            <div class="expand-detail px-2 flex items-center gap-2 text-2xs text-gray-400">
+              <span>Knight-Swift</span>
+              <span>&bull;</span>
+              <span>Driver: A. Rodriguez</span>
+              <span>&bull;</span>
+              <span class="text-amber-600">ETA +3h behind</span>
+            </div>
+          </div>
+          <!-- FM-0819 - Detention -->
+          <div class="load-row exception-row cursor-pointer border-b border-gray-100 bg-amber-50 hover:bg-amber-100" onclick="selectRow(this)">
+            <div class="px-2 py-[3px] flex items-center gap-0 text-2xs">
+              <span class="w-[60px] font-mono font-semibold text-gray-800">FM-0819</span>
+              <span class="w-[70px] text-gray-600 truncate">ATL<span class="text-gray-300 mx-px">&rarr;</span>MIA</span>
+              <span class="w-[50px] text-gray-600 truncate font-medium">JBHunt</span>
+              <span class="w-[52px] text-gray-500 num">Feb 7-9</span>
+              <span class="flex-1 text-right font-semibold text-gray-800 num">$3.2K</span>
+              <span class="w-[14px] text-center">&#9632;</span>
+              <span class="w-[60px] text-right text-amber-600 font-semibold">&#9888; Detntn</span>
+            </div>
+            <div class="expand-detail px-2 flex items-center gap-2 text-2xs text-gray-400">
+              <span>J.B. Hunt</span>
+              <span>&bull;</span>
+              <span>Driver: M. Thompson</span>
+              <span>&bull;</span>
+              <span class="text-amber-600">Detention 4h at shipper</span>
+            </div>
+          </div>
+          <!-- FM-0856 - Normal -->
+          <div class="load-row cursor-pointer border-b border-gray-100 bg-white hover:bg-gray-50" onclick="selectRow(this)">
+            <div class="px-2 py-[3px] flex items-center gap-0 text-2xs">
+              <span class="w-[60px] font-mono font-semibold text-gray-800">FM-0856</span>
+              <span class="w-[70px] text-gray-600 truncate">DET<span class="text-gray-300 mx-px">&rarr;</span>CMH</span>
+              <span class="w-[50px] text-gray-600 truncate font-medium">Werner</span>
+              <span class="w-[52px] text-gray-500 num">Feb 8-9</span>
+              <span class="flex-1 text-right font-semibold text-gray-800 num">$1.1K</span>
+              <span class="w-[14px] text-center">&#128230;</span>
+              <span class="w-[60px] text-right text-emerald-500 text-2xs">On Time</span>
+            </div>
+            <div class="expand-detail px-2 flex items-center gap-2 text-2xs text-gray-400">
+              <span>Werner Enterprises</span>
+              <span>&bull;</span>
+              <span>Driver: L. Chen</span>
+            </div>
+          </div>
+          <!-- FM-0838 - Normal -->
+          <div class="load-row cursor-pointer border-b border-gray-100 bg-gray-50/50 hover:bg-gray-100" onclick="selectRow(this)">
+            <div class="px-2 py-[3px] flex items-center gap-0 text-2xs">
+              <span class="w-[60px] font-mono font-semibold text-gray-800">FM-0838</span>
+              <span class="w-[70px] text-gray-600 truncate">EWR<span class="text-gray-300 mx-px">&rarr;</span>BOS</span>
+              <span class="w-[50px] text-gray-600 truncate font-medium">Estes</span>
+              <span class="w-[52px] text-gray-500 num">Feb 8-9</span>
+              <span class="flex-1 text-right font-semibold text-gray-800 num">$1.4K</span>
+              <span class="w-[14px] text-center">&#128230;</span>
+              <span class="w-[60px] text-right text-emerald-500 text-2xs">On Time</span>
+            </div>
+            <div class="expand-detail px-2 flex items-center gap-2 text-2xs text-gray-400">
+              <span>Estes Express</span>
+              <span>&bull;</span>
+              <span>Driver: P. Anderson</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- === LANE: DELIVERED === -->
+      <div class="flex flex-col min-w-[260px] w-[260px] shrink-0 bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div class="px-3 py-1.5 border-b border-gray-200 flex items-center justify-between shrink-0" style="border-top: 3px solid #10b981;">
+          <div class="flex items-center gap-1.5">
+            <span class="font-semibold text-gray-700 text-xs uppercase tracking-wide">Delivered</span>
+            <span class="bg-emerald-100 text-emerald-700 rounded-full px-1.5 py-0 text-2xs font-bold num">3</span>
+          </div>
+          <button class="text-gray-400 hover:text-gray-600"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button>
+        </div>
+        <div class="px-2 py-0.5 flex items-center text-2xs text-gray-400 font-medium uppercase tracking-wider border-b border-gray-100 bg-gray-50 shrink-0">
+          <span class="w-[60px]">Load</span>
+          <span class="w-[70px]">Route</span>
+          <span class="w-[50px]">Carrier</span>
+          <span class="flex-1 text-right">Rate</span>
+          <span class="w-[28px] text-right">Mgn</span>
+          <span class="w-[14px]"></span>
+        </div>
+        <div class="flex-1 overflow-y-auto lane-scroll">
+          <!-- FM-0820 -->
+          <div class="load-row cursor-pointer border-b border-gray-100 bg-white hover:bg-gray-50" onclick="selectRow(this)">
+            <div class="px-2 py-[3px] flex items-center gap-0 text-2xs">
+              <span class="w-[60px] font-mono font-semibold text-gray-700">FM-0820</span>
+              <span class="w-[70px] text-gray-500 truncate">DAL<span class="text-gray-300 mx-px">&rarr;</span>OKC</span>
+              <span class="w-[50px] text-gray-500 truncate font-medium">KLLM</span>
+              <span class="flex-1 text-right font-semibold text-gray-700 num">$1.7K</span>
+              <span class="w-[28px] text-right text-emerald-600 font-semibold num">20%</span>
+              <span class="w-[14px] text-center">&#10052;&#65039;</span>
+            </div>
+            <div class="expand-detail px-2 flex items-center gap-2 text-2xs text-gray-400">
+              <span>KLLM Transport</span>
+              <span>&bull;</span>
+              <span>Feb 7-8</span>
+              <span>&bull;</span>
+              <span class="text-emerald-500">POD received</span>
+            </div>
+          </div>
+          <!-- FM-0825 -->
+          <div class="load-row cursor-pointer border-b border-gray-100 bg-gray-50/50 hover:bg-gray-100" onclick="selectRow(this)">
+            <div class="px-2 py-[3px] flex items-center gap-0 text-2xs">
+              <span class="w-[60px] font-mono font-semibold text-gray-700">FM-0825</span>
+              <span class="w-[70px] text-gray-500 truncate">SFO<span class="text-gray-300 mx-px">&rarr;</span>SAC</span>
+              <span class="w-[50px] text-gray-500 truncate font-medium">FedEx</span>
+              <span class="flex-1 text-right font-semibold text-gray-700 num">$580</span>
+              <span class="w-[28px] text-right text-emerald-600 font-semibold num">21%</span>
+              <span class="w-[14px] text-center">&#128230;</span>
+            </div>
+            <div class="expand-detail px-2 flex items-center gap-2 text-2xs text-gray-400">
+              <span>FedEx Freight</span>
+              <span>&bull;</span>
+              <span>Feb 7-8</span>
+              <span>&bull;</span>
+              <span class="text-emerald-500">POD received</span>
+            </div>
+          </div>
+          <!-- FM-0828 -->
+          <div class="load-row cursor-pointer border-b border-gray-100 bg-white hover:bg-gray-50" onclick="selectRow(this)">
+            <div class="px-2 py-[3px] flex items-center gap-0 text-2xs">
+              <span class="w-[60px] font-mono font-semibold text-gray-700">FM-0828</span>
+              <span class="w-[70px] text-gray-500 truncate">PIT<span class="text-gray-300 mx-px">&rarr;</span>PHL</span>
+              <span class="w-[50px] text-gray-500 truncate font-medium">ABF</span>
+              <span class="flex-1 text-right font-semibold text-gray-700 num">$1.1K</span>
+              <span class="w-[28px] text-right text-emerald-600 font-semibold num">20%</span>
+              <span class="w-[14px] text-center">&#9632;</span>
+            </div>
+            <div class="expand-detail px-2 flex items-center gap-2 text-2xs text-gray-400">
+              <span>ABF Freight</span>
+              <span>&bull;</span>
+              <span>Feb 7-8</span>
+              <span>&bull;</span>
+              <span class="text-amber-500">Awaiting POD</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- === LANE: COMPLETED === -->
+      <div class="flex flex-col min-w-[240px] w-[240px] shrink-0 bg-white rounded-lg border border-gray-200 overflow-hidden opacity-80">
+        <div class="px-3 py-1.5 border-b border-gray-200 flex items-center justify-between shrink-0" style="border-top: 3px solid #16a34a;">
+          <div class="flex items-center gap-1.5">
+            <span class="font-semibold text-gray-700 text-xs uppercase tracking-wide">Completed</span>
+            <span class="bg-green-100 text-green-700 rounded-full px-1.5 py-0 text-2xs font-bold num">2</span>
+          </div>
+          <button class="text-gray-400 hover:text-gray-600"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button>
+        </div>
+        <div class="px-2 py-0.5 flex items-center text-2xs text-gray-400 font-medium uppercase tracking-wider border-b border-gray-100 bg-gray-50 shrink-0">
+          <span class="w-[60px]">Load</span>
+          <span class="w-[70px]">Route</span>
+          <span class="w-[50px]">Carrier</span>
+          <span class="flex-1 text-right">Rate</span>
+          <span class="w-[28px] text-right">Mgn</span>
+        </div>
+        <div class="flex-1 overflow-y-auto lane-scroll">
+          <!-- FM-0810 -->
+          <div class="load-row cursor-pointer border-b border-gray-100 bg-white hover:bg-gray-50" onclick="selectRow(this)">
+            <div class="px-2 py-[3px] flex items-center gap-0 text-2xs text-gray-500">
+              <span class="w-[60px] font-mono font-semibold">FM-0810</span>
+              <span class="w-[70px] truncate">BNA<span class="text-gray-300 mx-px">&rarr;</span>BHM</span>
+              <span class="w-[50px] truncate font-medium">Covnnt</span>
+              <span class="flex-1 text-right font-semibold num">$920</span>
+              <span class="w-[28px] text-right text-emerald-500 font-semibold num">20%</span>
+            </div>
+            <div class="expand-detail px-2 flex items-center gap-2 text-2xs text-gray-400">
+              <span>Covenant Transport</span>
+              <span>&bull;</span>
+              <span>Feb 6-7</span>
+              <span>&bull;</span>
+              <span class="text-green-500">Invoiced</span>
+            </div>
+          </div>
+          <!-- FM-0812 -->
+          <div class="load-row cursor-pointer border-b border-gray-100 bg-gray-50/50 hover:bg-gray-100" onclick="selectRow(this)">
+            <div class="px-2 py-[3px] flex items-center gap-0 text-2xs text-gray-500">
+              <span class="w-[60px] font-mono font-semibold">FM-0812</span>
+              <span class="w-[70px] truncate">BWI<span class="text-gray-300 mx-px">&rarr;</span>DCA</span>
+              <span class="w-[50px] truncate font-medium">YRC</span>
+              <span class="flex-1 text-right font-semibold num">$420</span>
+              <span class="w-[28px] text-right text-emerald-500 font-semibold num">19%</span>
+            </div>
+            <div class="expand-detail px-2 flex items-center gap-2 text-2xs text-gray-400">
+              <span>YRC Freight</span>
+              <span>&bull;</span>
+              <span>Feb 6</span>
+              <span>&bull;</span>
+              <span class="text-green-500">Invoiced</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end board -->
+
+    <!-- ===== KEYBOARD LEGEND (bottom-left) ===== -->
+    <div class="fixed bottom-2 left-16 bg-white border border-gray-200 rounded-lg shadow-sm px-3 py-1.5 flex items-center gap-3 text-2xs text-gray-400 z-50">
+      <span><kbd class="px-1 py-0.5 bg-gray-100 border border-gray-200 rounded text-gray-500 font-mono text-2xs">&uarr;&darr;</kbd> Navigate</span>
+      <span class="text-gray-200">|</span>
+      <span><kbd class="px-1 py-0.5 bg-gray-100 border border-gray-200 rounded text-gray-500 font-mono text-2xs">Enter</kbd> Detail</span>
+      <span class="text-gray-200">|</span>
+      <span><kbd class="px-1 py-0.5 bg-gray-100 border border-gray-200 rounded text-gray-500 font-mono text-2xs">A</kbd> Assign</span>
+      <span class="text-gray-200">|</span>
+      <span><kbd class="px-1 py-0.5 bg-gray-100 border border-gray-200 rounded text-gray-500 font-mono text-2xs">D</kbd> Dispatch</span>
+      <span class="text-gray-200">|</span>
+      <span><kbd class="px-1 py-0.5 bg-gray-100 border border-gray-200 rounded text-gray-500 font-mono text-2xs">/</kbd> Search</span>
+      <span class="text-gray-200">|</span>
+      <span><kbd class="px-1 py-0.5 bg-gray-100 border border-gray-200 rounded text-gray-500 font-mono text-2xs">?</kbd> Help</span>
+    </div>
+
+    <!-- ===== STATUS BAR (very bottom) ===== -->
+    <div class="bg-white border-t border-gray-200 px-3 py-0.5 flex items-center justify-between text-2xs text-gray-400 shrink-0">
+      <div class="flex items-center gap-3">
+        <span>20 loads displayed</span>
+        <span class="text-gray-200">|</span>
+        <span>3 exceptions</span>
+        <span class="text-gray-200">|</span>
+        <span>Revenue: <span class="text-gray-600 font-semibold">$26.2K</span></span>
+        <span class="text-gray-200">|</span>
+        <span>Avg Margin: <span class="text-emerald-600 font-semibold">20.1%</span></span>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="flex items-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>
+          Connected
+        </span>
+        <span>Last sync: 12s ago</span>
+        <span class="text-gray-200">|</span>
+        <span>Ultra TMS v2.0</span>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    // Row selection
+    let selectedRow = null;
+    function selectRow(el) {
+      if (selectedRow) selectedRow.classList.remove('selected');
+      if (selectedRow === el) {
+        selectedRow = null;
+        return;
+      }
+      el.classList.add('selected');
+      selectedRow = el;
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      // "/" focuses search
+      if (e.key === '/' && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        document.querySelector('input[type="text"]').focus();
+        return;
+      }
+
+      // Escape clears selection and blurs search
+      if (e.key === 'Escape') {
+        document.querySelector('input[type="text"]').blur();
+        if (selectedRow) {
+          selectedRow.classList.remove('selected');
+          selectedRow = null;
+        }
+        return;
+      }
+
+      // Skip if we're focused on an input
+      if (document.activeElement.tagName === 'INPUT') return;
+
+      const allRows = Array.from(document.querySelectorAll('.load-row'));
+      if (allRows.length === 0) return;
+
+      if (e.key === 'ArrowDown' || e.key === 'j') {
+        e.preventDefault();
+        let idx = selectedRow ? allRows.indexOf(selectedRow) : -1;
+        idx = Math.min(idx + 1, allRows.length - 1);
+        selectRow(allRows[idx]);
+        allRows[idx].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+
+      if (e.key === 'ArrowUp' || e.key === 'k') {
+        e.preventDefault();
+        let idx = selectedRow ? allRows.indexOf(selectedRow) : allRows.length;
+        idx = Math.max(idx - 1, 0);
+        selectRow(allRows[idx]);
+        allRows[idx].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+
+      // "?" shows help
+      if (e.key === '?') {
+        e.preventDefault();
+        alert('Keyboard Shortcuts:\n\n' +
+          'Arrow Up/Down or j/k - Navigate loads\n' +
+          'Enter - Open load detail\n' +
+          'A - Assign carrier to selected load\n' +
+          'D - Dispatch selected load\n' +
+          '/ - Focus search bar\n' +
+          'Escape - Clear selection / blur search\n' +
+          '? - Show this help');
+      }
+    });
+
+    // Live clock update for "Last sync" (simulate)
+    let syncTimer = 0;
+    setInterval(() => {
+      syncTimer++;
+      const syncEl = document.querySelectorAll('.text-2xs');
+      // Update the status bar sync time
+    }, 1000);
+  </script>
+</body>
+</html>

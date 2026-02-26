@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dispatch Board | Delta TMS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    /* Custom scrollbar for columns */
+    .kanban-col::-webkit-scrollbar {
+      width: 4px;
+    }
+    .kanban-col::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .kanban-col::-webkit-scrollbar-thumb {
+      background: #d1d5db;
+      border-radius: 9999px;
+    }
+    .kanban-col::-webkit-scrollbar-thumb:hover {
+      background: #9ca3af;
+    }
+    /* Sidebar scrollbar */
+    .sidebar-nav::-webkit-scrollbar {
+      width: 3px;
+    }
+    .sidebar-nav::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .sidebar-nav::-webkit-scrollbar-thumb {
+      background: #475569;
+      border-radius: 9999px;
+    }
+    /* Kanban board horizontal scroll */
+    .kanban-board::-webkit-scrollbar {
+      height: 6px;
+    }
+    .kanban-board::-webkit-scrollbar-track {
+      background: #f9fafb;
+    }
+    .kanban-board::-webkit-scrollbar-thumb {
+      background: #d1d5db;
+      border-radius: 9999px;
+    }
+    /* Card hover lift */
+    .load-card {
+      transition: box-shadow 0.15s ease, transform 0.15s ease;
+    }
+    .load-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      transform: translateY(-1px);
+    }
+    /* Nav item hover */
+    .nav-item {
+      transition: background-color 0.12s ease;
+    }
+  </style>
+</head>
+<body class="h-full bg-gray-50 font-sans text-gray-900 antialiased">
+
+  <div class="flex h-full">
+
+    <!-- ==================== LEFT SIDEBAR ==================== -->
+    <aside class="flex flex-col w-[220px] min-w-[220px] bg-slate-900 text-white">
+      <!-- Logo -->
+      <div class="flex items-center gap-2.5 px-5 py-5 border-b border-slate-700/60">
+        <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-600 text-white font-bold text-sm">D</div>
+        <span class="text-[15px] font-semibold tracking-tight">Delta TMS</span>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="sidebar-nav flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+        <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-md text-slate-300 hover:bg-slate-800 hover:text-white text-[13px] font-medium">
+          <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"/></svg>
+          Dashboard
+        </a>
+        <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-md text-slate-300 hover:bg-slate-800 hover:text-white text-[13px] font-medium">
+          <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+          Loads
+        </a>
+        <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-md bg-slate-700/70 text-white text-[13px] font-medium">
+          <svg class="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
+          Dispatch Board
+        </a>
+        <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-md text-slate-300 hover:bg-slate-800 hover:text-white text-[13px] font-medium">
+          <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+          Carriers
+        </a>
+        <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-md text-slate-300 hover:bg-slate-800 hover:text-white text-[13px] font-medium">
+          <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          Customers
+        </a>
+        <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-md text-slate-300 hover:bg-slate-800 hover:text-white text-[13px] font-medium">
+          <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          Reports
+        </a>
+        <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-md text-slate-300 hover:bg-slate-800 hover:text-white text-[13px] font-medium">
+          <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          Settings
+        </a>
+      </nav>
+
+      <!-- User -->
+      <div class="px-4 py-4 border-t border-slate-700/60">
+        <div class="flex items-center gap-3">
+          <div class="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 text-white text-xs font-semibold">JD</div>
+          <div class="min-w-0">
+            <div class="text-[13px] font-medium text-white truncate">John Doe</div>
+            <div class="text-[11px] text-slate-400">Dispatcher</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+      <!-- ===== TOP BAR ===== -->
+      <header class="flex items-center justify-between gap-4 px-6 py-3 bg-white border-b border-gray-200">
+        <!-- Left: New Load + View Toggles -->
+        <div class="flex items-center gap-4">
+          <button class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-[13px] font-medium rounded-lg transition-colors">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 4v16m8-8H4"/></svg>
+            New Load
+          </button>
+          <div class="flex items-center bg-gray-100 rounded-lg p-0.5">
+            <button class="px-3 py-1.5 bg-white text-gray-900 text-[12px] font-medium rounded-md shadow-sm">Kanban</button>
+            <button class="px-3 py-1.5 text-gray-500 text-[12px] font-medium rounded-md hover:text-gray-700">Table</button>
+            <button class="px-3 py-1.5 text-gray-500 text-[12px] font-medium rounded-md hover:text-gray-700">Timeline</button>
+            <button class="px-3 py-1.5 text-gray-500 text-[12px] font-medium rounded-md hover:text-gray-700">Map</button>
+          </div>
+        </div>
+
+        <!-- Right: Date + Search -->
+        <div class="flex items-center gap-3">
+          <button class="inline-flex items-center gap-1.5 px-3 py-2 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+            <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            This Week
+            <svg class="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="relative">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" placeholder="Search loads, carriers, routes..." class="w-72 pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-[13px] text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-colors" />
+          </div>
+          <!-- Notification bell -->
+          <button class="relative p-2 text-gray-400 hover:text-gray-600 transition-colors">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
+          </button>
+        </div>
+      </header>
+
+      <!-- ===== KPI BAR ===== -->
+      <div class="flex items-stretch gap-3 px-6 py-4 bg-white border-b border-gray-100">
+        <!-- Active Loads -->
+        <div class="flex-1 min-w-0 bg-white border border-gray-200 rounded-lg p-3 relative overflow-hidden">
+          <div class="absolute top-0 left-0 right-0 h-[3px] bg-blue-600 rounded-t-lg"></div>
+          <div class="text-[11px] font-medium text-gray-500 uppercase tracking-wide">Active Loads</div>
+          <div class="text-xl font-bold text-gray-900 mt-0.5">110</div>
+        </div>
+        <!-- Unassigned -->
+        <div class="flex-1 min-w-0 bg-white border border-gray-200 rounded-lg p-3 relative overflow-hidden">
+          <div class="absolute top-0 left-0 right-0 h-[3px] bg-gray-500 rounded-t-lg"></div>
+          <div class="text-[11px] font-medium text-gray-500 uppercase tracking-wide">Unassigned</div>
+          <div class="text-xl font-bold text-gray-900 mt-0.5">12</div>
+        </div>
+        <!-- Tendered -->
+        <div class="flex-1 min-w-0 bg-white border border-gray-200 rounded-lg p-3 relative overflow-hidden">
+          <div class="absolute top-0 left-0 right-0 h-[3px] bg-blue-500 rounded-t-lg"></div>
+          <div class="text-[11px] font-medium text-gray-500 uppercase tracking-wide">Tendered</div>
+          <div class="text-xl font-bold text-gray-900 mt-0.5">8</div>
+        </div>
+        <!-- Dispatched -->
+        <div class="flex-1 min-w-0 bg-white border border-gray-200 rounded-lg p-3 relative overflow-hidden">
+          <div class="absolute top-0 left-0 right-0 h-[3px] bg-indigo-500 rounded-t-lg"></div>
+          <div class="text-[11px] font-medium text-gray-500 uppercase tracking-wide">Dispatched</div>
+          <div class="text-xl font-bold text-gray-900 mt-0.5">23</div>
+        </div>
+        <!-- In Transit -->
+        <div class="flex-1 min-w-0 bg-white border border-gray-200 rounded-lg p-3 relative overflow-hidden">
+          <div class="absolute top-0 left-0 right-0 h-[3px] bg-amber-500 rounded-t-lg"></div>
+          <div class="text-[11px] font-medium text-gray-500 uppercase tracking-wide">In Transit</div>
+          <div class="text-xl font-bold text-gray-900 mt-0.5">45</div>
+        </div>
+        <!-- Delivered -->
+        <div class="flex-1 min-w-0 bg-white border border-gray-200 rounded-lg p-3 relative overflow-hidden">
+          <div class="absolute top-0 left-0 right-0 h-[3px] bg-green-500 rounded-t-lg"></div>
+          <div class="text-[11px] font-medium text-gray-500 uppercase tracking-wide">Delivered</div>
+          <div class="text-xl font-bold text-gray-900 mt-0.5">15</div>
+        </div>
+        <!-- At Risk -->
+        <div class="flex-1 min-w-0 bg-white border border-gray-200 rounded-lg p-3 relative overflow-hidden">
+          <div class="absolute top-0 left-0 right-0 h-[3px] bg-red-500 rounded-t-lg"></div>
+          <div class="text-[11px] font-medium text-gray-500 uppercase tracking-wide">At Risk</div>
+          <div class="text-xl font-bold text-red-600 mt-0.5">3</div>
+        </div>
+      </div>
+
+      <!-- ===== KANBAN BOARD ===== -->
+      <div class="flex-1 overflow-hidden relative">
+        <div class="kanban-board flex gap-4 h-full px-6 py-4 overflow-x-auto">
+
+          <!-- ====== COLUMN: UNASSIGNED ====== -->
+          <div class="flex flex-col min-w-[280px] w-[280px] bg-gray-50 rounded-xl border border-gray-200/80">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200/60">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-gray-500"></span>
+                <span class="text-[13px] font-semibold text-gray-900">Unassigned</span>
+                <span class="inline-flex items-center justify-center px-1.5 py-0.5 text-[11px] font-medium text-gray-500 bg-gray-200 rounded-full">12</span>
+              </div>
+              <button class="p-1 text-gray-400 hover:text-gray-600 rounded transition-colors">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
+              </button>
+            </div>
+            <div class="kanban-col flex-1 overflow-y-auto p-3 space-y-2.5">
+
+              <!-- Card 1 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 p-3.5 cursor-pointer">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-[13px] font-bold text-gray-900">FM-2025-0847</span>
+                  <span class="w-2 h-2 rounded-full bg-red-500" title="Urgent"></span>
+                </div>
+                <div class="flex items-center gap-1 text-[12px] text-gray-600 mb-2">
+                  <span>Chicago, IL</span>
+                  <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                  <span>Dallas, TX</span>
+                </div>
+                <div class="space-y-1 text-[11px] text-gray-500 mb-2.5">
+                  <div class="flex items-center justify-between">
+                    <span>Carrier: <span class="text-gray-700 font-medium">Unassigned</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Pickup: <span class="text-gray-700">Feb 7</span></span>
+                    <span>Del: <span class="text-gray-700">Feb 9</span></span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <span class="text-[13px] font-semibold text-gray-900">$2,450</span>
+                  <span class="text-[11px] font-medium text-green-600">22%</span>
+                </div>
+              </div>
+
+              <!-- Card 2 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 p-3.5 cursor-pointer">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-[13px] font-bold text-gray-900">FM-2025-0851</span>
+                  <span class="w-2 h-2 rounded-full bg-amber-500" title="Warning"></span>
+                </div>
+                <div class="flex items-center gap-1 text-[12px] text-gray-600 mb-2">
+                  <span>Atlanta, GA</span>
+                  <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                  <span>Miami, FL</span>
+                </div>
+                <div class="space-y-1 text-[11px] text-gray-500 mb-2.5">
+                  <div class="flex items-center justify-between">
+                    <span>Carrier: <span class="text-gray-700 font-medium">Unassigned</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Pickup: <span class="text-gray-700">Feb 8</span></span>
+                    <span>Del: <span class="text-gray-700">Feb 9</span></span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <span class="text-[13px] font-semibold text-gray-900">$1,200</span>
+                  <span class="text-[11px] font-medium text-amber-600">12%</span>
+                </div>
+              </div>
+
+              <!-- Card 3 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 p-3.5 cursor-pointer">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-[13px] font-bold text-gray-900">FM-2025-0855</span>
+                  <span class="w-2 h-2 rounded-full bg-green-500" title="Normal"></span>
+                </div>
+                <div class="flex items-center gap-1 text-[12px] text-gray-600 mb-2">
+                  <span>Houston, TX</span>
+                  <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                  <span>Denver, CO</span>
+                </div>
+                <div class="space-y-1 text-[11px] text-gray-500 mb-2.5">
+                  <div class="flex items-center justify-between">
+                    <span>Carrier: <span class="text-gray-700 font-medium">Unassigned</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Pickup: <span class="text-gray-700">Feb 9</span></span>
+                    <span>Del: <span class="text-gray-700">Feb 12</span></span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <span class="text-[13px] font-semibold text-gray-900">$3,100</span>
+                  <span class="text-[11px] font-medium text-green-600">18%</span>
+                </div>
+              </div>
+
+              <!-- Card 4 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 p-3.5 cursor-pointer">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-[13px] font-bold text-gray-900">FM-2025-0858</span>
+                  <span class="w-2 h-2 rounded-full bg-red-500" title="Urgent"></span>
+                </div>
+                <div class="flex items-center gap-1 text-[12px] text-gray-600 mb-2">
+                  <span>NYC, NY</span>
+                  <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                  <span>Boston, MA</span>
+                </div>
+                <div class="space-y-1 text-[11px] text-gray-500 mb-2.5">
+                  <div class="flex items-center justify-between">
+                    <span>Carrier: <span class="text-gray-700 font-medium">Unassigned</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Pickup: <span class="text-gray-700">Feb 7</span></span>
+                    <span>Del: <span class="text-gray-700">Feb 8</span></span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <span class="text-[13px] font-semibold text-gray-900">$850</span>
+                  <span class="text-[11px] font-medium text-red-600">8%</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ====== COLUMN: TENDERED ====== -->
+          <div class="flex flex-col min-w-[280px] w-[280px] bg-gray-50 rounded-xl border border-gray-200/80">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200/60">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                <span class="text-[13px] font-semibold text-gray-900">Tendered</span>
+                <span class="inline-flex items-center justify-center px-1.5 py-0.5 text-[11px] font-medium text-blue-600 bg-blue-100 rounded-full">8</span>
+              </div>
+              <button class="p-1 text-gray-400 hover:text-gray-600 rounded transition-colors">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
+              </button>
+            </div>
+            <div class="kanban-col flex-1 overflow-y-auto p-3 space-y-2.5">
+
+              <!-- Card 1 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 p-3.5 cursor-pointer">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-[13px] font-bold text-gray-900">FM-2025-0849</span>
+                  <span class="w-2 h-2 rounded-full bg-green-500" title="Normal"></span>
+                </div>
+                <div class="flex items-center gap-1 text-[12px] text-gray-600 mb-2">
+                  <span>Denver, CO</span>
+                  <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                  <span>Salt Lake City, UT</span>
+                </div>
+                <div class="space-y-1 text-[11px] text-gray-500 mb-2.5">
+                  <div class="flex items-center justify-between">
+                    <span>Carrier: <span class="text-gray-700 font-medium">Swift Transport</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Driver: <span class="text-gray-700">Pending</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Pickup: <span class="text-gray-700">Feb 8</span></span>
+                    <span>Del: <span class="text-gray-700">Feb 9</span></span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <span class="text-[13px] font-semibold text-gray-900">$1,650</span>
+                  <span class="text-[11px] font-medium text-green-600">24%</span>
+                </div>
+              </div>
+
+              <!-- Card 2 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 p-3.5 cursor-pointer">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-[13px] font-bold text-gray-900">FM-2025-0852</span>
+                  <span class="w-2 h-2 rounded-full bg-amber-500" title="Warning"></span>
+                </div>
+                <div class="flex items-center gap-1 text-[12px] text-gray-600 mb-2">
+                  <span>LA, CA</span>
+                  <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                  <span>Phoenix, AZ</span>
+                </div>
+                <div class="space-y-1 text-[11px] text-gray-500 mb-2.5">
+                  <div class="flex items-center justify-between">
+                    <span>Carrier: <span class="text-gray-700 font-medium">Werner Enterprises</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Driver: <span class="text-gray-700">Pending</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Pickup: <span class="text-gray-700">Feb 8</span></span>
+                    <span>Del: <span class="text-gray-700">Feb 9</span></span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <span class="text-[13px] font-semibold text-gray-900">$1,100</span>
+                  <span class="text-[11px] font-medium text-amber-600">11%</span>
+                </div>
+              </div>
+
+              <!-- Card 3 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 p-3.5 cursor-pointer">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-[13px] font-bold text-gray-900">FM-2025-0860</span>
+                  <span class="w-2 h-2 rounded-full bg-green-500" title="Normal"></span>
+                </div>
+                <div class="flex items-center gap-1 text-[12px] text-gray-600 mb-2">
+                  <span>Memphis, TN</span>
+                  <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                  <span>Nashville, TN</span>
+                </div>
+                <div class="space-y-1 text-[11px] text-gray-500 mb-2.5">
+                  <div class="flex items-center justify-between">
+                    <span>Carrier: <span class="text-gray-700 font-medium">Landstar</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Driver: <span class="text-gray-700">Pending</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Pickup: <span class="text-gray-700">Feb 9</span></span>
+                    <span>Del: <span class="text-gray-700">Feb 9</span></span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <span class="text-[13px] font-semibold text-gray-900">$950</span>
+                  <span class="text-[11px] font-medium text-green-600">28%</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ====== COLUMN: DISPATCHED ====== -->
+          <div class="flex flex-col min-w-[280px] w-[280px] bg-gray-50 rounded-xl border border-gray-200/80">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200/60">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+                <span class="text-[13px] font-semibold text-gray-900">Dispatched</span>
+                <span class="inline-flex items-center justify-center px-1.5 py-0.5 text-[11px] font-medium text-indigo-600 bg-indigo-100 rounded-full">23</span>
+              </div>
+              <button class="p-1 text-gray-400 hover:text-gray-600 rounded transition-colors">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
+              </button>
+            </div>
+            <div class="kanban-col flex-1 overflow-y-auto p-3 space-y-2.5">
+
+              <!-- Card 1 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 p-3.5 cursor-pointer">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-[13px] font-bold text-gray-900">FM-2025-0848</span>
+                  <span class="w-2 h-2 rounded-full bg-green-500" title="Normal"></span>
+                </div>
+                <div class="flex items-center gap-1 text-[12px] text-gray-600 mb-2">
+                  <span>Portland, OR</span>
+                  <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                  <span>Seattle, WA</span>
+                </div>
+                <div class="space-y-1 text-[11px] text-gray-500 mb-2.5">
+                  <div class="flex items-center justify-between">
+                    <span>Carrier: <span class="text-gray-700 font-medium">J.B. Hunt</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Driver: <span class="text-gray-700">Mike R.</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Pickup: <span class="text-gray-700">Feb 7</span></span>
+                    <span>Del: <span class="text-gray-700">Feb 8</span></span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <span class="text-[13px] font-semibold text-gray-900">$980</span>
+                  <span class="text-[11px] font-medium text-green-600">19%</span>
+                </div>
+              </div>
+
+              <!-- Card 2 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 p-3.5 cursor-pointer">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-[13px] font-bold text-gray-900">FM-2025-0853</span>
+                  <span class="w-2 h-2 rounded-full bg-green-500" title="Normal"></span>
+                </div>
+                <div class="flex items-center gap-1 text-[12px] text-gray-600 mb-2">
+                  <span>Chicago, IL</span>
+                  <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                  <span>Dallas, TX</span>
+                </div>
+                <div class="space-y-1 text-[11px] text-gray-500 mb-2.5">
+                  <div class="flex items-center justify-between">
+                    <span>Carrier: <span class="text-gray-700 font-medium">Schneider</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Driver: <span class="text-gray-700">Sarah K.</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Pickup: <span class="text-gray-700">Feb 8</span></span>
+                    <span>Del: <span class="text-gray-700">Feb 10</span></span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <span class="text-[13px] font-semibold text-gray-900">$2,750</span>
+                  <span class="text-[11px] font-medium text-green-600">21%</span>
+                </div>
+              </div>
+
+              <!-- Card 3 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 p-3.5 cursor-pointer">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-[13px] font-bold text-gray-900">FM-2025-0861</span>
+                  <span class="w-2 h-2 rounded-full bg-amber-500" title="Warning"></span>
+                </div>
+                <div class="flex items-center gap-1 text-[12px] text-gray-600 mb-2">
+                  <span>Houston, TX</span>
+                  <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                  <span>Denver, CO</span>
+                </div>
+                <div class="space-y-1 text-[11px] text-gray-500 mb-2.5">
+                  <div class="flex items-center justify-between">
+                    <span>Carrier: <span class="text-gray-700 font-medium">XPO Logistics</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Driver: <span class="text-gray-700">James T.</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Pickup: <span class="text-gray-700">Feb 8</span></span>
+                    <span>Del: <span class="text-gray-700">Feb 11</span></span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <span class="text-[13px] font-semibold text-gray-900">$3,400</span>
+                  <span class="text-[11px] font-medium text-amber-600">14%</span>
+                </div>
+              </div>
+
+              <!-- Card 4 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 p-3.5 cursor-pointer">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-[13px] font-bold text-gray-900">FM-2025-0866</span>
+                  <span class="w-2 h-2 rounded-full bg-green-500" title="Normal"></span>
+                </div>
+                <div class="flex items-center gap-1 text-[12px] text-gray-600 mb-2">
+                  <span>Atlanta, GA</span>
+                  <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                  <span>Miami, FL</span>
+                </div>
+                <div class="space-y-1 text-[11px] text-gray-500 mb-2.5">
+                  <div class="flex items-center justify-between">
+                    <span>Carrier: <span class="text-gray-700 font-medium">Heartland Express</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Driver: <span class="text-gray-700">Lisa M.</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Pickup: <span class="text-gray-700">Feb 9</span></span>
+                    <span>Del: <span class="text-gray-700">Feb 10</span></span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <span class="text-[13px] font-semibold text-gray-900">$1,350</span>
+                  <span class="text-[11px] font-medium text-green-600">17%</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ====== COLUMN: IN TRANSIT ====== -->
+          <div class="flex flex-col min-w-[280px] w-[280px] bg-gray-50 rounded-xl border border-gray-200/80">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200/60">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                <span class="text-[13px] font-semibold text-gray-900">In Transit</span>
+                <span class="inline-flex items-center justify-center px-1.5 py-0.5 text-[11px] font-medium text-amber-600 bg-amber-100 rounded-full">45</span>
+              </div>
+              <button class="p-1 text-gray-400 hover:text-gray-600 rounded transition-colors">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
+              </button>
+            </div>
+            <div class="kanban-col flex-1 overflow-y-auto p-3 space-y-2.5">
+
+              <!-- Card 1 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 p-3.5 cursor-pointer">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-[13px] font-bold text-gray-900">FM-2025-0850</span>
+                  <span class="w-2 h-2 rounded-full bg-green-500" title="Normal"></span>
+                </div>
+                <div class="flex items-center gap-1 text-[12px] text-gray-600 mb-2">
+                  <span>LA, CA</span>
+                  <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                  <span>Phoenix, AZ</span>
+                </div>
+                <div class="space-y-1 text-[11px] text-gray-500 mb-2.5">
+                  <div class="flex items-center justify-between">
+                    <span>Carrier: <span class="text-gray-700 font-medium">Swift Transport</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Driver: <span class="text-gray-700">Robert C.</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Pickup: <span class="text-gray-700">Feb 6</span></span>
+                    <span>Del: <span class="text-gray-700">Feb 8</span></span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <span class="text-[13px] font-semibold text-gray-900">$1,450</span>
+                  <span class="text-[11px] font-medium text-green-600">20%</span>
+                </div>
+              </div>
+
+              <!-- Card 2 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 p-3.5 cursor-pointer">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-[13px] font-bold text-gray-900">FM-2025-0856</span>
+                  <span class="w-2 h-2 rounded-full bg-red-500" title="Urgent"></span>
+                </div>
+                <div class="flex items-center gap-1 text-[12px] text-gray-600 mb-2">
+                  <span>NYC, NY</span>
+                  <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                  <span>Boston, MA</span>
+                </div>
+                <div class="space-y-1 text-[11px] text-gray-500 mb-2.5">
+                  <div class="flex items-center justify-between">
+                    <span>Carrier: <span class="text-gray-700 font-medium">FedEx Freight</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Driver: <span class="text-gray-700">David P.</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Pickup: <span class="text-gray-700">Feb 7</span></span>
+                    <span>Del: <span class="text-gray-700">Feb 7</span></span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <span class="text-[13px] font-semibold text-gray-900">$890</span>
+                  <span class="text-[11px] font-medium text-red-600">9%</span>
+                </div>
+              </div>
+
+              <!-- Card 3 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 p-3.5 cursor-pointer">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-[13px] font-bold text-gray-900">FM-2025-0863</span>
+                  <span class="w-2 h-2 rounded-full bg-green-500" title="Normal"></span>
+                </div>
+                <div class="flex items-center gap-1 text-[12px] text-gray-600 mb-2">
+                  <span>Memphis, TN</span>
+                  <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                  <span>Nashville, TN</span>
+                </div>
+                <div class="space-y-1 text-[11px] text-gray-500 mb-2.5">
+                  <div class="flex items-center justify-between">
+                    <span>Carrier: <span class="text-gray-700 font-medium">Werner Enterprises</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Driver: <span class="text-gray-700">Ana G.</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Pickup: <span class="text-gray-700">Feb 7</span></span>
+                    <span>Del: <span class="text-gray-700">Feb 8</span></span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <span class="text-[13px] font-semibold text-gray-900">$1,050</span>
+                  <span class="text-[11px] font-medium text-green-600">26%</span>
+                </div>
+              </div>
+
+              <!-- Card 4 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 p-3.5 cursor-pointer">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-[13px] font-bold text-gray-900">FM-2025-0870</span>
+                  <span class="w-2 h-2 rounded-full bg-amber-500" title="Warning"></span>
+                </div>
+                <div class="flex items-center gap-1 text-[12px] text-gray-600 mb-2">
+                  <span>Denver, CO</span>
+                  <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                  <span>Salt Lake City, UT</span>
+                </div>
+                <div class="space-y-1 text-[11px] text-gray-500 mb-2.5">
+                  <div class="flex items-center justify-between">
+                    <span>Carrier: <span class="text-gray-700 font-medium">Landstar</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Driver: <span class="text-gray-700">Chris W.</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Pickup: <span class="text-gray-700">Feb 6</span></span>
+                    <span>Del: <span class="text-gray-700">Feb 8</span></span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <span class="text-[13px] font-semibold text-gray-900">$2,100</span>
+                  <span class="text-[11px] font-medium text-amber-600">13%</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ====== COLUMN: DELIVERED ====== -->
+          <div class="flex flex-col min-w-[280px] w-[280px] bg-gray-50 rounded-xl border border-gray-200/80">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200/60">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+                <span class="text-[13px] font-semibold text-gray-900">Delivered</span>
+                <span class="inline-flex items-center justify-center px-1.5 py-0.5 text-[11px] font-medium text-green-600 bg-green-100 rounded-full">15</span>
+              </div>
+              <button class="p-1 text-gray-400 hover:text-gray-600 rounded transition-colors">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
+              </button>
+            </div>
+            <div class="kanban-col flex-1 overflow-y-auto p-3 space-y-2.5">
+
+              <!-- Card 1 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 p-3.5 cursor-pointer">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-[13px] font-bold text-gray-900">FM-2025-0862</span>
+                  <span class="w-2 h-2 rounded-full bg-green-500" title="Normal"></span>
+                </div>
+                <div class="flex items-center gap-1 text-[12px] text-gray-600 mb-2">
+                  <span>Chicago, IL</span>
+                  <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                  <span>Dallas, TX</span>
+                </div>
+                <div class="space-y-1 text-[11px] text-gray-500 mb-2.5">
+                  <div class="flex items-center justify-between">
+                    <span>Carrier: <span class="text-gray-700 font-medium">J.B. Hunt</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Driver: <span class="text-gray-700">Mike R.</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Pickup: <span class="text-gray-700">Feb 5</span></span>
+                    <span>Del: <span class="text-gray-700">Feb 7</span></span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <span class="text-[13px] font-semibold text-gray-900">$2,680</span>
+                  <span class="text-[11px] font-medium text-green-600">23%</span>
+                </div>
+              </div>
+
+              <!-- Card 2 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 p-3.5 cursor-pointer">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-[13px] font-bold text-gray-900">FM-2025-0867</span>
+                  <span class="w-2 h-2 rounded-full bg-green-500" title="Normal"></span>
+                </div>
+                <div class="flex items-center gap-1 text-[12px] text-gray-600 mb-2">
+                  <span>Portland, OR</span>
+                  <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                  <span>Seattle, WA</span>
+                </div>
+                <div class="space-y-1 text-[11px] text-gray-500 mb-2.5">
+                  <div class="flex items-center justify-between">
+                    <span>Carrier: <span class="text-gray-700 font-medium">Schneider</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Driver: <span class="text-gray-700">Sarah K.</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Pickup: <span class="text-gray-700">Feb 5</span></span>
+                    <span>Del: <span class="text-gray-700">Feb 6</span></span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <span class="text-[13px] font-semibold text-gray-900">$920</span>
+                  <span class="text-[11px] font-medium text-green-600">16%</span>
+                </div>
+              </div>
+
+              <!-- Card 3 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 p-3.5 cursor-pointer">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-[13px] font-bold text-gray-900">FM-2025-0871</span>
+                  <span class="w-2 h-2 rounded-full bg-green-500" title="Normal"></span>
+                </div>
+                <div class="flex items-center gap-1 text-[12px] text-gray-600 mb-2">
+                  <span>Houston, TX</span>
+                  <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                  <span>Denver, CO</span>
+                </div>
+                <div class="space-y-1 text-[11px] text-gray-500 mb-2.5">
+                  <div class="flex items-center justify-between">
+                    <span>Carrier: <span class="text-gray-700 font-medium">XPO Logistics</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Driver: <span class="text-gray-700">James T.</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Pickup: <span class="text-gray-700">Feb 4</span></span>
+                    <span>Del: <span class="text-gray-700">Feb 7</span></span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <span class="text-[13px] font-semibold text-gray-900">$4,200</span>
+                  <span class="text-[11px] font-medium text-green-600">25%</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ====== COLUMN: COMPLETED ====== -->
+          <div class="flex flex-col min-w-[280px] w-[280px] bg-gray-50 rounded-xl border border-gray-200/80">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200/60">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
+                <span class="text-[13px] font-semibold text-gray-900">Completed</span>
+                <span class="inline-flex items-center justify-center px-1.5 py-0.5 text-[11px] font-medium text-emerald-700 bg-emerald-100 rounded-full">28</span>
+              </div>
+              <button class="p-1 text-gray-400 hover:text-gray-600 rounded transition-colors">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
+              </button>
+            </div>
+            <div class="kanban-col flex-1 overflow-y-auto p-3 space-y-2.5">
+
+              <!-- Card 1 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 p-3.5 cursor-pointer opacity-75">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-[13px] font-bold text-gray-900">FM-2025-0864</span>
+                  <span class="w-2 h-2 rounded-full bg-green-500" title="Normal"></span>
+                </div>
+                <div class="flex items-center gap-1 text-[12px] text-gray-600 mb-2">
+                  <span>Atlanta, GA</span>
+                  <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                  <span>Miami, FL</span>
+                </div>
+                <div class="space-y-1 text-[11px] text-gray-500 mb-2.5">
+                  <div class="flex items-center justify-between">
+                    <span>Carrier: <span class="text-gray-700 font-medium">Heartland Express</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Driver: <span class="text-gray-700">Lisa M.</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Pickup: <span class="text-gray-700">Feb 3</span></span>
+                    <span>Del: <span class="text-gray-700">Feb 5</span></span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <span class="text-[13px] font-semibold text-gray-900">$1,800</span>
+                  <span class="text-[11px] font-medium text-green-600">19%</span>
+                </div>
+              </div>
+
+              <!-- Card 2 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 p-3.5 cursor-pointer opacity-75">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-[13px] font-bold text-gray-900">FM-2025-0872</span>
+                  <span class="w-2 h-2 rounded-full bg-green-500" title="Normal"></span>
+                </div>
+                <div class="flex items-center gap-1 text-[12px] text-gray-600 mb-2">
+                  <span>Denver, CO</span>
+                  <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                  <span>Salt Lake City, UT</span>
+                </div>
+                <div class="space-y-1 text-[11px] text-gray-500 mb-2.5">
+                  <div class="flex items-center justify-between">
+                    <span>Carrier: <span class="text-gray-700 font-medium">Swift Transport</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Driver: <span class="text-gray-700">Robert C.</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Pickup: <span class="text-gray-700">Feb 2</span></span>
+                    <span>Del: <span class="text-gray-700">Feb 4</span></span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <span class="text-[13px] font-semibold text-gray-900">$1,550</span>
+                  <span class="text-[11px] font-medium text-green-600">22%</span>
+                </div>
+              </div>
+
+              <!-- Card 3 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 p-3.5 cursor-pointer opacity-75">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-[13px] font-bold text-gray-900">FM-2025-0878</span>
+                  <span class="w-2 h-2 rounded-full bg-green-500" title="Normal"></span>
+                </div>
+                <div class="flex items-center gap-1 text-[12px] text-gray-600 mb-2">
+                  <span>LA, CA</span>
+                  <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                  <span>Phoenix, AZ</span>
+                </div>
+                <div class="space-y-1 text-[11px] text-gray-500 mb-2.5">
+                  <div class="flex items-center justify-between">
+                    <span>Carrier: <span class="text-gray-700 font-medium">FedEx Freight</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Driver: <span class="text-gray-700">David P.</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Pickup: <span class="text-gray-700">Feb 1</span></span>
+                    <span>Del: <span class="text-gray-700">Feb 3</span></span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <span class="text-[13px] font-semibold text-gray-900">$4,500</span>
+                  <span class="text-[11px] font-medium text-green-600">18%</span>
+                </div>
+              </div>
+
+              <!-- Card 4 -->
+              <div class="load-card bg-white rounded-lg border border-gray-200 p-3.5 cursor-pointer opacity-75">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-[13px] font-bold text-gray-900">FM-2025-0885</span>
+                  <span class="w-2 h-2 rounded-full bg-green-500" title="Normal"></span>
+                </div>
+                <div class="flex items-center gap-1 text-[12px] text-gray-600 mb-2">
+                  <span>NYC, NY</span>
+                  <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                  <span>Boston, MA</span>
+                </div>
+                <div class="space-y-1 text-[11px] text-gray-500 mb-2.5">
+                  <div class="flex items-center justify-between">
+                    <span>Carrier: <span class="text-gray-700 font-medium">Landstar</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Driver: <span class="text-gray-700">Ana G.</span></span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Pickup: <span class="text-gray-700">Jan 30</span></span>
+                    <span>Del: <span class="text-gray-700">Feb 1</span></span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <span class="text-[13px] font-semibold text-gray-900">$870</span>
+                  <span class="text-[11px] font-medium text-red-600">8%</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ===== MINI MAP WIDGET ===== -->
+        <div class="absolute bottom-4 right-6 w-[220px] bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden z-10">
+          <div class="flex items-center justify-between px-3 py-2 border-b border-gray-100">
+            <span class="text-[11px] font-semibold text-gray-700">Live Tracking</span>
+            <span class="text-[10px] text-gray-400">45 in transit</span>
+          </div>
+          <div class="p-2">
+            <svg viewBox="0 0 960 600" class="w-full h-auto" xmlns="http://www.w3.org/2000/svg">
+              <!-- US Continental outline (simplified) -->
+              <path d="M 150 130 L 200 100 L 280 90 L 350 85 L 430 80 L 500 78 L 560 82 L 630 80 L 700 85 L 750 100 L 800 110 L 830 130 L 850 160 L 860 200 L 855 240 L 840 270 L 820 300 L 800 320 L 780 340 L 760 360 L 730 380 L 700 395 L 670 400 L 640 410 L 620 420 L 600 440 L 580 460 L 560 470 L 530 475 L 500 470 L 470 460 L 440 455 L 410 460 L 380 470 L 350 480 L 320 485 L 290 480 L 260 470 L 230 455 L 200 440 L 175 420 L 155 400 L 140 370 L 125 340 L 115 310 L 108 280 L 105 250 L 108 220 L 115 190 L 125 160 L 150 130 Z"
+                    fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5" />
+
+              <!-- Active load dots with varied sizes and colors -->
+              <!-- Chicago -->
+              <circle cx="530" cy="160" r="5" fill="#2563EB" opacity="0.85" />
+              <circle cx="530" cy="160" r="9" fill="#2563EB" opacity="0.15" />
+              <!-- Dallas -->
+              <circle cx="440" cy="380" r="4" fill="#f59e0b" opacity="0.85" />
+              <circle cx="440" cy="380" r="8" fill="#f59e0b" opacity="0.15" />
+              <!-- Atlanta -->
+              <circle cx="640" cy="320" r="5" fill="#f59e0b" opacity="0.85" />
+              <circle cx="640" cy="320" r="9" fill="#f59e0b" opacity="0.15" />
+              <!-- Miami -->
+              <circle cx="700" cy="460" r="3.5" fill="#22c55e" opacity="0.85" />
+              <!-- Denver -->
+              <circle cx="320" cy="220" r="4.5" fill="#f59e0b" opacity="0.85" />
+              <circle cx="320" cy="220" r="8" fill="#f59e0b" opacity="0.15" />
+              <!-- Salt Lake City -->
+              <circle cx="250" cy="200" r="3" fill="#6366f1" opacity="0.85" />
+              <!-- LA -->
+              <circle cx="145" cy="330" r="5" fill="#f59e0b" opacity="0.85" />
+              <circle cx="145" cy="330" r="9" fill="#f59e0b" opacity="0.15" />
+              <!-- Phoenix -->
+              <circle cx="210" cy="370" r="3.5" fill="#22c55e" opacity="0.85" />
+              <!-- NYC -->
+              <circle cx="790" cy="150" r="4.5" fill="#f59e0b" opacity="0.85" />
+              <circle cx="790" cy="150" r="8" fill="#f59e0b" opacity="0.15" />
+              <!-- Boston -->
+              <circle cx="810" cy="120" r="3" fill="#22c55e" opacity="0.85" />
+              <!-- Houston -->
+              <circle cx="430" cy="430" r="4" fill="#2563EB" opacity="0.85" />
+              <!-- Memphis -->
+              <circle cx="550" cy="300" r="3.5" fill="#f59e0b" opacity="0.85" />
+              <!-- Nashville -->
+              <circle cx="580" cy="280" r="3" fill="#22c55e" opacity="0.85" />
+              <!-- Portland -->
+              <circle cx="140" cy="120" r="3.5" fill="#6366f1" opacity="0.85" />
+              <!-- Seattle -->
+              <circle cx="155" cy="100" r="3" fill="#22c55e" opacity="0.85" />
+
+              <!-- Route lines (subtle) -->
+              <line x1="530" y1="160" x2="440" y2="380" stroke="#2563EB" stroke-width="0.8" opacity="0.25" stroke-dasharray="4,3" />
+              <line x1="640" y1="320" x2="700" y2="460" stroke="#f59e0b" stroke-width="0.8" opacity="0.25" stroke-dasharray="4,3" />
+              <line x1="320" y1="220" x2="250" y2="200" stroke="#f59e0b" stroke-width="0.8" opacity="0.25" stroke-dasharray="4,3" />
+              <line x1="145" y1="330" x2="210" y2="370" stroke="#f59e0b" stroke-width="0.8" opacity="0.25" stroke-dasharray="4,3" />
+              <line x1="790" y1="150" x2="810" y2="120" stroke="#f59e0b" stroke-width="0.8" opacity="0.25" stroke-dasharray="4,3" />
+              <line x1="550" y1="300" x2="580" y2="280" stroke="#f59e0b" stroke-width="0.8" opacity="0.25" stroke-dasharray="4,3" />
+              <line x1="140" y1="120" x2="155" y2="100" stroke="#6366f1" stroke-width="0.8" opacity="0.25" stroke-dasharray="4,3" />
+              <line x1="430" y1="430" x2="320" y2="220" stroke="#2563EB" stroke-width="0.8" opacity="0.25" stroke-dasharray="4,3" />
+            </svg>
+          </div>
+          <!-- Legend -->
+          <div class="flex items-center justify-center gap-3 px-3 py-1.5 border-t border-gray-100">
+            <div class="flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+              <span class="text-[9px] text-gray-500">Transit</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+              <span class="text-[9px] text-gray-500">Pickup</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+              <span class="text-[9px] text-gray-500">Delivered</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

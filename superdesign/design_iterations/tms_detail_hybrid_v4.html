@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Load Detail — Hybrid V4 — Ultra TMS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#4f46e5',
+            'primary-light': '#6366f1',
+            'sidebar-bg': '#1a1f36',
+            'sidebar-active': '#252b45',
+            'content-bg': '#f0f1f5',
+            'card-bg': '#ffffff',
+            'border-main': '#e2e4ea',
+            'text-primary': '#1e2235',
+            'text-secondary': '#6b7194',
+            'text-muted': '#9ca3c0',
+            success: '#10b981',
+            warning: '#f59e0b',
+            danger: '#ef4444',
+            info: '#06b6d4',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Inter', system-ui, sans-serif; margin: 0; background: #f0f1f5; color: #1e2235; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #c5c8d6; border-radius: 3px; }
+
+    /* Card hover */
+    .card-hover {
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
+    }
+    .card-hover:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      transform: translateY(-1px);
+    }
+
+    /* Tab underline animation */
+    .tab-item {
+      position: relative;
+      transition: color 0.15s ease;
+    }
+    .tab-item::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #4f46e5;
+      transform: scaleX(0);
+      transition: transform 0.2s ease;
+    }
+    .tab-item.active::after {
+      transform: scaleX(1);
+    }
+    .tab-item:not(.active):hover::after {
+      transform: scaleX(1);
+      background: #e2e4ea;
+    }
+
+    /* Route line gradient */
+    .route-line {
+      background: linear-gradient(to bottom, #10b981 0%, #4f46e5 100%);
+    }
+  </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="w-[220px] flex-shrink-0 flex flex-col" style="background:#1a1f36;">
+    <!-- Logo -->
+    <div class="flex items-center gap-2.5 px-5 h-16 border-b border-white/10">
+      <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </div>
+      <span class="text-white font-bold text-base tracking-tight">Ultra TMS</span>
+    </div>
+
+    <!-- Nav -->
+    <nav class="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
+      <!-- Dashboard -->
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/60 hover:text-white/90 hover:bg-white/5 transition-colors text-sm">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </a>
+      <!-- Loads (active) -->
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white font-medium text-sm" style="background:#252b45;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="6" width="22" height="12" rx="2"/><path d="M1 10h22"/></svg>
+        Loads
+      </a>
+      <!-- Dispatch -->
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/60 hover:text-white/90 hover:bg-white/5 transition-colors text-sm">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Dispatch
+      </a>
+      <!-- Carriers -->
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/60 hover:text-white/90 hover:bg-white/5 transition-colors text-sm">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3"/><path d="m15 9 6-6"/></svg>
+        Carriers
+      </a>
+      <!-- Customers -->
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/60 hover:text-white/90 hover:bg-white/5 transition-colors text-sm">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Customers
+      </a>
+      <!-- Accounting -->
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/60 hover:text-white/90 hover:bg-white/5 transition-colors text-sm">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Accounting
+      </a>
+      <!-- Reports -->
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/60 hover:text-white/90 hover:bg-white/5 transition-colors text-sm">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Reports
+      </a>
+
+      <!-- Divider -->
+      <div class="border-t border-white/10 my-3"></div>
+
+      <!-- Settings -->
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/60 hover:text-white/90 hover:bg-white/5 transition-colors text-sm">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+      </a>
+    </nav>
+
+    <!-- User -->
+    <div class="px-3 pb-4">
+      <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 cursor-pointer transition-colors">
+        <div class="w-8 h-8 rounded-full bg-primary/30 flex items-center justify-center text-white text-xs font-semibold">JD</div>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm text-white/90 font-medium truncate">John Doe</div>
+          <div class="text-xs text-white/40 truncate">Dispatcher</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+    <!-- ===== STICKY HEADER BAR ===== -->
+    <header class="h-16 flex-shrink-0 bg-card-bg border-b border-border-main flex items-center px-6 gap-4 sticky top-0 z-30">
+      <!-- Back button -->
+      <button class="w-9 h-9 rounded-lg border border-border-main flex items-center justify-center text-text-secondary hover:bg-content-bg hover:text-text-primary transition-colors">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+
+      <!-- Load number -->
+      <h1 class="font-mono font-bold text-lg text-text-primary tracking-tight">#LD-2024-0847</h1>
+
+      <!-- Status badge -->
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+        <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+        In Transit
+      </span>
+
+      <div class="flex-1"></div>
+
+      <!-- Edit button -->
+      <button class="h-9 px-4 rounded-lg border border-border-main text-sm font-medium text-text-secondary hover:bg-content-bg hover:text-text-primary transition-colors flex items-center gap-2">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Edit
+      </button>
+
+      <!-- Actions dropdown -->
+      <button class="h-9 px-4 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary-light transition-colors flex items-center gap-2">
+        Actions
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+    </header>
+
+    <!-- ===== SCROLLABLE CONTENT ===== -->
+    <main class="flex-1 overflow-y-auto p-6">
+
+      <!-- ===== STAT CARDS ROW (V3 dashboard style) ===== -->
+      <div class="grid grid-cols-4 gap-4 mb-6">
+        <!-- Customer Rate -->
+        <div class="bg-card-bg rounded-lg border border-border-main card-hover overflow-hidden flex">
+          <div class="w-1 flex-shrink-0 bg-primary"></div>
+          <div class="p-4 flex-1">
+            <div class="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">Customer Rate</div>
+            <div class="font-mono font-bold text-2xl text-text-primary">$4,250.00</div>
+            <div class="font-mono text-sm text-text-muted mt-1">$4.59/mi</div>
+          </div>
+        </div>
+        <!-- Margin -->
+        <div class="bg-card-bg rounded-lg border border-border-main card-hover overflow-hidden flex">
+          <div class="w-1 flex-shrink-0 bg-success"></div>
+          <div class="p-4 flex-1">
+            <div class="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">Margin</div>
+            <div class="font-mono font-bold text-2xl text-success">$850.00</div>
+            <div class="mt-1.5">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-success">20.0%</span>
+            </div>
+          </div>
+        </div>
+        <!-- Distance -->
+        <div class="bg-card-bg rounded-lg border border-border-main card-hover overflow-hidden flex">
+          <div class="w-1 flex-shrink-0 bg-info"></div>
+          <div class="p-4 flex-1">
+            <div class="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">Distance</div>
+            <div class="font-mono font-bold text-2xl text-text-primary">925 mi</div>
+            <div class="text-sm text-text-muted mt-1">14h 30m est.</div>
+          </div>
+        </div>
+        <!-- Status -->
+        <div class="bg-card-bg rounded-lg border border-border-main card-hover overflow-hidden flex">
+          <div class="w-1 flex-shrink-0 bg-blue-500"></div>
+          <div class="p-4 flex-1">
+            <div class="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">Status</div>
+            <div class="mb-1.5">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-sm font-semibold bg-blue-50 text-blue-700">
+                <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                In Transit
+              </span>
+            </div>
+            <div class="text-sm text-text-muted">ETA: Feb 17, 2:00 PM</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB BAR (V1 style, enhanced) ===== -->
+      <div class="bg-card-bg rounded-t-lg border border-b-0 border-border-main">
+        <div class="flex items-center px-2" role="tablist">
+          <!-- Overview (active) -->
+          <button class="tab-item active px-4 py-3.5 text-sm font-medium text-primary" role="tab" aria-selected="true">
+            Overview
+          </button>
+          <!-- Route -->
+          <button class="tab-item px-4 py-3.5 text-sm font-medium text-text-secondary hover:text-text-primary" role="tab">
+            Route
+          </button>
+          <!-- Carrier -->
+          <button class="tab-item px-4 py-3.5 text-sm font-medium text-text-secondary hover:text-text-primary" role="tab">
+            Carrier
+          </button>
+          <!-- Documents -->
+          <button class="tab-item px-4 py-3.5 text-sm font-medium text-text-secondary hover:text-text-primary flex items-center gap-2" role="tab">
+            Documents
+            <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-content-bg text-[11px] font-semibold text-text-secondary">3</span>
+          </button>
+          <!-- Timeline -->
+          <button class="tab-item px-4 py-3.5 text-sm font-medium text-text-secondary hover:text-text-primary" role="tab">
+            Timeline
+          </button>
+          <!-- Check Calls -->
+          <button class="tab-item px-4 py-3.5 text-sm font-medium text-text-secondary hover:text-text-primary flex items-center gap-2" role="tab">
+            Check Calls
+            <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-[11px] font-semibold text-primary">5</span>
+          </button>
+          <!-- Financials -->
+          <button class="tab-item px-4 py-3.5 text-sm font-medium text-text-secondary hover:text-text-primary" role="tab">
+            Financials
+          </button>
+        </div>
+      </div>
+
+      <!-- ===== TAB CONTENT - OVERVIEW ===== -->
+      <div class="border border-t-0 border-border-main rounded-b-lg bg-card-bg p-6">
+        <div class="flex gap-4" style="--left: 55%; --right: 45%;">
+
+          <!-- LEFT COLUMN (55%) -->
+          <div class="flex-1" style="flex-basis: 55%; max-width: 55%;">
+            <div class="space-y-4">
+
+              <!-- Route Card -->
+              <div class="bg-card-bg rounded-lg border border-border-main card-hover overflow-hidden">
+                <div class="px-5 py-3 border-b border-border-main" style="background: rgba(226,228,234,0.3);">
+                  <h3 class="text-sm font-semibold text-text-primary flex items-center gap-2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+                    Route
+                  </h3>
+                </div>
+                <div class="p-5">
+                  <div class="flex gap-5">
+                    <!-- Timeline visual -->
+                    <div class="flex flex-col items-center pt-1">
+                      <!-- Origin dot -->
+                      <div class="w-3.5 h-3.5 rounded-full bg-success border-2 border-white shadow-sm flex-shrink-0"></div>
+                      <!-- Line -->
+                      <div class="route-line w-0.5 flex-1 my-1 rounded-full" style="min-height: 120px;"></div>
+                      <!-- Destination dot -->
+                      <div class="w-3.5 h-3.5 rounded-full bg-primary border-2 border-white shadow-sm flex-shrink-0"></div>
+                    </div>
+
+                    <!-- Stops info -->
+                    <div class="flex-1 flex flex-col justify-between">
+                      <!-- Origin -->
+                      <div>
+                        <div class="text-xs font-semibold text-success uppercase tracking-wider mb-0.5">Origin</div>
+                        <div class="text-base font-semibold text-text-primary">Chicago, IL</div>
+                        <div class="text-sm text-text-secondary mt-0.5">Feb 15, 2024 &middot; 8:00 AM</div>
+                        <div class="text-sm text-text-muted mt-0.5">Midwest Distribution Center</div>
+                      </div>
+
+                      <!-- Distance badge in the middle -->
+                      <div class="flex items-center gap-3 my-4 ml-2">
+                        <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-content-bg border border-border-main">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7194" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M8 6h10v10"/></svg>
+                          <span class="text-sm font-semibold text-text-primary font-mono">925 mi</span>
+                          <span class="text-xs text-text-muted">&middot;</span>
+                          <span class="text-sm text-text-secondary">14h 30m</span>
+                        </div>
+                      </div>
+
+                      <!-- Destination -->
+                      <div>
+                        <div class="text-xs font-semibold text-primary uppercase tracking-wider mb-0.5">Destination</div>
+                        <div class="text-base font-semibold text-text-primary">Dallas, TX</div>
+                        <div class="text-sm text-text-secondary mt-0.5">Feb 17, 2024 &middot; 2:00 PM <span class="text-text-muted">(est.)</span></div>
+                        <div class="text-sm text-text-muted mt-0.5">Texas Freight Terminal</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Cargo Card -->
+              <div class="bg-card-bg rounded-lg border border-border-main card-hover overflow-hidden">
+                <div class="px-5 py-3 border-b border-border-main" style="background: rgba(226,228,234,0.3);">
+                  <h3 class="text-sm font-semibold text-text-primary flex items-center gap-2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                    Cargo Details
+                  </h3>
+                </div>
+                <div class="p-5">
+                  <div class="grid grid-cols-2 gap-x-6 gap-y-5">
+                    <!-- Equipment -->
+                    <div>
+                      <div class="text-xs font-medium text-text-muted uppercase tracking-wider mb-1">Equipment</div>
+                      <div class="text-sm font-semibold text-text-primary">Dry Van 53'</div>
+                    </div>
+                    <!-- Weight -->
+                    <div>
+                      <div class="text-xs font-medium text-text-muted uppercase tracking-wider mb-1">Weight</div>
+                      <div class="text-sm font-semibold text-text-primary font-mono">42,000 lbs</div>
+                    </div>
+                    <!-- Commodity -->
+                    <div>
+                      <div class="text-xs font-medium text-text-muted uppercase tracking-wider mb-1">Commodity</div>
+                      <div class="text-sm font-semibold text-text-primary">Electronics</div>
+                    </div>
+                    <!-- Temperature -->
+                    <div>
+                      <div class="text-xs font-medium text-text-muted uppercase tracking-wider mb-1">Temperature</div>
+                      <div class="text-sm text-text-muted">N/A</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- RIGHT COLUMN (45%) -->
+          <div class="flex-1" style="flex-basis: 45%; max-width: 45%;">
+            <div class="space-y-4">
+
+              <!-- Parties Card -->
+              <div class="bg-card-bg rounded-lg border border-border-main card-hover overflow-hidden">
+                <div class="px-5 py-3 border-b border-border-main" style="background: rgba(226,228,234,0.3);">
+                  <h3 class="text-sm font-semibold text-text-primary flex items-center gap-2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    Parties
+                  </h3>
+                </div>
+                <div class="p-5 space-y-4">
+                  <!-- Customer -->
+                  <div>
+                    <div class="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">Customer</div>
+                    <div class="text-sm font-semibold text-text-primary">Acme Logistics Inc.</div>
+                    <div class="mt-2 space-y-1.5">
+                      <div class="flex items-center gap-2 text-sm text-text-secondary">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        Sarah Mitchell
+                      </div>
+                      <div class="flex items-center gap-2 text-sm text-text-secondary">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                        (312) 555-0198
+                      </div>
+                      <div class="flex items-center gap-2 text-sm text-text-secondary">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                        s.mitchell@acmelogistics.com
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Divider -->
+                  <div class="border-t border-border-main"></div>
+
+                  <!-- Carrier -->
+                  <div>
+                    <div class="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">Carrier</div>
+                    <div class="text-sm font-semibold text-text-primary">Swift Transportation</div>
+                    <div class="mt-2 space-y-1.5">
+                      <div class="flex items-center gap-4 text-sm text-text-secondary">
+                        <span class="font-mono text-xs text-text-muted">MC# 124567</span>
+                        <span class="font-mono text-xs text-text-muted">DOT# 987654</span>
+                      </div>
+                      <div class="flex items-center gap-2 text-sm text-text-secondary">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        Driver: Mike Rodriguez
+                      </div>
+                      <div class="flex items-center gap-2 text-sm text-text-secondary">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                        (214) 555-0347
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Recent Activity Card -->
+              <div class="bg-card-bg rounded-lg border border-border-main card-hover overflow-hidden">
+                <div class="px-5 py-3 border-b border-border-main" style="background: rgba(226,228,234,0.3);">
+                  <h3 class="text-sm font-semibold text-text-primary flex items-center gap-2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Recent Activity
+                  </h3>
+                </div>
+                <div class="p-5 space-y-4">
+                  <!-- Item 1 -->
+                  <div class="flex items-start gap-3">
+                    <div class="w-2 h-2 rounded-full bg-blue-500 mt-1.5 flex-shrink-0"></div>
+                    <div class="flex-1 min-w-0">
+                      <div class="text-sm text-text-primary">Check call received - Springfield, MO</div>
+                      <div class="text-xs text-text-muted mt-0.5">2h ago</div>
+                    </div>
+                  </div>
+                  <!-- Item 2 -->
+                  <div class="flex items-start gap-3">
+                    <div class="w-2 h-2 rounded-full bg-success mt-1.5 flex-shrink-0"></div>
+                    <div class="flex-1 min-w-0">
+                      <div class="text-sm text-text-primary">Driver confirmed pickup at origin</div>
+                      <div class="text-xs text-text-muted mt-0.5">6h ago</div>
+                    </div>
+                  </div>
+                  <!-- Item 3 -->
+                  <div class="flex items-start gap-3">
+                    <div class="w-2 h-2 rounded-full bg-primary mt-1.5 flex-shrink-0"></div>
+                    <div class="flex-1 min-w-0">
+                      <div class="text-sm text-text-primary">Rate confirmation signed by carrier</div>
+                      <div class="text-xs text-text-muted mt-0.5">1d ago</div>
+                    </div>
+                  </div>
+                  <!-- Item 4 -->
+                  <div class="flex items-start gap-3">
+                    <div class="w-2 h-2 rounded-full bg-warning mt-1.5 flex-shrink-0"></div>
+                    <div class="flex-1 min-w-0">
+                      <div class="text-sm text-text-primary">Load assigned to Swift Transportation</div>
+                      <div class="text-xs text-text-muted mt-0.5">2d ago</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Documents Card -->
+              <div class="bg-card-bg rounded-lg border border-border-main card-hover overflow-hidden">
+                <div class="px-5 py-3 border-b border-border-main flex items-center justify-between" style="background: rgba(226,228,234,0.3);">
+                  <h3 class="text-sm font-semibold text-text-primary flex items-center gap-2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    Documents
+                  </h3>
+                  <button class="text-xs font-medium text-primary hover:text-primary-light transition-colors flex items-center gap-1">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    Upload
+                  </button>
+                </div>
+                <div class="divide-y divide-border-main">
+                  <!-- BOL -->
+                  <div class="px-5 py-3.5 flex items-center gap-3 hover:bg-content-bg/50 transition-colors cursor-pointer">
+                    <div class="w-8 h-8 rounded-lg bg-content-bg flex items-center justify-center flex-shrink-0">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7194" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="text-sm font-medium text-text-primary">Bill of Lading (BOL)</div>
+                      <div class="text-xs text-text-muted mt-0.5">BOL-0847.pdf</div>
+                    </div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-success">Received</span>
+                  </div>
+                  <!-- Rate Con -->
+                  <div class="px-5 py-3.5 flex items-center gap-3 hover:bg-content-bg/50 transition-colors cursor-pointer">
+                    <div class="w-8 h-8 rounded-lg bg-content-bg flex items-center justify-center flex-shrink-0">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7194" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="text-sm font-medium text-text-primary">Rate Confirmation</div>
+                      <div class="text-xs text-text-muted mt-0.5">RC-0847.pdf</div>
+                    </div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-success">Signed</span>
+                  </div>
+                  <!-- POD -->
+                  <div class="px-5 py-3.5 flex items-center gap-3 hover:bg-content-bg/50 transition-colors cursor-pointer">
+                    <div class="w-8 h-8 rounded-lg bg-content-bg flex items-center justify-center flex-shrink-0">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7194" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="text-sm font-medium text-text-primary">Proof of Delivery (POD)</div>
+                      <div class="text-xs text-text-muted mt-0.5">Awaiting delivery</div>
+                    </div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-warning">Pending</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+</body>
+</html>

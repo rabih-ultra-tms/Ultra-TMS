@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>New Load - Two Column Form | Ultra TMS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { inter: ['Inter', 'sans-serif'] },
+          colors: {
+            sidebar: '#1a1f36',
+            'sidebar-hover': '#252b45',
+            'sidebar-active': '#2d3454',
+            primary: '#4f46e5',
+            'primary-hover': '#4338ca',
+            content: '#f0f1f5',
+            card: '#ffffff',
+            border: '#e2e4ea',
+            'text-primary': '#1e2235',
+            'text-secondary': '#6b7194',
+            'text-muted': '#9ca3c0',
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    body { margin: 0; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+  </style>
+</head>
+<body class="bg-content text-text-primary">
+
+  <div class="flex h-screen overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-[250px] bg-sidebar flex flex-col shrink-0">
+      <!-- Logo -->
+      <div class="h-16 flex items-center px-5 border-b border-white/10">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+            <span class="text-white font-bold text-sm">U</span>
+          </div>
+          <span class="text-white font-semibold text-base tracking-tight">Ultra TMS</span>
+        </div>
+      </div>
+
+      <!-- Nav -->
+      <nav class="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
+        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/60 hover:bg-sidebar-hover hover:text-white/90 transition-colors text-sm">
+          <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"/></svg>
+          Dashboard
+        </a>
+        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-sidebar-active text-white transition-colors text-sm font-medium">
+          <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
+          Loads
+        </a>
+        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/60 hover:bg-sidebar-hover hover:text-white/90 transition-colors text-sm">
+          <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          Dispatch
+        </a>
+        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/60 hover:bg-sidebar-hover hover:text-white/90 transition-colors text-sm">
+          <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+          Carriers
+        </a>
+        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/60 hover:bg-sidebar-hover hover:text-white/90 transition-colors text-sm">
+          <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          Customers
+        </a>
+        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/60 hover:bg-sidebar-hover hover:text-white/90 transition-colors text-sm">
+          <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2v16z"/></svg>
+          Accounting
+        </a>
+        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/60 hover:bg-sidebar-hover hover:text-white/90 transition-colors text-sm">
+          <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Reports
+        </a>
+      </nav>
+
+      <!-- User -->
+      <div class="p-3 border-t border-white/10">
+        <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-sidebar-hover transition-colors cursor-pointer">
+          <div class="w-8 h-8 rounded-full bg-primary/30 flex items-center justify-center text-white text-xs font-semibold">JD</div>
+          <div class="flex-1 min-w-0">
+            <div class="text-white text-sm font-medium truncate">John Doe</div>
+            <div class="text-white/40 text-xs truncate">Dispatcher</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+
+      <!-- Top Bar -->
+      <header class="h-16 bg-card border-b border-border flex items-center px-6 shrink-0">
+        <div class="flex items-center gap-3">
+          <button class="w-8 h-8 rounded-lg border border-border flex items-center justify-center text-text-secondary hover:bg-content hover:text-text-primary transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <div>
+            <h1 class="text-lg font-semibold text-text-primary leading-tight">New Load</h1>
+            <p class="text-xs text-text-muted">Complete all fields and review the summary</p>
+          </div>
+        </div>
+      </header>
+
+      <!-- Two-Column Scrollable Content -->
+      <main class="flex-1 overflow-y-auto p-6">
+        <div class="max-w-[1100px] mx-auto flex gap-6 items-start">
+
+          <!-- Left Column: Form (55%) -->
+          <div class="w-[55%] shrink-0">
+            <div class="bg-card rounded-xl border border-border p-6 space-y-6">
+
+              <!-- Customer Section -->
+              <div>
+                <div class="flex items-center gap-2 mb-4">
+                  <div class="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
+                    <svg class="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                  </div>
+                  <h2 class="text-sm font-semibold text-text-primary">Customer</h2>
+                </div>
+                <div class="space-y-3">
+                  <div>
+                    <label class="block text-xs font-medium text-text-secondary mb-1">Company</label>
+                    <div class="relative">
+                      <select class="w-full h-10 rounded-md border border-border bg-white px-3 text-sm text-text-primary appearance-none focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors">
+                        <option value="">Select a customer...</option>
+                        <option selected>Acme Logistics Inc.</option>
+                        <option>Global Freight Co.</option>
+                        <option>Summit Transport LLC</option>
+                      </select>
+                      <svg class="w-4 h-4 absolute right-3 top-3 text-text-muted pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-xs font-medium text-text-secondary mb-1">Reference #</label>
+                      <input type="text" value="REF-2026-0047" class="w-full h-10 rounded-md border border-border bg-white px-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors" />
+                    </div>
+                    <div>
+                      <label class="block text-xs font-medium text-text-secondary mb-1">PO Number</label>
+                      <input type="text" value="PO-44821" class="w-full h-10 rounded-md border border-border bg-white px-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Divider -->
+              <div class="border-t border-border"></div>
+
+              <!-- Route Section -->
+              <div>
+                <div class="flex items-center gap-2 mb-4">
+                  <div class="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
+                    <svg class="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                  </div>
+                  <h2 class="text-sm font-semibold text-text-primary">Route</h2>
+                </div>
+                <div class="space-y-3">
+                  <div>
+                    <label class="block text-xs font-medium text-text-secondary mb-1">Origin</label>
+                    <input type="text" value="Chicago, IL 60601" class="w-full h-10 rounded-md border border-border bg-white px-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-text-secondary mb-1">Destination</label>
+                    <input type="text" value="Dallas, TX 75201" class="w-full h-10 rounded-md border border-border bg-white px-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors" />
+                  </div>
+                  <button class="flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary-hover transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+                    Add stop
+                  </button>
+                </div>
+              </div>
+
+              <!-- Divider -->
+              <div class="border-t border-border"></div>
+
+              <!-- Cargo Section -->
+              <div>
+                <div class="flex items-center gap-2 mb-4">
+                  <div class="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
+                    <svg class="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                  </div>
+                  <h2 class="text-sm font-semibold text-text-primary">Cargo</h2>
+                </div>
+                <div class="space-y-3">
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-xs font-medium text-text-secondary mb-1">Equipment Type</label>
+                      <div class="relative">
+                        <select class="w-full h-10 rounded-md border border-border bg-white px-3 text-sm text-text-primary appearance-none focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors">
+                          <option>Dry Van (53')</option>
+                          <option>Reefer (53')</option>
+                          <option>Flatbed (48')</option>
+                        </select>
+                        <svg class="w-4 h-4 absolute right-3 top-3 text-text-muted pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+                      </div>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-medium text-text-secondary mb-1">Weight</label>
+                      <div class="flex gap-2">
+                        <input type="text" value="42,000" class="flex-1 h-10 rounded-md border border-border bg-white px-3 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors" />
+                        <select class="w-16 h-10 rounded-md border border-border bg-white px-1 text-sm text-text-primary text-center appearance-none focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors">
+                          <option>lbs</option>
+                          <option>kg</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-xs font-medium text-text-secondary mb-1">Commodity</label>
+                      <input type="text" value="Electronics" class="w-full h-10 rounded-md border border-border bg-white px-3 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors" />
+                    </div>
+                    <div>
+                      <label class="block text-xs font-medium text-text-secondary mb-1">Dimensions (L x W x H)</label>
+                      <div class="flex items-center gap-1">
+                        <input type="text" value="48" class="flex-1 h-10 rounded-md border border-border bg-white px-2 text-sm text-text-primary text-center focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors" />
+                        <span class="text-text-muted text-xs">x</span>
+                        <input type="text" value="40" class="flex-1 h-10 rounded-md border border-border bg-white px-2 text-sm text-text-primary text-center focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors" />
+                        <span class="text-text-muted text-xs">x</span>
+                        <input type="text" value="48" class="flex-1 h-10 rounded-md border border-border bg-white px-2 text-sm text-text-primary text-center focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors" />
+                        <span class="text-xs text-text-muted ml-0.5">in</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Divider -->
+              <div class="border-t border-border"></div>
+
+              <!-- Rate Section -->
+              <div>
+                <div class="flex items-center gap-2 mb-4">
+                  <div class="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
+                    <svg class="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
+                  </div>
+                  <h2 class="text-sm font-semibold text-text-primary">Rate</h2>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-xs font-medium text-text-secondary mb-1">Customer Rate</label>
+                    <div class="relative">
+                      <span class="absolute left-3 top-2.5 text-sm text-text-muted font-medium">$</span>
+                      <input type="text" value="4,250.00" class="w-full h-10 rounded-md border border-border bg-white pl-7 pr-3 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors" />
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-text-secondary mb-1">Carrier Rate</label>
+                    <div class="relative">
+                      <span class="absolute left-3 top-2.5 text-sm text-text-muted font-medium">$</span>
+                      <input type="text" value="3,400.00" class="w-full h-10 rounded-md border border-border bg-white pl-7 pr-3 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Right Column: Summary (45%) -->
+          <div class="flex-1 min-w-0">
+            <div class="bg-card rounded-xl border border-border sticky top-0">
+              <!-- Summary Header -->
+              <div class="px-6 py-4 border-b border-border">
+                <h2 class="text-sm font-semibold text-text-primary">Summary</h2>
+                <p class="text-xs text-text-muted mt-0.5">Live preview of your load</p>
+              </div>
+
+              <!-- Summary Content -->
+              <div class="px-6 py-5 space-y-5">
+
+                <!-- Customer -->
+                <div>
+                  <div class="text-xs font-medium text-text-muted uppercase tracking-wider mb-1.5">Customer</div>
+                  <div class="text-sm font-medium text-text-primary">Acme Logistics Inc.</div>
+                  <div class="text-xs text-text-secondary mt-0.5">REF-2026-0047 / PO-44821</div>
+                </div>
+
+                <!-- Route -->
+                <div>
+                  <div class="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">Route</div>
+                  <div class="flex items-start gap-3">
+                    <!-- Route dots and line -->
+                    <div class="flex flex-col items-center pt-1">
+                      <div class="w-2.5 h-2.5 rounded-full bg-primary border-2 border-primary/30"></div>
+                      <div class="w-px h-6 bg-border my-0.5"></div>
+                      <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-emerald-500/30"></div>
+                    </div>
+                    <div class="space-y-2.5">
+                      <div>
+                        <div class="text-sm font-medium text-text-primary">Chicago, IL 60601</div>
+                        <div class="text-xs text-text-muted">Origin</div>
+                      </div>
+                      <div>
+                        <div class="text-sm font-medium text-text-primary">Dallas, TX 75201</div>
+                        <div class="text-xs text-text-muted">Destination</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Cargo Details -->
+                <div>
+                  <div class="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">Cargo</div>
+                  <div class="grid grid-cols-2 gap-y-2 gap-x-4">
+                    <div>
+                      <div class="text-xs text-text-muted">Equipment</div>
+                      <div class="text-sm font-medium text-text-primary">Dry Van (53')</div>
+                    </div>
+                    <div>
+                      <div class="text-xs text-text-muted">Weight</div>
+                      <div class="text-sm font-medium text-text-primary">42,000 lbs</div>
+                    </div>
+                    <div>
+                      <div class="text-xs text-text-muted">Commodity</div>
+                      <div class="text-sm font-medium text-text-primary">Electronics</div>
+                    </div>
+                    <div>
+                      <div class="text-xs text-text-muted">Dimensions</div>
+                      <div class="text-sm font-medium text-text-primary">48 x 40 x 48 in</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Financial Summary -->
+                <div class="bg-content rounded-lg p-4 -mx-1">
+                  <div class="text-xs font-medium text-text-muted uppercase tracking-wider mb-3">Financials</div>
+                  <div class="space-y-2">
+                    <div class="flex justify-between items-center">
+                      <span class="text-sm text-text-secondary">Customer Rate</span>
+                      <span class="text-sm font-medium text-text-primary">$4,250.00</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                      <span class="text-sm text-text-secondary">Carrier Rate</span>
+                      <span class="text-sm font-medium text-text-primary">$3,400.00</span>
+                    </div>
+                    <div class="border-t border-border my-1.5"></div>
+                    <div class="flex justify-between items-center">
+                      <span class="text-sm font-semibold text-text-primary">Margin</span>
+                      <span class="text-sm font-bold text-emerald-600">$850.00 (20%)</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Create Button -->
+              <div class="px-6 pb-5">
+                <button class="w-full h-11 rounded-md bg-primary text-white text-sm font-semibold hover:bg-primary-hover transition-colors shadow-sm">
+                  Create Load
+                </button>
+                <div class="flex gap-3 mt-2.5">
+                  <button class="flex-1 h-9 rounded-md border border-border text-xs font-medium text-text-secondary hover:bg-content transition-colors">
+                    Cancel
+                  </button>
+                  <button class="flex-1 h-9 rounded-md bg-gray-100 border border-border text-xs font-medium text-text-secondary hover:bg-gray-200 transition-colors">
+                    Save Draft
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </main>
+
+    </div>
+  </div>
+
+</body>
+</html>

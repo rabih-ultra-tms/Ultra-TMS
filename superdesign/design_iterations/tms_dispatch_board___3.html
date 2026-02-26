@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ultra TMS | Dispatch Board - Ultra Dense</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+      },
+    },
+  },
+}
+</script>
+<style>
+  * { font-family: 'Inter', system-ui, sans-serif; }
+  body { overflow: hidden; }
+
+  /* Tabular numbers for aligned data */
+  .tabnum { font-variant-numeric: tabular-nums; }
+
+  /* Scrollbar styling for columns */
+  .col-scroll::-webkit-scrollbar { width: 3px; }
+  .col-scroll::-webkit-scrollbar-track { background: transparent; }
+  .col-scroll::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 2px; }
+  .col-scroll::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+  /* Mini card hover expansion */
+  .mini-card {
+    max-height: 56px;
+    overflow: hidden;
+    transition: max-height 0.2s ease, background-color 0.15s ease;
+    cursor: pointer;
+  }
+  .mini-card:hover {
+    max-height: 160px;
+    background-color: #f8fafc;
+    z-index: 10;
+    position: relative;
+  }
+  .mini-card .expand-row {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  .mini-card:hover .expand-row {
+    opacity: 1;
+  }
+
+  /* Icon rail tooltip */
+  .rail-icon { position: relative; }
+  .rail-icon::after {
+    content: attr(data-tip);
+    position: absolute;
+    left: 52px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #1e293b;
+    color: #fff;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+    z-index: 100;
+  }
+  .rail-icon:hover::after { opacity: 1; }
+
+  /* Filter pill active state */
+  .pill-active {
+    background-color: #2563EB;
+    color: #fff;
+  }
+
+  /* Search expand */
+  .search-box {
+    width: 28px;
+    overflow: hidden;
+    transition: width 0.25s ease;
+  }
+  .search-box:focus-within {
+    width: 200px;
+  }
+  .search-box input {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  .search-box:focus-within input {
+    opacity: 1;
+  }
+
+  /* Column drag handle on hover */
+  .col-header:hover .drag-dots { opacity: 0.4; }
+  .drag-dots { opacity: 0; transition: opacity 0.15s; }
+
+  /* Sub-group divider */
+  .sub-divider {
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #6b7280;
+    border-top: 1px solid #e5e7eb;
+    padding: 4px 8px 2px;
+    background: #f9fafb;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+</style>
+</head>
+<body class="bg-white text-gray-900 text-[11px] leading-tight">
+
+<!-- ===== LAYOUT SHELL ===== -->
+<div class="flex h-screen w-screen overflow-hidden">
+
+  <!-- ===== LEFT: ICON RAIL (48px) ===== -->
+  <aside class="w-12 flex-shrink-0 bg-slate-900 flex flex-col items-center py-2 gap-1 z-50">
+    <!-- Logo -->
+    <div class="w-8 h-8 rounded bg-blue-600 flex items-center justify-center text-white font-bold text-sm mb-3">D</div>
+
+    <!-- Nav Icons -->
+    <a href="#" class="rail-icon w-9 h-9 flex items-center justify-center rounded text-white bg-slate-700" data-tip="Dispatch Board">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    </a>
+    <a href="#" class="rail-icon w-9 h-9 flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-800" data-tip="Loads">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/><path d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10m10 0H3m10 0h2m4 0h1a1 1 0 001-1v-4l-3-5h-4v10z"/></svg>
+    </a>
+    <a href="#" class="rail-icon w-9 h-9 flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-800" data-tip="Orders">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+    </a>
+    <a href="#" class="rail-icon w-9 h-9 flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-800" data-tip="Carriers">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+    </a>
+    <a href="#" class="rail-icon w-9 h-9 flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-800" data-tip="Customers">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+    </a>
+    <a href="#" class="rail-icon w-9 h-9 flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-800" data-tip="Invoicing">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+    </a>
+    <a href="#" class="rail-icon w-9 h-9 flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-800" data-tip="Reports">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+    </a>
+
+    <div class="flex-1"></div>
+
+    <!-- Bottom icons -->
+    <a href="#" class="rail-icon w-9 h-9 flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-800" data-tip="Settings">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    </a>
+    <div class="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-[10px] font-semibold mb-1">RP</div>
+  </aside>
+
+  <!-- ===== MAIN CONTENT AREA ===== -->
+  <div class="flex-1 flex flex-col min-w-0">
+
+    <!-- ===== TOP BAR (40px) ===== -->
+    <header class="h-10 flex-shrink-0 border-b border-gray-200 flex items-center px-3 gap-2 bg-white z-40">
+      <!-- New Load -->
+      <button class="h-7 px-2.5 bg-blue-600 text-white text-[11px] font-medium rounded flex items-center gap-1 hover:bg-blue-700 flex-shrink-0">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        New Load
+      </button>
+
+      <div class="w-px h-5 bg-gray-200 mx-1"></div>
+
+      <!-- View Toggles -->
+      <div class="flex items-center bg-gray-100 rounded h-7 p-0.5 gap-px flex-shrink-0">
+        <button class="h-6 px-2.5 text-[10px] font-medium rounded bg-white text-gray-900 shadow-sm">Kanban</button>
+        <button class="h-6 px-2.5 text-[10px] font-medium rounded text-gray-500 hover:text-gray-700">Table</button>
+        <button class="h-6 px-2.5 text-[10px] font-medium rounded text-gray-500 hover:text-gray-700">Timeline</button>
+        <button class="h-6 px-2.5 text-[10px] font-medium rounded text-gray-500 hover:text-gray-700">Map</button>
+      </div>
+
+      <div class="w-px h-5 bg-gray-200 mx-1"></div>
+
+      <!-- Inline Filters -->
+      <div class="flex items-center gap-1 flex-shrink-0">
+        <button class="h-6 px-2 text-[10px] font-medium rounded-full border border-gray-200 text-gray-600 hover:border-gray-400 flex items-center gap-1">
+          Status
+          <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <button class="h-6 px-2 text-[10px] font-medium rounded-full border border-gray-200 text-gray-600 hover:border-gray-400 flex items-center gap-1">
+          Carrier
+          <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <button class="h-6 px-2 text-[10px] font-medium rounded-full border border-gray-200 text-gray-600 hover:border-gray-400 flex items-center gap-1">
+          Region
+          <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <button class="h-6 px-2 text-[10px] font-medium rounded-full pill-active flex items-center gap-1">
+          FTL
+          <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="flex-1"></div>
+
+      <!-- Search -->
+      <div class="search-box h-7 bg-gray-100 rounded flex items-center px-2 flex-shrink-0">
+        <svg class="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search loads..." class="bg-transparent border-none outline-none text-[11px] ml-1.5 w-full text-gray-700 placeholder-gray-400">
+      </div>
+
+      <!-- Refresh -->
+      <button class="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-gray-600 rounded hover:bg-gray-100 flex-shrink-0">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
+      </button>
+
+      <!-- Live indicator -->
+      <div class="flex items-center gap-1 text-[10px] text-gray-400 flex-shrink-0">
+        <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+        Live
+      </div>
+    </header>
+
+    <!-- ===== KPI BAR (36px) ===== -->
+    <div class="h-9 flex-shrink-0 border-b border-gray-100 flex items-center px-3 gap-4 bg-gray-50 text-[10px] font-medium text-gray-600 tabnum z-30">
+      <span class="flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-gray-900"></span>
+        <span class="text-gray-900 font-semibold">110</span> Active
+      </span>
+      <span class="flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+        <span class="text-gray-900 font-semibold">12</span> Unassigned
+      </span>
+      <span class="flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+        <span class="text-gray-900 font-semibold">8</span> Tendered
+      </span>
+      <span class="flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+        <span class="text-gray-900 font-semibold">23</span> Dispatched
+      </span>
+      <span class="flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+        <span class="text-gray-900 font-semibold">45</span> In Transit
+      </span>
+      <span class="flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+        <span class="text-gray-900 font-semibold">15</span> Delivered
+      </span>
+      <span class="flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+        <span class="text-gray-900 font-semibold">3</span> At Risk
+      </span>
+
+      <div class="flex-1"></div>
+
+      <span class="text-gray-400">Updated 12s ago</span>
+      <span class="text-gray-300">|</span>
+      <span class="text-gray-400">Week 6 / 2026</span>
+    </div>
+
+    <!-- ===== KANBAN BOARD ===== -->
+    <div class="flex-1 flex overflow-x-auto overflow-y-hidden" id="board">
+
+      <!-- ======================================= -->
+      <!-- COLUMN: Unassigned (12) -->
+      <!-- ======================================= -->
+      <div class="flex-shrink-0 flex flex-col border-r border-gray-200" style="width: calc(100% / 6); min-width: 220px;">
+        <!-- Column Header (sticky) -->
+        <div class="col-header sticky top-0 z-20 bg-white border-b border-gray-200 px-2 py-1.5 flex items-center justify-between">
+          <div class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-gray-400"></span>
+            <span class="text-[11px] font-semibold text-gray-800">Unassigned</span>
+            <span class="text-[10px] text-gray-400 tabnum">12</span>
+          </div>
+          <div class="flex items-center gap-0.5">
+            <span class="drag-dots text-gray-300 text-[8px] cursor-grab">&#x2807;</span>
+            <button class="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-gray-600 rounded hover:bg-gray-100">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+            </button>
+          </div>
+        </div>
+        <!-- Cards -->
+        <div class="flex-1 overflow-y-auto col-scroll">
+          <!-- Card 1 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-gray-400 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0847</span>
+              <span class="text-[9px] text-gray-400 tabnum">Feb 8</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">Chicago <span class="text-gray-300">&rarr;</span> Dallas</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$3,850</span>
+            </div>
+            <!-- Expanded content -->
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Equipment</span><span class="text-[10px]">53' Dry Van</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Distance</span><span class="text-[10px] tabnum">920 mi</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Weight</span><span class="text-[10px] tabnum">42,000 lbs</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Rate/mi</span><span class="text-[10px] tabnum">$4.18</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-green-600 tabnum">22%</span></div>
+              <div class="flex gap-1 mt-1">
+                <button class="h-5 px-1.5 text-[9px] font-medium bg-blue-600 text-white rounded">Assign</button>
+                <button class="h-5 px-1.5 text-[9px] font-medium border border-gray-300 text-gray-600 rounded hover:bg-gray-50">Tender</button>
+              </div>
+            </div>
+          </div>
+          <!-- Card 2 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-gray-400 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0848</span>
+              <span class="text-[9px] text-gray-400 tabnum">Feb 8</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">Atlanta <span class="text-gray-300">&rarr;</span> Miami</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$1,240</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Equipment</span><span class="text-[10px]">48' Flatbed</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Distance</span><span class="text-[10px] tabnum">662 mi</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Weight</span><span class="text-[10px] tabnum">28,500 lbs</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Rate/mi</span><span class="text-[10px] tabnum">$1.87</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-green-600 tabnum">14%</span></div>
+              <div class="flex gap-1 mt-1">
+                <button class="h-5 px-1.5 text-[9px] font-medium bg-blue-600 text-white rounded">Assign</button>
+                <button class="h-5 px-1.5 text-[9px] font-medium border border-gray-300 text-gray-600 rounded hover:bg-gray-50">Tender</button>
+              </div>
+            </div>
+          </div>
+          <!-- Card 3 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-gray-400 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0849</span>
+              <span class="text-[9px] text-gray-400 tabnum">Feb 9</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">Newark <span class="text-gray-300">&rarr;</span> Charlotte</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$2,100</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Equipment</span><span class="text-[10px]">53' Reefer</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Distance</span><span class="text-[10px] tabnum">634 mi</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Weight</span><span class="text-[10px] tabnum">38,200 lbs</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Rate/mi</span><span class="text-[10px] tabnum">$3.31</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-green-600 tabnum">18%</span></div>
+              <div class="flex gap-1 mt-1">
+                <button class="h-5 px-1.5 text-[9px] font-medium bg-blue-600 text-white rounded">Assign</button>
+                <button class="h-5 px-1.5 text-[9px] font-medium border border-gray-300 text-gray-600 rounded hover:bg-gray-50">Tender</button>
+              </div>
+            </div>
+          </div>
+          <!-- Card 4 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-gray-400 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0850</span>
+              <span class="text-[9px] text-gray-400 tabnum">Feb 9</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">Houston <span class="text-gray-300">&rarr;</span> Phoenix</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$2,780</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Equipment</span><span class="text-[10px]">53' Dry Van</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Distance</span><span class="text-[10px] tabnum">1,178 mi</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Weight</span><span class="text-[10px] tabnum">44,000 lbs</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Rate/mi</span><span class="text-[10px] tabnum">$2.36</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-amber-600 tabnum">9%</span></div>
+              <div class="flex gap-1 mt-1">
+                <button class="h-5 px-1.5 text-[9px] font-medium bg-blue-600 text-white rounded">Assign</button>
+                <button class="h-5 px-1.5 text-[9px] font-medium border border-gray-300 text-gray-600 rounded hover:bg-gray-50">Tender</button>
+              </div>
+            </div>
+          </div>
+          <!-- Card 5 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-gray-400 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0851</span>
+              <span class="text-[9px] text-gray-400 tabnum">Feb 9</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">Memphis <span class="text-gray-300">&rarr;</span> Indianapolis</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$1,450</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Equipment</span><span class="text-[10px]">53' Dry Van</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Distance</span><span class="text-[10px] tabnum">468 mi</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Weight</span><span class="text-[10px] tabnum">31,700 lbs</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Rate/mi</span><span class="text-[10px] tabnum">$3.10</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-green-600 tabnum">16%</span></div>
+              <div class="flex gap-1 mt-1">
+                <button class="h-5 px-1.5 text-[9px] font-medium bg-blue-600 text-white rounded">Assign</button>
+                <button class="h-5 px-1.5 text-[9px] font-medium border border-gray-300 text-gray-600 rounded hover:bg-gray-50">Tender</button>
+              </div>
+            </div>
+          </div>
+          <!-- Card 6 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-gray-400 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0852</span>
+              <span class="text-[9px] text-gray-400 tabnum">Feb 10</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">Seattle <span class="text-gray-300">&rarr;</span> Portland</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$680</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Equipment</span><span class="text-[10px]">26' Box Truck</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Distance</span><span class="text-[10px] tabnum">174 mi</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Weight</span><span class="text-[10px] tabnum">12,400 lbs</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Rate/mi</span><span class="text-[10px] tabnum">$3.91</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-green-600 tabnum">28%</span></div>
+              <div class="flex gap-1 mt-1">
+                <button class="h-5 px-1.5 text-[9px] font-medium bg-blue-600 text-white rounded">Assign</button>
+                <button class="h-5 px-1.5 text-[9px] font-medium border border-gray-300 text-gray-600 rounded hover:bg-gray-50">Tender</button>
+              </div>
+            </div>
+          </div>
+          <!-- Card 7 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-gray-400 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0853</span>
+              <span class="text-[9px] text-gray-400 tabnum">Feb 10</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">Denver <span class="text-gray-300">&rarr;</span> Salt Lake City</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$1,320</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Equipment</span><span class="text-[10px]">53' Dry Van</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Distance</span><span class="text-[10px] tabnum">525 mi</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Weight</span><span class="text-[10px] tabnum">36,800 lbs</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Rate/mi</span><span class="text-[10px] tabnum">$2.51</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-green-600 tabnum">21%</span></div>
+              <div class="flex gap-1 mt-1">
+                <button class="h-5 px-1.5 text-[9px] font-medium bg-blue-600 text-white rounded">Assign</button>
+                <button class="h-5 px-1.5 text-[9px] font-medium border border-gray-300 text-gray-600 rounded hover:bg-gray-50">Tender</button>
+              </div>
+            </div>
+          </div>
+          <!-- Card 8 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-gray-400 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0854</span>
+              <span class="text-[9px] text-gray-400 tabnum">Feb 10</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">LA <span class="text-gray-300">&rarr;</span> San Francisco</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$920</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Equipment</span><span class="text-[10px]">48' Flatbed</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Distance</span><span class="text-[10px] tabnum">382 mi</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Weight</span><span class="text-[10px] tabnum">22,000 lbs</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Rate/mi</span><span class="text-[10px] tabnum">$2.41</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-green-600 tabnum">19%</span></div>
+              <div class="flex gap-1 mt-1">
+                <button class="h-5 px-1.5 text-[9px] font-medium bg-blue-600 text-white rounded">Assign</button>
+                <button class="h-5 px-1.5 text-[9px] font-medium border border-gray-300 text-gray-600 rounded hover:bg-gray-50">Tender</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================= -->
+      <!-- COLUMN: Tendered (8) -->
+      <!-- ======================================= -->
+      <div class="flex-shrink-0 flex flex-col border-r border-gray-200" style="width: calc(100% / 6); min-width: 220px;">
+        <div class="col-header sticky top-0 z-20 bg-white border-b border-gray-200 px-2 py-1.5 flex items-center justify-between">
+          <div class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+            <span class="text-[11px] font-semibold text-gray-800">Tendered</span>
+            <span class="text-[10px] text-gray-400 tabnum">8</span>
+          </div>
+          <div class="flex items-center gap-0.5">
+            <span class="drag-dots text-gray-300 text-[8px] cursor-grab">&#x2807;</span>
+            <button class="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-gray-600 rounded hover:bg-gray-100">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="flex-1 overflow-y-auto col-scroll">
+          <!-- Card T1 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-amber-400 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0860</span>
+              <span class="text-[9px] text-amber-500 font-medium">Awaiting</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">Swift Transport</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$4,200</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Route</span><span class="text-[10px]">Chicago &rarr; LA</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Distance</span><span class="text-[10px] tabnum">2,015 mi</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Equipment</span><span class="text-[10px]">53' Reefer</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Tender sent</span><span class="text-[10px]">2h ago</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-green-600 tabnum">24%</span></div>
+              <div class="flex gap-1 mt-1">
+                <button class="h-5 px-1.5 text-[9px] font-medium bg-amber-500 text-white rounded">Resend</button>
+                <button class="h-5 px-1.5 text-[9px] font-medium border border-gray-300 text-gray-600 rounded hover:bg-gray-50">Cancel</button>
+              </div>
+            </div>
+          </div>
+          <!-- Card T2 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-amber-400 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0861</span>
+              <span class="text-[9px] text-amber-500 font-medium">Awaiting</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">Werner Enterprises</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$2,950</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Route</span><span class="text-[10px]">Dallas &rarr; Atlanta</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Distance</span><span class="text-[10px] tabnum">781 mi</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Equipment</span><span class="text-[10px]">53' Dry Van</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Tender sent</span><span class="text-[10px]">45m ago</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-green-600 tabnum">18%</span></div>
+            </div>
+          </div>
+          <!-- Card T3 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-amber-400 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0862</span>
+              <span class="text-[9px] text-amber-500 font-medium">Awaiting</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">JB Hunt</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$5,100</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Route</span><span class="text-[10px]">Newark &rarr; Seattle</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Distance</span><span class="text-[10px] tabnum">2,852 mi</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Equipment</span><span class="text-[10px]">53' Dry Van</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Tender sent</span><span class="text-[10px]">1h ago</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-green-600 tabnum">15%</span></div>
+            </div>
+          </div>
+          <!-- Card T4 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-amber-400 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0863</span>
+              <span class="text-[9px] text-red-500 font-medium">Expiring</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">Schneider National</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$1,870</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Route</span><span class="text-[10px]">Nashville &rarr; Louisville</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Distance</span><span class="text-[10px] tabnum">176 mi</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Equipment</span><span class="text-[10px]">53' Reefer</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Expires</span><span class="text-[10px] text-red-500">22m</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-green-600 tabnum">32%</span></div>
+            </div>
+          </div>
+          <!-- Card T5 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-amber-400 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0864</span>
+              <span class="text-[9px] text-amber-500 font-medium">Awaiting</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">XPO Logistics</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$3,620</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Route</span><span class="text-[10px]">Detroit &rarr; Houston</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Distance</span><span class="text-[10px] tabnum">1,265 mi</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Equipment</span><span class="text-[10px]">53' Dry Van</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Tender sent</span><span class="text-[10px]">3h ago</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-green-600 tabnum">20%</span></div>
+            </div>
+          </div>
+          <!-- Card T6 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-amber-400 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0865</span>
+              <span class="text-[9px] text-amber-500 font-medium">Awaiting</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">Landstar System</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$1,540</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Route</span><span class="text-[10px]">Tampa &rarr; Jacksonville</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Distance</span><span class="text-[10px] tabnum">200 mi</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Equipment</span><span class="text-[10px]">48' Flatbed</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Tender sent</span><span class="text-[10px]">30m ago</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-amber-600 tabnum">8%</span></div>
+            </div>
+          </div>
+          <!-- Card T7 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-amber-400 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0866</span>
+              <span class="text-[9px] text-amber-500 font-medium">Awaiting</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">Heartland Express</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$2,280</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Route</span><span class="text-[10px]">Omaha &rarr; Kansas City</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Distance</span><span class="text-[10px] tabnum">189 mi</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Equipment</span><span class="text-[10px]">53' Reefer</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Tender sent</span><span class="text-[10px]">15m ago</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-green-600 tabnum">26%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================= -->
+      <!-- COLUMN: Dispatched (23) -->
+      <!-- ======================================= -->
+      <div class="flex-shrink-0 flex flex-col border-r border-gray-200" style="width: calc(100% / 6); min-width: 220px;">
+        <div class="col-header sticky top-0 z-20 bg-white border-b border-gray-200 px-2 py-1.5 flex items-center justify-between">
+          <div class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+            <span class="text-[11px] font-semibold text-gray-800">Dispatched</span>
+            <span class="text-[10px] text-gray-400 tabnum">23</span>
+          </div>
+          <div class="flex items-center gap-0.5">
+            <span class="drag-dots text-gray-300 text-[8px] cursor-grab">&#x2807;</span>
+            <button class="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-gray-600 rounded hover:bg-gray-100">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="flex-1 overflow-y-auto col-scroll">
+          <!-- Card D1 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-blue-500 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0870</span>
+              <span class="text-[9px] text-blue-500 font-medium">Confirmed</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">Swift | Boston <span class="text-gray-300">&rarr;</span> DC</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$1,890</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Carrier</span><span class="text-[10px]">Swift Transport</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Driver</span><span class="text-[10px]">Mike Johnson</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Pickup</span><span class="text-[10px]">Feb 8, 06:00</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Distance</span><span class="text-[10px] tabnum">440 mi</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-green-600 tabnum">17%</span></div>
+            </div>
+          </div>
+          <!-- Card D2 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-blue-500 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0871</span>
+              <span class="text-[9px] text-blue-500 font-medium">Confirmed</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">Werner | Philly <span class="text-gray-300">&rarr;</span> Pittsburgh</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$1,120</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Carrier</span><span class="text-[10px]">Werner Enterprises</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Driver</span><span class="text-[10px]">Carlos Rivera</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Pickup</span><span class="text-[10px]">Feb 8, 14:00</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Distance</span><span class="text-[10px] tabnum">305 mi</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-green-600 tabnum">22%</span></div>
+            </div>
+          </div>
+          <!-- Card D3 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-blue-500 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0872</span>
+              <span class="text-[9px] text-blue-500 font-medium">En Route PU</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">Schneider | KC <span class="text-gray-300">&rarr;</span> St. Louis</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$780</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Carrier</span><span class="text-[10px]">Schneider National</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Driver</span><span class="text-[10px]">James Williams</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Pickup</span><span class="text-[10px]">Feb 8, 08:00</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Distance</span><span class="text-[10px] tabnum">250 mi</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-amber-600 tabnum">11%</span></div>
+            </div>
+          </div>
+          <!-- Card D4 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-blue-500 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0873</span>
+              <span class="text-[9px] text-blue-500 font-medium">Confirmed</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">Old Dominion | Raleigh <span class="text-gray-300">&rarr;</span> NYC</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$2,340</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Carrier</span><span class="text-[10px]">Old Dominion</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Driver</span><span class="text-[10px]">David Chen</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Pickup</span><span class="text-[10px]">Feb 9, 05:00</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Distance</span><span class="text-[10px] tabnum">488 mi</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-green-600 tabnum">19%</span></div>
+            </div>
+          </div>
+          <!-- Card D5 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-blue-500 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0874</span>
+              <span class="text-[9px] text-blue-500 font-medium">Confirmed</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">FedEx | Minneapolis <span class="text-gray-300">&rarr;</span> Chicago</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$1,650</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Carrier</span><span class="text-[10px]">FedEx Freight</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Driver</span><span class="text-[10px]">Sarah Martinez</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Pickup</span><span class="text-[10px]">Feb 9, 12:00</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Distance</span><span class="text-[10px] tabnum">410 mi</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-green-600 tabnum">25%</span></div>
+            </div>
+          </div>
+          <!-- Card D6 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-blue-500 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0875</span>
+              <span class="text-[9px] text-blue-500 font-medium">En Route PU</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">Estes | Richmond <span class="text-gray-300">&rarr;</span> Baltimore</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$620</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Carrier</span><span class="text-[10px]">Estes Express</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Driver</span><span class="text-[10px]">Tom Baker</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Pickup</span><span class="text-[10px]">Feb 8, 10:00</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Distance</span><span class="text-[10px] tabnum">110 mi</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-amber-600 tabnum">7%</span></div>
+            </div>
+          </div>
+          <!-- Card D7 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-blue-500 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0876</span>
+              <span class="text-[9px] text-blue-500 font-medium">Confirmed</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">Landstar | Phoenix <span class="text-gray-300">&rarr;</span> Vegas</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$890</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Carrier</span><span class="text-[10px]">Landstar System</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Driver</span><span class="text-[10px]">Kevin Lee</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Pickup</span><span class="text-[10px]">Feb 9, 07:00</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Distance</span><span class="text-[10px] tabnum">297 mi</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-green-600 tabnum">15%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================= -->
+      <!-- COLUMN: In Transit (45) — with sub-groups -->
+      <!-- ======================================= -->
+      <div class="flex-shrink-0 flex flex-col border-r border-gray-200" style="width: calc(100% / 6); min-width: 220px;">
+        <div class="col-header sticky top-0 z-20 bg-white border-b border-gray-200 px-2 py-1.5 flex items-center justify-between">
+          <div class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+            <span class="text-[11px] font-semibold text-gray-800">In Transit</span>
+            <span class="text-[10px] text-gray-400 tabnum">45</span>
+          </div>
+          <div class="flex items-center gap-0.5">
+            <span class="drag-dots text-gray-300 text-[8px] cursor-grab">&#x2807;</span>
+            <button class="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-gray-600 rounded hover:bg-gray-100">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="flex-1 overflow-y-auto col-scroll">
+          <!-- Sub-group: On Schedule -->
+          <div class="sub-divider flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>
+            On Schedule <span class="text-gray-400 ml-auto tabnum">38</span>
+          </div>
+          <!-- Card IT1 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-indigo-500 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0880</span>
+              <span class="text-[9px] text-green-600 font-medium">On Time</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">Swift | Dallas <span class="text-gray-300">&rarr;</span> Denver</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$2,450</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Carrier</span><span class="text-[10px]">Swift Transport</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Driver</span><span class="text-[10px]">Roberto Garcia</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">ETA</span><span class="text-[10px]">Feb 9, 18:00</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Progress</span><span class="text-[10px] tabnum">62% (487/785 mi)</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-green-600 tabnum">20%</span></div>
+              <div class="w-full bg-gray-200 rounded-full h-1 mt-0.5"><div class="bg-indigo-500 h-1 rounded-full" style="width: 62%"></div></div>
+            </div>
+          </div>
+          <!-- Card IT2 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-indigo-500 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0881</span>
+              <span class="text-[9px] text-green-600 font-medium">On Time</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">JB Hunt | ATL <span class="text-gray-300">&rarr;</span> Nashville</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$1,180</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Carrier</span><span class="text-[10px]">JB Hunt</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Driver</span><span class="text-[10px]">Lisa Thompson</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">ETA</span><span class="text-[10px]">Feb 8, 20:00</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Progress</span><span class="text-[10px] tabnum">78% (194/249 mi)</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-green-600 tabnum">14%</span></div>
+              <div class="w-full bg-gray-200 rounded-full h-1 mt-0.5"><div class="bg-indigo-500 h-1 rounded-full" style="width: 78%"></div></div>
+            </div>
+          </div>
+          <!-- Card IT3 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-indigo-500 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0882</span>
+              <span class="text-[9px] text-green-600 font-medium">On Time</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">Schneider | LA <span class="text-gray-300">&rarr;</span> Phoenix</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$980</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Carrier</span><span class="text-[10px]">Schneider National</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Driver</span><span class="text-[10px]">Paul Anderson</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">ETA</span><span class="text-[10px]">Feb 8, 22:30</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Progress</span><span class="text-[10px] tabnum">45% (166/370 mi)</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-green-600 tabnum">16%</span></div>
+              <div class="w-full bg-gray-200 rounded-full h-1 mt-0.5"><div class="bg-indigo-500 h-1 rounded-full" style="width: 45%"></div></div>
+            </div>
+          </div>
+          <!-- Card IT4 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-indigo-500 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0883</span>
+              <span class="text-[9px] text-green-600 font-medium">On Time</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">XPO | NYC <span class="text-gray-300">&rarr;</span> Boston</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$750</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Carrier</span><span class="text-[10px]">XPO Logistics</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Driver</span><span class="text-[10px]">Amy Wilson</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">ETA</span><span class="text-[10px]">Feb 8, 17:00</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Progress</span><span class="text-[10px] tabnum">88% (190/216 mi)</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-green-600 tabnum">21%</span></div>
+              <div class="w-full bg-gray-200 rounded-full h-1 mt-0.5"><div class="bg-indigo-500 h-1 rounded-full" style="width: 88%"></div></div>
+            </div>
+          </div>
+          <!-- Card IT5 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-indigo-500 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0884</span>
+              <span class="text-[9px] text-green-600 font-medium">On Time</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">FedEx | Memphis <span class="text-gray-300">&rarr;</span> Houston</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$1,920</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Carrier</span><span class="text-[10px]">FedEx Freight</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Driver</span><span class="text-[10px]">Daniel Brown</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">ETA</span><span class="text-[10px]">Feb 9, 08:00</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Progress</span><span class="text-[10px] tabnum">34% (183/536 mi)</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-green-600 tabnum">18%</span></div>
+              <div class="w-full bg-gray-200 rounded-full h-1 mt-0.5"><div class="bg-indigo-500 h-1 rounded-full" style="width: 34%"></div></div>
+            </div>
+          </div>
+
+          <!-- Sub-group: Delayed -->
+          <div class="sub-divider flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+            Delayed <span class="text-red-500 ml-auto tabnum">7</span>
+          </div>
+          <!-- Card IT-D1 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-red-400 px-2 py-1.5 bg-red-50/40">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0890</span>
+              <span class="text-[9px] text-red-500 font-medium">+2h Late</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">Werner | Detroit <span class="text-gray-300">&rarr;</span> Cincy</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$1,040</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Carrier</span><span class="text-[10px]">Werner Enterprises</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Driver</span><span class="text-[10px]">Mark Stevens</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Reason</span><span class="text-[10px] text-red-600">Weather delay I-75</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">New ETA</span><span class="text-[10px]">Feb 8, 22:00</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-amber-600 tabnum">12%</span></div>
+              <div class="w-full bg-gray-200 rounded-full h-1 mt-0.5"><div class="bg-red-400 h-1 rounded-full" style="width: 55%"></div></div>
+            </div>
+          </div>
+          <!-- Card IT-D2 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-red-400 px-2 py-1.5 bg-red-50/40">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0891</span>
+              <span class="text-[9px] text-red-500 font-medium">+4h Late</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">Heartland | Omaha <span class="text-gray-300">&rarr;</span> Denver</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$1,560</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Carrier</span><span class="text-[10px]">Heartland Express</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Driver</span><span class="text-[10px]">Greg Harris</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Reason</span><span class="text-[10px] text-red-600">Mechanical — tire blowout</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">New ETA</span><span class="text-[10px]">Feb 9, 14:00</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-amber-600 tabnum">10%</span></div>
+              <div class="w-full bg-gray-200 rounded-full h-1 mt-0.5"><div class="bg-red-400 h-1 rounded-full" style="width: 40%"></div></div>
+            </div>
+          </div>
+          <!-- Card IT-D3 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-red-400 px-2 py-1.5 bg-red-50/40">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0892</span>
+              <span class="text-[9px] text-red-500 font-medium">+1h Late</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">Landstar | Miami <span class="text-gray-300">&rarr;</span> Tampa</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$680</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Carrier</span><span class="text-[10px]">Landstar System</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Driver</span><span class="text-[10px]">Jose Ramirez</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Reason</span><span class="text-[10px] text-red-600">Traffic I-75</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">New ETA</span><span class="text-[10px]">Feb 8, 19:30</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-amber-600 tabnum">5%</span></div>
+              <div class="w-full bg-gray-200 rounded-full h-1 mt-0.5"><div class="bg-red-400 h-1 rounded-full" style="width: 72%"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================= -->
+      <!-- COLUMN: Delivered (15) -->
+      <!-- ======================================= -->
+      <div class="flex-shrink-0 flex flex-col border-r border-gray-200" style="width: calc(100% / 6); min-width: 220px;">
+        <div class="col-header sticky top-0 z-20 bg-white border-b border-gray-200 px-2 py-1.5 flex items-center justify-between">
+          <div class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-green-500"></span>
+            <span class="text-[11px] font-semibold text-gray-800">Delivered</span>
+            <span class="text-[10px] text-gray-400 tabnum">15</span>
+          </div>
+          <div class="flex items-center gap-0.5">
+            <span class="drag-dots text-gray-300 text-[8px] cursor-grab">&#x2807;</span>
+            <button class="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-gray-600 rounded hover:bg-gray-100">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="flex-1 overflow-y-auto col-scroll">
+          <!-- Card DL1 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-green-500 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0900</span>
+              <span class="text-[9px] text-green-600 font-medium">POD Recv'd</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">Swift | Houston <span class="text-gray-300">&rarr;</span> SA</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$890</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Carrier</span><span class="text-[10px]">Swift Transport</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Delivered</span><span class="text-[10px]">Feb 8, 08:15</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">On time</span><span class="text-[10px] text-green-600">Yes, -30m early</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-green-600 tabnum">23%</span></div>
+              <div class="flex gap-1 mt-1">
+                <button class="h-5 px-1.5 text-[9px] font-medium bg-green-600 text-white rounded">Invoice</button>
+                <button class="h-5 px-1.5 text-[9px] font-medium border border-gray-300 text-gray-600 rounded hover:bg-gray-50">View POD</button>
+              </div>
+            </div>
+          </div>
+          <!-- Card DL2 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-green-500 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0901</span>
+              <span class="text-[9px] text-green-600 font-medium">POD Recv'd</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">Werner | Cincy <span class="text-gray-300">&rarr;</span> Columbus</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$620</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Carrier</span><span class="text-[10px]">Werner Enterprises</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Delivered</span><span class="text-[10px]">Feb 8, 07:45</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">On time</span><span class="text-[10px] text-green-600">Yes, on schedule</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-green-600 tabnum">19%</span></div>
+            </div>
+          </div>
+          <!-- Card DL3 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-green-500 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0902</span>
+              <span class="text-[9px] text-amber-500 font-medium">Awaiting POD</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">Schneider | Denver <span class="text-gray-300">&rarr;</span> ABQ</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$1,340</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Carrier</span><span class="text-[10px]">Schneider National</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Delivered</span><span class="text-[10px]">Feb 7, 22:00</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">On time</span><span class="text-[10px] text-amber-500">+45m late</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-green-600 tabnum">15%</span></div>
+            </div>
+          </div>
+          <!-- Card DL4 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-green-500 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0903</span>
+              <span class="text-[9px] text-green-600 font-medium">POD Recv'd</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">Estes | Charlotte <span class="text-gray-300">&rarr;</span> Raleigh</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$480</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Carrier</span><span class="text-[10px]">Estes Express</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Delivered</span><span class="text-[10px]">Feb 8, 06:30</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">On time</span><span class="text-[10px] text-green-600">Yes, -1h early</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-green-600 tabnum">28%</span></div>
+            </div>
+          </div>
+          <!-- Card DL5 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-green-500 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0904</span>
+              <span class="text-[9px] text-green-600 font-medium">POD Recv'd</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">FedEx | Chicago <span class="text-gray-300">&rarr;</span> Milwaukee</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$560</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Carrier</span><span class="text-[10px]">FedEx Freight</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Delivered</span><span class="text-[10px]">Feb 7, 19:00</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">On time</span><span class="text-[10px] text-green-600">Yes, on schedule</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-green-600 tabnum">31%</span></div>
+            </div>
+          </div>
+          <!-- Card DL6 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-green-500 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0905</span>
+              <span class="text-[9px] text-green-600 font-medium">Invoiced</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">XPO | Boston <span class="text-gray-300">&rarr;</span> Hartford</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$420</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Carrier</span><span class="text-[10px]">XPO Logistics</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Delivered</span><span class="text-[10px]">Feb 7, 16:00</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Invoice #</span><span class="text-[10px] tabnum">INV-4582</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-green-600 tabnum">24%</span></div>
+            </div>
+          </div>
+          <!-- Card DL7 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-green-500 px-2 py-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0906</span>
+              <span class="text-[9px] text-green-600 font-medium">POD Recv'd</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">JB Hunt | KC <span class="text-gray-300">&rarr;</span> Tulsa</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$740</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-gray-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Carrier</span><span class="text-[10px]">JB Hunt</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Delivered</span><span class="text-[10px]">Feb 8, 05:30</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">On time</span><span class="text-[10px] text-green-600">Yes, -15m early</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-green-600 tabnum">17%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================= -->
+      <!-- COLUMN: At Risk (3) -->
+      <!-- ======================================= -->
+      <div class="flex-shrink-0 flex flex-col" style="width: calc(100% / 6); min-width: 220px;">
+        <div class="col-header sticky top-0 z-20 bg-white border-b border-gray-200 px-2 py-1.5 flex items-center justify-between">
+          <div class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-red-500"></span>
+            <span class="text-[11px] font-semibold text-gray-800">At Risk</span>
+            <span class="text-[10px] text-red-500 font-semibold tabnum">3</span>
+          </div>
+          <div class="flex items-center gap-0.5">
+            <span class="drag-dots text-gray-300 text-[8px] cursor-grab">&#x2807;</span>
+            <button class="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-gray-600 rounded hover:bg-gray-100">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="flex-1 overflow-y-auto col-scroll">
+          <!-- Card AR1 — Critical -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-red-500 px-2 py-1.5 bg-red-50">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0920</span>
+              <span class="text-[9px] text-red-600 font-semibold">CRITICAL</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">Swift | LA <span class="text-gray-300">&rarr;</span> Chicago</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$5,200</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-red-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Carrier</span><span class="text-[10px]">Swift Transport</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Driver</span><span class="text-[10px]">Victor Reyes</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-red-500 font-medium">Issue</span><span class="text-[10px] text-red-600">Driver unresponsive 6h+</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Last ping</span><span class="text-[10px]">Flagstaff, AZ 6h ago</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-green-600 tabnum">18%</span></div>
+              <div class="flex gap-1 mt-1">
+                <button class="h-5 px-1.5 text-[9px] font-medium bg-red-600 text-white rounded">Escalate</button>
+                <button class="h-5 px-1.5 text-[9px] font-medium border border-red-300 text-red-600 rounded hover:bg-red-50">Call Driver</button>
+              </div>
+            </div>
+          </div>
+          <!-- Card AR2 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-red-500 px-2 py-1.5 bg-red-50">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0921</span>
+              <span class="text-[9px] text-red-600 font-semibold">AT RISK</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">Old Dominion | ATL <span class="text-gray-300">&rarr;</span> Jax</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$1,780</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-red-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Carrier</span><span class="text-[10px]">Old Dominion</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Driver</span><span class="text-[10px]">Earl Washington</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-red-500 font-medium">Issue</span><span class="text-[10px] text-red-600">Carrier dispute — rate</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Original ETA</span><span class="text-[10px]">Feb 8, 14:00</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-amber-600 tabnum">6%</span></div>
+              <div class="flex gap-1 mt-1">
+                <button class="h-5 px-1.5 text-[9px] font-medium bg-red-600 text-white rounded">Escalate</button>
+                <button class="h-5 px-1.5 text-[9px] font-medium border border-gray-300 text-gray-600 rounded hover:bg-gray-50">Reassign</button>
+              </div>
+            </div>
+          </div>
+          <!-- Card AR3 -->
+          <div class="mini-card border-b border-gray-100 border-l-4 border-l-red-500 px-2 py-1.5 bg-red-50">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-[10px] text-gray-900 tabnum">FM-2025-0922</span>
+              <span class="text-[9px] text-red-600 font-semibold">AT RISK</span>
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-[10px] text-gray-600 truncate">Heartland | SLC <span class="text-gray-300">&rarr;</span> Boise</span>
+              <span class="text-[10px] font-medium text-gray-900 tabnum">$1,120</span>
+            </div>
+            <div class="expand-row mt-1.5 pt-1.5 border-t border-red-100 space-y-1">
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Carrier</span><span class="text-[10px]">Heartland Express</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Driver</span><span class="text-[10px]">Clint Morrison</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-red-500 font-medium">Issue</span><span class="text-[10px] text-red-600">Temp violation — reefer</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Temp reading</span><span class="text-[10px] text-red-600">48F (req: 34F)</span></div>
+              <div class="flex justify-between"><span class="text-[9px] text-gray-400">Margin</span><span class="text-[10px] font-medium text-amber-600 tabnum">9%</span></div>
+              <div class="flex gap-1 mt-1">
+                <button class="h-5 px-1.5 text-[9px] font-medium bg-red-600 text-white rounded">Escalate</button>
+                <button class="h-5 px-1.5 text-[9px] font-medium border border-red-300 text-red-600 rounded hover:bg-red-50">Call Driver</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty state padding -->
+          <div class="px-3 py-4 text-center">
+            <p class="text-[10px] text-gray-400">All other loads on track</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /board -->
+
+  </div><!-- /main content -->
+</div><!-- /layout shell -->
+
+<!-- ===== KEYBOARD SHORTCUT HINT (bottom-right) ===== -->
+<div class="fixed bottom-2 right-3 text-[9px] text-gray-300 z-50">
+  <kbd class="px-1 py-0.5 border border-gray-200 rounded text-[8px] bg-gray-50">?</kbd> Shortcuts
+</div>
+
+</body>
+</html>

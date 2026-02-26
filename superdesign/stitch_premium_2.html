@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Operational Intelligence CRM View</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style type="text/tailwindcss">
+        :root {
+            --bg-main: #F8F9FA;
+            --bg-filter: #F1F3F5;
+            --surface-white: #FFFFFF;
+            --border-light: #e5e7eb;
+            --border-soft: #DEE2E6;
+            --sapphire-blue: #1D4ED8;
+            --text-primary: #333333;
+            --text-secondary: #6C757D;
+            --text-muted: #adb5bd;
+            --status-active-bg: #E7F3EF;
+            --status-active-text: #065F46;
+            --status-inactive-bg: #F1F3F5;
+            --status-inactive-text: #495057;
+            --status-transit-bg: #DBEAFE;
+            --status-transit-text: #1E40AF;
+            --status-delivered-bg: #DCFCE7;
+            --status-delivered-text: #166534;
+        }
+        body { 
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: var(--border-soft);
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: var(--sapphire-blue);
+        }
+        .active-row {
+            background-color: #F0F4FF;
+        }
+        .details-panel-overlay {
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .details-panel-overlay.open {
+            transform: translateX(0);
+        }
+        .filter-dropdown {
+            display: none;
+        }
+        .filter-chip:hover .filter-dropdown,
+        .filter-chip:focus-within .filter-dropdown {
+            display: block;
+        }
+        .work-hub-shadow {
+            box-shadow: 4px 0 15px -5px rgba(0,0,0,0.05);
+        }
+        .tab-active {
+            color: var(--sapphire-blue);
+            border-bottom: 2px solid var(--sapphire-blue);
+        }
+        .tab-inactive {
+            color: var(--text-secondary);
+            border-bottom: 2px solid transparent;
+        }
+        .tab-inactive:hover {
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border-soft);
+        }
+    </style>
+</head>
+<body class="overflow-hidden">
+<div class="flex h-screen w-full overflow-hidden">
+<aside class="w-16 flex-shrink-0 border-r border-[var(--border-light)] bg-[var(--surface-white)] flex flex-col items-center py-4 gap-4 z-50">
+<div class="w-10 h-10 bg-[var(--sapphire-blue)] rounded flex items-center justify-center text-white mb-2 shadow-sm">
+<span class="material-symbols-outlined">local_shipping</span>
+</div>
+<nav class="flex-1 flex flex-col gap-2">
+<a class="w-10 h-10 flex items-center justify-center rounded text-[var(--text-secondary)] hover:bg-[var(--bg-main)] hover:text-[var(--text-primary)] transition-colors" href="#" title="Dashboard">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+</a>
+<div class="h-[1px] w-6 bg-[var(--border-light)] mx-auto my-1"></div>
+<a class="w-10 h-10 flex items-center justify-center rounded text-[var(--text-secondary)] hover:bg-[var(--bg-main)] hover:text-[var(--text-primary)] transition-colors" href="#" title="Loads">
+<span class="material-symbols-outlined text-[20px]">inventory_2</span>
+</a>
+<a class="w-10 h-10 flex items-center justify-center rounded text-[var(--text-secondary)] hover:bg-[var(--bg-main)] hover:text-[var(--text-primary)] transition-colors" href="#" title="Dispatch">
+<span class="material-symbols-outlined text-[20px]">route</span>
+</a>
+<div class="h-[1px] w-6 bg-[var(--border-light)] mx-auto my-1"></div>
+<a class="w-10 h-10 flex items-center justify-center rounded bg-[var(--sapphire-blue)] text-white shadow-md" href="#" title="Companies">
+<span class="material-symbols-outlined text-[20px]">corporate_fare</span>
+</a>
+<a class="w-10 h-10 flex items-center justify-center rounded text-[var(--text-secondary)] hover:bg-[var(--bg-main)] hover:text-[var(--text-primary)] transition-colors" href="#" title="Contacts">
+<span class="material-symbols-outlined text-[20px]">contacts</span>
+</a>
+<a class="w-10 h-10 flex items-center justify-center rounded text-[var(--text-secondary)] hover:bg-[var(--bg-main)] hover:text-[var(--text-primary)] transition-colors" href="#" title="Deals">
+<span class="material-symbols-outlined text-[20px]">handshake</span>
+</a>
+</nav>
+<button class="w-10 h-10 flex items-center justify-center rounded text-[var(--text-secondary)] hover:bg-[var(--bg-main)] hover:text-[var(--text-primary)] transition-colors" title="Settings">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+</button>
+</aside>
+<main class="flex-1 flex flex-col min-w-0 relative">
+<header class="h-12 border-b border-[var(--border-light)] bg-[var(--surface-white)] flex items-center justify-between px-6 shrink-0 z-40">
+<div class="flex items-center gap-6 flex-1">
+<h2 class="text-sm font-semibold tracking-tight text-[var(--text-primary)] flex items-center gap-2 shrink-0">
+<span class="material-symbols-outlined text-sm">corporate_fare</span> Operational Intelligence
+                </h2>
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-secondary)]">search</span>
+<input class="w-full bg-[var(--bg-main)] border-none focus:ring-1 focus:ring-[var(--sapphire-blue)] rounded-full py-1.5 pl-10 pr-4 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)]" placeholder="Search by name, MC, or contact..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="flex items-center gap-1.5 px-4 py-1.5 bg-[var(--sapphire-blue)] hover:opacity-90 text-white text-[11px] font-bold uppercase tracking-wider rounded-full transition-colors shadow-sm">
+<span class="material-symbols-outlined text-sm">add</span> Add Company
+                </button>
+<div class="h-6 w-[1px] bg-[var(--border-light)]"></div>
+<img alt="User avatar" class="w-8 h-8 rounded-full border border-[var(--border-light)]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAcr_cFkjiHjNmcrBMCgqsOHrlwiuNI7a1GM3ho_OHeuS1KINYwSHF5AbgBiQyUJed4G4zjUuo9kEftWohHOynVSqpYveAlUQ8kynBLG1FeuxSHEcoOWYIGkeitbQZzXMV2ez9FRdzg-khyJ2NkyT9tuh0UAWWem_1fe97AdSFDKT8bqNmW0ILI5NprezzlP7q_rNYjr4JsZDmL0DuUKauidn6-XUDP42g-AYuYpMQly3rmoqLtIoQjw8RocO8EPgui4tS1N6o2WQw"/>
+</div>
+</header>
+<section class="h-14 border-b border-[var(--border-light)] bg-[var(--surface-white)] flex items-center px-6 gap-3 shrink-0 z-30">
+<div class="flex items-center gap-1.5 text-[var(--text-secondary)] mr-2">
+<span class="material-symbols-outlined text-lg">filter_list</span>
+<span class="text-[10px] font-bold uppercase tracking-widest">Filters</span>
+</div>
+<div class="relative group filter-chip">
+<button class="flex items-center gap-1 px-3 py-1.5 border border-[var(--border-soft)] rounded-full bg-white text-[11px] font-medium text-[var(--text-secondary)] hover:border-[var(--sapphire-blue)] hover:text-[var(--sapphire-blue)] transition-all">
+                    Company Status <span class="material-symbols-outlined text-sm">expand_more</span>
+</button>
+<div class="absolute top-full left-0 mt-2 w-48 bg-white border border-[var(--border-light)] shadow-xl rounded-lg p-4 z-50 filter-dropdown">
+<label class="text-[10px] font-bold text-[var(--text-secondary)] uppercase block mb-3">Select Status</label>
+<div class="space-y-2">
+<label class="flex items-center gap-2 cursor-pointer group/item">
+<input checked="" class="w-3.5 h-3.5 rounded border-[var(--border-soft)] text-[var(--sapphire-blue)] focus:ring-[var(--sapphire-blue)]" type="checkbox"/>
+<span class="text-xs text-[var(--text-primary)] group-hover/item:text-[var(--sapphire-blue)]">Active</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer group/item">
+<input class="w-3.5 h-3.5 rounded border-[var(--border-soft)] text-[var(--sapphire-blue)] focus:ring-[var(--sapphire-blue)]" type="checkbox"/>
+<span class="text-xs text-[var(--text-primary)] group-hover/item:text-[var(--sapphire-blue)]">Inactive</span>
+</label>
+</div>
+</div>
+</div>
+<div class="relative group filter-chip">
+<button class="flex items-center gap-1 px-3 py-1.5 border border-[var(--border-soft)] rounded-full bg-white text-[11px] font-medium text-[var(--text-secondary)] hover:border-[var(--sapphire-blue)] hover:text-[var(--sapphire-blue)] transition-all">
+                    Account Manager <span class="material-symbols-outlined text-sm">expand_more</span>
+</button>
+<div class="absolute top-full left-0 mt-2 w-56 bg-white border border-[var(--border-light)] shadow-xl rounded-lg p-4 z-50 filter-dropdown">
+<label class="text-[10px] font-bold text-[var(--text-secondary)] uppercase block mb-3">Search Manager</label>
+<input class="w-full text-xs bg-[var(--bg-main)] border-none rounded py-1.5 px-3 focus:ring-1 focus:ring-[var(--sapphire-blue)]" placeholder="Name..." type="text"/>
+</div>
+</div>
+<div class="relative group filter-chip">
+<button class="flex items-center gap-1 px-3 py-1.5 border border-[var(--border-soft)] rounded-full bg-white text-[11px] font-medium text-[var(--text-secondary)] hover:border-[var(--sapphire-blue)] hover:text-[var(--sapphire-blue)] transition-all">
+                    Lead Source <span class="material-symbols-outlined text-sm">expand_more</span>
+</button>
+<div class="absolute top-full left-0 mt-2 w-56 bg-white border border-[var(--border-light)] shadow-xl rounded-lg p-4 z-50 filter-dropdown">
+<label class="text-[10px] font-bold text-[var(--text-secondary)] uppercase block mb-3">Source Type</label>
+<select class="w-full text-xs bg-[var(--surface-white)] border-[var(--border-light)] rounded focus:ring-1 focus:ring-[var(--sapphire-blue)] p-2">
+<option>Direct Referral</option>
+<option>Industry Event</option>
+<option>Organic Search</option>
+</select>
+</div>
+</div>
+<div class="flex-1"></div>
+<button class="text-[10px] font-bold text-[var(--sapphire-blue)] hover:underline uppercase tracking-widest px-2">Clear All</button>
+</section>
+<div class="flex-1 flex overflow-hidden">
+<aside class="w-80 shrink-0 border-r border-[var(--border-light)] bg-[var(--bg-main)] flex flex-col z-20 work-hub-shadow overflow-auto custom-scrollbar">
+<div class="p-6">
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-[10px] font-bold uppercase tracking-widest text-[var(--text-primary)]">Upcoming Tasks &amp; Events</h3>
+<span class="bg-[var(--sapphire-blue)] text-white text-[9px] px-1.5 py-0.5 rounded-sm">3 Pending</span>
+</div>
+<div class="space-y-4 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[1px] before:bg-[var(--border-soft)]">
+<div class="relative pl-8">
+<div class="absolute left-0 top-0.5 w-6 h-6 rounded-full bg-[var(--surface-white)] border-2 border-[var(--sapphire-blue)] flex items-center justify-center z-10">
+<span class="material-symbols-outlined text-[12px] text-[var(--sapphire-blue)] font-bold">call</span>
+</div>
+<div class="bg-[var(--surface-white)] p-3 rounded-lg border border-[var(--border-light)] shadow-sm">
+<p class="text-[11px] font-semibold text-[var(--text-primary)]">Follow-up: Miller Contract</p>
+<p class="text-[9px] text-[var(--text-secondary)] mt-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[10px]">schedule</span> Today, 2:30 PM
+                                </p>
+</div>
+</div>
+<div class="relative pl-8">
+<div class="absolute left-0 top-0.5 w-6 h-6 rounded-full bg-[var(--surface-white)] border-2 border-[var(--border-soft)] flex items-center justify-center z-10">
+<span class="material-symbols-outlined text-[12px] text-[var(--text-secondary)]">edit_note</span>
+</div>
+<div class="bg-[var(--surface-white)] p-3 rounded-lg border border-[var(--border-light)] shadow-sm opacity-80">
+<p class="text-[11px] font-semibold text-[var(--text-primary)]">Review Onboarding Docs</p>
+<p class="text-[9px] text-[var(--text-secondary)] mt-1">Tomorrow, 9:00 AM</p>
+</div>
+</div>
+<div class="relative pl-8">
+<div class="absolute left-0 top-0.5 w-6 h-6 rounded-full bg-[var(--surface-white)] border-2 border-[var(--border-soft)] flex items-center justify-center z-10">
+<span class="material-symbols-outlined text-[12px] text-[var(--text-secondary)]">handshake</span>
+</div>
+<div class="bg-[var(--surface-white)] p-3 rounded-lg border border-[var(--border-light)] shadow-sm opacity-80">
+<p class="text-[11px] font-semibold text-[var(--text-primary)]">Intro Meeting: New Leads</p>
+<p class="text-[9px] text-[var(--text-secondary)] mt-1">Oct 26, 2023</p>
+</div>
+</div>
+</div>
+</div>
+<div class="h-px bg-[var(--border-light)] mx-6"></div>
+<div class="p-6">
+<h3 class="text-[10px] font-bold uppercase tracking-widest text-[var(--text-primary)] mb-6">Related Contacts</h3>
+<div class="space-y-3">
+<div class="flex items-center gap-3 p-2 hover:bg-[var(--surface-white)] rounded-lg transition-colors cursor-pointer group">
+<div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-[var(--text-secondary)] text-xs font-bold uppercase">DK</div>
+<div class="flex-1 min-w-0">
+<p class="text-[11px] font-bold text-[var(--text-primary)] truncate">Davin Kemmer</p>
+<p class="text-[9px] text-[var(--text-secondary)]">CEO &amp; Founder</p>
+</div>
+<span class="material-symbols-outlined text-sm text-[var(--text-muted)] group-hover:text-[var(--sapphire-blue)]">mail</span>
+</div>
+<div class="flex items-center gap-3 p-2 hover:bg-[var(--surface-white)] rounded-lg transition-colors cursor-pointer group">
+<div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-[var(--text-secondary)] text-xs font-bold uppercase">SJ</div>
+<div class="flex-1 min-w-0">
+<p class="text-[11px] font-bold text-[var(--text-primary)] truncate">Sarah Jenkins</p>
+<p class="text-[9px] text-[var(--text-secondary)]">Operations Manager</p>
+</div>
+<span class="material-symbols-outlined text-sm text-[var(--text-muted)] group-hover:text-[var(--sapphire-blue)]">call</span>
+</div>
+<div class="flex items-center gap-3 p-2 hover:bg-[var(--surface-white)] rounded-lg transition-colors cursor-pointer group">
+<div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-[var(--text-secondary)] text-xs font-bold uppercase">MR</div>
+<div class="flex-1 min-w-0">
+<p class="text-[11px] font-bold text-[var(--text-primary)] truncate">Marcus Reeds</p>
+<p class="text-[9px] text-[var(--text-secondary)]">Billing Dept</p>
+</div>
+<span class="material-symbols-outlined text-sm text-[var(--text-muted)] group-hover:text-[var(--sapphire-blue)]">open_in_new</span>
+</div>
+</div>
+<button class="mt-6 w-full py-2 text-[9px] font-bold uppercase tracking-widest text-[var(--sapphire-blue)] border border-dashed border-[var(--border-soft)] rounded-lg hover:bg-white transition-all">
+                        + Add Contact
+                    </button>
+</div>
+</aside>
+<div class="flex-1 overflow-auto custom-scrollbar bg-[var(--surface-white)] relative">
+<div class="flex border-b border-[var(--border-light)] bg-[var(--bg-main)]/50 shrink-0 px-6 gap-8 py-2.5 sticky top-0 z-20">
+<div class="flex items-center gap-3">
+<p class="text-[9px] font-bold text-[var(--text-secondary)] uppercase tracking-widest">Total Companies</p>
+<span class="text-xs font-bold text-[var(--text-primary)]">1,248</span>
+</div>
+<div class="h-4 w-[1px] bg-[var(--border-soft)] self-center"></div>
+<div class="flex items-center gap-3">
+<p class="text-[9px] font-bold text-[var(--text-secondary)] uppercase tracking-widest">Active</p>
+<span class="text-xs font-bold text-[var(--text-primary)]">812</span>
+</div>
+</div>
+<table class="w-full text-left border-collapse">
+<thead class="bg-[var(--surface-white)] sticky top-[37px] z-10 border-b border-[var(--border-light)]">
+<tr>
+<th class="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)] w-2/5">Company</th>
+<th class="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">Status</th>
+<th class="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">Open AR</th>
+<th class="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">Manager</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-[var(--border-light)]">
+<tr class="active-row hover:bg-slate-50 transition-colors cursor-pointer group">
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="text-xs font-semibold text-[var(--text-primary)]">Waters, Miller and Kuvalis 16</span>
+<span class="text-[9px] text-[var(--text-secondary)] uppercase tracking-tighter">MC-120340</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-block px-3 py-1 rounded-full text-[9px] font-bold uppercase bg-[var(--status-active-bg)] text-[var(--status-active-text)]">Active</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="text-xs font-mono text-[var(--text-primary)] font-medium">$0.00</span>
+<span class="text-[9px] text-[var(--text-muted)]">Current</span>
+</div>
+</td>
+<td class="px-6 py-4 text-xs text-[var(--text-secondary)]">Alex Thompson</td>
+</tr>
+<tr class="hover:bg-slate-50 transition-colors cursor-pointer group">
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="text-xs font-semibold text-[var(--text-primary)]">Runolfsson and Abernathy</span>
+<span class="text-[9px] text-[var(--text-secondary)] uppercase tracking-tighter">MC-882103</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-block px-3 py-1 rounded-full text-[9px] font-bold uppercase bg-[var(--status-inactive-bg)] text-[var(--status-inactive-text)]">Inactive</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="text-xs font-mono text-red-600 font-bold">$4,520.00</span>
+<span class="text-[9px] text-red-500 font-bold uppercase tracking-wider">Overdue 15d</span>
+</div>
+</td>
+<td class="px-6 py-4 text-xs text-[var(--text-secondary)]">Sarah Jenkins</td>
+</tr>
+<tr class="hover:bg-slate-50 transition-colors cursor-pointer group">
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="text-xs font-semibold text-[var(--text-primary)]">Romaguera, Bashirian 10</span>
+<span class="text-[9px] text-[var(--text-secondary)] uppercase tracking-tighter">MC-992013</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-block px-3 py-1 rounded-full text-[9px] font-bold uppercase bg-[var(--status-inactive-bg)] text-[var(--status-inactive-text)]">Inactive</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="text-xs font-mono text-[var(--text-primary)] font-medium">$1,200.50</span>
+<span class="text-[9px] text-[var(--text-secondary)]">Net 30</span>
+</div>
+</td>
+<td class="px-6 py-4 text-xs text-[var(--text-secondary)]">Alex Thompson</td>
+</tr>
+<tr class="hover:bg-slate-50 transition-colors cursor-pointer group">
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="text-xs font-semibold text-[var(--text-primary)]">Hamill LLC 9</span>
+<span class="text-[9px] text-[var(--text-secondary)] uppercase tracking-tighter">MC-120556</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-block px-3 py-1 rounded-full text-[9px] font-bold uppercase bg-[var(--status-inactive-bg)] text-[var(--status-inactive-text)]">Inactive</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="text-xs font-mono text-red-600 font-bold">$8,450.00</span>
+<span class="text-[9px] text-red-500 font-bold uppercase tracking-wider">Overdue 45d</span>
+</div>
+</td>
+<td class="px-6 py-4 text-xs text-[var(--text-secondary)]">Marcus Reeds</td>
+</tr>
+<tr class="hover:bg-slate-50 transition-colors cursor-pointer group">
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="text-xs font-semibold text-[var(--text-primary)]">Rippin LLC 8</span>
+<span class="text-[9px] text-[var(--text-secondary)] uppercase tracking-tighter">MC-445019</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-block px-3 py-1 rounded-full text-[9px] font-bold uppercase bg-[var(--status-active-bg)] text-[var(--status-active-text)]">Active</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="text-xs font-mono text-[var(--text-primary)] font-medium">$0.00</span>
+<span class="text-[9px] text-[var(--text-muted)]">Current</span>
+</div>
+</td>
+<td class="px-6 py-4 text-xs text-[var(--text-secondary)]">Sarah Jenkins</td>
+</tr>
+</tbody>
+</table>
+<aside class="details-panel-overlay open absolute top-0 right-0 w-[480px] h-full border-l border-[var(--border-light)] bg-[var(--surface-white)] shadow-2xl flex flex-col z-30">
+<div class="flex flex-col bg-[var(--surface-white)] border-b border-[var(--border-light)] sticky top-0 z-20">
+<div class="p-4 flex items-start justify-between">
+<div class="flex flex-col gap-1">
+<h3 class="text-sm font-bold text-[var(--text-primary)]">Waters, Miller &amp; Kuvalis</h3>
+<p class="text-[10px] text-[var(--text-secondary)] font-medium tracking-wide uppercase">MC-120340 • Active Customer</p>
+</div>
+<div class="flex gap-2">
+<button class="w-7 h-7 flex items-center justify-center rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-main)] transition-colors"><span class="material-symbols-outlined text-sm">edit</span></button>
+<button class="w-7 h-7 flex items-center justify-center rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-main)] transition-colors"><span class="material-symbols-outlined text-sm">more_vert</span></button>
+<button class="w-7 h-7 flex items-center justify-center rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-main)] transition-colors">
+<span class="material-symbols-outlined text-lg">close</span>
+</button>
+</div>
+</div>
+<div class="px-4 flex gap-6 text-[11px] font-medium">
+<button class="pb-2.5 tab-inactive transition-all">Overview</button>
+<button class="pb-2.5 tab-inactive transition-all">Loads</button>
+<button class="pb-2.5 tab-inactive transition-all">Finance</button>
+<button class="pb-2.5 tab-active transition-all">Documents</button>
+</div>
+</div>
+<div class="flex-1 overflow-auto custom-scrollbar bg-[var(--bg-main)]">
+<div class="px-4 py-3 bg-white/80 backdrop-blur-sm border-b border-[var(--border-light)] sticky top-0 z-20 flex gap-3 items-center">
+<div class="relative flex-1 group">
+<span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-[18px] text-[var(--text-secondary)] group-focus-within:text-[var(--sapphire-blue)] transition-colors">search</span>
+<input class="w-full pl-9 pr-3 py-1.5 text-[11px] font-medium bg-[var(--bg-main)] border-none rounded-md focus:ring-1 focus:ring-[var(--sapphire-blue)] placeholder-[var(--text-muted)] transition-all" placeholder="Search documents..." type="text"/>
+</div>
+<button class="flex items-center gap-1.5 bg-[var(--sapphire-blue)] hover:bg-blue-700 text-white pl-2.5 pr-3 py-1.5 rounded-md transition-all shadow-sm hover:shadow active:scale-95">
+<span class="material-symbols-outlined text-[16px]">add</span>
+<span class="text-[11px] font-bold tracking-wide">Upload</span>
+</button>
+<button class="p-1.5 text-[var(--text-secondary)] hover:bg-[var(--bg-main)] rounded-md transition-colors" title="View Options">
+<span class="material-symbols-outlined text-[18px]">grid_view</span>
+</button>
+</div>
+<div class="p-4 space-y-6">
+<section>
+<div class="flex items-center justify-between mb-3 px-1">
+<h5 class="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest">Recent</h5>
+<button class="text-[10px] text-[var(--sapphire-blue)] font-semibold hover:underline">View All</button>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div class="bg-white p-3 rounded-xl border border-[var(--border-light)] shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] hover:border-blue-100 transition-all cursor-pointer group flex flex-col justify-between h-32 relative overflow-hidden">
+<div class="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-transparent to-blue-50 rounded-bl-full -mr-4 -mt-4 z-0"></div>
+<div class="relative z-10">
+<div class="w-8 h-8 rounded bg-blue-50 text-blue-600 flex items-center justify-center mb-2 border border-blue-100">
+<span class="material-symbols-outlined text-[18px]">article</span>
+</div>
+<p class="text-[11px] font-bold text-[var(--text-primary)] leading-tight line-clamp-2">Master_Service_Agreement.pdf</p>
+</div>
+<div class="relative z-10 pt-2 border-t border-dashed border-[var(--border-light)] flex justify-between items-center mt-auto">
+<span class="text-[9px] text-[var(--text-secondary)] font-medium">2h ago</span>
+<span class="w-1.5 h-1.5 rounded-full bg-amber-400" title="Pending"></span>
+</div>
+</div>
+<div class="bg-white p-3 rounded-xl border border-[var(--border-light)] shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] hover:border-blue-100 transition-all cursor-pointer group flex flex-col justify-between h-32 relative overflow-hidden">
+<div class="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-transparent to-green-50 rounded-bl-full -mr-4 -mt-4 z-0"></div>
+<div class="relative z-10">
+<div class="w-8 h-8 rounded bg-red-50 text-red-600 flex items-center justify-center mb-2 border border-red-100">
+<span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+</div>
+<p class="text-[11px] font-bold text-[var(--text-primary)] leading-tight line-clamp-2">W9_Form_Signed.pdf</p>
+</div>
+<div class="relative z-10 pt-2 border-t border-dashed border-[var(--border-light)] flex justify-between items-center mt-auto">
+<span class="text-[9px] text-[var(--text-secondary)] font-medium">Yesterday</span>
+<span class="w-1.5 h-1.5 rounded-full bg-green-500" title="Verified"></span>
+</div>
+</div>
+</div>
+</section>
+<section class="space-y-6">
+<div>
+<div class="flex items-center gap-2 mb-3 px-1">
+<span class="material-symbols-outlined text-[16px] text-[var(--text-secondary)]">folder</span>
+<h5 class="text-[10px] font-bold text-[var(--text-primary)] uppercase tracking-widest">Compliance</h5>
+<span class="h-px bg-[var(--border-light)] flex-1 ml-2"></span>
+</div>
+<div class="flex flex-col gap-3">
+<div class="bg-white p-3 rounded-xl border border-[var(--border-light)] shadow-sm hover:shadow-md transition-all group relative">
+<div class="flex gap-3">
+<div class="w-12 h-12 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center text-red-500 shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[24px]">picture_as_pdf</span>
+</div>
+<div class="flex-1 min-w-0 flex flex-col justify-center">
+<div class="flex justify-between items-start">
+<h6 class="text-[12px] font-semibold text-[var(--text-primary)] hover:text-[var(--sapphire-blue)] cursor-pointer truncate pr-2">MC_Authority_Letter.pdf</h6>
+<div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="w-6 h-6 flex items-center justify-center rounded hover:bg-gray-100 text-[var(--text-secondary)]"><span class="material-symbols-outlined text-[16px]">visibility</span></button>
+<button class="w-6 h-6 flex items-center justify-center rounded hover:bg-gray-100 text-[var(--text-secondary)]"><span class="material-symbols-outlined text-[16px]">download</span></button>
+<button class="w-6 h-6 flex items-center justify-center rounded hover:bg-red-50 hover:text-red-500 text-[var(--text-secondary)]"><span class="material-symbols-outlined text-[16px]">delete</span></button>
+</div>
+</div>
+<div class="flex items-center gap-2 mt-1">
+<span class="text-[10px] text-[var(--text-secondary)]">1.2 MB</span>
+<span class="text-[10px] text-[var(--border-soft)]">•</span>
+<span class="text-[10px] text-[var(--text-secondary)]">Modified Oct 12</span>
+</div>
+</div>
+</div>
+<div class="mt-3 pt-2 border-t border-[var(--border-light)] flex items-center gap-2">
+<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#DCFCE7] text-[#166534] uppercase tracking-wide">Verified</span>
+<span class="text-[9px] text-[var(--text-secondary)]">Valid until Dec 2024</span>
+</div>
+</div>
+</div>
+</div>
+<div>
+<div class="flex items-center gap-2 mb-3 px-1">
+<span class="material-symbols-outlined text-[16px] text-[var(--text-secondary)]">folder</span>
+<h5 class="text-[10px] font-bold text-[var(--text-primary)] uppercase tracking-widest">Insurance</h5>
+<span class="h-px bg-[var(--border-light)] flex-1 ml-2"></span>
+</div>
+<div class="flex flex-col gap-3">
+<div class="bg-white p-3 rounded-xl border border-[var(--border-light)] shadow-sm hover:shadow-md transition-all group relative border-l-4 border-l-red-500">
+<div class="flex gap-3">
+<div class="w-12 h-12 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center text-red-500 shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[24px]">picture_as_pdf</span>
+</div>
+<div class="flex-1 min-w-0 flex flex-col justify-center">
+<div class="flex justify-between items-start">
+<h6 class="text-[12px] font-semibold text-[var(--text-primary)] hover:text-[var(--sapphire-blue)] cursor-pointer truncate pr-2">COI_Liability_2022.pdf</h6>
+<div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="w-6 h-6 flex items-center justify-center rounded hover:bg-gray-100 text-[var(--text-secondary)]"><span class="material-symbols-outlined text-[16px]">visibility</span></button>
+<button class="w-6 h-6 flex items-center justify-center rounded hover:bg-gray-100 text-[var(--text-secondary)]"><span class="material-symbols-outlined text-[16px]">download</span></button>
+</div>
+</div>
+<div class="flex items-center gap-2 mt-1">
+<span class="text-[10px] text-[var(--text-secondary)]">2.4 MB</span>
+<span class="text-[10px] text-[var(--border-soft)]">•</span>
+<span class="text-[10px] text-[var(--text-secondary)]">Modified Dec 10</span>
+</div>
+</div>
+</div>
+<div class="mt-3 pt-2 border-t border-[var(--border-light)] flex items-center gap-2">
+<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-100 text-red-700 uppercase tracking-wide">Expired</span>
+<span class="text-[9px] text-red-600 font-medium">Expired 320 days ago</span>
+</div>
+</div>
+<div class="bg-white p-3 rounded-xl border border-[var(--border-light)] shadow-sm hover:shadow-md transition-all group relative">
+<div class="flex gap-3">
+<div class="w-12 h-12 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[24px]">description</span>
+</div>
+<div class="flex-1 min-w-0 flex flex-col justify-center">
+<div class="flex justify-between items-start">
+<h6 class="text-[12px] font-semibold text-[var(--text-primary)] hover:text-[var(--sapphire-blue)] cursor-pointer truncate pr-2">COI_Cargo_2024.pdf</h6>
+<div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="w-6 h-6 flex items-center justify-center rounded hover:bg-gray-100 text-[var(--text-secondary)]"><span class="material-symbols-outlined text-[16px]">visibility</span></button>
+<button class="w-6 h-6 flex items-center justify-center rounded hover:bg-gray-100 text-[var(--text-secondary)]"><span class="material-symbols-outlined text-[16px]">download</span></button>
+</div>
+</div>
+<div class="flex items-center gap-2 mt-1">
+<span class="text-[10px] text-[var(--text-secondary)]">2.1 MB</span>
+<span class="text-[10px] text-[var(--border-soft)]">•</span>
+<span class="text-[10px] text-[var(--text-secondary)]">Modified Oct 20</span>
+</div>
+</div>
+</div>
+<div class="mt-3 pt-2 border-t border-[var(--border-light)] flex items-center gap-2">
+<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#DCFCE7] text-[#166534] uppercase tracking-wide">Verified</span>
+<span class="text-[9px] text-[var(--text-secondary)]">Expires in 180 days</span>
+</div>
+</div>
+</div>
+</div>
+<div>
+<div class="flex items-center gap-2 mb-3 px-1">
+<span class="material-symbols-outlined text-[16px] text-[var(--text-secondary)]">folder</span>
+<h5 class="text-[10px] font-bold text-[var(--text-primary)] uppercase tracking-widest">Contracts</h5>
+<span class="h-px bg-[var(--border-light)] flex-1 ml-2"></span>
+</div>
+<div class="flex flex-col gap-3">
+<div class="bg-white p-3 rounded-xl border border-[var(--border-light)] shadow-sm hover:shadow-md transition-all group relative border-l-4 border-l-amber-400">
+<div class="flex gap-3">
+<div class="w-12 h-12 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[24px]">signature</span>
+</div>
+<div class="flex-1 min-w-0 flex flex-col justify-center">
+<div class="flex justify-between items-start">
+<h6 class="text-[12px] font-semibold text-[var(--text-primary)] hover:text-[var(--sapphire-blue)] cursor-pointer truncate pr-2">Master_Service_Agreement.pdf</h6>
+<div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="w-6 h-6 flex items-center justify-center rounded hover:bg-gray-100 text-[var(--text-secondary)]"><span class="material-symbols-outlined text-[16px]">visibility</span></button>
+<button class="w-6 h-6 flex items-center justify-center rounded hover:bg-gray-100 text-[var(--text-secondary)]"><span class="material-symbols-outlined text-[16px]">download</span></button>
+</div>
+</div>
+<div class="flex items-center gap-2 mt-1">
+<span class="text-[10px] text-[var(--text-secondary)]">5.6 MB</span>
+<span class="text-[10px] text-[var(--border-soft)]">•</span>
+<span class="text-[10px] text-[var(--text-secondary)]">Modified Oct 24</span>
+</div>
+</div>
+</div>
+<div class="mt-3 pt-2 border-t border-[var(--border-light)] flex items-center gap-2">
+<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-700 uppercase tracking-wide">Pending Review</span>
+<span class="text-[9px] text-[var(--text-secondary)]">Awaiting signature</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<div class="mt-6 pt-5 border-t border-[var(--border-light)]">
+<div class="bg-[var(--surface-white)] rounded-xl border border-[var(--border-light)] p-4 shadow-sm">
+<div class="flex justify-between items-end mb-3">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-[var(--sapphire-blue)]">
+<span class="material-symbols-outlined text-[18px]">cloud_queue</span>
+</div>
+<div class="flex flex-col">
+<span class="text-[11px] font-bold text-[var(--text-primary)]">Storage Usage</span>
+<span class="text-[10px] text-[var(--text-secondary)]">1.2 GB of 5 GB used</span>
+</div>
+</div>
+<span class="text-[12px] font-bold text-[var(--sapphire-blue)]">24%</span>
+</div>
+<div class="w-full bg-[var(--bg-filter)] rounded-full h-2 overflow-hidden mb-2">
+<div class="bg-[var(--sapphire-blue)] h-2 rounded-full shadow-[0_0_10px_rgba(29,78,216,0.3)]" style="width: 24%"></div>
+</div>
+<p class="text-[9px] text-[var(--text-muted)] text-center">Your plan includes 5GB of document storage.</p>
+</div>
+</div>
+</div>
+</div>
+</aside>
+</div>
+</div>
+<footer class="h-10 bg-[var(--surface-white)] border-t border-[var(--border-light)] flex items-center justify-between px-6 shrink-0 z-40">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+<span class="text-[9px] font-bold text-[var(--text-secondary)] uppercase tracking-widest">Live Sync Active</span>
+</div>
+<span class="text-[9px] text-[var(--text-muted)] tracking-tight">System v4.5.2-progressive</span>
+</div>
+<div class="text-[9px] text-[var(--text-secondary)] font-bold uppercase tracking-tighter">
+                Records: 1,248 total | Work Hub Active
+            </div>
+</footer>
+</main>
+</div>
+<button class="fixed bottom-6 right-6 w-12 h-12 bg-[var(--surface-white)] border border-[var(--border-light)] shadow-2xl rounded-full flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--sapphire-blue)] hover:border-[var(--sapphire-blue)] transition-all z-50">
+<span class="material-symbols-outlined">help</span>
+</button>
+</body></html>

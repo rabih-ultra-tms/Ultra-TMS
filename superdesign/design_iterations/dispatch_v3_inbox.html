@@ -1,0 +1,2383 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ultra TMS — Dispatch Board (Inbox)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+<style>
+/* ========================================
+   CSS VARIABLES — LIGHT / DARK
+   ======================================== */
+[data-theme="light"] {
+    --bg-main: #F8F9FA;
+    --bg-sidebar: #FFFFFF;
+    --bg-surface: #FFFFFF;
+    --bg-hover: #F1F5F9;
+    --bg-selected: #EFF6FF;
+    --bg-filter: #F1F3F5;
+    --border: #e5e7eb;
+    --border-soft: #DEE2E6;
+    --sapphire: #1D4ED8;
+    --sapphire-light: #DBEAFE;
+    --text-primary: #333333;
+    --text-secondary: #6C757D;
+    --text-muted: #adb5bd;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07);
+}
+[data-theme="dark"] {
+    --bg-main: #0F1117;
+    --bg-sidebar: #1A1D27;
+    --bg-surface: #1A1D27;
+    --bg-hover: #252836;
+    --bg-selected: #1E2A4A;
+    --bg-filter: #252836;
+    --border: #2A2D3A;
+    --border-soft: #353849;
+    --sapphire: #3B82F6;
+    --sapphire-light: #1E3A5F;
+    --text-primary: #E8E9ED;
+    --text-secondary: #9CA3AF;
+    --text-muted: #6B7280;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.4);
+}
+
+/* Status Colors (same both themes) */
+:root {
+    --status-transit: #3B82F6;
+    --status-unassigned: #F59E0B;
+    --status-tendered: #8B5CF6;
+    --status-dispatched: #06B6D4;
+    --status-delivered: #10B981;
+    --status-atrisk: #EF4444;
+}
+
+/* ========================================
+   RESET & BASE
+   ======================================== */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-primary);
+    background: var(--bg-main);
+    transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ========================================
+   CUSTOM SCROLLBAR
+   ======================================== */
+::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--text-muted);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+
+/* ========================================
+   MATERIAL ICONS
+   ======================================== */
+.icon {
+    font-family: 'Material Symbols Outlined';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 18px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    vertical-align: middle;
+}
+
+/* ========================================
+   APP SHELL — THREE PANES
+   ======================================== */
+.app-shell {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+}
+
+/* ========================================
+   LEFT PANE — STATUS NAVIGATOR
+   ======================================== */
+.left-pane {
+    width: 220px;
+    min-width: 220px;
+    max-width: 220px;
+    height: 100vh;
+    background: var(--bg-surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+}
+
+.logo-section {
+    padding: 20px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.logo-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--sapphire);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFFFFF;
+    transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.logo-icon .icon {
+    font-size: 20px;
+}
+
+.logo-text {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.3px;
+    transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 8px;
+}
+
+.nav-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 6px 8px;
+    transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+                color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    border-left: 3px solid transparent;
+    margin-bottom: 1px;
+}
+
+.nav-item:hover {
+    background: var(--bg-hover);
+}
+
+.nav-item.active {
+    background: var(--bg-selected);
+    border-left-color: var(--sapphire);
+}
+
+.nav-item.active .nav-label {
+    font-weight: 500;
+    color: var(--sapphire);
+}
+
+.nav-item.at-risk-item.active {
+    background: rgba(239, 68, 68, 0.08);
+}
+
+.nav-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.nav-icon {
+    font-size: 16px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+    transition: color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-item.active .nav-icon {
+    color: var(--sapphire);
+}
+
+.nav-label {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-primary);
+    transition: color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-count {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: var(--bg-filter);
+    padding: 1px 7px;
+    border-radius: 10px;
+    min-width: 22px;
+    text-align: center;
+    transition: background 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+                color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-item.active .nav-count {
+    background: var(--sapphire-light);
+    color: var(--sapphire);
+}
+
+.nav-item.at-risk-item .nav-count {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--status-atrisk);
+}
+
+/* Theme Toggle */
+.theme-toggle-area {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    transition: border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-filter);
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-toggle-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    border-color: var(--border-soft);
+}
+
+.theme-toggle-btn .icon {
+    font-size: 16px;
+}
+
+/* ========================================
+   CENTER PANE — DATA TABLE
+   ======================================== */
+.center-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    background: var(--bg-main);
+    transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Header Bar */
+.center-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.center-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.search-box {
+    position: relative;
+    width: 250px;
+    margin-left: 16px;
+}
+
+.search-box .icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    color: var(--text-muted);
+    pointer-events: none;
+    transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.search-input {
+    width: 100%;
+    padding: 7px 12px 7px 34px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-filter);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.search-input::placeholder {
+    color: var(--text-muted);
+}
+
+.search-input:focus {
+    border-color: var(--sapphire);
+    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.1);
+    background: var(--bg-surface);
+}
+
+.filter-group {
+    display: flex;
+    gap: 6px;
+    margin-left: auto;
+}
+
+.filter-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.filter-btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-soft);
+    color: var(--text-primary);
+}
+
+.filter-btn .icon {
+    font-size: 14px;
+}
+
+.new-load-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 16px;
+    border: none;
+    border-radius: 8px;
+    background: var(--sapphire);
+    color: #FFFFFF;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.new-load-btn:hover {
+    filter: brightness(1.1);
+    box-shadow: var(--shadow-md);
+}
+
+.new-load-btn .icon {
+    font-size: 16px;
+}
+
+/* Stats Strip */
+.stats-strip {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 8px 20px;
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.stat-label {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stat-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stat-dot {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    margin: 0 14px;
+    flex-shrink: 0;
+}
+
+/* Bulk Actions Bar */
+.bulk-bar {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 20px;
+    background: var(--sapphire-light);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bulk-bar.visible {
+    display: flex;
+}
+
+.bulk-count {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sapphire);
+}
+
+.bulk-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    border: 1px solid var(--sapphire);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--sapphire);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bulk-btn:hover {
+    background: var(--sapphire);
+    color: #FFFFFF;
+}
+
+.bulk-btn .icon {
+    font-size: 14px;
+}
+
+.bulk-clear {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: color 0.15s;
+}
+
+.bulk-clear:hover {
+    color: var(--text-primary);
+}
+
+/* Table Container */
+.table-container {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: auto;
+}
+
+/* Table */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.data-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}
+
+.data-table th {
+    padding: 0 10px;
+    height: 36px;
+    background: var(--bg-filter);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+                color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.data-table th:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+
+.th-inner {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.sort-arrow {
+    font-size: 14px;
+    color: var(--text-muted);
+    transition: color 0.15s, transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sort-arrow.active {
+    color: var(--sapphire);
+}
+
+.sort-arrow.desc {
+    transform: rotate(180deg);
+}
+
+/* Column widths */
+.col-check { width: 40px; }
+.col-load { width: 110px; }
+.col-status { width: 100px; }
+.col-route { width: 180px; }
+.col-carrier { width: 150px; }
+.col-equip { width: 95px; }
+.col-pickup { width: 105px; }
+.col-delivery { width: 105px; }
+.col-rate { width: 80px; text-align: right; }
+.col-margin { width: 70px; text-align: right; }
+.col-updated { width: 80px; }
+
+.data-table td {
+    padding: 0 10px;
+    height: 40px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+    transition: background 0.1s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.data-table tbody tr {
+    cursor: pointer;
+    transition: background 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.data-table tbody tr:hover td {
+    background: var(--bg-hover);
+}
+
+.data-table tbody tr.selected td {
+    background: var(--bg-selected);
+}
+
+.data-table tbody tr.selected td:first-child {
+    box-shadow: inset 3px 0 0 var(--sapphire);
+}
+
+/* Cell styling */
+.cell-check {
+    text-align: center;
+}
+
+.cell-check input[type="checkbox"] {
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+    accent-color: var(--sapphire);
+}
+
+.load-number {
+    font-weight: 600;
+    color: var(--sapphire);
+    cursor: pointer;
+}
+
+.load-number:hover {
+    text-decoration: underline;
+}
+
+.status-cell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 40px;
+}
+
+.status-dot-sm {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.status-text {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.route-main {
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+.route-miles {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.carrier-name {
+    font-weight: 500;
+    color: var(--text-primary);
+    font-size: 13px;
+}
+
+.driver-name {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.equip-badge {
+    display: inline-flex;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    background: var(--bg-filter);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+}
+
+.date-main {
+    font-size: 12px;
+    color: var(--text-primary);
+}
+
+.time-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.rate-value {
+    font-weight: 600;
+    text-align: right;
+    font-size: 13px;
+}
+
+.margin-positive {
+    color: #10B981;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.margin-negative {
+    color: #EF4444;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.margin-empty {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.updated-text {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* Pagination */
+.pagination-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+    transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.page-info {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.page-buttons {
+    display: flex;
+    gap: 4px;
+}
+
+.page-btn {
+    width: 30px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.page-btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-soft);
+}
+
+.page-btn.active {
+    background: var(--sapphire);
+    color: #FFFFFF;
+    border-color: var(--sapphire);
+}
+
+.page-btn .icon {
+    font-size: 16px;
+}
+
+/* ========================================
+   RIGHT PANE — DETAIL PANEL
+   ======================================== */
+.right-pane {
+    width: 380px;
+    min-width: 380px;
+    max-width: 380px;
+    height: 100vh;
+    background: var(--bg-surface);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Empty state */
+.detail-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: var(--text-muted);
+}
+
+.detail-empty .icon {
+    font-size: 48px;
+    opacity: 0.4;
+}
+
+.detail-empty-text {
+    font-size: 14px;
+    font-weight: 400;
+}
+
+/* Detail Header */
+.detail-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    transition: border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.detail-load-num {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.detail-status-badge {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #FFFFFF;
+}
+
+.detail-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 4px;
+}
+
+.detail-action-btn {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.detail-action-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.detail-action-btn.starred {
+    color: #F59E0B;
+}
+
+.detail-action-btn .icon {
+    font-size: 18px;
+}
+
+/* Tabs */
+.detail-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    padding: 0 16px;
+    flex-shrink: 0;
+    transition: border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.detail-tab {
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+}
+
+.detail-tab:hover {
+    color: var(--text-primary);
+}
+
+.detail-tab.active {
+    color: var(--sapphire);
+    border-bottom-color: var(--sapphire);
+}
+
+/* Tab Content */
+.detail-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+}
+
+.tab-panel {
+    display: none;
+}
+
+.tab-panel.active {
+    display: block;
+}
+
+/* Overview Tab */
+.detail-card {
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 12px;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.detail-card-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+}
+
+.route-visual {
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+}
+
+.route-line {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2px 0;
+    gap: 4px;
+}
+
+.route-dot-top {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--sapphire);
+    flex-shrink: 0;
+}
+
+.route-connector {
+    width: 2px;
+    flex: 1;
+    background: var(--border);
+    min-height: 30px;
+}
+
+.route-dot-bottom {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--status-delivered);
+    flex-shrink: 0;
+}
+
+.route-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.route-point-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.route-point-city {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.route-point-facility {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.route-point-time {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+.route-meta {
+    display: flex;
+    gap: 16px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+}
+
+.route-meta-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.route-meta-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.route-meta-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 6px 0;
+}
+
+.info-row:not(:last-child) {
+    border-bottom: 1px solid var(--border);
+}
+
+.info-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.info-value {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+    text-align: right;
+}
+
+/* Timeline Tab */
+.timeline-feed {
+    position: relative;
+    padding-left: 20px;
+}
+
+.timeline-line {
+    position: absolute;
+    left: 5px;
+    top: 8px;
+    bottom: 8px;
+    width: 2px;
+    background: var(--border);
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 18px;
+}
+
+.timeline-item:last-child {
+    padding-bottom: 0;
+}
+
+.timeline-dot {
+    position: absolute;
+    left: -20px;
+    top: 3px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--bg-surface);
+    z-index: 1;
+}
+
+.timeline-time {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+}
+
+.timeline-desc {
+    font-size: 13px;
+    color: var(--text-primary);
+    font-weight: 400;
+}
+
+/* Finance Tab */
+.finance-line {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+}
+
+.finance-line:not(:last-child) {
+    border-bottom: 1px solid var(--border);
+}
+
+.finance-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.finance-value {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.finance-total {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.finance-total .finance-label {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.finance-margin {
+    margin-top: 12px;
+    padding: 12px;
+    background: rgba(16, 185, 129, 0.06);
+    border: 1px solid rgba(16, 185, 129, 0.15);
+    border-radius: 8px;
+}
+
+.finance-margin-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+.finance-margin-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+}
+
+.finance-margin-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.finance-margin-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: #10B981;
+}
+
+.payment-status {
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: var(--bg-filter);
+    border-radius: 8px;
+}
+
+.payment-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.payment-text {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+/* Docs Tab */
+.doc-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+}
+
+.doc-item:not(:last-child) {
+    border-bottom: 1px solid var(--border);
+}
+
+.doc-icon-wrap {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+.doc-icon-wrap.complete {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10B981;
+}
+
+.doc-icon-wrap.pending {
+    background: rgba(245, 158, 11, 0.1);
+    color: #F59E0B;
+}
+
+.doc-icon-wrap.missing {
+    background: rgba(239, 68, 68, 0.1);
+    color: #EF4444;
+}
+
+.doc-icon-wrap .icon {
+    font-size: 16px;
+}
+
+.doc-info {
+    flex: 1;
+}
+
+.doc-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.doc-status-text {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.doc-progress {
+    margin-top: 14px;
+    padding: 12px;
+    background: var(--bg-filter);
+    border-radius: 8px;
+}
+
+.doc-progress-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.doc-progress-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.doc-progress-count {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--sapphire);
+}
+
+.doc-progress-bar {
+    width: 100%;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.doc-progress-fill {
+    height: 100%;
+    background: var(--sapphire);
+    border-radius: 3px;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+</style>
+</head>
+<body>
+<script>
+(function() {
+"use strict";
+
+/* ========================================
+   UTILITY FUNCTIONS
+   ======================================== */
+function el(tag, className, text) {
+    var node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined && text !== null) node.textContent = text;
+    return node;
+}
+
+function icon(name, extraClass) {
+    var span = el("span", "icon" + (extraClass ? " " + extraClass : ""));
+    span.textContent = name;
+    return span;
+}
+
+function formatCurrency(n) {
+    return "$" + n.toLocaleString("en-US");
+}
+
+function formatDate(str) {
+    var parts = str.split(" ");
+    return { date: parts[0] + " " + parts[1], time: parts[2] };
+}
+
+/* ========================================
+   MOCK DATA
+   ======================================== */
+var LOADS = [
+    { id: 1, num: "LD-2024-1847", status: "In Transit", originCity: "Chicago", originState: "IL", destCity: "Miami", destState: "FL", miles: 1380, carrier: "Swift Transport", driver: "Mike Johnson", equipment: "Dry Van 53'", pickupDate: "Jan 15", pickupTime: "08:00", deliveryDate: "Jan 17", deliveryTime: "14:00", rate: 4250, margin: 18.2, updated: "45min ago", starred: true, myLoad: true },
+    { id: 2, num: "LD-2024-1852", status: "In Transit", originCity: "Atlanta", originState: "GA", destCity: "New York", destState: "NY", miles: 880, carrier: "Werner Logistics", driver: "Sarah Chen", equipment: "Reefer 53'", pickupDate: "Jan 15", pickupTime: "06:00", deliveryDate: "Jan 16", deliveryTime: "18:00", rate: 3800, margin: 15.1, updated: "2h ago", starred: false, myLoad: false },
+    { id: 3, num: "LD-2024-1855", status: "In Transit", originCity: "Dallas", originState: "TX", destCity: "Phoenix", destState: "AZ", miles: 1065, carrier: "JB Hunt", driver: "Carlos Rivera", equipment: "Flatbed 48'", pickupDate: "Jan 15", pickupTime: "10:00", deliveryDate: "Jan 17", deliveryTime: "08:00", rate: 3200, margin: 12.8, updated: "1h ago", starred: false, myLoad: true },
+    { id: 4, num: "LD-2024-1861", status: "In Transit", originCity: "Denver", originState: "CO", destCity: "Seattle", destState: "WA", miles: 1320, carrier: "Schneider", driver: "Amy Walsh", equipment: "Dry Van 53'", pickupDate: "Jan 14", pickupTime: "14:00", deliveryDate: "Jan 16", deliveryTime: "20:00", rate: 4100, margin: 16.5, updated: "30min ago", starred: false, myLoad: false },
+    { id: 5, num: "LD-2024-1863", status: "In Transit", originCity: "Memphis", originState: "TN", destCity: "Boston", destState: "MA", miles: 1340, carrier: "XPO Logistics", driver: "James Lee", equipment: "Reefer 53'", pickupDate: "Jan 15", pickupTime: "05:00", deliveryDate: "Jan 17", deliveryTime: "12:00", rate: 4500, margin: 19.3, updated: "15min ago", starred: true, myLoad: false },
+    { id: 6, num: "LD-2024-1870", status: "In Transit", originCity: "Houston", originState: "TX", destCity: "Nashville", destState: "TN", miles: 790, carrier: "Heartland", driver: "David Kim", equipment: "Dry Van 53'", pickupDate: "Jan 15", pickupTime: "09:00", deliveryDate: "Jan 16", deliveryTime: "16:00", rate: 2800, margin: 14.0, updated: "3h ago", starred: false, myLoad: false },
+    { id: 7, num: "LD-2024-1873", status: "In Transit", originCity: "Portland", originState: "OR", destCity: "Salt Lake", destState: "UT", miles: 770, carrier: "Werner Logistics", driver: "Lisa Park", equipment: "Flatbed 48'", pickupDate: "Jan 15", pickupTime: "07:00", deliveryDate: "Jan 16", deliveryTime: "15:00", rate: 2950, margin: 13.2, updated: "20min ago", starred: false, myLoad: true },
+    { id: 8, num: "LD-2024-1879", status: "In Transit", originCity: "Minneapolis", originState: "MN", destCity: "Detroit", destState: "MI", miles: 690, carrier: "Schneider", driver: "Tom Wilson", equipment: "Dry Van 53'", pickupDate: "Jan 15", pickupTime: "11:00", deliveryDate: "Jan 16", deliveryTime: "09:00", rate: 2400, margin: 11.5, updated: "1h ago", starred: false, myLoad: false },
+    { id: 9, num: "LD-2024-1880", status: "Unassigned", originCity: "Los Angeles", originState: "CA", destCity: "Chicago", destState: "IL", miles: 2015, carrier: "\u2014", driver: "\u2014", equipment: "Dry Van 53'", pickupDate: "Jan 16", pickupTime: "06:00", deliveryDate: "Jan 18", deliveryTime: "18:00", rate: 5200, margin: null, updated: "5h ago", starred: true, myLoad: false },
+    { id: 10, num: "LD-2024-1882", status: "Unassigned", originCity: "San Francisco", originState: "CA", destCity: "Denver", destState: "CO", miles: 1235, carrier: "\u2014", driver: "\u2014", equipment: "Reefer 53'", pickupDate: "Jan 16", pickupTime: "08:00", deliveryDate: "Jan 18", deliveryTime: "10:00", rate: 3900, margin: null, updated: "4h ago", starred: false, myLoad: false },
+    { id: 11, num: "LD-2024-1884", status: "Unassigned", originCity: "New York", originState: "NY", destCity: "Atlanta", destState: "GA", miles: 880, carrier: "\u2014", driver: "\u2014", equipment: "Dry Van 53'", pickupDate: "Jan 16", pickupTime: "10:00", deliveryDate: "Jan 17", deliveryTime: "20:00", rate: 3100, margin: null, updated: "3h ago", starred: false, myLoad: false },
+    { id: 12, num: "LD-2024-1886", status: "Unassigned", originCity: "Phoenix", originState: "AZ", destCity: "Houston", destState: "TX", miles: 1175, carrier: "\u2014", driver: "\u2014", equipment: "Flatbed 48'", pickupDate: "Jan 16", pickupTime: "07:00", deliveryDate: "Jan 18", deliveryTime: "08:00", rate: 3600, margin: null, updated: "2h ago", starred: false, myLoad: false },
+    { id: 13, num: "LD-2024-1888", status: "Unassigned", originCity: "Seattle", originState: "WA", destCity: "Portland", destState: "OR", miles: 175, carrier: "\u2014", driver: "\u2014", equipment: "Dry Van 26'", pickupDate: "Jan 16", pickupTime: "14:00", deliveryDate: "Jan 16", deliveryTime: "18:00", rate: 800, margin: null, updated: "1h ago", starred: false, myLoad: false },
+    { id: 14, num: "LD-2024-1890", status: "Tendered", originCity: "Nashville", originState: "TN", destCity: "Dallas", destState: "TX", miles: 660, carrier: "Heartland", driver: "\u2014", equipment: "Dry Van 53'", pickupDate: "Jan 16", pickupTime: "06:00", deliveryDate: "Jan 17", deliveryTime: "10:00", rate: 2600, margin: 15.8, updated: "6h ago", starred: true, myLoad: false },
+    { id: 15, num: "LD-2024-1892", status: "Tendered", originCity: "Boston", originState: "MA", destCity: "Philadelphia", destState: "PA", miles: 310, carrier: "JB Hunt", driver: "\u2014", equipment: "Reefer 48'", pickupDate: "Jan 16", pickupTime: "09:00", deliveryDate: "Jan 16", deliveryTime: "16:00", rate: 1400, margin: 12.1, updated: "5h ago", starred: false, myLoad: false },
+    { id: 16, num: "LD-2024-1894", status: "Tendered", originCity: "Detroit", originState: "MI", destCity: "Columbus", destState: "OH", miles: 265, carrier: "Swift Transport", driver: "\u2014", equipment: "Dry Van 53'", pickupDate: "Jan 16", pickupTime: "11:00", deliveryDate: "Jan 16", deliveryTime: "18:00", rate: 1100, margin: 10.5, updated: "4h ago", starred: false, myLoad: false },
+    { id: 17, num: "LD-2024-1896", status: "Tendered", originCity: "Salt Lake", originState: "UT", destCity: "Las Vegas", destState: "NV", miles: 420, carrier: "XPO Logistics", driver: "\u2014", equipment: "Flatbed 48'", pickupDate: "Jan 16", pickupTime: "08:00", deliveryDate: "Jan 17", deliveryTime: "06:00", rate: 1800, margin: 14.2, updated: "3h ago", starred: false, myLoad: false },
+    { id: 18, num: "LD-2024-1900", status: "Dispatched", originCity: "Philadelphia", originState: "PA", destCity: "Washington", destState: "DC", miles: 140, carrier: "Werner Logistics", driver: "Robert Yang", equipment: "Dry Van 53'", pickupDate: "Jan 16", pickupTime: "06:00", deliveryDate: "Jan 16", deliveryTime: "12:00", rate: 900, margin: 16.7, updated: "8h ago", starred: true, myLoad: false },
+    { id: 19, num: "LD-2024-1902", status: "Dispatched", originCity: "Columbus", originState: "OH", destCity: "Indianapolis", destState: "IN", miles: 175, carrier: "Schneider", driver: "Maria Santos", equipment: "Reefer 48'", pickupDate: "Jan 16", pickupTime: "07:00", deliveryDate: "Jan 16", deliveryTime: "13:00", rate: 1050, margin: 13.3, updated: "7h ago", starred: false, myLoad: true },
+    { id: 20, num: "LD-2024-1904", status: "Dispatched", originCity: "Las Vegas", originState: "NV", destCity: "Los Angeles", destState: "CA", miles: 270, carrier: "JB Hunt", driver: "Kevin Brown", equipment: "Dry Van 53'", pickupDate: "Jan 16", pickupTime: "10:00", deliveryDate: "Jan 16", deliveryTime: "16:00", rate: 1200, margin: 11.7, updated: "6h ago", starred: false, myLoad: false },
+    { id: 21, num: "LD-2024-1906", status: "Dispatched", originCity: "Indianapolis", originState: "IN", destCity: "St Louis", destState: "MO", miles: 240, carrier: "Heartland", driver: "Anna Liu", equipment: "Flatbed 48'", pickupDate: "Jan 16", pickupTime: "08:00", deliveryDate: "Jan 16", deliveryTime: "14:00", rate: 1050, margin: 12.4, updated: "5h ago", starred: false, myLoad: false },
+    { id: 22, num: "LD-2024-1908", status: "Dispatched", originCity: "Washington", originState: "DC", destCity: "Richmond", destState: "VA", miles: 110, carrier: "Swift Transport", driver: "Paul Martin", equipment: "Dry Van 26'", pickupDate: "Jan 16", pickupTime: "09:00", deliveryDate: "Jan 16", deliveryTime: "13:00", rate: 650, margin: 15.4, updated: "4h ago", starred: false, myLoad: true },
+    { id: 23, num: "LD-2024-1830", status: "Delivered", originCity: "Kansas City", originState: "MO", destCity: "Omaha", destState: "NE", miles: 190, carrier: "XPO Logistics", driver: "Steve Clark", equipment: "Dry Van 53'", pickupDate: "Jan 14", pickupTime: "06:00", deliveryDate: "Jan 14", deliveryTime: "12:00", rate: 1100, margin: 17.3, updated: "1d ago", starred: false, myLoad: false },
+    { id: 24, num: "LD-2024-1832", status: "Delivered", originCity: "Omaha", originState: "NE", destCity: "Des Moines", destState: "IA", miles: 150, carrier: "Werner Logistics", driver: "Jenny Wu", equipment: "Reefer 48'", pickupDate: "Jan 14", pickupTime: "08:00", deliveryDate: "Jan 14", deliveryTime: "14:00", rate: 950, margin: 13.7, updated: "1d ago", starred: false, myLoad: false },
+    { id: 25, num: "LD-2024-1834", status: "Delivered", originCity: "Richmond", originState: "VA", destCity: "Charlotte", destState: "NC", miles: 330, carrier: "Schneider", driver: "Alex Rivera", equipment: "Dry Van 53'", pickupDate: "Jan 14", pickupTime: "07:00", deliveryDate: "Jan 14", deliveryTime: "16:00", rate: 1400, margin: 14.3, updated: "2d ago", starred: false, myLoad: false }
+];
+
+var STATUS_COLORS = {
+    "In Transit": "#3B82F6",
+    "Unassigned": "#F59E0B",
+    "Tendered": "#8B5CF6",
+    "Dispatched": "#06B6D4",
+    "Delivered": "#10B981",
+    "At Risk": "#EF4444"
+};
+
+var STATUS_KEYS = ["In Transit", "Unassigned", "Tendered", "Dispatched", "Delivered"];
+
+/* Hardcoded special filters */
+var STARRED_IDS = [1, 5, 9, 14, 18];
+var MY_LOAD_IDS = [1, 3, 7, 19, 22];
+
+/* At-risk loads: loads 1 and 5 (simulated) */
+var AT_RISK_IDS = [1, 5];
+
+/* ========================================
+   APPLICATION STATE
+   ======================================== */
+var state = {
+    activeFilter: "All Loads",
+    selectedLoadId: null,
+    searchQuery: "",
+    sortColumn: null,
+    sortDirection: "asc",
+    checkedIds: new Set(),
+    activeTab: "overview",
+    filteredLoads: []
+};
+
+/* ========================================
+   THEME MANAGEMENT
+   ======================================== */
+function getTheme() {
+    return localStorage.getItem("ultra-tms-theme") || "light";
+}
+
+function setTheme(t) {
+    document.documentElement.setAttribute("data-theme", t);
+    localStorage.setItem("ultra-tms-theme", t);
+}
+
+function toggleTheme() {
+    var current = document.documentElement.getAttribute("data-theme");
+    setTheme(current === "dark" ? "light" : "dark");
+    updateThemeButton();
+}
+
+function updateThemeButton() {
+    if (!themeBtn) return;
+    var isDark = document.documentElement.getAttribute("data-theme") === "dark";
+    themeBtn.textContent = "";
+    themeBtn.appendChild(icon(isDark ? "light_mode" : "dark_mode"));
+    var label = document.createTextNode(isDark ? " Light Mode" : " Dark Mode");
+    themeBtn.appendChild(label);
+}
+
+/* ========================================
+   FILTERING & SORTING
+   ======================================== */
+function getFilteredLoads() {
+    var result = LOADS.slice();
+
+    /* Status filter from left pane */
+    if (state.activeFilter === "Starred") {
+        result = result.filter(function(l) { return STARRED_IDS.indexOf(l.id) !== -1; });
+    } else if (state.activeFilter === "My Loads") {
+        result = result.filter(function(l) { return MY_LOAD_IDS.indexOf(l.id) !== -1; });
+    } else if (state.activeFilter === "At Risk") {
+        result = result.filter(function(l) { return AT_RISK_IDS.indexOf(l.id) !== -1; });
+    } else if (state.activeFilter !== "All Loads") {
+        result = result.filter(function(l) { return l.status === state.activeFilter; });
+    }
+
+    /* Search filter */
+    if (state.searchQuery) {
+        var q = state.searchQuery.toLowerCase();
+        result = result.filter(function(l) {
+            return l.num.toLowerCase().indexOf(q) !== -1 ||
+                   (l.originCity + " " + l.originState + " " + l.destCity + " " + l.destState).toLowerCase().indexOf(q) !== -1 ||
+                   l.carrier.toLowerCase().indexOf(q) !== -1;
+        });
+    }
+
+    /* Sort */
+    if (state.sortColumn) {
+        var dir = state.sortDirection === "asc" ? 1 : -1;
+        var col = state.sortColumn;
+        result.sort(function(a, b) {
+            var va, vb;
+            switch (col) {
+                case "load": va = a.num; vb = b.num; break;
+                case "status": va = a.status; vb = b.status; break;
+                case "route": va = a.originCity; vb = b.originCity; break;
+                case "carrier": va = a.carrier; vb = b.carrier; break;
+                case "equipment": va = a.equipment; vb = b.equipment; break;
+                case "pickup": va = a.pickupDate + a.pickupTime; vb = b.pickupDate + b.pickupTime; break;
+                case "delivery": va = a.deliveryDate + a.deliveryTime; vb = b.deliveryDate + b.deliveryTime; break;
+                case "rate": return (a.rate - b.rate) * dir;
+                case "margin":
+                    va = a.margin === null ? -999 : a.margin;
+                    vb = b.margin === null ? -999 : b.margin;
+                    return (va - vb) * dir;
+                case "updated": va = a.updated; vb = b.updated; break;
+                default: return 0;
+            }
+            if (typeof va === "string") {
+                return va.localeCompare(vb) * dir;
+            }
+            return 0;
+        });
+    }
+
+    return result;
+}
+
+function getStatusCount(status) {
+    return LOADS.filter(function(l) { return l.status === status; }).length;
+}
+
+/* ========================================
+   DOM REFERENCES (set during build)
+   ======================================== */
+var themeBtn = null;
+var tableBody = null;
+var bulkBar = null;
+var bulkCountEl = null;
+var pageInfoEl = null;
+var searchInput = null;
+var detailPanel = null;
+var detailEmpty = null;
+var detailContent = null;
+var headerCheckbox = null;
+var navItems = {};
+
+/* ========================================
+   BUILD LEFT PANE
+   ======================================== */
+function buildLeftPane() {
+    var pane = el("aside", "left-pane");
+
+    /* Logo */
+    var logoSection = el("div", "logo-section");
+    var logoIcon = el("div", "logo-icon");
+    logoIcon.appendChild(icon("local_shipping"));
+    logoSection.appendChild(logoIcon);
+    var logoText = el("div", "logo-text", "Ultra TMS");
+    logoSection.appendChild(logoText);
+    pane.appendChild(logoSection);
+
+    /* Nav list */
+    var navList = el("nav", "nav-list");
+
+    function addNavItem(label, type, color, iconName, count) {
+        var item = el("div", "nav-item" + (type === "atrisk" ? " at-risk-item" : ""));
+        item.setAttribute("data-filter", label);
+
+        if (color) {
+            var dot = el("span", "nav-dot");
+            dot.style.background = color;
+            item.appendChild(dot);
+        } else if (iconName) {
+            var ic = icon(iconName, "nav-icon");
+            item.appendChild(ic);
+        }
+
+        var lbl = el("span", "nav-label", label);
+        item.appendChild(lbl);
+
+        if (count !== undefined) {
+            var cnt = el("span", "nav-count", String(count));
+            item.appendChild(cnt);
+        }
+
+        item.addEventListener("click", function() {
+            state.activeFilter = label;
+            state.checkedIds.clear();
+            updateNavActive();
+            renderTable();
+            updateBulkBar();
+        });
+
+        navList.appendChild(item);
+        navItems[label] = item;
+        return item;
+    }
+
+    addNavItem("All Loads", "all", null, "inbox", LOADS.length);
+
+    var d1 = el("div", "nav-divider");
+    navList.appendChild(d1);
+
+    addNavItem("In Transit", "status", STATUS_COLORS["In Transit"], null, getStatusCount("In Transit"));
+    addNavItem("Unassigned", "status", STATUS_COLORS["Unassigned"], null, getStatusCount("Unassigned"));
+    addNavItem("Tendered", "status", STATUS_COLORS["Tendered"], null, getStatusCount("Tendered"));
+    addNavItem("Dispatched", "status", STATUS_COLORS["Dispatched"], null, getStatusCount("Dispatched"));
+    addNavItem("Delivered", "status", STATUS_COLORS["Delivered"], null, getStatusCount("Delivered"));
+
+    var d2 = el("div", "nav-divider");
+    navList.appendChild(d2);
+
+    addNavItem("At Risk", "atrisk", STATUS_COLORS["At Risk"], null, AT_RISK_IDS.length);
+    addNavItem("Starred", "special", null, "star", STARRED_IDS.length);
+    addNavItem("My Loads", "special", null, "person", MY_LOAD_IDS.length);
+
+    pane.appendChild(navList);
+
+    /* Theme toggle */
+    var toggleArea = el("div", "theme-toggle-area");
+    themeBtn = el("button", "theme-toggle-btn");
+    themeBtn.addEventListener("click", toggleTheme);
+    toggleArea.appendChild(themeBtn);
+    pane.appendChild(toggleArea);
+
+    return pane;
+}
+
+function updateNavActive() {
+    Object.keys(navItems).forEach(function(key) {
+        if (key === state.activeFilter) {
+            navItems[key].classList.add("active");
+        } else {
+            navItems[key].classList.remove("active");
+        }
+    });
+}
+
+/* ========================================
+   BUILD CENTER PANE
+   ======================================== */
+function buildCenterPane() {
+    var pane = el("main", "center-pane");
+
+    /* Header */
+    var header = el("div", "center-header");
+
+    var title = el("h1", "center-title", "Dispatch Board");
+    header.appendChild(title);
+
+    var searchBox = el("div", "search-box");
+    searchBox.appendChild(icon("search"));
+    searchInput = el("input", "search-input");
+    searchInput.type = "text";
+    searchInput.placeholder = "Search loads, routes, carriers...";
+    searchInput.addEventListener("input", function() {
+        state.searchQuery = searchInput.value;
+        renderTable();
+    });
+    searchBox.appendChild(searchInput);
+    header.appendChild(searchBox);
+
+    var filterGroup = el("div", "filter-group");
+
+    var filters = [
+        { label: "Status", ic: "filter_list" },
+        { label: "Date Range", ic: "date_range" },
+        { label: "Equipment", ic: "local_shipping" }
+    ];
+    filters.forEach(function(f) {
+        var btn = el("button", "filter-btn");
+        btn.appendChild(icon(f.ic));
+        btn.appendChild(document.createTextNode(" " + f.label));
+        filterGroup.appendChild(btn);
+    });
+    header.appendChild(filterGroup);
+
+    var newBtn = el("button", "new-load-btn");
+    newBtn.appendChild(icon("add"));
+    newBtn.appendChild(document.createTextNode(" New Load"));
+    header.appendChild(newBtn);
+
+    pane.appendChild(header);
+
+    /* Stats Strip */
+    var stats = el("div", "stats-strip");
+    var totalRevenue = LOADS.reduce(function(s, l) { return s + l.rate; }, 0);
+    var inTransitCount = getStatusCount("In Transit");
+    var statsData = [
+        { label: "Total", value: String(LOADS.length) },
+        { label: "In Transit", value: String(inTransitCount) },
+        { label: "On-Time", value: "94.2%" },
+        { label: "Revenue", value: "$" + (totalRevenue / 1000000).toFixed(2) + "M" }
+    ];
+    statsData.forEach(function(s, i) {
+        if (i > 0) {
+            stats.appendChild(el("span", "stat-dot"));
+        }
+        var item = el("span", "stat-item");
+        item.appendChild(el("span", "stat-label", s.label + ":"));
+        item.appendChild(el("span", "stat-value", " " + s.value));
+        stats.appendChild(item);
+    });
+    pane.appendChild(stats);
+
+    /* Bulk Actions */
+    bulkBar = el("div", "bulk-bar");
+    bulkCountEl = el("span", "bulk-count", "0 selected");
+    bulkBar.appendChild(bulkCountEl);
+
+    var bulkActions = [
+        { label: "Assign", ic: "person_add" },
+        { label: "Tender", ic: "send" },
+        { label: "Export", ic: "download" }
+    ];
+    bulkActions.forEach(function(a) {
+        var btn = el("button", "bulk-btn");
+        btn.appendChild(icon(a.ic));
+        btn.appendChild(document.createTextNode(" " + a.label));
+        bulkBar.appendChild(btn);
+    });
+
+    var clearBtn = el("button", "bulk-clear", "Clear selection");
+    clearBtn.addEventListener("click", function() {
+        state.checkedIds.clear();
+        renderTable();
+        updateBulkBar();
+    });
+    bulkBar.appendChild(clearBtn);
+    pane.appendChild(bulkBar);
+
+    /* Table */
+    var tableContainer = el("div", "table-container");
+    var table = el("table", "data-table");
+
+    /* thead */
+    var thead = el("thead");
+    var tr = el("tr");
+
+    var columns = [
+        { key: "check", label: "", cls: "col-check", sortable: false },
+        { key: "load", label: "Load #", cls: "col-load", sortable: true },
+        { key: "status", label: "Status", cls: "col-status", sortable: true },
+        { key: "route", label: "Route", cls: "col-route", sortable: true },
+        { key: "carrier", label: "Carrier / Driver", cls: "col-carrier", sortable: true },
+        { key: "equipment", label: "Equipment", cls: "col-equip", sortable: true },
+        { key: "pickup", label: "Pickup", cls: "col-pickup", sortable: true },
+        { key: "delivery", label: "Delivery", cls: "col-delivery", sortable: true },
+        { key: "rate", label: "Rate", cls: "col-rate", sortable: true },
+        { key: "margin", label: "Margin", cls: "col-margin", sortable: true },
+        { key: "updated", label: "Updated", cls: "col-updated", sortable: true }
+    ];
+
+    columns.forEach(function(c) {
+        var th = el("th", c.cls);
+        if (c.key === "check") {
+            headerCheckbox = document.createElement("input");
+            headerCheckbox.type = "checkbox";
+            headerCheckbox.style.cssText = "width:15px;height:15px;cursor:pointer;accent-color:var(--sapphire)";
+            headerCheckbox.addEventListener("change", function() {
+                var loads = getFilteredLoads();
+                if (headerCheckbox.checked) {
+                    loads.forEach(function(l) { state.checkedIds.add(l.id); });
+                } else {
+                    state.checkedIds.clear();
+                }
+                renderTable();
+                updateBulkBar();
+            });
+            th.appendChild(headerCheckbox);
+        } else {
+            var inner = el("span", "th-inner");
+            inner.appendChild(document.createTextNode(c.label));
+            if (c.sortable) {
+                var arrow = icon("arrow_upward", "sort-arrow");
+                arrow.setAttribute("data-col", c.key);
+                inner.appendChild(arrow);
+            }
+            th.appendChild(inner);
+            if (c.sortable) {
+                th.addEventListener("click", function() {
+                    if (state.sortColumn === c.key) {
+                        state.sortDirection = state.sortDirection === "asc" ? "desc" : "asc";
+                    } else {
+                        state.sortColumn = c.key;
+                        state.sortDirection = "asc";
+                    }
+                    renderTable();
+                    updateSortArrows();
+                });
+            }
+        }
+        tr.appendChild(th);
+    });
+    thead.appendChild(tr);
+    table.appendChild(thead);
+
+    /* tbody */
+    tableBody = el("tbody");
+    table.appendChild(tableBody);
+    tableContainer.appendChild(table);
+    pane.appendChild(tableContainer);
+
+    /* Pagination */
+    var pagBar = el("div", "pagination-bar");
+    pageInfoEl = el("span", "page-info", "Showing 1-25 of 25");
+    pagBar.appendChild(pageInfoEl);
+
+    var pageBtns = el("div", "page-buttons");
+    var prevBtn = el("button", "page-btn");
+    prevBtn.appendChild(icon("chevron_left"));
+    pageBtns.appendChild(prevBtn);
+
+    var p1 = el("button", "page-btn active", "1");
+    pageBtns.appendChild(p1);
+
+    var nextBtn = el("button", "page-btn");
+    nextBtn.appendChild(icon("chevron_right"));
+    pageBtns.appendChild(nextBtn);
+
+    pagBar.appendChild(pageBtns);
+    pane.appendChild(pagBar);
+
+    return pane;
+}
+
+function updateSortArrows() {
+    var arrows = document.querySelectorAll(".sort-arrow");
+    for (var i = 0; i < arrows.length; i++) {
+        var arrow = arrows[i];
+        var col = arrow.getAttribute("data-col");
+        if (col === state.sortColumn) {
+            arrow.classList.add("active");
+            if (state.sortDirection === "desc") {
+                arrow.classList.add("desc");
+            } else {
+                arrow.classList.remove("desc");
+            }
+        } else {
+            arrow.classList.remove("active");
+            arrow.classList.remove("desc");
+        }
+    }
+}
+
+function updateBulkBar() {
+    var count = state.checkedIds.size;
+    if (count > 0) {
+        bulkBar.classList.add("visible");
+        bulkCountEl.textContent = count + " selected";
+    } else {
+        bulkBar.classList.remove("visible");
+    }
+}
+
+function renderTable() {
+    var loads = getFilteredLoads();
+    state.filteredLoads = loads;
+
+    /* Clear */
+    while (tableBody.firstChild) {
+        tableBody.removeChild(tableBody.firstChild);
+    }
+
+    loads.forEach(function(load) {
+        var tr = el("tr");
+        if (load.id === state.selectedLoadId) {
+            tr.classList.add("selected");
+        }
+
+        /* Checkbox */
+        var tdCheck = el("td", "cell-check");
+        var cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.checked = state.checkedIds.has(load.id);
+        cb.addEventListener("click", function(e) {
+            e.stopPropagation();
+        });
+        cb.addEventListener("change", function() {
+            if (cb.checked) {
+                state.checkedIds.add(load.id);
+            } else {
+                state.checkedIds.delete(load.id);
+            }
+            updateBulkBar();
+        });
+        tdCheck.appendChild(cb);
+        tr.appendChild(tdCheck);
+
+        /* Load # */
+        var tdLoad = el("td");
+        var loadLink = el("span", "load-number", load.num);
+        tdLoad.appendChild(loadLink);
+        tr.appendChild(tdLoad);
+
+        /* Status */
+        var tdStatus = el("td");
+        var statusWrap = el("div", "status-cell");
+        var sDot = el("span", "status-dot-sm");
+        sDot.style.background = STATUS_COLORS[load.status] || "#999";
+        statusWrap.appendChild(sDot);
+        var sText = el("span", "status-text", load.status);
+        sText.style.color = STATUS_COLORS[load.status] || "var(--text-secondary)";
+        statusWrap.appendChild(sText);
+        tdStatus.appendChild(statusWrap);
+        tr.appendChild(tdStatus);
+
+        /* Route */
+        var tdRoute = el("td");
+        var routeMain = el("div", "route-main", load.originCity + ", " + load.originState + " \u2192 " + load.destCity + ", " + load.destState);
+        tdRoute.appendChild(routeMain);
+        var routeMiles = el("div", "route-miles", load.miles.toLocaleString() + " mi");
+        tdRoute.appendChild(routeMiles);
+        tr.appendChild(tdRoute);
+
+        /* Carrier / Driver */
+        var tdCarrier = el("td");
+        var carrierName = el("div", "carrier-name", load.carrier);
+        tdCarrier.appendChild(carrierName);
+        var driverName = el("div", "driver-name", load.driver);
+        tdCarrier.appendChild(driverName);
+        tr.appendChild(tdCarrier);
+
+        /* Equipment */
+        var tdEquip = el("td");
+        var badge = el("span", "equip-badge", load.equipment);
+        tdEquip.appendChild(badge);
+        tr.appendChild(tdEquip);
+
+        /* Pickup */
+        var tdPickup = el("td");
+        tdPickup.appendChild(el("div", "date-main", load.pickupDate));
+        tdPickup.appendChild(el("div", "time-sub", load.pickupTime));
+        tr.appendChild(tdPickup);
+
+        /* Delivery */
+        var tdDel = el("td");
+        tdDel.appendChild(el("div", "date-main", load.deliveryDate));
+        tdDel.appendChild(el("div", "time-sub", load.deliveryTime));
+        tr.appendChild(tdDel);
+
+        /* Rate */
+        var tdRate = el("td", "col-rate");
+        var rateVal = el("span", "rate-value", formatCurrency(load.rate));
+        tdRate.appendChild(rateVal);
+        tr.appendChild(tdRate);
+
+        /* Margin */
+        var tdMargin = el("td", "col-margin");
+        if (load.margin !== null) {
+            var mCls = load.margin >= 0 ? "margin-positive" : "margin-negative";
+            tdMargin.appendChild(el("span", mCls, load.margin.toFixed(1) + "%"));
+        } else {
+            tdMargin.appendChild(el("span", "margin-empty", "\u2014"));
+        }
+        tr.appendChild(tdMargin);
+
+        /* Updated */
+        var tdUpdated = el("td");
+        tdUpdated.appendChild(el("span", "updated-text", load.updated));
+        tr.appendChild(tdUpdated);
+
+        /* Row click */
+        tr.addEventListener("click", function() {
+            state.selectedLoadId = load.id;
+            renderTable();
+            renderDetail(load);
+        });
+
+        tableBody.appendChild(tr);
+    });
+
+    /* Update page info */
+    if (pageInfoEl) {
+        var total = loads.length;
+        pageInfoEl.textContent = "Showing 1-" + total + " of " + total;
+    }
+}
+
+/* ========================================
+   BUILD RIGHT PANE
+   ======================================== */
+function buildRightPane() {
+    var pane = el("aside", "right-pane");
+
+    /* Empty state */
+    detailEmpty = el("div", "detail-empty");
+    detailEmpty.appendChild(icon("description"));
+    detailEmpty.appendChild(el("div", "detail-empty-text", "Select a load to view details"));
+    pane.appendChild(detailEmpty);
+
+    /* Detail content wrapper (hidden initially) */
+    detailContent = el("div");
+    detailContent.style.display = "none";
+    detailContent.style.cssText = "display:none;flex-direction:column;height:100%";
+    pane.appendChild(detailContent);
+
+    detailPanel = pane;
+    return pane;
+}
+
+function renderDetail(load) {
+    if (!load) {
+        detailEmpty.style.display = "flex";
+        detailContent.style.display = "none";
+        return;
+    }
+
+    detailEmpty.style.display = "none";
+    detailContent.style.display = "flex";
+
+    /* Clear */
+    while (detailContent.firstChild) {
+        detailContent.removeChild(detailContent.firstChild);
+    }
+
+    /* Header */
+    var header = el("div", "detail-header");
+    header.appendChild(el("span", "detail-load-num", load.num));
+
+    var badge = el("span", "detail-status-badge", load.status);
+    badge.style.background = STATUS_COLORS[load.status] || "#999";
+    header.appendChild(badge);
+
+    var actions = el("div", "detail-actions");
+
+    var starBtn = el("button", "detail-action-btn" + (STARRED_IDS.indexOf(load.id) !== -1 ? " starred" : ""));
+    starBtn.appendChild(icon(STARRED_IDS.indexOf(load.id) !== -1 ? "star" : "star_border"));
+    actions.appendChild(starBtn);
+
+    var flagBtn = el("button", "detail-action-btn");
+    flagBtn.appendChild(icon("flag"));
+    actions.appendChild(flagBtn);
+
+    var closeBtn = el("button", "detail-action-btn");
+    closeBtn.appendChild(icon("close"));
+    closeBtn.addEventListener("click", function() {
+        state.selectedLoadId = null;
+        renderTable();
+        detailEmpty.style.display = "flex";
+        detailContent.style.display = "none";
+    });
+    actions.appendChild(closeBtn);
+    header.appendChild(actions);
+    detailContent.appendChild(header);
+
+    /* Tabs */
+    var tabBar = el("div", "detail-tabs");
+    var tabs = ["Overview", "Timeline", "Finance", "Docs"];
+    var tabEls = [];
+    var panels = [];
+
+    tabs.forEach(function(tabName, index) {
+        var tab = el("div", "detail-tab" + (index === 0 ? " active" : ""), tabName);
+        tab.addEventListener("click", function() {
+            tabEls.forEach(function(t) { t.classList.remove("active"); });
+            panels.forEach(function(p) { p.classList.remove("active"); });
+            tab.classList.add("active");
+            panels[index].classList.add("active");
+            state.activeTab = tabName.toLowerCase();
+        });
+        tabEls.push(tab);
+        tabBar.appendChild(tab);
+    });
+    detailContent.appendChild(tabBar);
+
+    /* Content area */
+    var contentArea = el("div", "detail-content");
+
+    /* Overview panel */
+    var overviewPanel = el("div", "tab-panel active");
+    overviewPanel.appendChild(buildOverviewTab(load));
+    panels.push(overviewPanel);
+    contentArea.appendChild(overviewPanel);
+
+    /* Timeline panel */
+    var timelinePanel = el("div", "tab-panel");
+    timelinePanel.appendChild(buildTimelineTab(load));
+    panels.push(timelinePanel);
+    contentArea.appendChild(timelinePanel);
+
+    /* Finance panel */
+    var financePanel = el("div", "tab-panel");
+    financePanel.appendChild(buildFinanceTab(load));
+    panels.push(financePanel);
+    contentArea.appendChild(financePanel);
+
+    /* Docs panel */
+    var docsPanel = el("div", "tab-panel");
+    docsPanel.appendChild(buildDocsTab(load));
+    panels.push(docsPanel);
+    contentArea.appendChild(docsPanel);
+
+    detailContent.appendChild(contentArea);
+}
+
+function buildOverviewTab(load) {
+    var frag = document.createDocumentFragment();
+
+    /* Route card */
+    var routeCard = el("div", "detail-card");
+    routeCard.appendChild(el("div", "detail-card-title", "Route"));
+
+    var routeVisual = el("div", "route-visual");
+
+    var routeLine = el("div", "route-line");
+    routeLine.appendChild(el("div", "route-dot-top"));
+    routeLine.appendChild(el("div", "route-connector"));
+    routeLine.appendChild(el("div", "route-dot-bottom"));
+    routeVisual.appendChild(routeLine);
+
+    var routeDetails = el("div", "route-details");
+
+    var origin = el("div");
+    origin.appendChild(el("div", "route-point-label", "Origin"));
+    origin.appendChild(el("div", "route-point-city", load.originCity + ", " + load.originState));
+    origin.appendChild(el("div", "route-point-facility", load.carrier !== "\u2014" ? load.carrier + " Warehouse" : "TBD Facility"));
+    origin.appendChild(el("div", "route-point-time", load.pickupDate + " at " + load.pickupTime));
+    routeDetails.appendChild(origin);
+
+    var dest = el("div");
+    dest.appendChild(el("div", "route-point-label", "Destination"));
+    dest.appendChild(el("div", "route-point-city", load.destCity + ", " + load.destState));
+    dest.appendChild(el("div", "route-point-facility", "Receiving Dock"));
+    dest.appendChild(el("div", "route-point-time", load.deliveryDate + " at " + load.deliveryTime));
+    routeDetails.appendChild(dest);
+
+    routeVisual.appendChild(routeDetails);
+    routeCard.appendChild(routeVisual);
+
+    var routeMeta = el("div", "route-meta");
+    var mi = el("div", "route-meta-item");
+    mi.appendChild(el("div", "route-meta-label", "Distance"));
+    mi.appendChild(el("div", "route-meta-value", load.miles.toLocaleString() + " mi"));
+    routeMeta.appendChild(mi);
+
+    var transitHours = Math.round(load.miles / 50);
+    var et = el("div", "route-meta-item");
+    et.appendChild(el("div", "route-meta-label", "Est. Transit"));
+    et.appendChild(el("div", "route-meta-value", transitHours + " hrs"));
+    routeMeta.appendChild(et);
+
+    var rpm = el("div", "route-meta-item");
+    rpm.appendChild(el("div", "route-meta-label", "Rate/Mile"));
+    rpm.appendChild(el("div", "route-meta-value", "$" + (load.rate / load.miles).toFixed(2)));
+    routeMeta.appendChild(rpm);
+
+    routeCard.appendChild(routeMeta);
+    frag.appendChild(routeCard);
+
+    /* Carrier card */
+    var carrierCard = el("div", "detail-card");
+    carrierCard.appendChild(el("div", "detail-card-title", "Carrier & Driver"));
+
+    var carrierRows = [
+        { label: "Company", value: load.carrier },
+        { label: "Driver", value: load.driver },
+        { label: "Phone", value: load.driver !== "\u2014" ? "(555) " + Math.floor(100 + Math.random() * 900) + "-" + Math.floor(1000 + Math.random() * 9000) : "\u2014" },
+        { label: "Truck #", value: load.driver !== "\u2014" ? "T-" + Math.floor(1000 + Math.random() * 9000) : "\u2014" },
+        { label: "Trailer #", value: load.driver !== "\u2014" ? "TR-" + Math.floor(1000 + Math.random() * 9000) : "\u2014" }
+    ];
+
+    carrierRows.forEach(function(r) {
+        var row = el("div", "info-row");
+        row.appendChild(el("span", "info-label", r.label));
+        row.appendChild(el("span", "info-value", r.value));
+        carrierCard.appendChild(row);
+    });
+    frag.appendChild(carrierCard);
+
+    /* Equipment card */
+    var equipCard = el("div", "detail-card");
+    equipCard.appendChild(el("div", "detail-card-title", "Equipment"));
+    var eqRow = el("div", "info-row");
+    eqRow.appendChild(el("span", "info-label", "Type"));
+    var eqBadge = el("span", "equip-badge", load.equipment);
+    eqRow.appendChild(eqBadge);
+    equipCard.appendChild(eqRow);
+    frag.appendChild(equipCard);
+
+    /* Customer card */
+    var custCard = el("div", "detail-card");
+    custCard.appendChild(el("div", "detail-card-title", "Customer"));
+    var custRows = [
+        { label: "Company", value: "Acme Distribution Inc." },
+        { label: "Contact", value: "John Smith" },
+        { label: "PO #", value: "PO-" + load.num.split("-").pop() }
+    ];
+    custRows.forEach(function(r) {
+        var row = el("div", "info-row");
+        row.appendChild(el("span", "info-label", r.label));
+        row.appendChild(el("span", "info-value", r.value));
+        custCard.appendChild(row);
+    });
+    frag.appendChild(custCard);
+
+    return frag;
+}
+
+function buildTimelineTab(load) {
+    var frag = document.createDocumentFragment();
+    var feed = el("div", "timeline-feed");
+    feed.appendChild(el("div", "timeline-line"));
+
+    var events = [];
+
+    /* Build timeline based on status */
+    events.push({ color: "#6B7280", time: load.pickupDate + " 02:00", desc: "Load created in system" });
+
+    if (load.status === "Unassigned") {
+        events.push({ color: STATUS_COLORS["Unassigned"], time: load.pickupDate + " 02:15", desc: "Awaiting carrier assignment" });
+    }
+
+    if (["Tendered", "Dispatched", "In Transit", "Delivered"].indexOf(load.status) !== -1) {
+        events.push({ color: STATUS_COLORS["Tendered"], time: load.pickupDate + " 03:00", desc: "Tendered to " + load.carrier });
+    }
+
+    if (["Dispatched", "In Transit", "Delivered"].indexOf(load.status) !== -1) {
+        events.push({ color: STATUS_COLORS["Dispatched"], time: load.pickupDate + " 04:00", desc: "Carrier accepted \u2014 " + (load.driver !== "\u2014" ? load.driver + " assigned" : "driver TBD") });
+        events.push({ color: STATUS_COLORS["Dispatched"], time: load.pickupDate + " 05:30", desc: "Dispatched for pickup" });
+    }
+
+    if (["In Transit", "Delivered"].indexOf(load.status) !== -1) {
+        events.push({ color: STATUS_COLORS["In Transit"], time: load.pickupDate + " " + load.pickupTime, desc: "Picked up at " + load.originCity + ", " + load.originState });
+        events.push({ color: STATUS_COLORS["In Transit"], time: load.pickupDate + " 14:00", desc: "GPS update: En route, " + Math.round(load.miles * 0.4) + " mi completed" });
+    }
+
+    if (load.status === "Delivered") {
+        events.push({ color: STATUS_COLORS["Delivered"], time: load.deliveryDate + " " + load.deliveryTime, desc: "Delivered at " + load.destCity + ", " + load.destState });
+        events.push({ color: "#10B981", time: load.deliveryDate + " " + load.deliveryTime, desc: "POD signed and uploaded" });
+    }
+
+    events.forEach(function(ev) {
+        var item = el("div", "timeline-item");
+        var dot = el("div", "timeline-dot");
+        dot.style.background = ev.color;
+        item.appendChild(dot);
+        item.appendChild(el("div", "timeline-time", ev.time));
+        item.appendChild(el("div", "timeline-desc", ev.desc));
+        feed.appendChild(item);
+    });
+
+    frag.appendChild(feed);
+    return frag;
+}
+
+function buildFinanceTab(load) {
+    var frag = document.createDocumentFragment();
+    var card = el("div", "detail-card");
+    card.appendChild(el("div", "detail-card-title", "Rate Breakdown"));
+
+    var lineHaul = Math.round(load.rate * 0.82);
+    var fuel = Math.round(load.rate * 0.12);
+    var accessorials = load.rate - lineHaul - fuel;
+
+    var lines = [
+        { label: "Line Haul", value: formatCurrency(lineHaul) },
+        { label: "Fuel Surcharge", value: formatCurrency(fuel) },
+        { label: "Accessorials", value: formatCurrency(accessorials) }
+    ];
+
+    lines.forEach(function(l) {
+        var row = el("div", "finance-line");
+        row.appendChild(el("span", "finance-label", l.label));
+        row.appendChild(el("span", "finance-value", l.value));
+        card.appendChild(row);
+    });
+
+    var totalRow = el("div", "finance-line finance-total");
+    totalRow.appendChild(el("span", "finance-label", "Total"));
+    totalRow.appendChild(el("span", "finance-value", formatCurrency(load.rate)));
+    card.appendChild(totalRow);
+
+    frag.appendChild(card);
+
+    /* Margin */
+    if (load.margin !== null) {
+        var marginCard = el("div", "finance-margin");
+        marginCard.appendChild(el("div", "finance-margin-title", "Margin Analysis"));
+
+        var marginAmt = Math.round(load.rate * load.margin / 100);
+        var cost = load.rate - marginAmt;
+
+        var mRows = [
+            { label: "Revenue", value: formatCurrency(load.rate) },
+            { label: "Carrier Cost", value: formatCurrency(cost) },
+            { label: "Gross Margin", value: formatCurrency(marginAmt) + " (" + load.margin.toFixed(1) + "%)" }
+        ];
+
+        mRows.forEach(function(r) {
+            var row = el("div", "finance-margin-row");
+            row.appendChild(el("span", "finance-margin-label", r.label));
+            row.appendChild(el("span", "finance-margin-value", r.value));
+            marginCard.appendChild(row);
+        });
+
+        frag.appendChild(marginCard);
+    }
+
+    /* Payment status */
+    var payment = el("div", "payment-status");
+    var payDot = el("div", "payment-dot");
+    var payText;
+    if (load.status === "Delivered") {
+        payDot.style.background = "#10B981";
+        payText = "Payment: Invoiced";
+    } else {
+        payDot.style.background = "#F59E0B";
+        payText = "Payment: Pending delivery";
+    }
+    payment.appendChild(payDot);
+    payment.appendChild(el("span", "payment-text", payText));
+    frag.appendChild(payment);
+
+    return frag;
+}
+
+function buildDocsTab(load) {
+    var frag = document.createDocumentFragment();
+
+    var isDelivered = load.status === "Delivered";
+    var isInTransit = load.status === "In Transit";
+
+    var docs = [
+        { name: "Bill of Lading (BOL)", status: (load.status === "Unassigned") ? "missing" : "complete", statusText: (load.status === "Unassigned") ? "Missing" : "Uploaded" },
+        { name: "Proof of Delivery (POD)", status: isDelivered ? "complete" : (isInTransit ? "pending" : "missing"), statusText: isDelivered ? "Uploaded" : (isInTransit ? "Pending delivery" : "Not available") },
+        { name: "Rate Confirmation", status: (load.status === "Unassigned") ? "missing" : "complete", statusText: (load.status === "Unassigned") ? "Missing" : "Signed" },
+        { name: "Insurance Certificate", status: (load.carrier !== "\u2014") ? "complete" : "missing", statusText: (load.carrier !== "\u2014") ? "Verified" : "Missing" }
+    ];
+
+    var completeCount = docs.filter(function(d) { return d.status === "complete"; }).length;
+
+    docs.forEach(function(d) {
+        var item = el("div", "doc-item");
+
+        var iconWrap = el("div", "doc-icon-wrap " + d.status);
+        var iconName = d.status === "complete" ? "check_circle" : (d.status === "pending" ? "schedule" : "cancel");
+        iconWrap.appendChild(icon(iconName));
+        item.appendChild(iconWrap);
+
+        var info = el("div", "doc-info");
+        info.appendChild(el("div", "doc-name", d.name));
+        info.appendChild(el("div", "doc-status-text", d.statusText));
+        item.appendChild(info);
+
+        frag.appendChild(item);
+    });
+
+    /* Progress bar */
+    var progress = el("div", "doc-progress");
+    var pHeader = el("div", "doc-progress-header");
+    pHeader.appendChild(el("span", "doc-progress-label", "Document Completion"));
+    pHeader.appendChild(el("span", "doc-progress-count", completeCount + "/4"));
+    progress.appendChild(pHeader);
+
+    var pBar = el("div", "doc-progress-bar");
+    var pFill = el("div", "doc-progress-fill");
+    pFill.style.width = (completeCount / 4 * 100) + "%";
+    pBar.appendChild(pFill);
+    progress.appendChild(pBar);
+
+    frag.appendChild(progress);
+    return frag;
+}
+
+/* ========================================
+   INITIALIZATION
+   ======================================== */
+function init() {
+    /* Apply saved theme */
+    setTheme(getTheme());
+
+    /* Build shell */
+    var shell = el("div", "app-shell");
+
+    shell.appendChild(buildLeftPane());
+    shell.appendChild(buildCenterPane());
+    shell.appendChild(buildRightPane());
+
+    document.body.appendChild(shell);
+
+    /* Set initial state */
+    updateThemeButton();
+    updateNavActive();
+    renderTable();
+
+    /* Select first load by default */
+    if (LOADS.length > 0) {
+        state.selectedLoadId = LOADS[0].id;
+        renderTable();
+        renderDetail(LOADS[0]);
+    }
+}
+
+/* Start */
+init();
+
+})();
+</script>
+</body>
+</html>

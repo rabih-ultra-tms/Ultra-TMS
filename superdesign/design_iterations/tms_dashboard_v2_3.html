@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ultra TMS Dashboard — Activity Feed + Metrics Grid</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: { sans: ['Inter', 'sans-serif'] },
+      colors: {
+        primary: '#4f46e5',
+        sidebar: '#1a1f36',
+        'sidebar-active': '#252b45',
+        surface: '#f0f1f5',
+        card: '#ffffff',
+        border: '#e2e4ea',
+        'txt-primary': '#1e2235',
+        'txt-secondary': '#6b7194',
+        'txt-muted': '#9ca3c0',
+        success: '#10b981',
+        warning: '#f59e0b',
+        danger: '#ef4444',
+        info: '#06b6d4',
+      }
+    }
+  }
+}
+</script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; }
+
+  /* Circular progress */
+  .circular-progress {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    position: relative;
+  }
+  .circular-progress::before {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border-radius: 50%;
+    background: white;
+  }
+  .circular-progress .value {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    z-index: 1;
+  }
+
+  /* Sparkline bars */
+  .sparkline {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 32px;
+  }
+  .sparkline .bar {
+    flex: 1;
+    background: #4f46e5;
+    border-radius: 2px 2px 0 0;
+    opacity: 0.3;
+    min-width: 4px;
+  }
+  .sparkline .bar.active { opacity: 1; }
+</style>
+</head>
+<body class="bg-surface text-txt-primary">
+<div class="flex h-screen overflow-hidden">
+
+  <!-- Sidebar -->
+  <aside class="w-[220px] bg-sidebar flex flex-col flex-shrink-0">
+    <div class="flex items-center gap-2.5 px-5 h-16 border-b border-white/10">
+      <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </div>
+      <span class="text-white font-semibold text-base tracking-tight">Ultra TMS</span>
+    </div>
+    <nav class="flex-1 py-4 px-3 space-y-1">
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-md bg-sidebar-active text-white text-sm font-medium border-l-[3px] border-primary -ml-[3px]">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-txt-muted hover:text-white hover:bg-sidebar-active text-sm transition-colors">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M9 17H5a2 2 0 00-2 2v0a2 2 0 002 2h14a2 2 0 002-2v0a2 2 0 00-2-2h-4m-6-4l3-8 3 8m-6-4h6"/></svg>
+        Dispatch
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-txt-muted hover:text-white hover:bg-sidebar-active text-sm transition-colors">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M20 8H4m16 0v10a2 2 0 01-2 2H6a2 2 0 01-2-2V8m16 0l-2-4H6L4 8m6 4h4"/></svg>
+        Loads
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-txt-muted hover:text-white hover:bg-sidebar-active text-sm transition-colors">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zm10 0a2 2 0 11-4 0 2 2 0 014 0z"/><path d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10m0 0h10m0 0h1l3-3V8h-4"/></svg>
+        Carriers
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-txt-muted hover:text-white hover:bg-sidebar-active text-sm transition-colors">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2m8-10a4 4 0 100-8 4 4 0 000 8zm10 10v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"/></svg>
+        Customers
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-txt-muted hover:text-white hover:bg-sidebar-active text-sm transition-colors">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M9 12h6m-3-3v6m-7 4h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        Quotes
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-txt-muted hover:text-white hover:bg-sidebar-active text-sm transition-colors">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
+        Accounting
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-txt-muted hover:text-white hover:bg-sidebar-active text-sm transition-colors">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0h6m0 0v-4a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        Reports
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-txt-muted hover:text-white hover:bg-sidebar-active text-sm transition-colors">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.573-1.066z"/><circle cx="12" cy="12" r="3"/></svg>
+        Settings
+      </a>
+    </nav>
+    <div class="px-4 py-4 border-t border-white/10 flex items-center gap-3">
+      <div class="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white text-sm font-semibold">RK</div>
+      <div class="flex-1 min-w-0">
+        <div class="text-white text-sm font-medium truncate">Rabih K.</div>
+        <div class="text-txt-muted text-xs truncate">Admin</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between px-6 h-14 bg-card border-b border-border flex-shrink-0">
+      <div>
+        <h1 class="text-lg font-semibold text-txt-primary">Dashboard</h1>
+        <p class="text-xs text-txt-muted -mt-0.5">Wednesday, February 18, 2026</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <button class="flex items-center gap-1.5 text-sm text-txt-secondary hover:text-primary transition-colors px-3 py-1.5 rounded-lg border border-border hover:border-primary/30">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Refresh
+        </button>
+        <button class="flex items-center gap-1.5 text-sm text-white bg-primary hover:bg-primary/90 transition-colors px-3 py-1.5 rounded-lg font-medium">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 5v14m-7-7h14"/></svg>
+          New Load
+        </button>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="flex-1 overflow-y-auto p-6">
+
+      <!-- Top: 3x2 Metrics Grid -->
+      <div class="grid grid-cols-3 gap-4 mb-6">
+
+        <!-- Active Loads -->
+        <div class="bg-card rounded-xl border border-border p-4">
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-3">
+                <div class="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#4f46e5" stroke-width="2"><path d="M20 8H4m16 0v10a2 2 0 01-2 2H6a2 2 0 01-2-2V8m16 0l-2-4H6L4 8m6 4h4"/></svg>
+                </div>
+                <span class="text-[10px] font-semibold text-txt-muted uppercase tracking-widest">Active Loads</span>
+              </div>
+              <div class="text-3xl font-bold text-txt-primary">247</div>
+              <div class="flex items-center gap-1 mt-1">
+                <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#10b981" stroke-width="2.5"><path d="M5 15l7-7 7 7"/></svg>
+                <span class="text-xs font-medium text-success">+12</span>
+                <span class="text-xs text-txt-muted">from yesterday</span>
+              </div>
+            </div>
+            <!-- Sparkline -->
+            <div class="sparkline" style="width: 80px;">
+              <div class="bar" style="height: 45%;"></div>
+              <div class="bar" style="height: 60%;"></div>
+              <div class="bar" style="height: 52%;"></div>
+              <div class="bar" style="height: 70%;"></div>
+              <div class="bar" style="height: 65%;"></div>
+              <div class="bar" style="height: 80%;"></div>
+              <div class="bar active" style="height: 90%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Revenue MTD -->
+        <div class="bg-card rounded-xl border border-border p-4">
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-3">
+                <div class="w-9 h-9 rounded-lg bg-success/10 flex items-center justify-center flex-shrink-0">
+                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#10b981" stroke-width="2"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
+                </div>
+                <span class="text-[10px] font-semibold text-txt-muted uppercase tracking-widest">Revenue MTD</span>
+              </div>
+              <div class="text-3xl font-bold text-txt-primary">$1.24M</div>
+              <div class="flex items-center gap-1 mt-1">
+                <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#10b981" stroke-width="2.5"><path d="M5 15l7-7 7 7"/></svg>
+                <span class="text-xs font-medium text-success">+8.3%</span>
+                <span class="text-xs text-txt-muted">vs last month</span>
+              </div>
+            </div>
+            <!-- Percentage badge -->
+            <div class="bg-success/10 text-success text-sm font-bold px-3 py-1.5 rounded-lg">+8.3%</div>
+          </div>
+        </div>
+
+        <!-- On-Time Rate with Circular Progress -->
+        <div class="bg-card rounded-xl border border-border p-4">
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-3">
+                <div class="w-9 h-9 rounded-lg bg-info/10 flex items-center justify-center flex-shrink-0">
+                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#06b6d4" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <span class="text-[10px] font-semibold text-txt-muted uppercase tracking-widest">On-Time Rate</span>
+              </div>
+              <div class="text-3xl font-bold text-txt-primary">94.2%</div>
+              <div class="flex items-center gap-1 mt-1">
+                <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#10b981" stroke-width="2.5"><path d="M5 15l7-7 7 7"/></svg>
+                <span class="text-xs font-medium text-success">+1.3%</span>
+                <span class="text-xs text-txt-muted">this week</span>
+              </div>
+            </div>
+            <!-- CSS Circular Progress -->
+            <div class="circular-progress" style="background: conic-gradient(#06b6d4 0deg, #06b6d4 338.9deg, #e2e4ea 338.9deg);">
+              <span class="value text-info">94%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Open Quotes -->
+        <div class="bg-card rounded-xl border border-border p-4">
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-3">
+                <div class="w-9 h-9 rounded-lg bg-warning/10 flex items-center justify-center flex-shrink-0">
+                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#f59e0b" stroke-width="2"><path d="M9 12h6m-3-3v6m-7 4h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                </div>
+                <span class="text-[10px] font-semibold text-txt-muted uppercase tracking-widest">Open Quotes</span>
+              </div>
+              <div class="text-3xl font-bold text-txt-primary">38</div>
+              <div class="flex items-center gap-1 mt-1">
+                <span class="text-xs text-txt-secondary">Conversion rate:</span>
+                <span class="text-xs font-medium text-success">34%</span>
+              </div>
+            </div>
+            <div class="bg-warning/10 text-warning text-sm font-bold px-3 py-1.5 rounded-lg">$485K</div>
+          </div>
+        </div>
+
+        <!-- Carrier Pool -->
+        <div class="bg-card rounded-xl border border-border p-4">
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-3">
+                <div class="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#4f46e5" stroke-width="2"><path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zm10 0a2 2 0 11-4 0 2 2 0 014 0z"/><path d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10m0 0h10m0 0h1l3-3V8h-4"/></svg>
+                </div>
+                <span class="text-[10px] font-semibold text-txt-muted uppercase tracking-widest">Carrier Pool</span>
+              </div>
+              <div class="text-3xl font-bold text-txt-primary">156</div>
+              <div class="flex items-center gap-1 mt-1">
+                <span class="text-xs text-txt-secondary">New this week:</span>
+                <span class="text-xs font-medium text-primary">+4</span>
+              </div>
+            </div>
+            <!-- Mini stacked avatars -->
+            <div class="flex -space-x-2">
+              <div class="w-8 h-8 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center text-[9px] font-bold text-blue-600">SW</div>
+              <div class="w-8 h-8 rounded-full bg-green-100 border-2 border-white flex items-center justify-center text-[9px] font-bold text-green-600">PL</div>
+              <div class="w-8 h-8 rounded-full bg-purple-100 border-2 border-white flex items-center justify-center text-[9px] font-bold text-purple-600">EG</div>
+              <div class="w-8 h-8 rounded-full bg-surface border-2 border-white flex items-center justify-center text-[9px] font-bold text-txt-muted">+153</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pending Invoices -->
+        <div class="bg-card rounded-xl border border-border p-4">
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-3">
+                <div class="w-9 h-9 rounded-lg bg-danger/10 flex items-center justify-center flex-shrink-0">
+                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#ef4444" stroke-width="2"><path d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2v16z"/></svg>
+                </div>
+                <span class="text-[10px] font-semibold text-txt-muted uppercase tracking-widest">Pending Invoices</span>
+              </div>
+              <div class="text-3xl font-bold text-txt-primary">23</div>
+              <div class="flex items-center gap-1 mt-1">
+                <span class="text-xs text-txt-secondary">Total amount:</span>
+                <span class="text-xs font-medium text-danger">$124,850</span>
+              </div>
+            </div>
+            <div class="bg-danger/10 text-danger text-sm font-bold px-3 py-1.5 rounded-lg">$125K</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom: 55/45 Split -->
+      <div class="flex gap-5">
+
+        <!-- LEFT (55%): Live Activity Feed -->
+        <div class="w-[55%] flex-shrink-0">
+          <div class="bg-card rounded-xl border border-border">
+            <div class="flex items-center justify-between px-5 py-3.5 border-b border-border">
+              <div class="flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-success animate-pulse"></div>
+                <h2 class="text-sm font-semibold text-txt-primary">Live Activity</h2>
+              </div>
+              <div class="flex items-center gap-2">
+                <button class="text-xs text-txt-secondary hover:text-primary font-medium px-2 py-1 rounded bg-surface">All</button>
+                <button class="text-xs text-txt-muted hover:text-primary font-medium px-2 py-1 rounded hover:bg-surface">Loads</button>
+                <button class="text-xs text-txt-muted hover:text-primary font-medium px-2 py-1 rounded hover:bg-surface">System</button>
+              </div>
+            </div>
+            <div class="divide-y divide-border">
+
+              <!-- Activity 1 -->
+              <div class="flex items-start gap-3 px-5 py-3.5 hover:bg-surface/30 transition-colors">
+                <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-xs font-bold text-green-700 flex-shrink-0 mt-0.5">JD</div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm text-txt-primary"><span class="font-medium">John D.</span> marked <span class="font-medium text-primary">LD-2024-0847</span> as delivered</p>
+                  <p class="text-xs text-txt-muted mt-0.5">Chicago, IL — Swift Carrier</p>
+                </div>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                  <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
+                  <span class="text-xs text-txt-muted">2m ago</span>
+                </div>
+              </div>
+
+              <!-- Activity 2 -->
+              <div class="flex items-start gap-3 px-5 py-3.5 hover:bg-surface/30 transition-colors">
+                <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#ef4444" stroke-width="2"><path d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm text-txt-primary"><span class="font-medium">System alert:</span> Carrier insurance expiring for <span class="font-medium text-danger">Apex Freight</span></p>
+                  <p class="text-xs text-txt-muted mt-0.5">Expires today — 3 active loads affected</p>
+                </div>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                  <span class="w-1.5 h-1.5 rounded-full bg-danger"></span>
+                  <span class="text-xs text-txt-muted">5m ago</span>
+                </div>
+              </div>
+
+              <!-- Activity 3 -->
+              <div class="flex items-start gap-3 px-5 py-3.5 hover:bg-surface/30 transition-colors">
+                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-700 flex-shrink-0 mt-0.5">SM</div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm text-txt-primary"><span class="font-medium">Sarah M.</span> assigned <span class="font-medium text-primary">LD-2024-0865</span> to Iron Horse LLC</p>
+                  <p class="text-xs text-txt-muted mt-0.5">Dallas, TX &rarr; Portland, OR — $4,800</p>
+                </div>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                  <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                  <span class="text-xs text-txt-muted">12m ago</span>
+                </div>
+              </div>
+
+              <!-- Activity 4 -->
+              <div class="flex items-start gap-3 px-5 py-3.5 hover:bg-surface/30 transition-colors">
+                <div class="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#f59e0b" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm text-txt-primary"><span class="font-medium">Weather alert:</span> Snow advisory affecting I-70 corridor</p>
+                  <p class="text-xs text-txt-muted mt-0.5">Denver to Kansas City — 4 loads may be delayed</p>
+                </div>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                  <span class="w-1.5 h-1.5 rounded-full bg-warning"></span>
+                  <span class="text-xs text-txt-muted">15m ago</span>
+                </div>
+              </div>
+
+              <!-- Activity 5 -->
+              <div class="flex items-start gap-3 px-5 py-3.5 hover:bg-surface/30 transition-colors">
+                <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-xs font-bold text-purple-700 flex-shrink-0 mt-0.5">RK</div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm text-txt-primary"><span class="font-medium">Rabih K.</span> created new quote <span class="font-medium text-primary">QT-2024-0192</span></p>
+                  <p class="text-xs text-txt-muted mt-0.5">Acme Corp — Flatbed, $3,200</p>
+                </div>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                  <span class="w-1.5 h-1.5 rounded-full bg-info"></span>
+                  <span class="text-xs text-txt-muted">28m ago</span>
+                </div>
+              </div>
+
+              <!-- Activity 6 -->
+              <div class="flex items-start gap-3 px-5 py-3.5 hover:bg-surface/30 transition-colors">
+                <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-xs font-bold text-green-700 flex-shrink-0 mt-0.5">JD</div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm text-txt-primary"><span class="font-medium">John D.</span> confirmed pickup for <span class="font-medium text-primary">LD-2024-0858</span></p>
+                  <p class="text-xs text-txt-muted mt-0.5">Atlanta, GA — Eagle Transport</p>
+                </div>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                  <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
+                  <span class="text-xs text-txt-muted">42m ago</span>
+                </div>
+              </div>
+
+              <!-- Activity 7 -->
+              <div class="flex items-start gap-3 px-5 py-3.5 hover:bg-surface/30 transition-colors">
+                <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#6b7194" stroke-width="2"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm text-txt-primary"><span class="font-medium">Invoice #INV-4521</span> paid by Acme Corp</p>
+                  <p class="text-xs text-txt-muted mt-0.5">$12,400 — Auto-reconciled</p>
+                </div>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                  <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
+                  <span class="text-xs text-txt-muted">1h ago</span>
+                </div>
+              </div>
+
+              <!-- Activity 8 -->
+              <div class="flex items-start gap-3 px-5 py-3.5 hover:bg-surface/30 transition-colors">
+                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-700 flex-shrink-0 mt-0.5">SM</div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm text-txt-primary"><span class="font-medium">Sarah M.</span> added new carrier <span class="font-medium text-primary">Northbound Freight</span></p>
+                  <p class="text-xs text-txt-muted mt-0.5">MC# 945271 — Flatbed, Reefer</p>
+                </div>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                  <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                  <span class="text-xs text-txt-muted">1.5h ago</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT (45%): Two Stacked Cards -->
+        <div class="flex-1 flex flex-col gap-5">
+
+          <!-- Revenue Trend Chart -->
+          <div class="bg-card rounded-xl border border-border flex-1">
+            <div class="flex items-center justify-between px-5 py-3.5 border-b border-border">
+              <h2 class="text-sm font-semibold text-txt-primary">Revenue Trend</h2>
+              <span class="text-xs text-txt-muted">Last 7 days</span>
+            </div>
+            <div class="px-5 py-4">
+              <!-- Bar chart -->
+              <div class="flex items-end gap-3" style="height: 160px;">
+                <div class="flex-1 flex flex-col items-center gap-1">
+                  <div class="w-full bg-primary/20 rounded-t" style="height: 55%;"></div>
+                  <span class="text-[10px] text-txt-muted">Mon</span>
+                </div>
+                <div class="flex-1 flex flex-col items-center gap-1">
+                  <div class="w-full bg-primary/20 rounded-t" style="height: 72%;"></div>
+                  <span class="text-[10px] text-txt-muted">Tue</span>
+                </div>
+                <div class="flex-1 flex flex-col items-center gap-1">
+                  <div class="w-full bg-primary/20 rounded-t" style="height: 60%;"></div>
+                  <span class="text-[10px] text-txt-muted">Wed</span>
+                </div>
+                <div class="flex-1 flex flex-col items-center gap-1">
+                  <div class="w-full bg-primary/20 rounded-t" style="height: 85%;"></div>
+                  <span class="text-[10px] text-txt-muted">Thu</span>
+                </div>
+                <div class="flex-1 flex flex-col items-center gap-1">
+                  <div class="w-full bg-primary/20 rounded-t" style="height: 68%;"></div>
+                  <span class="text-[10px] text-txt-muted">Fri</span>
+                </div>
+                <div class="flex-1 flex flex-col items-center gap-1">
+                  <div class="w-full bg-primary/30 rounded-t" style="height: 45%;"></div>
+                  <span class="text-[10px] text-txt-muted">Sat</span>
+                </div>
+                <div class="flex-1 flex flex-col items-center gap-1">
+                  <div class="w-full bg-primary rounded-t shadow-sm" style="height: 92%;"></div>
+                  <span class="text-[10px] text-txt-primary font-semibold">Today</span>
+                </div>
+              </div>
+              <!-- Y-axis labels -->
+              <div class="flex items-center justify-between mt-3 pt-3 border-t border-border">
+                <span class="text-xs text-txt-muted">Avg: $68.4K/day</span>
+                <span class="text-xs font-medium text-primary">Today: $82.1K</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Load Status Breakdown -->
+          <div class="bg-card rounded-xl border border-border">
+            <div class="flex items-center justify-between px-5 py-3.5 border-b border-border">
+              <h2 class="text-sm font-semibold text-txt-primary">Load Status Breakdown</h2>
+              <span class="text-xs text-txt-muted">247 total</span>
+            </div>
+            <div class="px-5 py-4">
+              <!-- Stacked horizontal bar -->
+              <div class="flex rounded-lg overflow-hidden h-8 mb-4">
+                <!-- In Transit: 134/247 = 54.3% -->
+                <div class="bg-info flex items-center justify-center" style="width: 54.3%;">
+                  <span class="text-[10px] font-bold text-white">134</span>
+                </div>
+                <!-- Delivered: 82/247 = 33.2% -->
+                <div class="bg-success flex items-center justify-center" style="width: 33.2%;">
+                  <span class="text-[10px] font-bold text-white">82</span>
+                </div>
+                <!-- Unassigned: 26/247 = 10.5% -->
+                <div class="bg-warning flex items-center justify-center" style="width: 10.5%;">
+                  <span class="text-[10px] font-bold text-white">26</span>
+                </div>
+                <!-- At Risk: 5/247 = 2% -->
+                <div class="bg-danger flex items-center justify-center" style="width: 2%;">
+                </div>
+              </div>
+              <!-- Legend -->
+              <div class="grid grid-cols-2 gap-y-2 gap-x-4">
+                <div class="flex items-center gap-2">
+                  <div class="w-3 h-3 rounded bg-info flex-shrink-0"></div>
+                  <span class="text-xs text-txt-secondary">In Transit</span>
+                  <span class="text-xs font-medium text-txt-primary ml-auto">134</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <div class="w-3 h-3 rounded bg-success flex-shrink-0"></div>
+                  <span class="text-xs text-txt-secondary">Delivered</span>
+                  <span class="text-xs font-medium text-txt-primary ml-auto">82</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <div class="w-3 h-3 rounded bg-warning flex-shrink-0"></div>
+                  <span class="text-xs text-txt-secondary">Unassigned</span>
+                  <span class="text-xs font-medium text-txt-primary ml-auto">26</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <div class="w-3 h-3 rounded bg-danger flex-shrink-0"></div>
+                  <span class="text-xs text-txt-secondary">At Risk</span>
+                  <span class="text-xs font-medium text-danger ml-auto">5</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

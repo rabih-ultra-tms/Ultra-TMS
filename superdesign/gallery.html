@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultra TMS - Design Gallery (Round 2)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-primary: #ffffff; --bg-secondary: #f8fafc; --bg-card: #ffffff;
+            --text-primary: #1a202c; --text-secondary: #718096; --border-color: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.1); --shadow-hover: 0 10px 25px -5px rgba(0,0,0,0.2);
+            --accent: #4f46e5;
+        }
+        [data-theme="dark"] {
+            --bg-primary: #1a202c; --bg-secondary: #2d3748; --bg-card: #2d3748;
+            --text-primary: #f7fafc; --text-secondary: #a0aec0; --border-color: #4a5568;
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.3); --shadow-hover: 0 10px 25px -5px rgba(0,0,0,0.4);
+        }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; padding: 32px; transition: all 0.3s; }
+        .header { margin-bottom: 32px; display: flex; justify-content: space-between; align-items: flex-start; }
+        .header h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; }
+        .header p { color: var(--text-secondary); font-size: 0.95rem; margin-top: 4px; }
+        .controls { display: flex; gap: 12px; align-items: center; }
+        .btn { background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px 16px; border-radius: 8px; cursor: pointer; font: inherit; font-size: 0.875rem; transition: all 0.2s; }
+        .btn:hover { background: var(--bg-secondary); transform: translateY(-1px); }
+        .btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+        .filters { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+        .section-title { font-size: 1.25rem; font-weight: 600; margin: 32px 0 16px; padding-bottom: 8px; border-bottom: 2px solid var(--accent); display: inline-block; }
+        .section-desc { color: var(--text-secondary); font-size: 0.85rem; margin: -8px 0 16px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 24px; margin-bottom: 48px; }
+        .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; }
+        .card:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); }
+        .card.hidden { display: none; }
+        .card-header { padding: 14px 16px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .card-header h3 { font-size: 0.95rem; font-weight: 600; }
+        .badge { background: var(--bg-secondary); color: var(--text-secondary); padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+        .badge.new { background: #dcfce7; color: #166534; }
+        .preview { height: 320px; overflow: hidden; background: #f0f1f5; }
+        .preview iframe { border: none; transform: scale(0.5); transform-origin: top left; width: 200%; height: 200%; pointer-events: none; }
+        .actions { padding: 12px 16px; }
+        .actions button { background: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 6px; font: inherit; font-size: 0.85rem; font-weight: 500; cursor: pointer; width: 100%; transition: opacity 0.2s; }
+        .actions button:hover { opacity: 0.9; }
+        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } .preview { height: 220px; } .header { flex-direction: column; gap: 16px; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div><h1>Ultra TMS Design Gallery</h1><p>Round 2 -- Fresh designs based on your feedback</p></div>
+        <div class="controls">
+            <button class="btn" onclick="toggleTheme()" id="theme-btn">Dark</button>
+        </div>
+    </div>
+
+    <div class="filters">
+        <button class="btn active" onclick="filter('all',this)">All (13)</button>
+        <button class="btn" onclick="filter('dashboard',this)">Dashboard (3)</button>
+        <button class="btn" onclick="filter('detail',this)">Detail Page (1)</button>
+        <button class="btn" onclick="filter('form',this)">Forms (5)</button>
+        <button class="btn" onclick="filter('filters',this)">Filters & Pickers (2)</button>
+        <button class="btn" onclick="filter('drawer',this)">Drawers & Tabs (2)</button>
+    </div>
+
+    <!-- DASHBOARDS -->
+    <h2 class="section-title" data-cat="dashboard">Dashboard (3 new concepts)</h2>
+    <p class="section-desc" data-cat="dashboard">Map command center, schedule/timeline, activity feed + metrics</p>
+    <div class="grid" data-cat="dashboard">
+        <div class="card" data-cat="dashboard">
+            <div class="card-header"><h3>Dashboard -- Map Command Center</h3><span class="badge new">NEW</span></div>
+            <div class="preview"><iframe src="./design_iterations/tms_dashboard_v2_1.html" loading="lazy"></iframe></div>
+            <div class="actions"><button onclick="window.open('./design_iterations/tms_dashboard_v2_1.html','_blank')">View Full</button></div>
+        </div>
+        <div class="card" data-cat="dashboard">
+            <div class="card-header"><h3>Dashboard -- Schedule / Timeline</h3><span class="badge new">NEW</span></div>
+            <div class="preview"><iframe src="./design_iterations/tms_dashboard_v2_2.html" loading="lazy"></iframe></div>
+            <div class="actions"><button onclick="window.open('./design_iterations/tms_dashboard_v2_2.html','_blank')">View Full</button></div>
+        </div>
+        <div class="card" data-cat="dashboard">
+            <div class="card-header"><h3>Dashboard -- Activity Feed + Metrics</h3><span class="badge new">NEW</span></div>
+            <div class="preview"><iframe src="./design_iterations/tms_dashboard_v2_3.html" loading="lazy"></iframe></div>
+            <div class="actions"><button onclick="window.open('./design_iterations/tms_dashboard_v2_3.html','_blank')">View Full</button></div>
+        </div>
+    </div>
+
+    <!-- DETAIL PAGE -->
+    <h2 class="section-title" data-cat="detail">Detail Page (V1 tabs + V3 cards hybrid)</h2>
+    <p class="section-desc" data-cat="detail">Tabs navigation from V1, dashboard-style stat cards from V3, enhanced</p>
+    <div class="grid" data-cat="detail">
+        <div class="card" data-cat="detail">
+            <div class="card-header"><h3>Load Detail -- Hybrid V4</h3><span class="badge new">NEW</span></div>
+            <div class="preview"><iframe src="./design_iterations/tms_detail_hybrid_v4.html" loading="lazy"></iframe></div>
+            <div class="actions"><button onclick="window.open('./design_iterations/tms_detail_hybrid_v4.html','_blank')">View Full</button></div>
+        </div>
+    </div>
+
+    <!-- FORMS -->
+    <h2 class="section-title" data-cat="form">Form Pages (5 power-user concepts)</h2>
+    <p class="section-desc" data-cat="form">Dense single-page, split pane preview, spreadsheet entry, template-first, guided chat</p>
+    <div class="grid" data-cat="form">
+        <div class="card" data-cat="form">
+            <div class="card-header"><h3>Form 1 -- Dense Single Page (McLeod style)</h3><span class="badge new">NEW</span></div>
+            <div class="preview"><iframe src="./design_iterations/tms_form_v2_1.html" loading="lazy"></iframe></div>
+            <div class="actions"><button onclick="window.open('./design_iterations/tms_form_v2_1.html','_blank')">View Full</button></div>
+        </div>
+        <div class="card" data-cat="form">
+            <div class="card-header"><h3>Form 2 -- Split Pane + Live Preview</h3><span class="badge new">NEW</span></div>
+            <div class="preview"><iframe src="./design_iterations/tms_form_v2_2.html" loading="lazy"></iframe></div>
+            <div class="actions"><button onclick="window.open('./design_iterations/tms_form_v2_2.html','_blank')">View Full</button></div>
+        </div>
+        <div class="card" data-cat="form">
+            <div class="card-header"><h3>Form 3 -- Spreadsheet Quick Entry</h3><span class="badge new">NEW</span></div>
+            <div class="preview"><iframe src="./design_iterations/tms_form_v2_3.html" loading="lazy"></iframe></div>
+            <div class="actions"><button onclick="window.open('./design_iterations/tms_form_v2_3.html','_blank')">View Full</button></div>
+        </div>
+        <div class="card" data-cat="form">
+            <div class="card-header"><h3>Form 4 -- Template-First (Clone & Modify)</h3><span class="badge new">NEW</span></div>
+            <div class="preview"><iframe src="./design_iterations/tms_form_v2_4.html" loading="lazy"></iframe></div>
+            <div class="actions"><button onclick="window.open('./design_iterations/tms_form_v2_4.html','_blank')">View Full</button></div>
+        </div>
+        <div class="card" data-cat="form">
+            <div class="card-header"><h3>Form 5 -- Guided Chat-like Entry</h3><span class="badge new">NEW</span></div>
+            <div class="preview"><iframe src="./design_iterations/tms_form_v2_5.html" loading="lazy"></iframe></div>
+            <div class="actions"><button onclick="window.open('./design_iterations/tms_form_v2_5.html','_blank')">View Full</button></div>
+        </div>
+    </div>
+
+    <!-- FILTERS & PICKERS -->
+    <h2 class="section-title" data-cat="filters">Filters, Pickers & Dropdowns (2 sheets)</h2>
+    <p class="section-desc" data-cat="filters">Filter bars, searchable dropdowns, date pickers, entity pickers, toggles</p>
+    <div class="grid" data-cat="filters">
+        <div class="card" data-cat="filters">
+            <div class="card-header"><h3>Filters -- Search, Dropdowns, Date Pickers</h3><span class="badge new">NEW</span></div>
+            <div class="preview"><iframe src="./design_iterations/tms_components_filters_1.html" loading="lazy"></iframe></div>
+            <div class="actions"><button onclick="window.open('./design_iterations/tms_components_filters_1.html','_blank')">View Full</button></div>
+        </div>
+        <div class="card" data-cat="filters">
+            <div class="card-header"><h3>Pickers -- Entity, Location, Equipment, Rate</h3><span class="badge new">NEW</span></div>
+            <div class="preview"><iframe src="./design_iterations/tms_components_filters_2.html" loading="lazy"></iframe></div>
+            <div class="actions"><button onclick="window.open('./design_iterations/tms_components_filters_2.html','_blank')">View Full</button></div>
+        </div>
+    </div>
+
+    <!-- DRAWERS & TABS -->
+    <h2 class="section-title" data-cat="drawer">Drawers & Internal Tabs (2 designs)</h2>
+    <p class="section-desc" data-cat="drawer">Standard right drawer with horizontal tabs, wide drawer with vertical icon tabs</p>
+    <div class="grid" data-cat="drawer">
+        <div class="card" data-cat="drawer">
+            <div class="card-header"><h3>Drawer 1 -- Standard with Horizontal Tabs</h3><span class="badge new">NEW</span></div>
+            <div class="preview"><iframe src="./design_iterations/tms_drawer_design_1.html" loading="lazy"></iframe></div>
+            <div class="actions"><button onclick="window.open('./design_iterations/tms_drawer_design_1.html','_blank')">View Full</button></div>
+        </div>
+        <div class="card" data-cat="drawer">
+            <div class="card-header"><h3>Drawer 2 -- Wide with Vertical Icon Tabs</h3><span class="badge new">NEW</span></div>
+            <div class="preview"><iframe src="./design_iterations/tms_drawer_design_2.html" loading="lazy"></iframe></div>
+            <div class="actions"><button onclick="window.open('./design_iterations/tms_drawer_design_2.html','_blank')">View Full</button></div>
+        </div>
+    </div>
+
+    <script>
+        const t = localStorage.getItem('gallery-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', t);
+        document.getElementById('theme-btn').textContent = t === 'dark' ? 'Light' : 'Dark';
+
+        function toggleTheme() {
+            const c = document.documentElement.getAttribute('data-theme');
+            const n = c === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', n);
+            localStorage.setItem('gallery-theme', n);
+            document.getElementById('theme-btn').textContent = n === 'dark' ? 'Light' : 'Dark';
+        }
+
+        function filter(cat, btn) {
+            document.querySelectorAll('.filters .btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.card').forEach(c => {
+                c.classList.toggle('hidden', cat !== 'all' && c.dataset.cat !== cat);
+            });
+            document.querySelectorAll('.section-title, .section-desc, .grid[data-cat]').forEach(el => {
+                el.style.display = (cat === 'all' || el.dataset.cat === cat) ? '' : 'none';
+            });
+        }
+    </script>
+</body>
+</html>

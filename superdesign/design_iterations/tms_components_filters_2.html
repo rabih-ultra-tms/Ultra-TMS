@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TMS Components — Contextual Pickers & Selection Patterns</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { inter: ['Inter', 'sans-serif'] },
+          colors: {
+            primary: '#4f46e5',
+            'primary-light': '#eef2ff',
+            'primary-50': '#e0e7ff',
+            sidebar: '#1a1f36',
+            'sidebar-active': '#252b45',
+            content: '#f0f1f5',
+            card: '#ffffff',
+            border: '#e2e4ea',
+            'text-primary': '#1e2235',
+            'text-secondary': '#6b7194',
+            'text-muted': '#9ca3c0',
+            success: '#10b981',
+            warning: '#f59e0b',
+            danger: '#ef4444',
+            info: '#06b6d4',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    body { background: #f0f1f5; }
+    .picker-item:hover { background: #f0f1f5; }
+    .equipment-card:hover:not(.selected) { border-color: #9ca3c0; }
+    .time-slot:hover:not(.selected):not(.unavailable) { border-color: #4f46e5; background: #eef2ff; }
+    .time-slot.unavailable {
+      background: repeating-linear-gradient(
+        -45deg,
+        #f0f1f5,
+        #f0f1f5 4px,
+        #e2e4ea 4px,
+        #e2e4ea 5px
+      );
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body class="min-h-screen p-8">
+
+  <!-- Page Header -->
+  <div class="max-w-7xl mx-auto mb-8">
+    <h1 class="text-2xl font-bold text-text-primary">Contextual Pickers & Selection Patterns</h1>
+    <p class="text-text-secondary mt-1">Entity selectors, location pickers, and specialized input components for TMS workflows</p>
+  </div>
+
+  <div class="max-w-7xl mx-auto space-y-10">
+
+    <!-- ========================================== -->
+    <!-- SECTION 1: ENTITY PICKERS                  -->
+    <!-- ========================================== -->
+    <div>
+      <h2 class="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
+        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Section 1 — Entity Pickers
+      </h2>
+
+      <div class="grid grid-cols-3 gap-4">
+
+        <!-- Customer Picker -->
+        <div class="bg-card rounded-xl border border-border p-6">
+          <span class="text-sm font-semibold text-text-primary uppercase tracking-wide block mb-4">Customer Picker</span>
+
+          <!-- Active state with dropdown -->
+          <div class="relative">
+            <label class="text-xs font-medium text-text-secondary mb-1.5 block">Customer *</label>
+            <!-- Input with selected chip -->
+            <div class="flex items-center gap-2 px-3 py-2 border border-primary rounded-lg bg-white ring-2 ring-primary/20">
+              <span class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-primary-light text-primary rounded text-xs font-medium">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                Acme Corp
+                <button class="hover:bg-primary/10 rounded p-0.5"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+              </span>
+              <input type="text" class="flex-1 text-sm text-text-primary outline-none bg-transparent placeholder:text-text-muted" placeholder="Change customer..." />
+            </div>
+
+            <!-- Dropdown -->
+            <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-border rounded-xl shadow-lg z-10">
+              <!-- Search -->
+              <div class="p-2 border-b border-border">
+                <div class="relative">
+                  <svg class="w-4 h-4 text-text-muted absolute left-2.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                  <input type="text" placeholder="Search customers..." class="w-full pl-8 pr-3 py-1.5 text-xs border border-border rounded bg-content/50 text-text-primary focus:outline-none" />
+                </div>
+              </div>
+              <!-- Recent -->
+              <div class="px-3 pt-2 pb-1">
+                <span class="text-[10px] font-bold text-text-muted uppercase tracking-widest">Recently Used</span>
+              </div>
+              <div class="picker-item flex items-center justify-between px-3 py-2 cursor-pointer">
+                <div>
+                  <p class="text-sm font-medium text-text-primary">Acme Corporation</p>
+                  <p class="text-xs text-text-muted">Chicago, IL</p>
+                </div>
+                <span class="text-xs text-text-muted">142 loads</span>
+              </div>
+              <div class="picker-item flex items-center justify-between px-3 py-2 cursor-pointer">
+                <div>
+                  <p class="text-sm font-medium text-text-primary">Global Shipping Co</p>
+                  <p class="text-xs text-text-muted">Atlanta, GA</p>
+                </div>
+                <span class="text-xs text-text-muted">89 loads</span>
+              </div>
+              <div class="picker-item flex items-center justify-between px-3 py-2 cursor-pointer">
+                <div>
+                  <p class="text-sm font-medium text-text-primary">Midwest Distributors</p>
+                  <p class="text-xs text-text-muted">Kansas City, MO</p>
+                </div>
+                <span class="text-xs text-text-muted">67 loads</span>
+              </div>
+              <div class="border-t border-border"></div>
+              <!-- Full list -->
+              <div class="px-3 pt-2 pb-1">
+                <span class="text-[10px] font-bold text-text-muted uppercase tracking-widest">All Customers</span>
+              </div>
+              <div class="picker-item flex items-center justify-between px-3 py-2 cursor-pointer">
+                <div>
+                  <p class="text-sm font-medium text-text-primary">Bay Area Foods</p>
+                  <p class="text-xs text-text-muted">San Francisco, CA</p>
+                </div>
+                <span class="text-xs text-text-muted">34 loads</span>
+              </div>
+              <div class="picker-item flex items-center justify-between px-3 py-2 cursor-pointer rounded-b-xl">
+                <div>
+                  <p class="text-sm font-medium text-text-primary">Delta Manufacturing</p>
+                  <p class="text-xs text-text-muted">Dallas, TX</p>
+                </div>
+                <span class="text-xs text-text-muted">51 loads</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Carrier Picker -->
+        <div class="bg-card rounded-xl border border-border p-6">
+          <span class="text-sm font-semibold text-text-primary uppercase tracking-wide block mb-4">Carrier Picker</span>
+
+          <div class="relative">
+            <label class="text-xs font-medium text-text-secondary mb-1.5 block">Carrier *</label>
+            <div class="flex items-center justify-between px-3 py-2 border border-primary rounded-lg bg-white ring-2 ring-primary/20 text-sm cursor-pointer">
+              <span class="text-text-muted">Select carrier...</span>
+              <svg class="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </div>
+
+            <!-- Dropdown -->
+            <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-border rounded-xl shadow-lg z-10">
+              <div class="p-2 border-b border-border">
+                <div class="relative">
+                  <svg class="w-4 h-4 text-text-muted absolute left-2.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                  <input type="text" placeholder="Search carriers..." class="w-full pl-8 pr-3 py-1.5 text-xs border border-border rounded bg-content/50 text-text-primary focus:outline-none" />
+                </div>
+              </div>
+
+              <!-- Carrier results -->
+              <div class="py-1">
+                <div class="picker-item px-3 py-2.5 cursor-pointer">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-sm font-semibold text-text-primary">Swift Transportation</span>
+                    <span class="flex items-center gap-0.5 text-xs text-warning">
+                      <svg class="w-3 h-3 fill-warning" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                      4.6
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-xs text-text-muted">MC# 133913</span>
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-success/10 text-success rounded text-[10px] font-medium">
+                      <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                      Insured
+                    </span>
+                    <span class="text-xs text-text-muted">12 trucks avail.</span>
+                  </div>
+                </div>
+                <div class="picker-item px-3 py-2.5 cursor-pointer">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-sm font-semibold text-text-primary">Heartland Express</span>
+                    <span class="flex items-center gap-0.5 text-xs text-warning">
+                      <svg class="w-3 h-3 fill-warning" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                      4.2
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-xs text-text-muted">MC# 215873</span>
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-success/10 text-success rounded text-[10px] font-medium">
+                      <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                      Insured
+                    </span>
+                    <span class="text-xs text-text-muted">5 trucks avail.</span>
+                  </div>
+                </div>
+                <div class="picker-item px-3 py-2.5 cursor-pointer rounded-b-xl">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-sm font-semibold text-text-primary">Lone Star Freight</span>
+                    <span class="flex items-center gap-0.5 text-xs text-warning">
+                      <svg class="w-3 h-3 fill-warning" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                      3.8
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-xs text-text-muted">MC# 501299</span>
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-danger/10 text-danger rounded text-[10px] font-medium">
+                      <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                      Expired
+                    </span>
+                    <span class="text-xs text-text-muted">3 trucks avail.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Driver Picker -->
+        <div class="bg-card rounded-xl border border-border p-6">
+          <span class="text-sm font-semibold text-text-primary uppercase tracking-wide block mb-4">Driver Picker</span>
+
+          <div class="relative">
+            <label class="text-xs font-medium text-text-secondary mb-1.5 block">Driver</label>
+            <div class="flex items-center justify-between px-3 py-2 border border-primary rounded-lg bg-white ring-2 ring-primary/20 text-sm cursor-pointer">
+              <span class="text-text-muted">Assign driver...</span>
+              <svg class="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </div>
+
+            <!-- Dropdown -->
+            <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-border rounded-xl shadow-lg z-10">
+              <div class="p-2 border-b border-border">
+                <div class="relative">
+                  <svg class="w-4 h-4 text-text-muted absolute left-2.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                  <input type="text" placeholder="Search drivers..." class="w-full pl-8 pr-3 py-1.5 text-xs border border-border rounded bg-content/50 text-text-primary focus:outline-none" />
+                </div>
+              </div>
+
+              <div class="py-1">
+                <!-- Available driver -->
+                <div class="picker-item px-3 py-2.5 cursor-pointer">
+                  <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-primary-light flex items-center justify-center flex-shrink-0">
+                      <span class="text-xs font-semibold text-primary">JD</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2">
+                        <span class="text-sm font-medium text-text-primary">John Davis</span>
+                        <span class="inline-flex items-center px-1.5 py-0.5 bg-success/10 text-success rounded text-[10px] font-medium">Available</span>
+                      </div>
+                      <div class="flex items-center gap-2 text-xs text-text-muted">
+                        <span>(555) 123-4567</span>
+                        <span class="w-1 h-1 rounded-full bg-text-muted"></span>
+                        <span>Truck #1847</span>
+                        <span class="w-1 h-1 rounded-full bg-text-muted"></span>
+                        <span>6.5h HOS</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!-- On Route driver -->
+                <div class="picker-item px-3 py-2.5 cursor-pointer">
+                  <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-warning/10 flex items-center justify-center flex-shrink-0">
+                      <span class="text-xs font-semibold text-warning">MS</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2">
+                        <span class="text-sm font-medium text-text-primary">Maria Santos</span>
+                        <span class="inline-flex items-center px-1.5 py-0.5 bg-warning/10 text-warning rounded text-[10px] font-medium">On Route</span>
+                      </div>
+                      <div class="flex items-center gap-2 text-xs text-text-muted">
+                        <span>(555) 987-6543</span>
+                        <span class="w-1 h-1 rounded-full bg-text-muted"></span>
+                        <span>Truck #2103</span>
+                        <span class="w-1 h-1 rounded-full bg-text-muted"></span>
+                        <span>2.1h HOS</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!-- Available driver -->
+                <div class="picker-item px-3 py-2.5 cursor-pointer rounded-b-xl">
+                  <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0">
+                      <span class="text-xs font-semibold text-success">RJ</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2">
+                        <span class="text-sm font-medium text-text-primary">Robert Johnson</span>
+                        <span class="inline-flex items-center px-1.5 py-0.5 bg-success/10 text-success rounded text-[10px] font-medium">Available</span>
+                      </div>
+                      <div class="flex items-center gap-2 text-xs text-text-muted">
+                        <span>(555) 456-7890</span>
+                        <span class="w-1 h-1 rounded-full bg-text-muted"></span>
+                        <span>Truck #1523</span>
+                        <span class="w-1 h-1 rounded-full bg-text-muted"></span>
+                        <span>9.0h HOS</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SECTION 2: LOCATION PICKER                 -->
+    <!-- ========================================== -->
+    <div>
+      <h2 class="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
+        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Section 2 — Location Picker
+      </h2>
+
+      <div class="grid grid-cols-2 gap-4">
+
+        <!-- Autocomplete state -->
+        <div class="bg-card rounded-xl border border-border p-6">
+          <span class="text-sm font-semibold text-text-primary uppercase tracking-wide block mb-4">Location Search — Active</span>
+          <div class="relative" style="max-width:450px;">
+            <label class="text-xs font-medium text-text-secondary mb-1.5 block">Pickup Location *</label>
+            <div class="relative">
+              <svg class="w-4 h-4 text-primary absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              <input type="text" value="Chicago" class="w-full pl-9 pr-3 py-2.5 text-sm border border-primary rounded-lg bg-white text-text-primary ring-2 ring-primary/20 focus:outline-none" />
+            </div>
+
+            <!-- Dropdown results -->
+            <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-border rounded-xl shadow-lg z-10">
+              <!-- Recent locations -->
+              <div class="px-3 pt-3 pb-1">
+                <span class="text-[10px] font-bold text-text-muted uppercase tracking-widest">Recent Locations</span>
+              </div>
+              <div class="picker-item flex items-center gap-3 px-3 py-2.5 cursor-pointer">
+                <svg class="w-4 h-4 text-text-muted flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <div>
+                  <p class="text-sm font-medium text-text-primary">Chicago, IL — Acme Warehouse</p>
+                  <p class="text-xs text-text-muted">123 Industrial Blvd, Chicago, IL 60601</p>
+                </div>
+              </div>
+              <div class="picker-item flex items-center gap-3 px-3 py-2.5 cursor-pointer">
+                <svg class="w-4 h-4 text-text-muted flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <div>
+                  <p class="text-sm font-medium text-text-primary">Chicago, IL — O'Hare Freight Terminal</p>
+                  <p class="text-xs text-text-muted">10000 W O'Hare Ave, Chicago, IL 60666</p>
+                </div>
+              </div>
+              <div class="picker-item flex items-center gap-3 px-3 py-2.5 cursor-pointer">
+                <svg class="w-4 h-4 text-text-muted flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <div>
+                  <p class="text-sm font-medium text-text-primary">Chicago Heights, IL — Steel Depot</p>
+                  <p class="text-xs text-text-muted">450 Commerce Dr, Chicago Heights, IL 60411</p>
+                </div>
+              </div>
+              <div class="border-t border-border"></div>
+              <!-- Search results -->
+              <div class="px-3 pt-2 pb-1">
+                <span class="text-[10px] font-bold text-text-muted uppercase tracking-widest">Search Results</span>
+              </div>
+              <div class="picker-item flex items-center gap-3 px-3 py-2.5 cursor-pointer">
+                <svg class="w-4 h-4 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <div>
+                  <p class="text-sm font-medium text-text-primary"><span class="text-primary font-semibold">Chicago</span>, IL — Logistics Hub South</p>
+                  <p class="text-xs text-text-muted">789 Distribution Way, Chicago, IL 60609</p>
+                </div>
+              </div>
+              <div class="picker-item flex items-center gap-3 px-3 py-2.5 cursor-pointer rounded-b-xl">
+                <svg class="w-4 h-4 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <div>
+                  <p class="text-sm font-medium text-text-primary"><span class="text-primary font-semibold">Chicago</span> Ridge, IL — Central Freight</p>
+                  <p class="text-xs text-text-muted">1200 Ridgeland Ave, Chicago Ridge, IL 60415</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Selected state with rich chip -->
+        <div class="bg-card rounded-xl border border-border p-6">
+          <span class="text-sm font-semibold text-text-primary uppercase tracking-wide block mb-4">Location Selected — Rich Chip Display</span>
+          <div style="max-width:450px;">
+            <label class="text-xs font-medium text-text-secondary mb-1.5 block">Pickup Location *</label>
+            <!-- Selected location as rich chip -->
+            <div class="flex items-start gap-3 px-3 py-2.5 border border-border rounded-lg bg-white">
+              <div class="w-8 h-8 rounded-lg bg-primary-light flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-semibold text-text-primary">Chicago, IL — Acme Warehouse</p>
+                <p class="text-xs text-text-muted">123 Industrial Blvd, Chicago, IL 60601</p>
+                <div class="flex items-center gap-2 mt-1.5">
+                  <span class="text-[10px] text-text-muted bg-content px-1.5 py-0.5 rounded">Dock hours: 6AM-6PM</span>
+                  <span class="text-[10px] text-text-muted bg-content px-1.5 py-0.5 rounded">Appt required</span>
+                </div>
+              </div>
+              <button class="p-1 hover:bg-content rounded text-text-muted hover:text-text-primary flex-shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
+
+            <!-- Delivery location - also selected -->
+            <label class="text-xs font-medium text-text-secondary mb-1.5 block mt-4">Delivery Location *</label>
+            <div class="flex items-start gap-3 px-3 py-2.5 border border-border rounded-lg bg-white">
+              <div class="w-8 h-8 rounded-lg bg-danger/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg class="w-4 h-4 text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-semibold text-text-primary">Dallas, TX — Central Distribution</p>
+                <p class="text-xs text-text-muted">5600 Logistics Pkwy, Dallas, TX 75201</p>
+                <div class="flex items-center gap-2 mt-1.5">
+                  <span class="text-[10px] text-text-muted bg-content px-1.5 py-0.5 rounded">24/7 receiving</span>
+                  <span class="text-[10px] text-text-muted bg-content px-1.5 py-0.5 rounded">No appt needed</span>
+                </div>
+              </div>
+              <button class="p-1 hover:bg-content rounded text-text-muted hover:text-text-primary flex-shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
+
+            <!-- Route info summary -->
+            <div class="flex items-center gap-4 mt-3 px-3 py-2 bg-content rounded-lg">
+              <div class="flex items-center gap-1.5 text-xs text-text-secondary">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                <span class="font-medium">920 mi</span>
+              </div>
+              <div class="flex items-center gap-1.5 text-xs text-text-secondary">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span class="font-medium">~14h drive</span>
+              </div>
+              <div class="flex items-center gap-1.5 text-xs text-text-secondary">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span class="font-medium">$4.46/mi avg</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SECTION 3: EQUIPMENT SELECTOR              -->
+    <!-- ========================================== -->
+    <div>
+      <h2 class="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
+        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10m10 0h-4m0 0H5m5 0a1 1 0 001 1h1a1 1 0 001-1m-5 0v-1h7V5h2l3 5v6h-2"/></svg>
+        Section 3 — Equipment Selector
+      </h2>
+
+      <div class="bg-card rounded-xl border border-border p-6">
+        <label class="text-xs font-medium text-text-secondary mb-3 block">Equipment Type *</label>
+
+        <!-- Equipment grid -->
+        <div class="grid grid-cols-6 gap-3 mb-4">
+          <!-- Dry Van (selected) -->
+          <div class="equipment-card selected border-2 border-primary rounded-xl p-4 text-center cursor-pointer bg-primary-light relative">
+            <div class="absolute top-2 right-2">
+              <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <svg class="w-10 h-10 mx-auto mb-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 48 48">
+              <rect x="2" y="12" width="32" height="20" rx="2" stroke-width="2"/>
+              <rect x="34" y="18" width="10" height="14" rx="1" stroke-width="2"/>
+              <circle cx="12" cy="34" r="3" stroke-width="2"/>
+              <circle cx="38" cy="34" r="3" stroke-width="2"/>
+              <line x1="2" y1="32" x2="9" y2="32" stroke-width="2"/>
+              <line x1="15" y1="32" x2="35" y2="32" stroke-width="2"/>
+              <line x1="41" y1="32" x2="46" y2="32" stroke-width="2"/>
+            </svg>
+            <p class="text-xs font-semibold text-primary">Dry Van</p>
+            <p class="text-[10px] text-primary/70 mt-0.5">53' L x 8'6" W x 9' H</p>
+          </div>
+
+          <!-- Reefer -->
+          <div class="equipment-card border-2 border-border rounded-xl p-4 text-center cursor-pointer hover:border-text-muted bg-white">
+            <svg class="w-10 h-10 mx-auto mb-2 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 48 48">
+              <rect x="2" y="12" width="32" height="20" rx="2" stroke-width="2"/>
+              <rect x="34" y="18" width="10" height="14" rx="1" stroke-width="2"/>
+              <circle cx="12" cy="34" r="3" stroke-width="2"/>
+              <circle cx="38" cy="34" r="3" stroke-width="2"/>
+              <line x1="2" y1="32" x2="9" y2="32" stroke-width="2"/>
+              <line x1="15" y1="32" x2="35" y2="32" stroke-width="2"/>
+              <!-- Snowflake -->
+              <line x1="18" y1="17" x2="18" y2="27" stroke-width="1.5"/>
+              <line x1="13" y1="22" x2="23" y2="22" stroke-width="1.5"/>
+              <line x1="14.5" y1="18.5" x2="21.5" y2="25.5" stroke-width="1.5"/>
+              <line x1="21.5" y1="18.5" x2="14.5" y2="25.5" stroke-width="1.5"/>
+            </svg>
+            <p class="text-xs font-semibold text-text-primary">Reefer</p>
+            <p class="text-[10px] text-text-muted mt-0.5">53' L x 8'6" W x 8'6" H</p>
+          </div>
+
+          <!-- Flatbed -->
+          <div class="equipment-card border-2 border-border rounded-xl p-4 text-center cursor-pointer hover:border-text-muted bg-white">
+            <svg class="w-10 h-10 mx-auto mb-2 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 48 48">
+              <line x1="2" y1="24" x2="34" y2="24" stroke-width="2.5"/>
+              <rect x="34" y="18" width="10" height="14" rx="1" stroke-width="2"/>
+              <circle cx="10" cy="30" r="3" stroke-width="2"/>
+              <circle cx="24" cy="30" r="3" stroke-width="2"/>
+              <circle cx="38" cy="34" r="3" stroke-width="2"/>
+              <line x1="2" y1="24" x2="2" y2="28" stroke-width="2"/>
+            </svg>
+            <p class="text-xs font-semibold text-text-primary">Flatbed</p>
+            <p class="text-[10px] text-text-muted mt-0.5">48' L x 8'6" W</p>
+          </div>
+
+          <!-- Step Deck -->
+          <div class="equipment-card border-2 border-border rounded-xl p-4 text-center cursor-pointer hover:border-text-muted bg-white">
+            <svg class="w-10 h-10 mx-auto mb-2 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 48 48">
+              <polyline points="2,20 16,20 16,24 34,24" stroke-width="2.5" fill="none"/>
+              <rect x="34" y="18" width="10" height="14" rx="1" stroke-width="2"/>
+              <circle cx="10" cy="28" r="3" stroke-width="2"/>
+              <circle cx="28" cy="30" r="3" stroke-width="2"/>
+              <circle cx="38" cy="34" r="3" stroke-width="2"/>
+            </svg>
+            <p class="text-xs font-semibold text-text-primary">Step Deck</p>
+            <p class="text-[10px] text-text-muted mt-0.5">48' L, 10' upper</p>
+          </div>
+
+          <!-- Tanker -->
+          <div class="equipment-card border-2 border-border rounded-xl p-4 text-center cursor-pointer hover:border-text-muted bg-white">
+            <svg class="w-10 h-10 mx-auto mb-2 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 48 48">
+              <ellipse cx="18" cy="22" rx="16" ry="8" stroke-width="2"/>
+              <rect x="34" y="18" width="10" height="14" rx="1" stroke-width="2"/>
+              <circle cx="10" cy="34" r="3" stroke-width="2"/>
+              <circle cx="26" cy="34" r="3" stroke-width="2"/>
+              <circle cx="38" cy="34" r="3" stroke-width="2"/>
+              <line x1="2" y1="30" x2="7" y2="30" stroke-width="2"/>
+              <line x1="29" y1="30" x2="34" y2="30" stroke-width="2"/>
+            </svg>
+            <p class="text-xs font-semibold text-text-primary">Tanker</p>
+            <p class="text-[10px] text-text-muted mt-0.5">6,000-9,000 gal</p>
+          </div>
+
+          <!-- Intermodal -->
+          <div class="equipment-card border-2 border-border rounded-xl p-4 text-center cursor-pointer hover:border-text-muted bg-white">
+            <svg class="w-10 h-10 mx-auto mb-2 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 48 48">
+              <rect x="2" y="12" width="30" height="18" rx="1" stroke-width="2"/>
+              <rect x="4" y="14" width="8" height="7" rx="0.5" stroke-width="1.5"/>
+              <rect x="14" y="14" width="8" height="7" rx="0.5" stroke-width="1.5"/>
+              <rect x="24" y="14" width="6" height="7" rx="0.5" stroke-width="1.5"/>
+              <line x1="2" y1="30" x2="32" y2="30" stroke-width="2"/>
+              <rect x="34" y="18" width="10" height="14" rx="1" stroke-width="2"/>
+              <circle cx="10" cy="34" r="3" stroke-width="2"/>
+              <circle cx="24" cy="34" r="3" stroke-width="2"/>
+              <circle cx="38" cy="34" r="3" stroke-width="2"/>
+            </svg>
+            <p class="text-xs font-semibold text-text-primary">Intermodal</p>
+            <p class="text-[10px] text-text-muted mt-0.5">20' / 40' / 53'</p>
+          </div>
+        </div>
+
+        <!-- Size selector -->
+        <div class="flex items-center gap-3">
+          <label class="text-xs font-medium text-text-secondary">Trailer Length:</label>
+          <div class="inline-flex items-center bg-content rounded-lg p-0.5 gap-0.5">
+            <button class="px-4 py-1.5 text-xs font-medium text-text-secondary rounded-md hover:text-text-primary">48'</button>
+            <button class="px-4 py-1.5 text-xs font-medium bg-primary text-white rounded-md shadow-sm">53'</button>
+          </div>
+          <span class="text-xs text-text-muted ml-2">Max weight: 44,000 lbs</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SECTION 4: RATE CALCULATOR PICKER          -->
+    <!-- ========================================== -->
+    <div>
+      <h2 class="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
+        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Section 4 — Rate Calculator Picker
+      </h2>
+
+      <div class="bg-card rounded-xl border border-border p-6">
+        <div class="max-w-2xl">
+          <!-- Market rate reference -->
+          <div class="flex items-center gap-2 px-3 py-2 bg-info/5 border border-info/20 rounded-lg mb-5">
+            <svg class="w-4 h-4 text-info flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span class="text-xs text-info font-medium">Market Reference: Chicago, IL to Dallas, TX — Avg: $4,100 (DAT) &middot; 920 mi &middot; $4.46/mi</span>
+          </div>
+
+          <!-- Rate inputs row -->
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <!-- Customer Rate -->
+            <div>
+              <label class="text-xs font-medium text-text-secondary mb-1.5 block">Customer Rate</label>
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-sm font-medium">$</span>
+                <input type="text" value="4,500.00" class="w-full pl-7 pr-3 py-2.5 text-sm border border-border rounded-lg bg-white text-text-primary font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+              </div>
+              <p class="text-xs text-text-muted mt-1">$4.89/mi</p>
+            </div>
+
+            <!-- Carrier Rate -->
+            <div>
+              <label class="text-xs font-medium text-text-secondary mb-1.5 block">Carrier Rate</label>
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-sm font-medium">$</span>
+                <input type="text" value="3,800.00" class="w-full pl-7 pr-3 py-2.5 text-sm border border-border rounded-lg bg-white text-text-primary font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+              </div>
+              <p class="text-xs text-text-muted mt-1">$4.13/mi</p>
+            </div>
+          </div>
+
+          <!-- Calculated margins -->
+          <div class="grid grid-cols-3 gap-3">
+            <!-- Margin $ -->
+            <div class="bg-success/5 border border-success/20 rounded-lg p-3 text-center">
+              <p class="text-[10px] font-semibold text-success uppercase tracking-wide mb-1">Margin</p>
+              <p class="text-xl font-bold text-success">$700.00</p>
+            </div>
+            <!-- Margin % -->
+            <div class="bg-success/5 border border-success/20 rounded-lg p-3 text-center">
+              <p class="text-[10px] font-semibold text-success uppercase tracking-wide mb-1">Margin %</p>
+              <p class="text-xl font-bold text-success">15.6%</p>
+            </div>
+            <!-- Rate per mile -->
+            <div class="bg-content border border-border rounded-lg p-3 text-center">
+              <p class="text-[10px] font-semibold text-text-secondary uppercase tracking-wide mb-1">Rate/Mile</p>
+              <p class="text-xl font-bold text-text-primary">$4.89</p>
+            </div>
+          </div>
+
+          <!-- Quick rate presets -->
+          <div class="flex items-center gap-2 mt-4">
+            <span class="text-xs text-text-muted">Quick set margin:</span>
+            <button class="px-2.5 py-1 text-xs font-medium text-text-secondary bg-content rounded hover:bg-border">10%</button>
+            <button class="px-2.5 py-1 text-xs font-medium text-primary bg-primary-light rounded">15%</button>
+            <button class="px-2.5 py-1 text-xs font-medium text-text-secondary bg-content rounded hover:bg-border">20%</button>
+            <button class="px-2.5 py-1 text-xs font-medium text-text-secondary bg-content rounded hover:bg-border">25%</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SECTION 5: TIME SLOT PICKER                -->
+    <!-- ========================================== -->
+    <div>
+      <h2 class="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
+        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Section 5 — Time Slot Picker
+      </h2>
+
+      <div class="bg-card rounded-xl border border-border p-6">
+        <div class="max-w-3xl">
+          <!-- Date navigation -->
+          <div class="flex items-center justify-between mb-5">
+            <button class="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-text-secondary hover:text-text-primary rounded-lg hover:bg-content">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+              Previous
+            </button>
+            <div class="text-center">
+              <p class="text-lg font-semibold text-text-primary">Wednesday, February 18, 2026</p>
+              <p class="text-xs text-text-muted">Pickup appointment scheduling</p>
+            </div>
+            <button class="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-text-secondary hover:text-text-primary rounded-lg hover:bg-content">
+              Next
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+
+          <!-- Morning slots -->
+          <div class="mb-5">
+            <div class="flex items-center gap-2 mb-2">
+              <svg class="w-4 h-4 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+              <span class="text-xs font-semibold text-text-secondary uppercase tracking-wide">Morning (6:00 AM - 12:00 PM)</span>
+            </div>
+            <div class="grid grid-cols-6 gap-2">
+              <button class="time-slot border border-border rounded-lg py-2.5 px-3 text-center cursor-pointer bg-white">
+                <p class="text-sm font-medium text-text-primary">6:00 AM</p>
+                <p class="text-[10px] text-text-muted">6:00 - 7:00</p>
+              </button>
+              <button class="time-slot border border-border rounded-lg py-2.5 px-3 text-center cursor-pointer bg-white">
+                <p class="text-sm font-medium text-text-primary">7:00 AM</p>
+                <p class="text-[10px] text-text-muted">7:00 - 8:00</p>
+              </button>
+              <button class="time-slot selected border-2 border-primary rounded-lg py-2.5 px-3 text-center cursor-pointer bg-primary-light">
+                <p class="text-sm font-semibold text-primary">8:00 AM</p>
+                <p class="text-[10px] text-primary/70">8:00 - 9:00</p>
+              </button>
+              <button class="time-slot unavailable border border-border rounded-lg py-2.5 px-3 text-center">
+                <p class="text-sm font-medium text-text-muted">9:00 AM</p>
+                <p class="text-[10px] text-text-muted">Booked</p>
+              </button>
+              <button class="time-slot unavailable border border-border rounded-lg py-2.5 px-3 text-center">
+                <p class="text-sm font-medium text-text-muted">10:00 AM</p>
+                <p class="text-[10px] text-text-muted">Booked</p>
+              </button>
+              <button class="time-slot border border-border rounded-lg py-2.5 px-3 text-center cursor-pointer bg-white">
+                <p class="text-sm font-medium text-text-primary">11:00 AM</p>
+                <p class="text-[10px] text-text-muted">11:00 - 12:00</p>
+              </button>
+            </div>
+          </div>
+
+          <!-- Afternoon slots -->
+          <div class="mb-5">
+            <div class="flex items-center gap-2 mb-2">
+              <svg class="w-4 h-4 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+              <span class="text-xs font-semibold text-text-secondary uppercase tracking-wide">Afternoon (12:00 PM - 6:00 PM)</span>
+            </div>
+            <div class="grid grid-cols-6 gap-2">
+              <button class="time-slot border border-border rounded-lg py-2.5 px-3 text-center cursor-pointer bg-white">
+                <p class="text-sm font-medium text-text-primary">12:00 PM</p>
+                <p class="text-[10px] text-text-muted">12:00 - 1:00</p>
+              </button>
+              <button class="time-slot border border-border rounded-lg py-2.5 px-3 text-center cursor-pointer bg-white">
+                <p class="text-sm font-medium text-text-primary">1:00 PM</p>
+                <p class="text-[10px] text-text-muted">1:00 - 2:00</p>
+              </button>
+              <button class="time-slot border border-border rounded-lg py-2.5 px-3 text-center cursor-pointer bg-white">
+                <p class="text-sm font-medium text-text-primary">2:00 PM</p>
+                <p class="text-[10px] text-text-muted">2:00 - 3:00</p>
+              </button>
+              <button class="time-slot unavailable border border-border rounded-lg py-2.5 px-3 text-center">
+                <p class="text-sm font-medium text-text-muted">3:00 PM</p>
+                <p class="text-[10px] text-text-muted">Booked</p>
+              </button>
+              <button class="time-slot border border-border rounded-lg py-2.5 px-3 text-center cursor-pointer bg-white">
+                <p class="text-sm font-medium text-text-primary">4:00 PM</p>
+                <p class="text-[10px] text-text-muted">4:00 - 5:00</p>
+              </button>
+              <button class="time-slot border border-border rounded-lg py-2.5 px-3 text-center cursor-pointer bg-white">
+                <p class="text-sm font-medium text-text-primary">5:00 PM</p>
+                <p class="text-[10px] text-text-muted">5:00 - 6:00</p>
+              </button>
+            </div>
+          </div>
+
+          <!-- Evening slots -->
+          <div class="mb-5">
+            <div class="flex items-center gap-2 mb-2">
+              <svg class="w-4 h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+              <span class="text-xs font-semibold text-text-secondary uppercase tracking-wide">Evening (6:00 PM - 10:00 PM)</span>
+            </div>
+            <div class="grid grid-cols-6 gap-2">
+              <button class="time-slot border border-border rounded-lg py-2.5 px-3 text-center cursor-pointer bg-white">
+                <p class="text-sm font-medium text-text-primary">6:00 PM</p>
+                <p class="text-[10px] text-text-muted">6:00 - 7:00</p>
+              </button>
+              <button class="time-slot border border-border rounded-lg py-2.5 px-3 text-center cursor-pointer bg-white">
+                <p class="text-sm font-medium text-text-primary">7:00 PM</p>
+                <p class="text-[10px] text-text-muted">7:00 - 8:00</p>
+              </button>
+              <button class="time-slot unavailable border border-border rounded-lg py-2.5 px-3 text-center">
+                <p class="text-sm font-medium text-text-muted">8:00 PM</p>
+                <p class="text-[10px] text-text-muted">Booked</p>
+              </button>
+              <button class="time-slot border border-border rounded-lg py-2.5 px-3 text-center cursor-pointer bg-white">
+                <p class="text-sm font-medium text-text-primary">9:00 PM</p>
+                <p class="text-[10px] text-text-muted">9:00 - 10:00</p>
+              </button>
+              <!-- Empty placeholders -->
+              <div></div>
+              <div></div>
+            </div>
+          </div>
+
+          <!-- Legend -->
+          <div class="flex items-center gap-5 pt-4 border-t border-border">
+            <div class="flex items-center gap-1.5">
+              <div class="w-4 h-4 border border-border rounded bg-white"></div>
+              <span class="text-xs text-text-muted">Available</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <div class="w-4 h-4 border-2 border-primary rounded bg-primary-light"></div>
+              <span class="text-xs text-text-muted">Selected</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <div class="w-4 h-4 border border-border rounded" style="background: repeating-linear-gradient(-45deg, #f0f1f5, #f0f1f5 2px, #e2e4ea 2px, #e2e4ea 3px);"></div>
+              <span class="text-xs text-text-muted">Unavailable</span>
+            </div>
+          </div>
+
+          <!-- Confirmation bar -->
+          <div class="flex items-center justify-between mt-4 px-4 py-3 bg-primary-light border border-primary/20 rounded-lg">
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span class="text-sm font-medium text-primary">Selected: Wednesday, Feb 18 at 8:00 AM - 9:00 AM</span>
+            </div>
+            <button class="px-4 py-1.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90">Confirm Slot</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="max-w-7xl mx-auto mt-12 mb-8 text-center">
+    <p class="text-xs text-text-muted">Ultra TMS Design System — Contextual Pickers & Selection Patterns — Component Showcase 2/2</p>
+  </div>
+
+</body>
+</html>

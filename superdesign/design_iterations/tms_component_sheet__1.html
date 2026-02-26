@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TMS Component Sheet - Full Catalog</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            primary: '#4f46e5',
+            contentbg: '#f0f1f5',
+            cardbg: '#ffffff',
+            border: '#e2e4ea',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-[#f0f1f5] min-h-screen p-8">
+
+  <!-- Header -->
+  <div class="max-w-7xl mx-auto mb-8">
+    <h1 class="text-2xl font-bold text-gray-900">Ultra TMS — Design System Component Sheet</h1>
+    <p class="text-sm text-gray-500 mt-1">Variation 1: Full Component Catalog &middot; Tailwind + Inter &middot; Primary #4f46e5</p>
+  </div>
+
+  <div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- ============================================ -->
+    <!-- BUTTONS -->
+    <!-- ============================================ -->
+    <section class="bg-white rounded-xl border border-[#e2e4ea] p-6">
+      <h2 class="text-base font-semibold text-gray-900 mb-1">Buttons</h2>
+      <p class="text-xs text-gray-400 mb-5 uppercase tracking-wider">Primary &middot; Secondary &middot; Outline &middot; Ghost &middot; Destructive &middot; Link &mdash; sm / md / lg</p>
+
+      <!-- Primary -->
+      <div class="mb-4">
+        <span class="text-[11px] font-medium text-gray-400 uppercase tracking-wider block mb-2">Primary</span>
+        <div class="flex items-end gap-3 flex-wrap">
+          <button class="px-3 py-1 text-xs font-medium text-white bg-[#4f46e5] rounded-md hover:bg-[#4338ca] transition">Small</button>
+          <button class="px-4 py-2 text-sm font-medium text-white bg-[#4f46e5] rounded-md hover:bg-[#4338ca] transition">Medium</button>
+          <button class="px-5 py-2.5 text-base font-medium text-white bg-[#4f46e5] rounded-md hover:bg-[#4338ca] transition">Large</button>
+        </div>
+      </div>
+
+      <!-- Secondary -->
+      <div class="mb-4">
+        <span class="text-[11px] font-medium text-gray-400 uppercase tracking-wider block mb-2">Secondary</span>
+        <div class="flex items-end gap-3 flex-wrap">
+          <button class="px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition">Small</button>
+          <button class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition">Medium</button>
+          <button class="px-5 py-2.5 text-base font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition">Large</button>
+        </div>
+      </div>
+
+      <!-- Outline -->
+      <div class="mb-4">
+        <span class="text-[11px] font-medium text-gray-400 uppercase tracking-wider block mb-2">Outline</span>
+        <div class="flex items-end gap-3 flex-wrap">
+          <button class="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-[#e2e4ea] rounded-md hover:bg-gray-50 transition">Small</button>
+          <button class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-[#e2e4ea] rounded-md hover:bg-gray-50 transition">Medium</button>
+          <button class="px-5 py-2.5 text-base font-medium text-gray-700 bg-white border border-[#e2e4ea] rounded-md hover:bg-gray-50 transition">Large</button>
+        </div>
+      </div>
+
+      <!-- Ghost -->
+      <div class="mb-4">
+        <span class="text-[11px] font-medium text-gray-400 uppercase tracking-wider block mb-2">Ghost</span>
+        <div class="flex items-end gap-3 flex-wrap">
+          <button class="px-3 py-1 text-xs font-medium text-gray-600 rounded-md hover:bg-gray-100 transition">Small</button>
+          <button class="px-4 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-100 transition">Medium</button>
+          <button class="px-5 py-2.5 text-base font-medium text-gray-600 rounded-md hover:bg-gray-100 transition">Large</button>
+        </div>
+      </div>
+
+      <!-- Destructive -->
+      <div class="mb-4">
+        <span class="text-[11px] font-medium text-gray-400 uppercase tracking-wider block mb-2">Destructive</span>
+        <div class="flex items-end gap-3 flex-wrap">
+          <button class="px-3 py-1 text-xs font-medium text-white bg-red-500 rounded-md hover:bg-red-600 transition">Small</button>
+          <button class="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-md hover:bg-red-600 transition">Medium</button>
+          <button class="px-5 py-2.5 text-base font-medium text-white bg-red-500 rounded-md hover:bg-red-600 transition">Large</button>
+        </div>
+      </div>
+
+      <!-- Link -->
+      <div>
+        <span class="text-[11px] font-medium text-gray-400 uppercase tracking-wider block mb-2">Link</span>
+        <div class="flex items-end gap-3 flex-wrap">
+          <button class="px-3 py-1 text-xs font-medium text-[#4f46e5] underline underline-offset-2 hover:text-[#4338ca] transition">Small</button>
+          <button class="px-4 py-2 text-sm font-medium text-[#4f46e5] underline underline-offset-2 hover:text-[#4338ca] transition">Medium</button>
+          <button class="px-5 py-2.5 text-base font-medium text-[#4f46e5] underline underline-offset-2 hover:text-[#4338ca] transition">Large</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- STATUS BADGES -->
+    <!-- ============================================ -->
+    <section class="bg-white rounded-xl border border-[#e2e4ea] p-6">
+      <h2 class="text-base font-semibold text-gray-900 mb-1">Status Badges</h2>
+      <p class="text-xs text-gray-400 mb-5 uppercase tracking-wider">Dot-label pattern for load / shipment statuses</p>
+
+      <div class="flex flex-wrap gap-3">
+        <!-- In Transit -->
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+          <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+          In Transit
+        </span>
+        <!-- Unassigned -->
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+          Unassigned
+        </span>
+        <!-- Dispatched -->
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-cyan-50 text-cyan-700 border border-cyan-200">
+          <span class="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
+          Dispatched
+        </span>
+        <!-- Delivered -->
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">
+          <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+          Delivered
+        </span>
+        <!-- At Risk -->
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">
+          <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+          At Risk
+        </span>
+        <!-- Tendered -->
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
+          <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+          Tendered
+        </span>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- PRIORITY BADGES -->
+    <!-- ============================================ -->
+    <section class="bg-white rounded-xl border border-[#e2e4ea] p-6">
+      <h2 class="text-base font-semibold text-gray-900 mb-1">Priority Badges</h2>
+      <p class="text-xs text-gray-400 mb-5 uppercase tracking-wider">Tinted background badges for priority levels</p>
+
+      <div class="flex flex-wrap gap-3">
+        <span class="inline-flex items-center px-2.5 py-1 rounded text-xs font-semibold bg-red-100 text-red-800">Urgent</span>
+        <span class="inline-flex items-center px-2.5 py-1 rounded text-xs font-semibold bg-amber-100 text-amber-800">High</span>
+        <span class="inline-flex items-center px-2.5 py-1 rounded text-xs font-semibold bg-gray-100 text-gray-700">Normal</span>
+        <span class="inline-flex items-center px-2.5 py-1 rounded text-xs font-semibold bg-gray-50 text-gray-500">Low</span>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- INPUTS -->
+    <!-- ============================================ -->
+    <section class="bg-white rounded-xl border border-[#e2e4ea] p-6">
+      <h2 class="text-base font-semibold text-gray-900 mb-1">Inputs</h2>
+      <p class="text-xs text-gray-400 mb-5 uppercase tracking-wider">Text inputs, select, search</p>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+        <!-- Default -->
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Default</label>
+          <input type="text" placeholder="Enter value..." class="w-full px-3 py-2 text-sm border border-[#e2e4ea] rounded-md bg-white text-gray-900 placeholder-gray-400 focus:outline-none">
+        </div>
+        <!-- Focused -->
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Focused</label>
+          <input type="text" value="Chicago, IL" class="w-full px-3 py-2 text-sm border-2 border-[#4f46e5] rounded-md bg-white text-gray-900 ring-2 ring-indigo-200 focus:outline-none">
+        </div>
+        <!-- Error -->
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Error</label>
+          <input type="text" value="abc" class="w-full px-3 py-2 text-sm border-2 border-red-400 rounded-md bg-white text-gray-900 ring-2 ring-red-100 focus:outline-none">
+          <p class="text-xs text-red-500 mt-1">Invalid ZIP code format</p>
+        </div>
+        <!-- Disabled -->
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Disabled</label>
+          <input type="text" value="Read only" disabled class="w-full px-3 py-2 text-sm border border-[#e2e4ea] rounded-md bg-gray-50 text-gray-400 cursor-not-allowed">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Select -->
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Select Dropdown</label>
+          <select class="w-full px-3 py-2 text-sm border border-[#e2e4ea] rounded-md bg-white text-gray-900 focus:outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-indigo-200">
+            <option>Select carrier...</option>
+            <option>Werner Enterprises</option>
+            <option>Swift Transportation</option>
+            <option>J.B. Hunt</option>
+          </select>
+        </div>
+        <!-- Search -->
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Search</label>
+          <div class="relative">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <input type="text" placeholder="Search loads..." class="w-full pl-10 pr-3 py-2 text-sm border border-[#e2e4ea] rounded-md bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-indigo-200">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- CARDS -->
+    <!-- ============================================ -->
+    <section class="bg-white rounded-xl border border-[#e2e4ea] p-6">
+      <h2 class="text-base font-semibold text-gray-900 mb-1">Cards</h2>
+      <p class="text-xs text-gray-400 mb-5 uppercase tracking-wider">Basic &middot; KPI &middot; Interactive</p>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <!-- Basic Card -->
+        <div class="bg-white border border-[#e2e4ea] rounded-lg p-5">
+          <h3 class="text-sm font-semibold text-gray-900 mb-1">Basic Card</h3>
+          <p class="text-xs text-gray-500 leading-relaxed">A simple container with padding, border, and rounded corners. Used for grouping related content.</p>
+          <div class="mt-3 flex gap-2">
+            <button class="px-3 py-1 text-xs font-medium text-white bg-[#4f46e5] rounded-md">Action</button>
+            <button class="px-3 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-md">Cancel</button>
+          </div>
+        </div>
+
+        <!-- KPI Card -->
+        <div class="bg-white border border-[#e2e4ea] rounded-lg overflow-hidden flex">
+          <div class="w-1 bg-[#4f46e5] shrink-0"></div>
+          <div class="p-5">
+            <p class="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Active Loads</p>
+            <p class="text-2xl font-bold text-gray-900 mt-1">1,247</p>
+            <p class="text-xs text-green-600 mt-1 flex items-center gap-1">
+              <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+              +12.3% vs last week
+            </p>
+          </div>
+        </div>
+
+        <!-- Interactive Card -->
+        <div class="bg-white border border-[#e2e4ea] rounded-lg p-5 cursor-pointer transition-shadow duration-200 hover:shadow-lg hover:shadow-gray-200/60 hover:border-[#4f46e5]/30">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-sm font-semibold text-gray-900">Load #TMS-4821</h3>
+            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
+              <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+              In Transit
+            </span>
+          </div>
+          <p class="text-xs text-gray-500">Chicago, IL &rarr; Dallas, TX</p>
+          <p class="text-sm font-semibold text-gray-900 mt-2">$3,450.00</p>
+          <p class="text-[11px] text-gray-400 mt-1">Hover me for shadow effect</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TABLE SAMPLE -->
+    <!-- ============================================ -->
+    <section class="bg-white rounded-xl border border-[#e2e4ea] p-6">
+      <h2 class="text-base font-semibold text-gray-900 mb-1">Table Sample</h2>
+      <p class="text-xs text-gray-400 mb-5 uppercase tracking-wider">Standard data table with status badges</p>
+
+      <div class="overflow-x-auto border border-[#e2e4ea] rounded-lg">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-gray-50 border-b border-[#e2e4ea]">
+              <th class="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Load #</th>
+              <th class="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+              <th class="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Route</th>
+              <th class="px-4 py-3 text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Revenue</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[#e2e4ea]">
+            <tr class="hover:bg-gray-50/60">
+              <td class="px-4 py-3 font-mono text-sm text-gray-900">TMS-4821</td>
+              <td class="px-4 py-3">
+                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                  <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>In Transit
+                </span>
+              </td>
+              <td class="px-4 py-3 text-gray-600">Chicago, IL &rarr; Dallas, TX</td>
+              <td class="px-4 py-3 text-right font-mono text-gray-900">$3,450.00</td>
+            </tr>
+            <tr class="hover:bg-gray-50/60">
+              <td class="px-4 py-3 font-mono text-sm text-gray-900">TMS-4822</td>
+              <td class="px-4 py-3">
+                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-green-50 text-green-700 border border-green-200">
+                  <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>Delivered
+                </span>
+              </td>
+              <td class="px-4 py-3 text-gray-600">Atlanta, GA &rarr; Miami, FL</td>
+              <td class="px-4 py-3 text-right font-mono text-gray-900">$2,180.00</td>
+            </tr>
+            <tr class="hover:bg-gray-50/60">
+              <td class="px-4 py-3 font-mono text-sm text-gray-900">TMS-4823</td>
+              <td class="px-4 py-3">
+                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                  <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Unassigned
+                </span>
+              </td>
+              <td class="px-4 py-3 text-gray-600">Denver, CO &rarr; Phoenix, AZ</td>
+              <td class="px-4 py-3 text-right font-mono text-gray-900">$4,720.00</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- COLOR PALETTE -->
+    <!-- ============================================ -->
+    <section class="bg-white rounded-xl border border-[#e2e4ea] p-6">
+      <h2 class="text-base font-semibold text-gray-900 mb-1">Color Palette</h2>
+      <p class="text-xs text-gray-400 mb-5 uppercase tracking-wider">Semantic colors with text, background tint, and border variants</p>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        <!-- Primary -->
+        <div class="space-y-2">
+          <div class="h-16 rounded-lg bg-[#4f46e5] flex items-end p-2">
+            <span class="text-[11px] font-mono text-white/80">#4f46e5</span>
+          </div>
+          <p class="text-xs font-semibold text-gray-700">Primary</p>
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-[#4f46e5] font-medium">Text color</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="inline-block w-full px-2 py-1 text-[11px] text-[#4f46e5] bg-indigo-50 rounded">Bg tint</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="inline-block w-full px-2 py-1 text-[11px] text-[#4f46e5] border border-indigo-300 rounded">Border</span>
+            </div>
+          </div>
+        </div>
+        <!-- Success -->
+        <div class="space-y-2">
+          <div class="h-16 rounded-lg bg-[#10b981] flex items-end p-2">
+            <span class="text-[11px] font-mono text-white/80">#10b981</span>
+          </div>
+          <p class="text-xs font-semibold text-gray-700">Success</p>
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-emerald-600 font-medium">Text color</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="inline-block w-full px-2 py-1 text-[11px] text-emerald-700 bg-emerald-50 rounded">Bg tint</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="inline-block w-full px-2 py-1 text-[11px] text-emerald-700 border border-emerald-300 rounded">Border</span>
+            </div>
+          </div>
+        </div>
+        <!-- Warning -->
+        <div class="space-y-2">
+          <div class="h-16 rounded-lg bg-[#f59e0b] flex items-end p-2">
+            <span class="text-[11px] font-mono text-white/80">#f59e0b</span>
+          </div>
+          <p class="text-xs font-semibold text-gray-700">Warning</p>
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-amber-600 font-medium">Text color</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="inline-block w-full px-2 py-1 text-[11px] text-amber-700 bg-amber-50 rounded">Bg tint</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="inline-block w-full px-2 py-1 text-[11px] text-amber-700 border border-amber-300 rounded">Border</span>
+            </div>
+          </div>
+        </div>
+        <!-- Danger -->
+        <div class="space-y-2">
+          <div class="h-16 rounded-lg bg-[#ef4444] flex items-end p-2">
+            <span class="text-[11px] font-mono text-white/80">#ef4444</span>
+          </div>
+          <p class="text-xs font-semibold text-gray-700">Danger</p>
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-red-600 font-medium">Text color</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="inline-block w-full px-2 py-1 text-[11px] text-red-700 bg-red-50 rounded">Bg tint</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="inline-block w-full px-2 py-1 text-[11px] text-red-700 border border-red-300 rounded">Border</span>
+            </div>
+          </div>
+        </div>
+        <!-- Info -->
+        <div class="space-y-2">
+          <div class="h-16 rounded-lg bg-[#3b82f6] flex items-end p-2">
+            <span class="text-[11px] font-mono text-white/80">#3b82f6</span>
+          </div>
+          <p class="text-xs font-semibold text-gray-700">Info</p>
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-blue-600 font-medium">Text color</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="inline-block w-full px-2 py-1 text-[11px] text-blue-700 bg-blue-50 rounded">Bg tint</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="inline-block w-full px-2 py-1 text-[11px] text-blue-700 border border-blue-300 rounded">Border</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- TYPOGRAPHY -->
+    <!-- ============================================ -->
+    <section class="bg-white rounded-xl border border-[#e2e4ea] p-6">
+      <h2 class="text-base font-semibold text-gray-900 mb-1">Typography</h2>
+      <p class="text-xs text-gray-400 mb-5 uppercase tracking-wider">Inter font &middot; Scale from page title to mono data</p>
+
+      <div class="space-y-4">
+        <div class="flex items-baseline gap-4 pb-3 border-b border-[#e2e4ea]">
+          <span class="text-[11px] font-mono text-gray-400 w-28 shrink-0">20px / 600</span>
+          <span class="text-[20px] font-semibold text-gray-900">Page Title — Dispatch Board</span>
+        </div>
+        <div class="flex items-baseline gap-4 pb-3 border-b border-[#e2e4ea]">
+          <span class="text-[11px] font-mono text-gray-400 w-28 shrink-0">16px / 600</span>
+          <span class="text-[16px] font-semibold text-gray-900">Section Title — Active Loads</span>
+        </div>
+        <div class="flex items-baseline gap-4 pb-3 border-b border-[#e2e4ea]">
+          <span class="text-[11px] font-mono text-gray-400 w-28 shrink-0">14px / 400</span>
+          <span class="text-[14px] font-normal text-gray-700">Body text — Load picked up at warehouse facility in Chicago.</span>
+        </div>
+        <div class="flex items-baseline gap-4 pb-3 border-b border-[#e2e4ea]">
+          <span class="text-[11px] font-mono text-gray-400 w-28 shrink-0">12px / 400</span>
+          <span class="text-[12px] font-normal text-gray-500">Caption — Last updated 2 hours ago</span>
+        </div>
+        <div class="flex items-baseline gap-4">
+          <span class="text-[11px] font-mono text-gray-400 w-28 shrink-0">14px / mono</span>
+          <span class="text-[14px] font-mono text-gray-900">$4,720.00 &middot; TMS-4823 &middot; 1,247 mi</span>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="max-w-7xl mx-auto mt-8 text-center">
+    <p class="text-xs text-gray-400">Ultra TMS Design System &middot; Component Sheet v1 &middot; Full Catalog</p>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Load Detail - Two Column Layout</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            primary: '#4f46e5',
+            sidebar: '#1a1f36',
+            contentbg: '#f0f1f5',
+            cardbg: '#ffffff',
+            border: '#e2e4ea',
+            'text-dark': '#1e2235',
+            'text-mid': '#6b7194',
+            'text-light': '#9ca3c0',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-contentbg text-text-dark min-h-screen flex">
+
+  <!-- Sidebar -->
+  <aside class="w-[260px] bg-sidebar min-h-screen flex flex-col fixed left-0 top-0 bottom-0">
+    <div class="px-6 py-6 border-b border-white/10">
+      <h1 class="text-white text-xl font-bold tracking-tight">Ultra TMS</h1>
+    </div>
+    <nav class="flex-1 px-3 py-4 space-y-1">
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/50 hover:text-white hover:bg-white/5 transition-colors text-sm">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1" /></svg>
+        Dashboard
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/50 hover:text-white hover:bg-white/5 transition-colors text-sm">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+        Dispatch Board
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/10 text-white text-sm font-medium">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+        Loads
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/50 hover:text-white hover:bg-white/5 transition-colors text-sm">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+        Carriers
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/50 hover:text-white hover:bg-white/5 transition-colors text-sm">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+        Customers
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/50 hover:text-white hover:bg-white/5 transition-colors text-sm">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+        Reports
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/50 hover:text-white hover:bg-white/5 transition-colors text-sm">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+        Settings
+      </a>
+    </nav>
+    <div class="px-4 py-4 border-t border-white/10">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-semibold">RU</div>
+        <div>
+          <p class="text-white text-sm font-medium">Rabih U.</p>
+          <p class="text-white/40 text-xs">Admin</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="ml-[260px] flex-1 min-h-screen">
+
+    <!-- Page Header -->
+    <div class="bg-white border-b border-border px-8 py-5">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <button class="w-9 h-9 rounded-lg border border-border flex items-center justify-center hover:bg-gray-50 transition-colors">
+            <svg class="w-4 h-4 text-text-mid" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+          </button>
+          <div class="flex items-center gap-3">
+            <h1 class="text-xl font-semibold text-text-dark">Load <span class="font-mono font-bold">#LD-2024-0847</span></h1>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold border border-blue-200">
+              <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+              In Transit
+            </span>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <button class="px-4 py-2 text-sm font-medium text-text-mid border border-border rounded-lg hover:bg-gray-50 transition-colors">
+            Edit Load
+          </button>
+          <div class="relative">
+            <button class="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2">
+              Actions
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Area -->
+    <div class="p-8">
+
+      <!-- Two Column Layout -->
+      <div class="flex gap-6 mb-6">
+
+        <!-- Left Column - Route Card (60%) -->
+        <div class="w-[60%] bg-white rounded-xl border border-border">
+          <div class="px-6 py-4 border-b border-border">
+            <h2 class="text-base font-semibold text-text-dark">Route</h2>
+          </div>
+          <div class="p-6">
+            <!-- Origin / Destination -->
+            <div class="flex items-start gap-4 mb-6">
+              <div class="flex flex-col items-center gap-1 pt-1">
+                <div class="w-3 h-3 rounded-full bg-emerald-500 ring-4 ring-emerald-50"></div>
+                <div class="w-0.5 h-16 bg-gradient-to-b from-emerald-300 to-primary"></div>
+                <div class="w-3 h-3 rounded-full bg-primary ring-4 ring-indigo-50"></div>
+              </div>
+              <div class="flex-1 space-y-5">
+                <div>
+                  <p class="text-xs font-medium text-text-light uppercase tracking-wider mb-1">Origin</p>
+                  <p class="text-base font-semibold text-text-dark">Chicago, IL</p>
+                  <p class="text-sm text-text-mid mt-0.5">02/15/2024 &middot; 08:00 AM</p>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-text-light uppercase tracking-wider mb-1">Destination</p>
+                  <p class="text-base font-semibold text-text-dark">Dallas, TX</p>
+                  <p class="text-sm text-text-mid mt-0.5">02/17/2024 &middot; 04:00 PM</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Map Placeholder -->
+            <div class="w-full h-[240px] rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center mb-6 border border-border">
+              <div class="text-center">
+                <svg class="w-10 h-10 text-text-light mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
+                <p class="text-sm text-text-light font-medium">Map View</p>
+              </div>
+            </div>
+
+            <!-- Distance & Time -->
+            <div class="flex gap-6">
+              <div class="flex items-center gap-3 bg-gray-50 rounded-lg px-4 py-3 flex-1">
+                <svg class="w-5 h-5 text-text-light" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                <div>
+                  <p class="text-xs text-text-light font-medium">Distance</p>
+                  <p class="text-lg font-bold text-text-dark">925 mi</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 bg-gray-50 rounded-lg px-4 py-3 flex-1">
+                <svg class="w-5 h-5 text-text-light" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <div>
+                  <p class="text-xs text-text-light font-medium">Estimated Time</p>
+                  <p class="text-lg font-bold text-text-dark">14h 30m</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column - Info Card (40%) -->
+        <div class="w-[40%] bg-white rounded-xl border border-border">
+          <div class="px-6 py-4 border-b border-border">
+            <h2 class="text-base font-semibold text-text-dark">Load Information</h2>
+          </div>
+          <div class="p-6">
+            <div class="grid grid-cols-2 gap-x-6 gap-y-5">
+              <div>
+                <p class="text-xs font-medium text-text-light uppercase tracking-wider mb-1.5">Customer</p>
+                <p class="text-sm font-semibold text-text-dark">ABC Logistics</p>
+              </div>
+              <div>
+                <p class="text-xs font-medium text-text-light uppercase tracking-wider mb-1.5">Carrier</p>
+                <p class="text-sm font-semibold text-text-dark">Swift Trans</p>
+              </div>
+              <div>
+                <p class="text-xs font-medium text-text-light uppercase tracking-wider mb-1.5">Driver</p>
+                <p class="text-sm font-semibold text-text-dark">John D.</p>
+              </div>
+              <div>
+                <p class="text-xs font-medium text-text-light uppercase tracking-wider mb-1.5">Equipment</p>
+                <p class="text-sm font-semibold text-text-dark">53' Dry Van</p>
+              </div>
+              <div>
+                <p class="text-xs font-medium text-text-light uppercase tracking-wider mb-1.5">Weight</p>
+                <p class="text-sm font-semibold text-text-dark">42,000 lbs</p>
+              </div>
+              <div>
+                <p class="text-xs font-medium text-text-light uppercase tracking-wider mb-1.5">Rate</p>
+                <p class="text-sm font-bold text-text-dark font-mono">$4,250.00</p>
+              </div>
+            </div>
+
+            <!-- Divider -->
+            <div class="border-t border-border my-6"></div>
+
+            <!-- Quick Stats -->
+            <div class="space-y-3">
+              <div class="flex items-center justify-between py-2">
+                <span class="text-sm text-text-mid">Revenue per Mile</span>
+                <span class="text-sm font-semibold text-text-dark font-mono">$4.59</span>
+              </div>
+              <div class="flex items-center justify-between py-2">
+                <span class="text-sm text-text-mid">Pickup Date</span>
+                <span class="text-sm font-semibold text-text-dark">Feb 15, 2024</span>
+              </div>
+              <div class="flex items-center justify-between py-2">
+                <span class="text-sm text-text-mid">Delivery Date</span>
+                <span class="text-sm font-semibold text-text-dark">Feb 17, 2024</span>
+              </div>
+              <div class="flex items-center justify-between py-2">
+                <span class="text-sm text-text-mid">Payment Terms</span>
+                <span class="text-sm font-semibold text-text-dark">Net 30</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Bar -->
+      <div class="bg-white rounded-xl border border-border">
+        <div class="flex border-b border-border px-6">
+          <button class="px-4 py-3.5 text-sm font-medium text-text-mid hover:text-text-dark transition-colors relative">
+            Overview
+          </button>
+          <button class="px-4 py-3.5 text-sm font-medium text-text-mid hover:text-text-dark transition-colors relative">
+            Route
+          </button>
+          <button class="px-4 py-3.5 text-sm font-medium text-text-mid hover:text-text-dark transition-colors relative">
+            Carrier
+          </button>
+          <button class="px-4 py-3.5 text-sm font-medium text-text-mid hover:text-text-dark transition-colors relative">
+            Documents
+          </button>
+          <button class="px-4 py-3.5 text-sm font-medium text-primary transition-colors relative">
+            Timeline
+            <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full"></span>
+          </button>
+          <button class="px-4 py-3.5 text-sm font-medium text-text-mid hover:text-text-dark transition-colors relative">
+            Check Calls
+          </button>
+        </div>
+
+        <!-- Timeline Content -->
+        <div class="p-6">
+          <div class="space-y-0">
+
+            <!-- Event 1 -->
+            <div class="flex gap-4">
+              <div class="flex flex-col items-center">
+                <div class="w-3 h-3 rounded-full bg-emerald-500 ring-4 ring-emerald-50 mt-1"></div>
+                <div class="w-0.5 flex-1 bg-border my-2"></div>
+              </div>
+              <div class="pb-6 flex-1">
+                <div class="flex items-center justify-between">
+                  <p class="text-sm font-semibold text-text-dark">Load Created</p>
+                  <span class="text-xs text-text-light font-medium">Feb 14, 2024 &middot; 10:30 AM</span>
+                </div>
+                <p class="text-sm text-text-mid mt-1">Load created by Sarah M. and assigned to dispatch queue.</p>
+              </div>
+            </div>
+
+            <!-- Event 2 -->
+            <div class="flex gap-4">
+              <div class="flex flex-col items-center">
+                <div class="w-3 h-3 rounded-full bg-primary ring-4 ring-indigo-50 mt-1"></div>
+                <div class="w-0.5 flex-1 bg-border my-2"></div>
+              </div>
+              <div class="pb-6 flex-1">
+                <div class="flex items-center justify-between">
+                  <p class="text-sm font-semibold text-text-dark">Carrier Assigned</p>
+                  <span class="text-xs text-text-light font-medium">Feb 14, 2024 &middot; 02:15 PM</span>
+                </div>
+                <p class="text-sm text-text-mid mt-1">Swift Trans accepted the load. Driver John D. assigned.</p>
+              </div>
+            </div>
+
+            <!-- Event 3 -->
+            <div class="flex gap-4">
+              <div class="flex flex-col items-center">
+                <div class="w-3 h-3 rounded-full bg-amber-500 ring-4 ring-amber-50 mt-1"></div>
+                <div class="w-0.5 flex-1 bg-border my-2"></div>
+              </div>
+              <div class="pb-6 flex-1">
+                <div class="flex items-center justify-between">
+                  <p class="text-sm font-semibold text-text-dark">Rate Confirmation Sent</p>
+                  <span class="text-xs text-text-light font-medium">Feb 14, 2024 &middot; 02:45 PM</span>
+                </div>
+                <p class="text-sm text-text-mid mt-1">Rate confirmation sent to Swift Trans via email.</p>
+              </div>
+            </div>
+
+            <!-- Event 4 -->
+            <div class="flex gap-4">
+              <div class="flex flex-col items-center">
+                <div class="w-3 h-3 rounded-full bg-emerald-500 ring-4 ring-emerald-50 mt-1"></div>
+                <div class="w-0.5 flex-1 bg-border my-2"></div>
+              </div>
+              <div class="pb-6 flex-1">
+                <div class="flex items-center justify-between">
+                  <p class="text-sm font-semibold text-text-dark">Picked Up</p>
+                  <span class="text-xs text-text-light font-medium">Feb 15, 2024 &middot; 08:12 AM</span>
+                </div>
+                <p class="text-sm text-text-mid mt-1">Freight picked up from ABC Logistics warehouse, Chicago, IL.</p>
+              </div>
+            </div>
+
+            <!-- Event 5 -->
+            <div class="flex gap-4">
+              <div class="flex flex-col items-center">
+                <div class="w-3 h-3 rounded-full bg-blue-500 ring-4 ring-blue-50 mt-1"></div>
+              </div>
+              <div class="flex-1">
+                <div class="flex items-center justify-between">
+                  <p class="text-sm font-semibold text-text-dark">Check Call - In Transit</p>
+                  <span class="text-xs text-text-light font-medium">Feb 16, 2024 &middot; 11:00 AM</span>
+                </div>
+                <p class="text-sm text-text-mid mt-1">Driver reported position near Springfield, MO. ETA on schedule.</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+</body>
+</html>
