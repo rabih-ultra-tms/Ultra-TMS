@@ -12,13 +12,14 @@ export class LoadsService {
   ) { }
 
   async create(tenantId: string, userId: string, dto: CreateLoadDto) {
-    // Verify order exists
-    const order = await this.prisma.order.findFirst({
-      where: { id: dto.orderId, tenantId, deletedAt: null },
-    });
-
-    if (!order) {
-      throw new NotFoundException('Order not found');
+    // Verify order exists if orderId is provided
+    if (dto.orderId) {
+      const order = await this.prisma.order.findFirst({
+        where: { id: dto.orderId, tenantId, deletedAt: null },
+      });
+      if (!order) {
+        throw new NotFoundException('Order not found');
+      }
     }
 
     const loadNumber = await this.generateLoadNumber(tenantId);
@@ -26,29 +27,43 @@ export class LoadsService {
     const load = await this.prisma.load.create({
       data: {
         tenantId,
-        orderId: dto.orderId,
+        ...(dto.orderId ? { orderId: dto.orderId } : {}),
         loadNumber,
         status: 'PENDING',
-        carrierId: dto.carrierId,
-        driverName: dto.driverName,
-        driverPhone: dto.driverPhone,
-        truckNumber: dto.truckNumber,
-        trailerNumber: dto.trailerNumber,
-        carrierRate: dto.carrierRate,
-        accessorialCosts: dto.accessorialCosts,
-        fuelAdvance: dto.fuelAdvance,
-        equipmentType: dto.equipmentType,
-        equipmentLength: dto.equipmentLength,
-        equipmentWeightLimit: dto.equipmentWeightLimit,
-        dispatchNotes: dto.dispatchNotes,
+        carrierId: dto.carrierId ?? null,
+        driverName: dto.driverName ?? null,
+        driverPhone: dto.driverPhone ?? null,
+        truckNumber: dto.truckNumber ?? null,
+        trailerNumber: dto.trailerNumber ?? null,
+        carrierRate: dto.carrierRate ?? null,
+        ...(dto.accessorialCosts !== undefined ? { accessorialCosts: dto.accessorialCosts } : {}),
+        ...(dto.fuelAdvance !== undefined ? { fuelAdvance: dto.fuelAdvance } : {}),
+        equipmentType: dto.equipmentType ?? null,
+        equipmentLength: dto.equipmentLength ?? null,
+        equipmentWeightLimit: dto.equipmentWeightLimit ?? null,
+        dispatchNotes: dto.dispatchNotes ?? null,
         createdById: userId,
         updatedById: userId,
       },
       include: {
         order: { select: { id: true, orderNumber: true, status: true } },
         carrier: { select: { id: true, legalName: true, mcNumber: true } },
+        stops: { orderBy: { stopSequence: 'asc' } },
       },
     });
+
+    // Link order stops to this load (stops belong to orders; loads reference them via loadId)
+    if (dto.orderId) {
+      await this.prisma.stop.updateMany({
+        where: {
+          orderId: dto.orderId,
+          tenantId,
+          loadId: null,
+          deletedAt: null,
+        },
+        data: { loadId: load.id },
+      });
+    }
 
     this.eventEmitter.emit('load.created', {
       loadId: load.id,
@@ -143,6 +158,37 @@ export class LoadsService {
     };
   }
 
+  async getStats(tenantId: string): Promise<{
+    total: number;
+    byStatus: Record<string, number>;
+    totalRevenueCents: number;
+  }> {
+    const [statusGroups, revenueResult] = await Promise.all([
+      this.prisma.load.groupBy({
+        by: ['status'],
+        where: { tenantId, deletedAt: null },
+        _count: { id: true },
+      }),
+      this.prisma.order.aggregate({
+        where: { tenantId, deletedAt: null, loads: { some: {} } },
+        _sum: { totalCharges: true },
+      }),
+    ]);
+
+    const byStatus: Record<string, number> = {};
+    let total = 0;
+    for (const group of statusGroups) {
+      byStatus[group.status] = group._count.id;
+      total += group._count.id;
+    }
+
+    const totalRevenueCents = Math.round(
+      Number(revenueResult._sum.totalCharges ?? 0) * 100,
+    );
+
+    return { total, byStatus, totalRevenueCents };
+  }
+
   async findOne(tenantId: string, id: string) {
     const load = await this.prisma.load.findFirst({
       where: { id, tenantId, deletedAt: null },
@@ -154,6 +200,7 @@ export class LoadsService {
           },
         },
         carrier: true,
+        stops: { orderBy: { stopSequence: 'asc' } },
         checkCalls: { orderBy: { createdAt: 'desc' } },
       },
     });
