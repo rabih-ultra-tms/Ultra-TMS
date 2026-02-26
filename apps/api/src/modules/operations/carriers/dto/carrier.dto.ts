@@ -233,11 +233,13 @@ export class ListOperationsCarriersDto {
   @IsString()
   state?: string;
 
+  @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @Min(1)
   page: number = 1;
 
+  @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @Min(10)
