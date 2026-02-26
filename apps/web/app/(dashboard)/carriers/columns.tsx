@@ -1,15 +1,18 @@
 "use client";
 
+import React from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { OperationsCarrierListItem } from "@/types/carriers";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { StatusBadge } from "@/components/tms/primitives/status-badge";
-import { Phone, Mail, MapPin, Truck, Users, Shield, AlertTriangle, ShieldCheck, ShieldX, Clock, CheckCircle2, CircleOff, ShieldAlert } from "lucide-react";
+import { Phone, Mail, MapPin, Truck, Users, Shield, AlertTriangle, ShieldCheck, ShieldX, Clock, CheckCircle2, CircleOff, ShieldAlert, Container, Snowflake, Layers, ArrowDownToLine, Zap, Package, Car, Ship } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import Link from "next/link";
 import { CarrierActionsMenu } from "./carrier-actions-menu";
 import { TierBadge } from "@/components/carriers/tier-badge";
 import type { Intent } from "@/lib/design-tokens";
+import { CARRIER_EQUIPMENT_TYPE_LABELS } from "@/types/carriers";
 
 const TYPE_COLORS: Record<string, string> = {
     COMPANY: "bg-purple-100 text-purple-800",
@@ -52,6 +55,18 @@ const COMPLIANCE_CONFIG = {
     expiring:  { icon: AlertTriangle, label: "Expiring",  className: "text-amber-600" },
     expired:   { icon: ShieldX,       label: "Expired",   className: "text-red-600"   },
 } as const;
+
+const EQUIPMENT_ICON_MAP: Record<string, { icon: React.ElementType; className: string }> = {
+    VAN:         { icon: Container,       className: "text-blue-500"   },
+    REEFER:      { icon: Snowflake,       className: "text-cyan-500"   },
+    FLATBED:     { icon: Layers,          className: "text-amber-600"  },
+    STEP_DECK:   { icon: ArrowDownToLine, className: "text-orange-500" },
+    POWER_ONLY:  { icon: Zap,            className: "text-yellow-500" },
+    BOX_TRUCK:   { icon: Package,        className: "text-slate-500"  },
+    SPRINTER:    { icon: Car,            className: "text-purple-500" },
+    INTERMODAL:  { icon: Ship,           className: "text-teal-500"   },
+    CONESTOGA:   { icon: Truck,          className: "text-gray-500"   },
+};
 
 const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
@@ -171,6 +186,104 @@ export const columns: ColumnDef<OperationsCarrierListItem>[] = [
             );
         },
     },
+    // ---- Equipment Types ----
+    {
+        id: "equipment",
+        header: "Equipment",
+        enableSorting: false,
+        cell: ({ row }) => {
+            const types = row.original.equipmentTypes ?? [];
+            if (types.length === 0) return <span className="text-muted-foreground text-xs">-</span>;
+
+            const visible = types.slice(0, 4);
+            const overflow = types.length - 4;
+            const allLabels = types
+                .map((t) => CARRIER_EQUIPMENT_TYPE_LABELS[t] ?? t)
+                .join(", ");
+
+            return (
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <div className="flex items-center gap-1">
+                                {visible.map((type) => {
+                                    const config = EQUIPMENT_ICON_MAP[type];
+                                    if (!config) return null;
+                                    const Icon = config.icon;
+                                    return (
+                                        <Icon key={type} className={`h-3.5 w-3.5 shrink-0 ${config.className}`} />
+                                    );
+                                })}
+                                {overflow > 0 && (
+                                    <span className="text-[10px] text-muted-foreground font-medium">+{overflow}</span>
+                                )}
+                            </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                            <p className="text-xs">{allLabels}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            );
+        },
+        size: 100,
+    },
+
+    // ---- On-Time % ----
+    {
+        accessorKey: "onTimeDeliveryRate",
+        header: "On-Time",
+        enableSorting: true,
+        cell: ({ row }) => {
+            const rate = row.original.onTimeDeliveryRate;
+            if (rate === undefined || rate === null) {
+                return <span className="text-muted-foreground text-xs">-</span>;
+            }
+            const pct = Number(rate);
+            const colorClass =
+                pct >= 95 ? "text-green-600" : pct >= 85 ? "text-amber-600" : "text-red-600";
+            return (
+                <span className={`text-xs font-medium ${colorClass}`}>
+                    {pct.toFixed(1)}%
+                </span>
+            );
+        },
+        size: 80,
+    },
+
+    // ---- Total Loads ----
+    {
+        accessorKey: "totalLoadsCompleted",
+        header: "Loads",
+        enableSorting: true,
+        cell: ({ row }) => {
+            const count = row.original.totalLoadsCompleted;
+            if (!count) return <span className="text-muted-foreground text-xs">-</span>;
+            return <span className="text-xs">{count.toLocaleString()}</span>;
+        },
+        size: 60,
+    },
+
+    // ---- Rating ----
+    {
+        accessorKey: "avgRating",
+        header: "Rating",
+        enableSorting: true,
+        cell: ({ row }) => {
+            const rating = row.original.avgRating;
+            if (rating === undefined || rating === null) {
+                return <span className="text-muted-foreground text-xs">-</span>;
+            }
+            return (
+                <div className="flex items-center gap-1 text-xs">
+                    <span className="text-amber-500">★</span>
+                    <span className="font-medium">{Number(rating).toFixed(1)}</span>
+                </div>
+            );
+        },
+        size: 70,
+    },
+
     {
         id: "compliance",
         header: "Compliance",
