@@ -5,11 +5,11 @@ import { OperationsCarrierListItem } from "@/types/carriers";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { StatusBadge } from "@/components/tms/primitives/status-badge";
-import { Phone, Mail, MapPin, Truck, Users, Shield, AlertTriangle, ShieldCheck, ShieldX } from "lucide-react";
+import { Phone, Mail, MapPin, Truck, Users, Shield, AlertTriangle, ShieldCheck, ShieldX, Clock, CheckCircle2, CircleOff, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import { CarrierActionsMenu } from "./carrier-actions-menu";
 import { TierBadge } from "@/components/carriers/tier-badge";
-import type { StatusColorToken, Intent } from "@/lib/design-tokens";
+import type { Intent } from "@/lib/design-tokens";
 
 const TYPE_COLORS: Record<string, string> = {
     COMPANY: "bg-purple-100 text-purple-800",
@@ -225,17 +225,17 @@ export const columns: ColumnDef<OperationsCarrierListItem>[] = [
         header: "Status",
         cell: ({ row }) => {
             const status = row.original.status;
-            const config: Record<string, { status?: StatusColorToken; intent?: Intent; label: string }> = {
-                ACTIVE: { intent: "success", label: "Active" },
-                INACTIVE: { status: "unassigned", label: "Inactive" },
-                PREFERRED: { status: "delivered", label: "Preferred" },
-                ON_HOLD: { intent: "warning", label: "On Hold" },
-                BLACKLISTED: { intent: "danger", label: "Blacklisted" },
+            const config: Record<string, { intent?: Intent; label: string }> = {
+                PENDING:     { intent: "info",      label: "Pending"     },
+                APPROVED:    { intent: "info",      label: "Approved"    },
+                ACTIVE:      { intent: "success",   label: "Active"      },
+                INACTIVE:    { intent: undefined,   label: "Inactive"    },
+                SUSPENDED:   { intent: "warning",   label: "Suspended"   },
+                BLACKLISTED: { intent: "danger",    label: "Blacklisted" },
             };
-            const { status: s, intent: i, label } = config[status] || { intent: "info", label: status };
-
+            const { intent, label } = config[status] ?? { intent: "info", label: status };
             return (
-                <StatusBadge status={s} intent={i} size="sm">
+                <StatusBadge intent={intent} size="sm">
                     {label}
                 </StatusBadge>
             );
