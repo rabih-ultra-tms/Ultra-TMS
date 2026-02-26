@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, Query, HttpCode, HttpStatus, UseGuards, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, Query, HttpCode, HttpStatus, UseGuards, Patch, SerializeOptions } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto, UpdateOrderDto, CloneOrderDto, ChangeOrderStatusDto, CancelOrderDto, OrderQueryDto, CreateLoadDto, CreateOrderItemDto, CreateOrderFromTemplateDto } from './dto';
@@ -10,6 +10,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
 
 @Controller('orders')
 @UseGuards(JwtAuthGuard)
+@SerializeOptions({ excludeExtraneousValues: false })
 @ApiTags('Orders')
 @ApiBearerAuth('JWT-auth')
 export class OrdersController {
@@ -187,6 +188,19 @@ export class OrdersController {
     @Param('id') id: string,
   ) {
     await this.ordersService.delete(tenantId, id, userId);
+  }
+
+  /**
+   * Get order activity timeline
+   * GET /api/v1/orders/:id/timeline
+   */
+  @Get(':id/timeline')
+  @ApiOperation({ summary: 'Get order activity timeline' })
+  @ApiParam({ name: 'id', description: 'Order ID' })
+  @ApiStandardResponse('Order timeline events')
+  @ApiErrorResponses()
+  async getTimeline(@CurrentTenant() tenantId: string, @Param('id') id: string) {
+    return this.ordersService.getTimeline(tenantId, id);
   }
 
   /**

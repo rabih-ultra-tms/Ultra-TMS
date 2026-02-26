@@ -48,7 +48,7 @@ function useCommissionReports(startDate: string, endDate: string) {
       // Attempt dedicated reports endpoint first, fall back to
       // assembling from dashboard data.
       const response = await apiClient.get(
-        '/commissions/dashboard',
+        '/commissions/reports',
         params
       );
       const data = unwrap<Record<string, unknown>>(response);

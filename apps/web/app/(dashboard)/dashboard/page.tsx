@@ -3,7 +3,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, AlertCircle, Truck, Users, FileText, DollarSign } from "lucide-react";
-import { useCarrierStats, useLoadHistoryStats, useLoadPlannerQuoteStats } from "@/lib/hooks/operations";
+import { useCarrierStats } from "@/lib/hooks/operations";
+import { useLoadStats } from "@/lib/hooks/tms/use-loads";
+import { useQuoteStats } from "@/lib/hooks/sales/use-quotes";
 import { useLogout } from "@/lib/hooks";
 
 function formatCurrency(cents: number): string {
@@ -57,18 +59,18 @@ export default function DashboardPage() {
   const logout = useLogout();
 
   const carrierStats = useCarrierStats();
-  const loadStats = useLoadHistoryStats();
-  const quoteStats = useLoadPlannerQuoteStats();
+  const loadStats = useLoadStats();
+  const quoteStats = useQuoteStats();
 
   const activeCarriers = carrierStats.data?.byStatus?.ACTIVE ?? 0;
   const totalCarriers = carrierStats.data?.total ?? 0;
 
-  const totalLoads = loadStats.data?.totalLoads ?? 0;
-  const completedLoads = loadStats.data?.completedLoads ?? 0;
+  const totalLoads = loadStats.data?.total ?? 0;
+  const inTransitLoads = loadStats.data?.byStatus?.['IN_TRANSIT'] ?? 0;
   const totalRevenueCents = loadStats.data?.totalRevenueCents ?? 0;
 
-  const openQuotes = (quoteStats.data?.draftCount ?? 0) + (quoteStats.data?.sentCount ?? 0);
-  const totalQuotes = quoteStats.data?.totalLoads ?? 0;
+  const openQuotes = quoteStats.data?.activePipeline ?? 0;
+  const totalQuotes = quoteStats.data?.totalQuotes ?? 0;
 
   return (
     <div className="space-y-6">
@@ -84,7 +86,7 @@ export default function DashboardPage() {
           title="Total Loads"
           icon={<Truck className="h-4 w-4 text-muted-foreground" />}
           value={totalLoads}
-          subtitle={completedLoads > 0 ? `${completedLoads} completed` : "All loads in system"}
+          subtitle={inTransitLoads > 0 ? `${inTransitLoads} in transit` : "All loads in system"}
           isLoading={loadStats.isLoading}
           isError={loadStats.isError}
         />

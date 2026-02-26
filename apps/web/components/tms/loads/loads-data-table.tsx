@@ -35,11 +35,15 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { useDeleteLoad } from "@/lib/hooks/tms/use-loads";
 
 interface LoadsDataTableProps {
     data: Load[];
     isLoading?: boolean;
     onRowClick?: (load: Load) => void;
+    onViewDetails?: (load: Load) => void;
+    onEdit?: (load: Load) => void;
     onSelectionChange?: (selectedIds: string[]) => void;
     groupBy?: 'status' | null;
 }
@@ -48,12 +52,17 @@ export function LoadsDataTable({
     data,
     isLoading: _isLoading,
     onRowClick,
+    onViewDetails,
+    onEdit,
     onSelectionChange: _onSelectionChange,
     groupBy
 }: LoadsDataTableProps) {
     const [sorting, setSorting] = useState<SortingState>([]);
     const [rowSelection, setRowSelection] = useState({});
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+    const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
+    const { mutate: deleteLoad, isPending: isDeleting } = useDeleteLoad();
 
     const columns: ColumnDef<Load>[] = [
         {
@@ -162,9 +171,14 @@ export function LoadsDataTable({
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => onRowClick?.(row.original)}><Eye className="mr-2 h-4 w-4" /> View Details</DropdownMenuItem>
-                            <DropdownMenuItem><Edit className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-600"><Trash className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => onViewDetails?.(row.original)}><Eye className="mr-2 h-4 w-4" /> View Details</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => onEdit?.(row.original)}><Edit className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
+                            <DropdownMenuItem
+                                className="text-red-600"
+                                onClick={() => setDeleteTargetId(row.original.id)}
+                            >
+                                <Trash className="mr-2 h-4 w-4" /> Delete
+                            </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
@@ -307,6 +321,21 @@ export function LoadsDataTable({
                     <Button size="sm" variant="ghost" className="text-white hover:bg-slate-800" onClick={() => setRowSelection({})}>Cancel</Button>
                 </div>
             )}
+
+            <ConfirmDialog
+                open={!!deleteTargetId}
+                onCancel={() => setDeleteTargetId(null)}
+                title="Delete Load"
+                description="This load will be permanently deleted. This action cannot be undone."
+                variant="destructive"
+                confirmLabel="Delete"
+                isLoading={isDeleting}
+                onConfirm={() => {
+                    if (deleteTargetId) {
+                        deleteLoad(deleteTargetId, { onSuccess: () => setDeleteTargetId(null) });
+                    }
+                }}
+            />
         </div>
     );
 }

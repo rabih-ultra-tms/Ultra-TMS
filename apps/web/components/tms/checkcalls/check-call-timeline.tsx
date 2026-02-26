@@ -60,7 +60,7 @@ function calculateTimeSinceLastCheckCall(lastCheckCallAt: string): {
 }
 
 function CheckCallCard({ checkCall }: { checkCall: CheckCall }) {
-  const config = CHECK_CALL_TYPE_CONFIG[checkCall.type];
+  const config = CHECK_CALL_TYPE_CONFIG[checkCall.type] ?? CHECK_CALL_TYPE_CONFIG.CHECK_CALL;
   const Icon = config.icon;
 
   return (

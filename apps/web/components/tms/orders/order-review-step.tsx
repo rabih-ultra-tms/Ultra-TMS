@@ -255,7 +255,7 @@ export function OrderReviewStep({ form, values }: OrderReviewStepProps) {
               <ReviewRow
                 key={acc.id || i}
                 label={ACCESSORIAL_TYPE_LABELS[acc.type] || acc.type}
-                value={`$${acc.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
+                value={`$${(acc.amount ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
               />
             ))}
           </div>

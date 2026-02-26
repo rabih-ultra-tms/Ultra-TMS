@@ -27,7 +27,7 @@ import {
   useCreatePlan,
   useUpdatePlan,
 } from '@/lib/hooks/commissions/use-plans';
-import type { CommissionPlan, PlanType, PlanTier } from '@/lib/hooks/commissions/use-plans';
+import type { CommissionPlan, PlanType, PlanTier, CreatePlanInput, BackendPlanType } from '@/lib/hooks/commissions/use-plans';
 
 // ===========================
 // Schema
@@ -109,6 +109,15 @@ const PLAN_TYPE_OPTIONS: { value: PlanType; label: string; description: string }
 // Default Tiers
 // ===========================
 
+// Reverse mapping: backend planType → frontend form type
+const BACKEND_TO_FORM_TYPE: Record<BackendPlanType, PlanType> = {
+  PERCENT_MARGIN: 'PERCENTAGE',
+  PERCENT_REVENUE: 'PERCENTAGE',
+  FLAT_FEE: 'FLAT',
+  TIERED: 'TIERED_PERCENTAGE',
+  CUSTOM: 'PERCENTAGE',
+};
+
 const DEFAULT_TIERS: PlanTier[] = [
   { minMargin: 0, maxMargin: 12, rate: 8 },
   { minMargin: 12, maxMargin: 18, rate: 10 },
@@ -132,26 +141,59 @@ export function CommissionPlanForm({ plan }: CommissionPlanFormProps) {
 
   const defaultValues: PlanFormValues = {
     name: plan?.name ?? '',
-    type: plan?.type ?? 'PERCENTAGE',
+    type: plan ? BACKEND_TO_FORM_TYPE[plan.planType] : 'PERCENTAGE',
     description: plan?.description ?? '',
-    rate: plan?.rate ?? null,
-    flatAmount: plan?.flatAmount ?? null,
-    tiers: plan?.tiers ?? [],
-    isActive: plan?.isActive ?? true,
+    rate: plan?.percentRate != null ? Number(plan.percentRate) : null,
+    flatAmount: plan?.flatAmount != null ? Number(plan.flatAmount) : null,
+    tiers: plan?.tiers?.map((t) => ({
+      minMargin: Number(t.thresholdMin),
+      maxMargin: t.thresholdMax != null ? Number(t.thresholdMax) : null,
+      rate: Number(t.rateAmount),
+    })) ?? [],
+    isActive: plan ? plan.status === 'ACTIVE' : true,
   };
 
   const handleSubmit = async (values: PlanFormValues) => {
-    const payload = {
-      ...values,
-      rate: values.rate ?? undefined,
-      flatAmount: values.flatAmount ?? undefined,
-      description: values.description || undefined,
+    // Map frontend plan types to backend PlanType enum
+    const planTypeMap: Record<string, string> = {
+      PERCENTAGE: 'PERCENT_MARGIN',
+      FLAT: 'FLAT_FEE',
+      TIERED_PERCENTAGE: 'TIERED',
+      TIERED_FLAT: 'TIERED',
     };
+
     try {
       if (isEditing) {
-        await updatePlan.mutateAsync({ id: plan.id, ...payload });
+        await updatePlan.mutateAsync({
+          id: plan.id,
+          name: values.name,
+          description: values.description || undefined,
+          status: values.isActive ? 'ACTIVE' : 'INACTIVE',
+          percentRate: values.rate ?? undefined,
+          flatAmount: values.flatAmount ?? undefined,
+        });
         toast.success('Commission plan updated');
       } else {
+        // Transform tiers to backend format
+        const mappedTiers = values.tiers?.map((tier, index) => ({
+          tierNumber: index + 1,
+          thresholdType: 'MARGIN',
+          thresholdMin: tier.minMargin,
+          thresholdMax: tier.maxMargin ?? undefined,
+          rateType: values.type === 'TIERED_PERCENTAGE' ? 'PERCENT' : 'FLAT',
+          rateAmount: tier.rate,
+        }));
+
+        const payload: CreatePlanInput = {
+          name: values.name,
+          planType: planTypeMap[values.type] ?? values.type,
+          description: values.description || undefined,
+          percentRate: values.rate ?? undefined,
+          flatAmount: values.flatAmount ?? undefined,
+          effectiveDate: new Date().toISOString(),
+          tiers: mappedTiers && mappedTiers.length > 0 ? mappedTiers : undefined,
+        };
+
         await createPlan.mutateAsync(payload);
         toast.success('Commission plan created');
       }

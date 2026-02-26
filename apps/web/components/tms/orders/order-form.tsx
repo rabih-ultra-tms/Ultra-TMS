@@ -590,7 +590,7 @@ export function OrderForm({
                   ) : (
                     <>
                       <CheckCircle className="mr-2 h-4 w-4" />
-                      {isEditMode ? "Update &amp; Confirm" : "Create &amp; Confirm"}
+                      {isEditMode ? "Update & Confirm" : "Create &amp; Confirm"}
                     </>
                   )}
                 </Button>

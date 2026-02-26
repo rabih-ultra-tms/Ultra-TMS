@@ -61,6 +61,8 @@ function calculateMargin(customerRate?: number, carrierRate?: number) {
   const amount = customerRate - carrierRate;
   const percent = (amount / customerRate) * 100;
 
+  if (!isFinite(amount) || !isFinite(percent)) return { amount: 0, percent: 0 };
+
   return { amount, percent };
 }
 
@@ -251,8 +253,8 @@ function renderCardContent({
         </div>
       </div>
 
-      {/* Row 5: Margin (if financial data available) */}
-      {load.customerRate && load.carrierRate && (
+      {/* Row 5: Margin (if financial data available and valid) */}
+      {Number.isFinite(load.customerRate) && Number.isFinite(load.carrierRate) && margin.amount !== 0 && (
         <div className="flex items-center gap-1.5 text-sm">
           <TrendingUp className="h-3.5 w-3.5" />
           <span className={cn('font-medium', getMarginColor(margin.percent))}>

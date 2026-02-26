@@ -33,8 +33,9 @@ export function SidebarNav({ groups, collapsed = false, onItemClick }: SidebarNa
 
   const isActive = (href: string) => {
     if (!pathname) return false;
-    if (href === "/dashboard") {
-      return pathname === "/dashboard";
+    // Pages that are index routes of a group — match exactly only
+    if (href === "/dashboard" || href === "/operations" || href === "/accounting" || href === "/commissions") {
+      return pathname === href;
     }
     // Exact match or sub-path match
     return pathname === href || pathname.startsWith(`${href}/`);

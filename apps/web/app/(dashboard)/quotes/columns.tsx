@@ -27,13 +27,15 @@ import { QuoteStatusBadge } from "@/components/sales/quotes/quote-status-badge";
 import type { Quote } from "@/types/quotes";
 import { SERVICE_TYPE_LABELS, EQUIPMENT_TYPE_LABELS } from "@/types/quotes";
 
-function formatCurrency(amount: number): string {
+function formatCurrency(amount: number | string | null | undefined): string {
+  const n = Number(amount);
+  if (!Number.isFinite(n)) return "—";
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(amount);
+  }).format(n);
 }
 
 function formatDate(dateString: string): string {
@@ -43,15 +45,16 @@ function formatDate(dateString: string): string {
   });
 }
 
-function MarginDisplay({ percent }: { percent: number | undefined }) {
-  if (percent == null) return <span className="text-muted-foreground">--</span>;
+function MarginDisplay({ percent }: { percent: number | string | null | undefined }) {
+  const n = Number(percent);
+  if (percent == null || !Number.isFinite(n)) return <span className="text-muted-foreground">--</span>;
   const color =
-    percent >= 15
+    n >= 15
       ? "text-green-600"
-      : percent >= 5
+      : n >= 5
         ? "text-amber-600"
         : "text-red-600";
-  return <span className={`text-xs font-medium ${color}`}>{percent.toFixed(0)}%</span>;
+  return <span className={`text-xs font-medium ${color}`}>{n.toFixed(0)}%</span>;
 }
 
 interface ColumnsConfig {
@@ -138,8 +141,8 @@ export function getColumns(config: ColumnsConfig = {}): ColumnDef<Quote>[] {
               <ArrowRightLeft className="h-3 w-3 text-muted-foreground shrink-0" />
               <span>{quote.destinationCity}, {quote.destinationState}</span>
             </div>
-            {quote.distance != null && (
-              <span className="text-xs text-muted-foreground">{quote.distance.toLocaleString()} mi</span>
+            {quote.distance != null && Number.isFinite(Number(quote.distance)) && (
+              <span className="text-xs text-muted-foreground">{Number(quote.distance).toLocaleString()} mi</span>
             )}
           </div>
         );

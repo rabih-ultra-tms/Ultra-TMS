@@ -4,6 +4,9 @@ import { use } from "react";
 import { useRouter } from "next/navigation";
 import { useCarrier, useUpdateCarrier } from "@/lib/hooks/operations";
 import { CarrierForm } from "@/components/carriers/carrier-form";
+import { CarrierDriversManager } from "@/components/carriers/carrier-drivers-manager";
+import { CarrierTrucksManager } from "@/components/carriers/carrier-trucks-manager";
+import { CarrierDocumentsManager } from "@/components/carriers/carrier-documents-manager";
 import { FormPageSkeleton } from "@/components/shared/form-page-skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { Button } from "@/components/ui/button";
@@ -58,6 +61,13 @@ export default function EditCarrierPage({
             initialData={carrier}
             onSubmit={handleSubmit}
             isSubmitting={updateMutation.isPending}
+            extraSections={(isCompany) => (
+                <div className="space-y-6">
+                    {isCompany && <CarrierDriversManager carrierId={id} />}
+                    <CarrierTrucksManager carrierId={id} showDriverAssignment={isCompany} />
+                    <CarrierDocumentsManager carrierId={id} />
+                </div>
+            )}
         />
     );
 }

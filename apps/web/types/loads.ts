@@ -1,5 +1,5 @@
 export enum LoadStatus {
-    PLANNING = 'PLANNING', // Not in backend enum but in status machine description? Backend has PENDING.
+    PLANNING = 'PLANNING', // Frontend-only display status (dispatch board). Not in backend enum — do not send to API.
     PENDING = 'PENDING',
     TENDERED = 'TENDERED',
     ACCEPTED = 'ACCEPTED',
@@ -53,6 +53,24 @@ export interface Load {
             contactEmail?: string;
             phone?: string;
         };
+        // Included by GET /loads/:id (findOne) — raw Prisma field names
+        stops?: Array<{
+            id: string;
+            stopType: string;
+            stopSequence: number;
+            facilityName?: string;
+            addressLine1: string;
+            addressLine2?: string;
+            city: string;
+            state: string;
+            postalCode: string;
+            contactName?: string;
+            contactPhone?: string;
+            appointmentRequired?: boolean;
+            appointmentDate?: string;
+            appointmentTimeStart?: string;
+            specialInstructions?: string;
+        }>;
     };
     carrier?: {
         id: string;
@@ -102,12 +120,9 @@ export interface LoadListResponse {
 }
 
 export interface LoadStats {
-    total: number;
-    unassigned: number;
-    inTransit: number;
-    deliveredToday: number;
-    avgMargin: number;
-    totalActive: number;
+  total: number;
+  byStatus: Record<string, number>;
+  totalRevenueCents: number;
 }
 
 // --- Types for Load Detail Page ---

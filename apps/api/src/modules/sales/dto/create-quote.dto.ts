@@ -177,6 +177,18 @@ export class UpdateQuoteDto {
   status?: string;
 
   @IsOptional()
+  @IsUUID()
+  companyId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  contactId?: string;
+
+  @IsOptional()
+  @IsString()
+  customerName?: string;
+
+  @IsOptional()
   @IsString()
   serviceType?: string;
 
@@ -203,6 +215,10 @@ export class UpdateQuoteDto {
   @IsOptional()
   @IsNumber()
   pieces?: number;
+
+  @IsOptional()
+  @IsNumber()
+  pallets?: number;
 
   @IsOptional()
   @IsNumber()
@@ -239,6 +255,12 @@ export class UpdateQuoteDto {
   @IsOptional()
   @IsString()
   customerNotes?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => QuoteStopDto)
+  stops?: QuoteStopDto[];
 
   @IsOptional()
   @IsObject()

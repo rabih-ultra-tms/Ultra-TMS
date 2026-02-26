@@ -108,7 +108,10 @@ export function LoadDetailClient({ id }: { id: string }) {
 
                 {/* Right Column: Tracking & Actions (25%) */}
                 <div className="xl:col-span-1 space-y-6">
-                    <LoadTrackingCard load={load} />
+                    <LoadTrackingCard
+                        load={load}
+                        onAddCheckCall={() => handleTabChange('check-calls')}
+                    />
                 </div>
 
             </div>

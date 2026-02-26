@@ -98,29 +98,71 @@ export class CommissionPayoutsService {
     return payout;
   }
 
-  async findAll(tenantId: string, userId?: string, status?: string) {
+  async findAll(
+    tenantId: string,
+    options: {
+      page: number;
+      limit: number;
+      userId?: string;
+      status?: string;
+      sortBy?: string;
+      sortOrder?: 'asc' | 'desc';
+    },
+  ) {
+    const { page, limit } = options;
+    const skip = (page - 1) * limit;
+
     const where: any = { tenantId };
 
-    if (userId) {
-      where.userId = userId;
+    if (options.userId) {
+      where.userId = options.userId;
     }
 
-    if (status) {
-      where.status = status;
+    if (options.status && options.status !== 'all') {
+      where.status = options.status.toUpperCase();
     }
 
-    return this.prisma.commissionPayout.findMany({
-      where,
-      include: {
-        user: true,
-        _count: {
-          select: {
-            entries: true,
+    const orderBy: any = {};
+    if (options.sortBy) {
+      orderBy[options.sortBy] = options.sortOrder ?? 'desc';
+    } else {
+      orderBy.createdAt = 'desc';
+    }
+
+    const [payouts, total] = await Promise.all([
+      this.prisma.commissionPayout.findMany({
+        where,
+        include: {
+          user: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
+          },
+          _count: {
+            select: {
+              entries: true,
+            },
           },
         },
+        orderBy,
+        skip,
+        take: limit,
+      }),
+      this.prisma.commissionPayout.count({ where }),
+    ]);
+
+    return {
+      data: payouts,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       },
-      orderBy: { createdAt: 'desc' },
-    });
+    };
   }
 
   async findOne(tenantId: string, id: string) {

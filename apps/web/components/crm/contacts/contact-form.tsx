@@ -60,7 +60,6 @@ export function ContactForm({
       phone: "",
       mobile: "",
       isPrimary: false,
-      notes: "",
       ...defaultValues,
     },
   });

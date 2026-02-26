@@ -16,13 +16,14 @@ interface AccDashboardStatsProps {
   isLoading: boolean;
 }
 
-function formatCurrency(value: number): string {
+function formatCurrency(value: number | string | null | undefined): string {
+  const num = Number(value ?? 0);
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(value);
+  }).format(isNaN(num) ? 0 : num);
 }
 
 function formatChange(value: number | undefined): {

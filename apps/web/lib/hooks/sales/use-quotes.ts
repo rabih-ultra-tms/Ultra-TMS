@@ -16,6 +16,61 @@ import type {
 
 const QUOTES_KEY = "quotes";
 
+function unwrap<T>(response: unknown): T {
+  const body = response as Record<string, unknown>;
+  return (body.data ?? response) as T;
+}
+
+/** Map frontend QuoteFormValues field names → API DTO field names */
+function mapFormToDto(data: QuoteFormValues): Record<string, unknown> {
+  const { accessorials, ...rest } = data;
+
+  const accessorialsTotal = accessorials?.reduce(
+    (sum, a) => sum + Number(a.amount ?? 0),
+    0,
+  ) ?? 0;
+
+  const stops = rest.stops?.map((s) => {
+    const raw = s as unknown as Record<string, unknown>;
+    return {
+      stopType: raw.stopType ?? s.type,
+      stopSequence: raw.stopSequence ?? s.sequence,
+      city: s.city,
+      state: s.state,
+      addressLine1: (raw.addressLine1 ?? s.address ?? "") as string,
+      addressLine2: raw.addressLine2 as string | undefined,
+      postalCode: (raw.postalCode ?? raw.zipCode ?? "") as string,
+      facilityName: s.facilityName,
+      contactName: s.contactName,
+      contactPhone: s.contactPhone,
+      notes: s.notes,
+    };
+  });
+
+  const validUntil = rest.validityDays
+    ? new Date(Date.now() + rest.validityDays * 86_400_000).toISOString()
+    : undefined;
+
+  return {
+    companyId: rest.customerId,
+    contactId: rest.contactId,
+    customerName: rest.customerName,
+    serviceType: rest.serviceType,
+    equipmentType: rest.equipmentType,
+    commodity: rest.commodity,
+    weightLbs: rest.weight,
+    pieces: rest.pieces,
+    pallets: rest.pallets,
+    linehaulRate: rest.linehaulRate,
+    fuelSurcharge: rest.fuelSurcharge,
+    accessorialsTotal,
+    totalAmount: (rest.linehaulRate ?? 0) + (rest.fuelSurcharge ?? 0) + accessorialsTotal,
+    internalNotes: rest.internalNotes,
+    validUntil,
+    stops,
+  };
+}
+
 export function useQuotes(params: QuoteListParams) {
   return useQuery({
     queryKey: [QUOTES_KEY, "list", params],
@@ -44,7 +99,8 @@ export function useQuoteStats() {
   return useQuery({
     queryKey: [QUOTES_KEY, "stats"],
     queryFn: async () => {
-      return await apiClient.get<QuoteStats>("/quotes/stats");
+      const response = await apiClient.get<{ data: QuoteStats }>("/quotes/stats");
+      return response.data;
     },
     staleTime: 30000,
   });
@@ -57,8 +113,13 @@ export function useDeleteQuote() {
     mutationFn: async (id: string) => {
       await apiClient.delete(`/quotes/${id}`);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUOTES_KEY] });
+    onSuccess: (_data, id) => {
+      queryClient.removeQueries({ queryKey: [QUOTES_KEY, "detail", id] });
+      queryClient.removeQueries({ queryKey: [QUOTES_KEY, "timeline", id] });
+      queryClient.removeQueries({ queryKey: [QUOTES_KEY, "notes", id] });
+      queryClient.removeQueries({ queryKey: [QUOTES_KEY, "versions", id] });
+      queryClient.invalidateQueries({ queryKey: [QUOTES_KEY, "list"] });
+      queryClient.invalidateQueries({ queryKey: [QUOTES_KEY, "stats"] });
     },
   });
 }
@@ -68,7 +129,8 @@ export function useCloneQuote() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      return await apiClient.post<Quote>(`/quotes/${id}/clone`);
+      const res = await apiClient.post<unknown>(`/quotes/${id}/clone`);
+      return unwrap<Quote>(res);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUOTES_KEY] });
@@ -81,7 +143,8 @@ export function useSendQuote() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      return await apiClient.post<Quote>(`/quotes/${id}/send`);
+      const res = await apiClient.post<unknown>(`/quotes/${id}/send`);
+      return unwrap<Quote>(res);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUOTES_KEY] });
@@ -94,7 +157,8 @@ export function useConvertQuote() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      return await apiClient.post<{ orderId: string; orderNumber: string }>(`/quotes/${id}/convert`);
+      const res = await apiClient.post<unknown>(`/quotes/${id}/convert`);
+      return unwrap<{ orderId: string; orderNumber: string }>(res);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUOTES_KEY] });
@@ -107,7 +171,10 @@ export function useConvertQuote() {
 export function useQuote(id: string) {
   return useQuery({
     queryKey: [QUOTES_KEY, "detail", id],
-    queryFn: () => apiClient.get<QuoteDetail>(`/quotes/${id}`),
+    queryFn: async () => {
+      const res = await apiClient.get<unknown>(`/quotes/${id}`);
+      return unwrap<QuoteDetail>(res);
+    },
     enabled: !!id,
   });
 }
@@ -115,7 +182,10 @@ export function useQuote(id: string) {
 export function useQuoteVersions(id: string) {
   return useQuery({
     queryKey: [QUOTES_KEY, "versions", id],
-    queryFn: () => apiClient.get<QuoteVersion[]>(`/quotes/${id}/versions`),
+    queryFn: async () => {
+      const res = await apiClient.get<unknown>(`/quotes/${id}/versions`);
+      return unwrap<QuoteVersion[]>(res);
+    },
     enabled: !!id,
   });
 }
@@ -123,7 +193,10 @@ export function useQuoteVersions(id: string) {
 export function useQuoteTimeline(id: string) {
   return useQuery({
     queryKey: [QUOTES_KEY, "timeline", id],
-    queryFn: () => apiClient.get<QuoteTimelineEvent[]>(`/quotes/${id}/timeline`),
+    queryFn: async () => {
+      const res = await apiClient.get<unknown>(`/quotes/${id}/timeline`);
+      return unwrap<QuoteTimelineEvent[]>(res);
+    },
     enabled: !!id,
   });
 }
@@ -131,7 +204,10 @@ export function useQuoteTimeline(id: string) {
 export function useQuoteNotes(id: string) {
   return useQuery({
     queryKey: [QUOTES_KEY, "notes", id],
-    queryFn: () => apiClient.get<QuoteNote[]>(`/quotes/${id}/notes`),
+    queryFn: async () => {
+      const res = await apiClient.get<unknown>(`/quotes/${id}/notes`);
+      return unwrap<QuoteNote[]>(res);
+    },
     enabled: !!id,
   });
 }
@@ -155,7 +231,8 @@ export function useAcceptQuote() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      return await apiClient.post<Quote>(`/quotes/${id}/accept`);
+      const res = await apiClient.post<unknown>(`/quotes/${id}/accept`);
+      return unwrap<Quote>(res);
     },
     onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: [QUOTES_KEY, "detail", id] });
@@ -170,7 +247,8 @@ export function useRejectQuote() {
 
   return useMutation({
     mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
-      return await apiClient.post<Quote>(`/quotes/${id}/reject`, { reason });
+      const res = await apiClient.post<unknown>(`/quotes/${id}/reject`, { reason });
+      return unwrap<Quote>(res);
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: [QUOTES_KEY, "detail", variables.id] });
@@ -185,7 +263,8 @@ export function useCreateQuoteVersion() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      return await apiClient.post<Quote>(`/quotes/${id}/version`);
+      const res = await apiClient.post<unknown>(`/quotes/${id}/version`);
+      return unwrap<Quote>(res);
     },
     onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: [QUOTES_KEY, "detail", id] });
@@ -202,7 +281,9 @@ export function useCreateQuote() {
 
   return useMutation({
     mutationFn: async (data: QuoteFormValues) => {
-      return await apiClient.post<Quote>("/quotes", data);
+      const dto = mapFormToDto(data);
+      const res = await apiClient.post<unknown>("/quotes", dto);
+      return unwrap<Quote>(res);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUOTES_KEY] });
@@ -215,7 +296,9 @@ export function useUpdateQuote() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: QuoteFormValues }) => {
-      return await apiClient.patch<Quote>(`/quotes/${id}`, data);
+      const dto = mapFormToDto(data);
+      const res = await apiClient.patch<unknown>(`/quotes/${id}`, dto);
+      return unwrap<Quote>(res);
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: [QUOTES_KEY, "detail", variables.id] });

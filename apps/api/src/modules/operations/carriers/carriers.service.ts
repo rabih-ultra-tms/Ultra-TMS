@@ -13,7 +13,42 @@ import {
   UpdateOperationsCarrierDriverDto,
   CreateOperationsCarrierTruckDto,
   UpdateOperationsCarrierTruckDto,
+  CreateOperationsCarrierDocumentDto,
 } from './dto';
+
+const CARRIER_DECIMAL_FIELDS = [
+  'onTimePickupRate',
+  'onTimeDeliveryRate',
+  'claimsRate',
+  'avgRating',
+  'acceptanceRate',
+  'performanceScore',
+] as const;
+
+const TRUCK_DECIMAL_FIELDS = ['deckLengthFt', 'deckWidthFt', 'deckHeightFt'] as const;
+
+function toNum(val: unknown): number | null {
+  if (val == null) return null;
+  const n = parseFloat(String(val));
+  return isNaN(n) ? null : n;
+}
+
+function serializeCarrier<T extends Record<string, unknown>>(carrier: T): T {
+  const result = { ...carrier } as Record<string, unknown>;
+  for (const field of CARRIER_DECIMAL_FIELDS) {
+    if (field in result) result[field] = toNum(result[field]);
+  }
+  if (Array.isArray(result.trucks)) {
+    result.trucks = (result.trucks as Record<string, unknown>[]).map((t) => {
+      const truck = { ...t };
+      for (const field of TRUCK_DECIMAL_FIELDS) {
+        if (field in truck) truck[field] = toNum(truck[field]);
+      }
+      return truck;
+    });
+  }
+  return result as T;
+}
 
 @Injectable()
 export class CarriersService {
@@ -25,7 +60,7 @@ export class CarriersService {
 
   async createCarrier(tenantId: string, dto: CreateOperationsCarrierDto) {
     try {
-      return await this.prisma.operationsCarrier.create({
+      const carrier = await this.prisma.operationsCarrier.create({
         data: {
           tenantId,
           carrierType: dto.carrierType,
@@ -55,9 +90,35 @@ export class CarriersService {
           cargoInsuranceLimitCents: dto.cargoInsuranceLimitCents,
           status: dto.status || 'ACTIVE',
           notes: dto.notes,
+          equipmentTypes: dto.equipmentTypes ?? [],
+          truckCount: dto.truckCount,
+          trailerCount: dto.trailerCount,
           isActive: true,
+          ...(dto.tier !== undefined && { tier: dto.tier }),
+          ...(dto.onTimePickupRate !== undefined && {
+            onTimePickupRate: new Prisma.Decimal(String(dto.onTimePickupRate)),
+          }),
+          ...(dto.onTimeDeliveryRate !== undefined && {
+            onTimeDeliveryRate: new Prisma.Decimal(String(dto.onTimeDeliveryRate)),
+          }),
+          ...(dto.claimsRate !== undefined && {
+            claimsRate: new Prisma.Decimal(String(dto.claimsRate)),
+          }),
+          ...(dto.avgRating !== undefined && {
+            avgRating: new Prisma.Decimal(String(dto.avgRating)),
+          }),
+          ...(dto.acceptanceRate !== undefined && {
+            acceptanceRate: new Prisma.Decimal(String(dto.acceptanceRate)),
+          }),
+          ...(dto.totalLoadsCompleted !== undefined && {
+            totalLoadsCompleted: dto.totalLoadsCompleted,
+          }),
+          ...(dto.performanceScore !== undefined && {
+            performanceScore: new Prisma.Decimal(String(dto.performanceScore)),
+          }),
         },
       });
+      return serializeCarrier(carrier as unknown as Record<string, unknown>);
     } catch (error) {
       throw new BadRequestException(
         `Failed to create carrier: ${error.message}`
@@ -67,6 +128,9 @@ export class CarriersService {
 
   async listCarriers(tenantId: string, dto: ListOperationsCarriersDto) {
     const skip = (dto.page - 1) * dto.limit;
+
+    const now = new Date();
+    const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
     const where: Prisma.OperationsCarrierWhereInput = {
       tenantId,
@@ -91,14 +155,39 @@ export class CarriersService {
       where.carrierType = dto.carrierType;
     }
 
-    const orderBy: Prisma.OperationsCarrierOrderByWithRelationInput = {};
-    if (dto.sortBy === 'companyName') {
-      orderBy.companyName = dto.sortOrder || 'asc';
-    } else if (dto.sortBy === 'status') {
-      orderBy.status = dto.sortOrder || 'asc';
-    } else {
-      orderBy.createdAt = 'desc';
+    if (dto.state) {
+      where.state = dto.state;
     }
+
+    if (dto.tier) {
+      where.tier = dto.tier;
+    }
+
+    if (dto.equipmentTypes?.length) {
+      where.equipmentTypes = { hasSome: dto.equipmentTypes };
+    }
+
+    if (dto.compliance === 'EXPIRED') {
+      where.insuranceExpiryDate = { lt: now };
+    } else if (dto.compliance === 'WARNING') {
+      where.insuranceExpiryDate = { gte: now, lte: thirtyDaysFromNow };
+    } else if (dto.compliance === 'COMPLIANT') {
+      where.insuranceExpiryDate = { gt: thirtyDaysFromNow };
+    }
+
+    if (dto.minScore !== undefined) {
+      where.performanceScore = { gte: dto.minScore };
+    }
+
+    const SORTABLE_FIELDS = new Set([
+      'companyName', 'status', 'tier', 'onTimeDeliveryRate', 'totalLoadsCompleted',
+      'avgRating', 'performanceScore', 'state', 'createdAt', 'updatedAt',
+    ]);
+
+    const orderBy: Prisma.OperationsCarrierOrderByWithRelationInput =
+      dto.sortBy && SORTABLE_FIELDS.has(dto.sortBy)
+        ? { [dto.sortBy]: dto.sortOrder || 'asc' }
+        : { createdAt: 'desc' };
 
     const [data, total] = await Promise.all([
       this.prisma.operationsCarrier.findMany({
@@ -119,7 +208,7 @@ export class CarriersService {
     ]);
 
     return {
-      data,
+      data: data.map(serializeCarrier),
       total,
       page: dto.page,
       limit: dto.limit,
@@ -173,6 +262,11 @@ export class CarriersService {
           where: { isActive: true },
           orderBy: { createdAt: 'desc' },
         },
+        _count: {
+          select: {
+            documents: { where: { isActive: true } },
+          },
+        },
       },
     });
 
@@ -180,7 +274,7 @@ export class CarriersService {
       throw new NotFoundException('Carrier not found');
     }
 
-    return carrier;
+    return serializeCarrier(carrier as unknown as Record<string, unknown>) as typeof carrier;
   }
 
   async updateCarrier(
@@ -191,7 +285,7 @@ export class CarriersService {
     const _existing = await this.getCarrierById(tenantId, carrierId);
 
     try {
-      return await this.prisma.operationsCarrier.update({
+      const updated = await this.prisma.operationsCarrier.update({
         where: { id: carrierId },
         data: {
           carrierType: dto.carrierType,
@@ -221,9 +315,35 @@ export class CarriersService {
           cargoInsuranceLimitCents: dto.cargoInsuranceLimitCents,
           status: dto.status,
           notes: dto.notes,
+          ...(dto.equipmentTypes !== undefined && { equipmentTypes: dto.equipmentTypes }),
+          ...(dto.truckCount !== undefined && { truckCount: dto.truckCount }),
+          ...(dto.trailerCount !== undefined && { trailerCount: dto.trailerCount }),
+          ...(dto.tier !== undefined && { tier: dto.tier }),
+          ...(dto.onTimePickupRate !== undefined && {
+            onTimePickupRate: new Prisma.Decimal(String(dto.onTimePickupRate)),
+          }),
+          ...(dto.onTimeDeliveryRate !== undefined && {
+            onTimeDeliveryRate: new Prisma.Decimal(String(dto.onTimeDeliveryRate)),
+          }),
+          ...(dto.claimsRate !== undefined && {
+            claimsRate: new Prisma.Decimal(String(dto.claimsRate)),
+          }),
+          ...(dto.avgRating !== undefined && {
+            avgRating: new Prisma.Decimal(String(dto.avgRating)),
+          }),
+          ...(dto.acceptanceRate !== undefined && {
+            acceptanceRate: new Prisma.Decimal(String(dto.acceptanceRate)),
+          }),
+          ...(dto.totalLoadsCompleted !== undefined && {
+            totalLoadsCompleted: dto.totalLoadsCompleted,
+          }),
+          ...(dto.performanceScore !== undefined && {
+            performanceScore: new Prisma.Decimal(String(dto.performanceScore)),
+          }),
           updatedAt: new Date(),
         },
       });
+      return serializeCarrier(updated as unknown as Record<string, unknown>);
     } catch (error) {
       throw new BadRequestException(
         `Failed to update carrier: ${error.message}`
@@ -563,5 +683,107 @@ export class CarriersService {
         assignedDriver: true,
       },
     });
+  }
+
+  // ============================================================================
+  // DOCUMENTS
+  // ============================================================================
+
+  async listDocuments(tenantId: string, carrierId: string) {
+    await this.getCarrierById(tenantId, carrierId); // validates access
+
+    return this.prisma.operationsCarrierDocument.findMany({
+      where: { carrierId, isActive: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async createDocument(
+    tenantId: string,
+    carrierId: string,
+    dto: CreateOperationsCarrierDocumentDto,
+  ) {
+    await this.getCarrierById(tenantId, carrierId);
+
+    try {
+      return await this.prisma.operationsCarrierDocument.create({
+        data: {
+          carrierId,
+          documentType: dto.documentType,
+          name: dto.name,
+          description: dto.description,
+          expiryDate: dto.expiryDate ? new Date(dto.expiryDate) : null,
+          status: 'PENDING',
+          isActive: true,
+        },
+      });
+    } catch (error) {
+      throw new BadRequestException(`Failed to create document: ${error.message}`);
+    }
+  }
+
+  async deleteDocument(tenantId: string, carrierId: string, documentId: string) {
+    await this.getCarrierById(tenantId, carrierId);
+
+    const doc = await this.prisma.operationsCarrierDocument.findUnique({
+      where: { id: documentId },
+    });
+
+    if (!doc || doc.carrierId !== carrierId) {
+      throw new NotFoundException('Document not found');
+    }
+
+    await this.prisma.operationsCarrierDocument.update({
+      where: { id: documentId },
+      data: { isActive: false, deletedAt: new Date() },
+    });
+
+    return { success: true };
+  }
+
+  // ============================================================================
+  // SCORECARD
+  // ============================================================================
+
+  async getCarrierScorecard(carrierId: string, tenantId: string) {
+    const carrier = await this.prisma.operationsCarrier.findUnique({
+      where: { id: carrierId, tenantId },
+      select: {
+        id: true,
+        companyName: true,
+        tier: true,
+        onTimePickupRate: true,
+        onTimeDeliveryRate: true,
+        claimsRate: true,
+        avgRating: true,
+        acceptanceRate: true,
+        totalLoadsCompleted: true,
+        performanceScore: true,
+        LoadHistory: {
+          where: { status: { in: ['DELIVERED', 'COMPLETED'] } },
+          orderBy: { deliveryDate: 'desc' },
+          take: 50,
+          select: {
+            id: true,
+            status: true,
+            pickupDate: true,
+            deliveryDate: true,
+            carrierRateCents: true,
+            ratePerMileCarrierCents: true,
+            originCity: true,
+            originState: true,
+            destinationCity: true,
+            destinationState: true,
+            totalMiles: true,
+          },
+        },
+      },
+    });
+
+    if (!carrier) {
+      throw new NotFoundException(`Carrier ${carrierId} not found`);
+    }
+
+    return { carrier };
   }
 }

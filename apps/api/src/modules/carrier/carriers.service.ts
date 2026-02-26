@@ -167,12 +167,27 @@ export class CarriersService {
         : {}),
     };
 
+    // Parse sort param: "companyName:asc" or "createdAt:desc"
+    const SORTABLE_FIELDS = new Set([
+      'legalName', 'mcNumber', 'dotNumber', 'status', 'qualificationTier',
+      'totalLoadsCompleted', 'onTimeDeliveryRate', 'avgRating',
+      'createdAt', 'updatedAt',
+    ]);
+
+    let orderBy: Record<string, 'asc' | 'desc'> = { createdAt: 'desc' };
+    if (query.sort) {
+      const [field, dir] = query.sort.split(':');
+      if (field && SORTABLE_FIELDS.has(field)) {
+        orderBy = { [field]: dir === 'asc' ? 'asc' : 'desc' };
+      }
+    }
+
     const [data, total] = await Promise.all([
       this.prisma.carrier.findMany({
         where,
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy,
         include: {
           contacts: { where: { isActive: true }, orderBy: { isPrimary: 'desc' } },
           insuranceCertificates: { where: { status: 'ACTIVE' }, orderBy: { expirationDate: 'asc' } },

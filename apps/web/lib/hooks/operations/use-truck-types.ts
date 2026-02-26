@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { 
-  TruckType, 
-  TruckTypeListResponse,
+import {
+  TruckType,
+  TruckTypeListItem,
   CreateTruckTypeInput,
   UpdateTruckTypeInput,
   CategoryCountsResponse
@@ -36,11 +36,18 @@ export const useTruckTypes = (params?: TruckTypeListParams) => {
       if (params?.includeInactive !== undefined) queryParams.includeInactive = params.includeInactive;
       if (params?.search) queryParams.search = params.search;
       
-      const response = await apiClient.get<TruckTypeListResponse>(
-        '/operations/truck-types',
-        queryParams
-      );
-      return response;
+      const response = await apiClient.get<{
+        success: boolean;
+        data: TruckTypeListItem[];
+        pagination: { page: number; limit: number; total: number; totalPages: number };
+        timestamp: string;
+      }>('/operations/truck-types', queryParams);
+      return {
+        data: response.data,
+        total: response.pagination?.total ?? 0,
+        page: response.pagination?.page ?? page,
+        limit: response.pagination?.limit ?? limit,
+      };
     },
   });
 };
@@ -74,10 +81,10 @@ export const useCategoryCounts = () => {
   return useQuery({
     queryKey: [TRUCK_TYPES_KEY, 'category-counts'],
     queryFn: async () => {
-      const response = await apiClient.get<CategoryCountsResponse>(
+      const response = await apiClient.get<{ success: boolean; data: CategoryCountsResponse; timestamp: string }>(
         '/operations/truck-types/category-counts'
       );
-      return response;
+      return response.data;
     },
   });
 };

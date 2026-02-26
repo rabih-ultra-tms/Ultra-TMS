@@ -128,49 +128,46 @@ const DEFAULT_VALUES: QuoteFormValues = {
 };
 
 function mapDetailToFormValues(detail: QuoteDetail): QuoteFormValues {
+  // Runtime data uses API field names (companyId, weightLbs, stopType, etc.)
+  // Prisma returns null for nullable fields; Zod .optional() only accepts undefined,
+  // so we must normalize null → undefined throughout.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const d = detail as any;
   return {
-    customerId: detail.customerId,
-    customerName: detail.customerName,
-    contactId: undefined,
-    serviceType: detail.serviceType,
-    equipmentType: detail.equipmentType,
-    commodity: detail.commodity,
-    weight: detail.weight,
-    pieces: detail.pieces,
-    pallets: detail.pallets,
-    specialHandling: detail.specialHandling,
+    customerId: d.companyId ?? d.customerId ?? "",
+    customerName: d.customerName ?? undefined,
+    contactId: d.contactId ?? undefined,
+    serviceType: d.serviceType,
+    equipmentType: d.equipmentType,
+    commodity: d.commodity ?? undefined,
+    weight: Number(d.weightLbs ?? d.weight ?? 0) || undefined,
+    pieces: d.pieces != null ? Number(d.pieces) : undefined,
+    pallets: d.pallets != null ? Number(d.pallets) : undefined,
+    specialHandling: d.specialHandling ?? undefined,
     stops:
-      detail.stops && detail.stops.length >= 2
-        ? detail.stops.map((s) => ({
-            type: s.type,
-            city: s.city,
-            state: s.state,
-            address: s.address,
-            zipCode: s.zipCode,
-            facilityName: s.facilityName,
-            appointmentDate: s.appointmentDate,
-            appointmentTime: s.appointmentTime,
-            notes: s.notes,
-            sequence: s.sequence,
+      d.stops && d.stops.length >= 2
+        ? d.stops.map((s: Record<string, unknown>) => ({
+            type: ((s.stopType ?? s.type ?? "PICKUP") as string) as "PICKUP" | "DELIVERY" | "STOP",
+            city: (s.city as string) ?? "",
+            state: (s.state as string) ?? "",
+            address: ((s.addressLine1 ?? s.address) ?? undefined) as string | undefined,
+            zipCode: ((s.postalCode ?? s.zipCode) ?? undefined) as string | undefined,
+            facilityName: (s.facilityName ?? undefined) as string | undefined,
+            appointmentDate: (s.appointmentDate ?? undefined) as string | undefined,
+            appointmentTime: (s.appointmentTime ?? undefined) as string | undefined,
+            contactName: (s.contactName ?? undefined) as string | undefined,
+            contactPhone: (s.contactPhone ?? undefined) as string | undefined,
+            notes: (s.notes ?? undefined) as string | undefined,
+            sequence: ((s.stopSequence ?? s.sequence ?? 1) as number),
           }))
         : [
-            {
-              type: "PICKUP" as const,
-              city: detail.originCity,
-              state: detail.originState,
-              sequence: 1,
-            },
-            {
-              type: "DELIVERY" as const,
-              city: detail.destinationCity,
-              state: detail.destinationState,
-              sequence: 2,
-            },
+            { type: "PICKUP" as const, city: d.originCity ?? "", state: d.originState ?? "", sequence: 1 },
+            { type: "DELIVERY" as const, city: d.destinationCity ?? "", state: d.destinationState ?? "", sequence: 2 },
           ],
-    linehaulRate: detail.linehaulRate ?? 0,
-    fuelSurcharge: detail.fuelSurcharge,
+    linehaulRate: Number(d.linehaulRate ?? 0),
+    fuelSurcharge: Number(d.fuelSurcharge ?? 0) || undefined,
     accessorials: [],
-    internalNotes: undefined,
+    internalNotes: d.internalNotes ?? undefined,
     validityDays: 7,
   };
 }
@@ -265,7 +262,9 @@ export function QuoteFormV2({ initialData, quoteId }: QuoteFormV2Props) {
 
     let savedQuoteId = quoteId;
     if (isEdit && quoteId) {
-      await updateMutation.mutateAsync({ id: quoteId, data: values });
+      if (isDirty) {
+        await updateMutation.mutateAsync({ id: quoteId, data: values });
+      }
     } else {
       const result = await createMutation.mutateAsync(values);
       savedQuoteId = result?.id;
@@ -329,7 +328,9 @@ export function QuoteFormV2({ initialData, quoteId }: QuoteFormV2Props) {
       <div className="flex-1 p-6 md:p-8">
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(handleSaveDraft)}
+            onSubmit={form.handleSubmit(handleSaveDraft, (errors) => {
+              console.error("[QuoteForm] Validation errors prevented save:", errors);
+            })}
             className="max-w-6xl mx-auto"
           >
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
@@ -675,8 +676,10 @@ export function QuoteFormV2({ initialData, quoteId }: QuoteFormV2Props) {
           <div className="flex items-center gap-3">
             <Button
               variant="outline"
-              onClick={form.handleSubmit(handleSaveDraft)}
-              disabled={!isDirty || isSaving}
+              onClick={form.handleSubmit(handleSaveDraft, (errors) => {
+                  console.error("[QuoteForm] Validation errors prevented save:", errors);
+                })}
+              disabled={(isEdit ? false : !isDirty) || isSaving}
             >
               {isSaving ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -687,7 +690,7 @@ export function QuoteFormV2({ initialData, quoteId }: QuoteFormV2Props) {
             </Button>
             <Button
               onClick={() => setShowSendDialog(true)}
-              disabled={!isDirty || isSaving}
+              disabled={isSaving}
             >
               <Send className="h-4 w-4 mr-2" />
               Save & Send

@@ -338,9 +338,14 @@ const loadLegacyTrucks = async (): Promise<LegacyTruck[]> => {
     'load-planner',
     'trucks.ts'
   );
-  const moduleUrl = pathToFileURL(trucksPath).href;
-  const module = await import(moduleUrl);
-  return (module.trucks || []) as LegacyTruck[];
+  try {
+    const moduleUrl = pathToFileURL(trucksPath).href;
+    const module = await import(moduleUrl);
+    return (module.trucks || []) as LegacyTruck[];
+  } catch {
+    // dev_docs source file is untracked — skip gracefully
+    return [];
+  }
 };
 
 const mapTruckToSeed = (truck: LegacyTruck, sortOrder: number) => {

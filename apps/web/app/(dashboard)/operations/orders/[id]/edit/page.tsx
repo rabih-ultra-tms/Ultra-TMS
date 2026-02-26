@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { use } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -10,31 +11,41 @@ import { OrderForm } from "@/components/tms/orders/order-form";
 import type { OrderFormValues, StopFormValues } from "@/components/tms/orders/order-form-schema";
 import type { OrderDetailResponse } from "@/types/orders";
 
+// Safely convert Prisma Decimal (serialized as string) to number
+function toNum(val: unknown): number | null {
+  if (val == null) return null;
+  const n = Number(val);
+  return Number.isFinite(n) ? n : null;
+}
+
 function mapOrderToFormValues(order: OrderDetailResponse): Partial<OrderFormValues> {
+  // customFields stores fields without dedicated Prisma columns
+  const cf = order.customFields;
+
   return {
     // Step 1: Customer & Reference
     customerId: order.customerId,
-    customerName: order.customer?.companyName || "",
+    customerName: order.customer?.name || "",
     customerReferenceNumber: order.customerReference || "",
     poNumber: order.poNumber || "",
     bolNumber: order.bolNumber || "",
     salesRepId: order.salesRepId || "",
-    priority: "MEDIUM" as const,
+    priority: ((cf?.priority as string) || "MEDIUM") as OrderFormValues["priority"],
     internalNotes: order.internalNotes || "",
 
     // Step 2: Cargo Details
     commodity: order.commodity || "",
-    weight: order.weightLbs || 0,
-    pieces: order.pieceCount || null,
-    pallets: order.palletCount || null,
+    weight: toNum(order.weightLbs) ?? 0,
+    pieces: order.pieceCount ?? null,
+    pallets: order.palletCount ?? null,
     equipmentType: (order.equipmentType || "DRY_VAN") as OrderFormValues["equipmentType"],
     isHazmat: order.isHazmat || false,
-    hazmatUnNumber: "",
+    hazmatUnNumber: (cf?.hazmatUnNumber as string) || "",
     hazmatClass: order.hazmatClass || "",
-    hazmatPlacard: "",
-    tempMin: order.temperatureMin || null,
-    tempMax: order.temperatureMax || null,
-    specialHandling: [],
+    hazmatPlacard: (cf?.hazmatPlacard as string) || "",
+    tempMin: toNum(order.temperatureMin),
+    tempMax: toNum(order.temperatureMax),
+    specialHandling: (cf?.specialHandling as string[]) || [],
     dimensionLength: null,
     dimensionWidth: null,
     dimensionHeight: null,
@@ -50,7 +61,7 @@ function mapOrderToFormValues(order: OrderDetailResponse): Partial<OrderFormValu
       zipCode: stop.postalCode,
       contactName: stop.contactName || "",
       contactPhone: stop.contactPhone || "",
-      appointmentDate: stop.appointmentDate || "",
+      appointmentDate: stop.appointmentDate ? String(stop.appointmentDate).slice(0, 10) : "",
       appointmentTimeFrom: stop.appointmentTimeStart || "",
       appointmentTimeTo: stop.appointmentTimeEnd || "",
       weight: null,
@@ -63,19 +74,27 @@ function mapOrderToFormValues(order: OrderDetailResponse): Partial<OrderFormValu
     })),
 
     // Step 4: Rate & Billing
-    customerRate: order.customerRate || null,
-    fuelSurcharge: order.fuelSurcharge || null,
-    accessorials: [],
-    estimatedCarrierRate: null,
-    paymentTerms: "NET_30",
-    billingContactId: "",
-    billingNotes: "",
+    customerRate: toNum(order.customerRate),
+    fuelSurcharge: toNum(order.fuelSurcharge),
+    accessorials: Array.isArray(cf?.accessorials)
+      ? (cf.accessorials as Array<{ type: string; amount: number; notes?: string }>).map((a) => ({
+          id: crypto.randomUUID(),
+          type: a.type || "",
+          amount: a.amount ?? 0,
+          notes: a.notes || "",
+        }))
+      : [],
+    estimatedCarrierRate: toNum(cf?.estimatedCarrierRate),
+    paymentTerms: (cf?.paymentTerms as string) || "NET_30",
+    billingContactId: (cf?.billingContactId as string) || "",
+    billingNotes: (cf?.billingNotes as string) || "",
   };
 }
 
-export default function EditOrderPage({ params }: { params: { id: string } }) {
+export default function EditOrderPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
-  const { data: order, isLoading, error, refetch } = useOrder(params.id);
+  const { data: order, isLoading, error, refetch } = useOrder(id);
 
   const initialData = React.useMemo(() => {
     if (!order) return undefined;
@@ -153,7 +172,7 @@ export default function EditOrderPage({ params }: { params: { id: string } }) {
   return (
     <OrderForm
       mode="edit"
-      orderId={params.id}
+      orderId={id}
       initialData={initialData}
       orderStatus={order.status}
     />

@@ -24,11 +24,13 @@ import { DetailPage } from "@/components/patterns/detail-page";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { CarrierOverviewCard } from "@/components/carriers/carrier-overview-card";
 import { CarrierInsuranceSection } from "@/components/carriers/carrier-insurance-section";
-import { CarrierDocumentsSection } from "@/components/carriers/carrier-documents-section";
+import { CarrierDocumentsManager } from "@/components/carriers/carrier-documents-manager";
+import { CarrierTrucksManager } from "@/components/carriers/carrier-trucks-manager";
 import { CarrierDriversSection } from "@/components/carriers/carrier-drivers-section";
 import { CarrierLoadsTab } from "@/components/carriers/carrier-loads-tab";
 import { CarrierContactsTab } from "@/components/carriers/carrier-contacts-tab";
 import { StatusBadge } from "@/components/tms/primitives/status-badge";
+import { TierBadge } from "@/components/carriers/tier-badge";
 import { CsaScoresDisplay } from "@/components/carriers/csa-scores-display";
 import type { StatusColorToken, Intent } from "@/lib/design-tokens";
 
@@ -62,7 +64,9 @@ export default function CarrierDetailPage({
     router.push("/carriers");
   };
 
-  // Tabs definition — matches CARR-002 spec: Overview, Contacts, Insurance, Documents, Drivers, Loads
+  const isCompany = carrier?.carrierType === "COMPANY";
+
+  // Tabs definition — Drivers tab only shown for COMPANY carriers (owner-operators are the driver themselves)
   const tabs = carrier ? [
     {
       value: "overview",
@@ -86,9 +90,9 @@ export default function CarrierDetailPage({
       value: "documents",
       label: "Documents",
       icon: FileText,
-      content: <CarrierDocumentsSection carrierId={id} />,
+      content: <CarrierDocumentsManager carrierId={id} />,
     },
-    {
+    ...(isCompany ? [{
       value: "drivers",
       label: "Drivers",
       icon: Users,
@@ -98,6 +102,12 @@ export default function CarrierDetailPage({
           drivers={Array.isArray(drivers) ? drivers : []}
         />
       ),
+    }] : []),
+    {
+      value: "trucks",
+      label: "Trucks",
+      icon: Truck,
+      content: <CarrierTrucksManager carrierId={id} showDriverAssignment={isCompany} />,
     },
     {
       value: "loads",
@@ -125,9 +135,12 @@ export default function CarrierDetailPage({
   // Status Badge
   const statusConfig = carrier ? (STATUS_CONFIG[carrier.status] || { intent: "info", label: carrier.status }) : null;
   const statusBadge = statusConfig ? (
-    <StatusBadge status={statusConfig.status} intent={statusConfig.intent}>
-      {statusConfig.label}
-    </StatusBadge>
+    <>
+      <StatusBadge status={statusConfig.status} intent={statusConfig.intent}>
+        {statusConfig.label}
+      </StatusBadge>
+      <TierBadge tier={carrier?.tier} size="sm" />
+    </>
   ) : null;
 
   // Subtitle parts
@@ -150,6 +163,11 @@ export default function CarrierDetailPage({
       backLabel="Back to Carriers"
       actions={
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/carriers/${id}/scorecard`}>
+              View Scorecard
+            </Link>
+          </Button>
           <Button variant="outline" size="sm" onClick={() => router.push(`/carriers/${id}/edit`)}>
             <Pencil className="mr-2 h-4 w-4" />
             Edit

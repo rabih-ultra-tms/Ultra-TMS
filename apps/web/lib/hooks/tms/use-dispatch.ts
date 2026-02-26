@@ -12,6 +12,8 @@ import type {
   DispatchBoardStats,
   DispatchFilters,
   DispatchLoad,
+  DispatchStop,
+  EquipmentType,
   KanbanLane,
   LoadStatus,
   MutationError,
@@ -47,7 +49,7 @@ function transformToBoardData(
   };
 
   loads.forEach((load) => {
-    const lane = STATUS_TO_LANE[load.status];
+    const lane = STATUS_TO_LANE[load.status] ?? 'UNASSIGNED';
     loadsByLane[lane].push(load);
   });
 
@@ -164,6 +166,75 @@ function unwrap<T>(response: unknown): T {
 }
 
 /**
+ * Raw load shape returned by the backend GET /loads/board.
+ * Stops and customer are nested inside `order`.
+ * Carrier uses `legalName` instead of `name`.
+ */
+interface RawBoardLoad {
+  id: string;
+  loadNumber: string;
+  status: string;
+  equipmentType?: string;
+  carrierRate?: string | number | null;
+  createdAt: string;
+  updatedAt: string;
+  dispatchedAt?: string | null;
+  order?: {
+    customerRate?: string | number | null;
+    customer?: { id: string; name: string };
+    stops?: Array<{
+      id: string;
+      stopType: string;
+      city: string;
+      state: string;
+      appointmentDate?: string | null;
+      status: string;
+    }>;
+  } | null;
+  carrier?: { id: string; legalName: string; mcNumber?: string } | null;
+}
+
+/** Parse a rate field (Decimal string, number, null, or Prisma Decimal object) to a finite number > 0 or undefined */
+function toRate(val: unknown): number | undefined {
+  if (val == null) return undefined;
+  const n = Number(val);
+  return Number.isFinite(n) && n > 0 ? n : undefined;
+}
+
+/** Map raw backend board load to the DispatchLoad shape expected by the UI */
+function normalizeLoad(raw: RawBoardLoad): DispatchLoad {
+  const stops: DispatchLoad['stops'] = (raw.order?.stops ?? []).map((s) => ({
+    id: s.id as unknown as number,
+    type: (s.stopType === 'PICKUP' ? 'PICKUP' : 'DELIVERY') as 'PICKUP' | 'DELIVERY',
+    city: s.city,
+    state: s.state,
+    appointmentDate: s.appointmentDate ? new Date(s.appointmentDate).toISOString().split('T')[0]! : '',
+    status: (s.status as DispatchStop['status']) ?? 'PENDING',
+  }));
+
+  return {
+    id: raw.id as unknown as number,
+    loadNumber: raw.loadNumber,
+    status: (raw.status as LoadStatus) ?? 'PENDING',
+    equipmentType: (raw.equipmentType as EquipmentType) ?? 'DRY_VAN',
+    isHotLoad: false,
+    hasExceptions: false,
+    customer: raw.order?.customer
+      ? { id: raw.order.customer.id as unknown as number, name: raw.order.customer.name }
+      : { id: 0, name: 'Unknown' },
+    carrier: raw.carrier
+      ? { id: raw.carrier.id as unknown as number, name: raw.carrier.legalName, mcNumber: raw.carrier.mcNumber }
+      : undefined,
+    stops,
+    customerRate: toRate(raw.order?.customerRate),
+    carrierRate: toRate(raw.carrierRate),
+    createdAt: raw.createdAt,
+    updatedAt: raw.updatedAt,
+    statusChangedAt: raw.dispatchedAt ?? raw.updatedAt,
+  };
+}
+
+/**
  * Fetch dispatch board loads
  * Note: Backend GET /loads/board only supports ?status= and ?region= query params.
  * Other filter params (date, equipment, carrier, etc.) are sent but silently ignored by backend.
@@ -183,7 +254,9 @@ export function useDispatchLoads(
       // apiClient already prepends /api/v1 — don't duplicate it
       const url = `/loads/board${queryString ? `?${queryString}` : ''}`;
       const response = await apiClient.get(url);
-      const loads = unwrap<DispatchLoad[]>(response);
+      // Backend returns { data: { total, byStatus, loads } } — extract the loads array
+      const body = unwrap<{ total: number; byStatus: Record<string, RawBoardLoad[]>; loads: RawBoardLoad[] }>(response);
+      const loads = (body.loads ?? []).map(normalizeLoad);
       return transformToBoardData(loads, sortConfig);
     },
     refetchInterval: options?.refetchInterval ?? 30000,
@@ -202,9 +275,9 @@ export function useDispatchBoardStats(filters?: DispatchFilters) {
       const queryString = buildQueryString(filters);
       const url = `/loads/board${queryString ? `?${queryString}` : ''}`;
       const response = await apiClient.get(url);
-      const loads = unwrap<DispatchLoad[]>(response);
-      // Compute stats from actual board data
-      const board = transformToBoardData(loads);
+      // Backend returns { data: { total, byStatus, loads } } — extract the loads array
+      const body = unwrap<{ total: number; byStatus: Record<string, RawBoardLoad[]>; loads: RawBoardLoad[] }>(response);
+      const board = transformToBoardData((body.loads ?? []).map(normalizeLoad));
       return board.stats;
     },
     refetchInterval: 30000,

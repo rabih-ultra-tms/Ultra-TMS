@@ -70,6 +70,29 @@ function unwrap<T>(response: unknown): T {
   return (body.data ?? response) as T;
 }
 
+function mapTransaction(raw: any): CommissionTransaction {
+  const firstName = raw.user?.firstName ?? '';
+  const lastName = raw.user?.lastName ?? '';
+  const repName = `${firstName} ${lastName}`.trim() || raw.user?.email || 'Unknown';
+  return {
+    id: raw.id,
+    date: raw.commissionPeriod ?? raw.createdAt,
+    repId: raw.userId,
+    repName,
+    loadId: raw.loadId ?? '',
+    loadNumber: raw.load?.loadNumber ?? 'N/A',
+    orderNumber: raw.order?.orderNumber ?? 'N/A',
+    orderAmount: raw.order?.totalCharges != null ? Number(raw.order.totalCharges) : 0,
+    marginPercent: raw.rateApplied != null ? Number(raw.rateApplied) : 0,
+    commissionAmount: Number(raw.commissionAmount ?? 0),
+    rate: Number(raw.rateApplied ?? 0),
+    planName: raw.plan?.name ?? 'N/A',
+    status: raw.status === 'REVERSED' ? 'VOID' : (raw.status ?? 'PENDING'),
+    voidReason: raw.reversalReason ?? undefined,
+    createdAt: raw.createdAt,
+  };
+}
+
 // ===========================
 // Query Hooks
 // ===========================
@@ -93,7 +116,11 @@ export function useTransactions(params: TransactionListParams = {}) {
         '/commissions/transactions',
         searchParams
       );
-      return unwrap<TransactionListResponse>(response);
+      const raw = response as { data: any[]; pagination: TransactionListResponse['pagination'] };
+      return {
+        data: (raw.data ?? []).map(mapTransaction),
+        pagination: raw.pagination,
+      };
     },
     placeholderData: (previousData) => previousData,
   });

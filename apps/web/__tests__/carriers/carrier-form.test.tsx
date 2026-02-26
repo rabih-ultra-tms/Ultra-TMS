@@ -126,7 +126,7 @@ describe("CarrierForm — Edit Mode", () => {
   const initialData = {
     companyName: "Existing Carrier",
     carrierType: "OWNER_OPERATOR" as const,
-    status: "PREFERRED" as const,
+    status: "APPROVED" as const,
     mcNumber: "MC999",
     dotNumber: "DOT888",
     email: "existing@carrier.com",

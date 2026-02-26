@@ -6,6 +6,7 @@ import { Plus, Trash2, MapPin, ArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -272,10 +273,18 @@ function StopCard({
             <FormItem>
               <FormLabel className="text-xs">Address *</FormLabel>
               <FormControl>
-                <Input
-                  placeholder="Street address"
+                <AddressAutocomplete
+                  id={`stops.${index}.address`}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onSelect={(components) => {
+                    field.onChange(components.address || field.value);
+                    if (components.city) form.setValue(`stops.${index}.city`, components.city);
+                    if (components.state) form.setValue(`stops.${index}.state`, components.state);
+                    if (components.zip) form.setValue(`stops.${index}.zipCode`, components.zip);
+                  }}
+                  placeholder="Start typing an address..."
                   className="h-8 text-sm"
-                  {...field}
                 />
               </FormControl>
               <FormMessage />

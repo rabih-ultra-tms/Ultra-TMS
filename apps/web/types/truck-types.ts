@@ -113,7 +113,8 @@ export interface TruckType {
   isActive: boolean
   baseRateCents: number | null
   ratePerMileCents: number | null
-  
+  imageUrl: string | null
+
   // Display
   sortOrder: number
   
@@ -161,7 +162,8 @@ export interface CreateTruckTypeInput {
   isActive?: boolean
   baseRateCents?: number
   ratePerMileCents?: number
-  
+  imageUrl?: string
+
   sortOrder?: number
 }
 

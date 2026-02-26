@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, IsBoolean, IsArray, Min } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsBoolean, IsArray, Min, MaxLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateTruckTypeDto {
@@ -89,6 +89,12 @@ export class CreateTruckTypeDto {
   @IsNumber()
   @Min(0)
   ratePerMileCents?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  imageUrl?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -190,6 +196,12 @@ export class UpdateTruckTypeDto {
   @IsNumber()
   @Min(0)
   ratePerMileCents?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  imageUrl?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

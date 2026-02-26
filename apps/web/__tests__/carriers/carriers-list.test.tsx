@@ -135,7 +135,8 @@ describe("CarriersPage", () => {
 
   it("shows filter controls", () => {
     render(<CarriersPage />);
-    expect(screen.getByPlaceholderText("State")).toBeInTheDocument();
+    // State is now a Select (not a free-text Input); verify by checking its placeholder text
+    expect(screen.getByText("All States")).toBeInTheDocument();
   });
 });
 

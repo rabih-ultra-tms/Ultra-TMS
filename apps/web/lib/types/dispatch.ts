@@ -10,6 +10,7 @@ export type LoadStatus =
   | 'PENDING'
   | 'TENDERED'
   | 'ACCEPTED'
+  | 'ASSIGNED'
   | 'DISPATCHED'
   | 'AT_PICKUP'
   | 'PICKED_UP'
@@ -42,6 +43,7 @@ export const STATUS_TO_LANE: Record<LoadStatus, KanbanLane> = {
   PENDING: 'UNASSIGNED',
   TENDERED: 'TENDERED',
   ACCEPTED: 'DISPATCHED',
+  ASSIGNED: 'DISPATCHED',
   DISPATCHED: 'DISPATCHED',
   AT_PICKUP: 'IN_TRANSIT',
   PICKED_UP: 'IN_TRANSIT',

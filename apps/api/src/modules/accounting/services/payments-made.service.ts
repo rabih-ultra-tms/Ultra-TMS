@@ -54,10 +54,14 @@ export class PaymentsMadeService {
       carrierId?: string;
       fromDate?: Date;
       toDate?: Date;
-      skip?: number;
-      take?: number;
+      page?: number;
+      limit?: number;
     },
   ) {
+    const page = options?.page ?? 1;
+    const limit = options?.limit ?? 20;
+    const skip = (page - 1) * limit;
+
     const where = {
       tenantId,
       ...(options?.status && { status: options.status }),
@@ -75,13 +79,13 @@ export class PaymentsMadeService {
           carrier: { select: { id: true, legalName: true } },
         },
         orderBy: { paymentDate: 'desc' },
-        skip: options?.skip,
-        take: options?.take,
+        skip,
+        take: limit,
       }),
       this.prisma.paymentMade.count({ where }),
     ]);
 
-    return { payments, total };
+    return { data: payments, total, page, limit };
   }
 
   async findOne(id: string, tenantId: string) {

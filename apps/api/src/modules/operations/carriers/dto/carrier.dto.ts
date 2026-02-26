@@ -3,9 +3,14 @@ import {
   IsOptional,
   IsEmail,
   IsNumber,
+  IsArray,
+  IsInt,
+  IsIn,
   Min,
+  Max,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
+import { PartialType } from '@nestjs/mapped-types';
 
 export class CreateOperationsCarrierDto {
   @IsString()
@@ -107,9 +112,69 @@ export class CreateOperationsCarrierDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  equipmentTypes?: string[];
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  truckCount?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  trailerCount?: number;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['PLATINUM', 'GOLD', 'SILVER', 'BRONZE', 'UNQUALIFIED'])
+  tier?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  onTimePickupRate?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  onTimeDeliveryRate?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  claimsRate?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Max(5)
+  avgRating?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  acceptanceRate?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  totalLoadsCompleted?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  performanceScore?: number;
 }
 
-export class UpdateOperationsCarrierDto extends CreateOperationsCarrierDto {}
+export class UpdateOperationsCarrierDto extends PartialType(CreateOperationsCarrierDto) {}
 
 export class OperationsCarrierResponseDto {
   id: string;
@@ -139,6 +204,14 @@ export class OperationsCarrierResponseDto {
   cargoInsuranceLimitCents?: number;
   status: string;
   notes?: string;
+  tier?: string;
+  onTimePickupRate?: number;
+  onTimeDeliveryRate?: number;
+  claimsRate?: number;
+  avgRating?: number;
+  acceptanceRate?: number;
+  totalLoadsCompleted?: number;
+  performanceScore?: number;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -161,11 +234,13 @@ export class ListOperationsCarriersDto {
   @IsString()
   state?: string;
 
+  @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @Min(1)
   page: number = 1;
 
+  @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @Min(10)
@@ -178,4 +253,27 @@ export class ListOperationsCarriersDto {
   @IsOptional()
   @IsString()
   sortOrder?: 'asc' | 'desc';
+
+  @IsOptional()
+  @IsString()
+  tier?: string;
+
+  @IsOptional()
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.split(',').map((v: string) => v.trim()).filter(Boolean) : value
+  )
+  @IsArray()
+  @IsString({ each: true })
+  equipmentTypes?: string[];
+
+  @IsOptional()
+  @IsString()
+  compliance?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  minScore?: number;
 }

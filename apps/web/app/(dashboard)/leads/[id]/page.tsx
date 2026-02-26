@@ -80,7 +80,8 @@ export default function LeadDetailPage() {
           <div className="flex gap-2">
             <Button
               onClick={() => setShowConvert(true)}
-              disabled={convertLead.isPending}
+              disabled={convertLead.isPending || lead.stage !== 'WON'}
+              title={lead.stage !== 'WON' ? 'Only won deals can be converted to customers' : undefined}
             >
               <ArrowRightLeft className="mr-2 h-4 w-4" />
               Convert to Customer

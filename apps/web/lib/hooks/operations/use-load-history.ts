@@ -26,16 +26,37 @@ export const useLoadHistory = (params: LoadHistoryListParams) => {
       
       // Only add optional params if they have values
       if (params.search) queryParams.search = params.search;
-      if (params.status) queryParams.status = params.status;
+      // DB stores status in UPPERCASE — convert before sending
+      if (params.status) queryParams.status = params.status.toUpperCase();
       if (params.carrierId) queryParams.carrierId = params.carrierId;
       if (params.sortBy) queryParams.sortBy = params.sortBy;
       if (params.sortOrder) queryParams.sortOrder = params.sortOrder;
       
-      const response = await apiClient.get<LoadHistoryListResponse>(
-        '/operations/load-history',
-        queryParams
-      );
-      return response;
+      const raw = await apiClient.get<{
+        success: boolean;
+        data: LoadHistoryListResponse['data'];
+        pagination: { page: number; limit: number; total: number; totalPages: number };
+      }>('/operations/load-history', queryParams);
+
+      // Normalize the interceptor-wrapped response to the shape the page expects.
+      // Also lowercase status so frontend label/color maps (lowercase keys) work.
+      // Compute marginPercentage from Int fields — Prisma Decimal may not survive serialization.
+      return {
+        data: (raw.data ?? []).map((item) => {
+          const cRate = Number(item.customerRateCents ?? 0);
+          const mCents = Number(item.marginCents ?? 0);
+          const marginPercentage = cRate > 0 ? parseFloat(((mCents / cRate) * 100).toFixed(2)) : null;
+          return {
+            ...item,
+            status: item.status?.toLowerCase() as LoadHistoryListResponse['data'][number]['status'],
+            marginPercentage,
+          };
+        }),
+        total: raw.pagination?.total ?? 0,
+        page: raw.pagination?.page ?? page,
+        limit: raw.pagination?.limit ?? limit,
+        totalPages: raw.pagination?.totalPages ?? 1,
+      } satisfies LoadHistoryListResponse;
     },
   });
 };
@@ -141,9 +162,13 @@ export const useCreateLoadHistory = () => {
 
   return useMutation({
     mutationFn: async (data: CreateLoadHistoryInput) => {
+      // DB stores status in UPPERCASE
+      const payload = data.status
+        ? { ...data, status: data.status.toUpperCase() }
+        : data;
       const response = await apiClient.post<{ data: LoadHistory }>(
         '/operations/load-history',
-        data
+        payload
       );
       return response.data;
     },

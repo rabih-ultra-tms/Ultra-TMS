@@ -1,9 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import {
   OperationsCarrier,
   OperationsCarrierListItem,
   OperationsCarrierDriver,
   OperationsCarrierTruck,
+  OperationsCarrierDocument,
   CarrierListParams,
 } from '@/types/carriers';
 import { apiClient } from '@/lib/api-client';
@@ -28,16 +30,31 @@ export const useCarriers = (params: CarrierListParams) => {
       if (params.status) cleanParams.status = params.status;
       if (params.carrierType) cleanParams.carrierType = params.carrierType;
       if (params.state) cleanParams.state = params.state;
-      if (params.sortBy) cleanParams.sortBy = params.sortBy;
-      if (params.sortOrder) cleanParams.sortOrder = params.sortOrder;
+      if (params.sortBy) {
+        cleanParams.sortBy = params.sortBy;
+        if (params.sortOrder) cleanParams.sortOrder = params.sortOrder;
+      }
+      if (params.tier) cleanParams.tier = params.tier;
+      if (params.equipmentTypes?.length) {
+        // Backend expects comma-separated (Transform decorator added in Band B Task 13)
+        cleanParams.equipmentTypes = params.equipmentTypes.join(',');
+      }
+      if (params.compliance && params.compliance !== 'all') {
+        cleanParams.compliance = params.compliance;
+      }
+      if (params.minScore !== undefined && params.minScore > 0) {
+        cleanParams.minScore = params.minScore;
+      }
       
-      return await apiClient.get<{
-        data: OperationsCarrierListItem[];
-        total: number;
-        page: number;
-        limit: number;
-        totalPages: number;
-      }>('/operations/carriers', cleanParams);
+      const raw = await apiClient.get<unknown>('/operations/carriers', cleanParams);
+      const r = raw as { data: OperationsCarrierListItem[]; pagination: { total: number; page: number; limit: number; totalPages: number } };
+      return {
+        data: r.data,
+        total: r.pagination?.total ?? 0,
+        page: r.pagination?.page ?? 1,
+        limit: r.pagination?.limit ?? 10,
+        totalPages: r.pagination?.totalPages ?? 1,
+      };
     },
   });
 };
@@ -46,9 +63,8 @@ export const useCarrier = (id: string) => {
   return useQuery({
     queryKey: [CARRIERS_KEY, id],
     queryFn: async () => {
-      return await apiClient.get<OperationsCarrier>(
-        `/operations/carriers/${id}`
-      );
+      const raw = await apiClient.get<unknown>(`/operations/carriers/${id}`);
+      return (raw as { data: OperationsCarrier }).data;
     },
     enabled: !!id,
   });
@@ -59,9 +75,12 @@ export const useCreateCarrier = () => {
 
   return useMutation({
     mutationFn: async (data: Partial<OperationsCarrier>) => {
+      const payload = Object.fromEntries(
+        Object.entries(data).filter(([, v]) => v !== '')
+      );
       return await apiClient.post<OperationsCarrier>(
         '/operations/carriers',
-        data
+        payload
       );
     },
     onSuccess: () => {
@@ -79,7 +98,11 @@ export const useUpdateCarrier = (id?: string) => {
     mutationFn: async (data: Partial<OperationsCarrier> & { id?: string }) => {
       const targetId = data.id || id;
       if (!targetId) throw new Error('Carrier ID is required for update');
-      const { id: _, ...updateData } = data;
+      const { id: _, ...rest } = data;
+      // Strip empty strings so @IsOptional() fields aren't sent as "" (which fails @IsEmail etc.)
+      const updateData = Object.fromEntries(
+        Object.entries(rest).filter(([, v]) => v !== '')
+      );
       return await apiClient.patch<OperationsCarrier>(
         `/operations/carriers/${targetId}`,
         updateData
@@ -96,6 +119,10 @@ export const useUpdateCarrier = (id?: string) => {
       queryClient.invalidateQueries({
         queryKey: [CARRIERS_KEY, 'stats'],
       });
+      toast.success('Carrier updated successfully');
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to update carrier', { description: error.message });
     },
   });
 };
@@ -128,11 +155,8 @@ export const useCarrierStats = () => {
   return useQuery({
     queryKey: [CARRIERS_KEY, 'stats'],
     queryFn: async () => {
-      return await apiClient.get<{
-        total: number;
-        byType: Record<string, number>;
-        byStatus: Record<string, number>;
-      }>('/operations/carriers/stats');
+      const raw = await apiClient.get<unknown>('/operations/carriers/stats');
+      return (raw as { data: { total: number; byType: Record<string, number>; byStatus: Record<string, number> } }).data;
     },
   });
 };
@@ -145,9 +169,9 @@ export const useCarrierDrivers = (carrierId: string) => {
   return useQuery({
     queryKey: [CARRIERS_KEY, carrierId, 'drivers'],
     queryFn: async () => {
-      return await apiClient.get<OperationsCarrierDriver[]>(
-        `/operations/carriers/${carrierId}/drivers`
-      );
+      const raw = await apiClient.get<unknown>(`/operations/carriers/${carrierId}/drivers`);
+      if (Array.isArray(raw)) return raw as OperationsCarrierDriver[];
+      return ((raw as { data?: OperationsCarrierDriver[] }).data ?? []);
     },
     enabled: !!carrierId,
   });
@@ -241,9 +265,9 @@ export const useCarrierTrucks = (carrierId: string) => {
   return useQuery({
     queryKey: [CARRIERS_KEY, carrierId, 'trucks'],
     queryFn: async () => {
-      return await apiClient.get<OperationsCarrierTruck[]>(
-        `/operations/carriers/${carrierId}/trucks`
-      );
+      const raw = await apiClient.get<unknown>(`/operations/carriers/${carrierId}/trucks`);
+      if (Array.isArray(raw)) return raw as OperationsCarrierTruck[];
+      return ((raw as { data?: OperationsCarrierTruck[] }).data ?? []);
     },
     enabled: !!carrierId,
   });
@@ -348,6 +372,147 @@ export const useDeleteTruck = (carrierId: string, truckId: string) => {
       queryClient.invalidateQueries({
         queryKey: [CARRIERS_KEY, carrierId],
       });
+    },
+  });
+};
+
+/** Update a truck without pre-baking the truckId into the hook (needed for list UIs). */
+export const useUpdateTruckById = (carrierId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ truckId, data }: { truckId: string; data: Partial<OperationsCarrierTruck> }) => {
+      return await apiClient.patch<OperationsCarrierTruck>(
+        `/operations/carriers/${carrierId}/trucks/${truckId}`,
+        data,
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [CARRIERS_KEY, carrierId, 'trucks'] });
+      queryClient.invalidateQueries({ queryKey: [CARRIERS_KEY, carrierId] });
+      toast.success('Truck updated');
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to update truck', { description: error.message });
+    },
+  });
+};
+
+/** Delete a truck without pre-baking the truckId into the hook. */
+export const useDeleteTruckById = (carrierId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (truckId: string) => {
+      await apiClient.delete(`/operations/carriers/${carrierId}/trucks/${truckId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [CARRIERS_KEY, carrierId, 'trucks'] });
+      queryClient.invalidateQueries({ queryKey: [CARRIERS_KEY, carrierId] });
+      toast.success('Truck removed');
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to remove truck', { description: error.message });
+    },
+  });
+};
+
+/** Update a driver without pre-baking the driverId into the hook (needed for list UIs). */
+export const useUpdateDriverById = (carrierId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ driverId, data }: { driverId: string; data: Partial<OperationsCarrierDriver> }) => {
+      return await apiClient.patch<OperationsCarrierDriver>(
+        `/operations/carriers/${carrierId}/drivers/${driverId}`,
+        data,
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [CARRIERS_KEY, carrierId, 'drivers'] });
+      queryClient.invalidateQueries({ queryKey: [CARRIERS_KEY, carrierId] });
+      toast.success('Driver updated');
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to update driver', { description: error.message });
+    },
+  });
+};
+
+/** Delete a driver without pre-baking the driverId into the hook. */
+export const useDeleteDriverById = (carrierId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (driverId: string) => {
+      await apiClient.delete(`/operations/carriers/${carrierId}/drivers/${driverId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [CARRIERS_KEY, carrierId, 'drivers'] });
+      queryClient.invalidateQueries({ queryKey: [CARRIERS_KEY, carrierId] });
+      toast.success('Driver removed');
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to remove driver', { description: error.message });
+    },
+  });
+};
+
+// ============================================================================
+// DOCUMENT QUERIES & MUTATIONS
+// ============================================================================
+
+export const useCarrierDocuments = (carrierId: string) => {
+  return useQuery({
+    queryKey: [CARRIERS_KEY, carrierId, 'documents'],
+    queryFn: async () => {
+      const raw = await apiClient.get<unknown>(`/operations/carriers/${carrierId}/documents`);
+      // Guard: API returns raw array; envelope form is handled for safety
+      if (Array.isArray(raw)) return raw as OperationsCarrierDocument[];
+      return ((raw as { data?: OperationsCarrierDocument[] }).data ?? []);
+    },
+    enabled: !!carrierId,
+  });
+};
+
+export const useCreateCarrierDocument = (carrierId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: {
+      documentType: string;
+      name: string;
+      description?: string;
+      expiryDate?: string;
+    }) => {
+      return await apiClient.post<OperationsCarrierDocument>(
+        `/operations/carriers/${carrierId}/documents`,
+        data,
+      );
+    },
+    onSuccess: () => {
+      toast.success('Document added');
+      queryClient.invalidateQueries({ queryKey: [CARRIERS_KEY, carrierId, 'documents'] });
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to add document', { description: error.message });
+    },
+  });
+};
+
+export const useDeleteCarrierDocument = (carrierId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (documentId: string) => {
+      await apiClient.delete(`/operations/carriers/${carrierId}/documents/${documentId}`);
+    },
+    onSuccess: () => {
+      toast.success('Document deleted');
+      queryClient.invalidateQueries({ queryKey: [CARRIERS_KEY, carrierId, 'documents'] });
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to delete document', { description: error.message });
     },
   });
 };

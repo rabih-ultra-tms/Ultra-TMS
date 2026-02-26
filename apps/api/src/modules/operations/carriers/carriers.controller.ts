@@ -29,6 +29,7 @@ import {
   UpdateOperationsCarrierDriverDto,
   CreateOperationsCarrierTruckDto,
   UpdateOperationsCarrierTruckDto,
+  CreateOperationsCarrierDocumentDto,
 } from './dto';
 
 @Controller('operations/carriers')
@@ -67,6 +68,16 @@ export class CarriersController {
   @ApiOperation({ summary: 'Get carrier statistics' })
   async getCarrierStats(@CurrentTenant() tenantId: string) {
     return this.carriersService.getCarrierStats(tenantId);
+  }
+
+  @Get(':carrierId/scorecard')
+  @Roles('ADMIN', 'MANAGER', 'SALES_REP', 'SALES_MANAGER')
+  @ApiOperation({ summary: 'Get carrier performance scorecard and recent load history' })
+  async getCarrierScorecard(
+    @CurrentTenant() tenantId: string,
+    @Param('carrierId') carrierId: string,
+  ) {
+    return this.carriersService.getCarrierScorecard(carrierId, tenantId);
   }
 
   @Get(':carrierId')
@@ -246,5 +257,42 @@ export class CarriersController {
     @Param('truckId') truckId: string
   ) {
     return this.carriersService.deleteTruck(tenantId, carrierId, truckId);
+  }
+
+  // ============================================================================
+  // DOCUMENTS ENDPOINTS
+  // ============================================================================
+
+  @Get(':carrierId/documents')
+  @Roles('ADMIN', 'MANAGER', 'SALES_REP', 'SALES_MANAGER')
+  @ApiOperation({ summary: 'List documents for carrier' })
+  async listDocuments(
+    @CurrentTenant() tenantId: string,
+    @Param('carrierId') carrierId: string,
+  ) {
+    return this.carriersService.listDocuments(tenantId, carrierId);
+  }
+
+  @Post(':carrierId/documents')
+  @Roles('ADMIN', 'MANAGER')
+  @ApiOperation({ summary: 'Create document record for carrier' })
+  async createDocument(
+    @CurrentTenant() tenantId: string,
+    @Param('carrierId') carrierId: string,
+    @Body() dto: CreateOperationsCarrierDocumentDto,
+  ) {
+    return this.carriersService.createDocument(tenantId, carrierId, dto);
+  }
+
+  @Delete(':carrierId/documents/:documentId')
+  @Roles('ADMIN', 'MANAGER')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete document record' })
+  async deleteDocument(
+    @CurrentTenant() tenantId: string,
+    @Param('carrierId') carrierId: string,
+    @Param('documentId') documentId: string,
+  ) {
+    return this.carriersService.deleteDocument(tenantId, carrierId, documentId);
   }
 }

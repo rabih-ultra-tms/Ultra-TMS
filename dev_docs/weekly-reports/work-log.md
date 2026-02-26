@@ -2388,6 +2388,33 @@ Completed software review for Phase 5 (Load Board) and Phase 6 (Financial). Buil
 
 <!-- NEXT SESSION ENTRY GOES HERE -->
 
+## Session: 2026-02-23 (Monday) — TMS Order Form Bug Fixes
+
+### Developer: Claude Code (Opus 4.6)
+### AI Tool: Claude Opus 4.6
+
+**What was done:**
+Two runtime bugs in the TMS order form were diagnosed and fixed. The first was a TypeError crashing the Review step when accessorial charges had undefined amounts (fixed with null-coalescing). The second was a deeper persistence issue: accessorial charges entered in the form were not surviving the save → reload round-trip. Root cause analysis traced the failure to (1) NestJS ValidationPipe stripping nested object properties from the accessorials array due to missing `@Type`/`@ValidateNested` decorators on the DTO, and (2) the edit page not generating `id` fields for accessorials loaded back from `customFields`, causing Zod schema failures.
+
+**Files changed (3):**
+| File | Change |
+|------|--------|
+| `apps/api/src/modules/tms/dto/create-order.dto.ts` | Added `AccessorialChargeDto` class with `@IsString`, `@IsNumber`, `@Min`, `@Type` decorators; applied `@ValidateNested({ each: true })` + `@Type(() => AccessorialChargeDto)` to `accessorials` in both `CreateOrderDto` and `UpdateOrderDto` |
+| `apps/web/app/(dashboard)/operations/orders/[id]/edit/page.tsx` | Fixed `mapOrderToFormValues` to generate `crypto.randomUUID()` for each accessorial loaded from `customFields`, with safe defaults for `amount` (`?? 0`) and `notes` |
+| `apps/web/components/tms/orders/order-review-step.tsx` | Guarded `acc.amount.toLocaleString()` with `?? 0` to prevent TypeError when amount is undefined |
+
+**Key deliverables:**
+- Accessorial charges now persist correctly through create → save → reload → edit cycle
+- No more RuntimeError crash in the Review step
+- `AccessorialChargeDto` properly validated by NestJS pipe — `type`, `amount`, `notes` survive the ValidationPipe
+- Edit page correctly reconstitutes accessorial array from `customFields` JSON with valid `id` fields
+
+**Impact metrics for report:**
+- Bugs fixed: 2 (1 crash, 1 data loss)
+- Files changed: 3
+- Root cause depth: NestJS ValidationPipe + class-transformer interaction with undecorated nested DTOs
+- API still compiles and starts clean (0 TS errors, 0 runtime errors on boot)
+
 ---
 
 ## Session: 2026-02-16 (Sunday) — Session 3

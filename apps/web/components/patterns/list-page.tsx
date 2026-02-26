@@ -8,6 +8,7 @@ import {
     SortingState,
     OnChangeFn,
     RowSelectionState,
+    type Row,
 } from "@tanstack/react-table";
 import { PageHeader } from "@/components/tms/layout/page-header";
 import { DataTable } from "@/components/tms/tables/data-table";
@@ -80,6 +81,9 @@ interface ListPageProps<TData> {
     entityLabel?: string;
 
     className?: string;
+
+    /** Optional row class callback passed through to DataTable */
+    getRowClassName?: (row: Row<TData>) => string | undefined;
 }
 
 export function ListPage<TData>({
@@ -107,6 +111,7 @@ export function ListPage<TData>({
     renderBulkActions,
     entityLabel = "items",
     className,
+    getRowClassName,
 }: ListPageProps<TData>) {
     // If pageCount not provided, calculate it
     const totalPages = pageCount ?? Math.ceil(total / pageSize);
@@ -215,6 +220,7 @@ export function ListPage<TData>({
                             <DataTable
                                 table={table}
                                 onRowClick={onRowClick ? (row) => onRowClick(row.original) : undefined}
+                                getRowClassName={getRowClassName}
                             />
                             <TablePagination
                                 pageIndex={page - 1} // 0-based

@@ -93,10 +93,16 @@ describe('CommissionPayoutsService', () => {
 
   it('finds payouts with filters', async () => {
     prisma.commissionPayout.findMany.mockResolvedValue([{ id: 'pay-1' }]);
+    prisma.commissionPayout.count.mockResolvedValue(1);
 
-    const result = await service.findAll('tenant-1', 'user-1', 'APPROVED');
+    const result = await service.findAll('tenant-1', {
+      page: 1,
+      limit: 20,
+      userId: 'user-1',
+      status: 'APPROVED',
+    });
 
-    expect(result[0]?.id).toBe('pay-1');
+    expect(result.data[0]?.id).toBe('pay-1');
     expect(prisma.commissionPayout.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: expect.objectContaining({ userId: 'user-1', status: 'APPROVED' }) }),
     );

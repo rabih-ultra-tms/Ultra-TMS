@@ -70,6 +70,15 @@ export class LoadsController {
     });
   }
 
+  @Get('stats')
+  @ApiOperation({ summary: 'Get load statistics' })
+  @ApiStandardResponse('Load statistics')
+  @ApiErrorResponses()
+  @Roles('ADMIN', 'DISPATCHER')
+  async getStats(@CurrentTenant() tenantId: string) {
+    return this.loadsService.getStats(tenantId);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get load by ID' })
   @ApiParam({ name: 'id', description: 'Load ID' })

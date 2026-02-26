@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsNumber, IsDateString } from 'class-validator';
+import { IsOptional, IsString, IsNumber, IsDateString, IsBoolean } from 'class-validator';
 
 export class UpdateStopDto {
   @IsOptional()
@@ -11,11 +11,15 @@ export class UpdateStopDto {
 
   @IsOptional()
   @IsString()
-  companyName?: string;
+  facilityName?: string;
 
   @IsOptional()
   @IsString()
-  address?: string;
+  addressLine1?: string;
+
+  @IsOptional()
+  @IsString()
+  addressLine2?: string;
 
   @IsOptional()
   @IsString()
@@ -27,7 +31,11 @@ export class UpdateStopDto {
 
   @IsOptional()
   @IsString()
-  zip?: string;
+  postalCode?: string;
+
+  @IsOptional()
+  @IsString()
+  country?: string;
 
   @IsOptional()
   @IsString()
@@ -35,23 +43,31 @@ export class UpdateStopDto {
 
   @IsOptional()
   @IsString()
-  phone?: string;
+  contactPhone?: string;
 
   @IsOptional()
   @IsString()
-  email?: string;
+  contactEmail?: string;
 
   @IsOptional()
-  @IsDateString()
+  @IsBoolean()
+  appointmentRequired?: boolean;
+
+  @IsOptional()
+  @IsString()
   appointmentDate?: string;
 
   @IsOptional()
   @IsString()
-  appointmentTime?: string;
+  appointmentTimeStart?: string;
 
   @IsOptional()
   @IsString()
-  instructions?: string;
+  appointmentTimeEnd?: string;
+
+  @IsOptional()
+  @IsString()
+  specialInstructions?: string;
 
   @IsOptional()
   @IsString()

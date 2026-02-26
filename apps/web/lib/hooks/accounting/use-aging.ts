@@ -54,6 +54,26 @@ function unwrap<T>(response: unknown): T {
   return (body.data ?? response) as T;
 }
 
+/**
+ * Backend returns buckets as an object keyed by label (e.g. { current: { amount, invoices }, '31-60': ... }).
+ * Frontend expects AgingBucket[]. This transforms the object shape into the expected array.
+ */
+function normalizeBuckets(raw: unknown): AgingBucket[] {
+  if (Array.isArray(raw)) return raw;
+  if (raw && typeof raw === 'object') {
+    return Object.entries(raw as Record<string, { min?: number; max?: number; amount?: number; invoices?: unknown[] }>).map(
+      ([label, bucket]) => ({
+        label,
+        minDays: bucket.min ?? 0,
+        maxDays: bucket.max === Infinity ? null : (bucket.max ?? null),
+        totalAmount: bucket.amount ?? 0,
+        invoiceCount: Array.isArray(bucket.invoices) ? bucket.invoices.length : 0,
+      }),
+    );
+  }
+  return [];
+}
+
 // ===========================
 // Hooks
 // ===========================
@@ -69,7 +89,13 @@ export function useAgingReport(params: AgingParams = {}) {
       const query = searchParams.toString();
       const url = query ? `/accounting/aging?${query}` : '/accounting/aging';
       const response = await apiClient.get(url);
-      return unwrap<AgingReportData>(response);
+      const raw = unwrap<Record<string, unknown>>(response);
+      return {
+        buckets: normalizeBuckets(raw.buckets),
+        customers: Array.isArray(raw.customers) ? raw.customers as AgingCustomerRow[] : [],
+        totalOutstanding: typeof raw.totalOutstanding === 'number' ? raw.totalOutstanding : 0,
+        asOfDate: typeof raw.asOfDate === 'string' ? raw.asOfDate : new Date().toISOString(),
+      };
     },
     staleTime: 60_000,
   });

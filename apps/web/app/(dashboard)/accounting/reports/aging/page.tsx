@@ -25,7 +25,7 @@ export default function AgingReportPage() {
   const customerId = searchParams.get('customerId') || undefined;
   const asOfDate = searchParams.get('asOfDate') || undefined;
 
-  const [selectedCustomer, setSelectedCustomer] = useState(customerId ?? '');
+  const [selectedCustomer, setSelectedCustomer] = useState(customerId ?? 'all');
   const [selectedDate, setSelectedDate] = useState(asOfDate ?? '');
 
   const { data: agingData, isLoading, error, refetch } = useAgingReport({
@@ -39,14 +39,14 @@ export default function AgingReportPage() {
 
   const handleApplyFilters = () => {
     const params = new URLSearchParams();
-    if (selectedCustomer) params.set('customerId', selectedCustomer);
+    if (selectedCustomer && selectedCustomer !== 'all') params.set('customerId', selectedCustomer);
     if (selectedDate) params.set('asOfDate', selectedDate);
     const query = params.toString();
     router.push(query ? `?${query}` : '/accounting/reports/aging');
   };
 
   const handleClearFilters = () => {
-    setSelectedCustomer('');
+    setSelectedCustomer('all');
     setSelectedDate('');
     router.push('/accounting/reports/aging');
   };
@@ -91,7 +91,7 @@ export default function AgingReportPage() {
               <SelectValue placeholder="All customers" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All customers</SelectItem>
+              <SelectItem value="all">All customers</SelectItem>
               {customers.map((c) => (
                 <SelectItem key={c.id} value={c.id}>
                   {c.name}

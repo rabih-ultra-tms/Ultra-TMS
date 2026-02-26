@@ -88,6 +88,9 @@ export const settlementKeys = {
 
 function unwrap<T>(response: unknown): T {
   const body = response as Record<string, unknown>;
+  if (body.pagination) {
+    return { data: body.data, pagination: body.pagination } as T;
+  }
   return (body["data"] ?? response) as T;
 }
 

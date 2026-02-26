@@ -54,7 +54,7 @@ export default function LoadsListPage() {
     };
 
     const handleEdit = (load: Load) => {
-        router.push(`/operations/loads/${load.id}`);
+        router.push(`/operations/loads/${load.id}/edit`);
     };
 
     const handleViewDetails = (load: Load) => {
@@ -99,6 +99,8 @@ export default function LoadsListPage() {
                         data={data?.data || []}
                         isLoading={isLoading}
                         onRowClick={handleRowClick}
+                        onViewDetails={handleViewDetails}
+                        onEdit={handleEdit}
                     />
                     {data && data.total > 0 && (
                         <TablePagination

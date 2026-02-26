@@ -9,7 +9,7 @@ interface CustomerDetailCardProps {
 export function CustomerDetailCard({ customer }: CustomerDetailCardProps) {
   return (
     <Card>
-      <CardHeader className="flex flex-row items-start justify-between gap-4">
+      <CardHeader className="flex flex-row items-center justify-between gap-4">
         <div className="space-y-1">
           <CardTitle>{customer.name}</CardTitle>
           {customer.legalName && (

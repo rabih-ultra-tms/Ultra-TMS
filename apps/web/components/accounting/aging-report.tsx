@@ -17,13 +17,14 @@ import type { AgingBucket, AgingCustomerRow } from '@/lib/hooks/accounting/use-a
 // Helpers
 // ===========================
 
-function formatCurrency(amount: number): string {
+function formatCurrency(amount: number | string | null | undefined): string {
+  const num = Number(amount ?? 0);
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(amount);
+  }).format(isNaN(num) ? 0 : num);
 }
 
 const BUCKET_COLORS = [
@@ -65,7 +66,9 @@ function AgingBarChart({ buckets, isLoading }: AgingBarChartProps) {
     );
   }
 
-  const maxAmount = Math.max(...buckets.map((b) => b.totalAmount), 1);
+  const safeBuckets = Array.isArray(buckets) ? buckets : [];
+
+  const maxAmount = Math.max(...safeBuckets.map((b) => b.totalAmount), 1);
 
   return (
     <Card>
@@ -74,8 +77,9 @@ function AgingBarChart({ buckets, isLoading }: AgingBarChartProps) {
       </CardHeader>
       <CardContent>
         <div className="flex items-end gap-6 h-48">
-          {buckets.map((bucket, i) => {
-            const heightPct = Math.max((bucket.totalAmount / maxAmount) * 100, 4);
+          {safeBuckets.map((bucket, i) => {
+            const amt = Number(bucket.totalAmount ?? 0);
+            const heightPct = Math.max(((isNaN(amt) ? 0 : amt) / maxAmount) * 100, 4);
             return (
               <div
                 key={bucket.label}

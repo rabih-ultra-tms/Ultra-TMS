@@ -40,6 +40,11 @@ export interface OrderItem {
     weightLbs?: number;
 }
 
+export interface OrderCustomer {
+    id: string;
+    name: string;
+}
+
 export interface Order {
     id: string;
     orderNumber: string;
@@ -52,10 +57,21 @@ export interface Order {
     items: OrderItem[];
     createdAt: string;
     updatedAt: string;
+    // Fields returned by API (Prisma scalar defaults)
+    equipmentType?: string;
+    customerRate?: number;
+    totalCharges?: number;
+    commodity?: string;
+    weightLbs?: number;
+    isHazmat?: boolean;
+    isHot?: boolean;
+    isExpedited?: boolean;
+    orderDate?: string;
+    // Included relations
+    customer?: OrderCustomer;
     _count?: {
         stops: number;
         loads: number;
-        items: number;
     };
 }
 
@@ -164,7 +180,7 @@ export interface OrderDetailResponse extends Order {
     timeline?: TimelineEvent[];
     customer?: {
         id: string;
-        companyName: string;
+        name: string;
         contactName?: string;
         contactEmail?: string;
         contactPhone?: string;
@@ -200,4 +216,6 @@ export interface OrderDetailResponse extends Order {
     poNumber?: string;
     bolNumber?: string;
     salesRepId?: string;
+    // JSON blob for fields without dedicated DB columns
+    customFields?: Record<string, unknown>;
 }

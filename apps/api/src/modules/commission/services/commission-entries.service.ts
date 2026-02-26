@@ -273,7 +273,7 @@ export class CommissionEntriesService {
       {
         userId: salesRep.id,
         loadId,
-        orderId: load.orderId,
+        orderId: load.orderId ?? undefined,
         entryType: 'LOAD_COMMISSION' as any,
         planId: plan.id,
         calculationBasis: plan.calculationBasis || 'NET_MARGIN',
