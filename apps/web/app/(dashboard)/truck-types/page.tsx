@@ -172,6 +172,9 @@ export default function TruckTypesPage() {
     loadingMethod: '' as string,
     isActive: true,
     sortOrder: 0,
+    baseRateDollars: '' as string | number,
+    ratePerMileDollars: '' as string | number,
+    imageUrl: '',
   })
 
   // Queries
@@ -272,6 +275,13 @@ export default function TruckTypesPage() {
     loadingMethod: formData.loadingMethod || undefined,
     isActive: formData.isActive,
     sortOrder: formData.sortOrder,
+    baseRateCents: formData.baseRateDollars !== ''
+      ? Math.round(parseFloat(formData.baseRateDollars.toString()) * 100)
+      : undefined,
+    ratePerMileCents: formData.ratePerMileDollars !== ''
+      ? Math.round(parseFloat(formData.ratePerMileDollars.toString()) * 100)
+      : undefined,
+    imageUrl: formData.imageUrl || undefined,
   })
 
   const resetForm = () => {
@@ -293,6 +303,9 @@ export default function TruckTypesPage() {
       loadingMethod: '',
       isActive: true,
       sortOrder: 0,
+      baseRateDollars: '',
+      ratePerMileDollars: '',
+      imageUrl: '',
     })
   }
 
@@ -328,6 +341,13 @@ export default function TruckTypesPage() {
         loadingMethod: editingTruck.loadingMethod || '',
         isActive: editingTruck.isActive,
         sortOrder: editingTruck.sortOrder,
+        baseRateDollars: editingTruck.baseRateCents != null
+          ? (editingTruck.baseRateCents / 100).toFixed(2)
+          : '',
+        ratePerMileDollars: editingTruck.ratePerMileCents != null
+          ? (editingTruck.ratePerMileCents / 100).toFixed(2)
+          : '',
+        imageUrl: editingTruck.imageUrl || '',
       })
     }
   }, [editingTruck, editingTruckId])
@@ -1127,6 +1147,53 @@ export default function TruckTypesPage() {
                   onChange={(e) => setFormData({ ...formData, bestFor: e.target.value })}
                   rows={4}
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="baseRateDollars">Base Rate ($/load)</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                    <Input
+                      id="baseRateDollars"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      value={formData.baseRateDollars}
+                      onChange={(e) => setFormData({ ...formData, baseRateDollars: e.target.value })}
+                      className="pl-7"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ratePerMileDollars">Rate Per Mile ($/mi)</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                    <Input
+                      id="ratePerMileDollars"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      value={formData.ratePerMileDollars}
+                      onChange={(e) => setFormData({ ...formData, ratePerMileDollars: e.target.value })}
+                      className="pl-7"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="imageUrl">Image URL</Label>
+                <Input
+                  id="imageUrl"
+                  type="url"
+                  placeholder="https://example.com/truck.png"
+                  value={formData.imageUrl}
+                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                />
+                <p className="text-xs text-muted-foreground">Optional. Displayed in Load Planner recommendations.</p>
               </div>
             </TabsContent>
           </Tabs>
