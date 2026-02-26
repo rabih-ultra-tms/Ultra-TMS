@@ -9,7 +9,7 @@ import {
   Min,
   Max,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 
 export class CreateOperationsCarrierDto {
   @IsString()
@@ -250,4 +250,27 @@ export class ListOperationsCarriersDto {
   @IsOptional()
   @IsString()
   sortOrder?: 'asc' | 'desc';
+
+  @IsOptional()
+  @IsString()
+  tier?: string;
+
+  @IsOptional()
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.split(',').map((v: string) => v.trim()).filter(Boolean) : value
+  )
+  @IsArray()
+  @IsString({ each: true })
+  equipmentTypes?: string[];
+
+  @IsOptional()
+  @IsString()
+  compliance?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  minScore?: number;
 }
