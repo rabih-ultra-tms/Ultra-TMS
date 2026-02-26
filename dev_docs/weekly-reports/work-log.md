@@ -6,6 +6,72 @@
 
 ---
 
+## Session: 2026-02-18 (Tuesday) — DOC-003: Screen-to-API Contract Registry
+
+### Developer: Claude Code (Opus 4.6)
+### AI Tool: Claude Opus 4.6
+
+**What was done:**
+Built the comprehensive Screen-to-API Contract Registry (DOC-003) — a 734-line reference document mapping all 47 MVP frontend routes to their exact backend API endpoints. Scanned all 50 React Query hook files containing ~200 `apiClient.*()` calls, validated each endpoint path, HTTP method, request parameters, and response types against the actual source code. Also ran a parallel backend scan covering 183 NestJS controllers (~750+ endpoints) to cross-reference. Discovered key naming mismatches (leads use `/crm/opportunities`, payments use `/payments-received`, payables use `/payments-made`) and documented 3 stub endpoints with no backend implementation yet.
+
+**Files created (1):**
+| File | Purpose |
+|------|---------|
+| `dev_docs_v2/05-references/screen-api-registry.md` | 734-line registry with 17 sections covering all MVP services |
+
+**Files modified (2):**
+| File | Change |
+|------|--------|
+| `dev_docs_v2/05-references/doc-map.md` | Updated reference from "(to be created)" to live link |
+| `dev_docs_v2/STATUS.md` | DOC-003 → DONE, Feb 18 |
+
+**Key deliverables:**
+- 47 MVP routes mapped to ~175 API endpoints across 17 service sections
+- Every endpoint validated against actual hook code (not guessed)
+- Key discoveries: 3 naming mismatches, 3 stub endpoints, bulk dispatch loops over individual calls
+- Sections: Auth, CRM, Sales, Orders, Loads, Stops, Dispatch, Tracking, Ops Dashboard, Carriers, Accounting, Commissions, Documents, Email, Load Board, Load History, Load Planner
+
+**Impact metrics for report:**
+- 1 document created (734 lines)
+- 50 hook files audited, ~200 API calls cataloged
+- 183 backend controllers cross-referenced
+- Task 71/72 complete (DOC-003 done, RELEASE-001 + BUG-BUFFER remaining)
+
+**Commit:** `d4901b8` — `docs: add screen-to-API contract registry (DOC-003)`
+
+---
+
+## Session: 2026-02-17 (Monday) — INTEG-001: FMCSA Integration
+
+### Developer: Claude Code (Opus 4.6)
+### AI Tool: Claude Opus 4.6
+
+**What was done:**
+Built the FMCSA integration for carrier onboarding (INTEG-001). Added MC#/DOT# lookup with auto-fill to the carrier form and CSA BASIC scores visualization to the carrier detail page. Created hooks wired to existing backend endpoints (`GET /safety/fmcsa/lookup`, `GET /safety/csa/:carrierId`). The FmcsaLookup component features a MC#/DOT# toggle, verify button with loading state, results card showing authority status (green/red/amber), legal name, DBA, power units, drivers, authority types, and an auto-fill button that populates 8 form fields. The CsaScoresDisplay shows all 7 BASIC categories with percentile progress bars, threshold markers, alert badges, and inspection/violation counts.
+
+**Files created (3):**
+| File | Purpose |
+|------|---------|
+| `lib/hooks/carriers/use-fmcsa.ts` | React Query hooks: useFmcsaLookup (mutation), useCsaScores (query) + TypeScript types |
+| `components/carriers/fmcsa-lookup.tsx` | MC#/DOT# input with verify button, results card, auto-fill |
+| `components/carriers/csa-scores-display.tsx` | 7 BASIC categories with percentile bars, threshold markers, alerts |
+
+**Files modified (3):**
+| File | Change |
+|------|--------|
+| `components/carriers/carrier-form.tsx` | Added FmcsaLookup above Company Information section with auto-fill |
+| `app/(dashboard)/carriers/[id]/page.tsx` | Added Compliance tab with CsaScoresDisplay |
+| `dev_docs_v2/STATUS.md` | INTEG-001 → DONE |
+
+**Key deliverables:**
+- FMCSA lookup with auto-fill on carrier create/edit forms
+- CSA scores visualization on carrier detail compliance tab
+- 0 new TypeScript errors, lint clean, no console.log or `any` types
+
+**Commit:** `e96fc93` — `feat: add FMCSA integration — carrier lookup + CSA scores (INTEG-001)`
+
+---
+
 ## Session: 2026-02-17 (Monday) — ACC-004: Carrier Payables
 
 ### Developer: Claude Code (Opus 4.6)
@@ -2138,6 +2204,51 @@ Completed DOC-002 — created a comprehensive business rules quick reference doc
 - 3 files updated (hub links)
 - 1 task completed (DOC-002)
 - Phase 5 progress: 6/8 tasks done (75%)
+
+## Session: 2026-02-17 (Monday) — COM-004/005/006: Commission Service Complete
+
+### Developer: Claude Code (Opus 4.6)
+### AI Tool: Claude Opus 4.6
+
+**What was done:**
+Completed the final 3 commission service tasks (COM-004, COM-005, COM-006), finishing the entire commission module. Built the transactions list with approve/void actions, the payout processing flow (list + detail + generate + process via ACH/check/wire), and a reports page with CSS-based earnings charts, plan usage analysis, and payout summary by month.
+
+### Commit: `5c322fa` — feat: build COM-004 transactions, COM-005 payouts, COM-006 reports — commission service complete
+
+**Files created (10):**
+| File | Purpose |
+|------|---------|
+| `lib/hooks/commissions/use-transactions.ts` | React Query hooks: useTransactions, useApproveTransaction, useVoidTransaction |
+| `lib/hooks/commissions/use-payouts.ts` | React Query hooks: usePayouts, usePayout, useGeneratePayout, useProcessPayout |
+| `components/commissions/transactions-table.tsx` | TanStack Table columns (7 data + actions), VoidTransactionDialog with reason textarea |
+| `components/commissions/payout-table.tsx` | Payout columns: date, rep, transactions, amount, method, period, status |
+| `components/commissions/payout-detail-card.tsx` | PayoutSummary (4 stat cards) + PayoutTransactions (included transactions table) |
+| `components/commissions/earnings-chart.tsx` | 3 report components: EarningsChart (CSS bars), PlanUsageCard, PayoutSummaryCard |
+| `app/(dashboard)/commissions/transactions/page.tsx` | Transactions list with 4 filters (rep search, status, date range) |
+| `app/(dashboard)/commissions/payouts/page.tsx` | Payouts list with status filter + Generate Payout dialog |
+| `app/(dashboard)/commissions/payouts/[id]/page.tsx` | Payout detail with summary stats, transactions table, Process button (ACH/Check/Wire) |
+| `app/(dashboard)/commissions/reports/page.tsx` | Reports page with date range filter, earnings chart, plan usage, payout summary |
+
+**Files modified (1):**
+| File | Change |
+|------|--------|
+| `dev_docs_v2/STATUS.md` | COM-004, COM-005, COM-006 → DONE |
+
+**Key deliverables:**
+- 4 new routes: `/commissions/transactions`, `/commissions/payouts`, `/commissions/payouts/[id]`, `/commissions/reports`
+- Approve/Void workflow with reason dialog for commission transactions
+- Full payout lifecycle: generate from approved transactions → process via payment method
+- CSS-based reports (no external chart library): rep earnings, plan usage, monthly payouts
+- Commission service 100% complete (6/6 tasks)
+- 0 TS errors, 0 lint errors in new code
+
+**Impact metrics for report:**
+- New pages: 4 (Transactions List, Payouts List, Payout Detail, Reports)
+- Components created: 6
+- Hooks created: 7
+- Lines of code: 1,680
+- Commission service: 6/6 tasks complete (100%)
+- Phase 6 progress: 12/15 tasks complete (3 remaining: INTEG-001, DOC-003, RELEASE-001)
 
 ## Session: 2026-02-21 (Friday) — Phase 4 TMS Forms Review
 
