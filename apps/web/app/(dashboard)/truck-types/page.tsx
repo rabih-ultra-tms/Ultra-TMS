@@ -131,6 +131,9 @@ function formatFeet(value: unknown): string {
 }
 
 export default function TruckTypesPage() {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+
   // State
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
@@ -172,7 +175,7 @@ export default function TruckTypesPage() {
   })
 
   // Queries
-  const { data: truckTypesResponse, isLoading } = useTruckTypes({
+  const { data: truckTypesResponse, isLoading, error } = useTruckTypes({
     category: categoryFilter === 'all' ? undefined : categoryFilter,
     includeInactive: showInactive,
     search: search || undefined,
@@ -421,6 +424,16 @@ export default function TruckTypesPage() {
 
   const totalCount = truckTypesResponse?.total || 0
   const filteredCount = filteredTrucks.length
+
+  if (!mounted) {
+    return (
+      <div className="container mx-auto py-6">
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -741,6 +754,15 @@ export default function TruckTypesPage() {
           <CardContent className="py-10 text-center">
             <Loader2 className="h-8 w-8 mx-auto animate-spin text-muted-foreground" />
             <p className="text-muted-foreground mt-2">Loading truck types...</p>
+          </CardContent>
+        </Card>
+      ) : error ? (
+        <Card>
+          <CardContent className="py-10 text-center">
+            <p className="text-destructive font-medium">Failed to load truck types</p>
+            <p className="text-muted-foreground text-sm mt-1">
+              {error instanceof Error ? error.message : 'An unexpected error occurred. Please refresh the page.'}
+            </p>
           </CardContent>
         </Card>
       ) : !filteredTrucks.length ? (
