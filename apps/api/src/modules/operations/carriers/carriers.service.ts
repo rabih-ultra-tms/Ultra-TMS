@@ -94,6 +94,9 @@ export class CarriersService {
   async listCarriers(tenantId: string, dto: ListOperationsCarriersDto) {
     const skip = (dto.page - 1) * dto.limit;
 
+    const now = new Date();
+    const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
     const where: Prisma.OperationsCarrierWhereInput = {
       tenantId,
       isActive: true,
@@ -117,14 +120,39 @@ export class CarriersService {
       where.carrierType = dto.carrierType;
     }
 
-    const orderBy: Prisma.OperationsCarrierOrderByWithRelationInput = {};
-    if (dto.sortBy === 'companyName') {
-      orderBy.companyName = dto.sortOrder || 'asc';
-    } else if (dto.sortBy === 'status') {
-      orderBy.status = dto.sortOrder || 'asc';
-    } else {
-      orderBy.createdAt = 'desc';
+    if (dto.state) {
+      where.state = dto.state;
     }
+
+    if (dto.tier) {
+      where.tier = dto.tier;
+    }
+
+    if (dto.equipmentTypes?.length) {
+      where.equipmentTypes = { hasSome: dto.equipmentTypes };
+    }
+
+    if (dto.compliance === 'EXPIRED') {
+      where.insuranceExpiryDate = { lt: now };
+    } else if (dto.compliance === 'WARNING') {
+      where.insuranceExpiryDate = { gte: now, lte: thirtyDaysFromNow };
+    } else if (dto.compliance === 'COMPLIANT') {
+      where.insuranceExpiryDate = { gt: thirtyDaysFromNow };
+    }
+
+    if (dto.minScore !== undefined) {
+      where.performanceScore = { gte: dto.minScore };
+    }
+
+    const SORTABLE_FIELDS = new Set([
+      'companyName', 'status', 'tier', 'onTimeDeliveryRate', 'totalLoadsCompleted',
+      'avgRating', 'performanceScore', 'state', 'createdAt', 'updatedAt',
+    ]);
+
+    const orderBy: Prisma.OperationsCarrierOrderByWithRelationInput =
+      dto.sortBy && SORTABLE_FIELDS.has(dto.sortBy)
+        ? { [dto.sortBy]: dto.sortOrder || 'asc' }
+        : { createdAt: 'desc' };
 
     const [data, total] = await Promise.all([
       this.prisma.operationsCarrier.findMany({
