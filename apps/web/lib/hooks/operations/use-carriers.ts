@@ -31,8 +31,8 @@ export const useCarriers = (params: CarrierListParams) => {
       if (params.carrierType) cleanParams.carrierType = params.carrierType;
       if (params.state) cleanParams.state = params.state;
       if (params.sortBy) {
-        cleanParams.sort = `${params.sortBy}:${params.sortOrder ?? 'asc'}`;
-        // Don't send sortBy/sortOrder separately — backend uses `sort`
+        cleanParams.sortBy = params.sortBy;
+        if (params.sortOrder) cleanParams.sortOrder = params.sortOrder;
       }
       if (params.tier) cleanParams.tier = params.tier;
       if (params.equipmentTypes?.length) {
