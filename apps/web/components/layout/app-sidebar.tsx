@@ -68,7 +68,7 @@ export function AppSidebar({ className }: AppSidebarProps) {
       <div className="flex h-full flex-col">
         <div
           className={cn(
-            "flex h-14 items-center border-b px-4",
+            "flex h-14 items-center border-b border-sidebar-border px-4",
             sidebarCollapsed ? "justify-center px-2" : "gap-2"
           )}
         >
@@ -76,7 +76,7 @@ export function AppSidebar({ className }: AppSidebarProps) {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <Truck className="h-5 w-5" />
             </div>
-            {!sidebarCollapsed && <span className="text-lg font-bold tracking-tight text-foreground">Ultra TMS</span>}
+            {!sidebarCollapsed && <span className="text-lg font-bold tracking-tight text-sidebar-foreground">Ultra TMS</span>}
           </Link>
         </div>
 
@@ -84,7 +84,7 @@ export function AppSidebar({ className }: AppSidebarProps) {
           <SidebarNav groups={filteredMainNav} collapsed={sidebarCollapsed} />
         </ScrollArea>
 
-        <div className="mt-auto border-t p-3">
+        <div className="mt-auto border-t border-sidebar-border p-3">
           <SidebarNav
             groups={[{ title: "", items: filteredBottomNav }]}
             collapsed={sidebarCollapsed}
@@ -98,7 +98,7 @@ export function AppSidebar({ className }: AppSidebarProps) {
     <>
       <aside
         className={cn(
-          "hidden border-r bg-background text-foreground md:fixed md:inset-y-0 md:left-0 md:z-40 md:flex md:flex-col",
+          "hidden border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:fixed md:inset-y-0 md:left-0 md:z-40 md:flex md:flex-col",
           "transition-all duration-300 ease-in-out",
           sidebarCollapsed ? "md:w-16" : "md:w-64",
           className
@@ -108,9 +108,9 @@ export function AppSidebar({ className }: AppSidebarProps) {
       </aside>
 
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <SheetContent side="left" className="w-64 p-0 bg-background text-foreground">
+        <SheetContent side="left" className="w-64 p-0 bg-sidebar text-sidebar-foreground">
           <div className="flex h-full flex-col">
-            <div className="flex h-14 items-center gap-2 border-b px-4">
+            <div className="flex h-14 items-center gap-2 border-b border-sidebar-border px-4">
               <Link
                 href="/dashboard"
                 className="flex items-center gap-2 font-semibold"
@@ -119,7 +119,7 @@ export function AppSidebar({ className }: AppSidebarProps) {
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                   <Truck className="h-5 w-5" />
                 </div>
-                <span className="text-lg font-bold tracking-tight text-foreground">Ultra TMS</span>
+                <span className="text-lg font-bold tracking-tight text-sidebar-foreground">Ultra TMS</span>
               </Link>
             </div>
 
@@ -127,7 +127,7 @@ export function AppSidebar({ className }: AppSidebarProps) {
               <SidebarNav groups={filteredMainNav} onItemClick={() => setSidebarOpen(false)} />
             </ScrollArea>
 
-            <div className="mt-auto border-t p-3">
+            <div className="mt-auto border-t border-sidebar-border p-3">
               <SidebarNav
                 groups={[{ title: "", items: filteredBottomNav }]}
                 onItemClick={() => setSidebarOpen(false)}

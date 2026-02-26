@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader2, LogIn, User, Lock, Eye, EyeOff, Info } from "lucide-react";
+import { Loader2, LogIn, User, Lock, Eye, EyeOff, Info, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -109,14 +109,25 @@ function LoginPageContent() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-xl shadow-black/[0.04] border-0 dark:border dark:border-border/50">
-        <CardHeader className="space-y-1 pb-6">
-          <CardTitle className="text-2xl font-bold tracking-tight">Sign In</CardTitle>
-          <CardDescription className="text-muted-foreground">
-            Access your transportation management dashboard
-          </CardDescription>
-        </CardHeader>
+    <div className="flex min-h-screen items-center justify-center bg-sidebar p-4">
+      <div className="w-full max-w-md">
+        <div className="mb-8 flex flex-col items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg">
+            <Truck className="h-7 w-7" />
+          </div>
+          <div className="text-center">
+            <h2 className="text-xl font-bold tracking-tight text-sidebar-foreground">Ultra TMS</h2>
+            <p className="text-sm text-sidebar-foreground/50">Transportation Management System</p>
+          </div>
+        </div>
+
+        <Card className="w-full shadow-xl border-0">
+          <CardHeader className="space-y-1 pb-6">
+            <CardTitle className="text-2xl font-bold tracking-tight">Sign In</CardTitle>
+            <CardDescription className="text-muted-foreground">
+              Access your transportation management dashboard
+            </CardDescription>
+          </CardHeader>
 
         <CardContent>
           {registered && (
@@ -271,7 +282,8 @@ function LoginPageContent() {
         </CardContent>
 
         <CardFooter className="justify-center" />
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }
@@ -280,13 +292,20 @@ export default function LoginPage() {
   return (
     <React.Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center p-4">
-          <Card className="w-full max-w-md shadow-xl shadow-black/[0.04] border-0 dark:border dark:border-border/50">
-            <CardHeader className="space-y-1 pb-6">
-              <CardTitle className="text-2xl font-bold tracking-tight">Sign In</CardTitle>
-              <CardDescription>Loading...</CardDescription>
-            </CardHeader>
-          </Card>
+        <div className="flex min-h-screen items-center justify-center bg-sidebar p-4">
+          <div className="w-full max-w-md">
+            <div className="mb-8 flex flex-col items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg">
+                <Truck className="h-7 w-7" />
+              </div>
+            </div>
+            <Card className="w-full shadow-xl border-0">
+              <CardHeader className="space-y-1 pb-6">
+                <CardTitle className="text-2xl font-bold tracking-tight">Sign In</CardTitle>
+                <CardDescription>Loading...</CardDescription>
+              </CardHeader>
+            </Card>
+          </div>
         </div>
       }
     >

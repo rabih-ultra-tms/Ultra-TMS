@@ -50,8 +50,8 @@ export function SidebarNav({ groups, collapsed = false, onItemClick }: SidebarNa
         href={item.disabled ? "#" : item.href}
         onClick={onItemClick}
         className={cn(
-          "group flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
-          active && "bg-accent text-accent-foreground",
+          "group flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+          active && "bg-sidebar-accent text-sidebar-accent-foreground",
           item.disabled && "pointer-events-none opacity-50",
           collapsed && "justify-center px-2"
         )}
@@ -101,7 +101,7 @@ export function SidebarNav({ groups, collapsed = false, onItemClick }: SidebarNa
                 type="button"
                 onClick={() => toggleGroup(group.title)}
                 className={cn(
-                  "mb-2 flex w-full items-center justify-between px-3 py-2 text-xs font-semibold text-muted-foreground",
+                  "mb-2 flex w-full items-center justify-between px-3 py-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/40",
                 )}
               >
                 <span>{group.title}</span>
