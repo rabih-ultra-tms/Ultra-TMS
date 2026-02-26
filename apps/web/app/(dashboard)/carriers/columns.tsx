@@ -363,7 +363,7 @@ export const columns: ColumnDef<OperationsCarrierListItem>[] = [
         },
     },
     {
-        id: "tier",
+        accessorKey: "tier",
         header: "Tier",
         enableSorting: true,
         cell: ({ row }) => (
