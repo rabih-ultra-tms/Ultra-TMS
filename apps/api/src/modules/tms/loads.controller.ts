@@ -74,6 +74,7 @@ export class LoadsController {
   @ApiOperation({ summary: 'Get load statistics' })
   @ApiStandardResponse('Load statistics')
   @ApiErrorResponses()
+  @Roles('ADMIN', 'DISPATCHER')
   async getStats(@CurrentTenant() tenantId: string) {
     return this.loadsService.getStats(tenantId);
   }

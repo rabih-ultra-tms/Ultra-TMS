@@ -169,6 +169,7 @@ export class LoadsService {
         where: { tenantId, deletedAt: null },
         _count: { id: true },
       }),
+      // Revenue: sum of totalCharges on orders that have at least one load (customer-billed revenue)
       this.prisma.order.aggregate({
         where: { tenantId, deletedAt: null, loads: { some: {} } },
         _sum: { totalCharges: true },
