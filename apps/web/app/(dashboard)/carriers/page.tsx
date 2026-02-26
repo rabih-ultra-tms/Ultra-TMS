@@ -50,7 +50,7 @@ import { OperationsCarrierListItem } from "@/types/carriers";
 // --- Constants ---
 
 type CarrierType = "COMPANY" | "OWNER_OPERATOR";
-type CarrierStatus = "ACTIVE" | "INACTIVE" | "PREFERRED" | "ON_HOLD" | "BLACKLISTED";
+type CarrierStatus = "PENDING" | "APPROVED" | "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BLACKLISTED";
 
 // --- Components ---
 
@@ -81,8 +81,8 @@ function StatsCards({ stats }: { stats: { total: number; byType: Record<string, 
     { label: "Companies",      value: stats.byType?.COMPANY ?? 0,           icon: Building2,    colorKey: "purple600" },
     { label: "Owner-Ops",      value: stats.byType?.OWNER_OPERATOR ?? 0,    icon: User,         colorKey: "orange500" },
     { label: "Active",         value: stats.byStatus?.ACTIVE ?? 0,          icon: CheckCircle2, colorKey: "green600"  },
-    { label: "Preferred",      value: stats.byStatus?.PREFERRED ?? 0,       icon: Star,         colorKey: "blue500"   },
-    { label: "On Hold",        value: stats.byStatus?.ON_HOLD ?? 0,         icon: PauseCircle,  colorKey: "amber500"  },
+    { label: "Approved",       value: stats.byStatus?.APPROVED ?? 0,        icon: Star,         colorKey: "blue500"   },
+    { label: "Suspended",      value: stats.byStatus?.SUSPENDED ?? 0,       icon: PauseCircle,  colorKey: "amber500"  },
   ];
 
   return (
@@ -280,10 +280,11 @@ export default function CarriersPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="PENDING">Pending</SelectItem>
+            <SelectItem value="APPROVED">Approved</SelectItem>
             <SelectItem value="ACTIVE">Active</SelectItem>
             <SelectItem value="INACTIVE">Inactive</SelectItem>
-            <SelectItem value="PREFERRED">Preferred</SelectItem>
-            <SelectItem value="ON_HOLD">On Hold</SelectItem>
+            <SelectItem value="SUSPENDED">Suspended</SelectItem>
             <SelectItem value="BLACKLISTED">Blacklisted</SelectItem>
           </SelectContent>
         </Select>

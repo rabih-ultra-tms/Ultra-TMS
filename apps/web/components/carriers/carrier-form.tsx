@@ -198,10 +198,11 @@ export function CarrierForm({
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
+                                                <SelectItem value="PENDING">Pending</SelectItem>
+                                                <SelectItem value="APPROVED">Approved</SelectItem>
                                                 <SelectItem value="ACTIVE">Active</SelectItem>
                                                 <SelectItem value="INACTIVE">Inactive</SelectItem>
-                                                <SelectItem value="PREFERRED">Preferred</SelectItem>
-                                                <SelectItem value="ON_HOLD">On Hold</SelectItem>
+                                                <SelectItem value="SUSPENDED">Suspended</SelectItem>
                                                 <SelectItem value="BLACKLISTED">Blacklisted</SelectItem>
                                             </SelectContent>
                                         </Select>

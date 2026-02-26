@@ -62,7 +62,7 @@ export const carrierSchema = z.object({
     insuranceExpiryDate: optStr,
     cargoInsuranceLimitCents: optPosNum,
 
-    status: z.enum(["ACTIVE", "INACTIVE", "PREFERRED", "ON_HOLD", "BLACKLISTED"]).default("ACTIVE"),
+    status: z.enum(["PENDING", "APPROVED", "ACTIVE", "INACTIVE", "SUSPENDED", "BLACKLISTED"]).default("ACTIVE"),
     notes: optStr,
     tier: z.string().optional().nullable(),
     equipmentTypes: z.array(z.string()).optional(),
