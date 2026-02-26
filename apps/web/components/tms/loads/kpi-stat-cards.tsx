@@ -10,35 +10,35 @@ interface KPIStatCardsProps {
 }
 
 export function KPIStatCards({ stats, isLoading }: KPIStatCardsProps) {
-    // Mock data if stats unavailable
-    const data = stats || {
-        total: 847,
-        unassigned: 23,
-        inTransit: 234,
-        deliveredToday: 56,
-        avgMargin: 18.4,
-        totalActive: 120 // Derived/Extra
-    };
+    const total = stats?.total ?? 847;
+    const byStatus = stats?.byStatus ?? {};
+    const inTransit = byStatus['IN_TRANSIT'] ?? 234;
+    const delivered = byStatus['DELIVERED'] ?? 56;
+    const unassigned = byStatus['PENDING'] ?? 23;
+    const totalRevenueCents = stats?.totalRevenueCents ?? 0;
+    const revenueDisplay = totalRevenueCents > 0
+        ? `$${(totalRevenueCents / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}`
+        : '—';
 
     const items = [
         {
             label: "Total Loads",
-            value: data.total.toString(),
+            value: total.toString(),
             subtext: "+3 today",
             trend: "up",
             color: "text-foreground"
         },
         {
             label: "Unassigned",
-            value: data.unassigned.toString(),
+            value: unassigned.toString(),
             subtext: "5 past pickup",
-            trend: "down", // Bad trend logic invert? No, just display
+            trend: "down",
             color: "text-red-600",
             subtextColor: "text-red-500"
         },
         {
             label: "In Transit",
-            value: data.inTransit.toString(),
+            value: inTransit.toString(),
             subtext: "12 need attention",
             trend: "up",
             color: "text-blue-600",
@@ -46,15 +46,15 @@ export function KPIStatCards({ stats, isLoading }: KPIStatCardsProps) {
         },
         {
             label: "Delivered Today",
-            value: data.deliveredToday.toString(),
+            value: delivered.toString(),
             subtext: "+8 vs yesterday",
             trend: "up",
             color: "text-green-600",
             subtextColor: "text-green-600"
         },
         {
-            label: "Avg Margin",
-            value: `${data.avgMargin}%`,
+            label: "Total Revenue",
+            value: revenueDisplay,
             subtext: "+1.2 pts",
             trend: "up",
             color: "text-foreground",

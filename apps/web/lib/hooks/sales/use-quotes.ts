@@ -44,7 +44,8 @@ export function useQuoteStats() {
   return useQuery({
     queryKey: [QUOTES_KEY, "stats"],
     queryFn: async () => {
-      return await apiClient.get<QuoteStats>("/quotes/stats");
+      const response = await apiClient.get<{ data: QuoteStats }>("/quotes/stats");
+      return response.data;
     },
     staleTime: 30000,
   });

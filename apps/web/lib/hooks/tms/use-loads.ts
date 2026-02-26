@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
-import { LoadListParams, LoadListResponse, Load, LoadDetailResponse } from "@/types/loads";
+import { LoadListParams, LoadListResponse, Load, LoadDetailResponse, LoadStatus, LoadStats } from "@/types/loads";
 import { OperationsCarrier } from "@/types/carriers";
 import { OrderDetailResponse } from "@/types/orders";
 import { orderKeys } from "./use-orders";
@@ -60,32 +60,39 @@ export function useLoad(id: string) {
     });
 }
 
-// STUB: No backend endpoint for load stats — disabled until backend adds GET /loads/stats
 export function useLoadStats() {
     return useQuery({
         queryKey: ['load-stats'],
         queryFn: async () => {
-            return {
-                total: 0,
-                unassigned: 0,
-                inTransit: 0,
-                deliveredToday: 0,
-                avgMargin: 0,
-                totalActive: 0
-            };
+            const response = await apiClient.get<{ data: LoadStats }>('/loads/stats');
+            return response.data;
         },
-        enabled: false, // No backend endpoint exists yet
+        staleTime: 30000,
     });
 }
 
-// STUB: No backend endpoint for load timeline — disabled until backend adds GET /loads/:id/timeline
+// Wire to GET /loads/:id/check-calls — maps check-call entries to timeline events
 export function useLoadTimeline(id: string) {
     return useQuery({
         queryKey: ['load-timeline', id],
         queryFn: async () => {
-            return [] as Array<{ id: string; type: string; title: string; description: string; date: string; user: string }>;
+            const response = await apiClient.get(`/loads/${id}/check-calls?limit=50`);
+            const body = response as { data?: Array<Record<string, unknown>> };
+            const calls = body.data ?? [];
+            return calls.map((cc): { id: string; type: string; title: string; description: string; date: string; user: string } => ({
+                id: String(cc.id),
+                type: 'status',
+                title: cc.status ? `Status: ${String(cc.status)}` : 'Check Call',
+                description: [
+                    cc.city && cc.state ? `${String(cc.city)}, ${String(cc.state)}` : null,
+                    cc.notes ? String(cc.notes) : null,
+                ].filter(Boolean).join(' — ') || 'Location update',
+                date: String(cc.createdAt ?? new Date().toISOString()),
+                user: cc.createdById ? String(cc.createdById) : 'System',
+            }));
         },
-        enabled: false, // No backend endpoint exists yet
+        enabled: !!id,
+        staleTime: 30000,
     });
 }
 
@@ -140,7 +147,24 @@ export function useCreateLoad() {
 
     return useMutation({
         mutationFn: async (data: CreateLoadInput) => {
-            const response = await apiClient.post('/loads', data);
+            const payload: Record<string, unknown> = {
+                ...(data.orderId ? { orderId: data.orderId } : {}),
+                ...(data.carrierId ? { carrierId: data.carrierId } : {}),
+                ...(data.equipmentType ? { equipmentType: data.equipmentType } : {}),
+                ...(data.driverName ? { driverName: data.driverName } : {}),
+                ...(data.driverPhone ? { driverPhone: data.driverPhone } : {}),
+                ...(data.truckNumber ? { truckNumber: data.truckNumber } : {}),
+                ...(data.trailerNumber ? { trailerNumber: data.trailerNumber } : {}),
+                ...(data.carrierRate !== undefined ? { carrierRate: data.carrierRate } : {}),
+                ...(data.dispatchNotes ? { dispatchNotes: data.dispatchNotes } : {}),
+                // Map fuelSurcharge → fuelAdvance
+                ...(data.fuelSurcharge !== undefined ? { fuelAdvance: data.fuelSurcharge } : {}),
+                // Map accessorials array → accessorialCosts (sum)
+                ...(data.accessorials?.length
+                    ? { accessorialCosts: data.accessorials.reduce((sum, a) => sum + (a.amount || 0), 0) }
+                    : {}),
+            };
+            const response = await apiClient.post('/loads', payload);
             return unwrap<Load>(response);
         },
         onSuccess: (load) => {
@@ -172,8 +196,25 @@ export function useUpdateLoad(loadId: string) {
 
     return useMutation({
         mutationFn: async (data: UpdateLoadInput) => {
-            // Backend uses @Put(':id') for load updates
-            const response = await apiClient.put(`/loads/${loadId}`, data);
+            // Map form values to backend DTO fields — same shape as CreateLoadDto
+            const payload: Record<string, unknown> = {
+                ...(data.orderId ? { orderId: data.orderId } : {}),
+                ...(data.carrierId ? { carrierId: data.carrierId } : {}),
+                ...(data.equipmentType ? { equipmentType: data.equipmentType } : {}),
+                ...(data.driverName ? { driverName: data.driverName } : {}),
+                ...(data.driverPhone ? { driverPhone: data.driverPhone } : {}),
+                ...(data.truckNumber ? { truckNumber: data.truckNumber } : {}),
+                ...(data.trailerNumber ? { trailerNumber: data.trailerNumber } : {}),
+                ...(data.carrierRate !== undefined ? { carrierRate: data.carrierRate } : {}),
+                ...(data.dispatchNotes ? { dispatchNotes: data.dispatchNotes } : {}),
+                // Map fuelSurcharge → fuelAdvance
+                ...(data.fuelSurcharge !== undefined ? { fuelAdvance: data.fuelSurcharge } : {}),
+                // Map accessorials array → accessorialCosts (sum)
+                ...(data.accessorials?.length
+                    ? { accessorialCosts: data.accessorials.reduce((sum, a) => sum + (a.amount || 0), 0) }
+                    : {}),
+            };
+            const response = await apiClient.put(`/loads/${loadId}`, payload);
             return unwrap<Load>(response);
         },
         onSuccess: (load) => {
@@ -185,7 +226,7 @@ export function useUpdateLoad(loadId: string) {
             toast.success('Load updated successfully', {
                 description: `Load ${load.loadNumber} has been updated`,
             });
-            router.push(`/operations/loads/${load.id}`);
+            router.push(`/operations/loads/${loadId}`);
         },
         onError: (error: Error) => {
             const errorMessage = (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message || error?.message || 'Failed to update load';
@@ -232,8 +273,6 @@ export function useCarriers(params: CarrierSearchParams) {
             if (params.originState) searchParams.set('originState', params.originState);
             if (params.destState) searchParams.set('destState', params.destState);
             if (params.tier) searchParams.set('tier', params.tier);
-            if (params.compliance) searchParams.set('compliance', params.compliance);
-            if (params.sort) searchParams.set('sort', params.sort);
             if (params.page) searchParams.set('page', params.page.toString());
             if (params.limit) searchParams.set('limit', params.limit.toString());
 
@@ -257,5 +296,81 @@ export function useOrder(orderId: string | undefined) {
         },
         enabled: !!orderId,
         staleTime: 60000,
+    });
+}
+
+// --- Delete Load ---
+
+export function useDeleteLoad() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (loadId: string) => {
+            await apiClient.delete(`/loads/${loadId}`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['loads'] });
+            toast.success('Load deleted');
+        },
+        onError: (error: Error) => {
+            const errorMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || error?.message || 'Failed to delete load';
+            toast.error('Error deleting load', { description: errorMessage });
+        },
+    });
+}
+
+// --- Bulk Update Load Status ---
+
+export function useBulkUpdateLoadStatus() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ loadIds, status }: { loadIds: string[]; status: LoadStatus }) => {
+            const results = await Promise.allSettled(
+                loadIds.map((id) => apiClient.patch(`/loads/${id}/status`, { status }))
+            );
+            const updated = results.filter((r) => r.status === 'fulfilled').length;
+            const failed = results.filter((r) => r.status === 'rejected').length;
+            return { updated, failed };
+        },
+        onSuccess: ({ updated, failed }) => {
+            queryClient.invalidateQueries({ queryKey: ['loads'] });
+            if (failed > 0) {
+                toast.warning(`Updated ${updated} loads, ${failed} failed`);
+            } else {
+                toast.success(`${updated} load${updated !== 1 ? 's' : ''} updated`);
+            }
+        },
+        onError: (error: Error) => {
+            toast.error('Failed to update status', { description: error.message });
+        },
+    });
+}
+
+// --- Bulk Assign Carrier ---
+
+export function useBulkAssignCarrier() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ loadIds, carrierId }: { loadIds: string[]; carrierId: string }) => {
+            const results = await Promise.allSettled(
+                loadIds.map((id) => apiClient.patch(`/loads/${id}/assign`, { carrierId }))
+            );
+            const updated = results.filter((r) => r.status === 'fulfilled').length;
+            const failed = results.filter((r) => r.status === 'rejected').length;
+            return { updated, failed };
+        },
+        onSuccess: ({ updated, failed }) => {
+            queryClient.invalidateQueries({ queryKey: ['loads'] });
+            if (failed > 0) {
+                toast.warning(`Assigned carrier to ${updated} loads, ${failed} failed`);
+            } else {
+                toast.success(`Carrier assigned to ${updated} load${updated !== 1 ? 's' : ''}`);
+            }
+        },
+        onError: (error: Error) => {
+            toast.error('Failed to assign carrier', { description: error.message });
+        },
     });
 }
