@@ -49,7 +49,7 @@ import { Label } from "@/components/ui/label";
 import { ListPage } from "@/components/patterns/list-page";
 import { columns, isInsuranceExpired, isInsuranceExpiring } from "./columns";
 import { OperationsCarrierListItem, EQUIPMENT_TYPES, CARRIER_EQUIPMENT_TYPE_LABELS } from "@/types/carriers";
-import type { Row } from "@tanstack/react-table";
+import type { Row, SortingState } from "@tanstack/react-table";
 
 // --- US States ---
 const US_STATES = [
@@ -146,6 +146,11 @@ export default function CarriersPage() {
   const [showBulkStatusDialog, setShowBulkStatusDialog] = useState(false);
   const [bulkStatus, setBulkStatus] = useState<CarrierStatus>("ACTIVE");
   const debouncedSearch = useDebounce(searchQuery, 300);
+  const [sorting, setSorting] = useState<SortingState>([]);
+
+  // Derive sort params for server-side sorting
+  const sortBy = sorting[0]?.id;
+  const sortOrder = sorting[0] ? (sorting[0].desc ? "desc" : "asc") : undefined;
 
   // Fetch carriers
   const { data, isLoading, error, refetch } = useCarriers({
@@ -159,6 +164,8 @@ export default function CarriersPage() {
     equipmentTypes: equipmentFilter === "all" ? undefined : [equipmentFilter],
     compliance: complianceFilter === "all" ? undefined : complianceFilter,
     minScore: minScore ? Number(minScore) : undefined,
+    sortBy,
+    sortOrder,
   });
 
   // Fetch stats
@@ -461,6 +468,8 @@ export default function CarriersPage() {
         error={error}
         onRetry={() => refetch()}
         onRowClick={(row) => router.push(`/carriers/${row.id}`)}
+        sorting={sorting}
+        onSortingChange={setSorting}
         rowSelection={rowSelection}
         onRowSelectionChange={setRowSelection}
         renderBulkActions={renderBulkActions}

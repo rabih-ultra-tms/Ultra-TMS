@@ -96,6 +96,7 @@ export const columns: ColumnDef<OperationsCarrierListItem>[] = [
     {
         accessorKey: "companyName",
         header: "Carrier",
+        enableSorting: true,
         cell: ({ row }) => {
             const carrier = row.original;
             return (
@@ -118,6 +119,7 @@ export const columns: ColumnDef<OperationsCarrierListItem>[] = [
     {
         id: "identifiers",
         header: "MC# / DOT#",
+        enableSorting: false,
         cell: ({ row }) => {
             const { mcNumber, dotNumber } = row.original;
             if (!mcNumber && !dotNumber) return <span className="text-muted-foreground">-</span>;
@@ -132,6 +134,7 @@ export const columns: ColumnDef<OperationsCarrierListItem>[] = [
     {
         id: "location",
         header: "Location",
+        enableSorting: false,
         cell: ({ row }) => {
             const { city, state } = row.original;
             if (!city || !state) return <span className="text-muted-foreground">-</span>;
@@ -146,6 +149,7 @@ export const columns: ColumnDef<OperationsCarrierListItem>[] = [
     {
         id: "contact",
         header: "Contact",
+        enableSorting: false,
         cell: ({ row }) => {
             const { phone, email } = row.original;
             if (!phone && !email) return <span className="text-muted-foreground">-</span>;
@@ -170,6 +174,7 @@ export const columns: ColumnDef<OperationsCarrierListItem>[] = [
     {
         id: "stats",
         header: "Fleet",
+        enableSorting: false,
         cell: ({ row }) => {
             const { _count } = row.original;
             return (
@@ -287,6 +292,7 @@ export const columns: ColumnDef<OperationsCarrierListItem>[] = [
     {
         id: "compliance",
         header: "Compliance",
+        enableSorting: false,
         cell: ({ row }) => {
             const state = getComplianceState(row.original);
 
@@ -307,6 +313,7 @@ export const columns: ColumnDef<OperationsCarrierListItem>[] = [
     {
         accessorKey: "insuranceExpiryDate",
         header: "Insurance",
+        enableSorting: false,
         cell: ({ row }) => {
             const carrier = row.original;
             if (!carrier.insuranceExpiryDate) return <span className="text-muted-foreground">-</span>;
@@ -336,6 +343,7 @@ export const columns: ColumnDef<OperationsCarrierListItem>[] = [
     {
         accessorKey: "status",
         header: "Status",
+        enableSorting: true,
         cell: ({ row }) => {
             const status = row.original.status;
             const config: Record<string, { intent?: Intent; label: string }> = {
@@ -357,6 +365,7 @@ export const columns: ColumnDef<OperationsCarrierListItem>[] = [
     {
         id: "tier",
         header: "Tier",
+        enableSorting: true,
         cell: ({ row }) => (
             <TierBadge tier={row.original.tier} size="sm" />
         ),
@@ -364,6 +373,7 @@ export const columns: ColumnDef<OperationsCarrierListItem>[] = [
     },
     {
         id: "actions",
+        enableSorting: false,
         cell: ({ row }) => <CarrierActionsMenu carrier={row.original} />,
         size: 40,
     },
