@@ -361,6 +361,7 @@ export const VALID_FORWARD_TRANSITIONS: Record<LoadStatus, LoadStatus[]> = {
   PENDING: ['TENDERED'],
   TENDERED: ['ACCEPTED', 'PENDING'], // Can revert if tender rejected/expired
   ACCEPTED: ['DISPATCHED'],
+  ASSIGNED: ['DISPATCHED'],
   DISPATCHED: ['AT_PICKUP'],
   AT_PICKUP: ['PICKED_UP'],
   PICKED_UP: ['IN_TRANSIT'],

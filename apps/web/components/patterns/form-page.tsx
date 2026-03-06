@@ -89,6 +89,13 @@ export function FormPage<T extends FieldValues>({
         criteriaMode: "all", // Show all errors for a field
     });
 
+    // Reset form when defaultValues change (async data arrival)
+    const serializedDefaults = JSON.stringify(defaultValues);
+    React.useEffect(() => {
+        form.reset(defaultValues);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [serializedDefaults]);
+
     const { isDirty, isSubmitting: formIsSubmitting } = form.formState;
     const isSubmitting = externalIsSubmitting || formIsSubmitting;
 

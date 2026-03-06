@@ -21,7 +21,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Save, Trash2, User, MapPin, Package, Truck, DollarSign, FileWarning, FileText, Upload, Plus, Copy, MessageSquare, ChevronDown, ChevronUp, Layers, Download, EyeOff, Image, AlertTriangle, GitCompareArrows } from 'lucide-react';
+import { Save, Trash2, User, MapPin, Package, Truck, DollarSign, FileWarning, FileText, Upload, Plus, Copy, MessageSquare, ChevronDown, ChevronUp, Layers, Download, EyeOff, Image, AlertTriangle, GitCompareArrows, ClipboardList } from 'lucide-react';
 import { toast } from 'sonner';
 import { CustomerForm } from '@/components/quotes/customer-form';
 import { RouteMap } from '@/components/load-planner/route-map';
@@ -186,10 +186,23 @@ const mapAccessorialBillingUnitFromApi = (unit?: string): AccessorialBillingUnit
   }
 };
 
-export default function LoadPlannerEditPage() {
+interface LoadPlannerEditPageProps {
+  /** When set, overrides useParams().id — used when embedded in a dialog */
+  embeddedId?: string;
+  /** Called after successful save instead of router.push */
+  onSaveSuccess?: () => void;
+  /** Called on cancel instead of router.push */
+  onCancel?: () => void;
+}
+
+export default function LoadPlannerEditPage({
+  embeddedId,
+  onSaveSuccess,
+  onCancel,
+}: LoadPlannerEditPageProps = {}) {
   const router = useRouter();
   const params = useParams();
-  const id = params.id as string;
+  const id = embeddedId ?? (params.id as string);
   const isEdit = id !== 'new';
 
   const { data: quote, isLoading: isLoadingQuote } = useLoadPlannerQuote(
@@ -203,21 +216,15 @@ export default function LoadPlannerEditPage() {
 
   // Tenant services (tab visibility)
   const { data: enabledServices } = useEnabledServices();
-  const ALL_TABS = useMemo(() => ['customer', 'route', 'cargo', 'trucks', 'pricing', 'permits', 'compare', 'pdf'] as const, []);
+  const ALL_TABS = useMemo(() => ['plan', 'pdf'] as const, []);
   const TAB_CONFIG = useMemo(() => [
-    { value: 'customer' as const, label: 'Customer', icon: User },
-    { value: 'route' as const, label: 'Route', icon: MapPin },
-    { value: 'cargo' as const, label: 'Cargo', icon: Package },
-    { value: 'trucks' as const, label: 'Trucks', icon: Truck },
-    { value: 'pricing' as const, label: 'Pricing', icon: DollarSign },
-    { value: 'permits' as const, label: 'Permits', icon: FileWarning },
-    { value: 'compare' as const, label: 'Compare', icon: GitCompareArrows },
+    { value: 'plan' as const, label: 'Plan', icon: ClipboardList },
     { value: 'pdf' as const, label: 'PDF', icon: FileText },
   ], []);
   const enabledTabs: string[] = useMemo(() => {
-    if (!enabledServices) return [...ALL_TABS] as string[];
-    return ALL_TABS.filter((tab) => enabledServices.includes(tab)) as string[];
-  }, [enabledServices, ALL_TABS]);
+    // 'plan' is always enabled (it groups multiple backend services into one UI tab)
+    return [...ALL_TABS] as string[];
+  }, [ALL_TABS]);
   const isTabEnabled = useCallback(
     (tab: string) => enabledTabs.includes(tab),
     [enabledTabs],
@@ -244,12 +251,12 @@ export default function LoadPlannerEditPage() {
   );
 
   // Tab state
-  const [activeTab, setActiveTab] = useState('customer');
+  const [activeTab, setActiveTab] = useState('plan');
 
   // Fall back to first enabled tab if current tab is disabled
   useEffect(() => {
     if (enabledServices && !enabledTabs.includes(activeTab)) {
-      setActiveTab(enabledTabs[0] ?? 'customer');
+      setActiveTab(enabledTabs[0] ?? 'plan');
     }
   }, [enabledServices, enabledTabs, activeTab]);
 
@@ -1449,7 +1456,11 @@ export default function LoadPlannerEditPage() {
         await createMutation.mutateAsync(quoteData);
         toast.success('Quote created successfully');
       }
-      router.push('/quote-history');
+      if (onSaveSuccess) {
+        onSaveSuccess();
+      } else {
+        router.push('/quote-history');
+      }
     } catch (error) {
       toast.error('Failed to save quote');
       console.error('Failed to save quote:', error);
@@ -1564,7 +1575,7 @@ export default function LoadPlannerEditPage() {
                   ? 'Update Quote'
                   : 'Save Quote'}
             </Button>
-            <Button variant="outline" onClick={() => router.push('/quote-history')}>
+            <Button variant="outline" onClick={() => onCancel ? onCancel() : router.push('/quote-history')}>
               <Trash2 className="h-4 w-4 mr-2" />
               Cancel
             </Button>
@@ -1575,7 +1586,7 @@ export default function LoadPlannerEditPage() {
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="w-full flex overflow-x-auto no-scrollbar">
+            <TabsList className="w-full flex">
               {TAB_CONFIG.filter((tab) => isTabEnabled(tab.value)).map((tab) => {
                 const Icon = tab.icon;
                 return (
@@ -1591,8 +1602,8 @@ export default function LoadPlannerEditPage() {
               })}
             </TabsList>
 
-            {/* Customer Tab */}
-            {isTabEnabled('customer') && <TabsContent value="customer" className="mt-4">
+            {/* Plan Tab - All sections combined */}
+            {isTabEnabled('plan') && <TabsContent value="plan" className="mt-4 space-y-6">
               <Card>
                 <CardHeader>
                   <CardTitle>Customer Information</CardTitle>
@@ -1626,19 +1637,10 @@ export default function LoadPlannerEditPage() {
                     onInternalNotesChange={setInternalNotes}
                   />
 
-                  <div className="flex gap-4 pt-4">
-                    {getNextTab('customer') && (
-                      <Button onClick={() => setActiveTab(getNextTab('customer')!)} className="flex-1">
-                        Continue to {getTabLabel(getNextTab('customer')!)}
-                      </Button>
-                    )}
-                  </div>
                 </CardContent>
               </Card>
-            </TabsContent>}
 
-            {/* Route Tab */}
-            {isTabEnabled('route') && <TabsContent value="route" className="mt-4 space-y-4">
+              {/* Route Section */}
               <Card>
                 <CardHeader>
                   <div className="flex items-center gap-2">
@@ -1749,22 +1751,7 @@ export default function LoadPlannerEditPage() {
                 </CardContent>
               </Card>
 
-              <div className="flex gap-4">
-                {getPrevTab('route') && (
-                  <Button variant="outline" onClick={() => setActiveTab(getPrevTab('route')!)}>
-                    Back
-                  </Button>
-                )}
-                {getNextTab('route') && (
-                  <Button onClick={() => setActiveTab(getNextTab('route')!)} className="flex-1">
-                    Continue to {getTabLabel(getNextTab('route')!)}
-                  </Button>
-                )}
-              </div>
-            </TabsContent>}
-
-            {/* Cargo Tab */}
-            {isTabEnabled('cargo') && <TabsContent value="cargo" className="mt-4 space-y-4">
+              {/* Cargo Section */}
               {/* Entry Mode Toggle */}
               <Card>
                 <CardContent className="pt-4">
@@ -2609,11 +2596,9 @@ export default function LoadPlannerEditPage() {
                           </div>
                         </div>
                       </div>
-                      {isTabEnabled('trucks') && (
-                        <Button variant="outline" size="sm" onClick={() => setActiveTab('trucks')}>
-                          Customize
-                        </Button>
-                      )}
+                      <Button variant="outline" size="sm" onClick={() => document.getElementById('trucks-section')?.scrollIntoView({ behavior: 'smooth' })}>
+                        Customize
+                      </Button>
                     </div>
                     {activePlan.warnings.length > 0 && (
                       <div className="mt-3 flex flex-wrap gap-2">
@@ -2637,29 +2622,15 @@ export default function LoadPlannerEditPage() {
                     )}
                     {hasPermitRisk && (
                       <div className="mt-2 text-xs text-orange-600">
-                        Permits may be required{isTabEnabled('trucks') ? ' - see Trucks tab for details' : ''}
+                        Permits may be required - see Trucks section below
                       </div>
                     )}
                   </CardContent>
                 </Card>
               )}
 
-              <div className="flex gap-4">
-                {getPrevTab('cargo') && (
-                  <Button variant="outline" onClick={() => setActiveTab(getPrevTab('cargo')!)}>
-                    Back
-                  </Button>
-                )}
-                {getNextTab('cargo') && (
-                  <Button onClick={() => setActiveTab(getNextTab('cargo')!)} className="flex-1">
-                    Continue to {getTabLabel(getNextTab('cargo')!)}
-                  </Button>
-                )}
-              </div>
-            </TabsContent>}
-
-            {/* Trucks Tab */}
-            {isTabEnabled('trucks') && <TabsContent value="trucks" className="mt-4 space-y-4">
+              {/* Trucks Section */}
+              <div id="trucks-section" />
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -2674,10 +2645,7 @@ export default function LoadPlannerEditPage() {
                   {cargoItems.length === 0 ? (
                     <div className="flex flex-col items-center py-10 text-muted-foreground">
                       <Package className="h-12 w-12 mb-4 opacity-50" />
-                      <p>Add cargo items first to see truck recommendations</p>
-                      <Button variant="outline" className="mt-4" onClick={() => setActiveTab('cargo')}>
-                        Go to Cargo
-                      </Button>
+                      <p>Add cargo items in the Cargo section above to see truck recommendations</p>
                     </div>
                   ) : (activePlan.loads.length) ? (
                     <div className="space-y-4">
@@ -2773,22 +2741,7 @@ export default function LoadPlannerEditPage() {
                 </CardContent>
               </Card>
 
-              <div className="flex gap-4">
-                {getPrevTab('trucks') && (
-                  <Button variant="outline" onClick={() => setActiveTab(getPrevTab('trucks')!)}>
-                    Back
-                  </Button>
-                )}
-                {getNextTab('trucks') && (
-                  <Button onClick={() => setActiveTab(getNextTab('trucks')!)} className="flex-1">
-                    Continue to {getTabLabel(getNextTab('trucks')!)}
-                  </Button>
-                )}
-              </div>
-            </TabsContent>}
-
-            {/* Pricing Tab */}
-            {isTabEnabled('pricing') && <TabsContent value="pricing" className="mt-4 space-y-4">
+              {/* Pricing Section */}
               <Card>
                 <CardHeader>
                   <div className="flex items-center justify-between">
@@ -3307,110 +3260,37 @@ export default function LoadPlannerEditPage() {
                 </CardContent>
               </Card>
 
-              <div className="flex gap-4">
-                {getPrevTab('pricing') && (
-                  <Button variant="outline" onClick={() => setActiveTab(getPrevTab('pricing')!)}>
-                    Back
-                  </Button>
-                )}
-                {getNextTab('pricing') && (
-                  <Button onClick={() => setActiveTab(getNextTab('pricing')!)} className="flex-1">
-                    Continue to {getTabLabel(getNextTab('pricing')!)}
-                  </Button>
-                )}
-              </div>
-            </TabsContent>}
-
-            {/* Permits Tab */}
-            {isTabEnabled('permits') && <TabsContent value="permits" className="mt-4 space-y-4">
-              {!pickupAddress || !dropoffAddress ? (
+              {/* Permits Section */}
+              {pickupAddress && dropoffAddress && cargoItems.length > 0 && (
                 <Card>
-                  <CardContent className="flex flex-col items-center py-10 text-muted-foreground">
-                    <MapPin className="h-12 w-12 mb-4 opacity-50" />
-                    <p className="text-center">Enter pickup and dropoff addresses first</p>
-                    <Button variant="outline" className="mt-4" onClick={() => setActiveTab('route')}>
-                      Go to Route
-                    </Button>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileWarning className="h-5 w-5" />
+                      Permit Requirements
+                    </CardTitle>
+                    <CardDescription>
+                      Permit calculations based on route and cargo dimensions
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <RouteIntelligence
+                      origin={`${pickupAddress}, ${pickupCity}, ${pickupState} ${pickupZip}`.trim()}
+                      destination={`${dropoffAddress}, ${dropoffCity}, ${dropoffState} ${dropoffZip}`.trim()}
+                      cargoSpecs={{
+                        length: maxItemLength,
+                        width: maxItemWidth,
+                        height: maxItemHeight,
+                        grossWeight: totalCargoWeight,
+                      }}
+                      perTruckCargoSpecs={perTruckCargoSpecs}
+                      onPermitDataCalculated={setCapturedPermitData}
+                    />
                   </CardContent>
                 </Card>
-              ) : cargoItems.length === 0 ? (
-                <Card>
-                  <CardContent className="flex flex-col items-center py-10 text-muted-foreground">
-                    <Package className="h-12 w-12 mb-4 opacity-50" />
-                    <p className="text-center">Add cargo items to calculate permit requirements</p>
-                    <Button variant="outline" className="mt-4" onClick={() => setActiveTab('cargo')}>
-                      Go to Cargo
-                    </Button>
-                  </CardContent>
-                </Card>
-              ) : (
-                <>
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <FileWarning className="h-5 w-5" />
-                        Permit Requirements
-                      </CardTitle>
-                      <CardDescription>
-                        Permit calculations based on route and cargo dimensions
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <RouteIntelligence
-                        origin={`${pickupAddress}, ${pickupCity}, ${pickupState} ${pickupZip}`.trim()}
-                        destination={`${dropoffAddress}, ${dropoffCity}, ${dropoffState} ${dropoffZip}`.trim()}
-                        cargoSpecs={{
-                          length: maxItemLength,
-                          width: maxItemWidth,
-                          height: maxItemHeight,
-                          grossWeight: totalCargoWeight,
-                        }}
-                        perTruckCargoSpecs={perTruckCargoSpecs}
-                        onPermitDataCalculated={setCapturedPermitData}
-                      />
-                    </CardContent>
-                  </Card>
-
-                </>
               )}
 
-              <div className="flex gap-4">
-                {getPrevTab('permits') && (
-                  <Button variant="outline" onClick={() => setActiveTab(getPrevTab('permits')!)}>
-                    Back
-                  </Button>
-                )}
-                {getNextTab('permits') && (
-                  <Button onClick={() => setActiveTab(getNextTab('permits')!)} className="flex-1">
-                    Continue to {getTabLabel(getNextTab('permits')!)}
-                  </Button>
-                )}
-              </div>
-            </TabsContent>}
-
-            {/* Compare Tab */}
-            {isTabEnabled('compare') && <TabsContent value="compare" className="mt-4 space-y-4">
-              {!pickupAddress || !dropoffAddress ? (
-                <Card>
-                  <CardContent className="flex flex-col items-center py-10 text-muted-foreground">
-                    <MapPin className="h-12 w-12 mb-4 opacity-50" />
-                    <p className="text-center">Enter pickup and dropoff addresses to compare routes</p>
-                    <Button variant="outline" className="mt-4" onClick={() => setActiveTab('route')}>
-                      Go to Route
-                    </Button>
-                  </CardContent>
-                </Card>
-              ) : cargoItems.length === 0 ? (
-                <Card>
-                  <CardContent className="flex flex-col items-center py-10 text-muted-foreground">
-                    <Package className="h-12 w-12 mb-4 opacity-50" />
-                    <p className="text-center">Add cargo items to compare route and truck scenarios</p>
-                    <Button variant="outline" className="mt-4" onClick={() => setActiveTab('cargo')}>
-                      Go to Cargo
-                    </Button>
-                  </CardContent>
-                </Card>
-              ) : (
+              {/* Compare Section */}
+              {pickupAddress && dropoffAddress && cargoItems.length > 0 && (
                 <RouteComparisonTab
                   pickupAddress={`${pickupAddress}, ${pickupCity}, ${pickupState} ${pickupZip}`.trim()}
                   dropoffAddress={`${dropoffAddress}, ${dropoffCity}, ${dropoffState} ${dropoffZip}`.trim()}
@@ -3425,19 +3305,6 @@ export default function LoadPlannerEditPage() {
                   }}
                 />
               )}
-
-              <div className="flex gap-4">
-                {getPrevTab('compare') && (
-                  <Button variant="outline" onClick={() => setActiveTab(getPrevTab('compare')!)}>
-                    Back
-                  </Button>
-                )}
-                {getNextTab('compare') && (
-                  <Button onClick={() => setActiveTab(getNextTab('compare')!)} className="flex-1">
-                    Continue to {getTabLabel(getNextTab('compare')!)}
-                  </Button>
-                )}
-              </div>
             </TabsContent>}
 
             {/* PDF Tab */}
@@ -4005,13 +3872,6 @@ export default function LoadPlannerEditPage() {
                 </div>
               </div>
 
-              <div className="flex gap-4">
-                {getPrevTab('pdf') && (
-                  <Button variant="outline" onClick={() => setActiveTab(getPrevTab('pdf')!)}>
-                    Back to {getTabLabel(getPrevTab('pdf')!)}
-                  </Button>
-                )}
-              </div>
             </TabsContent>}
           </Tabs>
         </div>

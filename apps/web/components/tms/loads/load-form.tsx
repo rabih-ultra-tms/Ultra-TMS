@@ -3,7 +3,7 @@
 import * as React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
-import { Calculator, Plus, Trash2, MapPin } from "lucide-react";
+import { Calculator, Plus, Trash2, MapPin, FileText } from "lucide-react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -13,7 +13,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { AddressAutocomplete, type AddressComponents } from "@/components/ui/address-autocomplete";
 import { CarrierSelector } from "./carrier-selector";
+import { LoadStatusBadge } from "./load-status-badge";
+import { LoadStatus } from "@/types/loads";
 import { CarrierWithScore } from "@/lib/hooks/tms/use-loads";
 
 // ---------------------------------------------------------------------------
@@ -115,11 +119,47 @@ interface LoadFormSectionsProps {
     isFromOrder?: boolean;
     mode?: 'create' | 'edit';
     loadStatus?: string;
+    /** Existing carrier data for edit mode — initializes the carrier display */
+    initialCarrier?: {
+        id: string;
+        companyName: string;
+        mcNumber: string;
+    };
+    /** Order info for edit mode — shown as read-only header */
+    orderInfo?: {
+        id: string;
+        orderNumber: string;
+        customerName: string;
+    };
 }
 
-export function LoadFormSections({ form, customerRate, isFromOrder, mode = 'create', loadStatus }: LoadFormSectionsProps) {
+export function LoadFormSections({
+    form,
+    customerRate,
+    isFromOrder,
+    mode = 'create',
+    loadStatus,
+    initialCarrier,
+    orderInfo,
+}: LoadFormSectionsProps) {
     const [showCarrierSelector, setShowCarrierSelector] = React.useState(false);
-    const [selectedCarrier, setSelectedCarrier] = React.useState<CarrierWithScore | null>(null);
+    // In edit mode, initialize from existing carrier data
+    const [selectedCarrier, setSelectedCarrier] = React.useState<CarrierWithScore | null>(
+        initialCarrier
+            ? { id: initialCarrier.id, companyName: initialCarrier.companyName, mcNumber: initialCarrier.mcNumber } as CarrierWithScore
+            : null
+    );
+
+    // Sync selectedCarrier when initialCarrier arrives (async data)
+    React.useEffect(() => {
+        if (initialCarrier && !selectedCarrier) {
+            setSelectedCarrier({
+                id: initialCarrier.id,
+                companyName: initialCarrier.companyName,
+                mcNumber: initialCarrier.mcNumber,
+            } as CarrierWithScore);
+        }
+    }, [initialCarrier, selectedCarrier]);
 
     const equipmentType = form.watch("equipmentType");
     const stops = form.watch("stops") || [];
@@ -165,6 +205,35 @@ export function LoadFormSections({ form, customerRate, isFromOrder, mode = 'crea
 
     return (
         <div className="space-y-6">
+            {/* Order & Status Info (edit mode) */}
+            {mode === 'edit' && orderInfo && (
+                <Card className="bg-muted/30 border-dashed">
+                    <CardContent className="py-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-2">
+                                    <FileText className="h-4 w-4 text-muted-foreground" />
+                                    <span className="text-sm text-muted-foreground">Order:</span>
+                                    <Link
+                                        href={`/operations/orders/${orderInfo.id}`}
+                                        className="text-sm font-medium text-blue-600 hover:underline"
+                                    >
+                                        {orderInfo.orderNumber}
+                                    </Link>
+                                </div>
+                                <Separator orientation="vertical" className="h-4" />
+                                <span className="text-sm text-muted-foreground">
+                                    Customer: <span className="font-medium text-foreground">{orderInfo.customerName}</span>
+                                </span>
+                            </div>
+                            {loadStatus && (
+                                <LoadStatusBadge status={loadStatus as LoadStatus} />
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
             {/* Equipment & Freight Section */}
             <Card>
                 <CardHeader>
@@ -229,7 +298,7 @@ export function LoadFormSections({ form, customerRate, isFromOrder, mode = 'crea
                                 <FormItem>
                                     <FormLabel>Weight (lbs)</FormLabel>
                                     <FormControl>
-                                        <Input type="number" placeholder="0" {...field} />
+                                        <Input type="number" placeholder="0" {...field} value={field.value ?? ''} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -244,7 +313,7 @@ export function LoadFormSections({ form, customerRate, isFromOrder, mode = 'crea
                                 <FormItem>
                                     <FormLabel>Pieces</FormLabel>
                                     <FormControl>
-                                        <Input type="number" placeholder="0" {...field} />
+                                        <Input type="number" placeholder="0" {...field} value={field.value ?? ''} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -259,7 +328,7 @@ export function LoadFormSections({ form, customerRate, isFromOrder, mode = 'crea
                                 <FormItem>
                                     <FormLabel>Pallets</FormLabel>
                                     <FormControl>
-                                        <Input type="number" placeholder="0" {...field} />
+                                        <Input type="number" placeholder="0" {...field} value={field.value ?? ''} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -313,7 +382,7 @@ export function LoadFormSections({ form, customerRate, isFromOrder, mode = 'crea
                                     <FormItem>
                                         <FormLabel>Min Temperature (°F)</FormLabel>
                                         <FormControl>
-                                            <Input type="number" placeholder="32" {...field} />
+                                            <Input type="number" placeholder="32" {...field} value={field.value ?? ''} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -326,7 +395,7 @@ export function LoadFormSections({ form, customerRate, isFromOrder, mode = 'crea
                                     <FormItem>
                                         <FormLabel>Max Temperature (°F)</FormLabel>
                                         <FormControl>
-                                            <Input type="number" placeholder="38" {...field} />
+                                            <Input type="number" placeholder="38" {...field} value={field.value ?? ''} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -362,12 +431,58 @@ export function LoadFormSections({ form, customerRate, isFromOrder, mode = 'crea
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {carrierReadOnly && (
-                        <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
-                            ⚠️ Carrier assignment is locked after pickup. Contact operations manager to reassign.
+                    {/* Read-only carrier display for locked status */}
+                    {carrierReadOnly && selectedCarrier && (
+                        <div className="space-y-3">
+                            <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+                                Carrier assignment is locked after pickup. Contact operations manager to reassign.
+                            </div>
+                            <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/50">
+                                <div>
+                                    <div className="font-medium">{selectedCarrier.companyName}</div>
+                                    <div className="text-sm text-muted-foreground font-mono">{selectedCarrier.mcNumber}</div>
+                                </div>
+                            </div>
+                            {/* Driver Info (read-only display) */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <FormField control={form.control} name="driverName" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Driver Name</FormLabel>
+                                        <FormControl><Input placeholder="John Doe" {...field} readOnly className="bg-muted/50" /></FormControl>
+                                    </FormItem>
+                                )} />
+                                <FormField control={form.control} name="driverPhone" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Driver Phone</FormLabel>
+                                        <FormControl><Input placeholder="(555) 123-4567" {...field} readOnly className="bg-muted/50" /></FormControl>
+                                    </FormItem>
+                                )} />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <FormField control={form.control} name="truckNumber" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Truck Number</FormLabel>
+                                        <FormControl><Input placeholder="T-1234" {...field} readOnly className="bg-muted/50" /></FormControl>
+                                    </FormItem>
+                                )} />
+                                <FormField control={form.control} name="trailerNumber" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Trailer Number</FormLabel>
+                                        <FormControl><Input placeholder="TR-5678" {...field} readOnly className="bg-muted/50" /></FormControl>
+                                    </FormItem>
+                                )} />
+                            </div>
                         </div>
                     )}
 
+                    {/* Read-only locked but no carrier */}
+                    {carrierReadOnly && !selectedCarrier && (
+                        <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+                            Carrier assignment is locked after pickup. Contact operations manager to reassign.
+                        </div>
+                    )}
+
+                    {/* Editable: no carrier selected yet */}
                     {!showCarrierSelector && !selectedCarrier && !carrierReadOnly && (
                         <Button onClick={() => setShowCarrierSelector(true)} variant="outline" className="w-full">
                             <Plus className="mr-2 h-4 w-4" />
@@ -375,89 +490,59 @@ export function LoadFormSections({ form, customerRate, isFromOrder, mode = 'crea
                         </Button>
                     )}
 
-                    {!showCarrierSelector && selectedCarrier && (
+                    {/* Editable: carrier selected — show info + driver fields */}
+                    {!showCarrierSelector && selectedCarrier && !carrierReadOnly && (
                         <div className="space-y-3">
                             <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/50">
                                 <div>
                                     <div className="font-medium">{selectedCarrier.companyName}</div>
-                                    <div className="text-sm text-muted-foreground">{selectedCarrier.mcNumber}</div>
+                                    <div className="text-sm text-muted-foreground font-mono">{selectedCarrier.mcNumber}</div>
                                 </div>
-                                {!carrierReadOnly && (
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => {
-                                            setSelectedCarrier(null);
-                                            form.setValue("carrierId", undefined);
-                                            setShowCarrierSelector(true);
-                                        }}
-                                    >
-                                        Change
-                                    </Button>
-                                )}
+                                <Button variant="ghost" size="sm" onClick={() => {
+                                    setSelectedCarrier(null);
+                                    form.setValue("carrierId", undefined);
+                                    setShowCarrierSelector(true);
+                                }}>
+                                    Change
+                                </Button>
                             </div>
-
                             {/* Driver Info */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <FormField
-                                    control={form.control}
-                                    name="driverName"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Driver Name</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="John Doe" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="driverPhone"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Driver Phone</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="(555) 123-4567" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                                <FormField control={form.control} name="driverName" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Driver Name</FormLabel>
+                                        <FormControl><Input placeholder="John Doe" {...field} /></FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )} />
+                                <FormField control={form.control} name="driverPhone" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Driver Phone</FormLabel>
+                                        <FormControl><Input placeholder="(555) 123-4567" {...field} /></FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )} />
                             </div>
-
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <FormField
-                                    control={form.control}
-                                    name="truckNumber"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Truck Number</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="T-1234" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="trailerNumber"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Trailer Number</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="TR-5678" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                                <FormField control={form.control} name="truckNumber" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Truck Number</FormLabel>
+                                        <FormControl><Input placeholder="T-1234" {...field} /></FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )} />
+                                <FormField control={form.control} name="trailerNumber" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Trailer Number</FormLabel>
+                                        <FormControl><Input placeholder="TR-5678" {...field} /></FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )} />
                             </div>
                         </div>
                     )}
 
+                    {/* Carrier picker */}
                     {showCarrierSelector && (
                         <CarrierSelector
                             equipmentType={equipmentType}
@@ -472,7 +557,7 @@ export function LoadFormSections({ form, customerRate, isFromOrder, mode = 'crea
             </Card>
 
             {/* Rate Section (conditional on carrier) */}
-            {selectedCarrier && (
+            {(selectedCarrier || form.watch("carrierId")) && (
                 <Card>
                     <CardHeader>
                         <CardTitle>Rate & Margin</CardTitle>
@@ -499,7 +584,7 @@ export function LoadFormSections({ form, customerRate, isFromOrder, mode = 'crea
                                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                                                 $
                                             </span>
-                                            <Input type="number" step="0.01" placeholder="0.00" className="pl-6" {...field} />
+                                            <Input type="number" step="0.01" placeholder="0.00" className="pl-6" {...field} value={field.value ?? ''} />
                                         </div>
                                     </FormControl>
                                     <FormMessage />
@@ -581,7 +666,7 @@ export function LoadFormSections({ form, customerRate, isFromOrder, mode = 'crea
                                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                                                 $
                                             </span>
-                                            <Input type="number" step="0.01" placeholder="0.00" className="pl-6" {...field} />
+                                            <Input type="number" step="0.01" placeholder="0.00" className="pl-6" {...field} value={field.value ?? ''} />
                                         </div>
                                     </FormControl>
                                     <FormMessage />
@@ -723,7 +808,7 @@ function StopsBuilder({ form }: StopsBuilderProps) {
                             <div className="flex items-center gap-2">
                                 <MapPin className="h-4 w-4" />
                                 <CardTitle className="text-base">
-                                    {stop.stopType === 'PICKUP' ? '📦 Pickup' : '🎯 Delivery'} Stop #{stop.stopSequence}
+                                    {stop.stopType === 'PICKUP' ? '📦 Pickup' : '🎯 Delivery'} Stop #{index + 1}
                                 </CardTitle>
                             </div>
                             {stops.length > 2 && (
@@ -750,13 +835,23 @@ function StopsBuilder({ form }: StopsBuilderProps) {
                                 }
                             }}
                         />
-                        <Input
+                        <AddressAutocomplete
                             placeholder="Address *"
                             value={stop.addressLine1}
-                            onChange={(e) => {
+                            onChange={(val) => {
                                 const updated = [...stops];
                                 if (updated[index]) {
-                                    updated[index].addressLine1 = e.target.value;
+                                    updated[index].addressLine1 = val;
+                                    form.setValue("stops", updated);
+                                }
+                            }}
+                            onSelect={(components: AddressComponents) => {
+                                const updated = [...stops];
+                                if (updated[index]) {
+                                    updated[index].addressLine1 = components.address;
+                                    if (components.city) updated[index].city = components.city;
+                                    if (components.state) updated[index].state = components.state;
+                                    if (components.zip) updated[index].postalCode = components.zip;
                                     form.setValue("stops", updated);
                                 }
                             }}
@@ -821,6 +916,92 @@ function StopsBuilder({ form }: StopsBuilderProps) {
                                 }}
                             />
                         </div>
+
+                        {/* Address Line 2 */}
+                        <Input
+                            placeholder="Address Line 2 (suite, unit, etc.)"
+                            value={stop.addressLine2 || ""}
+                            onChange={(e) => {
+                                const updated = [...stops];
+                                if (updated[index]) {
+                                    updated[index].addressLine2 = e.target.value;
+                                    form.setValue("stops", updated);
+                                }
+                            }}
+                        />
+
+                        {/* Appointment */}
+                        <div className="flex items-center justify-between rounded-lg border p-3">
+                            <div className="space-y-0.5">
+                                <div className="text-sm font-medium">Appointment Required</div>
+                                <div className="text-xs text-muted-foreground">Does this stop require a scheduled appointment?</div>
+                            </div>
+                            <Switch
+                                checked={stop.appointmentRequired || false}
+                                onCheckedChange={(checked) => {
+                                    const updated = [...stops];
+                                    if (updated[index]) {
+                                        updated[index].appointmentRequired = checked;
+                                        form.setValue("stops", updated);
+                                    }
+                                }}
+                            />
+                        </div>
+
+                        {stop.appointmentRequired && (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                <Input
+                                    type="date"
+                                    placeholder="Appointment Date"
+                                    value={stop.appointmentDate || ""}
+                                    onChange={(e) => {
+                                        const updated = [...stops];
+                                        if (updated[index]) {
+                                            updated[index].appointmentDate = e.target.value;
+                                            form.setValue("stops", updated);
+                                        }
+                                    }}
+                                />
+                                <Input
+                                    type="time"
+                                    placeholder="Start Time"
+                                    value={stop.appointmentTimeStart || ""}
+                                    onChange={(e) => {
+                                        const updated = [...stops];
+                                        if (updated[index]) {
+                                            updated[index].appointmentTimeStart = e.target.value;
+                                            form.setValue("stops", updated);
+                                        }
+                                    }}
+                                />
+                                <Input
+                                    type="time"
+                                    placeholder="End Time"
+                                    value={stop.appointmentTimeEnd || ""}
+                                    onChange={(e) => {
+                                        const updated = [...stops];
+                                        if (updated[index]) {
+                                            updated[index].appointmentTimeEnd = e.target.value;
+                                            form.setValue("stops", updated);
+                                        }
+                                    }}
+                                />
+                            </div>
+                        )}
+
+                        {/* Special Instructions */}
+                        <Textarea
+                            placeholder="Special instructions (e.g., call 30 min before arrival)"
+                            value={stop.specialInstructions || ""}
+                            onChange={(e) => {
+                                const updated = [...stops];
+                                if (updated[index]) {
+                                    updated[index].specialInstructions = e.target.value;
+                                    form.setValue("stops", updated);
+                                }
+                            }}
+                            className="min-h-[60px]"
+                        />
                     </CardContent>
                 </Card>
             ))}

@@ -1,9 +1,11 @@
 import { IsString, IsOptional, IsNumber, IsUUID, IsDateString, IsEnum } from 'class-validator';
+import { PartialType } from '@nestjs/mapped-types';
 import { LoadStatusEnum } from './load-query.dto';
 
 export class CreateLoadDto {
+  @IsOptional()
   @IsUUID()
-  orderId!: string;
+  orderId?: string;
 
   @IsOptional()
   @IsUUID()
@@ -54,7 +56,7 @@ export class CreateLoadDto {
   dispatchNotes?: string;
 }
 
-export class UpdateLoadDto extends CreateLoadDto {
+export class UpdateLoadDto extends PartialType(CreateLoadDto) {
   @IsOptional()
   @IsEnum(LoadStatusEnum)
   status?: LoadStatusEnum;

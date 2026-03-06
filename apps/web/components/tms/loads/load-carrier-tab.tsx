@@ -91,8 +91,8 @@ export function LoadCarrierTab({ load }: LoadCarrierTabProps) {
             {/* Rate Info */}
             {(() => {
                 const loadRecord = load as Load & { customerRate?: number; order?: { customerRate?: number } };
-                const customerRate = loadRecord.order?.customerRate ?? loadRecord.customerRate ?? 0;
-                const carrierRate = load.carrierRate ?? 0;
+                const customerRate = Number(loadRecord.order?.customerRate ?? loadRecord.customerRate ?? 0) || 0;
+                const carrierRate = Number(load.carrierRate ?? 0) || 0;
                 const margin = customerRate - carrierRate;
                 const marginPct = customerRate > 0 ? (margin / customerRate) * 100 : 0;
                 return (
