@@ -1,10 +1,12 @@
 import { Controller, Get, NotFoundException, Param } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import { Public } from '../../common/decorators/public.decorator';
 import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
 import { TrackingService } from './tracking.service';
 
 @Controller('public/tracking')
 @ApiTags('Public Tracking')
+@Public()
 export class PublicTrackingController {
   constructor(private readonly trackingService: TrackingService) {}
 

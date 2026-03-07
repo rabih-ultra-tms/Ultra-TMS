@@ -3,6 +3,7 @@ import {
   useMutation,
   useQueryClient,
 } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { apiClient } from '@/lib/api-client';
 
 // ===========================
@@ -193,6 +194,9 @@ export function useCreatePlan() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: planKeys.lists() });
     },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to create commission plan');
+    },
   });
 }
 
@@ -209,6 +213,9 @@ export function useUpdatePlan() {
       });
       queryClient.invalidateQueries({ queryKey: planKeys.lists() });
     },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update commission plan');
+    },
   });
 }
 
@@ -220,6 +227,9 @@ export function useDeletePlan() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: planKeys.lists() });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to delete commission plan');
     },
   });
 }
@@ -236,6 +246,9 @@ export function useActivatePlan() {
     onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: planKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: planKeys.lists() });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to activate commission plan');
     },
   });
 }

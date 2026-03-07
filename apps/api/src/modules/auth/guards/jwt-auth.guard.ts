@@ -21,7 +21,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     }
 
     const req = context.switchToHttp().getRequest();
-    if (process.env.NODE_ENV === 'test') {
+    if (process.env.NODE_ENV === 'test' && process.env.ALLOW_TEST_AUTH === 'true') {
       const headers = req?.headers ?? {};
       const headerValue = (value: unknown) =>
         Array.isArray(value) ? value[0] : value;

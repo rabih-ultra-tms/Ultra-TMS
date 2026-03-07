@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { CarrierPortalAuthService } from './carrier-portal-auth.service';
 import { CarrierPortalLoginDto } from './dto/carrier-portal-login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
@@ -14,6 +15,7 @@ export class CarrierPortalAuthController {
   constructor(private readonly authService: CarrierPortalAuthService) {}
 
   @Post('login')
+  @Throttle({ long: { limit: 5, ttl: 60000 } })
   @ApiOperation({ summary: 'Carrier portal login' })
   @ApiStandardResponse('Carrier portal login successful')
   @ApiErrorResponses()

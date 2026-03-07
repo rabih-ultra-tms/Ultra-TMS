@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PortalUserStatus } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../../prisma.service';
 import { CarrierPortalLoginDto } from './dto/carrier-portal-login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
@@ -20,14 +21,14 @@ export class CarrierPortalAuthService {
   private signAccess(user: { id: string; tenantId: string; carrierId: string; role: string }) {
     return this.jwtService.sign(
       { sub: user.id, tenantId: user.tenantId, carrierId: user.carrierId, role: user.role },
-      { secret: process.env.CARRIER_PORTAL_JWT_SECRET || process.env.JWT_SECRET || 'carrier-portal-secret', expiresIn: '2h' },
+      { secret: process.env.CARRIER_PORTAL_JWT_SECRET || process.env.JWT_SECRET, expiresIn: '2h' },
     );
   }
 
   private signRefresh(user: { id: string; tenantId: string }) {
     return this.jwtService.sign(
       { sub: user.id, tenantId: user.tenantId, type: 'refresh' },
-      { secret: process.env.CARRIER_PORTAL_JWT_SECRET || process.env.JWT_SECRET || 'carrier-portal-secret', expiresIn: '7d' },
+      { secret: process.env.CARRIER_PORTAL_JWT_SECRET || process.env.JWT_SECRET, expiresIn: '7d' },
     );
   }
 
@@ -46,7 +47,7 @@ export class CarrierPortalAuthService {
 
   async login(dto: CarrierPortalLoginDto, meta: { ipAddress?: string; userAgent?: string }) {
     const user = await this.prisma.carrierPortalUser.findFirst({ where: { email: dto.email, deletedAt: null } });
-    if (!user || user.password !== dto.password) {
+    if (!user || !(await bcrypt.compare(dto.password, user.password))) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -69,7 +70,7 @@ export class CarrierPortalAuthService {
   async refresh(dto: RefreshTokenDto) {
     try {
       const payload = this.jwtService.verify(dto.refreshToken, {
-        secret: process.env.CARRIER_PORTAL_JWT_SECRET || process.env.JWT_SECRET || 'carrier-portal-secret',
+        secret: process.env.CARRIER_PORTAL_JWT_SECRET || process.env.JWT_SECRET,
       });
 
       if (payload.type !== 'refresh') {
@@ -118,7 +119,8 @@ export class CarrierPortalAuthService {
   async resetPassword(dto: ResetPasswordDto) {
     const user = await this.prisma.carrierPortalUser.findFirst({ where: { verificationToken: dto.token } });
     if (!user) throw new BadRequestException('Invalid reset token');
-    await this.prisma.carrierPortalUser.update({ where: { id: user.id }, data: { password: dto.newPassword, verificationToken: null } });
+    const hashed = await bcrypt.hash(dto.newPassword, 12);
+    await this.prisma.carrierPortalUser.update({ where: { id: user.id }, data: { password: hashed, verificationToken: null } });
     return { success: true };
   }
 
@@ -135,10 +137,11 @@ export class CarrierPortalAuthService {
   async register(tenantId: string, dto: CarrierPortalRegisterDto) {
     const existing = await this.prisma.carrierPortalUser.findFirst({ where: { email: dto.email, tenantId } });
     if (existing) {
+      const hashedPassword = await bcrypt.hash(dto.password, 12);
       await this.prisma.carrierPortalUser.update({
         where: { id: existing.id },
         data: {
-          password: dto.password,
+          password: hashedPassword,
           firstName: dto.firstName ?? existing.firstName,
           lastName: dto.lastName ?? existing.lastName,
           carrierId: dto.carrierId ?? existing.carrierId,
@@ -153,12 +156,13 @@ export class CarrierPortalAuthService {
       throw new BadRequestException('carrierId is required');
     }
 
+    const hashedPw = await bcrypt.hash(dto.password, 12);
     await this.prisma.carrierPortalUser.create({
       data: {
         tenantId,
         carrierId: dto.carrierId,
         email: dto.email,
-        password: dto.password,
+        password: hashedPw,
         firstName: dto.firstName ?? 'Carrier',
         lastName: dto.lastName ?? 'User',
         status: PortalUserStatus.ACTIVE,

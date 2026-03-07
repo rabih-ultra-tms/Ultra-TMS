@@ -23,7 +23,7 @@ import { CarrierPortalUsersService } from './users/carrier-portal-users.service'
   imports: [
     // align type expectations for expiresIn across string/number
     JwtModule.register({
-      secret: process.env.CARRIER_PORTAL_JWT_SECRET || process.env.JWT_SECRET || 'carrier-portal-secret',
+      secret: process.env.CARRIER_PORTAL_JWT_SECRET || process.env.JWT_SECRET,
       signOptions: {
         expiresIn: (process.env.CARRIER_PORTAL_JWT_EXPIRES_IN || '2h') as JwtSignOptions['expiresIn'],
       },

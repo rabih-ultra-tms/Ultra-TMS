@@ -16,6 +16,7 @@ import { RolesController } from './roles.controller';
 import { AuthController } from './auth.controller';
 import { TenantController } from './tenant.controller';
 import { ProfileController } from './profile.controller';
+import { SessionsController } from './sessions.controller';
 
 @Global()
 @Module({
@@ -26,7 +27,13 @@ import { ProfileController } from './profile.controller';
       useFactory: (configService: ConfigService) => {
         const expiresIn = configService.get<string>('JWT_ACCESS_EXPIRATION', '15m');
         return {
-          secret: configService.get<string>('JWT_SECRET') || 'default-secret',
+          secret: (() => {
+            const secret = configService.get<string>('JWT_SECRET');
+            if (!secret) {
+              throw new Error('JWT_SECRET environment variable is required');
+            }
+            return secret;
+          })(),
           signOptions: {
             expiresIn: expiresIn as any, // ConfigService returns string, but JWT expects string | number
           },
@@ -34,7 +41,7 @@ import { ProfileController } from './profile.controller';
       },
     }),
   ],
-  controllers: [AuthController, UsersController, RolesController, TenantController, ProfileController],
+  controllers: [AuthController, UsersController, RolesController, TenantController, ProfileController, SessionsController],
   providers: [PrismaService, JwtAuthGuard, JwtStrategy, AuthService, UsersService, RolesService, TenantService, ProfileService, MfaService],
   exports: [JwtAuthGuard, JwtModule, AuthService, UsersService, RolesService, TenantService, ProfileService, MfaService],
 })

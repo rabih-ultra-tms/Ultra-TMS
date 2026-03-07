@@ -1,10 +1,22 @@
 import { PrismaService } from './prisma.service';
 
+// Mock DMMF with models that have deletedAt and ones that don't
+const mockDmmf = {
+  datamodel: {
+    models: [
+      { name: 'Company', fields: [{ name: 'id' }, { name: 'deletedAt' }] },
+      { name: 'Load', fields: [{ name: 'id' }, { name: 'deletedAt' }] },
+      { name: 'AuditLog', fields: [{ name: 'id' }] }, // no deletedAt
+    ],
+  },
+};
+
 describe('PrismaService', () => {
   let service: PrismaService;
 
   beforeEach(() => {
     service = Object.create(PrismaService.prototype) as PrismaService;
+    (service as any)._baseDmmf = mockDmmf;
   });
 
   it('registers soft-delete middleware on init', async () => {
@@ -48,7 +60,7 @@ describe('PrismaService', () => {
 
     await service.onModuleInit();
 
-    const params = { model: 'Invoice', action: 'findFirst', args: { where: {} } } as any;
+    const params = { model: 'AuditLog', action: 'findFirst', args: { where: {} } } as any;
     const next = jest.fn().mockResolvedValue('ok');
 
     await middleware(params, next);

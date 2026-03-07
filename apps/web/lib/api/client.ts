@@ -152,7 +152,8 @@ async function refreshTokens(): Promise<TokenPair | null> {
       }
 
       return null;
-    } catch {
+    } catch (error) {
+      console.error("[api-client] Token refresh failed:", error);
       return null;
     } finally {
       refreshPromise = null;
@@ -342,8 +343,8 @@ class ApiClient {
           errors = bodyData.errors as Record<string, string[]>;
           code = bodyData.code as string;
         }
-      } catch {
-        // Response wasn't JSON
+      } catch (parseError) {
+        console.warn("[api-client] Failed to parse error response as JSON:", parseError);
       }
 
       throw new ApiError(
@@ -426,8 +427,8 @@ class ApiClient {
       let errorBody: unknown;
       try {
         errorBody = await response.json();
-      } catch {
-        // Response wasn't JSON
+      } catch (parseError) {
+        console.warn("[api-client] Failed to parse upload error response as JSON:", parseError);
       }
       const message = (errorBody as { message?: string })?.message || response.statusText;
       throw new ApiError(message, response.status, response.statusText, errorBody);

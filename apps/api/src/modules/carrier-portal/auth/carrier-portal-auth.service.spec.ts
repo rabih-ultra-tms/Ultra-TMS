@@ -6,6 +6,11 @@ jest.mock('crypto', () => {
   };
 });
 
+jest.mock('bcrypt', () => ({
+  compare: jest.fn(async (plain: string, hashed: string) => plain === hashed),
+  hash: jest.fn(async (plain: string) => `hashed_${plain}`),
+}));
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';

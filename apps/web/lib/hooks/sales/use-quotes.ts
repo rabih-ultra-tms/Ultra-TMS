@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import type {
   Quote,
@@ -121,6 +122,9 @@ export function useDeleteQuote() {
       queryClient.invalidateQueries({ queryKey: [QUOTES_KEY, "list"] });
       queryClient.invalidateQueries({ queryKey: [QUOTES_KEY, "stats"] });
     },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to delete quote');
+    },
   });
 }
 
@@ -134,6 +138,9 @@ export function useCloneQuote() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUOTES_KEY] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to clone quote');
     },
   });
 }
@@ -149,6 +156,9 @@ export function useSendQuote() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUOTES_KEY] });
     },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to send quote');
+    },
   });
 }
 
@@ -162,6 +172,9 @@ export function useConvertQuote() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUOTES_KEY] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to convert quote to order');
     },
   });
 }
@@ -223,6 +236,9 @@ export function useAddQuoteNote() {
       queryClient.invalidateQueries({ queryKey: [QUOTES_KEY, "notes", variables.id] });
       queryClient.invalidateQueries({ queryKey: [QUOTES_KEY, "timeline", variables.id] });
     },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to add note');
+    },
   });
 }
 
@@ -238,6 +254,9 @@ export function useAcceptQuote() {
       queryClient.invalidateQueries({ queryKey: [QUOTES_KEY, "detail", id] });
       queryClient.invalidateQueries({ queryKey: [QUOTES_KEY, "timeline", id] });
       queryClient.invalidateQueries({ queryKey: [QUOTES_KEY] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to accept quote');
     },
   });
 }
@@ -255,6 +274,9 @@ export function useRejectQuote() {
       queryClient.invalidateQueries({ queryKey: [QUOTES_KEY, "timeline", variables.id] });
       queryClient.invalidateQueries({ queryKey: [QUOTES_KEY] });
     },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to reject quote');
+    },
   });
 }
 
@@ -270,6 +292,9 @@ export function useCreateQuoteVersion() {
       queryClient.invalidateQueries({ queryKey: [QUOTES_KEY, "detail", id] });
       queryClient.invalidateQueries({ queryKey: [QUOTES_KEY, "versions", id] });
       queryClient.invalidateQueries({ queryKey: [QUOTES_KEY] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to create quote version');
     },
   });
 }
@@ -288,6 +313,9 @@ export function useCreateQuote() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUOTES_KEY] });
     },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to create quote');
+    },
   });
 }
 
@@ -304,6 +332,9 @@ export function useUpdateQuote() {
       queryClient.invalidateQueries({ queryKey: [QUOTES_KEY, "detail", variables.id] });
       queryClient.invalidateQueries({ queryKey: [QUOTES_KEY] });
     },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update quote');
+    },
   });
 }
 
@@ -311,6 +342,9 @@ export function useCalculateRate() {
   return useMutation({
     mutationFn: async (params: CalculateRateRequest) => {
       return await apiClient.post<CalculateRateResponse>("/quotes/calculate-rate", params);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to calculate rate');
     },
   });
 }

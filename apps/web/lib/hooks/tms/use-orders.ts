@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { OrderListParams, OrderListResponse, Order, OrderDetailResponse, TimelineEvent, OrderDocument } from "@/types/orders";
 import type { OrderLoad } from "@/types/orders";
@@ -126,6 +127,9 @@ export function useCreateOrder() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: orderKeys.lists() });
         },
+        onError: (error: Error) => {
+            toast.error(error.message || 'Failed to create order');
+        },
     });
 }
 
@@ -141,6 +145,9 @@ export function useUpdateOrder() {
         onSuccess: (_data, variables) => {
             queryClient.invalidateQueries({ queryKey: orderKeys.detail(variables.id) });
             queryClient.invalidateQueries({ queryKey: orderKeys.lists() });
+        },
+        onError: (error: Error) => {
+            toast.error(error.message || 'Failed to update order');
         },
     });
 }

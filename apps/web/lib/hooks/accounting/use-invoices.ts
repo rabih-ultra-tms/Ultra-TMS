@@ -5,6 +5,7 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 
 // ===========================
@@ -188,6 +189,9 @@ export function useCreateInvoice() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: invoiceKeys.lists() });
     },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to create invoice');
+    },
   });
 }
 
@@ -207,6 +211,9 @@ export function useUpdateInvoice() {
       });
       queryClient.invalidateQueries({ queryKey: invoiceKeys.lists() });
     },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update invoice');
+    },
   });
 }
 
@@ -218,6 +225,9 @@ export function useDeleteInvoice() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: invoiceKeys.lists() });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to delete invoice');
     },
   });
 }
@@ -232,6 +242,9 @@ export function useSendInvoice() {
     onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: invoiceKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: invoiceKeys.lists() });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to send invoice');
     },
   });
 }
@@ -250,6 +263,9 @@ export function useVoidInvoice() {
         queryKey: invoiceKeys.detail(variables.id),
       });
       queryClient.invalidateQueries({ queryKey: invoiceKeys.lists() });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to void invoice');
     },
   });
 }
@@ -274,6 +290,9 @@ export function useUpdateInvoiceStatus() {
         queryKey: invoiceKeys.detail(variables.id),
       });
       queryClient.invalidateQueries({ queryKey: invoiceKeys.lists() });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update invoice status');
     },
   });
 }

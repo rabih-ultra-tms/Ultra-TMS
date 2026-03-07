@@ -6,6 +6,7 @@ import {
   LoadPlannerQuoteListParams,
 } from '@/types/load-planner-quotes';
 import { apiClient } from '@/lib/api-client';
+import { toast } from 'sonner';
 
 const LOAD_PLANNER_QUOTES_KEY = 'load-planner-quotes';
 
@@ -95,9 +96,13 @@ export const useCreateLoadPlannerQuote = () => {
       return response.data;
     },
     onSuccess: () => {
+      toast.success('Quote created');
       queryClient.invalidateQueries({
         queryKey: [LOAD_PLANNER_QUOTES_KEY],
       });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to create quote');
     },
   });
 };
@@ -121,6 +126,9 @@ export const useUpdateLoadPlannerQuote = (id: string) => {
         queryKey: [LOAD_PLANNER_QUOTES_KEY, 'list'],
       });
     },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update quote');
+    },
   });
 };
 
@@ -143,6 +151,9 @@ export const useUpdateLoadPlannerQuoteStatus = (id: string) => {
         queryKey: [LOAD_PLANNER_QUOTES_KEY, 'list'],
       });
     },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update quote status');
+    },
   });
 };
 
@@ -157,9 +168,13 @@ export const useDuplicateLoadPlannerQuote = () => {
       return response.data;
     },
     onSuccess: () => {
+      toast.success('Quote duplicated');
       queryClient.invalidateQueries({
         queryKey: [LOAD_PLANNER_QUOTES_KEY],
       });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to duplicate quote');
     },
   });
 };
@@ -180,6 +195,9 @@ export const useDeleteLoadPlannerQuote = (id?: string) => {
       queryClient.invalidateQueries({
         queryKey: [LOAD_PLANNER_QUOTES_KEY, 'list'],
       });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to delete quote');
     },
   });
 };

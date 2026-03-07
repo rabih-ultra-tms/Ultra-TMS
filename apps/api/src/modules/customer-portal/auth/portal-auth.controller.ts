@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { PortalAuthService } from './portal-auth.service';
 import { PortalLoginDto } from './dto/portal-login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
@@ -16,6 +17,7 @@ export class PortalAuthController {
   constructor(private readonly authService: PortalAuthService) {}
 
   @Post('login')
+  @Throttle({ long: { limit: 5, ttl: 60000 } })
   @ApiOperation({ summary: 'Customer portal login' })
   @ApiStandardResponse('Portal login successful')
   @ApiErrorResponses()

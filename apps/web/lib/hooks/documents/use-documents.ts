@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { toast } from "sonner";
 
 export type DocumentType =
   | "BOL"
@@ -86,9 +87,13 @@ export function useUploadDocument() {
       return response;
     },
     onSuccess: (_data, variables) => {
+      toast.success("Document uploaded");
       queryClient.invalidateQueries({
         queryKey: ["documents", variables.entityType, variables.entityId],
       });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to upload document");
     },
   });
 }
@@ -107,9 +112,13 @@ export function useDeleteDocument() {
       await apiClient.delete(`/documents/${documentId}`);
     },
     onSuccess: (_data, variables) => {
+      toast.success("Document deleted");
       queryClient.invalidateQueries({
         queryKey: ["documents", variables.entityType, variables.entityId],
       });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to delete document");
     },
   });
 }

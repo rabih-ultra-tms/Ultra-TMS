@@ -22,7 +22,7 @@ import { PortalUsersService } from './users/portal-users.service';
 @Module({
   imports: [
     JwtModule.register({
-      secret: process.env.PORTAL_JWT_SECRET || process.env.JWT_SECRET || 'portal-secret',
+      secret: process.env.PORTAL_JWT_SECRET || process.env.JWT_SECRET,
       signOptions: {
         expiresIn: (process.env.PORTAL_JWT_EXPIRES_IN || '1h') as JwtSignOptions['expiresIn'],
       },

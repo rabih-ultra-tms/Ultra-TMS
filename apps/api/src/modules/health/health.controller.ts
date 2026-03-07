@@ -1,5 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Public } from '../../common/decorators/public.decorator';
 import { PrismaService } from '../../prisma.service';
 
 interface HealthStatus {
@@ -15,6 +16,7 @@ interface HealthStatus {
 
 @Controller()
 @ApiTags('Health')
+@Public()
 export class HealthController {
   constructor(private prisma: PrismaService) {}
 

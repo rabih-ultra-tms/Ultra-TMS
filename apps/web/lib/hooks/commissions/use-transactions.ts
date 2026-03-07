@@ -3,6 +3,7 @@ import {
   useMutation,
   useQueryClient,
 } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { apiClient } from '@/lib/api-client';
 
 // ===========================
@@ -142,6 +143,9 @@ export function useApproveTransaction() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: transactionKeys.lists() });
     },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to approve transaction');
+    },
   });
 }
 
@@ -163,6 +167,9 @@ export function useVoidTransaction() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: transactionKeys.lists() });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to void transaction');
     },
   });
 }

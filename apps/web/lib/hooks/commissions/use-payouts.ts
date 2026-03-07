@@ -3,6 +3,7 @@ import {
   useMutation,
   useQueryClient,
 } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { apiClient } from '@/lib/api-client';
 
 // ===========================
@@ -146,6 +147,9 @@ export function useGeneratePayout() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: payoutKeys.lists() });
     },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to generate payout');
+    },
   });
 }
 
@@ -170,6 +174,9 @@ export function useProcessPayout() {
         queryKey: payoutKeys.detail(variables.payoutId),
       });
       queryClient.invalidateQueries({ queryKey: payoutKeys.lists() });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to process payout');
     },
   });
 }

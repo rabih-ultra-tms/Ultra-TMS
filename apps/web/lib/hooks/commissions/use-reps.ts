@@ -3,6 +3,7 @@ import {
   useMutation,
   useQueryClient,
 } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { apiClient } from '@/lib/api-client';
 
 // ===========================
@@ -167,6 +168,9 @@ export function useAssignPlan() {
         queryKey: repKeys.detail(variables.repId),
       });
       queryClient.invalidateQueries({ queryKey: repKeys.lists() });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to assign commission plan');
     },
   });
 }

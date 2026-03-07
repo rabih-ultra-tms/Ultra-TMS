@@ -6,6 +6,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { apiClient } from '@/lib/api/client';
 import type {
   DispatchBoardData,
@@ -373,6 +374,7 @@ export function useUpdateLoadStatus() {
           queryClient.setQueryData(queryKey, data);
         });
       }
+      toast.error(error.message || 'Failed to update load status');
     },
 
     // Refetch on success or error
@@ -444,6 +446,7 @@ export function useAssignCarrier() {
           queryClient.setQueryData(queryKey, data);
         });
       }
+      toast.error(error.message || 'Failed to assign carrier');
     },
 
     onSettled: () => {
@@ -501,6 +504,7 @@ export function useSendDispatch() {
           queryClient.setQueryData(queryKey, data);
         });
       }
+      toast.error(error.message || 'Failed to dispatch load');
     },
 
     onSettled: () => {
@@ -533,6 +537,9 @@ export function useBulkStatusUpdate() {
       return { updated, failed };
     },
 
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update load statuses');
+    },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: dispatchKeys.all });
     },
@@ -557,6 +564,9 @@ export function useBulkDispatch() {
       return { dispatched, failed };
     },
 
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to dispatch loads');
+    },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: dispatchKeys.all });
     },
@@ -594,9 +604,8 @@ export function useUpdateLoadEta() {
       queryClient.invalidateQueries({ queryKey: ['dispatch', 'board'] });
     },
 
-    onError: () => {
-      // Errors are handled by the apiClient (throws ApiError)
-      // The consuming component should use the mutation's error state
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update load ETA');
     },
   });
 }

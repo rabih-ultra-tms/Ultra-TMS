@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Delete,
   Body,
   Param,
@@ -162,6 +163,26 @@ export class UsersController {
     @Param('id') id: string,
   ) {
     const user = await this.usersService.deactivateUser(tenantId, id, userId);
+    return { data: user };
+  }
+
+  /**
+   * PATCH /api/v1/users/:id/roles
+   * Assign role to user
+   */
+  @Patch(':id/roles')
+  @ApiOperation({ summary: 'Assign role to user' })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiStandardResponse('User roles updated')
+  @ApiErrorResponses()
+  async assignRoles(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+    @Body() body: { roleIds: string[] },
+  ) {
+    const roleId = body.roleIds?.[0] ?? undefined;
+    const user = await this.usersService.update(tenantId, id, userId, { roleId });
     return { data: user };
   }
 

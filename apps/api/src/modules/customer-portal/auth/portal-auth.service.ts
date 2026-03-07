@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PortalUserStatus } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 import { randomBytes, createHash } from 'crypto';
 import { PrismaService } from '../../../prisma.service';
 import { PortalLoginDto } from './dto/portal-login.dto';
@@ -21,14 +22,14 @@ export class PortalAuthService {
   private signAccessToken(user: { id: string; tenantId: string; role: string }) {
     return this.jwtService.sign(
       { sub: user.id, tenantId: user.tenantId, role: user.role },
-      { secret: process.env.PORTAL_JWT_SECRET || process.env.JWT_SECRET || 'portal-secret', expiresIn: '2h' },
+      { secret: process.env.PORTAL_JWT_SECRET || process.env.JWT_SECRET, expiresIn: '2h' },
     );
   }
 
   private signRefreshToken(user: { id: string; tenantId: string }) {
     return this.jwtService.sign(
       { sub: user.id, tenantId: user.tenantId, type: 'refresh' },
-      { secret: process.env.PORTAL_JWT_SECRET || process.env.JWT_SECRET || 'portal-secret', expiresIn: '7d' },
+      { secret: process.env.PORTAL_JWT_SECRET || process.env.JWT_SECRET, expiresIn: '7d' },
     );
   }
 
@@ -55,7 +56,7 @@ export class PortalAuthService {
       },
     });
 
-    if (!user || user.password !== dto.password) {
+    if (!user || !(await bcrypt.compare(dto.password, user.password))) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -83,7 +84,7 @@ export class PortalAuthService {
   async refresh(dto: RefreshTokenDto) {
     try {
       const payload = this.jwtService.verify(dto.refreshToken, {
-        secret: process.env.PORTAL_JWT_SECRET || process.env.JWT_SECRET || 'portal-secret',
+        secret: process.env.PORTAL_JWT_SECRET || process.env.JWT_SECRET,
       });
 
       if (payload.type !== 'refresh') {
@@ -146,9 +147,10 @@ export class PortalAuthService {
       throw new BadRequestException('Invalid reset token');
     }
 
+    const hashed = await bcrypt.hash(dto.newPassword, 12);
     await this.prisma.portalUser.update({
       where: { id: user.id },
-      data: { password: dto.newPassword, verificationToken: null },
+      data: { password: hashed, verificationToken: null },
     });
 
     return { success: true };
@@ -171,10 +173,11 @@ export class PortalAuthService {
   async register(tenantId: string, dto: PortalRegisterDto) {
     const existing = await this.prisma.portalUser.findFirst({ where: { email: dto.email, tenantId } });
     if (existing) {
+      const hashedPassword = await bcrypt.hash(dto.password, 12);
       await this.prisma.portalUser.update({
         where: { id: existing.id },
         data: {
-          password: dto.password,
+          password: hashedPassword,
           firstName: dto.firstName ?? existing.firstName,
           lastName: dto.lastName ?? existing.lastName,
           companyId: dto.companyId ?? existing.companyId,
@@ -189,12 +192,13 @@ export class PortalAuthService {
       throw new BadRequestException('companyId is required');
     }
 
+    const hashedPw = await bcrypt.hash(dto.password, 12);
     await this.prisma.portalUser.create({
       data: {
         tenantId,
         companyId: dto.companyId,
         email: dto.email,
-        password: dto.password,
+        password: hashedPw,
         firstName: dto.firstName ?? 'Portal',
         lastName: dto.lastName ?? 'User',
         status: PortalUserStatus.ACTIVE,
@@ -207,13 +211,14 @@ export class PortalAuthService {
 
   async changePassword(userId: string, dto: ChangePasswordDto) {
     const user = await this.prisma.portalUser.findUnique({ where: { id: userId } });
-    if (!user || user.password !== dto.currentPassword) {
+    if (!user || !(await bcrypt.compare(dto.currentPassword, user.password))) {
       throw new UnauthorizedException('Invalid current password');
     }
 
+    const hashedNew = await bcrypt.hash(dto.newPassword, 12);
     await this.prisma.portalUser.update({
       where: { id: userId },
-      data: { password: dto.newPassword },
+      data: { password: hashedNew },
     });
 
     return { success: true };

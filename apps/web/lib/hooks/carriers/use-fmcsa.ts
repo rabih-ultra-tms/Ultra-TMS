@@ -64,13 +64,18 @@ interface FmcsaLookupParams {
 export const useFmcsaLookup = () => {
   return useMutation({
     mutationFn: async (params: FmcsaLookupParams) => {
-      const query: Record<string, string> = {};
-      if (params.dotNumber) query.dotNumber = params.dotNumber;
-      if (params.mcNumber) query.mcNumber = params.mcNumber;
-      const response = await apiClient.get<{ data: FmcsaCarrierRecord }>(
-        '/safety/fmcsa/lookup',
-        query,
-      );
+      let response: { data: FmcsaCarrierRecord };
+      if (params.dotNumber) {
+        response = await apiClient.get<{ data: FmcsaCarrierRecord }>(
+          `/carriers/fmcsa/lookup/dot/${params.dotNumber}`,
+        );
+      } else if (params.mcNumber) {
+        response = await apiClient.get<{ data: FmcsaCarrierRecord }>(
+          `/carriers/fmcsa/lookup/mc/${params.mcNumber}`,
+        );
+      } else {
+        throw new Error('Either dotNumber or mcNumber is required');
+      }
       return response.data;
     },
   });
@@ -81,7 +86,7 @@ export const useCsaScores = (carrierId: string) => {
     queryKey: ['csa-scores', carrierId],
     queryFn: async () => {
       const response = await apiClient.get<{ data: CsaScore[] }>(
-        `/safety/csa/${carrierId}`,
+        `/carriers/${carrierId}/csa-scores`,
       );
       return response.data;
     },
