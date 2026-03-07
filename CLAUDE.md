@@ -80,14 +80,17 @@ Full inventory: `dev_docs/Claude-review-v1/01-code-review/05-bug-inventory.md` (
 
 ## Starting Any Work Session
 
-1. **Read the service hub file** → `dev_docs_v2/03-services/{service}.md` — single source of truth (status, screens, API, components, bugs, tasks, design links)
-2. Read `dev_docs_v2/STATUS.md` → find your specific task and check assignments
-3. Read the task file in `dev_docs_v2/01-tasks/{current-phase}/` → detailed acceptance criteria
-4. Maximum 6 files before coding — see `dev_docs_v2/00-foundations/session-kickoff.md`
+> **Active source of truth: `dev_docs_v3/`** (updated 2026-03-07 — covers ALL 38 services)
 
-**Hub files (source of truth):** `dev_docs_v2/03-services/` — one file per MVP service with everything consolidated.
-**Execution layer:** `dev_docs_v2/` has bite-size tasks, audit results, design tokens, and quality gates.
-**Spec layer:** `dev_docs/` has design specs, dev prompts, service definitions, and reviews.
+1. **Read the service hub file** → `dev_docs_v3/01-services/p0-mvp/{service}.md` — single source of truth
+2. Read `dev_docs_v3/STATUS.md` → find your specific task and check assignments
+3. Read the task file in `dev_docs_v3/03-tasks/sprint-quality/` → detailed acceptance criteria
+4. Maximum 6 files before coding — see `dev_docs_v3/00-foundations/session-kickoff.md`
+
+**Hub files (source of truth):** `dev_docs_v3/01-services/p0-mvp/` — one file per MVP service with everything consolidated.
+**Execution layer:** `dev_docs_v3/` has tasks, audit results, quality gates, and API catalog.
+**Spec layer:** `dev_docs/` has design specs, dev prompts, service definitions, and reviews (READ-ONLY reference).
+**Historical:** `dev_docs_v2/` has the v2 sprint record (71/72 tasks done) — READ-ONLY.
 
 ## Before Building: Discovery Checklist
 

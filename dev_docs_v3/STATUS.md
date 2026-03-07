@@ -1,0 +1,151 @@
+# Ultra TMS — Project Status Dashboard
+
+> **Last Updated:** 2026-03-07
+> **Current Phase:** Quality Sprint (post-initial-build, pre-production)
+> **Overall Health:** C+ (6.2/10) — Strong backend, weak frontend quality, many routes unverified
+> **Active Plan:** [dev_docs_v3/](.) — covers ALL 38 services (not just 8 MVP)
+
+---
+
+## Build Status
+
+| Metric | Value |
+|---|---|
+| Frontend routes | 98 (page.tsx files — corrected Mar 7 from actual scan) |
+| React components | 304 (corrected Mar 7 from actual scan of components/) |
+| Custom hooks | 51 (corrected Mar 7 from actual scan of lib/hooks/) |
+| Backend modules | 35 active + 5 .bak = 40 total module dirs |
+| Controller files | ~187 (across 35 active modules) |
+| NestJS Service files | ~225 (across 35 active modules) |
+| DTOs | 309 |
+| Prisma models | 260 |
+| Prisma enums | 114 |
+| Migrations | 31 |
+| Design spec files | 381 (42 service folders) |
+| Services defined | 38 |
+
+---
+
+## Quality Sprint — Active Tasks (QS-001 to QS-010)
+
+| ID | Task | Effort | Priority | Assignee | Status |
+|----|------|--------|----------|----------|--------|
+| QS-001 | WebSocket Gateways (dispatch, tracking, notifications) | XL | P0 | Claude Code | planned |
+| QS-002 | Soft Delete Migration (Order, Quote, Invoice, Settlement, Payment) | M | P0 | Claude Code | planned |
+| QS-003 | Accounting Dashboard Endpoint | M | P1 | Claude Code | planned |
+| QS-004 | CSA Scores Endpoint | S | P1 | Claude Code | planned |
+| QS-005 | Profile Page (currently 0/10 stub) | L | P1 | Claude Code | planned |
+| QS-006 | Check Call Form RHF Refactor | M | P1 | Codex/Gemini | planned |
+| QS-007 | CORS Env Variable | S | P1 | Codex/Gemini | planned |
+| QS-008 | Runtime Verification (click every route with Playwright) | L | P0 | Claude Code | planned |
+| QS-009 | Delete .bak Directories | S | P2 | Codex/Gemini | planned |
+| QS-010 | Triage 339 TODOs | M | P2 | Codex/Gemini | planned |
+
+---
+
+## Service Health Table (All 38 Services)
+
+### P0 MVP (9 services)
+
+| # | Service | Backend | Frontend | Tests | Verified | Confidence | Priority |
+|---|---------|---------|----------|-------|----------|------------|----------|
+| 01 | Auth & Admin | Done | Partial | Partial | No | Medium | P0 |
+| 02 | Dashboard | Done | Partial | None | No | Low | P0 |
+| 03 | CRM / Customers | Done | Partial | Partial | No | Medium | P0 |
+| 04 | Sales / Quotes | Done | Partial | None | No | Low | P0 |
+| 05 | TMS Core (Orders/Loads/Dispatch) | Done | Partial | None | No | Low | P0 |
+| 06 | Carrier Management | Done | Partial | Partial | No | Medium | P0 |
+| 07 | Accounting | Done | Partial | None | No | Low | P0 |
+| 08 | Commission | Done | Partial | None | No | Low | P0 |
+| 09 | Load Board | Partial | Not Built | None | No | Low | P0 |
+
+### P1 Post-MVP (6 services)
+
+| # | Service | Backend | Frontend | Tests | Verified | Confidence | Priority |
+|---|---------|---------|----------|-------|----------|------------|----------|
+| 10 | Claims | Partial | Not Built | None | No | Low | P1 |
+| 11 | Documents | Partial | Not Built | None | No | Low | P1 |
+| 12 | Communication | Partial | Not Built | None | No | Low | P1 |
+| 13 | Customer Portal | Partial | Not Built | None | No | Low | P1 |
+| 14 | Carrier Portal | Partial | Not Built | None | No | Low | P1 |
+| 15 | Contracts | Partial | Not Built | None | No | Low | P1 |
+
+### P2 Extended (7 services)
+
+| # | Service | Backend | Frontend | Tests | Verified | Confidence | Priority |
+|---|---------|---------|----------|-------|----------|------------|----------|
+| 16 | Agents | Partial | Not Built | None | No | Low | P2 |
+| 17 | Credit | Partial | Not Built | None | No | Low | P2 |
+| 18 | Factoring Internal | Partial | Not Built | None | No | Low | P2 |
+| 19 | Analytics | Partial | Not Built | None | No | Low | P2 |
+| 20 | Workflow | Partial | Not Built | None | No | Low | P2 |
+| 21 | Integration Hub | Partial | Not Built | None | No | Low | P2 |
+| 22 | Search | Partial | Not Built | None | No | Low | P2 |
+
+### P3 Future (16 services) — see [01-services/p3-future/_index.md](01-services/p3-future/_index.md)
+
+HR, Safety, EDI, Help Desk, Feedback, Rate Intelligence, Scheduler, Super Admin, Config, Cache, Audit Log, Fleet, Warehousing, Compliance, Analytics Advanced, Mobile
+
+---
+
+## Blocked Tasks
+
+| ID | Title | Blocked by | Reason |
+|----|-------|------------|--------|
+| QS-010 | Triage TODOs | QS-008 (preferred) | Better to know actual codebase state before triaging |
+| BUILD-001 | Accounting Dashboard Screen | QS-003 | Endpoint must exist before building screen |
+| TMS-001/002 | TMS Core screens | QS-008 | Runtime verification determines what needs to be fixed |
+| TMS-003/004 | Dispatch + Tracking | QS-001 | WebSocket must exist before real-time screens work |
+
+**No hard blockers in Quality Sprint** — QS-001 through QS-009 can start immediately in parallel.
+
+---
+
+## Dependency Analysis
+
+> Generated by DEPENDENCY-GRAPHER — see [04-completeness/dependency-graph.md](04-completeness/dependency-graph.md)
+
+**Critical Path:** QS-001 (14h standalone), QS-008 → TMS-001/002, QS-003 → BUILD-001
+
+**Parallelizable now (all 10 QS tasks have no hard blockers):**
+
+- Claude Code: QS-001 (XL), then QS-008, then QS-005
+- Codex/Gemini: QS-007 (30min) → QS-009 (30min) → QS-004 (2h) → QS-002 (3h) → QS-006 (3h) → QS-010 (3h)
+
+---
+
+## Key Blockers
+
+1. **WebSocket gap** — dispatch and tracking pages have no real-time data (SocketProvider has infinite loop bug)
+2. **Missing endpoints** — Accounting dashboard, CSA scores not built on backend
+3. **96 unverified routes** — no Playwright run has confirmed all routes render correctly
+4. **339 TODOs** — technical debt scattered across codebase, untriaged
+
+---
+
+## Team Protocol
+
+| Agent | Best For | Avoid |
+|---|---|---|
+| Claude Code | Complex features, audits, architecture, security, WebSockets | Simple CRUD, boilerplate |
+| Gemini/Codex | CRUD screens, patterns, tests, form refactors, cleanup | Complex state, WS, auth |
+
+**Session start:** `/kickoff` → read STATUS.md → find next QS task → read hub file → code
+
+---
+
+## Navigation
+
+| What | Where |
+|---|---|
+| Service hub files | [01-services/](01-services/) |
+| Screen catalog | [02-screens/_index.md](02-screens/_index.md) |
+| Active tasks | [03-tasks/sprint-quality/](03-tasks/sprint-quality/) |
+| Backlog | [03-tasks/backlog/_index.md](03-tasks/backlog/_index.md) |
+| Completeness matrices | [04-completeness/](04-completeness/) |
+| API catalog | [04-specs/api-catalog.md](04-specs/api-catalog.md) |
+| Audit reports | [05-audit/](05-audit/) |
+| Reference catalogs | [06-references/](06-references/) |
+| Decisions log | [07-decisions/decision-log.md](07-decisions/decision-log.md) |
+| Sprint plans | [08-sprints/](08-sprints/) |
+| Foundation docs | [00-foundations/](00-foundations/) |
