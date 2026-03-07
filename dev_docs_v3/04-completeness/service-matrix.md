@@ -116,9 +116,9 @@
 | Feature | Service | Backend | Frontend | Tests | Priority |
 |---------|---------|---------|----------|-------|----------|
 | Carrier CRUD | Carrier | Production | Partial (list works) | 45 backend | P0 |
-| Carrier detail view | Carrier | Production | **BUG-001 (404)** | 45 backend | P0 |
-| Carrier contacts | Carrier | Production | Not Built | None | P1 |
-| Carrier drivers | Carrier | Production | Not Built | None | P1 |
+| Carrier detail view | Carrier | Production | Built (tabbed detail, 7/10) | 45 backend | P0 |
+| Carrier contacts | Carrier | Production | Built (tab in detail) | None | P1 |
+| Carrier drivers | Carrier | Production | Built (tab in detail) | None | P1 |
 | Carrier insurance tracking | Carrier | Production | Not Built | None | P0 |
 | Insurance expiry alerts | Carrier | Production | Not Built | None | P0 |
 | FMCSA lookup | Carrier | Production | Not Built | None | P0 |
@@ -126,7 +126,7 @@
 | Preferred carriers | Carrier | Production | Partial | None | P1 |
 | Compliance center | Carrier | Production | Not Built | None | P2 |
 | Truck types CRUD | Carrier | Production | PROTECTED | Some | P0 |
-| Load history per carrier | Carrier | Production | Partial (detail 404) | None | P0 |
+| Load history per carrier | Carrier | Production | Built (5/10) | None | P0 |
 | Carrier onboarding wizard | Carrier | Partial | Not Built | None | P2 |
 
 ### Accounting
@@ -134,15 +134,15 @@
 | Feature | Service | Backend | Frontend | Tests | Priority |
 |---------|---------|---------|----------|-------|----------|
 | Invoice auto-creation from delivery | Accounting | Partial | Not Built | None | P0 |
-| Invoice CRUD | Accounting | Partial | Unverified | None | P0 |
-| Invoice send to customer | Accounting | Partial | Unverified | None | P0 |
-| Invoice PDF | Accounting | Partial | Unverified | None | P0 |
-| Payment recording | Accounting | Partial | Unverified | None | P0 |
+| Invoice CRUD | Accounting | Partial | Built (10 pages, 7.9/10) | None | P0 |
+| Invoice send to customer | Accounting | Partial | Built (unverified runtime) | None | P0 |
+| Invoice PDF | Accounting | Partial | Built (unverified runtime) | None | P0 |
+| Payment recording | Accounting | Partial | Built (unverified runtime) | None | P0 |
 | Invoice overdue management | Accounting | Partial | Not Built | None | P1 |
-| Settlement auto-creation | Accounting | Partial | Unverified | None | P0 |
-| Settlement approval + payment | Accounting | Partial | Unverified | None | P0 |
-| Accounting dashboard (KPIs) | Accounting | **Missing** | Unverified | None | P0 |
-| Aging report | Accounting | **Missing** | Unverified | None | P1 |
+| Settlement auto-creation | Accounting | Partial | Built (unverified runtime) | None | P0 |
+| Settlement approval + payment | Accounting | Partial | Built (unverified runtime) | None | P0 |
+| Accounting dashboard (KPIs) | Accounting | **Missing** | Built (hardcoded data) | None | P0 |
+| Aging report | Accounting | **Missing** | Built (unverified runtime) | None | P1 |
 | Credit hold integration | Accounting | Partial | Not Built | None | P1 |
 | QuickBooks sync | Accounting | Not Built | Not Built | None | P2 |
 
@@ -150,23 +150,23 @@
 
 | Feature | Service | Backend | Frontend | Tests | Priority |
 |---------|---------|---------|----------|-------|----------|
-| Commission auto-calculation | Commission | Partial | Unverified | None | P0 |
-| Commission plan CRUD | Commission | Partial | Unverified | None | P0 |
-| Tiered commission rates | Commission | Partial | Unverified | None | P1 |
-| Commission payment recording | Commission | Partial | Unverified | None | P1 |
-| Commission reports | Commission | Partial | Unverified | None | P1 |
-| Sales rep commission view | Commission | Partial | Unverified | None | P1 |
+| Commission auto-calculation | Commission | Partial | Built (trigger unverified) | None | P0 |
+| Commission plan CRUD | Commission | Partial | Built (11 pages, 8.5/10) | None | P0 |
+| Tiered commission rates | Commission | Partial | Built (tier editor) | None | P1 |
+| Commission payment recording | Commission | Partial | Built (payouts pages) | None | P1 |
+| Commission reports | Commission | Partial | Built (reports page) | None | P1 |
+| Sales rep commission view | Commission | Partial | Built (reps list + detail) | None | P1 |
 | Manager overrides | Commission | Partial | Not Built | None | P2 |
 
 ### Load Board
 
 | Feature | Service | Backend | Frontend | Tests | Priority |
 |---------|---------|---------|----------|-------|----------|
-| Internal load board | Load Board | Stub | Unverified | None | P0 |
-| Post to DAT | Load Board | Stub | Unverified | None | P1 |
-| Post to Truckstop.com | Load Board | Stub | Unverified | None | P1 |
-| Carrier offer management | Load Board | Stub | Unverified | None | P0 |
-| Offer acceptance → TMS assignment | Load Board | Stub | Unverified | None | P0 |
+| Internal load board | Load Board | Stub | Built (4 pages, 7/10) | None | P0 |
+| Post to DAT | Load Board | Stub | Built (posting form) | None | P1 |
+| Post to Truckstop.com | Load Board | Stub | Built (posting form) | None | P1 |
+| Carrier offer management | Load Board | Stub | Not Built (offers page) | None | P0 |
+| Offer acceptance → TMS assignment | Load Board | Stub | Not Built | None | P0 |
 | Posting expiry | Load Board | Stub | Not Built | None | P1 |
 
 ---
@@ -175,7 +175,7 @@
 
 | Phase | Total Features | Built | Partial/Unverified | Not Built | Coverage |
 |-------|---------------|-------|---------------------|-----------|----------|
-| P0 MVP | ~85 | ~25 | ~40 | ~20 | ~30% |
+| P0 MVP | ~85 | ~55 | ~15 | ~15 | ~65% |
 | P1 Post-MVP | ~40 | 0 | ~5 | ~35 | ~5% |
 | P2 Extended | ~50 | 0 | ~10 | ~40 | ~0% |
 | P3 Future | ~80+ | 0 | ~20 | ~60+ | ~0% |

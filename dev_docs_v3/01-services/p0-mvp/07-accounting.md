@@ -11,14 +11,14 @@
 
 | Field | Value |
 |-------|-------|
-| **Health Score** | D (3/10) |
-| **Confidence** | Medium — backend reviewed; frontend confirmed not built |
+| **Health Score** | B (7.9/10 frontend, backend partial) / Overall: B- (7/10) |
+| **Confidence** | High — frontend audited 2026-03-07, all 10 pages reviewed |
 | **Last Verified** | 2026-03-07 |
 | **Backend** | Partial — core endpoints exist; dashboard endpoint missing (QS-003) |
-| **Frontend** | Not Built — all screens require fresh build from spec |
+| **Frontend** | Built — 10 pages exist (8 real, 1 partial, 1 broken link). Avg quality 7.9/10 |
 | **Tests** | None |
 | **Active Sprint** | QS-003 (Accounting Dashboard Endpoint) |
-| **Navigation** | 5 sidebar links point to 404s (invoices, settlements, reports) |
+| **Navigation** | Sidebar links now route to existing pages |
 
 ---
 
@@ -33,10 +33,10 @@
 | Backend — Payments | Partial | Controller + service exist |
 | Backend — Dashboard | Not Built | Missing — QS-003 task to build this |
 | Prisma Models | Partial | Invoice, Settlement, Payment models; soft delete missing on some |
-| Frontend Pages | Not Built | 0 screens exist |
-| React Hooks | Not Built | Must be created |
-| Components | Not Built | Must be created |
-| Tests | None | |
+| Frontend Pages | Built | 10 pages exist in `app/(dashboard)/accounting/` |
+| React Hooks | Built | 6 hooks in `lib/hooks/accounting/` |
+| Components | Built | 18 components in `components/accounting/` |
+| Tests | Partial | 1 test file `__tests__/accounting/accounting.test.tsx` |
 | Security | Good | Endpoints require JwtAuthGuard, ACCOUNTING role |
 
 ---
@@ -45,18 +45,18 @@
 
 | Screen | Route | Status | Quality | Notes |
 |--------|-------|--------|---------|-------|
-| Invoices List | `/accounting/invoices` | Not Built | — | Sidebar link active but 404s |
-| Invoice Detail | `/accounting/invoices/[id]` | Not Built | — | |
-| Invoice Create | `/accounting/invoices/new` | Not Built | — | Auto-generated from delivered orders |
-| Invoice Edit | `/accounting/invoices/[id]/edit` | Not Built | — | |
-| Settlements List | `/accounting/settlements` | Not Built | — | Sidebar link 404s |
-| Settlement Detail | `/accounting/settlements/[id]` | Not Built | — | Carrier payment details |
-| Settlement Create | `/accounting/settlements/new` | Not Built | — | From load delivery |
-| Payments List | `/accounting/payments` | Not Built | — | |
-| Payment Detail | `/accounting/payments/[id]` | Not Built | — | |
-| Accounting Dashboard | `/accounting` | Not Built | — | KPI: AR, AP, cash flow, aging |
-| Reports | `/accounting/reports` | Not Built | — | Sidebar link 404s. Phase 3 |
-| Aging Report | `/accounting/reports/aging` | Not Built | — | Phase 3 |
+| Invoices List | `/accounting/invoices` | Built | 8/10 | Table with filters, status badges, pagination, search |
+| Invoice Detail | `/accounting/invoices/[id]` | Built | 8/10 | Detail card with line items, payment history |
+| Invoice Create | `/accounting/invoices/new` | Built | 8/10 | Form with order lookup, line items, validation |
+| Invoice Edit | `/accounting/invoices/[id]/edit` | Not Built | — | No edit route exists — create handles updates |
+| Settlements List | `/accounting/settlements` | Built | 8/10 | Table with filters, status badges |
+| Settlement Detail | `/accounting/settlements/[id]` | Built | 8/10 | Detail with carrier info, approval workflow |
+| Settlement Create | `/accounting/settlements/new` | Not Built | — | No separate create page |
+| Payments List | `/accounting/payments` | Built | 8/10 | Table with payment method, allocation view |
+| Payment Detail | `/accounting/payments/[id]` | Built | 7/10 | Basic detail view |
+| Payables List | `/accounting/payables` | Built | 8/10 | Table with payable status, filters |
+| Accounting Dashboard | `/accounting` | Built | 7/10 | KPI stats + recent invoices (needs QS-003 endpoint) |
+| Aging Report | `/accounting/reports/aging` | Built | 7/10 | Aging buckets visualization |
 
 ---
 
@@ -86,38 +86,71 @@
 
 ## 5. Components
 
-All must be built:
+18 components exist in `components/accounting/`:
 
-| Component | Planned Path | Priority |
-|-----------|-------------|----------|
-| InvoicesTable | `components/accounting/invoices/invoices-table.tsx` | P0 |
-| InvoiceForm | `components/accounting/invoices/invoice-form.tsx` | P0 |
-| InvoiceDetailCard | `components/accounting/invoices/invoice-detail-card.tsx` | P0 |
-| InvoiceStatusBadge | `components/accounting/invoices/invoice-status-badge.tsx` | P0 |
-| PaymentForm | `components/accounting/payments/payment-form.tsx` | P0 |
-| SettlementsTable | `components/accounting/settlements/settlements-table.tsx` | P0 |
-| SettlementDetailCard | `components/accounting/settlements/settlement-detail-card.tsx` | P0 |
-| AccountingDashboardKPI | `components/accounting/dashboard/accounting-kpi.tsx` | P0 |
-| AgingReport | `components/accounting/reports/aging-report.tsx` | P1 |
+**Invoices (5):**
+| Component | Path | Status |
+|-----------|------|--------|
+| InvoicesTable | `components/accounting/invoices-table.tsx` | Built |
+| InvoiceForm | `components/accounting/invoice-form.tsx` | Built |
+| InvoiceDetailCard | `components/accounting/invoice-detail-card.tsx` | Built |
+| InvoiceStatusBadge | `components/accounting/invoice-status-badge.tsx` | Built |
+| InvoiceFilters | `components/accounting/invoice-filters.tsx` | Built |
+
+**Payments (5):**
+| Component | Path | Status |
+|-----------|------|--------|
+| PaymentsTable | `components/accounting/payments-table.tsx` | Built |
+| PaymentStatusBadge | `components/accounting/payment-status-badge.tsx` | Built |
+| PaymentAllocation | `components/accounting/payment-allocation.tsx` | Built |
+| PaymentFilters | `components/accounting/payment-filters.tsx` | Built |
+| RecordPaymentForm | `app/(dashboard)/accounting/payments/record-payment-form.tsx` | Built |
+
+**Settlements (3):**
+| Component | Path | Status |
+|-----------|------|--------|
+| SettlementTable | `components/accounting/settlement-table.tsx` | Built |
+| SettlementStatusBadge | `components/accounting/settlement-status-badge.tsx` | Built |
+| SettlementFilters | `components/accounting/settlement-filters.tsx` | Built |
+
+**Payables (3):**
+| Component | Path | Status |
+|-----------|------|--------|
+| PayablesTable | `components/accounting/payables-table.tsx` | Built |
+| PayableStatusBadge | `components/accounting/payable-status-badge.tsx` | Built |
+| PayableFilters | `components/accounting/payable-filters.tsx` | Built |
+
+**Dashboard & Reports (2):**
+| Component | Path | Status |
+|-----------|------|--------|
+| AccDashboardStats | `components/accounting/acc-dashboard-stats.tsx` | Built |
+| AccRecentInvoices | `components/accounting/acc-recent-invoices.tsx` | Built |
+| AgingReport | `components/accounting/aging-report.tsx` | Built |
 
 ---
 
 ## 6. Hooks
 
-All must be built:
+6 hooks exist in `lib/hooks/accounting/`:
+
+| Hook | File | Endpoints | Status |
+|------|------|-----------|--------|
+| `useInvoices` | `use-invoices.ts` | GET `/accounting/invoices`, POST, PATCH status | Built |
+| `useSettlements` | `use-settlements.ts` | GET `/accounting/settlements`, POST, PATCH | Built |
+| `usePayments` | `use-payments.ts` | GET `/accounting/payments`, POST | Built |
+| `usePayables` | `use-payables.ts` | GET `/accounting/payables` | Built |
+| `useAccountingDashboard` | `use-accounting-dashboard.ts` | GET `/accounting/dashboard` | Built (needs QS-003 endpoint) |
+| `useAging` | `use-aging.ts` | GET `/accounting/reports/aging` | Built |
+
+**Not built (from original plan):**
 
 | Hook | Endpoints | Priority |
 |------|-----------|----------|
-| `useInvoices` | GET `/accounting/invoices` | P0 |
-| `useInvoice` | GET `/accounting/invoices/:id` | P0 |
-| `useCreateInvoice` | POST `/accounting/invoices` | P0 |
-| `useUpdateInvoiceStatus` | PATCH `/accounting/invoices/:id/status` | P0 |
-| `useRecordPayment` | POST `/accounting/invoices/:id/payment` | P0 |
-| `useSettlements` | GET `/accounting/settlements` | P0 |
-| `useSettlement` | GET `/accounting/settlements/:id` | P0 |
-| `useCreateSettlement` | POST `/accounting/settlements` | P0 |
-| `usePaySettlement` | POST `/accounting/settlements/:id/pay` | P0 |
-| `useAccountingDashboard` | GET `/accounting/dashboard` | P0 |
+| `useCreateInvoice` (separate) | POST `/accounting/invoices` | Low — bundled in useInvoices |
+| `useUpdateInvoiceStatus` (separate) | PATCH `/accounting/invoices/:id/status` | Low — bundled in useInvoices |
+| `usePaySettlement` (separate) | POST `/accounting/settlements/:id/pay` | Low — bundled in useSettlements |
+
+> **Note:** The 6 existing hooks bundle CRUD mutations via React Query `useMutation` inside the same file, so separate create/update/pay hooks are unnecessary.
 
 ---
 
@@ -245,38 +278,47 @@ DISPUTED → APPROVED (after resolution)
 
 | Issue | Severity | File | Status |
 |-------|----------|------|--------|
-| All accounting sidebar links return 404 | P0 | `lib/config/navigation.ts` | Open |
-| No frontend screens built | P0 | `(dashboard)/accounting/` | Open |
 | Accounting Dashboard endpoint missing | P0 | Backend controller | QS-003 |
+| Invoice Edit route missing | P1 | `(dashboard)/accounting/invoices/[id]/edit/` | No page exists |
+| Settlement Create route missing | P1 | `(dashboard)/accounting/settlements/new/` | No page exists |
 | Aging Report endpoint missing | P1 | Backend controller | Backlog |
 | Soft delete not on Invoice, Settlement, Payment | P1 | Prisma schema | QS-002 |
-| No hooks exist | P0 | — | Must Build |
-| No tests | P0 | — | Must Build |
+| Dashboard uses mock/fallback data without QS-003 endpoint | P1 | `acc-dashboard-stats.tsx` | Blocked by QS-003 |
 | QuickBooks sync not implemented | P2 | — | Deferred |
+| Test coverage minimal | P2 | `__tests__/accounting/` | 1 test file only |
+
+**Previously listed — now resolved:**
+- ~~All accounting sidebar links return 404~~ — Links now route to existing pages
+- ~~No frontend screens built~~ — 10 pages exist (audited 2026-03-07)
+- ~~No hooks exist~~ — 6 hooks built in `lib/hooks/accounting/`
 
 ---
 
 ## 12. Tasks
 
 ### Quality Sprint (Active)
+
 | Task ID | Title | Effort | Status |
 |---------|-------|--------|--------|
 | QS-003 | Build Accounting Dashboard Endpoint (AR total, AP total, aging, cash flow) | M (2-4h) | Open |
 | QS-002 | Soft Delete Migration for Invoice, Settlement, Payment | M (2-4h) | Open |
 
-### Backlog
-| Task ID | Title | Effort | Priority |
-|---------|-------|--------|----------|
-| ACC-101 | Fix sidebar nav links (accounting routes) | S (30m) | P0 — QS-related |
-| ACC-102 | Build Invoices List page | L (6h) | P0 |
-| ACC-103 | Build Invoice Detail page (PDF preview, payment record) | L (6h) | P0 |
-| ACC-104 | Build Invoice Create flow (from order) | M (4h) | P0 |
-| ACC-105 | Build Settlements List + Detail | L (6h) | P0 |
-| ACC-106 | Build Accounting Dashboard | L (6h) | P0 |
-| ACC-107 | Build Aging Report | M (4h) | P1 |
-| ACC-108 | Write accounting hooks (10 hooks) | M (3h) | P0 |
-| ACC-109 | Write accounting tests | M (4h) | P1 |
-| ACC-110 | QuickBooks integration (P1 post-MVP) | XL (16h) | P2 |
+### Backlog (updated 2026-03-07 — reflects actual build state)
+
+| Task ID | Title | Effort | Priority | Notes |
+|---------|-------|--------|----------|-------|
+| ACC-101 | ~~Fix sidebar nav links~~ | — | ~~P0~~ | DONE — links route to existing pages |
+| ACC-102 | QA Invoices List page (exists, 8/10) | S (1h) | P1 | Verify filters, pagination, API wiring |
+| ACC-103 | QA Invoice Detail page (exists, 8/10) | S (1h) | P1 | Verify line items, payment history |
+| ACC-104 | QA Invoice Create flow (exists, 8/10) | S (1h) | P1 | Verify order lookup, validation |
+| ACC-105 | QA Settlements List + Detail (exist, 8/10) | S (1h) | P1 | Verify approval workflow |
+| ACC-106 | QA Accounting Dashboard (exists, 7/10 — blocked by QS-003) | S (1h) | P0 | Needs QS-003 endpoint first |
+| ACC-107 | QA Aging Report (exists, 7/10) | S (30m) | P1 | Verify aging buckets |
+| ACC-108 | ~~Write accounting hooks~~ | — | ~~P0~~ | DONE — 6 hooks exist in `lib/hooks/accounting/` |
+| ACC-109 | Expand accounting tests | M (4h) | P1 | Only 1 test file exists |
+| ACC-110 | QuickBooks integration (P1 post-MVP) | XL (16h) | P2 | Deferred |
+| ACC-111 | Build Invoice Edit route (`/invoices/[id]/edit`) | M (3h) | P1 | Missing route |
+| ACC-112 | Build Settlement Create route (`/settlements/new`) | M (3h) | P2 | Missing route |
 
 ---
 
@@ -299,12 +341,14 @@ DISPUTED → APPROVED (after resolution)
 
 | Original Plan | Actual | Delta |
 |--------------|--------|-------|
-| Accounting frontend in scope | Frontend 0% built | Major gap |
+| Accounting frontend in scope | 10 pages built, avg 7.9/10 quality | Ahead of plan |
 | Auto-invoice on delivery | Backend logic written | Backend ahead |
 | QuickBooks integration in scope | Deferred to P2 | Descoped |
-| 12 screens planned | 0 built | 100% gap |
-| Sidebar links functional | All 404s | Regression |
-| Tests required | 0 tests | Critical gap |
+| 12 screens planned | 10 built, 2 missing (edit, settlement create) | Minor gap |
+| Sidebar links functional | All routing correctly | Resolved |
+| Tests required | 1 test file exists | Partial gap |
+| 10 hooks planned | 6 hooks built (bundled CRUD mutations) | Complete (different design) |
+| 9 components planned | 18 components built | Exceeded plan |
 
 ---
 

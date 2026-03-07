@@ -29,7 +29,7 @@
 | Design Specs | Done | 13 files, all 15-section |
 | Backend Controller | Production | `apps/api/src/modules/crm/` |
 | Prisma Models | Production | Customer, Contact, Lead (Opportunity), Activity |
-| Frontend Pages | Partial | 8 routes built (some with quality issues); 5 not built |
+| Frontend Pages | Partial | 15 routes built (incl. sub-tabs); 4 Wave 2 screens not built |
 | React Hooks | Partial | CRUD hooks exist; pipeline hooks minimal |
 | Components | Partial | 16 components; ContactsTable missing search/delete |
 | Tests | None | 0 tests — highest priority gap for CRM |
@@ -44,12 +44,18 @@
 | Companies List | `/companies` | Built | B+ | Good search/pagination |
 | Company Detail | `/companies/[id]` | Built | B | Tabbed view works |
 | Company Create | `/companies/new` | Built | B+ | Zod validation |
+| Company Edit | `/companies/[id]/edit` | Built | B | Edit form |
+| Company Activities | `/companies/[id]/activities` | Built | B | Sub-tab of detail |
+| Company Contacts | `/companies/[id]/contacts` | Built | B | Sub-tab of detail |
 | Contacts List | `/contacts` | Built | C | No search, no delete button — BUG-009 |
 | Contact Detail | `/contacts/[id]` | Built | B | No delete button — BUG-009 |
 | Contact Create | `/contacts/new` | Built | B+ | Zod validation works |
+| Contact Edit | `/contacts/[id]/edit` | Built | B | Edit form |
 | Leads List | `/leads` | Built | B- | Table + pipeline, no delete, owner filter text input — BUG-009, BUG-010 |
 | Lead Detail | `/leads/[id]` | Built | B | No convert button, no delete — BUG-010 |
 | Lead Create | `/leads/new` | Built | B+ | Good validation |
+| Lead Activities | `/leads/[id]/activities` | Built | B | Sub-tab of detail |
+| Lead Contacts | `/leads/[id]/contacts` | Built | B | Sub-tab of detail |
 | Customers | `/customers` | Redirect | — | Redirects to /companies |
 | Opportunities List | `/crm/opportunities` | Not Built | — | Wave 2 |
 | Activities Calendar | `/crm/activities` | Not Built | — | Wave 2 |
@@ -302,7 +308,7 @@ LOST → NEW (reopen)
 | Contacts with search | Contacts missing search | Regression |
 | Full CRUD with delete | Delete UI not built | Bug |
 | Lead conversion flow | Backend built, no UI | Wire-up gap |
-| 13 screens planned | 9 built (some poor quality) | 4 not built |
+| 13 screens planned | 15 built (incl. sub-tabs), 4 Wave 2 not built | Exceeds plan for Wave 1 |
 | B+ grade target | B- achieved | Slightly below target |
 | Tests required | 0 tests | Critical gap |
 

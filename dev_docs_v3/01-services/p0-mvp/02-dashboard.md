@@ -64,11 +64,12 @@
 
 | Component | Path | Status | Shared? |
 |-----------|------|--------|---------|
-| DashboardKPICard | `components/dashboard/kpi-card.tsx` | Partial (hardcoded data) | Yes |
-| DashboardChart | `components/dashboard/revenue-chart.tsx` | Partial | No |
-| AlertsPanel | `components/dashboard/alerts-panel.tsx` | Partial | No |
-| ActivityFeed | `components/dashboard/activity-feed.tsx` | Partial | No |
-| NeedsAttentionList | `components/dashboard/needs-attention.tsx` | Stub | No |
+| OpsKPICards | `components/tms/dashboard/ops-kpi-cards.tsx` | Built | No |
+| OpsCharts | `components/tms/dashboard/ops-charts.tsx` | Built | No |
+| OpsAlertsPanel | `components/tms/dashboard/ops-alerts-panel.tsx` | Built | No |
+| OpsActivityFeed | `components/tms/dashboard/ops-activity-feed.tsx` | Built | No |
+| OpsNeedsAttention | `components/tms/dashboard/ops-needs-attention.tsx` | Built | No |
+| KPICard (shared) | `components/tms/stats/kpi-card.tsx` | Built | Yes |
 
 ---
 

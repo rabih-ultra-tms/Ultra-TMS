@@ -11,12 +11,12 @@
 
 | Field | Value |
 |-------|-------|
-| **Health Score** | D (2/10) |
-| **Confidence** | Low — backend minimal; frontend confirmed not built |
+| **Health Score** | C+ (6/10) |
+| **Confidence** | High — re-audited 2026-03-07, 4 pages and 10 components verified |
 | **Last Verified** | 2026-03-07 |
 | **Backend** | Partial stub — `apps/api/src/modules/load-board/` exists with basic structure |
-| **Frontend** | Not Built |
-| **Tests** | None |
+| **Frontend** | Built — 4 pages, 10 components, 1 hook |
+| **Tests** | Frontend: 13 test suites (405 lines); Backend: unit + e2e specs |
 | **MVP Status** | Deferred from v2 to P0 edge case — build ONLY after core TMS screens done |
 | **External Deps** | DAT TMS, Truckstop.com integration required for external posting |
 
@@ -31,10 +31,10 @@
 | Backend Controller | Partial stub | Basic controller exists, limited logic |
 | Backend Service | Partial stub | CRUD structure, no external API integration |
 | Prisma Models | Partial | LoadBoardPosting model exists |
-| Frontend Pages | Not Built | 0 screens |
-| React Hooks | Not Built | Must be created |
-| Components | Not Built | Must be created |
-| Tests | None | |
+| Frontend Pages | Built | 4 pages in `app/(dashboard)/load-board/` |
+| React Hooks | Built | 1 hook: `lib/hooks/tms/use-load-board.ts` |
+| Components | Built | 10 components in `components/load-board/` |
+| Tests | Built | FE: `__tests__/loadboard/load-board.test.tsx` (13 suites); BE: unit + e2e specs |
 | External APIs | Not Integrated | DAT and Truckstop.com credentials needed |
 
 ---
@@ -43,10 +43,11 @@
 
 | Screen | Route | Status | Quality | Notes |
 |--------|-------|--------|---------|-------|
-| Load Board List | `/load-board` | Not Built | — | Internal loads available for posting |
-| Post Load | `/load-board/post` | Not Built | — | Post to DAT/Truckstop |
-| Posted Loads | `/load-board/posted` | Not Built | — | Active external postings |
-| Carrier Offers | `/load-board/offers` | Not Built | — | Inbound carrier offers |
+| Load Board Dashboard | `/load-board` | Built | 7/10 | Dashboard stats, recent postings |
+| Post Load | `/load-board/post` | Built | 7/10 | Posting form with carrier matches |
+| Posting Detail | `/load-board/postings/[id]` | Built | 7/10 | Detail card, bids list |
+| Load Search | `/load-board/search` | Built | 7/10 | Search filters + results |
+| Carrier Offers | `/load-board/offers` | Not Built | — | No separate offers page |
 | Load Board Settings | `/load-board/settings` | Not Built | — | API credentials config |
 
 ---
@@ -67,29 +68,34 @@
 
 ## 5. Components
 
-All must be built:
+10 components exist in `components/load-board/`:
 
-| Component | Planned Path | Priority |
-|-----------|-------------|----------|
-| LoadBoardTable | `components/load-board/load-board-table.tsx` | P0 |
-| PostingForm | `components/load-board/posting-form.tsx` | P0 |
-| PostingStatusBadge | `components/load-board/posting-status-badge.tsx` | P0 |
-| OfferCard | `components/load-board/offer-card.tsx` | P0 |
-| LoadBoardSettings | `components/load-board/load-board-settings.tsx` | P0 |
+| Component | Path | Status |
+|-----------|------|--------|
+| LbDashboardStats | `components/load-board/lb-dashboard-stats.tsx` | Built |
+| LbRecentPostings | `components/load-board/lb-recent-postings.tsx` | Built |
+| PostingForm | `components/load-board/posting-form.tsx` | Built |
+| PostingDetailCard | `components/load-board/posting-detail-card.tsx` | Built |
+| BidsList | `components/load-board/bids-list.tsx` | Built |
+| BidCounterDialog | `components/load-board/bid-counter-dialog.tsx` | Built |
+| CarrierMatchCard | `components/load-board/carrier-match-card.tsx` | Built |
+| CarrierMatchesPanel | `components/load-board/carrier-matches-panel.tsx` | Built |
+| LoadSearchFilters | `components/load-board/load-search-filters.tsx` | Built |
+| LoadSearchResults | `components/load-board/load-search-results.tsx` | Built |
 
 ---
 
 ## 6. Hooks
 
-All must be built:
+3 hook files exist (15 exported hooks total):
 
-| Hook | Endpoints | Priority |
-|------|-----------|----------|
-| `useLoadBoard` | GET `/load-board` | P0 |
-| `usePostLoad` | POST `/load-board/post` | P0 |
-| `usePostings` | GET `/load-board/postings` | P0 |
-| `useOffers` | GET `/load-board/offers` | P0 |
-| `useAcceptOffer` | POST `/load-board/offers/:id/accept` | P0 |
+| Hook File | Path | Status | Exports |
+|-----------|------|--------|---------|
+| `use-loadboard-dashboard` | `lib/hooks/load-board/use-loadboard-dashboard.ts` | Built | `useLoadBoardDashboardStats`, `useRecentPostings` |
+| `use-postings` | `lib/hooks/load-board/use-postings.ts` | Built | 13 hooks: queries (`usePostings`, `useSearchPostings`, `usePosting`, `useBids`, `useCarrierMatches`) + mutations (`useCreatePosting`, `useUpdatePosting`, `useCancelPosting`, `useAcceptBid`, `useRejectBid`, `useCounterBid`, `useTenderToCarrier`) |
+| `use-load-board` (legacy) | `lib/hooks/tms/use-load-board.ts` | Built | `useLoadPosts`, `useLoadPost`, `useLoadBoardStats` — legacy duplicate, different endpoint pattern |
+
+**Note:** Two hook sets exist with different endpoints. `lib/hooks/load-board/` is the primary; `lib/hooks/tms/use-load-board.ts` is legacy. Should consolidate.
 
 ---
 
@@ -186,12 +192,16 @@ PENDING → WITHDRAWN (carrier withdraws)
 
 | Issue | Severity | File | Status |
 |-------|----------|------|--------|
-| No frontend screens built | P0 | `(dashboard)/load-board/` | Open |
-| Backend endpoints are stubs | P0 | `apps/api/src/modules/load-board/` | Open |
+| Backend endpoints are stubs (frontend calls may fail) | P0 | `apps/api/src/modules/load-board/` | Open |
 | DAT TMS API not integrated | P1 | — | Needs credentials |
 | Truckstop.com API not integrated | P1 | — | Needs credentials |
-| No tests | P0 | — | Must Build |
+| ~~No tests~~ | — | — | FIXED — 13 FE test suites + BE specs exist |
 | External API credentials not in .env.example | P1 | `.env.example` | Open |
+
+**Previously listed — now resolved:**
+- ~~No frontend screens built~~ — 4 pages exist (audited 2026-03-07)
+- ~~No components~~ — 10 components in `components/load-board/`
+- ~~No hooks~~ — `use-load-board.ts` exists in `lib/hooks/tms/`
 
 ---
 
@@ -205,9 +215,9 @@ PENDING → WITHDRAWN (carrier withdraws)
 ### Backlog
 | Task ID | Title | Effort | Priority |
 |---------|-------|--------|----------|
-| LB-101 | Build Load Board List page | L (6h) | P0 |
-| LB-102 | Build Post Load form + external board posting | L (8h) | P0 |
-| LB-103 | Build Offers queue (review + accept/reject) | M (4h) | P0 |
+| LB-101 | QA Load Board Dashboard (exists, 7/10) | S (1h) | P1 |
+| LB-102 | QA Post Load form (exists, 7/10) | S (1h) | P1 |
+| LB-103 | Build Offers queue page (not built) | M (4h) | P1 |
 | LB-104 | Implement DAT TMS API integration | L (8h) | P1 |
 | LB-105 | Implement Truckstop.com API integration | L (8h) | P1 |
 | LB-106 | Build Load Board backend endpoints (replace stubs) | L (8h) | P0 |
@@ -231,8 +241,9 @@ PENDING → WITHDRAWN (carrier withdraws)
 |--------------|--------|-------|
 | Load Board = deferred to post-MVP (v2) | Moved to P0 edge case | Priority shifted |
 | Full DAT/Truckstop integration | Stubs only | Integration gap |
-| Internal load board | Partially designed | Not built |
-| 5 screens planned | 0 built | 100% gap |
+| Internal load board | 4 pages built with search, posting, detail | Ahead of plan |
+| 5 screens planned | 4 built, 1 not built (offers) | Minor gap |
+| 5 components planned | 10 components built | Exceeds plan |
 
 ---
 

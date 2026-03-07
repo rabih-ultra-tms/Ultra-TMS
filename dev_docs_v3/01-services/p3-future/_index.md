@@ -2,41 +2,44 @@
 
 > These 16 services are **not in scope** for the current 16-week MVP sprint or the P1/P2 phases.
 > All have partial backend implementations. None have frontend screens.
+> Each service now has a full 15-section hub file in this directory.
 > Do not build these without explicit user approval.
 
 ---
 
 ## Service List
 
-| # | Service | Backend Status | Module Path | Notes |
-|---|---------|---------------|------------|-------|
-| 23 | HR | Partial (6 controllers) | `apps/api/src/modules/hr/` | Employee management, payroll data |
-| 24 | Scheduler | Partial (5 controllers) | `apps/api/src/modules/scheduler/` | Job scheduling, cron tasks |
-| 25 | Safety | Partial (9 controllers) | `apps/api/src/modules/safety/` | FMCSA safety compliance, violations |
-| 26 | EDI | Partial (5 controllers) | `apps/api/src/modules/edi/` | EDI 210, 214, 990 transaction sets |
-| 27 | Help Desk | Partial (5 controllers) | `apps/api/src/modules/help-desk/` | Internal support ticketing |
-| 28 | Feedback | Partial (5 controllers) | `apps/api/src/modules/feedback/` | User feedback collection |
-| 29 | Rate Intelligence | Partial (6 controllers) | `apps/api/src/modules/rate-intelligence/` | Market rate benchmarking |
-| 30 | Audit | Partial (8 controllers) | `apps/api/src/modules/audit/` | System-wide audit trail |
-| 31 | Config | Partial (9 controllers) | `apps/api/src/modules/config/` | Tenant configuration management |
-| 32 | Cache | Partial (4 controllers) | `apps/api/src/modules/cache/` | Redis cache management |
-| 33 | Super Admin | Partial (auth exists) | `apps/api/src/modules/auth/` | Cross-tenant admin access |
-| 34 | Operations | In auth module | (part of auth) | Role-based operations view |
-| 35 | Email | Partial | `apps/api/src/modules/email/` | SendGrid wrapper (used by Communication) |
-| 36 | Storage | Partial | `apps/api/src/modules/storage/` | S3-compatible file storage |
-| 37 | Redis | Partial (4 controllers) | `apps/api/src/modules/redis/` | Queue management, pub/sub |
-| 38 | Health | Production | `apps/api/src/modules/health/` | `GET /health` health check endpoint |
+| # | Service | Hub File | Backend Status | Module Path |
+|---|---------|----------|---------------|------------|
+| 23 | HR | [23-hr.md](23-hr.md) | Partial (6 controllers, ~35 endpoints, 6 models) | `apps/api/src/modules/hr/` |
+| 24 | Scheduler | [24-scheduler.md](24-scheduler.md) | Substantial (5 controllers, 25 endpoints, 6 models) | `apps/api/src/modules/scheduler/` |
+| 25 | Safety | [25-safety.md](25-safety.md) | Substantial (9 controllers, 43 endpoints, 7 models, 4 enums) | `apps/api/src/modules/safety/` |
+| 26 | EDI | [26-edi.md](26-edi.md) | Partial (8 controllers, 35 endpoints) | `apps/api/src/modules/edi/` |
+| 27 | Help Desk | [27-help-desk.md](27-help-desk.md) | Substantial (5 controllers, 31 endpoints, 8 models) | `apps/api/src/modules/help-desk/` |
+| 28 | Feedback | [28-feedback.md](28-feedback.md) | Partial (5 controllers, 25 endpoints, 7 models) | `apps/api/src/modules/feedback/` |
+| 29 | Rate Intelligence | [29-rate-intelligence.md](29-rate-intelligence.md) | Partial (6 sub-modules, 21 endpoints) | `apps/api/src/modules/rate-intelligence/` |
+| 30 | Audit | [30-audit.md](30-audit.md) | Partial (8 controllers, 31 endpoints) | `apps/api/src/modules/audit/` |
+| 31 | Config | [31-config.md](31-config.md) | Substantial (9 controllers, 39 endpoints) | `apps/api/src/modules/config/` |
+| 32 | Cache | [32-cache.md](32-cache.md) | Partial (4 controllers, 20 endpoints) | `apps/api/src/modules/cache/` |
+| 33 | Super Admin | [33-super-admin.md](33-super-admin.md) | Partial (role in auth) | `apps/api/src/modules/auth/` |
+| 34 | Email | [34-email.md](34-email.md) | Infrastructure (0 controllers, 1 service) | `apps/api/src/modules/email/` |
+| 35 | Storage | [35-storage.md](35-storage.md) | Infrastructure (0 controllers, 1 service) | `apps/api/src/modules/storage/` |
+| 36 | Redis | [36-redis.md](36-redis.md) | Infrastructure (0 controllers, 1 service) | `apps/api/src/modules/redis/` |
+| 37 | Health | [37-health.md](37-health.md) | Production (1 controller) | `apps/api/src/modules/health/` |
+| 38 | Operations Sub-Modules | [38-operations.md](38-operations.md) | Built (7 sub-modules) | `apps/api/src/modules/operations/` |
 
 ---
 
 ## Notes
 
 - **Audit (30):** System-wide audit trail used by all services internally. AuditLog table exists and is written to by all P0 services. The audit module provides the API to query it. Frontend (AuditLog screen) is built in Auth & Admin service.
-- **Health (38):** The only FULLY PRODUCTION service in this list. `GET /api/v1/health` returns 200. Was public pre-Mar-6 security fix; now requires auth.
+- **Health (37):** The only FULLY PRODUCTION service in this list. `GET /api/v1/health` returns 200.
 - **Config (31):** Tenant configuration (custom fields, preferences, feature flags) is used by all P0 services via `custom_fields` JSON columns. Full Config UI is P3.
-- **Rate Intelligence (29):** Market rate benchmarking requires integration with DAT, Greenscreens.ai, or similar APIs. Significant commercial cost. Deferred to P3.
-- **EDI (26):** EDI 210 (invoice), 214 (transportation) support needed for enterprise customers. Requires dedicated EDI middleware. Deferred.
-- **Safety (25):** FMCSA safety compliance tracking (CSA scores, violation history). Basic FMCSA lookup is in Carrier Management. Full safety compliance dashboard is P3.
+- **Operations (38):** NOT a separate service — backend sub-modules that power TMS Core and other P0 frontend pages.
+- **Infrastructure (34-36):** Email, Storage, Redis are service-only helpers with no controllers. Used internally by other modules.
+- **Rate Intelligence (29):** Requires DAT, Greenscreens.ai integration. Significant commercial cost. Deferred.
+- **EDI (26):** EDI 210/214/990 support for enterprise customers. Requires dedicated EDI middleware.
+- **Safety (25):** FMCSA safety compliance tracking. Basic FMCSA lookup is in Carrier Management. Full dashboard is P3.
 
 ---
 
@@ -47,12 +50,6 @@ These services should be revisited when:
 2. All P1 Post-MVP services are complete (estimated: Month 5-6)
 3. Business justification exists for the specific service
 4. Engineering capacity is available (not blocking P0/P1 delivery)
-
-To promote a service from P3 to a higher priority:
-1. Get user approval
-2. Create a service hub file in the appropriate priority folder
-3. Update `_index.md` with the new priority
-4. Create task files in `dev_docs_v3/03-tasks/`
 
 ---
 

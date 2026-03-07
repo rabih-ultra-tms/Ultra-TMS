@@ -11,13 +11,13 @@
 
 | Field | Value |
 |-------|-------|
-| **Health Score** | A- Backend (9/10) / 0 Frontend (0/10) / Overall: C (5/10) |
-| **Confidence** | High — backend audited; frontend confirmed 0 routes |
+| **Health Score** | A- Backend (9/10) / B Frontend (7.4/10) / Overall: B+ (8/10) |
+| **Confidence** | High — backend audited; frontend audited 2026-03-07 |
 | **Last Verified** | 2026-03-07 |
 | **Backend** | Production — 65 endpoints, fully tested, multi-tenant validated |
-| **Frontend** | Not Built — 0 of 14 screens exist |
-| **Tests** | Backend: Tested | Frontend: None (nothing to test) |
-| **Active Sprint** | QS-001 (WebSocket Gateways), then TMS-001 through TMS-008 |
+| **Frontend** | Built — 12 of 14 screens exist (10 real, 2 wrapper-stubs delegating to components) |
+| **Tests** | Backend: Tested. Frontend: None (screens exist but untested) |
+| **Active Sprint** | QS-001 (WebSocket Gateways), QS-008 (Runtime Verification) |
 | **Revenue Impact** | CRITICAL — every dollar of revenue flows through TMS Core |
 
 ---
@@ -35,11 +35,11 @@
 | Backend — Dashboard | Production | `apps/api/src/modules/operations/` — 5 endpoints |
 | Backend — Tracking | Production | `apps/api/src/modules/tms/tracking/` — 2 endpoints |
 | Prisma Models | Production | Order, Load, Stop, CheckCall, TrackingEvent |
-| Frontend Pages | Not Built | 0 routes exist; no page.tsx files |
-| React Hooks | Not Built | Must be created |
-| Components | Not Built | Must be created |
-| WebSocket Gateways | Not Built | QS-001 — Critical blocker for Dispatch + Tracking |
-| Tests (Frontend) | Not Built | Must be created |
+| Frontend Pages | Built | 12 page.tsx files in `app/(dashboard)/operations/` |
+| React Hooks | Built | 10 hooks in `lib/hooks/tms/` (orders, loads, stops, checkcalls, dispatch, dispatch-ws, tracking, ops-dashboard, load-board, rate-confirmation) |
+| Components | Built | ~95 components in `components/tms/` (dispatch board, kanban, order forms, load forms, stops, tracking map, check calls, dashboards) |
+| WebSocket Gateways | Not Built | QS-001 — Critical blocker for Dispatch + Tracking real-time features |
+| Tests (Frontend) | Not Built | Screens exist but have 0 test coverage |
 
 ---
 
@@ -47,20 +47,20 @@
 
 | Screen | Route | Status | Quality | Notes |
 |--------|-------|--------|---------|-------|
-| Operations Dashboard | `/operations` | Not Built | — | KPI cards, load status breakdown, alerts, activity. Real-time WebSocket |
-| Orders List | `/operations/orders` | Not Built | — | Table: multi-status filters, pagination, search, date range |
-| Order Detail | `/operations/orders/[id]` | Not Built | — | Tabs: Overview, Stops, Loads, Documents, Timeline |
-| New Order Form | `/operations/orders/new` | Not Built | — | Multi-step: customer selector, stops builder, rate entry. Pre-fill from quote |
-| Edit Order Form | `/operations/orders/[id]/edit` | Not Built | — | Same as create, edit mode |
-| Loads List | `/operations/loads` | Not Built | — | Table: status filters, carrier filter, equipment filter |
-| Load Detail | `/operations/loads/[id]` | Not Built | — | Tabs: Overview, Stops, Tracking, Documents |
-| New Load Form | `/operations/loads/new` | Not Built | — | Inherits from order. Carrier assignment section |
-| Edit Load Form | `/operations/loads/[id]/edit` | Not Built | — | Carrier field read-only after PICKED_UP |
-| Dispatch Board | `/operations/dispatch` | Not Built | — | CRITICAL: Kanban, drag-drop, bulk actions, real-time |
-| Tracking Map | `/operations/tracking` | Not Built | — | Live GPS pins, sidebar, real-time 30s updates |
-| Stop Management | `/operations/loads/[id]/stops` | Not Built | — | List + inline edit. Arrival/departure buttons |
-| Check Call Log | `/operations/loads/[id]/checkcalls` | Not Built | — | Timeline + add-new form |
-| Rate Confirmation | `/operations/loads/[id]/rate-con` | Not Built | — | Document preview. PDF export |
+| Operations Dashboard | `/operations` | Built | 8/10 | KPI cards, alerts, activity feed, needs-attention. WebSocket via SocketProvider `/dispatch`. Role-based scope (personal vs team) |
+| Orders List | `/operations/orders` | Built | 7/10 | Stats cards, pagination, search, status filter. Row selection state exists but no bulk action buttons. Delete is no-op toast |
+| Order Detail | `/operations/orders/[id]` | Built | 8/10 | 6 tabs: Overview, Stops, Loads, Items, Documents (Phase 3), Timeline. Actions menu (Edit, Duplicate disabled, Cancel disabled) |
+| New Order Form | `/operations/orders/new` | Built (wrapper) | 6/10 | Thin Suspense wrapper delegating to `<OrderForm>` component. Form quality depends on component |
+| Edit Order Form | `/operations/orders/[id]/edit` | Built | 9/10 | Robust Prisma Decimal conversion, complex form mapping, proper error/loading/not-found states |
+| Loads List | `/operations/loads` | Built | 8/10 | KPI stat cards, filter bar, data table with row click drawer. Page title mislabeled "Dispatch Board" |
+| Load Detail | `/operations/loads/[id]` | Built (wrapper) | 7/10 | Server wrapper delegating to LoadDetailClient component |
+| New Load Form | `/operations/loads/new` | Built | 8/10 | Optional orderId pre-fill, stop mapping, hazmat/reefer conditional fields, accessorials |
+| Edit Load Form | `/operations/loads/[id]/edit` | Built | 9/10 | Robust Decimal conversion, stop data mapping, carrier/order normalization, load status restrictions |
+| Dispatch Board | `/operations/dispatch` | Built (wrapper) | 5/10 | Wrapper with Suspense + skeleton. Delegates to `<DispatchBoard>` component (~243 LOC with kanban, filters, WebSocket status, optimistic updates) |
+| Tracking Map | `/operations/tracking` | Built (wrapper) | 5/10 | Wrapper with SocketProvider `/tracking`. Delegates to `<TrackingMap>` component |
+| Stop Management | `/operations/loads/[id]/stops` | Not Built | — | Stops are managed via tabs in Load Detail, not a separate route |
+| Check Call Log | `/operations/loads/[id]/checkcalls` | Not Built | — | Check calls managed via tab in Load Detail, not a separate route |
+| Rate Confirmation | `/operations/loads/[id]/rate-con` | Built | 9/10 | Options sidebar, custom message, load summary, Generate/Download/Email actions, PDF preview, blob cleanup on unmount |
 
 ---
 
@@ -160,55 +160,77 @@
 
 ## 5. Components
 
-All must be built — none currently exist:
+~95 components exist in `components/tms/`. Key components by domain:
 
-| Component | Planned Path | Priority |
-|-----------|-------------|----------|
-| OrdersTable | `components/tms/orders/orders-table.tsx` | P0 |
-| OrderForm | `components/tms/orders/order-form.tsx` | P0 |
-| OrderDetailCard | `components/tms/orders/order-detail-card.tsx` | P0 |
-| OrderStatusBadge | `components/tms/orders/order-status-badge.tsx` | P0 |
-| OrderTimeline | `components/tms/orders/order-timeline.tsx` | P0 |
-| LoadsTable | `components/tms/loads/loads-table.tsx` | P0 |
-| LoadForm | `components/tms/loads/load-form.tsx` | P0 |
-| LoadDetailCard | `components/tms/loads/load-detail-card.tsx` | P0 |
-| LoadStatusBadge | `components/tms/loads/load-status-badge.tsx` | P0 |
-| LoadStopsList | `components/tms/loads/load-stops-list.tsx` | P0 |
-| LoadCarrierSection | `components/tms/loads/load-carrier-section.tsx` | P0 |
-| DispatchBoard | `components/tms/dispatch/dispatch-board.tsx` | P0-Critical |
-| DispatchLane | `components/tms/dispatch/dispatch-lane.tsx` | P0-Critical |
-| DispatchCard | `components/tms/dispatch/dispatch-card.tsx` | P0-Critical |
-| StopsTable | `components/tms/stops/stops-table.tsx` | P0 |
-| StopForm | `components/tms/stops/stop-form.tsx` | P0 |
-| StopCard | `components/tms/stops/stop-card.tsx` | P0 |
-| TrackingMap | `components/tms/tracking/tracking-map.tsx` | P1 |
-| TrackingSidebar | `components/tms/tracking/tracking-sidebar.tsx` | P1 |
-| CheckCallTimeline | `components/tms/loads/check-call-timeline.tsx` | P0 |
-| CheckCallForm | `components/tms/loads/check-call-form.tsx` | P0 |
+**Orders** (built):
+- `orders/order-form.tsx` — Multi-step form (customer, stops, cargo, rate, review)
+- `orders/order-columns.tsx` — TanStack React Table column definitions
+- `orders/order-filters.tsx` — Search + status filter bar
+- `orders/order-detail-overview.tsx` — Detail tab content
+- `orders/order-stops-tab.tsx`, `order-loads-tab.tsx`, `order-items-tab.tsx`, `order-documents-tab.tsx`, `order-timeline-tab.tsx`, `order-notes-tab.tsx`
+- `orders/order-customer-step.tsx`, `order-cargo-step.tsx`, `order-rate-step.tsx`, `order-review-step.tsx`, `order-stops-builder.tsx`
+
+**Loads** (built):
+- `loads/load-form.tsx` — Load creation/edit form
+- `loads/loads-data-table.tsx`, `loads/loads-filter-bar.tsx` — List page components
+- `loads/load-detail-header.tsx`, `load-carrier-tab.tsx`, `load-route-tab.tsx`, `load-timeline-tab.tsx`, `load-documents-tab.tsx`, `load-check-calls-tab.tsx`
+- `loads/load-status-badge.tsx`, `load-summary-card.tsx`, `load-drawer.tsx`, `load-tracking-card.tsx`
+- `loads/carrier-selector.tsx`, `column-settings-drawer.tsx`, `kpi-stat-cards.tsx`
+
+**Dispatch** (built):
+- `dispatch/dispatch-board.tsx` — Main board (~243 LOC, kanban + table views)
+- `dispatch/kanban-board.tsx`, `kanban-lane.tsx`, `load-card.tsx`
+- `dispatch/dispatch-data-table.tsx`, `dispatch-detail-drawer.tsx`
+- `dispatch/dispatch-toolbar.tsx`, `dispatch-stats-bar.tsx`, `dispatch-kpi-strip.tsx`, `dispatch-bulk-toolbar.tsx`
+- `dispatch/dispatch-board-skeleton.tsx`
+- `dispatch/new-load-dialog.tsx`, `new-quote-dialog.tsx`
+
+**Tracking** (built):
+- `tracking/tracking-map.tsx` — Map component
+- `tracking/tracking-sidebar.tsx` — Load list sidebar
+- `tracking/tracking-pin-popup.tsx` — Map pin popup
+
+**Stops** (built):
+- `stops/stops-table.tsx`, `stop-card.tsx`, `stop-actions.tsx`
+
+**Check Calls** (built):
+- `checkcalls/check-call-form.tsx`, `check-call-timeline.tsx`, `overdue-checkcalls.tsx`
+
+**Dashboard** (built):
+- `dashboard/ops-kpi-cards.tsx`, `ops-charts.tsx`, `ops-alerts-panel.tsx`, `ops-activity-feed.tsx`, `ops-needs-attention.tsx`
+
+**Shared TMS primitives** (built):
+- `primitives/status-badge.tsx`, `status-dot.tsx`, `search-input.tsx`, `custom-checkbox.tsx`, `user-avatar.tsx`
+- `tables/data-table.tsx`, `table-pagination.tsx`, `bulk-action-bar.tsx`, `density-toggle.tsx`, `group-header.tsx`
+- `panels/slide-panel.tsx`, `panel-tabs.tsx`, `quick-actions.tsx`
+- `cards/route-card.tsx`, `info-grid.tsx`, `field-list.tsx`
+- `filters/filter-bar.tsx`, `filter-chip.tsx`, `status-dropdown.tsx`, `column-visibility.tsx`
+- `stats/stat-item.tsx`, `stats-bar.tsx`, `kpi-card.tsx`
+- `shared/status-badge.tsx`, `financial-summary-card.tsx`, `metadata-card.tsx`, `timeline-feed.tsx`
+- `finance/finance-breakdown.tsx`
+- `documents/document-list.tsx`, `upload-zone.tsx`, `permit-list.tsx`, `rate-con-preview.tsx`, `document-actions.tsx`
+- `emails/email-preview-dialog.tsx`
+- `timeline/timeline.tsx`
+- `alerts/alert-banner.tsx`
 
 ---
 
 ## 6. Hooks
 
-All must be built — none currently exist:
+All 10 hooks exist in `lib/hooks/tms/`. All use `unwrap()` helper for proper `{ data: T }` envelope handling.
 
-| Hook | Endpoints | Priority |
-|------|-----------|----------|
-| `useOrders` | GET `/orders` | P0 |
-| `useOrder` | GET `/orders/:id` | P0 |
-| `useCreateOrder` | POST `/orders` | P0 |
-| `useUpdateOrderStatus` | PATCH `/orders/:id/status` | P0 |
-| `useLoads` | GET `/loads` | P0 |
-| `useLoad` | GET `/loads/:id` | P0 |
-| `useAssignCarrier` | POST `/loads/:id/assign` | P0 |
-| `useDispatchLoad` | POST `/loads/:id/dispatch` | P0 |
-| `useStops` | GET `/stops` | P0 |
-| `useArriveStop` | PATCH `/stops/:id/arrive` | P0 |
-| `useDepartStop` | PATCH `/stops/:id/depart` | P0 |
-| `useCheckCalls` | GET `/checkcalls` | P0 |
-| `useCreateCheckCall` | POST `/checkcalls` | P0 |
-| `useOperationsDashboard` | GET `/operations/dashboard` | P0 |
-| `useTrackingPositions` | GET `/operations/tracking/positions` | P1 |
+| Hook | File | Endpoints | Quality | Notes |
+|------|------|-----------|---------|-------|
+| `useOrders` / `useOrder` / `useCreateOrder` / `useUpdateOrder` | `use-orders.ts` | GET/POST/PUT/PATCH `/orders`, `/orders/:id`, `/orders/:id/status` | 9/10 | `unwrap()` + `unwrapPaginated()`, `mapFormToApi()` conversion, cache invalidation |
+| `useLoads` / `useLoad` / `useCreateLoad` / `useUpdateLoad` | `use-loads.ts` | GET/POST/PUT/PATCH `/loads`, `/loads/:id`, `/loads/:id/assign` | 8/10 | Defensive `toNum()` for Prisma Decimal, bulk status/carrier assignment |
+| `useStops` / `useArriveStop` / `useDepartStop` | `use-stops.ts` | GET/PUT/PATCH `/stops`, `/stops/:id/arrive`, `/stops/:id/depart` | 8/10 | Stop reorder support |
+| `useCheckCalls` / `useCreateCheckCall` | `use-checkcalls.ts` | GET/POST `/checkcalls`, `/checkcalls/overdue` | 8/10 | Overdue check calls query |
+| `useDispatchBoard` / `useDispatchLoad` | `use-dispatch.ts` | GET `/loads` (board view), POST `/loads/:id/dispatch` | 8/10 | Complex `RawBoardLoad` → `DispatchLoad` normalization, optimistic updates with rollback |
+| `useDispatchWebSocket` | `use-dispatch-ws.ts` | WebSocket `/dispatch` namespace | 7/10 | Event listeners, cache updates via `setQueriesData` |
+| `useTrackingPositions` | `use-tracking.ts` | GET `/operations/tracking/positions` | 7/10 | WebSocket integration, 15s polling fallback, ETA status derivation |
+| `useOperationsDashboard` / `useDashboardLiveUpdates` | `use-ops-dashboard.ts` | GET `/operations/dashboard/*` (5 endpoints) | 8/10 | WebSocket event subscription for cache invalidation, period/scope/comparison params |
+| `useLoadBoard*` | `use-load-board.ts` | Load board dashboard/postings endpoints | 7/10 | Dashboard stats, postings CRUD |
+| `useRateConfirmation` | `use-rate-confirmation.ts` | GET `/loads/:id/rate-confirmation` | 8/10 | PDF generation |
 
 ---
 
@@ -352,46 +374,49 @@ PENDING → ARRIVED (driver arrives) → DEPARTED (driver departs) → COMPLETED
 
 | Issue | Severity | File | Status |
 |-------|----------|------|--------|
-| 0 frontend screens exist | P0 Blocker | `apps/web/app/(dashboard)/operations/` | Not Built |
-| WebSocket gateways not implemented | P0 Blocker | `apps/api/src/gateways/` | QS-001 |
-| No hooks exist for any TMS Core endpoint | P0 | `apps/web/lib/hooks/tms/` | Must Build |
-| Check Call Form needs RHF refactor (QS-006 target) | P1 | (future component) | Open |
+| WebSocket gateways not implemented | P0 Blocker | `apps/api/src/gateways/` | QS-001 — dispatch/tracking pages exist but lack real-time data |
+| Loads list page title says "Dispatch Board" | P2 UX | `operations/loads/page.tsx` | Open — cosmetic mislabel |
+| Orders list delete is no-op | P1 UX | `operations/orders/page.tsx` | Open — shows toast "not available yet" |
+| Orders list bulk actions UI missing | P1 UX | `operations/orders/page.tsx` | Row selection state exists but no action buttons |
+| Dispatch/Tracking are thin wrappers | P2 | `operations/dispatch/page.tsx`, `operations/tracking/page.tsx` | Components handle logic — verify component quality at runtime |
+| Column visibility not persisted | P2 UX | `operations/loads/page.tsx` | Resets on navigation |
+| `as any` type assertions | P2 Code | `orders/page.tsx:98`, `orders/[id]/edit/page.tsx:124` | Minor — acceptable workarounds |
 | Soft delete not on Order, Quote, Invoice, Settlement, Payment | P1 DB | Migration needed | QS-002 |
-| No tests for any frontend TMS screens | P0 | — | Must Build |
+| No tests for any frontend TMS screens | P1 | — | 12 screens exist, 0 test coverage |
+| Check Call Form needs RHF refactor | P1 | `components/tms/checkcalls/check-call-form.tsx` | QS-006 |
 
 ---
 
 ## 12. Tasks
 
 ### Quality Sprint (Active)
+
 | Task ID | Title | Effort | Status |
 |---------|-------|--------|--------|
 | QS-001 | WebSocket Gateways (dispatch + tracking + notifications + dashboard) | XL (12-16h) | Open |
 | QS-002 | Soft Delete Migration (Order, Quote, Invoice, Settlement, Payment) | M (2-4h) | Open |
 | QS-006 | Check Call Form RHF Refactor | M (2-4h) | Open |
+| QS-008 | Runtime Verification — click all 12 TMS routes with Playwright | L (6h) | Open |
 
-### Phase 1 Backlog (TMS Core screens)
-| Task ID | Title | Effort | Priority |
-|---------|-------|--------|----------|
-| TMS-001 | Build Orders List page | L (7h) | P0 |
-| TMS-002 | Build Order Detail page (tabs) | L (8h) | P0 |
-| TMS-003 | Build Loads List page | M (5h) | P0 |
-| TMS-004 | Build Load Detail page (tabs) | L (8h) | P0 |
-| TMS-005 | Build New Order Form (multi-step) | XL (12h) | P0 |
-| TMS-006 | Build Edit Order Form | M (5h) | P0 |
-| TMS-007 | Build New Load Form | L (9h) | P0 |
-| TMS-008 | Build Edit Load Form | M (5h) | P0 |
-| TMS-009 | Build Stop Management | L (6h) | P0 |
-| TMS-010 | Build Check Call Log | L (6h) | P0 |
-| TMS-011a | Dispatch: Data layer | L (8-10h) | P0 |
-| TMS-011b | Dispatch: Kanban UI | L (8-10h) | P0 |
-| TMS-011c | Dispatch: Drag-drop | XL (12-16h) | P0 |
-| TMS-011d | Dispatch: Real-time sync | L (8-12h) | P0 |
-| TMS-011e | Dispatch: Bulk actions + polish | M (4-6h) | P0 |
-| TMS-012 | Build Operations Dashboard | L (9h) | P0 |
-| TMS-013 | Build Tracking Map (live GPS) | L (12h) | P1 |
-| TMS-014 | Build Rate Confirmation (PDF preview) | L (6h) | P1 |
-| TMS-015 | Public Tracking Page | L (8-12h) | P1 |
+### QA Backlog (screens exist — verify and fix)
+
+| Task ID | Title | Effort | Priority | Notes |
+|---------|-------|--------|----------|-------|
+| TMS-001 | QA Orders List (fix delete no-op, add bulk action buttons) | S (2h) | P0 | Page exists 7/10 |
+| TMS-002 | QA Order Detail (verify all 6 tabs render, actions work) | S (2h) | P0 | Page exists 8/10 |
+| TMS-003 | QA Loads List (fix page title "Dispatch Board" → "Loads", persist column settings) | S (1h) | P0 | Page exists 8/10 |
+| TMS-004 | QA Load Detail (verify LoadDetailClient renders, tabs work) | S (2h) | P0 | Page exists 7/10 |
+| TMS-005 | QA New Order Form (verify OrderForm component, all steps work) | M (3h) | P0 | Wrapper exists 6/10, form component needs audit |
+| TMS-006 | QA Edit Order Form (verify pre-population, Decimal handling) | S (1h) | P0 | Page exists 9/10 |
+| TMS-007 | QA New Load Form (verify orderId pre-fill, hazmat fields) | S (1h) | P0 | Page exists 8/10 |
+| TMS-008 | QA Edit Load Form (verify Decimal conversion, status restrictions) | S (1h) | P0 | Page exists 9/10 |
+| TMS-009 | Verify Stop Management via Load Detail tabs | S (1h) | P0 | No separate route — stops managed in load detail |
+| TMS-010 | Verify Check Call Log via Load Detail tabs | S (1h) | P0 | No separate route — check calls managed in load detail |
+| TMS-011 | QA Dispatch Board (verify kanban, drag-drop, WebSocket status, optimistic updates) | M (4h) | P0 | Component exists but needs QS-001 for real-time |
+| TMS-012 | QA Operations Dashboard (verify KPI cards, alerts, activity feed with real data) | S (2h) | P0 | Page exists 8/10 |
+| TMS-013 | QA Tracking Map (verify map renders, pins, sidebar, WebSocket) | M (3h) | P1 | Component exists but needs QS-001 for real-time |
+| TMS-014 | QA Rate Confirmation (verify PDF generation, download, email) | S (1h) | P1 | Page exists 9/10 |
+| TMS-015 | Build Public Tracking Page | L (8-12h) | P1 | Not yet built |
 
 ---
 
@@ -420,12 +445,13 @@ PENDING → ARRIVED (driver arrives) → DEPARTED (driver departs) → COMPLETED
 
 | Original Plan | Actual | Delta |
 |--------------|--------|-------|
-| Frontend to be built first | Backend built first (A-), frontend 0% | Reversed build order |
-| 14 screens planned | 0 built | 100% gap |
-| WebSocket in "Phase 4" | WebSocket needed in Phase 1 for Dispatch Board | Moved forward |
+| Frontend to be built first | Backend A-, frontend B (7.4/10) | Both substantially built |
+| 14 screens planned | 12 built (10 real, 2 wrappers), 2 integrated into tabs | ~86% complete |
+| WebSocket in "Phase 4" | WebSocket needed in Phase 1 for Dispatch Board | QS-001 — still the critical blocker |
 | Single TMS module | Separate Orders, Loads, Stops, CheckCalls modules | Better modularity |
-| Dispatch Board = 1 task | Dispatch Board split into 5 sub-tasks | Complexity increase |
-| Public Tracking Page = future | Moved to P1 (reduces support calls by 50%) | Priority up |
+| Dispatch Board = 1 task | Dispatch board component built with kanban + table views | QA needed, not a build task |
+| Public Tracking Page = future | Moved to P1 (reduces support calls by 50%) | Only unbuilt screen |
+| All screens "Not Built" in docs | 12 screens built during v2 sprint (71/72 tasks) | Docs were never updated post-v2 |
 
 ---
 

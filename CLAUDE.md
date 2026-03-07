@@ -9,21 +9,21 @@
 **Repo:** `rabih-ultra-tms/Ultra-TMS` | Contributor: `primovera12`
 **MVP Focus:** 8 services, ~30 screens, 16-week timeline (not 38 services / 362 screens)
 
-## Current State (as of 2026-02-08)
+## Current State (as of 2026-03-07)
 
-**Overall Score: 6.2/10 (C+)** — Strong foundation, excellent documentation, weak execution.
+**Overall Score: 7.0/10 (B-)** — Strong backend, frontend much further along than originally documented.
 
 | Area | Grade | Status |
 |------|-------|--------|
 | Architecture & Infra | B+ | Solid monorepo, modern stack, well-structured modules |
-| Code Quality | C+ | 29 bugs (4 critical), 858-line monoliths, 8.7% frontend test coverage |
-| Design Quality | D+ | Great docs but implementation uses hardcoded colors, browser confirm(), bare "Loading..." |
+| Code Quality | C+ | Some bugs remain, 858-line monoliths, 8.7% frontend test coverage |
+| Design Quality | C | Improved — Commission module is 8.5/10 model. Some pages still have hardcoded colors. |
 | Planning & Docs | A | 504 doc files, 89 screen specs with 15-section detail |
-| Industry Readiness | D | 28 feature gaps vs competitors. TMS Core frontend not wired up |
+| Industry Readiness | C | TMS Core frontend exists (12 pages). Most services have frontend pages built. |
 
-**What works:** Auth, CRM (basic CRUD), Sales (basic CRUD), Carrier list (buggy)
-**What exists but is disconnected from frontend:** LoadsService (19KB), OrdersService (22KB), RateConfirmationService, Check Calls, dispatch/assignCarrier logic — **do NOT rebuild these, wire them up**
-**What's not built:** TMS Core frontend pages, Dispatch Board, Accounting, Operations dashboards
+**What works:** Auth, CRM (15 pages), Sales (Load Planner 9/10), TMS Core (12 pages), Carriers (6 pages + 17 components), Accounting (10 pages), Commission (11 pages, model quality), Load Board (4 pages)
+**Backend services with frontend wired up:** LoadsService, OrdersService, RateConfirmationService, Check Calls, dispatch — all have corresponding frontend pages and hooks
+**What needs QA:** Runtime verification of all routes (QS-008), dashboard endpoint (QS-003)
 
 Reviews: `dev_docs/Claude-review-v1/` (37 files) | `dev_docs/gemini-review-v2/` (2 files — corrects Claude's backend assessment)
 
@@ -48,14 +48,14 @@ Reviews: `dev_docs/Claude-review-v1/` (37 files) | `dev_docs/gemini-review-v2/` 
 
 | # | Service | Status | Priority |
 |---|---------|--------|----------|
-| 1 | Auth & Admin | Existing UI | Rebuild from spec |
-| 2 | CRM / Customers | Existing UI | Rebuild from spec |
-| 3 | Sales / Quotes + Load Planner | Load Planner works, quotes basic | Rebuild quotes, PROTECT Load Planner |
-| 4 | TMS Core (Orders, Loads, Dispatch) | Backend exists, no frontend | Build from spec |
-| 5 | Carrier Management | Existing UI (buggy, 404s) | Rebuild from spec, PROTECT Truck Types |
-| 6 | Accounting (Invoices, Settlements) | Not built | Build from spec |
-| 7 | Load Board | Not built | Build from spec |
-| 8 | Commission | Not built | Build from spec |
+| 1 | Auth & Admin | 17/20 screens built | QA from spec |
+| 2 | CRM / Customers | 15 pages built | QA + fix BUG-009/010 |
+| 3 | Sales / Quotes + Load Planner | Load Planner PROTECTED (9/10), quotes basic | Rebuild quotes, PROTECT Load Planner |
+| 4 | TMS Core (Orders, Loads, Dispatch) | 12 pages built (7.4/10) | QA from spec |
+| 5 | Carrier Management | 6 pages + 17 components built | QA from spec, PROTECT Truck Types |
+| 6 | Accounting (Invoices, Settlements) | 10 pages built (7.9/10) | QA, needs QS-003 endpoint |
+| 7 | Load Board | 4 pages + 10 components built | QA, backend stubs need real logic |
+| 8 | Commission | 11 pages built (8.5/10, model quality) | QA, verify auto-calc trigger |
 
 All other services (Compliance, Safety, Fleet, Warehousing, etc.) are **future — do not build**.
 
@@ -67,14 +67,17 @@ All other services (Compliance, Safety, Fleet, Warehousing, etc.) are **future �
 
 | Bug | File | Impact |
 |-----|------|--------|
-| Carrier detail 404 | `carriers/page.tsx` → no `carriers/[id]/page.tsx` | Core CRUD broken |
-| Load history detail 404 | `load-history/page.tsx` → no `load-history/[id]/page.tsx` | Core CRUD broken |
-| 5 sidebar links to 404 | `lib/config/navigation.ts` → invoices, settlements, reports, help, settings | Broken navigation |
 | `useMemo` side effect | `truck-types/page.tsx:270` | Form data won't populate in React 19 |
 | JWT logged to console | `admin/layout.tsx` (10 console.logs) | Security vulnerability |
 | localStorage tokens | `lib/api/client.ts:59,77` | Contradicts XSS-safe cookie policy |
 | `window.confirm()` x7 | carriers, load-history, quote-history, truck-types | Should use ConfirmDialog |
-| No search debounce x3 | carriers, load-history, quote-history | API hammered on every keystroke |
+| QS-003 dashboard endpoint | Backend controller | Accounting dashboard needs this |
+
+**Previously listed — now resolved (2026-03-07 audit):**
+- ~~Carrier detail 404~~ — `carriers/[id]/page.tsx` EXISTS (7/10, tabbed detail)
+- ~~Load history detail 404~~ — `load-history/[id]/page.tsx` EXISTS (5/10)
+- ~~5 sidebar links to 404~~ — Most now route to existing pages (accounting, commissions, load-board)
+- ~~No search debounce x3~~ — Carriers page HAS debounce (3 refs found)
 
 Full inventory: `dev_docs/Claude-review-v1/01-code-review/05-bug-inventory.md` (29 bugs total)
 

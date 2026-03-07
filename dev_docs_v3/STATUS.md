@@ -2,7 +2,7 @@
 
 > **Last Updated:** 2026-03-07
 > **Current Phase:** Quality Sprint (post-initial-build, pre-production)
-> **Overall Health:** C+ (6.2/10) — Strong backend, weak frontend quality, many routes unverified
+> **Overall Health:** B- (7.0/10) — Strong backend, frontend much further along than documented. 96 unverified routes remain.
 > **Active Plan:** [dev_docs_v3/](.) — covers ALL 38 services (not just 8 MVP)
 
 ---
@@ -49,42 +49,42 @@
 
 | # | Service | Backend | Frontend | Tests | Verified | Confidence | Priority |
 |---|---------|---------|----------|-------|----------|------------|----------|
-| 01 | Auth & Admin | Done | Partial | Partial | No | Medium | P0 |
-| 02 | Dashboard | Done | Partial | None | No | Low | P0 |
-| 03 | CRM / Customers | Done | Partial | Partial | No | Medium | P0 |
-| 04 | Sales / Quotes | Done | Partial | None | No | Low | P0 |
-| 05 | TMS Core (Orders/Loads/Dispatch) | Done | Partial | None | No | Low | P0 |
-| 06 | Carrier Management | Done | Partial | Partial | No | Medium | P0 |
-| 07 | Accounting | Done | Partial | None | No | Low | P0 |
-| 08 | Commission | Done | Partial | None | No | Low | P0 |
-| 09 | Load Board | Partial | Not Built | None | No | Low | P0 |
+| 01 | Auth & Admin | Done | Partial (17/20 screens) | Partial | No | Medium | P0 |
+| 02 | Dashboard | Done | Partial (shell, KPIs hardcoded) | None | No | Low | P0 |
+| 03 | CRM / Customers | Done | Built (15 pages) | Partial | No | Medium | P0 |
+| 04 | Sales / Quotes | Done | Partial (6 pages, LP PROTECTED) | None | No | Medium | P0 |
+| 05 | TMS Core (Orders/Loads/Dispatch) | Done | Built (12 pages, 7.4/10) | None | No | Medium | P0 |
+| 06 | Carrier Management | Done | Built (6 pages, 17 components) | Partial | No | Medium | P0 |
+| 07 | Accounting | Done | Built (10 pages, 7.9/10) | Partial | No | Medium | P0 |
+| 08 | Commission | Done | Built (11 pages, 8.5/10) | 14 FE tests | No | High | P0 |
+| 09 | Load Board | Partial | Built (4 pages, 10 components) | 13 FE suites + BE specs | No | Medium | P0 |
 
 ### P1 Post-MVP (6 services)
 
 | # | Service | Backend | Frontend | Tests | Verified | Confidence | Priority |
 |---|---------|---------|----------|-------|----------|------------|----------|
-| 10 | Claims | Partial | Not Built | None | No | Low | P1 |
-| 11 | Documents | Partial | Not Built | None | No | Low | P1 |
-| 12 | Communication | Partial | Not Built | None | No | Low | P1 |
-| 13 | Customer Portal | Partial | Not Built | None | No | Low | P1 |
-| 14 | Carrier Portal | Partial | Not Built | None | No | Low | P1 |
-| 15 | Contracts | Partial | Not Built | None | No | Low | P1 |
+| 10 | Claims | Substantial (44 endpoints, 8 models, 20+ DTOs) | Not Built | 7 BE spec files | No | High | P1 |
+| 11 | Documents | Substantial (20 endpoints) | Partial (4 hooks, 4+ components, 0 pages) | Backend: 7 spec files | No | High | P1 |
+| 12 | Communication | Substantial (30 endpoints) | Partial (3 hooks, 0 pages) | Backend: 7 spec files | No | High | P1 |
+| 13 | Customer Portal | Substantial (40 endpoints, 8 models, 6 enums) | Not Built | None | No | High | P1 |
+| 14 | Carrier Portal | Substantial (54 endpoints, 5 models, 5 enums) | Not Built | 7 spec stubs + 1 e2e | No | High | P1 |
+| 15 | Contracts | Substantial (58 endpoints, 11 models, 6 enums) | Not Built | 2 spec files | No | High | P1 |
 
 ### P2 Extended (7 services)
 
 | # | Service | Backend | Frontend | Tests | Verified | Confidence | Priority |
 |---|---------|---------|----------|-------|----------|------------|----------|
-| 16 | Agents | Partial | Not Built | None | No | Low | P2 |
-| 17 | Credit | Partial | Not Built | None | No | Low | P2 |
-| 18 | Factoring Internal | Partial | Not Built | None | No | Low | P2 |
-| 19 | Analytics | Partial | Not Built | None | No | Low | P2 |
-| 20 | Workflow | Partial | Not Built | None | No | Low | P2 |
-| 21 | Integration Hub | Partial | Not Built | None | No | Low | P2 |
-| 22 | Search | Partial | Not Built | None | No | Low | P2 |
+| 16 | Agents | Substantial (6 controllers, 43 endpoints, 9 models) | Not Built | None | No | High | P2 |
+| 17 | Credit | Substantial (5 controllers, 31 endpoints, 5 models) | Not Built | 5 spec files | No | High | P2 |
+| 18 | Factoring Internal | Substantial (5 controllers, 30 endpoints, 5 models) | Not Built | None | No | High | P2 |
+| 19 | Analytics | Substantial (6 controllers, 40 endpoints, 10 models) | Not Built | 4 spec files | No | High | P2 |
+| 20 | Workflow | Substantial (5 controllers, 35 endpoints) | Not Built | None | No | High | P2 |
+| 21 | Integration Hub | Substantial (7 controllers, 45 endpoints, 7 models) | Not Built | None | No | High | P2 |
+| 22 | Search | Substantial (4 controllers, 27 endpoints) | Not Built | 8 spec files | No | High | P2 |
 
 ### P3 Future (16 services) — see [01-services/p3-future/_index.md](01-services/p3-future/_index.md)
 
-HR, Safety, EDI, Help Desk, Feedback, Rate Intelligence, Scheduler, Super Admin, Config, Cache, Audit Log, Fleet, Warehousing, Compliance, Analytics Advanced, Mobile
+All 16 P3 services documented. 10 have full 15-section hubs (HR 35ep, Scheduler 25ep, Safety 43ep, EDI 35ep, Help Desk 31ep, Feedback 25ep, Rate Intelligence 21ep, Audit 31ep, Config 39ep, Cache 20ep). 6 have abbreviated hubs appropriate to scope (Super Admin — role in auth, Email/Storage/Redis — infrastructure helpers, Health — 1 endpoint, Operations — TMS Core sub-modules).
 
 ---
 
@@ -131,6 +131,18 @@ HR, Safety, EDI, Help Desk, Feedback, Rate Intelligence, Scheduler, Super Admin,
 | Gemini/Codex | CRUD screens, patterns, tests, form refactors, cleanup | Complex state, WS, auth |
 
 **Session start:** `/kickoff` → read STATUS.md → find next QS task → read hub file → code
+
+---
+
+## Documentation Completeness
+
+| Tier | Services | Hub Files | 15-Section Format | Index File |
+|------|----------|-----------|-------------------|------------|
+| P0 MVP | 9 | 9/9 | Yes | N/A |
+| P1 Post-MVP | 6 | 6/6 | Yes | [_index.md](01-services/p1-post-mvp/_index.md) |
+| P2 Extended | 7 | 7/7 | Yes | [_index.md](01-services/p2-extended/_index.md) |
+| P3 Future | 16 | 16/16 | 10 full + 6 abbreviated | [_index.md](01-services/p3-future/_index.md) |
+| **Total** | **38** | **38/38** | **All documented** | |
 
 ---
 

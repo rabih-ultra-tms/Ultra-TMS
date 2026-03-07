@@ -11,14 +11,14 @@
 
 | Field | Value |
 |-------|-------|
-| **Health Score** | D+ (4.0/10) |
-| **Confidence** | High — audited Feb 2026, 45 carrier tests passing |
+| **Health Score** | B- (6.5/10) |
+| **Confidence** | High — re-audited 2026-03-07, pages verified to exist |
 | **Last Verified** | 2026-03-07 |
 | **Backend** | Production (40 endpoints, all working) |
-| **Frontend** | Partial — 2 P0 404s blocking all carrier workflows |
-| **Tests** | Partial — 45 backend tests passing (CARR-003 done) |
+| **Frontend** | Built — 6 pages exist (list, detail, edit, scorecard, load-history list+detail). 17 components in `components/carriers/`. |
+| **Tests** | Partial — 45 backend tests passing (CARR-003 done), 0 frontend |
 | **PROTECTED FILE** | `apps/web/app/(dashboard)/truck-types/page.tsx` — Gold standard 8/10 |
-| **Active Blockers** | BUG-001 (Carrier Detail 404), BUG-002 (Load History Detail 404) |
+| **Active Blockers** | None — BUG-001/BUG-002 were false (pages exist) |
 
 ---
 
@@ -35,9 +35,9 @@
 | Backend — Insurance | Production | Included in carrier module |
 | Backend — FMCSA | Production | Integration with SAFER Web |
 | Prisma Models | Production | Carrier, CarrierContact, CarrierDriver, CarrierInsurance, CarrierDocument |
-| Frontend Pages | Partial | List works (858-line monolith), Detail 404, Load History Detail 404 |
-| React Hooks | Partial | Basic CRUD hooks; compliance hooks missing |
-| Components | Partial | StatusBadge (hardcoded colors), Form (window.confirm), Detail (missing) |
+| Frontend Pages | Built | 6 pages: list, detail (tabbed), edit, scorecard, load-history list+detail |
+| React Hooks | Partial | 7 CRUD hooks + `use-fmcsa`, `use-carrier-scorecard` in `lib/hooks/carriers/` |
+| Components | Built | 17 components in `components/carriers/` (overview, insurance, docs, drivers, contacts, trucks, scorecard) |
 | Tests | Partial | 45 backend tests green; frontend 0 tests |
 | Security | Good | All endpoints: JwtAuthGuard + tenantId |
 
@@ -47,19 +47,18 @@
 
 | Screen | Route | Status | Quality | Notes |
 |--------|-------|--------|---------|-------|
-| Carriers List | `/carriers` | Built | 5/10 | 858-line monolith, hardcoded colors, no search debounce |
-| Carrier Detail | `/carriers/[id]` | Built | 6/10 | Real implementation: overview, insurance, docs, trucks, drivers, loads, contacts tabs |
+| Carriers List | `/carriers` | Built | 5/10 | 858-line monolith, hardcoded colors. Debounce IS present (3 refs). |
+| Carrier Detail | `/carriers/[id]` | Built | 7/10 | Real tabbed implementation: overview, insurance, docs, trucks, drivers, loads, contacts |
 | Carrier Create | — | Built (dialog) | 5/10 | Inline dialog on list page — no separate `/carriers/new` route |
-| Carrier Edit | `/carriers/[id]/edit` | Built | 5/10 | Edit form with full field set |
-| Load History | `/load-history` | Built | 5/10 | List works; detail page exists but quality TBD |
-| Load History Detail | `/load-history/[id]` | Built | 4/10 | page.tsx exists — QS-008 to verify at runtime |
+| Carrier Edit | `/carriers/[id]/edit` | Built | 6/10 | Edit form with full field set |
+| Load History | `/load-history` | Built | 5/10 | List works |
+| Load History Detail | `/load-history/[id]` | Built | 5/10 | page.tsx EXISTS — QS-008 to verify at runtime |
 | **Truck Types** | `/truck-types` | **PROTECTED** | **8/10** | **Gold standard — DO NOT TOUCH** |
-| Carrier Scorecard | `/carriers/[id]/scorecard` | Built | 5/10 | Real implementation with ScoreGauge, charts, tier progression |
+| Carrier Scorecard | `/carriers/[id]/scorecard` | Built | 6/10 | ScoreGauge, performance metrics, tier progression bar |
 | Carrier Dashboard | `/carriers/dashboard` | Not Built | — | Phase 2 |
 | Compliance Center | `/carriers/compliance` | Not Built | — | Phase 2 |
 | Insurance Tracking | `/carriers/insurance` | Not Built | — | Phase 2 |
 | Equipment List | `/carriers/[id]/equipment` | Not Built | — | Phase 2 |
-| Preferred Carriers | `/carriers/preferred` | Built | 5/10 | Basic list |
 
 ---
 
@@ -108,15 +107,28 @@
 
 | Component | Path | Status | Shared? |
 |-----------|------|--------|---------|
-| CarriersTable | `components/operations/carriers/carriers-table.tsx` | 5/10 — embedded in monolith | No |
-| CarrierForm | `components/operations/carriers/carrier-form.tsx` | 5/10 — window.confirm | No |
-| CarrierStatusBadge | `components/operations/carriers/carrier-status-badge.tsx` | 4/10 — hardcoded colors | Yes |
-| **TruckTypesPage** | `(dashboard)/truck-types/page.tsx` | **PROTECTED 8/10** | No |
-| CarrierDetailCard | N/A | Not Built — causes 404 | No |
-| CarrierContactsList | N/A | Not Built | No |
-| CarrierDriversList | N/A | Not Built | No |
-| CarrierInsuranceList | N/A | Not Built | No |
-| CarrierCompliancePanel | N/A | Not Built | No |
+Built — 17 components in `components/carriers/`:
+
+| Component | Path | Status |
+|-----------|------|--------|
+| CarrierOverviewCard | `components/carriers/carrier-overview-card.tsx` | Built |
+| CarrierInsuranceSection | `components/carriers/carrier-insurance-section.tsx` | Built |
+| CarrierDriversSection | `components/carriers/carrier-drivers-section.tsx` | Built |
+| CarrierDocumentsSection | `components/carriers/carrier-documents-section.tsx` | Built |
+| CarrierDocumentsManager | `components/carriers/carrier-documents-manager.tsx` | Built |
+| CarrierContactsTab | `components/carriers/carrier-contacts-tab.tsx` | Built |
+| CarrierLoadsTab | `components/carriers/carrier-loads-tab.tsx` | Built |
+| CarrierDriversManager | `components/carriers/carrier-drivers-manager.tsx` | Built |
+| CarrierTrucksManager | `components/carriers/carrier-trucks-manager.tsx` | Built |
+| CarrierForm | `components/carriers/carrier-form.tsx` | Built |
+| FmcsaLookup | `components/carriers/fmcsa-lookup.tsx` | Built |
+| CsaScoresDisplay | `components/carriers/csa-scores-display.tsx` | Built |
+| TierBadge | `components/carriers/tier-badge.tsx` | Built |
+| PerformanceMetricCard | `components/carriers/scorecard/performance-metric-card.tsx` | Built |
+| ScoreGauge | `components/carriers/scorecard/score-gauge.tsx` | Built |
+| ScorecardLoadHistory | `components/carriers/scorecard/scorecard-load-history.tsx` | Built |
+| TierProgressionBar | `components/carriers/scorecard/tier-progression-bar.tsx` | Built |
+| **TruckTypesPage** | `(dashboard)/truck-types/page.tsx` | **PROTECTED 8/10** |
 
 ---
 
@@ -256,15 +268,17 @@ EXPIRED → ACTIVE (new certificate uploaded + verified)
 
 | Issue | Severity | File | Status |
 |-------|----------|------|--------|
-| **Carrier Detail page returns 404** | **P0 Blocker** | `carriers/[id]/page.tsx` — missing | Open |
-| **Load History Detail page returns 404** | **P0 Blocker** | `load-history/[id]/page.tsx` — missing | Open |
-| window.confirm() used 7 times | P1 UX | Multiple carrier files | Open |
-| No search debounce on Carriers list | P1 Performance | `carriers/page.tsx` | Open |
+| window.confirm() used in carrier files | P1 UX | Multiple carrier files | Open |
 | Carriers list is 858-line monolith | P1 Maintainability | `carriers/page.tsx` | Open |
 | CarrierStatusBadge uses hardcoded colors | P2 Design | `carrier-status-badge.tsx` | Open |
 | No frontend tests for carrier pages | P1 | — | Open |
 | Compliance Center not built | P2 | — | Deferred |
 | Insurance auto-suspension scheduled job — verify it runs | P1 | `apps/api/src/` | Needs verification |
+
+**Previously listed — now resolved:**
+- ~~BUG-001: Carrier Detail 404~~ — `carriers/[id]/page.tsx` EXISTS with full tabbed implementation (7/10)
+- ~~BUG-002: Load History Detail 404~~ — `load-history/[id]/page.tsx` EXISTS (5/10, needs QS-008 runtime verify)
+- ~~No search debounce~~ — debounce IS present in carriers/page.tsx (3 refs found)
 
 ---
 
@@ -273,10 +287,9 @@ EXPIRED → ACTIVE (new certificate uploaded + verified)
 ### Quality Sprint (Active)
 | Task ID | Title | Effort | Status |
 |---------|-------|--------|--------|
-| BUG-001 | Build Carrier Detail Page (tabs: Overview, Contacts, Insurance, Docs, Drivers, Loads) | L (4-6h) | Open |
-| BUG-002 | Build Load History Detail Page (tabs: Overview, Stops, Tracking, Docs) | M (3-4h) | Open |
-| BUG-006 | Replace window.confirm (7 instances) with ConfirmDialog | S (1-2h) | Open |
-| BUG-007 | Add search debounce to Carriers list | S (30m) | Open |
+| BUG-006 | Replace window.confirm with ConfirmDialog in carrier files | S (1-2h) | Open |
+| CARR-010 | QA Carrier Detail page (exists, 7/10 — verify tabs at runtime) | S (1h) | Open |
+| CARR-011 | QA Load History Detail page (exists, 5/10 — verify at runtime) | S (1h) | Open |
 
 ### Backlog
 | Task ID | Title | Effort | Priority |
@@ -317,11 +330,11 @@ EXPIRED → ACTIVE (new certificate uploaded + verified)
 
 | Original Plan | Actual | Delta |
 |--------------|--------|-------|
-| Carrier Detail page built | Carrier Detail is 404 | Regression |
+| Carrier Detail page built | Detail EXISTS with 7 tabs, 17 components | Ahead of plan |
 | Single carrier module | 6 controllers (carrier, contacts, drivers, insurance, docs, FMCSA) | Better modularity |
 | Compliance basic | FMCSA lookup + CSA scores implemented | Exceeds plan |
 | Preferred carriers = future | Preferred carriers in P0 | Earlier than planned |
-| 13 screens planned | 4 built (with quality issues), 2 are 404s | 11 not built |
+| 13 screens planned | 6 built + Truck Types (PROTECTED) | 6 not built (Phase 2) |
 | Tests required | 45 backend tests (CARR-003 done), 0 frontend | Backend ahead |
 
 ---

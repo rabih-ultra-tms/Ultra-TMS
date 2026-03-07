@@ -79,10 +79,10 @@
 | Screen | Required Endpoints | All Exist? | Notes |
 |--------|-------------------|-----------|-------|
 | Carriers List | GET /carriers | YES | Production |
-| Carrier Detail | GET /carriers/:id | YES | Production — **page.tsx missing** |
+| Carrier Detail | GET /carriers/:id | YES | Production — page built (tabbed, 7/10) |
 | Carrier Create | POST /carriers | YES | Production |
 | Carrier Edit | PATCH /carriers/:id | YES | Production |
-| Load History | GET /carriers/:id/loads | YES | Production — **detail page.tsx missing** |
+| Load History | GET /carriers/:id/loads | YES | Production — page built (5/10) |
 | Carrier Scorecard | GET /carriers/:id/performance | YES | Production |
 | Truck Types | GET /truck-types (separate) | YES | Production — PROTECTED |
 
