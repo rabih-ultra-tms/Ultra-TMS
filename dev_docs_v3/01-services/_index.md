@@ -6,7 +6,7 @@
 
 ---
 
-## P0: MVP Services (9 services — 16-week sprint)
+## P0: MVP Services (10 services — 16-week sprint)
 
 | # | Service | Hub File | Backend | Frontend | Tests | Health | Priority |
 |---|---------|----------|---------|----------|-------|--------|----------|
@@ -19,23 +19,21 @@
 | 07 | Accounting | [07-accounting.md](p0-mvp/07-accounting.md) | Production (backend) | Not Built | None | D 3/10 | P0-High |
 | 08 | Commission | [08-commission.md](p0-mvp/08-commission.md) | Production (backend) | Not Built | None | D 3/10 | P0-Medium |
 | 09 | Load Board | [09-load-board.md](p0-mvp/09-load-board.md) | Partial (backend stub) | Not Built | None | D 2/10 | P0-Medium |
+| 13 | Customer Portal | [13-customer-portal.md](p0-mvp/13-customer-portal.md) | Partial (7 controllers) | Not Built | None | D 2/10 | P0-High |
 
 ---
 
-## P1: Post-MVP Services (6 services)
+## P1: Post-MVP Services (3 services)
 
 | # | Service | Hub File | Backend | Frontend | Health | Notes |
 |---|---------|----------|---------|----------|--------|-------|
-| 10 | Claims | [10-claims.md](p1-post-mvp/10-claims.md) | Partial (7 controllers) | Not Built | D 2/10 | |
 | 11 | Documents | [11-documents.md](p1-post-mvp/11-documents.md) | Partial (3 controllers, .bak) | Partial | D+ 3/10 | .bak dir exists |
 | 12 | Communication | [12-communication.md](p1-post-mvp/12-communication.md) | Partial (5 controllers) | Not Built | D 2/10 | Email + SMS |
-| 13 | Customer Portal | [13-customer-portal.md](p1-post-mvp/13-customer-portal.md) | Partial (7 controllers) | Not Built | D 2/10 | Separate auth |
-| 14 | Carrier Portal | [14-carrier-portal.md](p1-post-mvp/14-carrier-portal.md) | Partial (7 controllers) | Not Built | D 2/10 | Separate auth |
-| 15 | Contracts | [15-contracts.md](p1-post-mvp/15-contracts.md) | Partial (8 controllers) | Not Built | D 2/10 | |
+| 14 | Carrier Portal | [14-carrier-portal.md](p1-post-mvp/14-carrier-portal.md) | Partial (7 controllers) | Not Built | D 2/10 | First P1 to build |
 
 ---
 
-## P2: Extended Services (7 services)
+## P2: Extended Services (9 services)
 
 | # | Service | Hub File | Backend | Frontend | Health | Notes |
 |---|---------|----------|---------|----------|--------|-------|
@@ -46,10 +44,12 @@
 | 20 | Workflow | [20-workflow.md](p2-extended/20-workflow.md) | Partial (4 controllers, .bak) | Not Built | D 2/10 | .bak dir exists |
 | 21 | Integration Hub | [21-integration-hub.md](p2-extended/21-integration-hub.md) | Partial (5 controllers, .bak) | Not Built | D 2/10 | .bak dir exists |
 | 22 | Search | [22-search.md](p2-extended/22-search.md) | Partial (4 controllers) | Not Built | D 2/10 | Elasticsearch |
+| 10 | Claims | [10-claims.md](p2-extended/10-claims.md) | Partial (7 controllers) | Not Built | D 2/10 | Demoted from P1 |
+| 15 | Contracts | [15-contracts.md](p2-extended/15-contracts.md) | Partial (8 controllers) | Not Built | D 2/10 | Demoted from P1 |
 
 ---
 
-## P3: Future Services (16 services — not in current scope)
+## P3: Future Services (10 services — not in current scope)
 
 See [p3-future/_index.md](p3-future/_index.md) for full list.
 
@@ -65,24 +65,33 @@ See [p3-future/_index.md](p3-future/_index.md) for full list.
 | 30 | Audit | Partial (8 controllers) | Audit trail |
 | 31 | Config | Partial (9 controllers) | System configuration |
 | 32 | Cache | Partial (4 controllers) | Redis cache layer |
-| 33 | Super Admin | Partial (auth exists) | Cross-tenant admin |
-| 34 | Operations | In auth | Role-based ops view |
-| 35 | Email | In communication | SendGrid integration |
-| 36 | Storage | Partial | S3 file storage |
-| 37 | Redis | Partial (4 controllers) | Queue management |
-| 38 | Health | Production | Health check endpoint |
+
+---
+
+## P-Infra: Infrastructure Modules (6 modules — not services)
+
+See [p-infra/_index.md](p-infra/_index.md) for details.
+
+| # | Module | Type | Notes |
+|---|--------|------|-------|
+| 33 | Super Admin | Role in Auth | Cross-tenant admin role |
+| 34 | Email | Service Helper | SendGrid integration |
+| 35 | Storage | Service Helper | S3 file storage |
+| 36 | Redis | Service Helper | Cache, queues, WebSocket adapter |
+| 37 | Health | Production Endpoint | `GET /api/v1/health` |
+| 38 | Operations | Sub-Modules | 7 sub-modules powering TMS Core |
 
 ---
 
 ## Coverage Summary
 
-| Layer | P0 MVP | P1 Post-MVP | P2 Extended | P3 Future |
-|-------|--------|-------------|-------------|-----------|
-| Backend modules | 9/9 active | 6/6 partial | 7/7 partial | 16 partial |
-| Frontend screens | ~25% built | 0% | 0% | 0% |
-| Unit tests | ~10% | 0% | 0% | 0% |
-| E2E tests | 0% | 0% | 0% | 0% |
-| Design specs | 100% (89+ files) | Partial | Partial | Partial |
+| Layer | P0 MVP | P1 Post-MVP | P2 Extended | P3 Future | P-Infra |
+|-------|--------|-------------|-------------|-----------|---------|
+| Backend modules | 9/9 active | 3/3 partial | 9/9 partial | 10 partial | 6/6 infrastructure |
+| Frontend screens | ~25% built | 0% | 0% | 0% | N/A |
+| Unit tests | ~10% | 0% | 0% | 0% | N/A |
+| E2E tests | 0% | 0% | 0% | 0% | N/A |
+| Design specs | 100% (89+ files) | Partial | Partial | Partial | N/A |
 
 ---
 
@@ -91,7 +100,7 @@ See [p3-future/_index.md](p3-future/_index.md) for full list.
 | Original Plan | Actual State | Delta |
 |--------------|-------------|-------|
 | 38 services planned | 42 backend modules exist | +4 modules (partial) |
-| 8 MVP services | 9 P0 services (Dashboard added) | +1 |
+| 8 MVP services | 10 P0 services (Dashboard + Customer Portal added) | +2 |
 | ~300 screens planned | 96 routes built | 75% not built |
 | 362 screens in full vision | MVP = 30 screens scoped | Reduced to MVP |
 | All services "not built" | 30+ services have partial backends | Major delta |

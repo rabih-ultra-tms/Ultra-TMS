@@ -188,13 +188,65 @@ const { mutate, isPending } = useMutation({
 
 ## Caching Strategy
 
-**Redis (port 6379)** is configured but not yet used for application-level caching. Current use:
-- Session storage (future)
-- Job queues (future — BullMQ)
+### Current State
 
-**React Query** handles client-side caching (staleTime, gcTime).
+- **Redis 7** running on port 6379 (docker-compose) -- configured for WebSocket adapter and BullMQ queues
+- **React Query (TanStack Query)** handles all client-side caching (staleTime varies by hook)
+- **No server-side application cache** implemented yet
 
-**Planned:** Redis cache layer for frequently-read data (carrier list, rate tables).
+### Redis Cache Tiers
+
+| Tier | TTL | Data Examples | Invalidation |
+|------|-----|--------------|-------------|
+| Hot (reference) | 5 min | Carrier list, truck types, status enums, location lookups | On write (explicit invalidation) |
+| Warm (computed) | 1 min | Dashboard KPIs, aging report totals, load counts by status | On write + TTL expiry |
+| Session | 24 hours | User session data, preferences, recent searches | On logout / token refresh |
+| Queue | N/A | BullMQ jobs (email send, PDF generation, FMCSA sync) | On job completion |
+
+### Cache Key Convention
+
+```
+ultra:{tenantId}:{entity}:{scope}
+```
+
+Examples:
+- `ultra:tenant123:carriers:list` -- paginated carrier list
+- `ultra:tenant123:dashboard:kpis` -- dashboard aggregations
+- `ultra:tenant123:loads:count-by-status` -- load status counts
+- `ultra:global:truck-types:all` -- shared reference data (no tenant scope)
+- `ultra:global:enums:load-status` -- enum values
+
+### React Query Client-Side Cache
+
+| Data Type | staleTime | gcTime | refetchOnWindowFocus |
+|-----------|-----------|--------|---------------------|
+| Reference data (truck types, enums) | 5 min | 30 min | false |
+| Lists (carriers, loads, orders) | 30 sec | 5 min | true |
+| Detail pages (load detail, carrier detail) | 15 sec | 5 min | true |
+| Dashboard KPIs | 60 sec | 10 min | true |
+| User profile | 5 min | 30 min | false |
+
+### Implementation Priority
+
+| # | What to Cache | Expected Impact | Depends On |
+|---|--------------|----------------|-----------|
+| 1 | Dashboard aggregations | Biggest latency win (complex SQL -> cached result) | QS-003 endpoint |
+| 2 | Carrier reference data | Frequently read, rarely written | None |
+| 3 | Rate/tariff tables | Heavy read during quoting, batch write on import | None |
+| 4 | Session storage | Replaces localStorage tokens (fixes P0-001 XSS) | Auth refactor |
+
+### Cache Invalidation Rules
+
+- **Write-through:** On any POST/PUT/DELETE, invalidate related cache keys
+- **Pattern invalidation:** `ultra:{tenantId}:carriers:*` clears all carrier caches for tenant
+- **No cross-tenant cache sharing** except `ultra:global:*` reference data
+- **Stale-while-revalidate:** Serve cached data immediately, refresh in background
+
+### See Also
+
+- ADR-015: Redis for Queues and Cache
+- PERF-007: Redis caching backlog task
+- 11-features/performance.md: Performance standards
 
 ---
 

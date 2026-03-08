@@ -147,3 +147,43 @@ Then verify manually:
 | No tests | Write at least 1 test per component |
 | Form not verified | Use Playwright to fill + submit every form |
 | TypeScript errors ignored | `pnpm check-types` must pass before claiming done |
+
+---
+
+## /verify Command Sequence (8 Steps)
+
+Run this complete sequence before marking ANY task as done. No shortcuts.
+
+| Step | Command / Action | Pass Criteria | What Breaks If Skipped |
+| ------ | ----------------- | --------------- | ---------------------- |
+| 1 | `pnpm check-types` | 0 errors | Runtime TypeError in production |
+| 2 | `pnpm lint` | 0 errors, 0 warnings | Inconsistent code style, missed bugs |
+| 3 | `pnpm --filter web test` | All tests pass, 0 skipped | Regression in next feature |
+| 4 | `pnpm --filter api test` | All tests pass, 0 skipped | API contract breaks |
+| 5 | Navigate to route in browser | Page renders without errors | Blank page in production |
+| 6 | Open DevTools -> Console | No errors, no warnings, no console.logs | Security leak (JWT logged), UX bugs |
+| 7 | Resize to 375px, 768px, 1440px | Layout doesn't break | Mobile users see broken UI |
+| 8 | Re-read task acceptance criteria | All criteria met | Task marked done but incomplete |
+
+### Rules
+
+- **If ANY step fails:** Fix the issue, then re-run FROM THAT STEP (not from step 1)
+- **Steps 1-4 are automated:** Run them in sequence, takes ~60 seconds total
+- **Steps 5-8 are manual:** Requires browser open on the relevant route
+- **Never skip step 6:** Console.log statements in production code have caused security findings (JWT logged, SEC-P0-002)
+- **Step 8 is non-negotiable:** The acceptance criteria in the task file ARE the definition of done
+
+### Quick Command
+
+```bash
+# Steps 1-4 in one command
+pnpm check-types && pnpm lint && pnpm --filter web test && pnpm --filter api test
+```
+
+### When to Run /verify
+
+- After completing any QS-* task
+- After completing any backlog task
+- Before any git commit
+- Before requesting code review
+- Before claiming "task done" to the user

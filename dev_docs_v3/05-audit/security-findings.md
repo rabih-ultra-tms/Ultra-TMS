@@ -5,6 +5,42 @@
 
 ---
 
+## Incident Severity Framework
+
+> Applied to all security findings and production incidents. Classification determines response SLA.
+
+| Level | Name | Ack Time | Engage Time | Mitigate Time | Examples |
+|-------|------|----------|-------------|---------------|----------|
+| SEV-1 | Critical | 5 min | 15 min | 1 hour | Data breach, complete outage, auth bypass, cross-tenant data leak, payment system compromise |
+| SEV-2 | Major | 15 min | 30 min | 2 hours | Single service down, data corruption risk, financial calculation error, carrier API failure |
+| SEV-3 | Minor | 1 hour | 4 hours | Next sprint | UI broken on one page, non-critical feature down, degraded search performance |
+| SEV-4 | Low | 1 business day | Next sprint | Backlog | Cosmetic issues, minor UX bugs, tech debt items, documentation errors |
+
+### Classification Rules
+
+- **Any multi-tenant data leak = SEV-1** regardless of data volume (one leaked record is as bad as 10,000)
+- **Any financial calculation error = SEV-2 minimum** (invoice, commission, settlement amounts)
+- **Any auth/JWT vulnerability = SEV-1** (token exposure, session hijack, privilege escalation)
+- **Production outage affecting all users = SEV-1**
+- **Production outage affecting one tenant = SEV-2**
+- **API returning incorrect data = SEV-2** (silent data corruption is worse than an error page)
+- **API returning 500 errors = SEV-3** (visible but recoverable)
+
+### Escalation Matrix
+
+| Level | Who Gets Notified | Action |
+|-------|-------------------|--------|
+| SEV-1 | All team members + stakeholder | All hands on deck. Rollback first, debug second. |
+| SEV-2 | On-call developer + team lead | Investigate immediately. Fix or workaround within SLA. |
+| SEV-3 | Assigned developer | Fix in current sprint. |
+| SEV-4 | Add to backlog | Prioritize in next planning session. |
+
+### Current Findings Severity Classification
+
+> Below findings are classified using this framework. Previously unclassified findings have been assigned levels.
+
+---
+
 ## Summary
 
 | Priority | Total | Fixed | Open |

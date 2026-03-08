@@ -2,7 +2,7 @@
 
 > Maps every feature to a service, verifies no orphan features.
 > Last updated: 2026-03-07
-> Sources: 38 service definitions + 381 design specs + actual codebase + audit reports
+> Sources: 32 services + 6 infrastructure modules + 381 design specs + actual codebase + audit reports
 
 ---
 
@@ -176,8 +176,8 @@
 | Phase | Total Features | Built | Partial/Unverified | Not Built | Coverage |
 |-------|---------------|-------|---------------------|-----------|----------|
 | P0 MVP | ~85 | ~55 | ~15 | ~15 | ~65% |
-| P1 Post-MVP | ~40 | 0 | ~5 | ~35 | ~5% |
-| P2 Extended | ~50 | 0 | ~10 | ~40 | ~0% |
+| P1 Post-MVP | ~25 | 0 | ~5 | ~20 | ~5% |
+| P2 Extended | ~70 | 0 | ~10 | ~60 | ~0% |
 | P3 Future | ~80+ | 0 | ~20 | ~60+ | ~0% |
 
 **Key insight:** Many "unverified" features have page.tsx files that were discovered to exist. The true Built% is unknown until QS-008 runtime verification completes. The count above is conservative — actual built % may be higher.
@@ -189,8 +189,20 @@
 Running the mapping above against all source documents:
 
 - **0 UNMAPPED features** — all features from service definitions trace to a specific service
-- **0 phantom services** — all 9 P0 services have clear feature ownership
+- **0 phantom services** — all 10 P0 services have clear feature ownership
 - **Personas covered:** Dispatcher (TMS Core), Sales Rep (Sales/CRM), Accounting (Accounting/Commission), Admin (Auth/Admin), Carrier (Carrier/Portal), Customer (CRM/Portal) — all 6 primary personas have screen coverage in plan
+
+---
+
+## Tribunal Tier Changes (2026-03-07)
+
+Per Tribunal verdict TRIBUNAL-01 and TRIBUNAL-02:
+- **P0:** 10 services (was 9 — Customer Portal promoted from P1)
+- **P1:** 3 services (was 6 — Claims, Contracts demoted to P2; Customer Portal promoted to P0)
+- **P2:** 9 services (was 7 — Claims, Contracts added)
+- **P3:** 10 services (was 16 — 6 infrastructure modules moved to P-Infra)
+- **P-Infra:** 6 modules (new tier — Email, Storage, Redis, Health, Operations, Super Admin)
+- **Total:** 32 true services + 6 infrastructure modules = 38 entries
 
 ---
 

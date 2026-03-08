@@ -133,3 +133,60 @@ After completing a task:
 | Quality gates | [quality-gates.md](quality-gates.md) |
 | Domain rules | [domain-rules.md](domain-rules.md) |
 | Protect list | [../PROTECT-LIST.md](../PROTECT-LIST.md) |
+
+---
+
+## Session End Ritual (2 minutes)
+
+Run this sequence before ending any coding session:
+
+| Step | Action | Time |
+|------|--------|------|
+| 1 | Run `pnpm check-types` -- verify zero TypeScript errors | 15 sec |
+| 2 | Run `pnpm lint` -- verify zero lint errors | 15 sec |
+| 3 | Run `pnpm --filter web test` -- verify all tests pass | 30 sec |
+| 4 | Update task status in STATUS.md (planned -> in-progress -> done) | 15 sec |
+| 5 | Update service hub file if routes/endpoints/components changed | 15 sec |
+| 6 | If task incomplete, add session summary to STATUS.md | 15 sec |
+
+### Session Summary Block (when task is incomplete)
+
+Add this to STATUS.md under the relevant task:
+
+```
+**Session Summary (YYYY-MM-DD):**
+- Completed: [what was done]
+- Remaining: [what's left]
+- Blockers: [any blockers found]
+- Files modified: [exact paths]
+```
+
+**Why this matters:** Without a session-end ritual, the next session starts by re-discovering what happened. This wastes 15-20 minutes every time. The 2-minute investment saves 10x.
+
+---
+
+## AI Agent Handoff Protocol
+
+When work transfers between Claude Code, Gemini, or Codex:
+
+### Sending Agent (before handoff)
+
+1. Complete current task fully OR document partial state in STATUS.md
+2. Run session-end ritual (above)
+3. Ensure all files are saved (no unsaved editor buffers)
+4. Note which files were modified in the session summary
+
+### Receiving Agent (after handoff)
+
+1. Read STATUS.md -- find current task and session summary
+2. Read the task file in `03-tasks/` -- get acceptance criteria
+3. Read the service hub file in `01-services/` -- get context
+4. Read the 3-6 files listed in the task's "Context" header
+5. Begin coding (max 6 files read before coding)
+
+### Handoff Rules
+
+- **Never assume** the previous agent finished a task unless STATUS.md says "done"
+- **Always re-read** modified files -- don't trust cached context from a previous session
+- **Don't redo work** -- check git log for recent commits before starting
+- **Follow the same standards** -- all agents use the same quality gates, testing standards, and code conventions documented in dev_docs_v3

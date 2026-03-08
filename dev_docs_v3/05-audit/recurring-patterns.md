@@ -295,6 +295,41 @@ If the endpoint doesn't exist in the controller, either build it first or create
 
 ---
 
+### Pattern 11: Missing tenantId Filter in Queries
+
+**Frequency:** Systemic risk (801 manual WHERE clauses)
+**Symptom:** Tenant A can see Tenant B's data — critical security breach
+**Root cause:** Manual `where: { tenantId }` injection is the sole isolation mechanism. Missing it from ANY query leaks data across tenants.
+**Source:** Tribunal verdict TRIBUNAL-05 (2026-03-07)
+
+**Wrong:**
+```typescript
+// DANGEROUS — returns ALL tenants' carriers
+const carriers = await this.prisma.carrier.findMany({
+  where: { status: 'ACTIVE' },
+});
+```
+
+**Correct:**
+```typescript
+// ALWAYS include tenantId
+const carriers = await this.prisma.carrier.findMany({
+  where: { tenantId, status: 'ACTIVE', deletedAt: null },
+});
+```
+
+**Better (future — Prisma Client Extension):**
+```typescript
+// Extension auto-injects tenantId and deletedAt: null
+const carriers = await this.prisma.carrier.findMany({
+  where: { status: 'ACTIVE' },
+}); // tenantId + deletedAt automatically added by extension
+```
+
+**Rule:** EVERY Prisma query that touches a tenant-scoped model MUST include `tenantId` in the `where` clause. If you're writing a new service method, search for `tenantId` in the existing service to confirm the pattern. Future: Prisma Client Extension (QS-014) will auto-inject, but until then, manual filtering is required.
+
+---
+
 ## Prevention Checklist
 
 Before marking any feature complete, verify:
@@ -311,6 +346,7 @@ Before marking any feature complete, verify:
 - [ ] Error state renders ErrorState component
 - [ ] Empty state renders EmptyState component
 - [ ] TypeScript types defined for all API responses
+- [ ] tenantId included in every Prisma query WHERE clause
 - [ ] Endpoint existence verified with grep before writing fetch call
 - [ ] `pnpm check-types` passes with 0 errors
 - [ ] Playwright screenshot taken of actual running feature

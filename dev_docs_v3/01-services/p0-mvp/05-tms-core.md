@@ -246,6 +246,7 @@ All 10 hooks exist in `lib/hooks/tms/`. All use `unwrap()` helper for proper `{ 
 8. **TONU Fee:** If a carrier is dispatched and the load is then cancelled, a Truck Order Not Used (TONU) fee applies. Default: $250 flat. Configurable per carrier. TONU is automatically added as an accessorial charge. Dispatcher must acknowledge the TONU before cancellation completes.
 9. **Soft Delete Required:** Orders, Loads, and Stops use soft delete. `deletedAt` field is set; hard deletes are forbidden. Deleted records are excluded from all list queries by default (filter: `deletedAt: null`).
 10. **Real-Time Events (WebSocket):** Dispatch Board subscribes to `/dispatch` namespace. Key events: `load:status:changed`, `load:created`, `load:assigned`. Tracking Map subscribes to `/tracking` namespace. Key events: `load:location:updated`, `load:eta:updated`. WebSocket auth uses same JWT cookie.
+11. **Dispatch Polling Fallback (MVP):** Until WebSocket gateways are fully deployed (QS-001), the Dispatch Board uses React Query with a 30-second polling interval as a fallback. `use-dispatch.ts` refetches the load list every 30s. This provides near-real-time updates without WebSocket dependency. Once QS-001 is complete, polling interval increases to 5 minutes (stale backup only). Per Tribunal verdict TRIBUNAL-09.
 
 ---
 
@@ -417,6 +418,46 @@ PENDING → ARRIVED (driver arrives) → DEPARTED (driver departs) → COMPLETED
 | TMS-013 | QA Tracking Map (verify map renders, pins, sidebar, WebSocket) | M (3h) | P1 | Component exists but needs QS-001 for real-time |
 | TMS-014 | QA Rate Confirmation (verify PDF generation, download, email) | S (1h) | P1 | Page exists 9/10 |
 | TMS-015 | Build Public Tracking Page | L (8-12h) | P1 | Not yet built |
+
+---
+
+## 12b. Rate Confirmation & BOL Generation (Tribunal Verdicts)
+
+> Added per TRIBUNAL-02, TRIBUNAL-04, TRIBUNAL-10 verdicts (2026-03-07).
+> These are table-stakes features for any TMS — promoted to P0 scope.
+
+### Rate Confirmation
+
+**Status:** Backend endpoint EXISTS (`GET /api/v1/loads/:id/rate-confirmation`). Frontend page EXISTS (`/operations/loads/[id]/rate-con`, 9/10 quality). PDF generation partially built via `pdf.service.ts` (PDFKit).
+
+**What's needed:**
+
+- `POST /api/v1/loads/:id/rate-confirmation/generate` — generate rate con PDF (extend `pdf.service.ts`)
+- `POST /api/v1/loads/:id/rate-confirmation/send` — email rate con to carrier (SendGrid)
+- Update Load model: set `rateConfirmationSent` timestamp on send
+- Verify frontend Generate/Download/Email buttons work end-to-end
+
+**PDF content:** Load details (number, dates, equipment), carrier info, pickup/delivery addresses, rates and accessorials, terms and conditions, signature line.
+
+**Task:** QS-012 (Rate Con PDF Generation)
+
+### BOL (Bill of Lading) Generation
+
+**Status:** Not Built. No backend endpoint, no frontend page.
+
+**What's needed:**
+
+- `POST /api/v1/loads/:id/bol` — generate BOL PDF
+- Frontend button on Load Detail page to generate/preview/download BOL
+- BOL template in `pdf.service.ts` or separate `document-generation.service.ts`
+
+**PDF content:** Shipper/consignee info, commodity description, weight, piece count, special instructions, hazmat placards (if applicable), reference numbers, carrier name, standard BOL terms.
+
+**Task:** QS-013 (BOL PDF Generation)
+
+### Shared PDF Infrastructure
+
+Both features reuse `apps/api/src/modules/accounting/services/pdf.service.ts` which already has `generateInvoicePdf()` using PDFKit (pdfkit@0.17.2). The same pattern (service method → PDFKit → Buffer → response) applies to rate con and BOL.
 
 ---
 
