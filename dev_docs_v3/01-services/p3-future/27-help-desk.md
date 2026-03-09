@@ -1,9 +1,10 @@
 # Service Hub: Help Desk (27)
 
-> **Source of Truth** -- dev_docs_v3 era | Last verified: 2026-03-07
+> **Source of Truth** — dev_docs_v3 era | Last verified: 2026-03-09 (PST-27 tribunal)
 > **Original definition:** `dev_docs/02-services/` (Help Desk service definition)
 > **Design specs:** `dev_docs/12-Rabih-design-Process/27-help-desk/` (7 files)
-> **Priority:** P3 Future -- internal support ticketing system
+> **Tribunal file:** `dev_docs_v3/05-audit/tribunal/per-service/PST-27-help-desk.md`
+> **Priority:** P3 Future — internal support ticketing system
 
 ---
 
@@ -11,13 +12,13 @@
 
 | Field | Value |
 |-------|-------|
-| **Health Score** | D (2/10) |
-| **Confidence** | High -- code-verified 2026-03-07 |
-| **Last Verified** | 2026-03-07 |
-| **Backend** | Scaffolded -- 5 controllers, 31 endpoints in `apps/api/src/modules/help-desk/` |
-| **Frontend** | Not Built -- 0 pages, 0 components, 0 hooks |
-| **Tests** | Minimal -- spec files exist but services are mostly placeholders (EscalationService, SlaTrackerService) |
-| **Active Blockers** | No frontend at all; escalation and SLA tracker services are stubs |
+| **Health Score** | B- (7.5/10) |
+| **Confidence** | High — code-verified via PST-27 tribunal |
+| **Last Verified** | 2026-03-09 |
+| **Backend** | Partial — 5 controllers, 31 endpoints in `apps/api/src/modules/help-desk/`. 7/10 services fully implemented; 2 stubs (EscalationService, SlaTrackerService) |
+| **Frontend** | Not Built — 0 pages, 0 components, 0 hooks |
+| **Tests** | 10 spec files / ~30 tests / 591 LOC. 8/10 files have real tests; 2 stub tests (escalation, sla-tracker) |
+| **Active Blockers** | No frontend at all; EscalationService + SlaTrackerService are stubs; RolesGuard missing on all 5 controllers; currentTicketCount never updated |
 
 ---
 
@@ -27,19 +28,21 @@
 |-------|--------|-------|
 | Service Definition | Done | Help Desk service definition in dev_docs |
 | Design Specs | Done | 7 files in `dev_docs/12-Rabih-design-Process/27-help-desk/` |
-| Backend -- Tickets | Scaffolded | `help-desk/tickets/` -- controller, service, ticket-number service |
-| Backend -- Teams | Scaffolded | `help-desk/teams/` -- controller, service, assignment service |
-| Backend -- SLA Policies | Scaffolded | `help-desk/sla/` -- controller, sla.service, sla-tracker.service (stub) |
-| Backend -- Canned Responses | Scaffolded | `help-desk/canned-responses/` -- controller, service |
-| Backend -- Knowledge Base | Scaffolded | `help-desk/knowledge-base/` -- kb.controller, articles.service, categories.service |
-| Backend -- Escalation | Stub | `help-desk/escalation/escalation.service.ts` -- placeholder `evaluate()` only |
-| Backend -- DTO | Done | `help-desk/dto/help-desk.dto.ts` -- 15 DTO classes with full validation |
-| Prisma Models | Done | SupportTicket, TicketReply, SupportTeam, SupportTeamMember, SlaPolicy, CannedResponse, KBArticle, EscalationRule |
+| Backend — Tickets | Implemented | `help-desk/tickets/` — controller, service (212 LOC), ticket-number service. SLA application, auto-assign delegation, event emission, status transitions |
+| Backend — Teams | Implemented | `help-desk/teams/` — controller, service, assignment service. Round-robin auto-assign works |
+| Backend — SLA Policies | Implemented | `help-desk/sla/` — controller, sla.service with full policy matching (`applyPolicy()` does condition matching, sets firstResponseDue/resolutionDue) |
+| Backend — SLA Tracker | Stub | `help-desk/sla/sla-tracker.service.ts` — 9 LOC, single `track()` returning `true` |
+| Backend — Canned Responses | Implemented | `help-desk/canned-responses/` — controller, service with full CRUD |
+| Backend — Knowledge Base | Implemented | `help-desk/knowledge-base/` — kb.controller, articles.service (slug generation, keyword serialization, publish workflow, feedback counters), categories.service (JSON store via TenantConfig) |
+| Backend — Escalation | Stub | `help-desk/escalation/escalation.service.ts` — 9 LOC, placeholder `evaluate()` only |
+| Backend — DTO | Done | `help-desk/dto/help-desk.dto.ts` — 15 DTO classes with full validation |
+| Prisma Models | Done | 8 models: SupportTicket, TicketReply, SupportTeam, SupportTeamMember, SlaPolicy, CannedResponse, KBArticle, EscalationRule |
 | Frontend Pages | Not Built | No pages exist |
 | React Hooks | Not Built | No hooks exist |
 | Components | Not Built | No components exist |
-| Tests | Minimal | 7 `.spec.ts` files present; core services likely have basic tests but escalation/SLA tracker are stubs |
-| Security | Good | All controllers: JwtAuthGuard + tenantId scoping + @Roles decorators |
+| Tests | Good | 10 spec files, ~30 tests, 591 LOC. 8/10 files have real meaningful tests; only escalation + sla-tracker are stubs |
+| Security | Partial | All 5 controllers: JwtAuthGuard + tenantId scoping. RolesGuard: **0/5 controllers** — all @Roles decorators are decorative (no enforcement). Tenant isolation 100%. Soft-delete 100% |
+| Events | Implemented | 6 EventEmitter events (ticket.created, .updated, .replied, .assigned, .closed, .reopened) — all fire but no listeners exist yet |
 
 ---
 
@@ -61,61 +64,61 @@
 
 ## 4. API Endpoints
 
-### Tickets Controller (`support/tickets`) -- 9 endpoints
+### Tickets Controller (`support/tickets`) — 9 endpoints
 
 | Method | Path | Controller | Status | Notes |
 |--------|------|------------|--------|-------|
-| GET | `/api/v1/support/tickets` | TicketsController | Scaffolded | List tickets (VIEWER+) |
-| POST | `/api/v1/support/tickets` | TicketsController | Scaffolded | Create ticket (USER+) |
-| GET | `/api/v1/support/tickets/:id` | TicketsController | Scaffolded | Ticket detail (VIEWER+) |
-| PUT | `/api/v1/support/tickets/:id` | TicketsController | Scaffolded | Update ticket (USER+) |
-| DELETE | `/api/v1/support/tickets/:id` | TicketsController | Scaffolded | Delete ticket (MANAGER+) |
-| POST | `/api/v1/support/tickets/:id/reply` | TicketsController | Scaffolded | Add reply (USER+) |
-| POST | `/api/v1/support/tickets/:id/assign` | TicketsController | Scaffolded | Assign ticket (USER+) |
-| POST | `/api/v1/support/tickets/:id/close` | TicketsController | Scaffolded | Close with resolution notes (USER+) |
-| POST | `/api/v1/support/tickets/:id/reopen` | TicketsController | Scaffolded | Reopen closed ticket (USER+) |
+| GET | `/api/v1/support/tickets` | TicketsController | Implemented | List tickets (VIEWER+). No pagination or filters |
+| POST | `/api/v1/support/tickets` | TicketsController | Implemented | Create ticket (USER+). Applies SLA policy, triggers auto-assign |
+| GET | `/api/v1/support/tickets/:id` | TicketsController | Implemented | Ticket detail (VIEWER+) |
+| PUT | `/api/v1/support/tickets/:id` | TicketsController | Implemented | Update ticket (USER+) |
+| DELETE | `/api/v1/support/tickets/:id` | TicketsController | Implemented | Soft-delete ticket (MANAGER+) |
+| POST | `/api/v1/support/tickets/:id/reply` | TicketsController | Implemented | Add reply (USER+). Sets status to OPEN on first reply, tracks firstRespondedAt |
+| POST | `/api/v1/support/tickets/:id/assign` | TicketsController | Implemented | Assign ticket (USER+). Sets status to OPEN |
+| POST | `/api/v1/support/tickets/:id/close` | TicketsController | Implemented | Close with resolution notes (USER+). Skips RESOLVED state — see BUG-5 |
+| POST | `/api/v1/support/tickets/:id/reopen` | TicketsController | Implemented | Reopen closed ticket (USER+) |
 
-### Canned Responses Controller (`support/canned-responses`) -- 4 endpoints
-
-| Method | Path | Controller | Status | Notes |
-|--------|------|------------|--------|-------|
-| GET | `/api/v1/support/canned-responses` | CannedResponsesController | Scaffolded | List responses (VIEWER+) |
-| POST | `/api/v1/support/canned-responses` | CannedResponsesController | Scaffolded | Create response (ADMIN) |
-| PUT | `/api/v1/support/canned-responses/:id` | CannedResponsesController | Scaffolded | Update response (ADMIN) |
-| DELETE | `/api/v1/support/canned-responses/:id` | CannedResponsesController | Scaffolded | Delete response (ADMIN) |
-
-### Knowledge Base Controller (`support/kb`) -- 9 endpoints
+### Canned Responses Controller (`support/canned-responses`) — 4 endpoints
 
 | Method | Path | Controller | Status | Notes |
 |--------|------|------------|--------|-------|
-| GET | `/api/v1/support/kb/categories` | KbController | Scaffolded | List KB categories (VIEWER+) |
-| POST | `/api/v1/support/kb/categories` | KbController | Scaffolded | Create category (ADMIN) |
-| PUT | `/api/v1/support/kb/categories/:id` | KbController | Scaffolded | Update category (ADMIN) |
-| GET | `/api/v1/support/kb/articles` | KbController | Scaffolded | List articles (VIEWER+) |
-| POST | `/api/v1/support/kb/articles` | KbController | Scaffolded | Create article (USER+) |
-| GET | `/api/v1/support/kb/articles/:id` | KbController | Scaffolded | Article detail (VIEWER+) |
-| PUT | `/api/v1/support/kb/articles/:id` | KbController | Scaffolded | Update article (USER+) |
-| POST | `/api/v1/support/kb/articles/:id/publish` | KbController | Scaffolded | Publish article (ADMIN) |
-| POST | `/api/v1/support/kb/articles/:id/feedback` | KbController | Scaffolded | Submit helpful/unhelpful feedback (USER+) |
+| GET | `/api/v1/support/canned-responses` | CannedResponsesController | Implemented | List responses (VIEWER+) |
+| POST | `/api/v1/support/canned-responses` | CannedResponsesController | Implemented | Create response (ADMIN) |
+| PUT | `/api/v1/support/canned-responses/:id` | CannedResponsesController | Implemented | Update response (ADMIN) |
+| DELETE | `/api/v1/support/canned-responses/:id` | CannedResponsesController | Implemented | Soft-delete response (ADMIN) |
 
-### SLA Policies Controller (`support/sla-policies`) -- 4 endpoints
+### Knowledge Base Controller (`support/kb`) — 9 endpoints
 
 | Method | Path | Controller | Status | Notes |
 |--------|------|------------|--------|-------|
-| GET | `/api/v1/support/sla-policies` | SlaPoliciesController | Scaffolded | List SLA policies (VIEWER+) |
-| POST | `/api/v1/support/sla-policies` | SlaPoliciesController | Scaffolded | Create SLA policy (ADMIN) |
-| PUT | `/api/v1/support/sla-policies/:id` | SlaPoliciesController | Scaffolded | Update SLA policy (ADMIN) |
-| DELETE | `/api/v1/support/sla-policies/:id` | SlaPoliciesController | Scaffolded | Delete SLA policy (ADMIN) |
+| GET | `/api/v1/support/kb/categories` | KbController | Implemented | List KB categories (VIEWER+). Stored in TenantConfig JSON |
+| POST | `/api/v1/support/kb/categories` | KbController | Implemented | Create category (ADMIN). Uses prisma.tenantConfig.upsert() |
+| PUT | `/api/v1/support/kb/categories/:id` | KbController | Implemented | Update category (ADMIN) |
+| GET | `/api/v1/support/kb/articles` | KbController | Implemented | List articles (VIEWER+). No pagination |
+| POST | `/api/v1/support/kb/articles` | KbController | Implemented | Create article (USER+). Maps isPublic to isPublished — see BUG-6 |
+| GET | `/api/v1/support/kb/articles/:id` | KbController | Implemented | Article detail (VIEWER+) |
+| PUT | `/api/v1/support/kb/articles/:id` | KbController | Implemented | Update article (USER+) |
+| POST | `/api/v1/support/kb/articles/:id/publish` | KbController | Implemented | Publish article (ADMIN) |
+| POST | `/api/v1/support/kb/articles/:id/feedback` | KbController | Implemented | Submit helpful/unhelpful feedback (USER+) |
 
-### Teams Controller (`support/teams`) -- 5 endpoints
+### SLA Policies Controller (`support/sla-policies`) — 4 endpoints
 
 | Method | Path | Controller | Status | Notes |
 |--------|------|------------|--------|-------|
-| GET | `/api/v1/support/teams` | TeamsController | Scaffolded | List teams (VIEWER+) |
-| POST | `/api/v1/support/teams` | TeamsController | Scaffolded | Create team (ADMIN) |
-| GET | `/api/v1/support/teams/:id` | TeamsController | Scaffolded | Team detail (VIEWER+) |
-| PUT | `/api/v1/support/teams/:id` | TeamsController | Scaffolded | Update team (USER+) |
-| POST | `/api/v1/support/teams/:id/members` | TeamsController | Scaffolded | Manage team members (ADMIN) |
+| GET | `/api/v1/support/sla-policies` | SlaPoliciesController | Implemented | List SLA policies (VIEWER+) |
+| POST | `/api/v1/support/sla-policies` | SlaPoliciesController | Implemented | Create SLA policy (ADMIN) |
+| PUT | `/api/v1/support/sla-policies/:id` | SlaPoliciesController | Implemented | Update SLA policy (ADMIN) |
+| DELETE | `/api/v1/support/sla-policies/:id` | SlaPoliciesController | Implemented | Soft-delete SLA policy (ADMIN) |
+
+### Teams Controller (`support/teams`) — 5 endpoints
+
+| Method | Path | Controller | Status | Notes |
+|--------|------|------------|--------|-------|
+| GET | `/api/v1/support/teams` | TeamsController | Implemented | List teams (VIEWER+) |
+| POST | `/api/v1/support/teams` | TeamsController | Implemented | Create team (ADMIN) |
+| GET | `/api/v1/support/teams/:id` | TeamsController | Implemented | Team detail (VIEWER+) |
+| PUT | `/api/v1/support/teams/:id` | TeamsController | Implemented | Update team (USER+) |
+| POST | `/api/v1/support/teams/:id/members` | TeamsController | Implemented | Manage team members (ADMIN). BUG: uses hard-delete then re-create |
 
 **Total: 31 endpoints across 5 controllers**
 
@@ -171,27 +174,29 @@ All hooks MUST unwrap the API envelope: `response.data.data` (not `response.data
 
 1. **Ticket Lifecycle:** Every ticket follows the status flow: NEW -> OPEN -> PENDING/ON_HOLD -> RESOLVED -> CLOSED. A ticket enters NEW when created, transitions to OPEN when first assigned or replied to, moves to PENDING when waiting on requester input, can be placed ON_HOLD for external dependencies, is RESOLVED when the agent provides a resolution, and is CLOSED after confirmation or auto-close timeout. Tickets can be reopened from RESOLVED or CLOSED, which resets status to OPEN.
 
-2. **SLA Policies -- Response Time:** Each SLA policy defines a `firstResponseTarget` in minutes. When a ticket is created, the system matches it against SLA policies based on `conditions` (priority and/or category). The matched policy's `firstResponseTarget` sets the `firstResponseDue` timestamp on the ticket. If `useBusinessHours` is true, only business hours count toward the timer. A ticket is SLA-compliant for first response if `firstRespondedAt <= firstResponseDue`.
+2. **SLA Policies — Response Time:** Each SLA policy defines a `firstResponseTarget` in minutes. When a ticket is created, the system matches it against SLA policies based on `conditions` (priority and/or category). The matched policy's `firstResponseTarget` sets the `firstResponseDue` timestamp on the ticket. If `useBusinessHours` is true, only business hours count toward the timer. A ticket is SLA-compliant for first response if `firstRespondedAt <= firstResponseDue`. **PST-27 confirmed: `applyPolicy()` does condition matching and sets firstResponseDue/resolutionDue on ticket creation.**
 
-3. **SLA Policies -- Resolution Time:** Each SLA policy also defines a `resolutionTarget` in minutes. The `resolutionDue` timestamp is computed at ticket creation. A ticket is SLA-compliant for resolution if `resolvedAt <= resolutionDue`. SLA policies have a `priority` field (integer) -- when multiple policies match a ticket's conditions, the highest-priority policy wins.
+3. **SLA Policies — Resolution Time:** Each SLA policy also defines a `resolutionTarget` in minutes. The `resolutionDue` timestamp is computed at ticket creation. A ticket is SLA-compliant for resolution if `resolvedAt <= resolutionDue`. SLA policies have a `priority` field (integer) — when multiple policies match a ticket's conditions, the highest-priority policy wins.
 
-4. **Team Routing:** Support teams have an `autoAssign` flag and an `assignmentMethod` (default: ROUND_ROBIN). When auto-assign is enabled, new tickets routed to a team are automatically assigned to the next available member. Members have `maxOpenTickets` (default: 20) and `currentTicketCount` -- a member is eligible for assignment only if `isAvailable === true` AND `currentTicketCount < maxOpenTickets`. Round-robin assignment distributes tickets evenly across eligible members.
+4. **Team Routing:** Support teams have an `autoAssign` flag and an `assignmentMethod` (default: ROUND_ROBIN). When auto-assign is enabled, new tickets routed to a team are automatically assigned to the next available member. Members have `maxOpenTickets` (default: 20) and `currentTicketCount` — a member is eligible for assignment only if `isAvailable === true` AND `currentTicketCount < maxOpenTickets`. **BUG: `autoAssign()` does NOT check maxOpenTickets (BUG-3). Also, `currentTicketCount` is never incremented/decremented anywhere in the module (BUG-4), making round-robin broken — always picks the same member.**
 
-5. **Escalation Rules:** Escalation rules are defined in the `EscalationRule` model with `triggerType` (e.g., SLA_BREACH, NO_RESPONSE, PRIORITY_CHANGE), `triggerMinutes` (time threshold), `conditions` (matching criteria), `actionType` (e.g., REASSIGN, NOTIFY, ESCALATE_PRIORITY), and `actionConfig` (action details like target user/team). Note: The `EscalationService` is currently a stub -- rule evaluation is not yet implemented. Rules are stored in the database but not executed.
+5. **Escalation Rules:** Escalation rules are defined in the `EscalationRule` model with `triggerType` (e.g., SLA_BREACH, NO_RESPONSE, PRIORITY_CHANGE), `triggerMinutes` (time threshold), `conditions` (matching criteria), `actionType` (e.g., REASSIGN, NOTIFY, ESCALATE_PRIORITY), and `actionConfig` (action details like target user/team). Note: The `EscalationService` is currently a stub — rule evaluation is not yet implemented. Rules are stored in the database but not executed.
 
-6. **Knowledge Base Articles:** Articles follow a draft/publish workflow. Articles are created with `isPublished = false`. An ADMIN can publish via the `/publish` endpoint, which sets `isPublished = true` and records `publishedAt`. Articles have `viewCount`, `helpfulCount`, and `unhelpfulCount` for tracking usefulness. Users submit feedback via the `/feedback` endpoint (helpful: true/false). Articles belong to categories (via `categoryId`), can have a `summary` for list views, and support `keywords` for search. Each article has a unique `slug` per tenant for URL-friendly access.
+6. **Knowledge Base Articles:** Articles follow a draft/publish workflow. Articles are created with `isPublished = false`. An ADMIN can publish via the `/publish` endpoint, which sets `isPublished = true` and records `publishedAt`. Articles have `viewCount`, `helpfulCount`, and `unhelpfulCount` for tracking usefulness. Users submit feedback via the `/feedback` endpoint (helpful: true/false). Articles belong to categories (via `categoryId`), can have a `summary` for list views, and support `keywords` for search. Each article has a unique `slug` per tenant for URL-friendly access. **BUG: Article create maps DTO `isPublic` to DB `isPublished`, bypassing draft workflow (BUG-6).**
 
 7. **Canned Responses for Common Issues:** Canned responses are pre-written reply templates managed by ADMINs. Each response has a `title`, `content`, `category` (for organization), and `useCount` (incremented each time it is inserted into a reply). Responses can be `isPublic` (visible to all agents) or private (visible only to the owner via `ownerId`). Agents select canned responses when composing replies to speed up resolution of frequently asked questions.
 
 8. **Ticket Sources and Types:** Tickets can originate from five sources: EMAIL, PORTAL, PHONE, CHAT, or INTERNAL. Each ticket is classified by type: QUESTION (general inquiry), PROBLEM (something is broken), INCIDENT (service disruption), or REQUEST (feature/access request). Source and type drive SLA policy matching and reporting segmentation.
 
-9. **Reply Types:** Ticket replies have three types: PUBLIC (visible to requester), INTERNAL_NOTE (visible only to agents/admins -- used for internal discussion), and SYSTEM (auto-generated by the system for status changes, assignments, SLA events). Replies support `bodyHtml` for rich text and `attachments` as JSON arrays.
+9. **Reply Types:** Ticket replies have three types: PUBLIC (visible to requester), INTERNAL_NOTE (visible only to agents/admins — used for internal discussion), and SYSTEM (auto-generated by the system for status changes, assignments, SLA events). Replies support `bodyHtml` for rich text and `attachments` as JSON arrays.
 
-10. **Ticket Assignment:** Tickets can be assigned to both a `teamId` and an individual `assignedToId`. Assignment can be manual (via the `/assign` endpoint) or automatic (via team auto-assign). When a ticket is assigned, the `currentTicketCount` on the team member record should be incremented. When resolved/closed, it should be decremented.
+10. **Ticket Assignment:** Tickets can be assigned to both a `teamId` and an individual `assignedToId`. Assignment can be manual (via the `/assign` endpoint) or automatic (via team auto-assign). When a ticket is assigned, the `currentTicketCount` on the team member record should be incremented. When resolved/closed, it should be decremented. **PST-27 confirmed: auto-assignment IS wired — ticket creation calls `AssignmentService.autoAssign()` when teamId set without assignee.**
 
 11. **Satisfaction Tracking:** After a ticket is resolved, the system can collect `satisfactionRating` (integer scale) and `satisfactionComment` from the requester. These fields are stored directly on the SupportTicket model for reporting and agent performance tracking.
 
-12. **Ticket Numbering:** The `TicketNumberService` generates unique, sequential ticket numbers (stored in the `ticketNumber` field with a unique constraint). Format is tenant-scoped to prevent collisions across tenants.
+12. **Ticket Numbering:** The `TicketNumberService` generates unique, sequential ticket numbers (stored in the `ticketNumber` field with a unique constraint). Format is tenant-scoped to prevent collisions across tenants. **BUG: count-based generation is not atomic — concurrent requests in the same month can get the same number (BUG-2). Unique constraint prevents data corruption but produces failures.**
+
+13. **Event Emission:** TicketsService emits 6 EventEmitter events: `ticket.created`, `ticket.updated`, `ticket.replied`, `ticket.assigned`, `ticket.closed`, `ticket.reopened`. Events fire but no listeners exist yet — future phases will wire email notifications, SLA tracking, and escalation listeners.
 
 ---
 
@@ -222,6 +227,11 @@ SupportTicket {
   resolutionNotes     String?
   satisfactionRating  Int?
   satisfactionComment String?
+  externalId          String?          -- migration field (omitted in previous hub)
+  sourceSystem        String?          -- migration field (omitted in previous hub)
+  customFields        Json?            -- migration field (omitted in previous hub)
+  createdById         String?          -- migration field (omitted in previous hub)
+  updatedById         String?          -- migration field (omitted in previous hub)
   TicketReply         TicketReply[]
   createdAt           DateTime
   updatedAt           DateTime
@@ -362,6 +372,8 @@ EscalationRule {
 }
 ```
 
+**Note on KBCategory:** KB categories have no dedicated Prisma model. Categories are stored in `TenantConfig` as a JSON array (key: `helpdesk.kb.categories`). The CategoriesService uses `prisma.tenantConfig.upsert()` to persist categories. This means no referential integrity between `KBArticle.categoryId` and categories, no indexing on category fields, and denormalized JSON storage. Should migrate to a dedicated Prisma model before frontend build.
+
 ---
 
 ## 9. Validation Rules
@@ -407,11 +419,15 @@ RESOLVED -> OPEN    (reopened -- requester disputes resolution)
 CLOSED -> OPEN      (reopened -- new information received)
 ```
 
+**BUG-5:** `close()` method sets status directly to CLOSED, skipping the RESOLVED intermediate state. The code does not enforce the OPEN -> RESOLVED -> CLOSED flow.
+
 ### KB Article States
 ```
 DRAFT -> PUBLISHED  (ADMIN publishes via /publish endpoint)
 PUBLISHED -> DRAFT  (unpublished for editing -- via update with isPublished: false)
 ```
+
+**BUG-6:** Article create maps DTO `isPublic` to DB `isPublished`, so creating with `isPublic: true` immediately publishes, bypassing draft workflow.
 
 ### SLA Compliance States
 ```
@@ -421,34 +437,69 @@ BREACHED           (current time > due time, not yet responded/resolved)
 MET                (responded/resolved before due time)
 ```
 
+### Enums (5 — all verified 100% match)
+
+| Enum | Values |
+|------|--------|
+| TicketSource | EMAIL, PORTAL, PHONE, CHAT, INTERNAL |
+| TicketType | QUESTION, PROBLEM, INCIDENT, REQUEST |
+| TicketPriority | URGENT, HIGH, NORMAL, LOW |
+| TicketStatus | NEW, OPEN, PENDING, ON_HOLD, RESOLVED, CLOSED |
+| ReplyType | PUBLIC, INTERNAL_NOTE, SYSTEM |
+
 ---
 
 ## 11. Known Issues
 
 | Issue | Severity | File | Status |
 |-------|----------|------|--------|
-| EscalationService is a stub -- no rule evaluation logic | P1 | `help-desk/escalation/escalation.service.ts` | Open |
-| SlaTrackerService is a stub -- no breach detection or scheduling | P1 | `help-desk/sla/sla-tracker.service.ts` | Open |
+| EscalationService is a stub — no rule evaluation logic | P1 | `help-desk/escalation/escalation.service.ts` | Open |
+| SlaTrackerService is a stub — no breach detection or scheduling | P1 | `help-desk/sla/sla-tracker.service.ts` | Open |
 | No frontend pages, components, or hooks exist | P0 Build Gap | -- | Open |
+| RolesGuard missing on all 5 controllers — @Roles decorators are decorative | P2 | All controllers | **Open (PST-27 BUG)** |
+| `manageMembers()` hard-deletes then re-creates — loses audit trail, breaks soft-delete consistency | P2 | `teams/teams.service.ts:53` | **Open (PST-27 BUG-1)** |
+| TicketNumberService race condition — count-based generation not atomic, concurrent requests get same number | P2 | `tickets/ticket-number.service.ts:13` | **Open (PST-27 BUG-2)** |
+| `autoAssign()` doesn't check `maxOpenTickets` — agent at max capacity can still be assigned tickets | P2 | `teams/assignment.service.ts:12-14` | **Open (PST-27 BUG-3)** |
+| `currentTicketCount` never incremented/decremented — round-robin assignment broken, always picks same member | P2 | `teams/assignment.service.ts` | **Confirmed (PST-27 BUG-4)** |
+| `close()` skips RESOLVED state — sets status directly to CLOSED | P3 | `tickets/tickets.service.ts:171` | **Open (PST-27 BUG-5)** |
+| Article create maps `isPublic` to `isPublished` — bypasses draft workflow | P3 | `knowledge-base/articles.service.ts:42-43` | **Open (PST-27 BUG-6)** |
 | No pagination on ticket/article list endpoints | P2 | Controllers | Open |
 | No search/filter query params on list endpoints | P2 | Controllers | Open |
-| KB categories have no dedicated Prisma model (may use generic or inline) | P2 | schema.prisma | Needs investigation |
+| KB categories have no dedicated Prisma model — stored in TenantConfig JSON, no referential integrity | P2 | schema.prisma / categories.service | Confirmed — design choice, migrate before frontend build |
 | No WebSocket support for real-time ticket updates | P2 | -- | Not started |
-| Team member `currentTicketCount` not auto-incremented/decremented | P2 | `teams/assignment.service.ts` | Needs verification |
+| Module exports nothing — other modules cannot consume Help Desk services | P3 | `help-desk.module.ts` | **Open (PST-27)** |
+
+**Resolved Issues (closed during PST-27 tribunal):**
+- ~~"Scaffolded" label for backend~~ — FALSE: 7/10 services fully implemented with production CRUD, SLA policy matching, auto-assignment, KB publish workflow. Only EscalationService + SlaTrackerService are stubs (18 LOC combined)
+- ~~"Tests: Minimal — spec files exist but services are mostly placeholders"~~ — FALSE: 10 spec files, ~30 tests, 591 LOC. 8/10 files have real meaningful tests. Only escalation + sla-tracker are stubs
+- ~~"Security: Good"~~ — MISLEADING: JwtAuthGuard + tenantId scoping ARE good, but RolesGuard is missing from all 5 controllers. @Roles decorators do nothing without RolesGuard in @UseGuards
+- ~~Team member `currentTicketCount` not auto-incremented/decremented — Needs verification~~ — CONFIRMED TRUE: no increment/decrement anywhere in module
 
 ---
 
 ## 12. Tasks
 
-### Phase 1: Backend Completion
+### Completed (verified by PST-27 tribunal)
+| Task ID | Title | Status |
+|---------|-------|--------|
+| HD-004 | Wire up auto-assignment in ticket creation flow | **Done** — ticket creation calls `AssignmentService.autoAssign()` when teamId set without assignee |
+
+### Open (updated with PST-27 findings)
 | Task ID | Title | Effort | Priority |
 |---------|-------|--------|----------|
 | HD-001 | Implement EscalationService rule evaluation engine | L (8h) | P1 |
 | HD-002 | Implement SlaTrackerService breach detection + scheduling | L (8h) | P1 |
 | HD-003 | Add pagination, search, and filter params to list endpoints | M (4h) | P1 |
-| HD-004 | Wire up auto-assignment in ticket creation flow | M (4h) | P1 |
-| HD-005 | Auto-increment/decrement team member currentTicketCount | S (2h) | P1 |
-| HD-006 | Write comprehensive backend tests for all 5 controllers | L (8h) | P1 |
+| HD-005 | Auto-increment/decrement team member currentTicketCount on assign/close/reopen | S (2h) | P1 |
+| HD-006 | ~~Write comprehensive backend tests for all 5 controllers~~ → Expand existing 30 tests to cover gaps (escalation, sla-tracker, edge cases) | M (4h) | P1 |
+| HD-007 | Add RolesGuard to all 5 controllers (PST-27 finding) | S (15min) | P2 |
+| HD-008 | Fix manageMembers() to use soft-delete instead of hard-delete (PST-27 BUG-1) | S (30min) | P2 |
+| HD-009 | Fix TicketNumberService race condition — use $transaction or sequence (PST-27 BUG-2) | M (1h) | P2 |
+| HD-024 | Add maxOpenTickets filter to AssignmentService.autoAssign() (PST-27 BUG-3) | S (15min) | P2 |
+| HD-025 | Fix close() to go through RESOLVED state or document intentional skip (PST-27 BUG-5) | S (30min) | P3 |
+| HD-026 | Fix article create isPublic→isPublished mapping (PST-27 BUG-6) | S (30min) | P3 |
+| HD-027 | Add module exports if other modules need Help Desk services (PST-27) | XS (5min) | P3 |
+| HD-028 | Migrate KB categories from TenantConfig JSON to dedicated Prisma model (PST-27) | L (4h) | P3 |
 
 ### Phase 2: Frontend Build
 | Task ID | Title | Effort | Priority |
@@ -491,29 +542,31 @@ MET                (responded/resolved before due time)
 
 | Original Plan | Actual | Delta |
 |--------------|--------|-------|
-| Full help desk system | Backend scaffolded only, no frontend | Behind plan |
-| 5 controllers with full CRUD | 5 controllers, 31 endpoints -- all scaffolded | On track (backend) |
-| SLA enforcement | SlaTrackerService is a stub | Behind -- no runtime enforcement |
-| Escalation engine | EscalationService is a stub | Behind -- no rule execution |
-| Knowledge base with search | Articles + categories services exist, no search | Partial |
+| Full help desk system | Backend 7/10 implemented, no frontend | Behind plan |
+| 5 controllers with full CRUD | 5 controllers, 31 endpoints — all implemented (except 2 stub services) | On track (backend) |
+| SLA enforcement | SLA policy matching works (`applyPolicy()`). SlaTrackerService is a stub — no runtime breach detection | Partial |
+| Escalation engine | EscalationService is a stub (9 LOC) | Behind — no rule execution |
+| Knowledge base with search | Articles + categories services fully implemented, no search/filter params | Partial |
 | Canned responses | Controller + service built with CRUD | On track |
-| Team routing with auto-assign | AssignmentService exists, wiring unclear | Partial |
+| Team routing with auto-assign | AssignmentService wired into ticket creation. BUG: doesn't check maxOpenTickets, currentTicketCount never updated | Partial — logic exists but broken |
 | 7 design specs | All 7 present | On track |
 | Frontend pages | 0 of 9 planned pages built | Significantly behind |
+| Health Score D (2/10) | Verified 7.5/10 by PST-27 tribunal | Hub was significantly underrated |
 
 ---
 
 ## 15. Dependencies
 
 **Depends on:**
-- Auth & Admin (JWT, roles, tenantId scoping -- all controllers use JwtAuthGuard)
+- Auth & Admin (JWT, roles, tenantId scoping — all controllers use JwtAuthGuard)
 - User Management (agent user records for assignment, team membership)
-- Communication / Email (ticket notifications, SLA breach alerts)
-- EventEmitter (help-desk.module imports EventEmitterModule for internal events)
+- Communication / Email (ticket notifications, SLA breach alerts — future)
+- EventEmitter (help-desk.module imports EventEmitterModule for internal events — 6 events emitted)
 
 **Depended on by:**
 - No other services currently depend on Help Desk (P3 future service)
 - Future: All services could link tickets via `relatedType` + `relatedId` (e.g., a ticket about a specific Load, Carrier, or Invoice)
+- Note: Module exports nothing — add exports if other modules need Help Desk services
 
 **Sub-module structure:**
 ```
@@ -552,3 +605,18 @@ apps/api/src/modules/help-desk/
     ticket-number.service.ts
     ticket-number.service.spec.ts
 ```
+
+**Module Stats (from PST-27):**
+
+| Metric | Value |
+|--------|-------|
+| Active files | 17 (.ts, non-spec) |
+| Active LOC | 1,463 |
+| Test files | 10 (.spec.ts) |
+| Test LOC | 591 |
+| Total LOC | 2,054 |
+| DTO classes | 15 (in single file) |
+| Prisma models | 8 |
+| Prisma enums | 5 |
+| EventEmitter events | 6 |
+| Module exports | 0 |

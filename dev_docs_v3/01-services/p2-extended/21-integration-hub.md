@@ -1,9 +1,10 @@
 # Service Hub: Integration Hub (21)
 
-> **Source of Truth** -- dev_docs_v3 era | Last verified: 2026-03-07
+> **Source of Truth** — dev_docs_v3 era | Last verified: 2026-03-09 (PST-21 tribunal)
 > **Original definition:** `dev_docs/02-services/` (Integration Hub service definition)
 > **Design specs:** `dev_docs/12-Rabih-design-Process/20-integration-hub/` (10 files)
 > **v2 hub (historical):** N/A
+> **Tribunal file:** `dev_docs_v3/05-audit/tribunal/per-service/PST-21-integration-hub.md`
 
 ---
 
@@ -11,13 +12,14 @@
 
 | Field | Value |
 |-------|-------|
-| **Health Score** | D (2/10) |
-| **Confidence** | Medium -- backend controllers exist but no frontend |
-| **Last Verified** | 2026-03-07 |
-| **Backend** | Partial -- 7 controllers, 45 endpoints in `apps/api/src/modules/integration-hub/` |
-| **Frontend** | Not Built -- no pages, no components, no hooks |
-| **Tests** | None |
-| **Active Blockers** | `.bak` directory needs resolution per QS-009; entire frontend must be built |
+| **Health Score** | B (8.0/10) — **LARGEST SCORE DELTA (+6.0, was 2/10)** |
+| **Confidence** | High — code-verified via PST-21 tribunal |
+| **Last Verified** | 2026-03-09 |
+| **Backend** | Production — 7 controllers, 45 endpoints in `apps/api/src/modules/integration-hub/`, 100% auth-guarded |
+| **Frontend** | Not Built — no pages, no components, no hooks |
+| **Tests** | 46 tests / 5 spec files / 826 LOC |
+| **Security** | Strong — 100% JWT+Roles guards, AES-256-GCM credential encryption, credential masking on all GETs |
+| **Priority** | P1 — fix EncryptionService hardcoded fallback key; P2 — fix testConnection() stub |
 
 ---
 
@@ -27,19 +29,19 @@
 |-------|--------|-------|
 | Service Definition | Done | Integration Hub definition in dev_docs |
 | Design Specs | Done | 10 files in `dev_docs/12-Rabih-design-Process/20-integration-hub/` |
-| Backend -- Providers | Partial | `@Controller('integration-hub/providers')` -- integration providers catalog |
-| Backend -- Integrations | Partial | `@Controller('integration-hub/integrations')` -- IntegrationsController |
-| Backend -- Sync Jobs | Partial | `@Controller('integration-hub/sync-jobs')` -- SyncController |
-| Backend -- API Logs | Partial | `@Controller('integration-hub/api-logs')` -- API request logs |
-| Backend -- Transformations | Partial | `@Controller('integration-hub/transformations')` -- data transformation rules |
-| Backend -- Webhook Endpoints | Partial | `@Controller('integration-hub/webhooks/endpoints')` -- WebhooksController |
-| Backend -- Webhook Subscriptions | Partial | `@Controller('integration-hub/webhooks/subscriptions')` -- webhook subscriptions |
-| Prisma Models | Done | Integration, SyncJob, DataTransformation, WebhookEndpoint, WebhookSubscription, APIRequestLog, CircuitBreakerStateRecord |
+| Backend — Providers | Production | `@Controller('integration-hub/providers')` — 3 endpoints |
+| Backend — Integrations | Production | `@Controller('integration-hub/integrations')` — 14 endpoints |
+| Backend — Sync Jobs | Production | `@Controller('integration-hub/sync-jobs')` — 6 endpoints |
+| Backend — API Logs | Production | `@Controller('integration-hub/api-logs')` — 2 endpoints |
+| Backend — Transformations | Production | `@Controller('integration-hub/transformations')` — 6 endpoints |
+| Backend — Webhook Endpoints | Production | `@Controller('integration-hub/webhooks/endpoints')` — 8 endpoints |
+| Backend — Webhook Subscriptions | Production | `@Controller('integration-hub/webhooks/subscriptions')` — 6 endpoints |
+| Prisma Models | Done | 9 models: Integration, SyncJob, TransformationTemplate, WebhookEndpoint, WebhookSubscription, APIRequestLog, CircuitBreakerStateRecord, IntegrationProviderConfig, WebhookDelivery |
 | Frontend Pages | Not Built | No routes exist |
 | React Hooks | Not Built | No hooks exist |
 | Components | Not Built | No components exist |
-| Tests | None | No backend or frontend tests |
-| Security | Unknown | Needs audit -- JWT/tenant guards not verified |
+| Tests | 46 tests | 5 spec files, 826 LOC — covers CRUD, encryption, OAuth, webhooks, sync |
+| Security | Strong | 7/7 controllers fully guarded (JWT+Roles), AES-256-GCM encryption verified + tested, credential masking on all GETs |
 
 ---
 
@@ -62,69 +64,80 @@
 
 ## 4. API Endpoints
 
-### Providers Controller -- `integration-hub/providers`
+### Providers Controller — `integration-hub/providers` (3 endpoints)
 | Method | Path | Controller | Status | Notes |
 |--------|------|------------|--------|-------|
-| GET | `/api/v1/integration-hub/providers` | ProvidersController | Partial | List available integration providers |
-| GET | `/api/v1/integration-hub/providers/:id` | ProvidersController | Partial | Provider detail (auth requirements, capabilities) |
+| GET | `/api/v1/integration-hub/providers` | ProvidersController | Production | List available integration providers |
+| GET | `/api/v1/integration-hub/providers/:id` | ProvidersController | Production | Provider detail (auth requirements, capabilities) |
+| GET | `/api/v1/integration-hub/providers/categories` | ProvidersController | Production | List provider categories |
 
-### Integrations Controller -- `integration-hub/integrations`
+### Integrations Controller — `integration-hub/integrations` (14 endpoints)
 | Method | Path | Controller | Status | Notes |
 |--------|------|------------|--------|-------|
-| GET | `/api/v1/integration-hub/integrations` | IntegrationsController | Partial | List configured integrations |
-| POST | `/api/v1/integration-hub/integrations` | IntegrationsController | Partial | Create/configure new integration |
-| GET | `/api/v1/integration-hub/integrations/:id` | IntegrationsController | Partial | Integration detail + status |
-| PATCH | `/api/v1/integration-hub/integrations/:id` | IntegrationsController | Partial | Update integration config/credentials |
-| DELETE | `/api/v1/integration-hub/integrations/:id` | IntegrationsController | Partial | Disable/remove integration |
-| POST | `/api/v1/integration-hub/integrations/:id/test` | IntegrationsController | Partial | Test connection to external service |
-| POST | `/api/v1/integration-hub/integrations/:id/sync` | IntegrationsController | Partial | Trigger manual sync |
-| PATCH | `/api/v1/integration-hub/integrations/:id/status` | IntegrationsController | Partial | Enable/disable integration |
+| GET | `/api/v1/integration-hub/integrations` | IntegrationsController | Production | List configured integrations |
+| POST | `/api/v1/integration-hub/integrations` | IntegrationsController | Production | Create/configure new integration |
+| GET | `/api/v1/integration-hub/integrations/:id` | IntegrationsController | Production | Integration detail + status |
+| PUT | `/api/v1/integration-hub/integrations/:id` | IntegrationsController | Production | Update integration config |
+| DELETE | `/api/v1/integration-hub/integrations/:id` | IntegrationsController | Production | Disable/remove integration |
+| POST | `/api/v1/integration-hub/integrations/:id/test` | IntegrationsController | Production | Test connection (stub — uses Math.random) |
+| POST | `/api/v1/integration-hub/integrations/:id/status` | IntegrationsController | Production | Enable/disable integration |
+| GET | `/api/v1/integration-hub/integrations/health` | IntegrationsController | Production | Health check for all integrations |
+| GET | `/api/v1/integration-hub/integrations/:id/health` | IntegrationsController | Production | Health check for single integration |
+| PUT | `/api/v1/integration-hub/integrations/:id/credentials` | IntegrationsController | Production | Update integration credentials |
+| POST | `/api/v1/integration-hub/integrations/:id/oauth/authorize` | IntegrationsController | Production | OAuth2 authorization initiation |
+| POST | `/api/v1/integration-hub/integrations/:id/oauth/callback` | IntegrationsController | Production | OAuth2 callback handler |
+| GET | `/api/v1/integration-hub/integrations/:id/stats` | IntegrationsController | Production | Integration usage statistics |
+| GET | `/api/v1/integration-hub/integrations/:id/logs` | IntegrationsController | Production | Integration-scoped API logs |
 
-### Sync Jobs Controller -- `integration-hub/sync-jobs`
+### Sync Jobs Controller — `integration-hub/sync-jobs` (6 endpoints)
 | Method | Path | Controller | Status | Notes |
 |--------|------|------------|--------|-------|
-| GET | `/api/v1/integration-hub/sync-jobs` | SyncController | Partial | List sync job history |
-| GET | `/api/v1/integration-hub/sync-jobs/:id` | SyncController | Partial | Sync job detail (records processed, errors) |
-| POST | `/api/v1/integration-hub/sync-jobs/:id/retry` | SyncController | Partial | Retry failed sync job |
-| DELETE | `/api/v1/integration-hub/sync-jobs/:id` | SyncController | Partial | Cancel pending sync job |
+| GET | `/api/v1/integration-hub/sync-jobs` | SyncController | Production | List sync job history |
+| POST | `/api/v1/integration-hub/sync-jobs` | SyncController | Production | Create/trigger sync job |
+| GET | `/api/v1/integration-hub/sync-jobs/:id` | SyncController | Production | Sync job detail (records processed, errors) |
+| POST | `/api/v1/integration-hub/sync-jobs/:id/retry` | SyncController | Production | Retry failed sync job |
+| GET | `/api/v1/integration-hub/sync-jobs/:id/progress` | SyncController | Production | Real-time sync progress |
+| GET | `/api/v1/integration-hub/sync-jobs/:id/errors` | SyncController | Production | Sync job error details |
 
-### API Logs Controller -- `integration-hub/api-logs`
+### API Logs Controller — `integration-hub/api-logs` (2 endpoints)
 | Method | Path | Controller | Status | Notes |
 |--------|------|------------|--------|-------|
-| GET | `/api/v1/integration-hub/api-logs` | ApiLogsController | Partial | List API request logs (filterable) |
-| GET | `/api/v1/integration-hub/api-logs/:id` | ApiLogsController | Partial | Log detail (full request/response body) |
-| DELETE | `/api/v1/integration-hub/api-logs` | ApiLogsController | Partial | Purge old logs |
+| GET | `/api/v1/integration-hub/api-logs` | ApiLogsController | Production | List API request logs (filterable) |
+| GET | `/api/v1/integration-hub/api-logs/:id` | ApiLogsController | Production | Log detail (full request/response body) |
 
-### Transformations Controller -- `integration-hub/transformations`
+### Transformations Controller — `integration-hub/transformations` (6 endpoints)
 | Method | Path | Controller | Status | Notes |
 |--------|------|------------|--------|-------|
-| GET | `/api/v1/integration-hub/transformations` | TransformationsController | Partial | List data transformation rules |
-| POST | `/api/v1/integration-hub/transformations` | TransformationsController | Partial | Create field mapping rule |
-| GET | `/api/v1/integration-hub/transformations/:id` | TransformationsController | Partial | Transformation detail |
-| PATCH | `/api/v1/integration-hub/transformations/:id` | TransformationsController | Partial | Update mapping rule |
-| DELETE | `/api/v1/integration-hub/transformations/:id` | TransformationsController | Partial | Delete mapping rule |
-| POST | `/api/v1/integration-hub/transformations/:id/test` | TransformationsController | Partial | Test transformation with sample data |
+| GET | `/api/v1/integration-hub/transformations` | TransformationsController | Production | List transformation templates |
+| POST | `/api/v1/integration-hub/transformations` | TransformationsController | Production | Create transformation template |
+| GET | `/api/v1/integration-hub/transformations/:id` | TransformationsController | Production | Template detail |
+| PATCH | `/api/v1/integration-hub/transformations/:id` | TransformationsController | Production | Update template |
+| DELETE | `/api/v1/integration-hub/transformations/:id` | TransformationsController | Production | Delete template |
+| POST | `/api/v1/integration-hub/transformations/test` | TransformationsController | Production | Test transformation with sample data (pass-through stub) |
 
-### Webhook Endpoints Controller -- `integration-hub/webhooks/endpoints`
+### Webhook Endpoints Controller — `integration-hub/webhooks/endpoints` (8 endpoints)
 | Method | Path | Controller | Status | Notes |
 |--------|------|------------|--------|-------|
-| GET | `/api/v1/integration-hub/webhooks/endpoints` | WebhooksController | Partial | List webhook endpoints |
-| POST | `/api/v1/integration-hub/webhooks/endpoints` | WebhooksController | Partial | Create webhook endpoint |
-| GET | `/api/v1/integration-hub/webhooks/endpoints/:id` | WebhooksController | Partial | Endpoint detail |
-| PATCH | `/api/v1/integration-hub/webhooks/endpoints/:id` | WebhooksController | Partial | Update endpoint config |
-| DELETE | `/api/v1/integration-hub/webhooks/endpoints/:id` | WebhooksController | Partial | Delete endpoint |
-| POST | `/api/v1/integration-hub/webhooks/endpoints/:id/test` | WebhooksController | Partial | Send test webhook payload |
+| GET | `/api/v1/integration-hub/webhooks/endpoints` | WebhooksController | Production | List webhook endpoints |
+| POST | `/api/v1/integration-hub/webhooks/endpoints` | WebhooksController | Production | Create webhook endpoint (returns secret once) |
+| GET | `/api/v1/integration-hub/webhooks/endpoints/:id` | WebhooksController | Production | Endpoint detail |
+| PATCH | `/api/v1/integration-hub/webhooks/endpoints/:id` | WebhooksController | Production | Update endpoint config |
+| DELETE | `/api/v1/integration-hub/webhooks/endpoints/:id` | WebhooksController | Production | Delete endpoint |
+| POST | `/api/v1/integration-hub/webhooks/endpoints/:id/test` | WebhooksController | Production | Send test webhook payload |
+| POST | `/api/v1/integration-hub/webhooks/endpoints/:id/rotate-secret` | WebhooksController | Production | Rotate webhook secret (one-time display) |
+| GET | `/api/v1/integration-hub/webhooks/endpoints/:id/deliveries` | WebhooksController | Production | List deliveries for endpoint |
 
-### Webhook Subscriptions Controller -- `integration-hub/webhooks/subscriptions`
+### Webhook Subscriptions Controller — `integration-hub/webhooks/subscriptions` (6 endpoints)
 | Method | Path | Controller | Status | Notes |
 |--------|------|------------|--------|-------|
-| GET | `/api/v1/integration-hub/webhooks/subscriptions` | SubscriptionsController | Partial | List webhook subscriptions |
-| POST | `/api/v1/integration-hub/webhooks/subscriptions` | SubscriptionsController | Partial | Create subscription (event -> endpoint) |
-| GET | `/api/v1/integration-hub/webhooks/subscriptions/:id` | SubscriptionsController | Partial | Subscription detail |
-| PATCH | `/api/v1/integration-hub/webhooks/subscriptions/:id` | SubscriptionsController | Partial | Update subscription |
-| DELETE | `/api/v1/integration-hub/webhooks/subscriptions/:id` | SubscriptionsController | Partial | Delete subscription |
+| GET | `/api/v1/integration-hub/webhooks/subscriptions` | SubscriptionsController | Production | List webhook subscriptions |
+| POST | `/api/v1/integration-hub/webhooks/subscriptions` | SubscriptionsController | Production | Create subscription (event -> endpoint) |
+| GET | `/api/v1/integration-hub/webhooks/subscriptions/:id` | SubscriptionsController | Production | Subscription detail |
+| PATCH | `/api/v1/integration-hub/webhooks/subscriptions/:id` | SubscriptionsController | Production | Update subscription |
+| DELETE | `/api/v1/integration-hub/webhooks/subscriptions/:id` | SubscriptionsController | Production | Delete subscription |
+| POST | `/api/v1/integration-hub/webhooks/subscriptions/:id/test` | SubscriptionsController | Production | Test subscription delivery |
 
-**Total: 7 controllers, ~45 endpoints**
+**Total: 7 controllers, 45 endpoints — 100% verified (PST-21)**
 
 ---
 
@@ -156,11 +169,11 @@ No hooks built. Planned hooks for future frontend build:
 | `useIntegrations` | GET `/integration-hub/integrations` | Not Built |
 | `useIntegration` | GET `/integration-hub/integrations/:id` | Not Built |
 | `useCreateIntegration` | POST `/integration-hub/integrations` | Not Built |
-| `useUpdateIntegration` | PATCH `/integration-hub/integrations/:id` | Not Built |
+| `useUpdateIntegration` | PUT `/integration-hub/integrations/:id` | Not Built |
 | `useDeleteIntegration` | DELETE `/integration-hub/integrations/:id` | Not Built |
 | `useTestIntegration` | POST `/integration-hub/integrations/:id/test` | Not Built |
 | `useSyncJobs` | GET `/integration-hub/sync-jobs` | Not Built |
-| `useTriggerSync` | POST `/integration-hub/integrations/:id/sync` | Not Built |
+| `useTriggerSync` | POST `/integration-hub/sync-jobs` | Not Built |
 | `useApiLogs` | GET `/integration-hub/api-logs` | Not Built |
 | `useProviders` | GET `/integration-hub/providers` | Not Built |
 | `useWebhookEndpoints` | GET `/integration-hub/webhooks/endpoints` | Not Built |
@@ -170,14 +183,15 @@ No hooks built. Planned hooks for future frontend build:
 
 ## 7. Business Rules
 
-1. **Integration Categories:** TMS, ACCOUNTING, ELD, LOADBOARD, MAPPING, COMMUNICATION, PAYMENT. Each category groups providers for organized display in the catalog.
-2. **Auth Types:** API_KEY, OAUTH2, BASIC, BEARER, CUSTOM. The auth type determines which credential fields are required during integration setup. OAuth2 integrations require a full token exchange flow with refresh token management.
-3. **Sync Frequencies:** REAL_TIME, EVERY_5_MIN, EVERY_15_MIN, HOURLY, DAILY, MANUAL. Each integration is configured with a sync frequency that determines how often data is pulled/pushed. REAL_TIME uses webhooks; all others use scheduled polling.
-4. **Circuit Breaker:** Automatic disable after N consecutive failures, with configurable cooldown period. States: CLOSED (healthy), OPEN (tripped -- no calls allowed), HALF_OPEN (testing recovery). After cooldown, system sends a single test request; if it succeeds, circuit closes; if it fails, circuit re-opens.
-5. **Data Transformations:** Configurable field mapping between external and internal schemas. Each transformation rule maps a source field path to a destination field path with optional value transformations (type casting, enum mapping, concatenation).
-6. **Webhook Management:** Inbound webhooks receive data from external systems via signed endpoints. Outbound webhooks push events to configured URLs. All webhooks use HMAC-SHA256 signature verification. Failed deliveries retry 3 times with exponential backoff.
-7. **API Logging:** All external API calls are logged with full request/response payloads for debugging. Logs include HTTP method, URL, headers (secrets masked), status code, response time, and error details. Logs are retained per tenant retention policy.
-8. **Credential Security:** API keys, OAuth tokens, and secrets are encrypted at rest. Never returned in API responses in plaintext -- only masked display (e.g., `sk-****1234`). OAuth refresh tokens are rotated automatically before expiry.
+1. **Integration Categories:** LOAD_BOARD, ACCOUNTING, ELD, CRM, RATING, TMS, DOCUMENT, TRACKING (8 values). Each category groups providers for organized display in the catalog.
+2. **Auth Types:** API_KEY, OAUTH2, BASIC, NONE (4 values). The auth type determines which credential fields are required during integration setup. OAuth2 integrations require a full token exchange flow with refresh token management.
+3. **Sync Frequencies:** REALTIME, HOURLY, DAILY, MANUAL (4 values). Each integration is configured with a sync frequency that determines how often data is pulled/pushed. REALTIME uses webhooks; all others use scheduled polling.
+4. **Sync Direction:** INBOUND, OUTBOUND, BIDIRECTIONAL (3 values). Determines data flow direction for sync jobs.
+5. **Circuit Breaker:** Automatic disable after N consecutive failures, with configurable cooldown period. States: CLOSED (healthy), OPEN (tripped — no calls allowed), HALF_OPEN (testing recovery). After cooldown, system sends a single test request; if it succeeds, circuit closes; if it fails, circuit re-opens.
+6. **Transformation Templates:** Configurable transformation rules between external and internal schemas. Each template defines sourceFormat, targetFormat, and transformationLogic with testCases for validation.
+7. **Webhook Management:** Inbound webhooks receive data from external systems via signed endpoints. Outbound webhooks push events to configured URLs. All webhooks use HMAC-SHA256 signature verification. Failed deliveries retry with exponential backoff. Delivery tracking via WebhookDelivery model.
+8. **API Logging:** All external API calls are logged with full request/response payloads for debugging. Logs include HTTP method, endpoint, headers (secrets masked), status code, response time, and error details. Logs are append-only (no soft-delete).
+9. **Credential Security:** API keys, OAuth tokens, and secrets are encrypted at rest using AES-256-GCM (`EncryptionService`). Never returned in API responses in plaintext — `CredentialMaskerService` masks all sensitive fields (e.g., `sk-****1234`). Webhook secrets generated via `crypto.randomBytes(24)` (48-char hex). Secret rotation endpoint with one-time display pattern.
 
 ---
 
@@ -188,16 +202,18 @@ No hooks built. Planned hooks for future frontend build:
 Integration {
   id               String (UUID)
   tenantId         String (FK -> Tenant)
+  createdById      String (FK -> User)
+  updatedById      String (FK -> User)
   name             String
   description      String?
-  category         IntegrationCategory (TMS, ACCOUNTING, ELD, LOADBOARD, MAPPING, COMMUNICATION, PAYMENT)
+  category         IntegrationCategory (LOAD_BOARD, ACCOUNTING, ELD, CRM, RATING, TMS, DOCUMENT, TRACKING)
   provider         String (VarChar 100)
-  authType         AuthType (API_KEY, OAUTH2, BASIC, BEARER, CUSTOM)
-  apiKey           String?
-  apiSecret        String?
-  oauthTokens      Json?
+  authType         AuthType (API_KEY, OAUTH2, BASIC, NONE)
+  apiKey           String? (AES-256-GCM encrypted)
+  apiSecret        String? (AES-256-GCM encrypted)
+  oauthTokens      Json? (AES-256-GCM encrypted)
   config           Json
-  syncFrequency    SyncFrequency (REAL_TIME, EVERY_5_MIN, EVERY_15_MIN, HOURLY, DAILY, MANUAL)
+  syncFrequency    SyncFrequency (REALTIME, HOURLY, DAILY, MANUAL)
   lastSyncAt       DateTime?
   nextSyncAt       DateTime?
   status           String (default "ACTIVE")
@@ -211,43 +227,51 @@ Integration {
   apiRequestLogs   APIRequestLog[]
   circuitBreaker   CircuitBreakerStateRecord?
   webhookEndpoints WebhookEndpoint[]
+  -- Indexes on tenantId, category, status
 }
 ```
 
 ### SyncJob
 ```
 SyncJob {
-  id              String (UUID)
-  integrationId   String (FK -> Integration)
-  tenantId        String
-  direction       String (INBOUND, OUTBOUND)
-  status          String (PENDING, RUNNING, COMPLETED, FAILED, CANCELLED)
-  recordsTotal    Int?
+  id               String (UUID)
+  integrationId    String (FK -> Integration)
+  tenantId         String
+  jobType          String
+  direction        SyncDirection (INBOUND, OUTBOUND, BIDIRECTIONAL)
+  status           ExecutionStatus (PENDING, RUNNING, COMPLETED, FAILED, CANCELLED)
+  schedule         String?
   recordsProcessed Int?
-  recordsFailed   Int?
-  errorMessage    String?
-  errorDetails    Json?
-  startedAt       DateTime?
-  completedAt     DateTime?
-  createdAt       DateTime
-  updatedAt       DateTime
+  recordsFailed    Int?
+  errorDetails     Json?
+  lastSyncAt       DateTime?
+  lastError        String?
+  startedAt        DateTime?
+  completedAt      DateTime?
+  externalId       String?
+  sourceSystem     String?
+  customFields     Json?
+  createdAt        DateTime
+  updatedAt        DateTime
 }
 ```
 
-### DataTransformation
+### TransformationTemplate
 ```
-DataTransformation {
-  id              String (UUID)
-  integrationId   String (FK -> Integration)
-  tenantId        String
-  name            String
-  sourceField     String
-  targetField     String
-  transformType   String (DIRECT, ENUM_MAP, CONCAT, SPLIT, FORMAT, CUSTOM)
-  transformConfig Json?
-  isActive        Boolean (default true)
-  createdAt       DateTime
-  updatedAt       DateTime
+TransformationTemplate {
+  id                  String (UUID)
+  integrationId       String (FK -> Integration)
+  tenantId            String
+  templateName        String
+  sourceFormat        String
+  targetFormat        String
+  transformationLogic Json
+  testCases           Json?
+  externalId          String?
+  sourceSystem        String?
+  customFields        Json?
+  createdAt           DateTime
+  updatedAt           DateTime
 }
 ```
 
@@ -257,29 +281,38 @@ WebhookEndpoint {
   id              String (UUID)
   integrationId   String (FK -> Integration)
   tenantId        String
+  name            String
+  description     String?
   url             String
-  direction       String (INBOUND, OUTBOUND)
-  secret          String
-  isActive        Boolean (default true)
-  lastTriggeredAt DateTime?
+  events          String[]
+  secret          String (crypto.randomBytes(24), 48-char hex)
+  status          String (default "ACTIVE")
+  externalId      String?
+  sourceSystem    String?
+  customFields    Json?
   createdAt       DateTime
   updatedAt       DateTime
+  deletedAt       DateTime?
   -- Relations
   subscriptions   WebhookSubscription[]
+  deliveries      WebhookDelivery[]
 }
 ```
 
 ### WebhookSubscription
 ```
 WebhookSubscription {
-  id              String (UUID)
-  endpointId      String (FK -> WebhookEndpoint)
-  tenantId        String
-  eventType       String
-  filterConfig    Json?
-  isActive        Boolean (default true)
-  createdAt       DateTime
-  updatedAt       DateTime
+  id                  String (UUID)
+  webhookEndpointId   String (FK -> WebhookEndpoint)
+  tenantId            String
+  eventType           String
+  filterConditions    Json?
+  isActive            Boolean (default true)
+  externalId          String?
+  sourceSystem        String?
+  customFields        Json?
+  createdAt           DateTime
+  updatedAt           DateTime
 }
 ```
 
@@ -290,15 +323,13 @@ APIRequestLog {
   integrationId   String (FK -> Integration)
   tenantId        String
   method          String (GET, POST, PUT, PATCH, DELETE)
-  url             String
+  endpoint        String
   requestHeaders  Json?
   requestBody     Json?
   responseStatus  Int?
-  responseHeaders Json?
   responseBody    Json?
   durationMs      Int?
-  errorMessage    String?
-  createdAt       DateTime
+  timestamp       DateTime
 }
 ```
 
@@ -310,12 +341,54 @@ CircuitBreakerStateRecord {
   tenantId          String
   state             String (CLOSED, OPEN, HALF_OPEN)
   failureCount      Int (default 0)
+  halfOpenAttempts  Int (default 0)
   lastFailureAt     DateTime?
   nextRetryAt       DateTime?
   createdAt         DateTime
   updatedAt         DateTime
 }
 ```
+
+### IntegrationProviderConfig
+```
+IntegrationProviderConfig {
+  id                String (UUID)
+  tenantId          String
+  providerName      String
+  category          IntegrationCategory
+  authType          AuthType
+  baseUrl           String
+  documentationUrl  String?
+  logoUrl           String?
+  externalId        String?
+  sourceSystem      String?
+  customFields      Json?
+  createdAt         DateTime
+  updatedAt         DateTime
+}
+```
+
+### WebhookDelivery
+```
+WebhookDelivery {
+  id                String (UUID)
+  webhookEndpointId String (FK -> WebhookEndpoint)
+  tenantId          String
+  event             String
+  payload           Json
+  requestHeaders    Json?
+  requestBody       Json?
+  responseStatus    Int?
+  status            WebhookStatus
+  attempts          Int (default 0)
+  lastAttempt       DateTime?
+  nextRetry         DateTime?
+  createdAt         DateTime
+  updatedAt         DateTime
+}
+```
+
+**Total: 9 Prisma models**
 
 ---
 
@@ -333,8 +406,11 @@ CircuitBreakerStateRecord {
 | `config` | Valid JSON object | "Integration config must be valid JSON" |
 | Webhook `url` | Valid URL, HTTPS required for production | "Webhook URL must be a valid HTTPS URL" |
 | Webhook `secret` | Min 32 chars | "Webhook secret must be at least 32 characters" |
-| Transformation `sourceField` | Required, valid field path | "Source field path is required" |
-| Transformation `targetField` | Required, valid field path | "Target field path is required" |
+| Template `templateName` | Required | "Template name is required" |
+| Template `sourceFormat` | Required | "Source format is required" |
+| Template `targetFormat` | Required | "Target format is required" |
+
+**DTO classes: 37 across 4 files**
 
 ---
 
@@ -349,12 +425,12 @@ SUSPENDED -> ACTIVE (circuit breaker resets after cooldown + successful test)
 ACTIVE -> DELETED (soft delete)
 ```
 
-### Sync Job Status Machine
+### Sync Job Status Machine (uses ExecutionStatus enum)
 ```
 PENDING -> RUNNING (job picked up by scheduler)
 RUNNING -> COMPLETED (all records processed successfully)
 RUNNING -> FAILED (unrecoverable error during sync)
-PENDING -> CANCELLED (manual cancel before execution)
+PENDING -> CANCELLED (manual cancel via POST /:id/cancel)
 FAILED -> PENDING (retry triggered)
 ```
 
@@ -370,26 +446,37 @@ HALF_OPEN -> OPEN (test request fails)
 
 ## 11. Known Issues
 
-| Issue | Severity | File | Status |
-|-------|----------|------|--------|
-| `.bak` directory exists alongside active module | P1 Cleanup | `apps/api/src/modules/integration-hub.bak/` | Open -- QS-009 |
-| No frontend exists at all | P2 Gap | -- | Open |
-| No tests for any controller or service | P1 Quality | -- | Open |
-| JWT/tenant guard coverage not verified | P1 Security | `apps/api/src/modules/integration-hub/` | Open |
-| Credential encryption implementation not verified | P0 Security | -- | Open |
-| Circuit breaker threshold/cooldown values not documented | P2 Config | -- | Open |
-| API log retention/purge policy not implemented | P2 | -- | Open |
+| Issue | Severity | Status | Notes |
+|-------|----------|--------|-------|
+| EncryptionService hardcoded fallback key | P1 BUG | **Open** | If `ENCRYPTION_KEY` not set, falls back to `JWT_SECRET` -> `PORTAL_JWT_SECRET` -> `'local-dev-secret'`. Hardcoded key is predictable. Should fail-fast in production. |
+| testConnection() is a Math.random stub | P2 BUG | **Open** | Uses `Math.random() > 0.2` to determine success. No actual HTTP connectivity test. Misleading UX. |
+| `.bak` directory exists alongside active module | P2 Cleanup | Open — QS-009 | 2,682 LOC, pre-refactor code, safe to delete |
+| No frontend exists at all | P2 Gap | Open | All 10 screens remain to be built |
+| TransformationTemplate test endpoint is a stub | P3 | Open | Echoes input with metadata, no actual transformation |
+| IntegrationHubModule has no exports | P3 | Open | Not externally consumable — add exports if cross-module consumption needed |
+
+**Resolved Issues (closed during PST-21 tribunal):**
+- ~~No tests for any controller or service~~ — FALSE: 46 tests / 5 spec files / 826 LOC
+- ~~JWT/tenant guard coverage not verified~~ — VERIFIED: 7/7 controllers fully guarded (100% coverage)
+- ~~Credential encryption implementation not verified~~ — VERIFIED: AES-256-GCM encryption + tested (encrypt/decrypt round-trip, malformed input handling)
+- ~~Security "Unknown"~~ — FALSE: 100% guard coverage + AES-256-GCM + credential masking + webhook secret rotation + @Audit decorator
 
 ---
 
 ## 12. Tasks
 
-### Quality Sprint (Active)
-| Task ID | Title | Effort | Status |
-|---------|-------|--------|--------|
-| INT-001 | Resolve integration-hub.bak directory | S (1h) | Open -- QS-009 |
-| INT-002 | Audit JWT/tenant guards on all 45 endpoints | S (2h) | Open |
-| INT-003 | Verify credential encryption at rest | S (2h) | Open |
+### Completed (verified by PST-21 tribunal)
+| Task ID | Title | Status |
+|---------|-------|--------|
+| INT-002 | Audit JWT/tenant guards on all 45 endpoints | **Done** — 7/7 controllers, 100% |
+| INT-003 | Verify credential encryption at rest | **Done** — AES-256-GCM confirmed + tested |
+
+### Open (from tribunal findings)
+| Task ID | Title | Effort | Priority |
+|---------|-------|--------|----------|
+| INT-001 | Resolve integration-hub.bak directory | S (1h) | P2 — QS-009 |
+| INT-116 | Fix EncryptionService hardcoded fallback — fail-fast in production | XS (30min) | P1 |
+| INT-117 | Replace testConnection() Math.random stub with real HTTP test | M (3h) | P2 |
 
 ### Backlog
 | Task ID | Title | Effort | Priority |
@@ -435,12 +522,14 @@ HALF_OPEN -> OPEN (test request fails)
 |--------------|--------|-------|
 | 5 controllers estimated | 7 controllers with 45 endpoints | Backend exceeds plan |
 | Basic integration CRUD | Full sub-module architecture (providers, sync, transformations, webhooks, logs) | Architecture ahead |
-| Simple webhook support | Dedicated webhook endpoints + subscriptions controllers | More modular |
+| Simple webhook support | Dedicated webhook endpoints + subscriptions + deliveries controllers | More modular |
 | Circuit breaker not planned | CircuitBreakerStateRecord model exists | Added resilience pattern |
-| Data transformations not planned | Dedicated transformations controller + model | Added flexibility |
-| Frontend planned for P2 | No frontend built at all | Behind -- 0/10 screens |
-| Tests required | 0 tests | Behind -- no coverage |
+| Data transformations not planned | Dedicated transformations controller + TransformationTemplate model | Added flexibility |
+| Frontend planned for P2 | No frontend built at all | Behind — 0/10 screens |
+| Tests required | 46 tests / 5 spec files / 826 LOC | Ahead — good coverage for backend |
+| Security unverified | 100% guards + AES-256-GCM + credential masking | Ahead — strong security architecture |
 | 10 design screens specified | 0 screens built | All 10 screens remain to be built |
+| Hub score 2/10 | Verified 8.0/10 by PST-21 tribunal | **LARGEST SCORE DELTA (+6.0)** |
 
 ---
 

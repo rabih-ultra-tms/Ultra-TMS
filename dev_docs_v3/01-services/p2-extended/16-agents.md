@@ -1,7 +1,9 @@
 # Service Hub: Agents (16)
 
 > **Priority:** P2 Extended | **Status:** Backend Rich (6 controllers, 43 endpoints), Frontend Not Built
-> **Source of Truth** -- dev_docs_v3 | Last verified: 2026-03-07
+> **Source of Truth** — dev_docs_v3 era | Last verified: 2026-03-09 (PST-16 tribunal)
+> **Design specs:** `dev_docs/12-Rabih-design-Process/15-agents/` (9 files)
+> **Tribunal file:** `dev_docs_v3/05-audit/tribunal/per-service/PST-16-agents.md`
 
 ---
 
@@ -9,17 +11,19 @@
 
 | Field | Value |
 |-------|-------|
-| **Health Score** | D (2/10) |
-| **Last Verified** | 2026-03-07 |
+| **Health Score** | B- (6.5/10) |
+| **Confidence** | High — code-verified via PST-16 tribunal |
+| **Last Verified** | 2026-03-09 |
 | **Backend** | 6 controllers, 43 endpoints in `apps/api/src/modules/agents/` |
-| **Frontend** | Not Built -- no pages, no components, no hooks |
+| **Frontend** | Not Built — no pages, no components, no hooks |
 | **Components** | None |
 | **Hooks** | None |
-| **Tests** | None |
+| **Tests** | 28 tests / 6 spec files / 453 LOC (unit tests with PrismaService + EventEmitter2 mocking) |
 | **Prisma Models** | Agent, AgentAgreement, AgentCommission, AgentCustomerAssignment, AgentLead, AgentPayout, AgentContact, AgentDrawBalance, AgentPortalUser (9 models) |
 | **Enums** | AgentType, AgentStatus, AgentTier, AgentCommissionStatus, AgentPayoutStatus, AgreementStatus, AssignmentType, AssignmentStatus, LeadStatus, CommissionSplitType (10 enums) |
 | **Design Specs** | 9 files in `dev_docs/12-Rabih-design-Process/15-agents/` |
 | **Scope** | Freight agents and sub-brokers who bring loads to the brokerage; commission tracking, lead attribution, customer assignments, agreements, payouts |
+| **Priority** | P0: Add RolesGuard to 3 controllers, fix tenant leak in rankings. P1: Frontend build (9 screens). |
 
 ---
 
@@ -28,14 +32,15 @@
 | Layer | Status | Notes |
 |-------|--------|-------|
 | Service Definition | Done | 9 design spec files cover full vision |
-| Backend Controllers | Done | 6 controllers: agents (14), agreements (6), assignments (8), commissions (3), leads (8), statements (4) = 43 endpoints |
+| Backend Controllers | Done | 6 controllers: agents (13), agreements (6), assignments (8), commissions (3), leads (8), statements (4) = 43 endpoints |
 | Backend Services | Done | AgentsService, AgentAgreementsService, CustomerAssignmentsService, AgentCommissionsService, AgentLeadsService, AgentStatementsService |
 | Prisma Models | Done | 9 models with 10 enums, rich field sets including financial, territory, portal access |
 | Frontend Pages | Not Built | No `/agents` routes exist |
 | Hooks | Not Built | No hooks in `lib/hooks/` for agents |
 | Components | Not Built | No components in `components/` for agents |
-| Tests | None | Zero test files |
+| Tests | Partial | 6 spec files, 28 test cases, 453 LOC — unit tests with proper mocking (PrismaService, EventEmitter2), assertions, and error coverage |
 | Agent Portal | Schema Only | AgentPortalUser model exists with passwordHash, login tracking; no portal UI |
+| Security | Gaps | 3/6 controllers missing RolesGuard; 1 tenant leak in rankings query |
 
 ---
 
@@ -56,7 +61,7 @@
 
 ## 4. API Endpoints
 
-### AgentsController -- `@Controller('agents')`
+### AgentsController — `@Controller('agents')`
 
 | Method | Path | Status | Notes |
 |--------|------|--------|-------|
@@ -74,7 +79,7 @@
 | PUT | `/api/v1/agents/:id/contacts/:contactId` | Built | Update agent contact |
 | DELETE | `/api/v1/agents/:id/contacts/:contactId` | Built | Remove agent contact |
 
-### AgentAgreementsController -- `@Controller()` (route prefix in decorators)
+### AgentAgreementsController — `@Controller()` (route prefix in decorators)
 
 | Method | Path | Status | Notes |
 |--------|------|--------|-------|
@@ -85,7 +90,7 @@
 | POST | `/api/v1/agent-agreements/:id/activate` | Built | Activate agreement (DRAFT -> ACTIVE) |
 | POST | `/api/v1/agent-agreements/:id/terminate` | Built | Terminate agreement |
 
-### AgentCommissionsController -- `@Controller()` (route prefix in decorators)
+### AgentCommissionsController — `@Controller()` (route prefix in decorators)
 
 | Method | Path | Status | Notes |
 |--------|------|--------|-------|
@@ -93,7 +98,7 @@
 | GET | `/api/v1/agents/:id/performance` | Built | Agent performance metrics |
 | GET | `/api/v1/agents/rankings` | Built | Global agent rankings |
 
-### AgentLeadsController -- `@Controller()` (route prefix in decorators)
+### AgentLeadsController — `@Controller()` (route prefix in decorators)
 
 | Method | Path | Status | Notes |
 |--------|------|--------|-------|
@@ -106,7 +111,7 @@
 | POST | `/api/v1/agent-leads/:id/convert` | Built | Convert lead to customer |
 | POST | `/api/v1/agent-leads/:id/reject` | Built | Reject lead |
 
-### CustomerAssignmentsController -- `@Controller()` (route prefix in decorators)
+### CustomerAssignmentsController — `@Controller()` (route prefix in decorators)
 
 | Method | Path | Status | Notes |
 |--------|------|--------|-------|
@@ -119,7 +124,7 @@
 | POST | `/api/v1/agent-assignments/:id/terminate` | Built | Terminate assignment |
 | GET | `/api/v1/customers/:id/agent` | Built | Look up agent for a customer |
 
-### AgentStatementsController -- `@Controller()` (route prefix in decorators)
+### AgentStatementsController — `@Controller()` (route prefix in decorators)
 
 | Method | Path | Status | Notes |
 |--------|------|--------|-------|
@@ -173,17 +178,17 @@
 ## 7. Business Rules
 
 1. **Agent Types:** Three types defined in `AgentType` enum: REFERRING (refers leads only, no direct selling), SELLING (actively manages customer relationships and books loads), HYBRID (both referring and selling). External agents operate independently with their own client relationships.
-2. **Agent Tiers:** `AgentTier` enum: STANDARD, SILVER, GOLD. Tier affects commission split rates and payout thresholds. Tier promotion based on revenue/volume performance.
-3. **Agent Commission Split:** Commission structure defined in `AgentAgreement` with `CommissionSplitType`: PERCENT_OF_REP (split from rep's commission), PERCENT_OF_MARGIN (split from load gross margin -- typical 50/50 or 60/40), FLAT_PER_LOAD (fixed dollar per load), TIERED (volume-based tiers stored in `tiers` JSON field).
+2. **Agent Tiers:** `AgentTier` enum: STANDARD, SILVER, GOLD, PLATINUM. Tier affects commission split rates and payout thresholds. Tier promotion based on revenue/volume performance.
+3. **Agent Commission Split:** Commission structure defined in `AgentAgreement` with `CommissionSplitType`: PERCENT_OF_REP (split from rep's commission), PERCENT_OF_MARGIN (split from load gross margin — typical 50/50 or 60/40), FLAT_PER_LOAD (fixed dollar per load), TIERED (volume-based tiers stored in `tiers` JSON field).
 4. **Load Attribution:** Loads sourced by an agent are tagged with `agentId`. Commission records in `AgentCommission` track `loadId`, `loadRevenue`, `loadMargin`, `splitRate`, `grossCommission`, `netCommission`. Both agent and internal sales rep commissions are calculated from the same load.
 5. **Customer Assignments:** `AgentCustomerAssignment` links agents to customers with `AssignmentType`: PRIMARY, SECONDARY, SPLIT. Assignment includes `splitPercent`, `protectionStart`/`protectionEnd` dates, and `isProtected` flag. Only one PRIMARY assignment per customer (enforced by `@@unique([agentId, customerId])`).
 6. **Account Protection:** Agents have a protection period (default 12 months per `AgentAgreement.protectionPeriodMonths`) during which their assigned customers cannot be reassigned without override. Override requires `overrideReason` documentation.
 7. **Sunset Process:** When ending an agent relationship, a sunset period reduces commission gradually. `sunsetEnabled`, `sunsetPeriodMonths`, `sunsetSchedule` (JSON) on `AgentAgreement`. Assignment enters `SUNSET` status with `currentSunsetRate` tracking declining split.
-8. **Lead Pipeline:** Agents submit leads via `AgentLead` with full prospect details (company, contacts, estimated volume/revenue, lanes, equipment needs). Lead flows: SUBMITTED -> IN_REVIEW -> QUALIFIED -> WORKING -> CONVERTED or REJECTED. Conversion creates a customer and auto-assigns to the submitting agent.
+8. **Lead Pipeline:** Agents submit leads via `AgentLead` with full prospect details (company, contacts, estimated volume/revenue, lanes, equipment needs). Lead flows: SUBMITTED -> IN_REVIEW -> QUALIFIED -> WORKING -> CONVERTED or REJECTED. Conversion creates a customer and auto-assigns to the submitting agent with PRIMARY type, 12-month protection, ACTIVE status.
 9. **Draw Against Commission:** `AgentDrawBalance` tracks guaranteed minimum payments. If commissions earned are less than draw amount, shortfall is tracked in `carryoverBalance`. `drawRecoverable` on agreement determines if shortfall is recouped from future earnings.
 10. **Agent Portal:** `AgentPortalUser` model supports external agent self-service portal with separate credentials (`passwordHash`), role-based access, and login tracking. External agents see only their own loads, commissions, and statements.
-11. **Statements and Payouts:** `AgentPayout` tracks period-based payments with `grossCommissions`, `drawRecovery`, `adjustments`, `netAmount`. Approval workflow: PENDING -> APPROVED -> PROCESSING -> PAID. Statements can be generated and downloaded as PDF.
-12. **Data Access:** External agents can only see loads they sourced and their own commissions/statements. Internal agents (sales reps) see all loads per their tenant permissions. Enforced at controller/service level.
+11. **Statements and Payouts:** `AgentPayout` tracks period-based payments with `grossCommissions`, `drawRecovery`, `adjustments`, `netAmount`. Approval workflow: PENDING -> APPROVED -> PROCESSING -> PAID. Statements can be generated and downloaded as PDF (simple text-to-PDF buffer, not a formatted template).
+12. **Data Access:** External agents can only see loads they sourced and their own commissions/statements. Internal agents (sales reps) see all loads per their tenant permissions. Enforced at controller/service level via `ensureAgentSelfAccess()` on 3 of 6 controllers (AgentsController, CommissionsController, StatementsController).
 13. **Onboarding Workflow:** Agent record tracks onboarding: `applicationDate`, `backgroundCheckStatus`/`backgroundCheckDate`, `trainingCompleted`/`trainingCompletedDate`, then `activatedAt`/`activatedBy`. Agent stays PENDING until activated.
 14. **Territories:** `territories` JSON field on Agent stores geographic territory definitions. `industryFocus` JSON stores industry specializations. Design spec `07-agent-territories.md` envisions map-based territory management.
 15. **Payment Info:** Agent model stores banking details (`bankName`, `bankRouting`, `bankAccount`, `bankAccountType`, `paymentMethod`) for commission payouts. `taxId` for 1099 reporting.
@@ -192,7 +197,7 @@
 
 ## 8. Data Model
 
-### Agent (Prisma -- verified)
+### Agent (Prisma — verified)
 
 ```
 Agent {
@@ -224,7 +229,7 @@ Agent {
   trainingCompletedDate DateTime?
   activatedAt           DateTime?
   activatedBy           String?
-  tier                  AgentTier   @default(STANDARD) (STANDARD | SILVER | GOLD)
+  tier                  AgentTier   @default(STANDARD) (STANDARD | SILVER | GOLD | PLATINUM)
   paymentMethod         String?     @db.VarChar(20)
   bankName              String?     @db.VarChar(100)
   bankRouting           String?     @db.VarChar(20)
@@ -246,7 +251,7 @@ Agent {
 }
 ```
 
-### AgentAgreement (Prisma -- verified)
+### AgentAgreement (Prisma — verified)
 
 ```
 AgentAgreement {
@@ -278,7 +283,7 @@ AgentAgreement {
 }
 ```
 
-### AgentCommission (Prisma -- verified)
+### AgentCommission (Prisma — verified)
 
 ```
 AgentCommission {
@@ -309,7 +314,7 @@ AgentCommission {
 }
 ```
 
-### AgentCustomerAssignment (Prisma -- verified)
+### AgentCustomerAssignment (Prisma — verified)
 
 ```
 AgentCustomerAssignment {
@@ -341,7 +346,7 @@ AgentCustomerAssignment {
 }
 ```
 
-### AgentLead (Prisma -- verified)
+### AgentLead (Prisma — verified)
 
 ```
 AgentLead {
@@ -357,6 +362,7 @@ AgentLead {
   contactPhone            String?    @db.VarChar(20)
   website                 String?    @db.VarChar(255)
   industry                String?    @db.VarChar(100)
+  city                    String?    @db.VarChar(100)
   state                   String?    @db.VarChar(50)
   estimatedMonthlyVolume  Int?
   estimatedMonthlyRevenue Decimal?   @db.Decimal(12, 2)
@@ -378,7 +384,7 @@ AgentLead {
 }
 ```
 
-### AgentPayout (Prisma -- verified)
+### AgentPayout (Prisma — verified)
 
 ```
 AgentPayout {
@@ -405,7 +411,7 @@ AgentPayout {
 }
 ```
 
-### AgentContact (Prisma -- verified)
+### AgentContact (Prisma — verified)
 
 ```
 AgentContact {
@@ -428,7 +434,7 @@ AgentContact {
 }
 ```
 
-### AgentDrawBalance (Prisma -- verified)
+### AgentDrawBalance (Prisma — verified)
 
 ```
 AgentDrawBalance {
@@ -449,7 +455,7 @@ AgentDrawBalance {
 }
 ```
 
-### AgentPortalUser (Prisma -- verified)
+### AgentPortalUser (Prisma — verified)
 
 ```
 AgentPortalUser {
@@ -488,7 +494,7 @@ AgentPortalUser {
 | tenantId | Required, injected from auth context | Multi-tenant isolation |
 | Agreement effectiveDate | Required, Date | Must be valid date |
 | Agreement splitType | Required, valid CommissionSplitType | PERCENT_OF_REP, PERCENT_OF_MARGIN, FLAT_PER_LOAD, TIERED |
-| Agreement splitRate | Required for non-TIERED types | Decimal(5,4) -- e.g., 0.5000 = 50% |
+| Agreement splitRate | Required for non-TIERED types | Decimal(5,4) — e.g., 0.5000 = 50% |
 | Agreement tiers | Required JSON array for TIERED type | Volume breakpoints with rates |
 | Lead companyName | Required, max 200 chars | Prospect company name |
 | Lead contactFirstName/LastName | Required, max 100 chars each | Prospect contact |
@@ -573,24 +579,41 @@ SUBMITTED -> IN_REVIEW -> QUALIFIED -> WORKING -> CONVERTED
 
 | Issue | Severity | Status | Notes |
 |-------|----------|--------|-------|
-| No frontend pages -- zero routes for agents | P1 | Open | 9 design specs exist, none built |
+| **3 controllers missing RolesGuard** — AgentAgreementsController, CustomerAssignmentsController, AgentLeadsController have `@Roles` decorators but no `RolesGuard` to enforce them | P0 BUG | **Open** | Any authenticated user can access agreements, assignments, and leads endpoints |
+| **Tenant leak in rankings query** — `AgentCommissionsService.rankings()` fetches agent details with `agent.findMany({ where: { id: { in: agentIds } } })` missing tenantId filter | P0 BUG | **Open** | Could leak agent names from other tenants into rankings response |
+| No frontend pages — zero routes for agents | P1 | Open | 9 design specs exist, none built |
 | No hooks or components | P1 | Open | 43 backend endpoints have no frontend consumers |
-| No tests for any of the 6 controllers | P0 | Open | 43 endpoints completely untested |
 | Agent portal (AgentPortalUser) has no UI | P2 | Open | Schema and model exist, no login/portal pages |
-| Rankings endpoint duplicated in AgentsController and CommissionsController | P2 | Open | Both expose `GET /agents/rankings` -- potential conflict |
-| Commission calculation logic unverified | P1 | Open | Fields exist but unclear if service correctly computes from load data |
-| Statement PDF generation unverified | P2 | Open | Endpoint exists but PDF rendering implementation unknown |
-| Draw balance tracking unverified | P2 | Open | AgentDrawBalance model exists, unclear if automated |
-| Sunset schedule execution unverified | P2 | Open | `sunsetSchedule` JSON stored but no cron/job to apply rate reductions |
-| Lead conversion to customer flow unverified | P1 | Open | `/convert` endpoint exists but customer creation logic unknown |
-| AgentType enum mismatch with business intent | P2 | Open | Enum has REFERRING/SELLING/HYBRID, business rules reference INTERNAL/EXTERNAL -- these are different concepts |
+| Rankings endpoint duplicated in AgentsController and CommissionsController | P2 | Open | Both expose `GET /agents/rankings` — potential conflict |
+| No commission calculation engine | P1 | Open | Commission records exist but no service calculates them from load data; only reads/aggregates |
+| Statement PDF is text-only | P2 | Open | `generatePdf()` creates a simple text buffer, not a formatted PDF template |
+| Draw balance tracking not automated | P2 | Open | AgentDrawBalance model exists, no automated shortfall calculation |
+| No sunset cron job | P2 | Open | `sunsetSchedule` JSON stored but no cron/job to apply rate reductions |
+| Module exports nothing | P2 | Open | `agents.module.ts` exports nothing — other modules cannot consume AgentsService |
+| AgentType enum mismatch with business intent | P2 | Open | Enum has REFERRING/SELLING/HYBRID, business rules reference INTERNAL/EXTERNAL — these are different concepts |
+| `ensureAgentSelfAccess()` missing on AgentLeadsController | P2 | Open | Agents can submit/view leads for other agents |
+
+**Resolved Issues (closed during PST-16 tribunal):**
+- ~~No tests for any controller~~ — FALSE: 6 spec files, 28 tests, 453 LOC exist with proper mocking
+- ~~Lead conversion to customer flow unverified~~ — VERIFIED: `/convert` creates customer assignment with PRIMARY type, 12-month protection, ACTIVE status
+- ~~AgentTier has 3 values~~ — CORRECTED: Actual has 4 (STANDARD, SILVER, GOLD, PLATINUM)
 
 ---
 
 ## 12. Tasks
 
+### Completed (verified by PST-16 tribunal)
+| Task ID | Title | Status |
+|---------|-------|--------|
+| AGT-018 | Verify lead-to-customer conversion flow | **Done** — `/convert` creates assignment with PRIMARY type, 12-month protection, ACTIVE status |
+
+### Open (from tribunal findings)
 | Task ID | Title | Effort | Priority | Notes |
 |---------|-------|--------|----------|-------|
+| AGT-020 | Add RolesGuard to AgentAgreementsController | XS (15min) | P0 | `agreements/agent-agreements.controller.ts:10` |
+| AGT-021 | Add RolesGuard to CustomerAssignmentsController | XS (15min) | P0 | `assignments/customer-assignments.controller.ts:16` |
+| AGT-022 | Add RolesGuard to AgentLeadsController | XS (15min) | P0 | `leads/agent-leads.controller.ts:17` |
+| AGT-023 | Fix tenant leak in rankings query | XS (15min) | P0 | Add tenantId to agent.findMany in `commissions/agent-commissions.service.ts:64` |
 | AGT-001 | Build Agents Dashboard page (`/agents`) | L (6-8h) | P2 | Design spec: `01-agents-dashboard.md` |
 | AGT-002 | Build Agents List page (`/agents/list`) | M (4h) | P2 | Design spec: `02-agents-list.md`, filterable table |
 | AGT-003 | Build Agent Detail page (`/agents/[id]`) | L (8h) | P2 | Design spec: `03-agent-detail.md`, tabbed layout: profile, contacts, agreements, commissions, leads |
@@ -603,13 +626,15 @@ SUBMITTED -> IN_REVIEW -> QUALIFIED -> WORKING -> CONVERTED
 | AGT-010 | Build useAgentLeads hook | S (2h) | P2 | Lead pipeline with qualify/convert/reject actions |
 | AGT-011 | Build useAgentCustomers hook | S (2h) | P2 | Customer assignment CRUD with transfer/sunset |
 | AGT-012 | Build useAgentStatements hook | S (1h) | P2 | Statement list + PDF download |
-| AGT-013 | Write controller tests (43 endpoints) | XL (10-12h) | P1 | Zero coverage currently, 6 controllers |
+| AGT-013 | Expand test coverage (43 endpoints) | L (8-10h) | P1 | 28 tests exist but coverage is shallow; add integration tests |
 | AGT-014 | Build Agent Territories page | M (4h) | P3 | Design spec: `07-agent-territories.md`, map-based |
 | AGT-015 | Build Agent Reports page | M (4h) | P3 | Design spec: `08-agent-reports.md`, rankings and payouts |
 | AGT-016 | Build Agent Portal login and restricted UI | XL (12h+) | P3 | AgentPortalUser model ready, need auth flow and restricted views |
-| AGT-017 | Verify commission calculation service logic | M (3h) | P1 | Ensure split types compute correctly from load revenue/margin |
-| AGT-018 | Verify lead-to-customer conversion flow | S (2h) | P1 | Ensure `/convert` creates customer and auto-assigns to agent |
+| AGT-017 | Implement commission calculation engine | M (3h) | P1 | No service currently computes commissions from load data |
 | AGT-019 | Resolve duplicate rankings endpoint | S (1h) | P2 | AgentsController and CommissionsController both serve rankings |
+| AGT-024 | Add `ensureAgentSelfAccess()` to AgentLeadsController | S (1h) | P2 | Agents can currently submit/view leads for other agents |
+| AGT-025 | Export AgentsService from module | XS (15min) | P2 | Enable other modules to consume agent data |
+| AGT-026 | Implement sunset cron job | M (3h) | P2 | `sunsetSchedule` JSON stored but never executed |
 
 ---
 
@@ -644,10 +669,10 @@ SUBMITTED -> IN_REVIEW -> QUALIFIED -> WORKING -> CONVERTED
 | Statements | Not mentioned | Statement generation and PDF download (4 endpoints) | Entirely new sub-module |
 | Portal | Not mentioned | AgentPortalUser model with auth fields | Schema-only, no UI |
 | Draw | Not mentioned | AgentDrawBalance model for guaranteed minimum payments | Schema-only, unverified |
-| Frontend | "Not Built" | Still Not Built | No change -- zero frontend |
+| Frontend | "Not Built" | Still Not Built | No change — zero frontend |
 | Design Specs | Not referenced | 9 files exist in `dev_docs/12-Rabih-design-Process/15-agents/` | Were not linked |
 
-**Key finding:** The backend is dramatically more capable than the previous hub documented. Six controllers with 43 endpoints, 9 Prisma models, and 10 enums cover a comprehensive agent lifecycle: onboarding, agreements, customer assignments with protection periods, lead pipeline, commission calculation, draw balances, payouts, statements, and a portal user model. The entire frontend is missing -- no pages, no components, no hooks. The previous hub captured roughly 15% of the actual backend scope.
+**Key finding:** The backend is dramatically more capable than the previous hub documented. Six controllers with 43 endpoints, 9 Prisma models, and 10 enums cover a comprehensive agent lifecycle: onboarding, agreements, customer assignments with protection periods, lead pipeline, commission calculation, draw balances, payouts, statements, and a portal user model. The entire frontend is missing — no pages, no components, no hooks. The previous hub captured roughly 15% of the actual backend scope.
 
 ---
 

@@ -1,9 +1,10 @@
 # Service Hub: Feedback (28)
 
 > **Priority:** P3 Future | **Status:** Backend Partial, Frontend Not Built
-> **Source of Truth** -- dev_docs_v3 | Last verified: 2026-03-07
+> **Source of Truth** — dev_docs_v3 era | Last verified: 2026-03-09 (PST-28 tribunal)
 > **Original definition:** `dev_docs/02-services/` (feedback service)
 > **Design specs:** `dev_docs/12-Rabih-design-Process/28-feedback/` (7 files)
+> **Tribunal file:** `dev_docs_v3/05-audit/tribunal/per-service/PST-28-feedback.md`
 
 ---
 
@@ -11,12 +12,12 @@
 
 | Field | Value |
 |-------|-------|
-| **Health Score** | D (1/10) |
-| **Confidence** | High -- code confirmed via scan |
-| **Last Verified** | 2026-03-07 |
-| **Backend** | Partial -- 5 controllers, 25 endpoints in `apps/api/src/modules/feedback/` |
-| **Frontend** | Not Built -- no pages, no components, no hooks |
-| **Tests** | None |
+| **Health Score** | C (7.0/10) |
+| **Confidence** | High — code-verified via PST-28 tribunal |
+| **Last Verified** | 2026-03-09 |
+| **Backend** | Partial — 5 controllers, 25 endpoints in `apps/api/src/modules/feedback/` (1 stub controller, 4 production) |
+| **Frontend** | Not Built — no pages, no components, no hooks |
+| **Tests** | 9 files / 47 tests / ~820 LOC (9/10 services covered) |
 | **Scope** | User feedback collection, NPS surveys, feature requests, embeddable widgets |
 
 ---
@@ -27,80 +28,88 @@
 |-------|--------|-------|
 | Service Definition | Done | Feedback service in dev_docs |
 | Design Specs | Done | 7 files, all 15-section format |
-| Backend Controller | Partial | 5 controllers: entries, features, nps, surveys, widgets |
-| Backend Service | Partial | 5 services + analytics/sentiment sub-modules |
-| Prisma Models | Partial | FeedbackEntry, FeatureRequest, NpsResponse, Survey, Widget models |
+| Backend Controller | Partial | 5 controllers: entries (STUB), features, nps, surveys, widgets |
+| Backend Service | Partial | 9 services: entries (stub), features, nps-surveys, surveys, nps-score, analytics, widgets, voting, sentiment |
+| Prisma Models | Partial | 8 models: FeatureRequest, FeatureRequestVote, FeatureRequestComment, NPSResponse, NPSSurvey, Survey, SurveyResponse, FeedbackWidget |
 | Frontend Pages | Not Built | 0 pages |
 | React Hooks | Not Built | 0 hooks |
 | Components | Not Built | 0 components |
-| Tests | None | |
+| Tests | 47 tests | 9 spec files, ~820 LOC, 9/10 services covered |
 
 ---
 
 ## 3. Screens
 
-| Screen | Route | Status | Notes |
-|--------|-------|--------|-------|
-| Feedback Dashboard | `/feedback` | Not Built | Overview of all feedback, NPS score, trends |
-| Feedback List | `/feedback/entries` | Not Built | Filterable list of all submitted feedback |
-| Feedback Detail | `/feedback/entries/[id]` | Not Built | Single entry with status management, sentiment |
-| Submit Feedback | `/feedback/submit` | Not Built | Public-facing feedback form |
-| Surveys List | `/feedback/surveys` | Not Built | List of created surveys with response counts |
-| Survey Builder | `/feedback/surveys/new` | Not Built | Drag-and-drop survey creation |
-| Survey Detail | `/feedback/surveys/[id]` | Not Built | Survey results, response analytics |
-| Feature Requests | `/feedback/features` | Not Built | Feature request board with voting |
-| NPS Dashboard | `/feedback/nps` | Not Built | NPS score over time, promoter/detractor breakdown |
-| Widget Configuration | `/feedback/widgets` | Not Built | Configure embeddable feedback widgets |
+| Screen | Route | Status | Quality | Notes |
+|--------|-------|--------|---------|-------|
+| Feedback Dashboard | `/feedback` | Not Built | — | Overview of all feedback, NPS score, trends |
+| Feedback List | `/feedback/entries` | Not Built | — | Filterable list of all submitted feedback |
+| Feedback Detail | `/feedback/entries/[id]` | Not Built | — | Single entry with status management, sentiment |
+| Submit Feedback | `/feedback/submit` | Not Built | — | Public-facing feedback form |
+| Surveys List | `/feedback/surveys` | Not Built | — | List of created surveys with response counts |
+| Survey Builder | `/feedback/surveys/new` | Not Built | — | Drag-and-drop survey creation |
+| Survey Detail | `/feedback/surveys/[id]` | Not Built | — | Survey results, response analytics |
+| Feature Requests | `/feedback/features` | Not Built | — | Feature request board with voting |
+| NPS Dashboard | `/feedback/nps` | Not Built | — | NPS score over time, promoter/detractor breakdown |
+| Widget Configuration | `/feedback/widgets` | Not Built | — | Configure embeddable feedback widgets |
 
 ---
 
 ## 4. API Endpoints
 
-### FeedbackEntriesController (`feedback/entries`)
+### FeedbackEntriesController (`feedback/entries`) — STUB
 
 | Method | Path | Auth | Status | Notes |
 |--------|------|------|--------|-------|
-| POST | `/feedback/entries` | Optional | Partial | Submit feedback (public via widget or authenticated) |
-| GET | `/feedback/entries` | JWT + ADMIN | Partial | List all feedback entries (paginated) |
-| GET | `/feedback/entries/:id` | JWT + ADMIN | Partial | Get single entry with sentiment data |
-| PATCH | `/feedback/entries/:id/status` | JWT + ADMIN | Partial | Update entry status |
+| GET | `/feedback/entries` | JWT | Stub | Returns empty array |
+| POST | `/feedback/entries` | JWT | Stub | Throws BadRequestException |
+| GET | `/feedback/entries/:id` | JWT | Stub | Throws NotFoundException |
+| POST | `/feedback/entries/:id/respond` | JWT | Stub | Throws BadRequestException |
 
 ### FeaturesController (`feedback/features`)
 
 | Method | Path | Auth | Status | Notes |
 |--------|------|------|--------|-------|
-| POST | `/feedback/features` | JWT | Partial | Submit feature request |
-| GET | `/feedback/features` | JWT | Partial | List feature requests (sorted by votes) |
-| POST | `/feedback/features/:id/vote` | JWT | Partial | Upvote a feature request |
-| PATCH | `/feedback/features/:id/status` | JWT + ADMIN | Partial | Update feature request status |
+| GET | `/feedback/features` | JWT | Production | List feature requests, tenantId filtered |
+| POST | `/feedback/features` | JWT | Production | Create FeatureRequest |
+| GET | `/feedback/features/:id` | JWT | Production | Get single, throws if not found |
+| PUT | `/feedback/features/:id` | JWT | Production | Update feature request |
+| POST | `/feedback/features/:id/vote` | JWT | Production | Upvote — idempotent via VotingService |
+| POST | `/feedback/features/:id/comment` | JWT | Production | Add comment to feature request |
 
 ### NpsController (`feedback/nps`)
 
 | Method | Path | Auth | Status | Notes |
 |--------|------|------|--------|-------|
-| POST | `/feedback/nps` | Optional | Partial | Submit NPS response (0-10 score + comment) |
-| GET | `/feedback/nps/score` | JWT + ADMIN | Partial | Current NPS score calculation |
-| GET | `/feedback/nps/responses` | JWT + ADMIN | Partial | List all NPS responses (paginated) |
-| POST | `/feedback/nps/send-survey` | JWT + ADMIN | Partial | Trigger NPS survey email to user segment |
+| GET | `/feedback/nps/surveys` | JWT | Production | List NPS surveys |
+| POST | `/feedback/nps/surveys` | JWT | Production | Create NPS survey |
+| GET | `/feedback/nps/surveys/:id` | JWT | Production | Get single NPS survey |
+| PUT | `/feedback/nps/surveys/:id` | JWT | Production | Update NPS survey |
+| POST | `/feedback/nps/surveys/:id/activate` | JWT | Production | Activate NPS survey (DRAFT→ACTIVE) |
+| POST | `/feedback/nps/respond` | JWT | Production | Submit NPS response (0-10 score + comment) |
+| GET | `/feedback/nps/responses` | JWT | Production | List NPS responses via FeedbackAnalyticsService |
+| GET | `/feedback/nps/score` | JWT | Production | Current NPS score calculation |
 
 ### SurveysController (`feedback/surveys`)
 
 | Method | Path | Auth | Status | Notes |
 |--------|------|------|--------|-------|
-| POST | `/feedback/surveys` | JWT + ADMIN | Partial | Create survey with questions |
-| GET | `/feedback/surveys` | JWT + ADMIN | Partial | List all surveys |
-| GET | `/feedback/surveys/:id` | JWT + ADMIN | Partial | Get survey with questions |
-| POST | `/feedback/surveys/:id/responses` | Optional | Partial | Submit survey response |
-| GET | `/feedback/surveys/:id/results` | JWT + ADMIN | Partial | Aggregated survey results |
+| GET | `/feedback/surveys` | JWT | Production | List all surveys |
+| POST | `/feedback/surveys` | JWT | Production | Create survey with questions |
+| GET | `/feedback/surveys/:id` | JWT | Production | Get survey with questions |
+| PUT | `/feedback/surveys/:id` | JWT | Production | Update survey |
+| POST | `/feedback/surveys/:id/respond` | JWT | Production | Submit survey response, validates required questions |
 
 ### WidgetsController (`feedback/widgets`)
 
 | Method | Path | Auth | Status | Notes |
 |--------|------|------|--------|-------|
-| GET | `/feedback/widgets/:tenantId/config` | Public | Partial | Get widget configuration for embedding |
-| POST | `/feedback/widgets/:tenantId/submit` | Public | Partial | Submit feedback via embeddable widget |
+| GET | `/feedback/widgets` | JWT | Production | List widgets |
+| POST | `/feedback/widgets` | JWT | Production | Create widget (list + create only, no update/delete) |
 
-**Total: 5 controllers, 25 endpoints (4 + 4 + 4 + 5 + 2 + 6 internal analytics)**
+**Total: 5 controllers, 25 endpoints (4 stub + 6 features + 8 NPS + 5 surveys + 2 widgets)**
+
+> **Security note:** All 5 controllers use JwtAuthGuard only. 0/5 have RolesGuard or @Roles decorators — any authenticated user has full access.
 
 ---
 
@@ -138,64 +147,39 @@ No hooks built. Planned hooks:
 | `useFeedbackEntries` | GET `/feedback/entries` | Not Built | Paginated list with filters |
 | `useFeedbackEntry` | GET `/feedback/entries/:id` | Not Built | Single entry detail |
 | `useSubmitFeedback` | POST `/feedback/entries` | Not Built | Mutation |
-| `useUpdateFeedbackStatus` | PATCH `/feedback/entries/:id/status` | Not Built | Mutation |
 | `useFeatureRequests` | GET `/feedback/features` | Not Built | Sorted by votes |
 | `useVoteFeature` | POST `/feedback/features/:id/vote` | Not Built | Optimistic update |
 | `useNpsScore` | GET `/feedback/nps/score` | Not Built | Current score |
 | `useNpsResponses` | GET `/feedback/nps/responses` | Not Built | Paginated |
-| `useSubmitNps` | POST `/feedback/nps` | Not Built | Mutation |
+| `useSubmitNps` | POST `/feedback/nps/respond` | Not Built | Mutation |
 | `useSurveys` | GET `/feedback/surveys` | Not Built | List |
 | `useSurvey` | GET `/feedback/surveys/:id` | Not Built | Single survey |
 | `useCreateSurvey` | POST `/feedback/surveys` | Not Built | Mutation |
-| `useSurveyResults` | GET `/feedback/surveys/:id/results` | Not Built | Aggregated results |
-| `useWidgetConfig` | GET `/feedback/widgets/:tenantId/config` | Not Built | Public config |
+| `useWidgetConfig` | GET `/feedback/widgets` | Not Built | Widget config |
 
 ---
 
 ## 7. Business Rules
 
-1. **Feedback Types:** Three categories -- BUG_REPORT (something is broken), FEATURE_REQUEST (something is wanted), GENERAL (catch-all for comments, praise, complaints). Each type has its own required fields. Bug reports require steps to reproduce and severity. Feature requests require a title, description, and use case justification.
+1. **Feedback Types:** Five categories — BUG (something is broken), SUGGESTION (improvement idea), COMPLAINT (negative experience), PRAISE (positive experience), OTHER (catch-all). Hub previously claimed BUG_REPORT/FEATURE_REQUEST/GENERAL — corrected per Prisma FeedbackType enum.
 
-2. **NPS Scoring (0-10):** Net Promoter Score uses the standard formula. Respondents scoring 0-6 are DETRACTORS, 7-8 are PASSIVES, 9-10 are PROMOTERS. NPS = %Promoters - %Detractors, yielding a score from -100 to +100. NPS surveys should be sent no more than once per quarter per user to avoid survey fatigue. A minimum of 30 responses is required before displaying the NPS score to ensure statistical significance.
+2. **NPS Scoring (0-10):** Net Promoter Score uses the standard formula. Respondents scoring 0-6 are DETRACTORS, 7-8 are PASSIVES, 9-10 are PROMOTERS. NPS = %Promoters - %Detractors, yielding a score from -100 to +100. Real NPS calculation implemented in NpsScoreService with correct categorization.
 
-3. **Sentiment Analysis:** All feedback entries and NPS comments are processed through the `analytics/` and `sentiment/` sub-modules for automated sentiment scoring. Sentiment is classified as POSITIVE, NEUTRAL, or NEGATIVE with a confidence score (0.0-1.0). Sentiment data is attached to each feedback entry response. Admins can override automated sentiment classification.
+3. **Sentiment Analysis:** SentimentService uses simple word-matching (14 positive keywords, 14 negative keywords). Classifies as POSITIVE, NEUTRAL, or NEGATIVE. Functional but basic — not ML-based. Tested with 4 spec tests.
 
-4. **Survey Creation and Distribution:** Surveys are created by ADMIN users with a title, description, and ordered list of questions. Question types include: SINGLE_CHOICE, MULTIPLE_CHOICE, RATING_SCALE (1-5 or 1-10), FREE_TEXT, and YES_NO. Surveys have a status lifecycle: DRAFT -> ACTIVE -> CLOSED -> ARCHIVED. Active surveys can be distributed via email (using NPS send-survey pattern), in-app notification, or embeddable link. Each survey tracks response count and completion rate.
+4. **Survey Creation and Distribution:** Surveys are created with a title, description, and questions stored as JSON in the Survey.questions field (not a separate SurveyQuestion table). Survey responses validate required questions. Surveys support event-driven triggers via `order.completed` and `user.onboarded` event listeners.
 
-5. **Embeddable Widgets:** The widget system allows tenants to embed a feedback collection form on external sites (e.g., customer portals, marketing sites). Widget configuration is per-tenant and includes: allowed feedback types, custom branding (colors, logo URL), required fields, and redirect URL after submission. Widget endpoints are PUBLIC (no JWT required) but rate-limited to prevent abuse. Widget submissions are tagged with `source: WIDGET` to distinguish from internal submissions.
+5. **Embeddable Widgets:** Widget endpoints are behind JwtAuthGuard (not public as previously documented). Only list + create endpoints exist — no update/delete/config. Widget configuration is per-tenant.
 
-6. **Feature Voting and Prioritization:** Feature requests support a voting mechanism where authenticated users can upvote. Each user gets one vote per feature request (idempotent -- duplicate votes are ignored). Feature requests are sorted by vote count by default. Admins can set a status on feature requests: SUBMITTED -> UNDER_REVIEW -> PLANNED -> IN_PROGRESS -> COMPLETED -> DECLINED. Declined features require a reason visible to the requester.
+6. **Feature Voting and Prioritization:** Feature requests support voting via VotingService (idempotent — duplicate votes ignored). Feature requests also support comments via FeatureRequestComment model. Status lifecycle: SUBMITTED → UNDER_REVIEW → PLANNED → IN_PROGRESS → COMPLETED. Also DECLINED (added vs hub).
 
-7. **Feedback Entry Lifecycle:** All feedback entries follow a status machine: NEW -> ACKNOWLEDGED -> IN_PROGRESS -> RESOLVED -> CLOSED. Admins can also mark entries as SPAM or DUPLICATE. Status changes are timestamped. Entries older than 90 days in RESOLVED status are auto-closed via scheduled job.
+7. **Event Architecture (undocumented until PST-28):** 5 emitted events: `feedback.submitted`, `feature.submitted`, `feature.voted`, `nps.response.submitted`, `survey.response.submitted`. 2 event listeners: `order.completed` → triggers event-based survey, `user.onboarded` → triggers event-based survey.
 
-8. **Data Isolation:** All feedback data is tenant-scoped. Widget submissions are associated with the tenant via the URL parameter (`/feedback/widgets/:tenantId/submit`). Anonymous submissions are allowed via widgets but are tagged as `anonymous: true` and cannot be followed up on unless the submitter provides an email.
+8. **Data Isolation:** All feedback data is tenant-scoped via tenantId. **Exception:** VotingService has no tenantId parameter — cross-tenant voting is possible (P2 bug). **Soft-delete compliance: 0/7 real services filter `deletedAt: null` — WORST of all services audited.**
 
 ---
 
 ## 8. Data Model
-
-### FeedbackEntry
-```
-FeedbackEntry {
-  id          String (UUID)
-  tenantId    String (FK -> Tenant)
-  userId      String? (FK -> User, null for anonymous)
-  type        FeedbackType (BUG_REPORT, FEATURE_REQUEST, GENERAL)
-  subject     String
-  body        String (text)
-  status      FeedbackStatus (NEW, ACKNOWLEDGED, IN_PROGRESS, RESOLVED, CLOSED, SPAM, DUPLICATE)
-  priority    FeedbackPriority? (LOW, MEDIUM, HIGH, CRITICAL)
-  sentiment   SentimentType? (POSITIVE, NEUTRAL, NEGATIVE)
-  sentimentScore Float? (0.0-1.0 confidence)
-  source      FeedbackSource (INTERNAL, WIDGET, EMAIL, API)
-  metadata    Json? (browser info, page URL, custom fields)
-  email       String? (for anonymous submissions)
-  createdAt   DateTime
-  updatedAt   DateTime
-  resolvedAt  DateTime?
-  closedAt    DateTime?
-}
-```
 
 ### FeatureRequest
 ```
@@ -205,41 +189,58 @@ FeatureRequest {
   userId      String (FK -> User)
   title       String
   description String (text)
-  useCase     String? (justification)
-  status      FeatureStatus (SUBMITTED, UNDER_REVIEW, PLANNED, IN_PROGRESS, COMPLETED, DECLINED)
-  declineReason String?
+  status      FeatureRequestStatus (SUBMITTED, UNDER_REVIEW, PLANNED, IN_PROGRESS, COMPLETED, DECLINED)
   voteCount   Int (default: 0, denormalized)
-  votes       FeatureVote[]
+  votes       FeatureRequestVote[]
+  comments    FeatureRequestComment[]
   createdAt   DateTime
   updatedAt   DateTime
+  deletedAt   DateTime?
+  ~55% field accuracy vs Prisma
 }
 ```
 
-### FeatureVote
+### FeatureRequestVote (hub previously: FeatureVote — wrong name)
 ```
-FeatureVote {
+FeatureRequestVote {
   id              String (UUID)
   featureRequestId String (FK -> FeatureRequest)
   userId          String (FK -> User)
   createdAt       DateTime
   @@unique([featureRequestId, userId])
+  ~70% field accuracy vs Prisma
 }
 ```
 
-### NpsResponse
+### FeatureRequestComment (MISSING from previous hub)
 ```
-NpsResponse {
+FeatureRequestComment {
+  10+ fields
+  Comment system for feature requests
+  Entirely undocumented until PST-28
+}
+```
+
+### NPSResponse (hub previously: NpsResponse — wrong casing)
+```
+NPSResponse {
   id          String (UUID)
   tenantId    String (FK -> Tenant)
   userId      String? (FK -> User)
   score       Int (0-10)
-  category    NpsCategory (PROMOTER, PASSIVE, DETRACTOR) -- derived from score
+  category    NPSCategory (PROMOTER, PASSIVE, DETRACTOR) -- derived from score
   comment     String?
-  sentiment   SentimentType?
-  sentimentScore Float?
-  surveyBatchId String? (which send-survey batch triggered this)
-  email       String? (for non-authenticated respondents)
   createdAt   DateTime
+  ~45% field accuracy vs Prisma
+}
+```
+
+### NPSSurvey (MISSING from previous hub)
+```
+NPSSurvey {
+  19 fields
+  NPS survey lifecycle model (DRAFT→ACTIVE)
+  Entirely undocumented until PST-28
 }
 ```
 
@@ -251,27 +252,13 @@ Survey {
   createdBy   String (FK -> User)
   title       String
   description String?
-  status      SurveyStatus (DRAFT, ACTIVE, CLOSED, ARCHIVED)
-  questions   SurveyQuestion[]
+  questions   Json (questions stored as JSON, NOT separate table)
+  type        SurveyType (NPS, CSAT, CUSTOM, EXIT, ONBOARDING)
   responses   SurveyResponse[]
-  responseCount Int (default: 0, denormalized)
-  startsAt    DateTime?
-  endsAt      DateTime?
   createdAt   DateTime
   updatedAt   DateTime
-}
-```
-
-### SurveyQuestion
-```
-SurveyQuestion {
-  id          String (UUID)
-  surveyId    String (FK -> Survey)
-  text        String
-  type        QuestionType (SINGLE_CHOICE, MULTIPLE_CHOICE, RATING_SCALE, FREE_TEXT, YES_NO)
-  options     Json? (array of choice options, null for FREE_TEXT)
-  required    Boolean (default: true)
-  order       Int
+  deletedAt   DateTime?
+  ~40% field accuracy vs Prisma
 }
 ```
 
@@ -284,6 +271,7 @@ SurveyResponse {
   answers     Json (array of { questionId, value })
   completedAt DateTime
   createdAt   DateTime
+  ~50% field accuracy vs Prisma
 }
 ```
 
@@ -291,18 +279,20 @@ SurveyResponse {
 ```
 FeedbackWidget {
   id              String (UUID)
-  tenantId        String (FK -> Tenant, unique)
+  tenantId        String (FK -> Tenant)
   enabled         Boolean (default: true)
-  allowedTypes    FeedbackType[] (which feedback types are shown)
-  brandColor      String? (hex color)
-  logoUrl         String?
-  requiredFields  String[] (e.g., ["email", "name"])
-  redirectUrl     String?
-  rateLimit       Int (default: 10 per minute per IP)
   createdAt       DateTime
   updatedAt       DateTime
+  ~30% field accuracy vs Prisma
 }
 ```
+
+### Removed Phantom Models
+
+| Model | Reason for Removal |
+|-------|--------------------|
+| ~~FeedbackEntry~~ | **PHANTOM** — No Prisma model exists. FeedbackEntriesService correctly throws "not supported by current schema" |
+| ~~SurveyQuestion~~ | **PHANTOM** — Questions stored as JSON in Survey.questions field, not a separate table |
 
 ---
 
@@ -311,33 +301,15 @@ FeedbackWidget {
 | Field | Rule | Error Message |
 |-------|------|--------------|
 | `type` | IsEnum(FeedbackType) | "Invalid feedback type" |
-| `subject` | IsString, 1-200 chars | "Subject is required (max 200 characters)" |
-| `body` | IsString, 1-5000 chars | "Feedback body is required (max 5000 characters)" |
 | `score` (NPS) | IsInt, Min(0), Max(10) | "NPS score must be between 0 and 10" |
-| `email` | IsEmail (optional) | "Invalid email format" |
 | `survey.title` | IsString, 1-200 chars | "Survey title is required" |
 | `survey.questions` | IsArray, MinLength(1) | "Survey must have at least one question" |
-| `question.type` | IsEnum(QuestionType) | "Invalid question type" |
-| `question.options` | Required for SINGLE_CHOICE, MULTIPLE_CHOICE | "Options are required for choice questions" |
 | `featureRequest.title` | IsString, 1-200 chars | "Feature request title is required" |
 | `featureRequest.description` | IsString, 1-2000 chars | "Description is required" |
-| `widget.brandColor` | Matches hex pattern `/^#[0-9A-Fa-f]{6}$/` | "Invalid hex color" |
-| `widget.rateLimit` | IsInt, Min(1), Max(100) | "Rate limit must be between 1 and 100" |
 
 ---
 
 ## 10. Status States
-
-### Feedback Entry Status Machine
-```
-NEW -> ACKNOWLEDGED (admin reviews)
-ACKNOWLEDGED -> IN_PROGRESS (admin starts work)
-IN_PROGRESS -> RESOLVED (issue addressed)
-RESOLVED -> CLOSED (auto after 90 days, or manual)
-NEW -> SPAM (admin marks as spam)
-NEW -> DUPLICATE (admin marks as duplicate, links to original)
-Any -> CLOSED (admin force-close)
-```
 
 ### Feature Request Status Machine
 ```
@@ -348,10 +320,10 @@ PLANNED -> IN_PROGRESS (development started)
 IN_PROGRESS -> COMPLETED (shipped)
 ```
 
-### Survey Status Machine
+### Survey Status (plain string, NOT Prisma enum)
 ```
 DRAFT -> ACTIVE (publish)
-ACTIVE -> CLOSED (end collection, manual or auto via endsAt)
+ACTIVE -> CLOSED (end collection)
 CLOSED -> ARCHIVED (admin archives)
 DRAFT -> ARCHIVED (discard without publishing)
 ```
@@ -363,29 +335,55 @@ Score 7-8  -> PASSIVE
 Score 9-10 -> PROMOTER
 ```
 
+### Enums (Prisma)
+
+| Enum | Values | Notes |
+|------|--------|-------|
+| FeedbackType | BUG, SUGGESTION, COMPLAINT, PRAISE, OTHER | Hub previously had BUG_REPORT/FEATURE_REQUEST/GENERAL — WRONG |
+| FeatureRequestStatus | SUBMITTED, UNDER_REVIEW, PLANNED, IN_PROGRESS, COMPLETED, DECLINED | Hub missed DECLINED |
+| NPSCategory | PROMOTER, PASSIVE, DETRACTOR | Matches |
+| SurveyType | NPS, CSAT, CUSTOM, EXIT, ONBOARDING | Not in previous hub |
+
+### Removed Phantom Enums
+
+| Enum | Reason |
+|------|--------|
+| ~~FeedbackStatus~~ | No Prisma enum — used only in phantom FeedbackEntry |
+| ~~FeedbackPriority~~ | No Prisma enum — phantom |
+| ~~FeedbackSource~~ | No Prisma enum — phantom |
+| ~~SentimentType~~ | No Prisma enum — used as plain string in service |
+| ~~SurveyStatus~~ | No Prisma enum — plain string |
+| ~~QuestionType~~ | No Prisma enum — defined in DTO only |
+
 ---
 
 ## 11. Known Issues
 
-| Issue | Severity | File/Location | Status |
-|-------|----------|---------------|--------|
-| No frontend exists -- entire UI needs to be built | P3 | N/A | Expected (P3 service) |
-| Sentiment analysis sub-module implementation depth unknown | P3 | `feedback/sentiment/` | Needs audit |
-| Analytics sub-module implementation depth unknown | P3 | `feedback/analytics/` | Needs audit |
-| Widget rate limiting may not be implemented | P3 | `feedback/widgets/` | Needs verification |
-| No email integration for NPS survey distribution | P3 | `feedback/nps/` | Backend stub likely |
-| No Prisma models verified in schema for feedback | P3 | `prisma/schema.prisma` | Needs verification |
+| Issue | Severity | Status | Notes |
+|-------|----------|--------|-------|
+| 0/7 services filter `deletedAt: null` — worst soft-delete compliance | P2 BUG | **Open** | Every query leaks soft-deleted records |
+| VotingService has no tenantId — cross-tenant voting possible | P2 BUG | **Open** | Also uses hard-delete (.deleteMany) |
+| 0/5 controllers have RolesGuard — any JWT user has full access | P2 SEC | **Open** | No @Roles decorators anywhere |
+| FeedbackEntry model does not exist — entire entries controller is stub | P3 GAP | **Open** | Need to create Prisma model or remove stub |
+| Widget endpoints not public despite embeddable use case | P3 DOC | **Open** | All behind JwtAuthGuard — decide on auth model |
+| WidgetsController missing update/delete endpoints | P3 GAP | **Open** | Only list + create |
+| No frontend exists — entire UI needs to be built | P3 | **Open** | Expected (P3 service) |
+| ~~Sentiment analysis sub-module implementation depth unknown~~ | — | **Closed** | PST-28: SentimentService is simple word-matching (14 keywords each), tested with 4 specs |
+| ~~Analytics sub-module implementation depth unknown~~ | — | **Closed** | PST-28: FeedbackAnalyticsService does GroupBy aggregation, tested with 3 specs |
+| ~~Widget rate limiting may not be implemented~~ | — | **Closed** | PST-28: Widgets are behind JwtAuthGuard, rate limiting question is moot for authenticated endpoints |
+| ~~No Prisma models verified in schema for feedback~~ | — | **Closed** | PST-28: 8 models verified in Prisma schema |
+| ~~No email integration for NPS survey distribution~~ | — | **Closed** | PST-28: NPS uses NPSSurvey lifecycle model (DRAFT→ACTIVE), not email-based |
 
 ---
 
 ## 12. Tasks
 
-### Backlog (P3 -- Not Scheduled)
+### Backlog (P3 — Not Scheduled)
 
 | Task ID | Title | Effort | Priority |
 |---------|-------|--------|----------|
-| FB-101 | Audit feedback backend -- verify all 25 endpoints work | M (4h) | P3 |
-| FB-102 | Verify/create Prisma models for feedback entities | M (3h) | P3 |
+| FB-101 | ~~Audit feedback backend — verify all 25 endpoints work~~ | — | **Done** (PST-28 tribunal) |
+| FB-102 | ~~Verify/create Prisma models for feedback entities~~ | — | **Done** (PST-28: 8 models verified) |
 | FB-103 | Build Feedback Dashboard page | L (6h) | P3 |
 | FB-104 | Build Feedback Entries list + detail pages | L (6h) | P3 |
 | FB-105 | Build Submit Feedback form (internal + widget) | M (4h) | P3 |
@@ -395,11 +393,20 @@ Score 9-10 -> PROMOTER
 | FB-109 | Build Feature Request board with voting | L (6h) | P3 |
 | FB-110 | Build Widget Configuration page | M (4h) | P3 |
 | FB-111 | Build embeddable widget JS snippet | L (8h) | P3 |
-| FB-112 | Implement sentiment analysis integration | L (8h) | P3 |
-| FB-113 | Write feedback service tests | L (6h) | P3 |
+| FB-113 | ~~Write feedback service tests~~ | — | **Done** (PST-28: 47 tests exist) |
 | FB-114 | Create all frontend hooks for feedback endpoints | M (4h) | P3 |
 
-**Total estimated effort:** ~75 hours
+### New Tasks (from PST-28 tribunal findings)
+
+| Task ID | Title | Effort | Priority |
+|---------|-------|--------|----------|
+| FB-115 | Create FeedbackEntry Prisma model OR remove stub controller | M (3h) | P2 |
+| FB-116 | Add `deletedAt: null` filter to all 7 service queries | M (3h) | P2 |
+| FB-117 | Add tenantId to VotingService.vote() and .unvote() | S (1h) | P2 |
+| FB-118 | Add @UseGuards(RolesGuard) + @Roles to all 5 controllers | M (2h) | P2 |
+| FB-119 | Convert VotingService.unvote() hard-delete to soft-delete | S (1h) | P3 |
+| FB-120 | Decide widget auth model: make public or keep JWT | S (1h) | P3 |
+| FB-121 | Add update/delete endpoints to WidgetsController | M (2h) | P3 |
 
 ---
 
@@ -422,26 +429,57 @@ Score 9-10 -> PROMOTER
 | Original Plan | Actual | Delta |
 |--------------|--------|-------|
 | Backend + Frontend | Backend only | Frontend entirely missing |
-| 5 controller areas planned | 5 controllers built | On track for backend |
-| Sentiment analysis | Sub-module exists, depth unknown | Needs audit |
-| Survey system | Backend endpoints exist | Frontend survey builder is complex (XL effort) |
-| Embeddable widgets | 2 public endpoints exist | No JS embed snippet built |
-| NPS scoring | Backend endpoints exist | No email distribution verified |
-| Feature voting | Backend endpoints exist | No frontend board |
+| 5 controller areas planned | 5 controllers built (1 stub, 4 production) | FeedbackEntries is non-functional stub |
+| Sentiment analysis | SentimentService: simple 14-keyword word matching | Functional but basic |
+| Survey system | Backend endpoints exist, event-driven triggers | Survey questions stored as JSON, not separate model |
+| Embeddable widgets | 2 JWT-authenticated endpoints exist | Not public — auth model needs decision |
+| NPS scoring | Full lifecycle: NPSSurvey + NPSResponse + NpsScoreService | Exceeds plan (lifecycle model undocumented until PST-28) |
+| Feature voting | Backend + voting + comments | Comments system entirely undocumented until PST-28 |
 | ~10 screens expected | 0 screens built | Full frontend gap |
+| "No tests" | 9 files / 47 tests / ~820 LOC | Hub was completely wrong |
 
 ---
 
 ## 15. Dependencies
 
 **Depends on:**
-- Auth (JWT authentication for internal endpoints, user identity for submissions)
-- Email/Communication (NPS survey distribution via SendGrid)
-- Tenant (widget configuration is per-tenant, all data tenant-scoped)
+- Auth (JWT authentication for all endpoints — no RolesGuard used)
+- Tenant (all data tenant-scoped via tenantId, except VotingService)
+- EventEmitter2 (5 events emitted, 2 listeners for order.completed / user.onboarded)
 
 **Depended on by:**
 - No other services currently depend on Feedback (P3 standalone service)
 - Future: Analytics could consume feedback sentiment data for customer health scoring
 - Future: Help Desk could link support tickets to feedback entries
 
-**Breaking change risk:** LOW -- P3 service with no downstream consumers. Backend changes are safe.
+**Breaking change risk:** LOW — P3 service with no downstream consumers. Backend changes are safe.
+
+---
+
+## 16. Code Metrics (PST-28 verified)
+
+| Metric | Value |
+|--------|-------|
+| Source files | 16 |
+| Test files | 9 |
+| Total source LOC | ~1,798 |
+| Total test LOC | ~820 |
+| Grand total LOC | ~2,618 |
+| DTOs | 14 classes / 298 LOC |
+| .bak directory | None |
+
+---
+
+## 17. Service Implementation Quality (PST-28 verified)
+
+| Service | Status | Quality | Notes |
+|---------|--------|---------|-------|
+| FeedbackEntriesService | **FULL STUB** | 1/10 | All methods throw — FeedbackEntry model doesn't exist |
+| FeaturesService | Production | 7/10 | Full CRUD + voting + comments, no soft-delete filter |
+| NpsSurveysService | Production | 7/10 | Full lifecycle (DRAFT→ACTIVE), validates status |
+| SurveysService | Production | 8/10 | Best service — event-driven triggers, question validation |
+| NpsScoreService | Production | 7/10 | Real NPS calculation, correct categorization |
+| FeedbackAnalyticsService | Production | 6/10 | GroupBy aggregation, no soft-delete on groupBy |
+| WidgetsService | Minimal | 5/10 | List + create only, no update/delete/config endpoints |
+| VotingService | Production | 5/10 | Idempotent but no tenantId, hard-delete |
+| SentimentService | Production | 6/10 | Simple word-matching (14 keywords each), functional |
