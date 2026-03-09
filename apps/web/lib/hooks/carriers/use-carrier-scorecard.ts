@@ -9,7 +9,7 @@ export function useCarrierScorecard(carrierId: string) {
     queryKey: [CARRIERS_KEY, carrierId, 'scorecard'],
     queryFn: async () => {
       const raw = await apiClient.get<{ data: CarrierScorecardResponse }>(
-        `/operations/carriers/${carrierId}/scorecard`,
+        `/carriers/${carrierId}/scorecard`,
       );
       return raw.data;
     },

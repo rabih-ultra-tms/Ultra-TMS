@@ -659,13 +659,17 @@ export class CarriersService {
   async getScorecard(tenantId: string, id: string) {
     const carrier = await this.requireCarrier(tenantId, id);
 
-    const [loads, insurances, documents] = await Promise.all([
+    const [loads, insurances, documents, csaScores] = await Promise.all([
       this.prisma.load.findMany({
         where: { tenantId, carrierId: id },
         include: { order: { include: { stops: true } } },
       }),
       this.prisma.insuranceCertificate.findMany({ where: { tenantId, carrierId: id, status: { not: 'CANCELLED' } } }),
       this.prisma.carrierDocument.findMany({ where: { tenantId, carrierId: id, deletedAt: null } }),
+      this.prisma.csaScore.findMany({
+        where: { tenantId, carrierId: id, deletedAt: null },
+        orderBy: { asOfDate: 'desc' },
+      }),
     ]);
 
     const totalLoads = loads.length;
@@ -721,6 +725,14 @@ export class CarriersService {
         outOfService: carrier.fmcsaOutOfService ?? false,
         lastFmcsaCheck: carrier.fmcsaLastChecked,
       },
+      csaScores: csaScores.map((s) => ({
+        basicType: s.basicType,
+        score: s.score,
+        percentile: s.percentile,
+        isAboveThreshold: s.isAboveThreshold,
+        isAlert: s.isAlert,
+        asOfDate: s.asOfDate,
+      })),
     };
   }
 

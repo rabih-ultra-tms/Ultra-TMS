@@ -22,14 +22,14 @@ export class PortalAuthService {
   private signAccessToken(user: { id: string; tenantId: string; role: string }) {
     return this.jwtService.sign(
       { sub: user.id, tenantId: user.tenantId, role: user.role },
-      { secret: process.env.PORTAL_JWT_SECRET || process.env.JWT_SECRET, expiresIn: '2h' },
+      { secret: process.env.CUSTOMER_PORTAL_JWT_SECRET || process.env.JWT_SECRET, expiresIn: '2h' },
     );
   }
 
   private signRefreshToken(user: { id: string; tenantId: string }) {
     return this.jwtService.sign(
       { sub: user.id, tenantId: user.tenantId, type: 'refresh' },
-      { secret: process.env.PORTAL_JWT_SECRET || process.env.JWT_SECRET, expiresIn: '7d' },
+      { secret: process.env.CUSTOMER_PORTAL_JWT_SECRET || process.env.JWT_SECRET, expiresIn: '7d' },
     );
   }
 
@@ -84,7 +84,7 @@ export class PortalAuthService {
   async refresh(dto: RefreshTokenDto) {
     try {
       const payload = this.jwtService.verify(dto.refreshToken, {
-        secret: process.env.PORTAL_JWT_SECRET || process.env.JWT_SECRET,
+        secret: process.env.CUSTOMER_PORTAL_JWT_SECRET || process.env.JWT_SECRET,
       });
 
       if (payload.type !== 'refresh') {

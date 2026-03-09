@@ -34,15 +34,15 @@
 |----|------|--------|----------|----------|--------|
 | QS-001 | WebSocket Gateway (/notifications only) | L | P0 | Claude Code | **DONE** (2026-03-09) |
 | QS-002 | Soft Delete Migration (Order, Quote, Invoice, Settlement, Payment) | M | P0 | Claude Code | **DONE** (2026-03-09) |
-| QS-003 | Accounting Dashboard Endpoint | M | P1 | Claude Code | planned |
-| QS-004 | CSA Scores Endpoint | S | P1 | Claude Code | planned |
-| QS-005 | Profile Page (currently 0/10 stub) | L | P1 | Claude Code | planned |
-| QS-006 | Check Call Form RHF Refactor | M | P1 | Codex/Gemini | planned |
-| QS-007 | CORS Env Variable | S | P1 | Codex/Gemini | planned |
+| QS-003 | Accounting Dashboard Endpoint | M | P1 | Claude Code | **DONE** (2026-03-09) — verified: endpoint, hook, component all wired |
+| QS-004 | CSA Scores Endpoint | S | P1 | Claude Code | **DONE** (2026-03-09) — CsaScore model wired into scorecard, URL bug fixed |
+| QS-005 | Profile Page (currently 0/10 stub) | L | P1 | Claude Code | **DONE** (2026-03-09) — RHF forms, password change, MFA, avatar upload |
+| QS-006 | Check Call Form RHF Refactor | M | P1 | Claude Code | **DONE** (2026-03-09) — converted from useState to RHF+Zod |
+| QS-007 | CORS Env Variable | S | P1 | Claude Code | **DONE** (2026-03-09) — reads CORS_ALLOWED_ORIGINS env var |
 | QS-008 | Runtime Verification (click every route with Playwright) | L | P0 | Claude Code | planned |
-| QS-009 | Delete .bak Directories | S | P2 | Codex/Gemini | planned |
+| QS-009 | Delete .bak Directories | S | P2 | Claude Code | **DONE** (2026-03-09) — 5 dirs removed |
 | QS-010 | Triage 339 TODOs | M | P2 | Codex/Gemini | planned |
-| QS-011 | Customer Portal — Basic 4-Page MVP | L | P0 | Claude Code | planned |
+| QS-011 | Customer Portal — Basic 4-Page MVP | L | P0 | Claude Code | **DONE** (2026-03-09) — 4 pages, 4 hooks, portal layout, CPORT-016 JWT fix |
 | QS-012 | Rate Confirmation PDF Generation | M | P0 | Claude Code | **DONE** (2026-03-09) |
 | QS-013 | BOL PDF Generation | M | P0 | Claude Code | **DONE** (2026-03-09) |
 | QS-014 | Prisma Client Extension for Auto tenantId | L | P0 | Claude Code | **DONE** (2026-03-09) |
