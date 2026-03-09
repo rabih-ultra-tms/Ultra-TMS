@@ -6,6 +6,47 @@
 
 ---
 
+## Session: 2026-03-09 (Sunday) — QS-012 Verified + QS-013 BOL PDF Generation
+
+### Developer: Claude Code (Opus 4.6)
+### AI Tool: Claude Opus 4.6
+
+**What was done:**
+Verified QS-012 (Rate Confirmation PDF) was already fully implemented and marked it DONE. Built QS-013 (Bill of Lading PDF Generation) end-to-end: backend endpoint, PDFKit template with standard BOL format, frontend hook, Load Detail header integration, and 4 unit tests.
+
+### Commit: `4fa76eb` — feat(QS-013): implement Bill of Lading PDF generation
+
+**Files created/changed:** 8 files (+596 lines)
+
+**Detailed breakdown:**
+
+| Area | File | Change |
+|------|------|--------|
+| Backend DTO | `apps/api/src/modules/tms/dto/bol-options.dto.ts` | **NEW** — `BolOptionsDto` (includeHazmat, includeSpecialInstructions) |
+| Backend DTO | `apps/api/src/modules/tms/dto/index.ts` | Export `BolOptionsDto` |
+| Backend Service | `apps/api/src/modules/tms/loads.service.ts` | +249 LOC — `generateBolPdf()` with full standard BOL template |
+| Backend Controller | `apps/api/src/modules/tms/loads.controller.ts` | +25 LOC — `POST /loads/:id/bol` endpoint |
+| Frontend Hook | `apps/web/lib/hooks/tms/use-bol.ts` | **NEW** — 100 LOC hook (generate, download, cleanup) |
+| Frontend UI | `apps/web/components/tms/loads/load-detail-header.tsx` | +16 LOC — BOL generate/download in Actions dropdown |
+| Tests | `apps/api/src/modules/tms/loads.service.spec.ts` | +195 LOC — 4 BOL tests (not found, with items, fallback, hazmat) |
+| Docs | `dev_docs_v3/STATUS.md` | QS-012 + QS-013 marked DONE, QS-013 removed from blocked |
+
+**Key deliverables:**
+- Standard BOL PDF with: header, reference numbers (load/order/BOL/PO), shipper/consignee side-by-side, carrier + driver + equipment, commodity table with item-level or order-level fallback, weight/piece totals, hazmat section, special instructions, multi-stop listing, 3 signature lines
+- `POST /api/v1/loads/:id/bol` — guarded with `@Roles('ADMIN', 'DISPATCHER')`
+- Frontend: Generate BOL / Download BOL in Load Detail Actions dropdown with loading state
+- All 4 new tests passing; API types clean; pre-existing web type errors unchanged
+
+**Impact metrics for report:**
+- Quality Sprint tasks completed this session: 2 (QS-012 verified, QS-013 built)
+- Total QS tasks DONE: 4/16 (QS-001, QS-012, QS-013, QS-014)
+- New endpoint: 1 (`POST /loads/:id/bol`)
+- New tests: 4 (all passing)
+- Lines added: ~596
+- PDF documents now supported: 4 (Invoice, Statement, Rate Confirmation, BOL)
+
+---
+
 ## Session: 2026-03-06 (Thursday) — Full-Stack Audit + Security Fixes + Playwright E2E Setup
 
 ### Developer: Claude Code (Opus 4.6)
