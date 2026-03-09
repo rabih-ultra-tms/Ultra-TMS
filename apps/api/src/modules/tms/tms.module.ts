@@ -13,9 +13,10 @@ import { TrackingController } from './tracking.controller';
 import { PublicTrackingController } from './public-tracking.controller';
 import { TrackingService } from './tracking.service';
 import { NotificationsGateway } from './gateways/notifications.gateway';
+import { CommunicationModule } from '../communication/communication.module';
 
 @Module({
-  imports: [EventEmitterModule, ConfigModule, JwtModule.register({})],
+  imports: [EventEmitterModule, ConfigModule, JwtModule.register({}), CommunicationModule],
   controllers: [OrdersController, LoadsController, StopsController, TrackingController, PublicTrackingController],
   providers: [PrismaService, OrdersService, LoadsService, StopsService, TrackingService, NotificationsGateway],
   exports: [OrdersService, LoadsService, StopsService, TrackingService, NotificationsGateway],

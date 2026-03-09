@@ -123,6 +123,22 @@ export class EmailService {
       },
     });
 
+    // Convert attachments from DTO format to SendGrid format
+    const sgAttachments = dto.attachments?.map((att) => {
+      // Support data URIs (data:mimetype;base64,CONTENT)
+      let content = att.url;
+      if (att.url.startsWith('data:')) {
+        const base64Part = att.url.split(',')[1];
+        if (base64Part) content = base64Part;
+      }
+      return {
+        content,
+        filename: att.name,
+        type: att.mimeType,
+        disposition: 'attachment' as const,
+      };
+    });
+
     // Send via provider
     const result = await this.sendGrid.sendEmail({
       to: dto.recipientEmail,
@@ -133,6 +149,7 @@ export class EmailService {
       from: dto.fromEmail,
       fromName: dto.fromName,
       replyTo: dto.replyTo,
+      attachments: sgAttachments,
     });
 
     // Update log with result

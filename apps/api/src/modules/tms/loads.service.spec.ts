@@ -3,6 +3,7 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { LoadsService } from './loads.service';
 import { PrismaService } from '../../prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EmailService } from '../communication/email.service';
 
 describe('LoadsService', () => {
   let service: LoadsService;
@@ -14,6 +15,7 @@ describe('LoadsService', () => {
     statusHistory: { create: jest.Mock };
   };
   const eventEmitter = { emit: jest.fn() };
+  const emailService = { send: jest.fn() };
 
   beforeEach(async () => {
     prisma = {
@@ -31,12 +33,14 @@ describe('LoadsService', () => {
     };
 
     eventEmitter.emit.mockClear();
+    emailService.send.mockClear();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         LoadsService,
         { provide: PrismaService, useValue: prisma },
         { provide: EventEmitter2, useValue: eventEmitter },
+        { provide: EmailService, useValue: emailService },
       ],
     }).compile();
 
@@ -759,5 +763,227 @@ describe('LoadsService', () => {
         }),
       }),
     );
+  });
+
+  // --- sendRateConfirmation tests ---
+
+  it('throws when sending rate con for missing load', async () => {
+    prisma.load.findFirst.mockResolvedValue(null);
+
+    await expect(
+      service.sendRateConfirmation('tenant-1', 'load-1', {} as any, 'user-1'),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it('throws when sending rate con for load without carrier', async () => {
+    prisma.load.findFirst.mockResolvedValue({
+      id: 'load-1',
+      carrierId: null,
+      carrier: null,
+    });
+
+    await expect(
+      service.sendRateConfirmation('tenant-1', 'load-1', {} as any, 'user-1'),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('throws when carrier has no email on file', async () => {
+    prisma.load.findFirst.mockResolvedValue({
+      id: 'load-1',
+      carrierId: 'car-1',
+      carrier: {
+        id: 'car-1',
+        legalName: 'Carrier Inc',
+        dispatchEmail: null,
+        primaryContactEmail: null,
+      },
+    });
+
+    await expect(
+      service.sendRateConfirmation('tenant-1', 'load-1', {} as any, 'user-1'),
+    ).rejects.toThrow('no dispatch or primary contact email');
+  });
+
+  it('sends rate con email and sets rateConfirmationSent flag', async () => {
+    // First call: sendRateConfirmation fetches load with carrier
+    prisma.load.findFirst
+      .mockResolvedValueOnce({
+        id: 'load-1',
+        loadNumber: 'LD2026010001',
+        carrierId: 'car-1',
+        carrier: {
+          id: 'car-1',
+          legalName: 'Fast Freight LLC',
+          mcNumber: 'MC123456',
+          dispatchEmail: 'dispatch@fastfreight.com',
+          primaryContactEmail: 'contact@fastfreight.com',
+        },
+      })
+      // Second call: generateRateConfirmation fetches load with full relations
+      .mockResolvedValueOnce({
+        id: 'load-1',
+        loadNumber: 'LD2026010001',
+        carrierId: 'car-1',
+        carrierRate: 2500,
+        accessorialCosts: 150,
+        fuelAdvance: 100,
+        carrier: { legalName: 'Fast Freight LLC', mcNumber: 'MC123456' },
+        order: { customer: { id: 'cust-1', name: 'Acme' } },
+        stops: [
+          {
+            stopType: 'PICKUP',
+            facilityName: 'Origin Warehouse',
+            addressLine1: '100 Main St',
+            city: 'Dallas',
+            state: 'TX',
+            postalCode: '75201',
+            appointmentDate: new Date('2026-02-01'),
+            appointmentTimeStart: '08:00',
+          },
+          {
+            stopType: 'DELIVERY',
+            facilityName: 'Destination DC',
+            addressLine1: '200 Oak Ave',
+            city: 'Houston',
+            state: 'TX',
+            postalCode: '77001',
+            appointmentDate: new Date('2026-02-02'),
+            appointmentTimeStart: '14:00',
+          },
+        ],
+      });
+
+    emailService.send.mockResolvedValue({
+      success: true,
+      logId: 'log-1',
+      messageId: 'msg-1',
+    });
+    prisma.load.update.mockResolvedValue({ id: 'load-1', rateConfirmationSent: true });
+
+    const result = await service.sendRateConfirmation(
+      'tenant-1',
+      'load-1',
+      { includeAccessorials: true, includeTerms: true } as any,
+      'user-1',
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.logId).toBe('log-1');
+
+    // Verify email was sent to dispatch email
+    expect(emailService.send).toHaveBeenCalledWith(
+      'tenant-1',
+      'user-1',
+      expect.objectContaining({
+        recipientEmail: 'dispatch@fastfreight.com',
+        recipientName: 'Fast Freight LLC',
+        recipientType: 'CARRIER',
+        entityType: 'LOAD',
+        entityId: 'load-1',
+        subject: expect.stringContaining('LD2026010001'),
+      }),
+    );
+
+    // Verify attachment was included
+    expect(emailService.send).toHaveBeenCalledWith(
+      'tenant-1',
+      'user-1',
+      expect.objectContaining({
+        attachments: expect.arrayContaining([
+          expect.objectContaining({
+            name: 'rate-confirmation-LD2026010001.pdf',
+            mimeType: 'application/pdf',
+          }),
+        ]),
+      }),
+    );
+
+    // Verify rateConfirmationSent was set
+    expect(prisma.load.update).toHaveBeenCalledWith({
+      where: { id: 'load-1' },
+      data: { rateConfirmationSent: true },
+    });
+  });
+
+  it('uses primaryContactEmail when dispatchEmail is null', async () => {
+    prisma.load.findFirst
+      .mockResolvedValueOnce({
+        id: 'load-1',
+        loadNumber: 'LD2026010001',
+        carrierId: 'car-1',
+        carrier: {
+          id: 'car-1',
+          legalName: 'Carrier Inc',
+          dispatchEmail: null,
+          primaryContactEmail: 'primary@carrier.com',
+        },
+      })
+      .mockResolvedValueOnce({
+        id: 'load-1',
+        loadNumber: 'LD2026010001',
+        carrierId: 'car-1',
+        carrierRate: 1000,
+        accessorialCosts: 0,
+        fuelAdvance: 0,
+        carrier: { legalName: 'Carrier Inc', mcNumber: 'MC1' },
+        order: { customer: { id: 'c1' } },
+        stops: [],
+      });
+
+    emailService.send.mockResolvedValue({ success: true, logId: 'log-2' });
+    prisma.load.update.mockResolvedValue({ id: 'load-1' });
+
+    await service.sendRateConfirmation('tenant-1', 'load-1', {} as any, 'user-1');
+
+    expect(emailService.send).toHaveBeenCalledWith(
+      'tenant-1',
+      'user-1',
+      expect.objectContaining({
+        recipientEmail: 'primary@carrier.com',
+      }),
+    );
+  });
+
+  it('does not set rateConfirmationSent when email fails', async () => {
+    prisma.load.findFirst
+      .mockResolvedValueOnce({
+        id: 'load-1',
+        loadNumber: 'LD2026010001',
+        carrierId: 'car-1',
+        carrier: {
+          id: 'car-1',
+          legalName: 'Carrier Inc',
+          dispatchEmail: 'dispatch@carrier.com',
+        },
+      })
+      .mockResolvedValueOnce({
+        id: 'load-1',
+        loadNumber: 'LD2026010001',
+        carrierId: 'car-1',
+        carrierRate: 1000,
+        accessorialCosts: 0,
+        fuelAdvance: 0,
+        carrier: { legalName: 'Carrier Inc', mcNumber: 'MC1' },
+        order: { customer: { id: 'c1' } },
+        stops: [],
+      });
+
+    emailService.send.mockResolvedValue({
+      success: false,
+      error: 'SendGrid API error',
+    });
+
+    const result = await service.sendRateConfirmation(
+      'tenant-1',
+      'load-1',
+      {} as any,
+      'user-1',
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('SendGrid API error');
+
+    // Should NOT update rateConfirmationSent when email fails
+    expect(prisma.load.update).not.toHaveBeenCalled();
   });
 });

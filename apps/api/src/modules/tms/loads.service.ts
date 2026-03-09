@@ -1,14 +1,18 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../prisma.service';
+import { EmailService } from '../communication/email.service';
 import PDFDocument from 'pdfkit';
 import { CreateLoadDto, UpdateLoadDto, AssignCarrierDto, UpdateLoadLocationDto, LoadQueryDto, CreateCheckCallDto, PaginationDto, RateConfirmationOptionsDto } from './dto';
 
 @Injectable()
 export class LoadsService {
+  private readonly logger = new Logger(LoadsService.name);
+
   constructor(
     private prisma: PrismaService,
     private eventEmitter: EventEmitter2,
+    private emailService: EmailService,
   ) { }
 
   async create(tenantId: string, userId: string, dto: CreateLoadDto) {
@@ -598,6 +602,71 @@ export class LoadsService {
     return new Promise((resolve) => {
       doc.on('end', () => resolve(Buffer.concat(chunks)));
     });
+  }
+
+  async sendRateConfirmation(
+    tenantId: string,
+    loadId: string,
+    options: RateConfirmationOptionsDto,
+    userId: string,
+  ): Promise<{ success: boolean; logId?: string; error?: string }> {
+    const load = await this.prisma.load.findFirst({
+      where: { id: loadId, tenantId, deletedAt: null },
+      include: { carrier: true },
+    });
+
+    if (!load) {
+      throw new NotFoundException('Load not found');
+    }
+
+    if (!load.carrierId || !load.carrier) {
+      throw new BadRequestException('Load must be assigned to a carrier');
+    }
+
+    const carrierEmail = load.carrier.dispatchEmail || load.carrier.primaryContactEmail;
+    if (!carrierEmail) {
+      throw new BadRequestException(
+        'Carrier has no dispatch or primary contact email on file',
+      );
+    }
+
+    const pdfBuffer = await this.generateRateConfirmation(tenantId, loadId, options, userId);
+
+    const result = await this.emailService.send(tenantId, userId, {
+      subject: `Rate Confirmation - Load ${load.loadNumber}`,
+      body: `Please find attached the rate confirmation for Load ${load.loadNumber}. Please review, sign, and return at your earliest convenience.`,
+      bodyHtml: `<p>Please find attached the rate confirmation for Load <strong>${load.loadNumber}</strong>.</p><p>Please review, sign, and return at your earliest convenience.</p>`,
+      recipientEmail: carrierEmail,
+      recipientName: load.carrier.legalName,
+      recipientType: 'CARRIER',
+      recipientId: load.carrierId,
+      entityType: 'LOAD',
+      entityId: loadId,
+      attachments: [
+        {
+          name: `rate-confirmation-${load.loadNumber}.pdf`,
+          url: `data:application/pdf;base64,${pdfBuffer.toString('base64')}`,
+          mimeType: 'application/pdf',
+        },
+      ],
+    });
+
+    if (result.success) {
+      await this.prisma.load.update({
+        where: { id: loadId },
+        data: { rateConfirmationSent: true },
+      });
+
+      this.logger.log(
+        `Rate confirmation sent for load ${load.loadNumber} to ${carrierEmail}`,
+      );
+    }
+
+    return {
+      success: result.success,
+      logId: result.logId,
+      error: result.error,
+    };
   }
 
   async getLoadBoard(tenantId: string, options: {

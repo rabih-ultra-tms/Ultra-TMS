@@ -214,6 +214,19 @@ export class LoadsController {
     @Body() options: RateConfirmationOptionsDto,
     @Res() res: Response,
   ) {
+    // If sendToCarrier is true, generate + email + return JSON result
+    if (options.sendToCarrier) {
+      const result = await this.loadsService.sendRateConfirmation(
+        tenantId,
+        id,
+        options,
+        userId,
+      );
+      res.json({ data: result });
+      return;
+    }
+
+    // Otherwise just generate and return PDF binary
     const pdfBuffer = await this.loadsService.generateRateConfirmation(
       tenantId,
       id,
@@ -229,6 +242,22 @@ export class LoadsController {
 
     res.send(pdfBuffer);
   }
+
+  @Post(':id/rate-confirmation/send')
+  @ApiOperation({ summary: 'Send rate confirmation to carrier via email' })
+  @ApiParam({ name: 'id', description: 'Load ID' })
+  @ApiStandardResponse('Rate confirmation sent')
+  @ApiErrorResponses()
+  @Roles('ADMIN', 'DISPATCHER')
+  async sendRateConfirmation(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+    @Body() options: RateConfirmationOptionsDto,
+  ) {
+    return this.loadsService.sendRateConfirmation(tenantId, id, options, userId);
+  }
+
   @Delete(':id')
   @ApiOperation({ summary: 'Delete load' })
   @ApiParam({ name: 'id', description: 'Load ID' })
