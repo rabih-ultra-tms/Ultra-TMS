@@ -47,7 +47,7 @@
 | QS-013 | BOL PDF Generation | M | P0 | Claude Code | **DONE** (2026-03-09) |
 | QS-014 | Prisma Client Extension for Auto tenantId | L | P0 | Claude Code | **DONE** (2026-03-09) |
 | QS-015 | Financial Calculation Tests (10 tests) | L | P0 | Claude Code | **DONE** (2026-03-09) |
-| QS-016 | Tenant Isolation Tests (5 tests) | M | P0 | Claude Code | planned |
+| QS-016 | Tenant Isolation Tests (5 tests) | M | P0 | Claude Code | **DONE** (2026-03-09) |
 
 ---
 
