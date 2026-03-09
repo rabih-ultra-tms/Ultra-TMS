@@ -2,7 +2,7 @@
 
 **Priority:** P0
 **Effort:** L (4-6 hours)
-**Status:** planned
+**Status:** DONE (2026-03-09)
 **Assigned:** Claude Code
 
 ---
