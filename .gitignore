@@ -38,3 +38,6 @@ yarn-error.log*
 .DS_Store
 *.pem
 TECH_STACK.md
+
+# Design Lab (screenshot-to-code working files)
+design-lab/

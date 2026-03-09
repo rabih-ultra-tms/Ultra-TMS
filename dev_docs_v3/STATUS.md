@@ -23,7 +23,7 @@
 | Prisma enums | 114 |
 | Migrations | 31 |
 | Design spec files | 381 (42 service folders) |
-| Services defined | 32 services + 6 infrastructure modules (38 total) |
+| Services defined | 32 services + 6 infrastructure modules + Command Center (39 total) |
 
 ---
 
@@ -50,9 +50,9 @@
 
 ---
 
-## Service Health Table (All 38 Services)
+## Service Health Table (All 39 Services)
 
-### P0 MVP (10 services)
+### P0 MVP (11 services — includes Command Center)
 
 | # | Service | Backend | Frontend | Tests | Verified | Confidence | Priority |
 |---|---------|---------|----------|-------|----------|------------|----------|
@@ -66,6 +66,7 @@
 | 08 | Commission | Done | Built (11 pages, 8.5/10) | 14 FE tests | No | High | P0 |
 | 09 | Load Board | Partial | Built (4 pages, 10 components) | 13 FE suites + BE specs | No | Medium | P0 |
 | 13 | Customer Portal | Substantial | Not Built (P0-Basic: 4 pages) | None | No | Low | P0 |
+| 39 | **Command Center** | Partial (consumes 180+ endpoints) | Foundation (4,095 LOC dispatch board) | 3 FE tests (570 LOC) | No | High | **P0** |
 
 ### P1 Post-MVP (3 services)
 
