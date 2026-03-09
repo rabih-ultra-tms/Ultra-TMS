@@ -523,7 +523,9 @@ PaymentPlan {
 }
 ```
 
-**Total: 11 models, 200+ fields. Hub previously documented 3 models with ~43 fields (~15% accuracy).**
+**Total: 11 core accounting models, 200+ fields. Hub previously documented 3 models with ~43 fields (~15% accuracy).**
+
+> **Cross-Domain Model Note (2026-03-09):** 11 core accounting models are documented above. Additionally, 4 cross-domain models in other services reference accounting entities: CarrierInvoiceSubmission (Carrier Portal -- carriers submit invoices via portal), FactoredPayment (Factoring -- factoring company payment records), PortalPayment (Customer Portal -- customer online payments), PortalSavedPaymentMethod (Customer Portal -- stored payment methods). These are owned by their respective services but interact with accounting workflows (e.g., PortalPayment creates a PaymentReceived record, CarrierInvoiceSubmission creates a Settlement). Total accounting-related models in schema: 15.
 
 ---
 

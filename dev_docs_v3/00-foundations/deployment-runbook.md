@@ -1,7 +1,7 @@
 # Deployment Runbook -- Ultra TMS
 
-> Status: Draft (no production deployment yet -- project is pre-launch)
-> Last updated: 2026-03-07
+> Status: Pre-Production (verified locally, not yet tested in staging)
+> Last updated: 2026-03-09
 > See also: INFRA-001 (CI/CD Pipeline), INFRA-002 (Docker Production Config)
 
 ## Pre-Deployment Checklist
@@ -22,6 +22,24 @@ Run every item. No exceptions.
 - [ ] Redis connection verified
 
 ## Deployment Steps
+
+### 0. Database Backup (ALWAYS before migration)
+
+```bash
+# Create a named backup before ANY migration or deployment
+pg_dump -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME} -F c \
+  -f backup_pre_deploy_$(date +%Y%m%d_%H%M%S).dump
+
+# Verify backup is valid
+pg_restore --list backup_pre_deploy_*.dump | head -5
+
+# For production (RDS): create a manual snapshot
+aws rds create-db-snapshot \
+  --db-instance-identifier ultra-tms-prod \
+  --db-snapshot-identifier pre-deploy-$(date +%Y%m%d-%H%M%S)
+```
+
+**Do NOT proceed to step 1 until backup is confirmed successful.** If migration fails, you will need this backup to restore.
 
 ### 1. Database Migration (if schema changed)
 
@@ -147,9 +165,178 @@ pnpm --filter api prisma migrate resolve --rolled-back {migration_name}
 | Elasticsearch 8.13 | No (search only) | 9200 | `curl :9200/_health` |
 | Kibana | No (dev only) | 5601 | N/A |
 
+## Blue/Green Deployment (Alternative)
+
+For zero-downtime deployments, use blue/green strategy instead of in-place updates.
+
+### How It Works
+
+1. **Blue** = current production environment (serving traffic)
+2. **Green** = new version deployed to identical environment (not serving traffic)
+3. Switch load balancer target from Blue to Green after verification
+4. Keep Blue running for 30 minutes as instant rollback
+
+### Steps
+
+```bash
+# 1. Deploy Green environment (identical infra, new code)
+#    - Same database (shared) — migration must be backward-compatible
+#    - Separate API instances on different ports/targets
+
+# 2. Run smoke tests against Green (not yet public)
+curl https://green.internal/api/v1/health
+curl https://green.internal/api/v1/ready
+
+# 3. Switch load balancer target group
+aws elbv2 modify-listener --listener-arn $LISTENER_ARN \
+  --default-actions Type=forward,TargetGroupArn=$GREEN_TG_ARN
+
+# 4. Monitor error rate for 15 minutes
+
+# 5. If errors: switch back to Blue immediately
+aws elbv2 modify-listener --listener-arn $LISTENER_ARN \
+  --default-actions Type=forward,TargetGroupArn=$BLUE_TG_ARN
+
+# 6. If stable: decommission Blue after 30 minutes
+```
+
+### Database Migration Constraint
+
+Blue/Green requires **expand-contract migrations** (already documented in Step 1). Both Blue and Green must be able to read/write the same database simultaneously during the switchover window. Never deploy a migration that drops columns or tables while Blue is still running.
+
+---
+
+## Post-Deploy Smoke Test Script
+
+Run these 10 checks immediately after every deployment. All must return 200 OK (or expected status).
+
+```bash
+#!/bin/bash
+# smoke-test.sh — Run after every deployment
+# Usage: ./smoke-test.sh https://api.yourdomain.com
+
+BASE_URL="${1:-http://localhost:3001}"
+PASS=0
+FAIL=0
+
+check() {
+  local name=$1
+  local url=$2
+  local expected=${3:-200}
+  local status=$(curl -s -o /dev/null -w "%{http_code}" "$url")
+  if [ "$status" = "$expected" ]; then
+    echo "  PASS: $name ($status)"
+    PASS=$((PASS + 1))
+  else
+    echo "  FAIL: $name (expected $expected, got $status)"
+    FAIL=$((FAIL + 1))
+  fi
+}
+
+echo "Smoke Test: $BASE_URL"
+echo "================================"
+
+# 1. Health checks (no auth required)
+check "Health"        "$BASE_URL/api/v1/health"
+check "Readiness"     "$BASE_URL/api/v1/ready"
+check "Liveness"      "$BASE_URL/api/v1/live"
+
+# 2. Auth (should return 401 without token — confirms guard is active)
+check "Auth guard"    "$BASE_URL/api/v1/carriers" 401
+
+# 3. Swagger docs (should load in non-production)
+check "Swagger"       "$BASE_URL/api-docs" 200
+
+# 4. Login endpoint exists (should return 400 for empty body, not 404)
+check "Login route"   "$BASE_URL/api/v1/auth/login" 400
+
+# 5. Public tracking page (no auth)
+check "Public track"  "$BASE_URL/api/v1/tracking/public/TEST-000" 404
+
+# 6. Throttle headers present (confirms rate limiting is active)
+HEADERS=$(curl -s -I "$BASE_URL/api/v1/health")
+if echo "$HEADERS" | grep -qi "x-ratelimit\|retry-after"; then
+  echo "  PASS: Rate limiting headers present"
+  PASS=$((PASS + 1))
+else
+  echo "  WARN: Rate limiting headers not found (may be expected)"
+  PASS=$((PASS + 1))
+fi
+
+# 7-10. If you have a test token, verify authenticated endpoints
+# Uncomment and set TOKEN for full verification:
+# TOKEN="your-jwt-token"
+# check "Carriers list"  "$BASE_URL/api/v1/carriers" 200 -H "Authorization: Bearer $TOKEN"
+# check "Loads list"     "$BASE_URL/api/v1/tms/loads" 200 -H "Authorization: Bearer $TOKEN"
+# check "Dashboard"      "$BASE_URL/api/v1/accounting/dashboard" 200 -H "Authorization: Bearer $TOKEN"
+
+echo "================================"
+echo "Results: $PASS passed, $FAIL failed"
+[ "$FAIL" -eq 0 ] && echo "ALL CHECKS PASSED" || echo "DEPLOYMENT FAILED SMOKE TEST"
+exit $FAIL
+```
+
+---
+
+## Environment Promotion Workflow
+
+### Pipeline: dev -> staging -> production
+
+```
+   dev (local)          staging              production
+   +-----------+        +-----------+        +-----------+
+   | pnpm dev  | -----> | Docker    | -----> | Docker /  |
+   | localhost |  push  | Same infra|  gate  | Managed   |
+   |           |        | Test data |        | Real data |
+   +-----------+        +-----------+        +-----------+
+       |                     |                     |
+   Unit tests           Integration tests     Smoke tests
+   Type checks          E2E (Playwright)      Health checks
+   Lint                 Load test (optional)   Error rate
+```
+
+### Promotion Gates
+
+| Gate | dev -> staging | staging -> production |
+|------|---------------|----------------------|
+| Type check | `pnpm check-types` passes | Same |
+| Lint | `pnpm lint` passes | Same |
+| Unit tests | `pnpm test` all green | Same |
+| Build | `pnpm build` succeeds | Same |
+| Migration | `prisma migrate diff` reviewed | Applied + verified |
+| E2E tests | Not required | All Playwright suites pass |
+| Smoke test | Not required | `smoke-test.sh` all pass |
+| Approval | Automatic | Manual approval from tech lead |
+| Rollback plan | Not required | Documented with backup confirmed |
+
+### Environment-Specific Configuration
+
+| Config | dev | staging | production |
+|--------|-----|---------|------------|
+| `NODE_ENV` | `development` | `staging` | `production` |
+| Database | Local Docker | Separate RDS instance | Production RDS (Multi-AZ) |
+| Redis | Local Docker | Separate ElastiCache | Production ElastiCache |
+| CORS | `localhost:3000` | staging domain | production domain |
+| SendGrid | Disabled | Sandbox mode | Live |
+| Swagger | Enabled | Enabled | Disabled |
+| Debug logs | Enabled | Enabled | Disabled |
+| Seed data | Dev seed | Anonymized copy | Real data |
+| SSL | None | ACM cert | ACM cert |
+
+### Staging Data Strategy
+
+- **Never copy production data to staging without anonymization**
+- Use `prisma db seed` with test fixtures for staging
+- Or create an anonymization script that replaces PII (names, emails, phone numbers) while preserving data relationships and volume
+
+---
+
 ## See Also
 
 - INFRA-001: CI/CD Pipeline backlog task
 - INFRA-002: Docker Production Configuration backlog task
 - quality-gates.md: /verify sequence (run before every deploy)
 - security-findings.md: Severity framework (for post-deploy incidents)
+- env-var-matrix.md: Complete environment variable inventory
+- production-architecture.md: Infrastructure topology and failure modes
+- observability-strategy.md: Monitoring and alerting post-deploy

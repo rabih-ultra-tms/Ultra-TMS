@@ -41,6 +41,14 @@ A task is DONE only when ALL of the following are true:
 
 ---
 
+## Screen Scoring Quick Reference
+
+To score a screen: check 6 dimensions (Functionality 30%, Data Integration 20%, UI Quality 20%, State Handling 15%, Accessibility 10%, Code Quality 5%). See [screen-quality-rubric.md](../10-standards/screen-quality-rubric.md) for full criteria, tier definitions, and calibration examples.
+
+For bug documentation format, see [bug-reproduction-template.md](../10-standards/bug-reproduction-template.md).
+
+---
+
 ## Gate 2: Page / Screen Quality
 
 - [ ] Builds without errors (`pnpm build`)

@@ -147,6 +147,8 @@ Run this sequence before ending any coding session:
 | 3 | Run `pnpm --filter web test` -- verify all tests pass | 30 sec |
 | 4 | Update task status in STATUS.md (planned -> in-progress -> done) | 15 sec |
 | 5 | Update service hub file if routes/endpoints/components changed | 15 sec |
+| 5b | **If you changed endpoints, models, or components — update the service hub file** (Section 4 endpoint count, Section 5 component list, Section 8 model fields) | 15 sec |
+| 5c | **If you fixed a bug listed in a hub's Known Issues (Section 11) — close it with ~~strikethrough~~ and add the fix date** | 15 sec |
 | 6 | If task incomplete, add session summary to STATUS.md | 15 sec |
 
 ### Session Summary Block (when task is incomplete)
@@ -175,6 +177,7 @@ When work transfers between Claude Code, Gemini, or Codex:
 2. Run session-end ritual (above)
 3. Ensure all files are saved (no unsaved editor buffers)
 4. Note which files were modified in the session summary
+5. **Update the service hub file if code changes affected endpoint counts, model fields, or component inventory** (see `doc-maintenance-guide.md`)
 
 ### Receiving Agent (after handoff)
 

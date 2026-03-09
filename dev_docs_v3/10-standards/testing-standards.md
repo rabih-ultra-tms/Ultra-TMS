@@ -109,10 +109,14 @@ rest.get('/api/v1/carriers', (req, res, ctx) => {
 
 | Milestone | Target Date | Overall Target | Key Metric |
 |-----------|------------|---------------|------------|
-| Current baseline | 2026-03-07 | 8.7% FE, ~15% BE | 72 tests, 13 suites |
-| Quality Sprint end | +2 weeks | 15% FE, 25% BE | 120+ tests passing |
-| Pre-Production gate | +6 weeks | 25% FE, 40% BE | All P0 services >= 20% |
-| v1.0 launch | +12 weeks | 40% FE, 50% BE | All P0 services >= 40% |
+| Current baseline | 2026-03-07 | 8.7% FE, ~15% BE (estimated) | 72 tests, 13 suites |
+| Quality Sprint end (S4) | Sprint S4 end (~3-4 weeks) | 15% FE, 25% BE | 120+ tests passing |
+| Pre-Production gate (S6) | Sprint S6 end (~8-10 weeks) | 25% FE, 40% BE | All P0 services >= 20% |
+| v1.0 launch (S8) | v1.0 launch (Sprint S8, ~14-16 weeks) | 40% FE, 50% BE | All P0 services >= 40% |
+
+> **Coverage metric:** "20% coverage" = **statement coverage** as reported by Istanbul/c8 (the Jest default). This is the coarsest but most commonly reported metric. Branch coverage and function coverage are tracked but not used as gate thresholds.
+
+> **Backend coverage unknown:** Backend coverage percentage (~15%) is an ESTIMATE based on test file count vs module count. Run `pnpm --filter api test:coverage` to establish an actual baseline. This has never been run on the project. Until it is run, backend coverage claims in hub files should be treated as estimates.
 
 ### Financial Module Testing Mandate
 
@@ -149,3 +153,19 @@ Every feature should have tests in at least 6 of these 8 layers:
 | 6. Page Tests | Full page render with data | Yes |
 | 7. E2E Tests | Playwright full-flow tests | Recommended |
 | 8. Documentation | API docs match implementation | Optional |
+
+---
+
+### Test Quality Tiers
+
+Not all test files are equal. When auditing test coverage (e.g., during per-service tribunals), classify each spec file into one of these tiers:
+
+| Tier | Definition | Example | Counts as Coverage? |
+|------|-----------|---------|-------------------|
+| **Tier 1: Empty Shell** | `describe()` block with no `it()` blocks, or all `it()` blocks are `it.todo()` or `it.skip()`. File exists but has zero assertions. | `describe('CarrierService', () => { /* empty */ })` | NO — counts as a spec file but contributes 0% to coverage. 7 of the Carrier Portal's spec files are Tier 1 stubs (PST-14). |
+| **Tier 2: Basic Assertions** | `it()` blocks exist with basic assertions: `expect(result).toBeDefined()`, `expect(result).toBeTruthy()`, `expect(service).toBeInstanceOf()`. Tests verify existence, not correctness. | `it('should create', () => { expect(service.create(dto)).toBeDefined(); })` | PARTIAL — contributes to statement coverage but does not verify business logic. Many auto-generated NestJS test files are Tier 2. |
+| **Tier 3: Comprehensive** | Tests cover edge cases, error paths, boundary values, and use meaningful assertions. Mocking is intentional. Tests would catch a regression if business logic changed. | `it('should reject invoice with zero total', () => { await expect(service.create({ total: 0 })).rejects.toThrow('Invoice total must be positive'); })` | YES — this is real coverage. Financial module tests (QS-015) must be Tier 3. |
+
+**Rule:** When a hub file says "X tests exist," also note the tier. "45 tests (Tier 3)" is very different from "45 tests (Tier 2)." The carrier module's 45 tests are Tier 3 (real business logic assertions). Many other modules have Tier 1-2 stubs.
+
+**Goal:** All P0 financial tests (QS-015) must be Tier 3. All P0 service tests should be at least Tier 2 by Sprint S6 end. Tier 1 stubs should be upgraded or deleted (they give false confidence).

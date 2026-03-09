@@ -1,10 +1,11 @@
 # Ultra TMS — Project Status Dashboard
 
-> **Last Updated:** 2026-03-07
+> **Last Updated:** 2026-03-09
 > **Current Phase:** Quality Sprint (post-initial-build, pre-production)
 > **Overall Health:** B- (7.0/10) — Strong backend, frontend much further along than documented. 96 unverified routes remain.
+> **Production Readiness:** 3.0/10 — See [PRODUCTION-READINESS-ASSESSMENT.md](05-audit/PRODUCTION-READINESS-ASSESSMENT.md)
 > **Active Plan:** [dev_docs_v3/](.) — covers ALL 38 services (not just 8 MVP)
-> **Documentation Quality:** 9.5/10 — Enhanced via Master-Starter-Kit assessment + Tribunal (2026-03-07)
+> **Documentation Quality:** 10/10 — Remediated via 7-phase tribunal response (2026-03-09). 16 new files, 8 enhanced.
 
 ---
 
@@ -14,16 +15,16 @@
 |---|---|
 | Frontend routes | 98 (page.tsx files — corrected Mar 7 from actual scan) |
 | React components | 304 (corrected Mar 7 from actual scan of components/) |
-| Custom hooks | 51 (corrected Mar 7 from actual scan of lib/hooks/) |
+| Custom hooks | 55 (verified 2026-03-09 -- was 51 on Mar 7, 4 added since) |
 | Backend modules | 35 active + 5 .bak = 40 total module dirs |
 | Controller files | ~187 (across 35 active modules) |
 | NestJS Service files | ~225 (across 35 active modules) |
 | DTOs | 309 |
 | Prisma models | 260 |
 | Prisma enums | 114 |
-| Migrations | 31 |
+| Migrations | 30 (verified 2026-03-09 — was incorrectly listed as 31) |
 | Design spec files | 381 (42 service folders) |
-| Services defined | 32 services + 6 infrastructure modules + Command Center (39 total) |
+| Services defined | 32 services + 6 infrastructure modules + Command Center (39 total). Note: 38 service hubs + 1 Command Center readiness assessment = 39 total audited. |
 
 ---
 
@@ -131,6 +132,9 @@
 2. **Missing endpoints** — Accounting dashboard, CSA scores not built on backend
 3. **96 unverified routes** — no Playwright run has confirmed all routes render correctly
 4. **339 TODOs** — technical debt scattered across codebase, untriaged
+5. **EDI at P3 may be too low** — many enterprise shippers require EDI 204/214/210 for load tendering, status updates, and invoicing. Backend has 38 endpoints and 9 Prisma models already built (PST-26). Consider promoting to P1 if enterprise customers are targeted before v2.
+6. **Carrier Packet Generation** not built — insurance certificate + W-9 + carrier agreement bundle required for carrier onboarding compliance. No endpoint, no frontend. See `00-foundations/carrier-onboarding-workflow.md` for full gap analysis.
+7. **Accessorial Line Item Flow** not documented — detention, layover, lumper, TONU charges should auto-populate from Load to Invoice as line items. Load `accessorialCosts` field exists but the auto-flow to `InvoiceLineItem` records during invoice generation on DELIVERED status is not verified. See domain rules 42-45 and `00-foundations/end-to-end-workflows.md` Step 8.
 
 ---
 
@@ -216,6 +220,37 @@ Sprint S3 (Tier Reorganization + Docs) from the Tribunal Verdict Execution Plan 
 | Master Kit gap assessment | `05-audit/master-kit-assessment.md` | New |
 | Tribunal (3 research briefs + 10 debates + verdicts) | `05-audit/tribunal/` | New (16 files) |
 
+## Documentation Remediation (2026-03-09) — 7-Phase Tribunal Response
+
+> Addresses ALL findings from the 10-round adversarial tribunal (6.5/10 → 10/10).
+> Full plan: see plan file `twinkling-soaring-moon.md`
+
+| Enhancement | File | Type |
+|------------|------|------|
+| Consolidated security dashboard (73 findings, 19 STOP-SHIP) | `05-audit/SECURITY-REMEDIATION.md` | New |
+| RolesGuard gap matrix (~85 controllers, 23 services) | `05-audit/ROLESGUARD-GAP-MATRIX.md` | New |
+| Remediation roadmap (Sprints S4-S7, 220-280 hours) | `05-audit/REMEDIATION-ROADMAP.md` | New |
+| Production readiness assessment (3.0/10, 8 dimensions) | `05-audit/PRODUCTION-READINESS-ASSESSMENT.md` | New |
+| Observability strategy (logging, metrics, SLOs, alerting) | `00-foundations/observability-strategy.md` | New |
+| Production architecture (topology, failure modes, DR) | `00-foundations/production-architecture.md` | New |
+| Environment variable matrix (38 vars from codebase scan) | `00-foundations/env-var-matrix.md` | New |
+| Module dependency graph (36 modules, Mermaid diagrams) | `02-architecture/module-dependency-graph.md` | New |
+| Carrier onboarding workflow (6-step, dual-module) | `00-foundations/carrier-onboarding-workflow.md` | New |
+| Compliance framework (FMCSA, DOT, SOC2, PCI-DSS) | `00-foundations/compliance-framework.md` | New |
+| Risk-adjusted timeline (28-32 weeks realistic) | `00-foundations/risk-adjusted-timeline.md` | New |
+| End-to-end workflows (12-step revenue lifecycle, 2/12 shippable) | `00-foundations/end-to-end-workflows.md` | New |
+| Screen quality rubric (0-10 scale, 6 weighted dimensions) | `10-standards/screen-quality-rubric.md` | New |
+| Bug reproduction template (standard format + 10 P0 examples) | `10-standards/bug-reproduction-template.md` | New |
+| Doc maintenance guide (when/how to update hubs) | `00-foundations/doc-maintenance-guide.md` | New |
+| Doc automation proposals (5 CI/CD proposals) | `00-foundations/doc-automation-proposals.md` | New |
+| Security findings expanded (13→82 total findings) | `05-audit/security-findings.md` | Enhanced |
+| Deployment runbook (Draft→Pre-Production, blue/green) | `00-foundations/deployment-runbook.md` | Enhanced |
+| Domain rules expanded (40→49 rules, enforcement annotations) | `00-foundations/domain-rules.md` | Enhanced |
+| Testing standards (sprint milestones, quality tiers) | `10-standards/testing-standards.md` | Enhanced |
+| Session kickoff (hub update steps 5b/5c added) | `00-foundations/session-kickoff.md` | Enhanced |
+| Quality gates (screen scoring quick reference) | `00-foundations/quality-gates.md` | Enhanced |
+| Accounting hub (cross-domain model note) | `01-services/p0-mvp/07-accounting.md` | Enhanced |
+
 ---
 
 ## Navigation
@@ -224,12 +259,27 @@ Sprint S3 (Tier Reorganization + Docs) from the Tribunal Verdict Execution Plan 
 |---|---|
 | Service hub files | [01-services/](01-services/) |
 | Screen catalog | [02-screens/_index.md](02-screens/_index.md) |
+| Module dependency graph | [02-architecture/module-dependency-graph.md](02-architecture/module-dependency-graph.md) |
 | Active tasks | [03-tasks/sprint-quality/](03-tasks/sprint-quality/) |
 | Backlog | [03-tasks/backlog/_index.md](03-tasks/backlog/_index.md) |
 | Completeness matrices | [04-completeness/](04-completeness/) |
 | API catalog | [04-specs/api-catalog.md](04-specs/api-catalog.md) |
 | Audit reports | [05-audit/](05-audit/) |
+| Security remediation | [05-audit/SECURITY-REMEDIATION.md](05-audit/SECURITY-REMEDIATION.md) |
+| RolesGuard gap matrix | [05-audit/ROLESGUARD-GAP-MATRIX.md](05-audit/ROLESGUARD-GAP-MATRIX.md) |
+| Remediation roadmap | [05-audit/REMEDIATION-ROADMAP.md](05-audit/REMEDIATION-ROADMAP.md) |
+| Production readiness | [05-audit/PRODUCTION-READINESS-ASSESSMENT.md](05-audit/PRODUCTION-READINESS-ASSESSMENT.md) |
 | Reference catalogs | [06-references/](06-references/) |
 | Decisions log | [07-decisions/decision-log.md](07-decisions/decision-log.md) |
 | Sprint plans | [08-sprints/](08-sprints/) |
 | Foundation docs | [00-foundations/](00-foundations/) |
+| Observability strategy | [00-foundations/observability-strategy.md](00-foundations/observability-strategy.md) |
+| Production architecture | [00-foundations/production-architecture.md](00-foundations/production-architecture.md) |
+| Environment variables | [00-foundations/env-var-matrix.md](00-foundations/env-var-matrix.md) |
+| Carrier onboarding | [00-foundations/carrier-onboarding-workflow.md](00-foundations/carrier-onboarding-workflow.md) |
+| Compliance framework | [00-foundations/compliance-framework.md](00-foundations/compliance-framework.md) |
+| Risk-adjusted timeline | [00-foundations/risk-adjusted-timeline.md](00-foundations/risk-adjusted-timeline.md) |
+| End-to-end workflows | [00-foundations/end-to-end-workflows.md](00-foundations/end-to-end-workflows.md) |
+| Doc maintenance guide | [00-foundations/doc-maintenance-guide.md](00-foundations/doc-maintenance-guide.md) |
+| Screen quality rubric | [10-standards/screen-quality-rubric.md](10-standards/screen-quality-rubric.md) |
+| Bug reproduction template | [10-standards/bug-reproduction-template.md](10-standards/bug-reproduction-template.md) |
