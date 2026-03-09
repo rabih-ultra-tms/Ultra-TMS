@@ -3,6 +3,7 @@ import { ClassSerializerInterceptor, Logger, ValidationPipe } from '@nestjs/comm
 import { AppModule } from './app.module';
 import { setupSwagger } from './swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 import { join } from 'path';
 
 async function bootstrap() {
@@ -45,6 +46,9 @@ async function bootstrap() {
     origin: ['http://localhost:3000', 'http://localhost:3002'],
     credentials: true,
   });
+
+  // WebSocket adapter (Socket.io)
+  app.useWebSocketAdapter(new IoAdapter(app));
 
   // Global API prefix
   app.setGlobalPrefix('api/v1');
