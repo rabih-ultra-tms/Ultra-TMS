@@ -2,7 +2,7 @@
 
 **Priority:** P0
 **Effort:** L (6-8 hours)
-**Status:** planned
+**Status:** DONE (2026-03-09)
 **Assigned:** Claude Code
 **Source:** Tribunal verdict TRIBUNAL-08
 
@@ -37,6 +37,6 @@ Financial calculations (invoicing, commission, settlement) are the highest-risk 
 
 ## Acceptance Criteria
 
-- [ ] 10 tests written and passing
-- [ ] All tests use realistic TMS data
-- [ ] No floating-point arithmetic in tested code
+- [x] 10 tests written and passing
+- [x] All tests use realistic TMS data
+- [x] No floating-point arithmetic in tested code

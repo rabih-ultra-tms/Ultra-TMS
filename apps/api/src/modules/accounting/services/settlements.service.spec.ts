@@ -91,4 +91,97 @@ describe('SettlementsService', () => {
 
     await expect(service.generateFromLoad('tenant-1', 'user-1', 'load-1')).rejects.toThrow(NotFoundException);
   });
+
+  // ── QS-015: Financial Calculation Tests ──────────────────────────────
+
+  describe('Financial Calculations', () => {
+    it('generates settlement with carrier rate minus fuel advance deduction', async () => {
+      // Realistic: carrier rate $3,200, fuel advance $500 → net $2,700
+      const load = {
+        id: 'load-1',
+        loadNumber: 'LD2026030042',
+        orderId: 'order-1',
+        carrierId: 'carrier-1',
+        carrierRate: 3200,
+        fuelAdvance: 500,
+        carrier: {
+          legalName: 'Swift Logistics LLC',
+          paymentTerms: 'NET30',
+          factoringCompany: null,
+        },
+      };
+      prisma.load.findFirst.mockResolvedValue(load);
+
+      const createSpy = jest
+        .spyOn(service, 'create')
+        .mockResolvedValue({ id: 'set-1' } as any);
+
+      await service.generateFromLoad('tenant-1', 'user-1', 'load-1');
+
+      const createArg = createSpy.mock.calls[0]![2]!;
+      expect(createArg.grossAmount).toBe(3200);
+      expect(createArg.deductionsTotal).toBe(500);
+      expect(createArg.netAmount).toBe(2700); // 3200 - 500
+      expect(createArg.balanceDue).toBe(2700);
+      // Verify freight line item + deduction line item
+      expect(createArg.lineItems).toHaveLength(2);
+      expect(createArg.lineItems[0].amount).toBe(3200);
+      expect(createArg.lineItems[1].amount).toBe(-500);
+      expect(createArg.lineItems[1].itemType).toBe('DEDUCTION');
+    });
+
+    it('creates settlement with quick-pay fee correctly deducted', async () => {
+      // Quick pay scenario: $5,000 gross, 3% quick-pay fee ($150), net = $4,850
+      prisma.settlement.findFirst.mockResolvedValue(null);
+      prisma.settlement.create.mockImplementation(({ data }) => Promise.resolve(data));
+
+      const grossAmount = 5000;
+      const quickPayFeePercent = 3;
+      const quickPayFee = grossAmount * (quickPayFeePercent / 100); // $150
+      const netAmount = grossAmount - quickPayFee;
+
+      await service.create('tenant-1', 'user-1', {
+        carrierId: 'carrier-1',
+        settlementDate: '2026-03-01',
+        dueDate: '2026-03-03', // Quick pay = fast turnaround
+        grossAmount,
+        quickPayFeePercent,
+        quickPayFeeAmount: quickPayFee,
+        quickPayFee,
+        deductionsTotal: 0,
+        netAmount,
+        balanceDue: netAmount,
+        paymentType: 'QUICK_PAY',
+        payToName: 'Express Freight Inc.',
+      } as any);
+
+      const createCall = prisma.settlement.create.mock.calls[0]![0]!;
+      expect(createCall.data.grossAmount).toBe(5000);
+      expect(createCall.data.quickPayFee).toBe(150);
+      expect(createCall.data.netAmount).toBe(4850);
+      // Verify: net = gross - quickPayFee - deductions
+      expect(createCall.data.netAmount).toBe(
+        createCall.data.grossAmount - createCall.data.quickPayFee - createCall.data.deductionsTotal,
+      );
+    });
+
+    it('computes payables summary totals with decimal precision', async () => {
+      const now = new Date();
+      prisma.settlement.findMany.mockResolvedValue([
+        { id: 's1', dueDate: new Date(now.getTime() - 86400000), balanceDue: 1575.33, carrier: {} }, // overdue
+        { id: 's2', dueDate: new Date(now.getTime() - 86400000), balanceDue: 2424.67, carrier: {} }, // overdue
+        { id: 's3', dueDate: new Date(now.getTime() + 3 * 86400000), balanceDue: 8999.99, carrier: {} }, // upcoming
+        { id: 's4', dueDate: new Date(now.getTime() + 7 * 86400000), balanceDue: 0.01, carrier: {} }, // upcoming (1 cent)
+      ]);
+
+      const result = await service.getPayablesSummary('tenant-1');
+
+      // 1575.33 + 2424.67 = 4000.00 exactly
+      expect(result.totals.overdue).toBe(4000);
+      // 8999.99 + 0.01 = 9000.00 exactly
+      expect(result.totals.upcoming).toBe(9000);
+      expect(result.totals.dueToday).toBe(0);
+      expect(result.totals.total).toBe(13000);
+    });
+  });
 });

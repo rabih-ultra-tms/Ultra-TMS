@@ -249,4 +249,130 @@ describe('InvoicesService', () => {
       }),
     );
   });
+
+  // ── QS-015: Financial Calculation Tests ──────────────────────────────
+
+  describe('Financial Calculations', () => {
+    it('creates invoice with line items whose amounts match subtotal', async () => {
+      // Realistic TMS scenario: freight $4,200 + detention $350 + lumper $125 = $4,675
+      prisma.invoice.findFirst.mockResolvedValue({ invoiceNumber: 'INV-000042' });
+      prisma.invoice.create.mockImplementation(({ data }) => Promise.resolve(data));
+
+      const dto = {
+        companyId: 'customer-abc',
+        orderId: 'order-1',
+        loadId: 'load-1',
+        invoiceDate: '2026-03-01',
+        dueDate: '2026-03-31',
+        subtotal: 4675,
+        totalAmount: 4675,
+        balanceDue: 4675,
+        paymentTerms: 'NET30',
+        lineItems: [
+          { lineNumber: 1, description: 'Line haul freight – Chicago to Dallas', itemType: 'FREIGHT', loadId: 'load-1', quantity: 1, unitPrice: 4200, amount: 4200 },
+          { lineNumber: 2, description: 'Detention – 3 hours @ $75/hr', itemType: 'ACCESSORIAL', loadId: 'load-1', quantity: 3, unitPrice: 75, amount: 225, revenueAccountId: 'acc-rev-1' },
+          { lineNumber: 3, description: 'Lumper fee', itemType: 'ACCESSORIAL', loadId: 'load-1', quantity: 1, unitPrice: 250, amount: 250 },
+        ],
+      } as any;
+
+      await service.create('tenant-1', 'user-1', dto);
+
+      const createCall = prisma.invoice.create.mock.calls[0]![0]!;
+      const lineItemsData = createCall.data.lineItems.create;
+      const lineItemSum = lineItemsData.reduce((sum: number, li: any) => sum + Number(li.amount), 0);
+
+      expect(lineItemSum).toBe(4675);
+      expect(lineItemSum).toBe(createCall.data.subtotal);
+    });
+
+    it('creates invoice with tax applied after subtotal', async () => {
+      // $3,500 subtotal + $280 tax (8%) = $3,780 total
+      prisma.invoice.findFirst.mockResolvedValue({ invoiceNumber: 'INV-000010' });
+      prisma.invoice.create.mockImplementation(({ data }) => Promise.resolve(data));
+
+      const subtotal = 3500;
+      const taxAmount = 280; // 8% of subtotal
+      const totalAmount = subtotal + taxAmount;
+
+      await service.create('tenant-1', 'user-1', {
+        companyId: 'customer-xyz',
+        invoiceDate: '2026-02-15',
+        dueDate: '2026-03-17',
+        subtotal,
+        taxAmount,
+        totalAmount,
+        balanceDue: totalAmount,
+        paymentTerms: 'NET30',
+      } as any);
+
+      const createCall = prisma.invoice.create.mock.calls[0]![0]!;
+
+      expect(createCall.data.subtotal).toBe(3500);
+      expect(createCall.data.taxAmount).toBe(280);
+      expect(createCall.data.totalAmount).toBe(3780);
+      expect(createCall.data.totalAmount).toBe(createCall.data.subtotal + createCall.data.taxAmount);
+    });
+
+    it('computes aging bucket totals using integer-safe arithmetic', async () => {
+      // Amounts that cause floating-point issues with naive addition: 0.1 + 0.2 !== 0.3
+      const now = new Date();
+      prisma.invoice.findMany.mockResolvedValue([
+        { balanceDue: 1999.99, dueDate: new Date(now.getTime() - 10 * 86400000) }, // 1-30 days
+        { balanceDue: 3000.01, dueDate: new Date(now.getTime() - 10 * 86400000) }, // 1-30 days
+        { balanceDue: 4500.50, dueDate: new Date(now.getTime() - 45 * 86400000) }, // 31-60 days
+        { balanceDue: 7250.75, dueDate: new Date(now.getTime() + 5 * 86400000) },  // current (not yet due)
+      ] as any);
+
+      const result = await service.getAgingReport('tenant-1');
+
+      // 1999.99 + 3000.01 = 5000.00 exactly
+      expect(result.totals.days1to30).toBe(5000);
+      expect(result.totals.days31to60).toBe(4500.50);
+      expect(result.totals.current).toBe(7250.75);
+      // Verify total across buckets
+      const grandTotal = result.totals.current + result.totals.days1to30 +
+        result.totals.days31to60 + result.totals.days61to90 + result.totals.over90;
+      expect(grandTotal).toBe(16751.25);
+    });
+
+    it('creates multi-line-item invoice with freight, accessorial, and adjustment', async () => {
+      // Real scenario: freight + fuel surcharge + discount adjustment
+      prisma.invoice.findFirst.mockResolvedValue({ invoiceNumber: 'INV-000099' });
+      prisma.invoice.create.mockImplementation(({ data }) => Promise.resolve(data));
+
+      const lineItems = [
+        { lineNumber: 1, description: 'LTL freight – Atlanta to Miami', itemType: 'FREIGHT', quantity: 1, unitPrice: 2800, amount: 2800 },
+        { lineNumber: 2, description: 'Fuel surcharge (18%)', itemType: 'ACCESSORIAL', quantity: 1, unitPrice: 504, amount: 504 },
+        { lineNumber: 3, description: 'Inside delivery', itemType: 'ACCESSORIAL', quantity: 1, unitPrice: 150, amount: 150 },
+        { lineNumber: 4, description: 'Volume discount (5%)', itemType: 'ADJUSTMENT', quantity: 1, unitPrice: -172.70, amount: -172.70 },
+      ];
+      const subtotal = 3281.30; // 2800 + 504 + 150 - 172.70
+      const taxAmount = 262.50;
+      const totalAmount = 3543.80; // subtotal + tax
+
+      await service.create('tenant-1', 'user-1', {
+        companyId: 'company-1',
+        invoiceDate: '2026-03-05',
+        dueDate: '2026-04-04',
+        subtotal,
+        taxAmount,
+        totalAmount,
+        balanceDue: totalAmount,
+        paymentTerms: 'NET30',
+        lineItems,
+      } as any);
+
+      const createCall = prisma.invoice.create.mock.calls[0]![0]!;
+      const created = createCall.data.lineItems.create;
+
+      expect(created).toHaveLength(4);
+      // Verify negative adjustment is stored correctly
+      expect(created[3].amount).toBe(-172.70);
+      // Verify sum of line items equals subtotal
+      const sum = created.reduce((s: number, li: any) => s + Number(li.amount), 0);
+      expect(Math.round(sum * 100) / 100).toBe(3281.30);
+      // Verify total = subtotal + tax
+      expect(createCall.data.totalAmount).toBe(createCall.data.subtotal + createCall.data.taxAmount);
+    });
+  });
 });
