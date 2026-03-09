@@ -65,6 +65,7 @@ export class PaymentsReceivedService {
 
     const where = {
       tenantId,
+      deletedAt: null,
       ...(options?.status && { status: options.status }),
       ...(options?.companyId && { companyId: options.companyId }),
       ...(options?.fromDate &&
@@ -91,7 +92,7 @@ export class PaymentsReceivedService {
 
   async findOne(id: string, tenantId: string) {
     const payment = await this.prisma.paymentReceived.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
       include: {
         company: true,
         bankAccount: { select: { id: true, accountNumber: true, accountName: true } },
@@ -117,7 +118,7 @@ export class PaymentsReceivedService {
     applications: ApplyPaymentDto[],
   ) {
     const payment = await this.prisma.paymentReceived.findFirst({
-      where: { id: paymentId, tenantId },
+      where: { id: paymentId, tenantId, deletedAt: null },
     });
 
     if (!payment) {
@@ -137,7 +138,7 @@ export class PaymentsReceivedService {
     return this.prisma.$transaction(async (tx) => {
       for (const application of applications) {
         const invoice = await tx.invoice.findFirst({
-          where: { id: application.invoiceId, tenantId },
+          where: { id: application.invoiceId, tenantId, deletedAt: null },
         });
 
         if (!invoice) {
@@ -198,9 +199,25 @@ export class PaymentsReceivedService {
     });
   }
 
+  async delete(id: string, tenantId: string, userId: string) {
+    const payment = await this.findOne(id, tenantId);
+
+    if (payment.status === 'APPLIED') {
+      throw new BadRequestException('Cannot delete a fully applied payment');
+    }
+
+    return this.prisma.paymentReceived.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+        updatedById: userId,
+      },
+    });
+  }
+
   async markBounced(id: string, tenantId: string) {
     const payment = await this.prisma.paymentReceived.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
       include: { applications: true },
     });
 
@@ -278,7 +295,7 @@ export class PaymentsReceivedService {
         if (paymentItem.allocations?.length) {
           for (const allocation of paymentItem.allocations) {
             const invoice = await this.prisma.invoice.findFirst({
-              where: { id: allocation.invoiceId, tenantId },
+              where: { id: allocation.invoiceId, tenantId, deletedAt: null },
             });
 
             if (!invoice) {

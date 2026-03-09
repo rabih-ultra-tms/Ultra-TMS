@@ -92,6 +92,7 @@ export class InvoicesService {
 
     const where = {
       tenantId,
+      deletedAt: null,
       ...(options?.status && { status: options.status }),
       ...(options?.companyId && { companyId: options.companyId }),
       ...(options?.fromDate &&
@@ -118,7 +119,7 @@ export class InvoicesService {
 
   async findOne(id: string, tenantId: string) {
     const invoice = await this.prisma.invoice.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
       include: {
         company: true,
         order: { select: { id: true, orderNumber: true } },
@@ -141,7 +142,7 @@ export class InvoicesService {
 
   async update(id: string, tenantId: string, userId: string, data: Partial<CreateInvoiceDto>) {
     const invoice = await this.prisma.invoice.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!invoice) {
@@ -174,9 +175,25 @@ export class InvoicesService {
     });
   }
 
+  async delete(id: string, tenantId: string, userId: string) {
+    const invoice = await this.findOne(id, tenantId);
+
+    if (Number(invoice.amountPaid) > 0) {
+      throw new BadRequestException('Cannot delete an invoice with payments applied');
+    }
+
+    return this.prisma.invoice.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+        updatedById: userId,
+      },
+    });
+  }
+
   async sendInvoice(id: string, tenantId: string, dto?: SendInvoiceDto) {
     const invoice = await this.prisma.invoice.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!invoice) {
@@ -199,7 +216,7 @@ export class InvoicesService {
 
   async voidInvoice(id: string, tenantId: string, userId: string, reason: string) {
     const invoice = await this.prisma.invoice.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!invoice) {
@@ -223,7 +240,7 @@ export class InvoicesService {
 
   async sendReminder(id: string, tenantId: string) {
     const invoice = await this.prisma.invoice.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!invoice) {
@@ -251,6 +268,7 @@ export class InvoicesService {
     const invoices = await this.prisma.invoice.findMany({
       where: {
         tenantId,
+        deletedAt: null,
         status: { in: ['SENT', 'PARTIAL', 'OVERDUE'] },
       },
       include: {
@@ -365,6 +383,7 @@ export class InvoicesService {
     const invoices = await this.prisma.invoice.findMany({
       where: {
         tenantId,
+        deletedAt: null,
         companyId,
         invoiceDate: { gte: fromDate, lte: toDate },
       },

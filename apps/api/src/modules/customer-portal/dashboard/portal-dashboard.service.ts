@@ -9,7 +9,7 @@ export class PortalDashboardService {
     const [shipments, quotes, invoices, payments, notifications] = await Promise.all([
       this.prisma.load.count({ where: { tenantId, order: { customerId: companyId } } }),
       this.prisma.quoteRequest.count({ where: { tenantId, companyId } }),
-      this.prisma.invoice.findMany({ where: { tenantId, companyId }, take: 5, orderBy: { invoiceDate: 'desc' } }),
+      this.prisma.invoice.findMany({ where: { tenantId, companyId, deletedAt: null }, take: 5, orderBy: { invoiceDate: 'desc' } }),
       this.prisma.portalPayment.findMany({ where: { tenantId, companyId }, take: 5, orderBy: { createdAt: 'desc' } }),
       this.prisma.portalNotification.findMany({
         where: { tenantId, portalUserId, isRead: false },
@@ -48,7 +48,7 @@ export class PortalDashboardService {
 
   async getAlerts(tenantId: string, companyId: string) {
     const overdueInvoices = await this.prisma.invoice.count({
-      where: { tenantId, companyId, status: { in: ['OVERDUE'] } },
+      where: { tenantId, companyId, deletedAt: null, status: { in: ['OVERDUE'] } },
     });
 
     const delayedShipments = await this.prisma.load.count({

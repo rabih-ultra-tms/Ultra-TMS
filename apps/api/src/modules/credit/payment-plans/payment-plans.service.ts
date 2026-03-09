@@ -53,7 +53,7 @@ export class PaymentPlansService {
   async create(tenantId: string, userId: string, dto: CreatePaymentPlanDto) {
     await this.requireCompany(tenantId, dto.companyId);
     const invoiceIds = dto.invoices.map((i) => i.invoiceId);
-    const invoices = await this.prisma.invoice.findMany({ where: { id: { in: invoiceIds }, tenantId } });
+    const invoices = await this.prisma.invoice.findMany({ where: { id: { in: invoiceIds }, tenantId, deletedAt: null } });
 
     if (invoices.length !== invoiceIds.length) {
       throw new BadRequestException('One or more invoices not found for this tenant');
@@ -118,7 +118,7 @@ export class PaymentPlansService {
     let totalAmount = Number(plan.totalAmount);
     if (dto.invoices) {
       invoiceIds = dto.invoices.map((i) => i.invoiceId);
-      const invoices = await this.prisma.invoice.findMany({ where: { id: { in: invoiceIds }, tenantId } });
+      const invoices = await this.prisma.invoice.findMany({ where: { id: { in: invoiceIds }, tenantId, deletedAt: null } });
       if (invoices.length !== invoiceIds.length) {
         throw new BadRequestException('One or more invoices not found for this tenant');
       }

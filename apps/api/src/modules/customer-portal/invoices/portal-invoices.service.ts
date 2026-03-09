@@ -7,14 +7,14 @@ export class PortalInvoicesService {
 
   list(tenantId: string, companyId: string) {
     return this.prisma.invoice.findMany({
-      where: { tenantId, companyId },
+      where: { tenantId, companyId, deletedAt: null },
       orderBy: { invoiceDate: 'desc' },
     });
   }
 
   async detail(tenantId: string, companyId: string, id: string) {
     const invoice = await this.prisma.invoice.findFirst({
-      where: { id, tenantId, companyId },
+      where: { id, tenantId, companyId, deletedAt: null },
       include: { lineItems: true },
     });
     if (!invoice) {
@@ -24,7 +24,7 @@ export class PortalInvoicesService {
   }
 
   async aging(tenantId: string, companyId: string) {
-    const invoices = await this.prisma.invoice.findMany({ where: { tenantId, companyId } });
+    const invoices = await this.prisma.invoice.findMany({ where: { tenantId, companyId, deletedAt: null } });
     const buckets: Record<string, number> = { CURRENT: 0, '1-30': 0, '31-60': 0, '61-90': 0, '90+': 0 };
 
     const now = new Date();

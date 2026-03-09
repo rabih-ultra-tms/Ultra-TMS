@@ -13,7 +13,7 @@ export class PortalPaymentsService {
     }
 
     const invoices = await this.prisma.invoice.findMany({
-      where: { tenantId, companyId, id: { in: dto.invoices.map((i) => i.invoiceId) } },
+      where: { tenantId, companyId, deletedAt: null, id: { in: dto.invoices.map((i) => i.invoiceId) } },
     });
 
     if (invoices.length !== dto.invoices.length) {
@@ -87,7 +87,7 @@ export class PortalPaymentsService {
 
   private async applyPayments(tenantId: string, invoices: InvoicePaymentDto[]) {
     for (const inv of invoices) {
-      const invoice = await this.prisma.invoice.findFirst({ where: { tenantId, id: inv.invoiceId } });
+      const invoice = await this.prisma.invoice.findFirst({ where: { tenantId, id: inv.invoiceId, deletedAt: null } });
       if (!invoice) continue;
       const newPaid = Number(invoice.amountPaid) + inv.amount;
       const newBalance = Math.max(0, Number(invoice.totalAmount) - newPaid);

@@ -64,6 +64,7 @@ export class PaymentsMadeService {
 
     const where = {
       tenantId,
+      deletedAt: null,
       ...(options?.status && { status: options.status }),
       ...(options?.carrierId && { carrierId: options.carrierId }),
       ...(options?.fromDate &&
@@ -90,7 +91,7 @@ export class PaymentsMadeService {
 
   async findOne(id: string, tenantId: string) {
     const payment = await this.prisma.paymentMade.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
       include: {
         carrier: true,
         bankAccount: { select: { id: true, accountNumber: true, accountName: true } },
@@ -106,7 +107,7 @@ export class PaymentsMadeService {
 
   async update(id: string, tenantId: string, data: Partial<CreatePaymentMadeDto>) {
     const payment = await this.prisma.paymentMade.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!payment) {
@@ -136,9 +137,25 @@ export class PaymentsMadeService {
     });
   }
 
+  async delete(id: string, tenantId: string, userId: string) {
+    const payment = await this.findOne(id, tenantId);
+
+    if (payment.status === 'CLEARED') {
+      throw new BadRequestException('Cannot delete a cleared payment');
+    }
+
+    return this.prisma.paymentMade.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+        updatedById: userId,
+      },
+    });
+  }
+
   async markSent(id: string, tenantId: string) {
     const payment = await this.prisma.paymentMade.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!payment) {
@@ -153,7 +170,7 @@ export class PaymentsMadeService {
 
   async markCleared(id: string, tenantId: string) {
     const payment = await this.prisma.paymentMade.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!payment) {
@@ -168,7 +185,7 @@ export class PaymentsMadeService {
 
   async voidPayment(id: string, tenantId: string) {
     const payment = await this.prisma.paymentMade.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!payment) {
@@ -189,6 +206,7 @@ export class PaymentsMadeService {
     const approvedSettlements = await this.prisma.settlement.findMany({
       where: {
         tenantId,
+        deletedAt: null,
         status: 'APPROVED',
       },
       include: {

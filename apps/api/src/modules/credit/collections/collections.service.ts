@@ -114,6 +114,7 @@ export class CollectionsService {
     const invoices = await this.prisma.invoice.findMany({
       where: {
         tenantId,
+        deletedAt: null,
         status: { notIn: ['PAID', 'VOID'] },
       },
       select: {
@@ -186,7 +187,7 @@ export class CollectionsService {
   }
 
   private async requireInvoice(tenantId: string, invoiceId: string, companyId: string) {
-    const invoice = await this.prisma.invoice.findFirst({ where: { id: invoiceId, tenantId, companyId } });
+    const invoice = await this.prisma.invoice.findFirst({ where: { id: invoiceId, tenantId, companyId, deletedAt: null } });
     if (!invoice) {
       throw new NotFoundException('Invoice not found for this customer');
     }

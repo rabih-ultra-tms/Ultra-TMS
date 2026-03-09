@@ -17,7 +17,7 @@ export class ReportsService {
 
     const [invoices, overdueInvoices, payablesPending, paymentsThisMonth] = await Promise.all([
       this.prisma.invoice.findMany({
-        where: { tenantId },
+        where: { tenantId, deletedAt: null },
         select: {
           totalAmount: true,
           amountPaid: true,
@@ -27,7 +27,7 @@ export class ReportsService {
         },
       }),
       this.prisma.invoice.findMany({
-        where: { tenantId, status: 'OVERDUE' },
+        where: { tenantId, deletedAt: null, status: 'OVERDUE' },
         select: { totalAmount: true, amountPaid: true },
       }),
       this.prisma.paymentMade.aggregate({
@@ -88,6 +88,7 @@ export class ReportsService {
     const invoices = await this.prisma.invoice.findMany({
       where: {
         tenantId,
+        deletedAt: null,
         invoiceDate: { gte: fromDate, lte: toDate },
         ...(query.companyId && { companyId: query.companyId }),
       },
@@ -123,6 +124,7 @@ export class ReportsService {
     const invoices = await this.prisma.invoice.findMany({
       where: {
         tenantId,
+        deletedAt: null,
         status: { in: ['SENT', 'OVERDUE', 'PARTIAL'] },
       },
       include: {

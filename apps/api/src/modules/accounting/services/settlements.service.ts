@@ -92,6 +92,7 @@ export class SettlementsService {
 
     const where = {
       tenantId,
+      deletedAt: null,
       ...(options?.status && { status: options.status }),
       ...(options?.carrierId && { carrierId: options.carrierId }),
       ...(options?.fromDate &&
@@ -118,7 +119,7 @@ export class SettlementsService {
 
   async findOne(id: string, tenantId: string) {
     const settlement = await this.prisma.settlement.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
       include: {
         carrier: true,
         lineItems: {
@@ -139,7 +140,7 @@ export class SettlementsService {
 
   async update(id: string, tenantId: string, userId: string, data: Partial<CreateSettlementDto>) {
     const settlement = await this.prisma.settlement.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!settlement) {
@@ -182,7 +183,7 @@ export class SettlementsService {
 
   async approve(id: string, tenantId: string, userId: string) {
     const settlement = await this.prisma.settlement.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!settlement) {
@@ -203,9 +204,25 @@ export class SettlementsService {
     });
   }
 
+  async delete(id: string, tenantId: string, userId: string) {
+    const settlement = await this.findOne(id, tenantId);
+
+    if (Number(settlement.amountPaid) > 0) {
+      throw new BadRequestException('Cannot delete a settlement with payments applied');
+    }
+
+    return this.prisma.settlement.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+        updatedById: userId,
+      },
+    });
+  }
+
   async voidSettlement(id: string, tenantId: string) {
     const settlement = await this.prisma.settlement.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!settlement) {
@@ -226,6 +243,7 @@ export class SettlementsService {
     const settlements = await this.prisma.settlement.findMany({
       where: {
         tenantId,
+        deletedAt: null,
         status: { in: ['PENDING', 'APPROVED', 'PARTIAL'] },
       },
       include: {
