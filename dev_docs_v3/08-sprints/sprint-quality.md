@@ -1,7 +1,7 @@
 # Sprint Plan — Quality Sprint
 
 > Format: SPRINT-PLAN-GENERATOR
-> Last updated: 2026-03-07
+> Last updated: 2026-03-09
 > Sprint goal: Verify all 98 routes render. Fix P0 bugs. Complete missing endpoints. No more "done in code, broken at runtime."
 
 ---
@@ -28,6 +28,10 @@
 
 | ID | Title | Effort | Priority | Assigned | Status |
 |----|-------|--------|----------|----------|--------|
+| QS-001 | WebSocket Gateways (/notifications) | XL (14h) | P0 | Claude Code | **DONE** (2026-03-09) |
+| QS-012 | Rate Confirmation PDF | — | P0 | Claude Code | **DONE** (2026-03-09) — already implemented |
+| QS-013 | BOL PDF Generation | — | P0 | Claude Code | **DONE** (2026-03-09) |
+| QS-016 | Tenant Isolation Tests | — | P0 | Claude Code | **DONE** (2026-03-09) — 15 integration tests |
 | QS-007 | CORS Env Variable | S (0.5h) | P1 | Codex | planned |
 | QS-009 | Delete .bak Directories | S (0.5h) | P3 | Codex | planned |
 | QS-004 | CSA Scores Endpoint | S (2h) | P1 | Codex | planned |
@@ -37,7 +41,6 @@
 | QS-010 | Triage 339 TODOs | M (3h) | P2 | Claude Code | planned |
 | QS-008 | Runtime Verification (Playwright) | L (6h) | P0 | Claude Code | planned |
 | QS-005 | Profile Page | L (6h) | P1 | Claude Code | planned |
-| QS-001 | WebSocket Gateways | XL (14h) | P0 | Claude Code | planned |
 | **Total** | | **41.5h** | | | |
 
 ---
@@ -84,7 +87,7 @@
 |-----|------|-------|-------------|
 | 1 | QS-002: Soft Delete Migration | 3h | Migration file + service updates |
 | 2 | QS-003: Accounting Dashboard Endpoint | 3h | Working `GET /accounting/dashboard` |
-| 3-7 | QS-001: WebSocket Gateways | 14h | 4 WS namespaces (dispatch, tracking, notifs, dashboard) |
+| 3-7 | QS-001: WebSocket Gateways | 14h | ~~4 WS namespaces~~ → /notifications DONE (tribunal scoped down) |
 | 8 | QS-008: Runtime Verification | 6h | 98 routes verified, STATUS updated |
 | 9 | QS-005: Profile Page | 6h | Working profile with edit + MFA sections |
 | 10 | QS-010: TODO Triage + doc updates | 3h | Backlog updated, STATUS.md updated |

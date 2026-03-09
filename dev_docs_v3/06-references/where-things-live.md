@@ -101,11 +101,11 @@
 
 | What | Where |
 |------|-------|
-| Backend module map | `dev_docs_v3/06-references/backend-module-map.md` |
-| Component catalog | `dev_docs_v3/06-references/component-catalog.md` |
-| Hook catalog | `dev_docs_v3/06-references/hook-catalog.md` |
-| Prisma model catalog | `dev_docs_v3/06-references/prisma-model-catalog.md` |
-| Prisma schema docs | `dev_docs_v3/06-references/prisma-schema-docs.md` |
+| Backend module map | `dev_docs_v3/04-specs/catalogs/backend-modules.md` |
+| Component catalog | `dev_docs_v3/04-specs/catalogs/frontend-components.md` |
+| Hook catalog | `dev_docs_v3/04-specs/catalogs/frontend-hooks.md` |
+| Prisma model catalog | `dev_docs_v3/04-specs/catalogs/prisma-models.md` |
+| Prisma schema docs | `dev_docs_v3/04-specs/catalogs/prisma-schema-docs.md` |
 | API catalog | `dev_docs_v3/04-specs/api-catalog.md` |
 | Latest audit | `dev_docs_v3/05-audit/latest-audit.md` |
 | Security findings | `dev_docs_v3/05-audit/security-findings.md` |

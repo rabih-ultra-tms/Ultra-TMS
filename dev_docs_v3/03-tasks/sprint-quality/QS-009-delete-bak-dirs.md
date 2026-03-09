@@ -71,7 +71,7 @@ pnpm --filter api build
 1. All 5 `.bak` directories are deleted
 2. `pnpm --filter api build` passes with 0 errors after deletion
 3. `pnpm check-types` passes with 0 errors
-4. `dev_docs_v3/06-references/backend-module-map.md` updated to remove .bak references
+4. `dev_docs_v3/04-specs/catalogs/backend-modules.md` updated to remove .bak references
 
 ---
 

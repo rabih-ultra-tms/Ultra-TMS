@@ -1,14 +1,14 @@
 # Roadmap Phases — Ultra TMS
 
 > **Total timeline:** 16 weeks MVP, ongoing post-MVP
-> **Last updated:** 2026-03-07
+> **Last updated:** 2026-03-09
 
 ---
 
 ## Phase Overview
 
 ```
-Week 01-02  ████ Quality Sprint (current)
+Week 01-02  ████ Quality Sprint (IN PROGRESS — 4/13 tasks done)
 Week 03-04  ████ Sprint 02: Accounting Build
 Week 05-06  ████ Sprint 03: TMS Core Build
 Week 07-08  ████ Sprint 04: Commission & Agent Build
@@ -22,11 +22,15 @@ Week 15-16  ████ Sprint 08: Beta Launch Prep
 
 ## Phase 1: Foundation (Weeks 1-4) — Quality + Accounting
 
-**Sprint Quality (current):**
-- Runtime verification of all 98 routes
-- Fix P0 bugs (WebSocket gateways, accounting endpoint, soft deletes)
-- Delete .bak directories, triage TODOs
-- CORS fix, profile page
+**Sprint Quality (in progress — 4/13 done):**
+
+- ~~QS-001: WebSocket /notifications gateway~~ DONE (2026-03-09)
+- ~~QS-012: Rate Confirmation PDF~~ DONE (2026-03-09)
+- ~~QS-013: BOL PDF Generation~~ DONE (2026-03-09)
+- ~~QS-016: Tenant Isolation Tests~~ DONE (2026-03-09)
+- Runtime verification of all 98 routes (QS-008 — next up)
+- Fix remaining P0 bugs (accounting endpoint, soft deletes)
+- Delete .bak directories, triage TODOs, CORS fix, profile page
 
 **Sprint 02 — Accounting:**
 - Invoice CRUD (create, send, track aging)
@@ -134,3 +138,4 @@ Week 15-16  ████ Sprint 08: Beta Launch Prep
 | 2026-02-16 | Sonnet audit: 62 bugs found, 57 fixed | Quality gate before feature sprint |
 | 2026-03-07 | v3 docs: cover all 38 services | Document everything, build in priority order |
 | 2026-03-07 | Quality Sprint before new features | Runtime verification + P0 fixes first |
+| 2026-03-09 | Consolidated sprints into 08-sprints/ | Deleted 01-sprints/ (stale pre-audit plans). 08-sprints/ is single source of truth |
