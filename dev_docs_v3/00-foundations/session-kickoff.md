@@ -36,6 +36,8 @@ Read:
 - **Known Issues** — bugs you need to be aware of
 - **Business Rules** — domain constraints you cannot violate
 
+> **Note:** Hub Section 8 field counts represent business fields only. They exclude 6 standard scaffold fields present on nearly every model: `externalId`, `sourceSystem`, `customFields`, `createdById`, `updatedById`, `deletedAt`. For exact field counts, check `schema.prisma` directly.
+
 ---
 
 ## Step 4: Read the Actual Code (3-6 of 6)

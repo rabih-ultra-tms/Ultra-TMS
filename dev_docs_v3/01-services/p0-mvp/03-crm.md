@@ -15,7 +15,7 @@
 | **Health Score** | B (7.5/10) |
 | **Confidence** | High — code-verified via PST-03 tribunal |
 | **Last Verified** | 2026-03-09 |
-| **Backend** | Production — 48 endpoints across 5 controllers (Companies 12, Contacts 8, Activities 11, Opportunities 10, HubSpot 7) |
+| **Backend** | Production — 49 endpoints across 5 controllers (Companies 12, Contacts 8, Activities 11, Opportunities 10, HubSpot 8) |
 | **Frontend** | Substantial — 18+ routes built (6 company, 6 customer redirects, 3 leads, 3 contacts + sub-tabs); 4 Wave 2 screens not built |
 | **Tests** | ~70 backend test cases (5 spec files) + 2 frontend test files |
 | **Priority** | P0 — fix tenant isolation in mutations; P1 — authenticate HubSpot webhook |
@@ -59,7 +59,13 @@
 | Lead Create | `/leads/new` | Built | 8/10 | Company/user select, validation |
 | Lead Activities | `/leads/[id]/activities` | Built | 7/10 | Sub-tab — needs verification |
 | Lead Contacts | `/leads/[id]/contacts` | Built | 7/10 | Sub-tab confirmed |
-| Customers | `/customers` | Redirect | — | 6 redirect files → `/companies/*` |
+| Customers List | `/customers` | Built | 7/10 | Full CRUD page (not just redirects) |
+| Customer Detail | `/customers/[id]` | Built | 7/10 | Customer detail view |
+| Customer Edit | `/customers/[id]/edit` | Built | 7/10 | Edit form with defaultValues |
+| Customer Activities | `/customers/[id]/activities` | Built | 7/10 | Activity timeline sub-tab |
+| Customer Contacts | `/customers/[id]/contacts` | Built | 7/10 | Contacts sub-tab |
+| Customer Create | `/customers/new` | Built | 8/10 | Create form with Zod validation |
+| Activities | `/activities` | Built | 6/10 | Standalone activities page |
 | Opportunities List | `/crm/opportunities` | Not Built | — | Wave 2 |
 | Activities Calendar | `/crm/activities` | Not Built | — | Wave 2 |
 | Territory Mgmt | `/crm/territories` | Not Built | — | Wave 2 |
@@ -521,7 +527,7 @@ Company uses `ActiveStatus` enum (ACTIVE, INACTIVE, etc.) — NOT a credit statu
 | Original Plan | Actual | Delta |
 |--------------|--------|-------|
 | 13 screens planned | 18+ routes built (incl. sub-tabs + redirects), 4 Wave 2 not built | Exceeds plan for Wave 1 |
-| 10 endpoints (single controller) | 48 endpoints across 5 controllers | Massively exceeded plan |
+| 10 endpoints (single controller) | 49 endpoints across 5 controllers | Massively exceeded plan |
 | 16 components | 25 components | Exceeded plan |
 | B+ grade target | B (7.5/10) after tribunal | Close to target |
 | Tests required | ~70 backend + 2 frontend test files exist | Partial — security tests missing |

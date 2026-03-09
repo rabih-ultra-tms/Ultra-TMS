@@ -428,6 +428,34 @@ AccessorialRate {
 }
 ```
 
+### SalesQuota (21 scalar fields) (Added post-verification)
+
+```
+SalesQuota {
+  id                 String (UUID, PK)
+  tenantId           String (FK → Tenant)
+  userId             String (FK → User)
+  periodType         String @db.VarChar(20)
+  periodStart        DateTime
+  periodEnd          DateTime
+  revenueTarget      Decimal? @db.Decimal(14,2)
+  loadsTarget        Int?
+  newCustomersTarget Int?
+  revenueActual      Decimal @default(0) @db.Decimal(14,2)
+  loadsActual        Int @default(0)
+  newCustomersActual Int @default(0)
+  status             String @default("ACTIVE") @db.VarChar(50)
+  createdAt          DateTime
+  updatedAt          DateTime
+  createdById        String?
+  customFields       Json
+  deletedAt          DateTime?
+  externalId         String?
+  sourceSystem       String?
+  updatedById        String?
+}
+```
+
 ---
 
 ## 9. Validation Rules

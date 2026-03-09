@@ -170,7 +170,7 @@
 
 ## 7. Business Rules
 
-1. **5 Automated Email Triggers (COMM-001):** (1) Rate confirmation sent to carrier on dispatch, (2) Tender notification to carrier when load tendered, (3) Pickup reminder 2 hours before scheduled pickup, (4) Delivery confirmation to customer on delivery, (5) Invoice email to customer on invoice creation. Frontend hook `useAutoEmail` implements all 5 triggers; backend event wiring TBD.
+1. **5 Automated Email Triggers (NOTIF-001):** (1) Rate confirmation sent to carrier on dispatch, (2) Tender notification to carrier when load tendered, (3) Pickup reminder 2 hours before scheduled pickup, (4) Delivery confirmation to customer on delivery, (5) Invoice email to customer on invoice creation. Frontend hook `useAutoEmail` implements all 5 triggers; backend event wiring TBD.
 2. **SendGrid Integration:** All emails route through SendGrid via `apps/api/src/modules/email/`. From address configurable per tenant. Templates use HTML with variable substitution. Bounce/unsubscribe webhooks must be handled.
 3. **SMS via Twilio:** Check call reminders, urgent delivery alerts. TCPA opt-in compliance required. Default: SMS disabled until carrier/customer explicitly opts in. Inbound SMS handled via webhook endpoint (currently non-functional — see Known Issues).
 4. **SMS Conversations:** Thread-based tracking via SmsConversation + SmsMessage models. Conversations can be opened, replied to, and closed. Each SMS is tied to a conversation thread for continuity.
@@ -464,27 +464,27 @@ Note: `delete()` method does soft-delete. `deleteExpired()` uses hard delete (`d
 
 | Task ID | Title | Status |
 |---------|-------|--------|
-| COMM-005 | Write Communication Backend Tests | **Done** — 68 tests across 8 spec files |
+| NOTIF-005 | Write Communication Backend Tests | **Done** — 68 tests across 8 spec files |
 
 ### Open (from tribunal findings)
 
 | Task ID | Title | Effort | Priority | Notes |
 |---------|-------|--------|----------|-------|
-| COMM-001 | Wire 5 Automated Email Triggers (backend events) | L (8-12h) | P1 | Frontend hooks exist (`useAutoEmail`), backend event wiring needed |
-| COMM-002 | Build Notification Bell + Center UI | M (4-6h) | P1 | Connect existing bell stub to API + build `/notifications` page |
-| COMM-003 | Build Email Template Editor Page | M (4-6h) | P2 | `/communication/templates/email` — CRUD with preview |
-| COMM-004 | Build SMS Opt-in Flow + Compose UI | M (4-6h) | P2 | TCPA opt-in + `/communication/sms/compose` |
-| COMM-006 | Build Communication Hub Dashboard | M (4h) | P2 | `/communication` overview with stats |
-| COMM-007 | Build Communication Log Page | S (2-3h) | P2 | `/communication/log` — filterable table |
-| COMM-008 | Build SMS Conversation Thread UI | M (4h) | P2 | `/communication/sms/conversations` with thread view |
-| COMM-009 | Build Bulk Messaging UI | M (4-6h) | P3 | `/communication/bulk` — multi-step wizard |
-| COMM-010 | Build Auto-Message Rules UI | L (6-8h) | P3 | `/communication/auto-rules` — rule builder |
-| COMM-011 | Implement Real-time Notification WS | M (3-4h) | P1 | Depends on QS-001 WebSocket gateway work |
-| COMM-012 | Build Remaining Frontend Hooks | M (3-4h) | P1 | 11 hooks still needed (3 of 14 built) |
-| COMM-013 | Fix SMS webhook auth (BUG) | S (1-2h) | P1 | Extract to separate controller or `@Public()` + add Twilio signature validation |
-| COMM-014 | Add SendGrid webhook endpoint | M (3-4h) | P2 | Bounce/unsubscribe/delivery event handling |
-| COMM-015 | Connect notification-settings.tsx to preferences API | S (1-2h) | P2 | Wire static switches to real backend |
-| COMM-016 | Wire deleteExpired() to cron job | XS (30min) | P2 | Cleanup expired InAppNotifications |
+| NOTIF-001 | Wire 5 Automated Email Triggers (backend events) | L (8-12h) | P1 | Frontend hooks exist (`useAutoEmail`), backend event wiring needed |
+| NOTIF-002 | Build Notification Bell + Center UI | M (4-6h) | P1 | Connect existing bell stub to API + build `/notifications` page |
+| NOTIF-003 | Build Email Template Editor Page | M (4-6h) | P2 | `/communication/templates/email` — CRUD with preview |
+| NOTIF-004 | Build SMS Opt-in Flow + Compose UI | M (4-6h) | P2 | TCPA opt-in + `/communication/sms/compose` |
+| NOTIF-006 | Build Communication Hub Dashboard | M (4h) | P2 | `/communication` overview with stats |
+| NOTIF-007 | Build Communication Log Page | S (2-3h) | P2 | `/communication/log` — filterable table |
+| NOTIF-008 | Build SMS Conversation Thread UI | M (4h) | P2 | `/communication/sms/conversations` with thread view |
+| NOTIF-009 | Build Bulk Messaging UI | M (4-6h) | P3 | `/communication/bulk` — multi-step wizard |
+| NOTIF-010 | Build Auto-Message Rules UI | L (6-8h) | P3 | `/communication/auto-rules` — rule builder |
+| NOTIF-011 | Implement Real-time Notification WS | M (3-4h) | P1 | Depends on QS-001 WebSocket gateway work |
+| NOTIF-012 | Build Remaining Frontend Hooks | M (3-4h) | P1 | 11 hooks still needed (3 of 14 built) |
+| NOTIF-013 | Fix SMS webhook auth (BUG) | S (1-2h) | P1 | Extract to separate controller or `@Public()` + add Twilio signature validation |
+| NOTIF-014 | Add SendGrid webhook endpoint | M (3-4h) | P2 | Bounce/unsubscribe/delivery event handling |
+| NOTIF-015 | Connect notification-settings.tsx to preferences API | S (1-2h) | P2 | Wire static switches to real backend |
+| NOTIF-016 | Wire deleteExpired() to cron job | XS (30min) | P2 | Cleanup expired InAppNotifications |
 
 ---
 

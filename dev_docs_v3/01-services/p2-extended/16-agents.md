@@ -1,6 +1,6 @@
 # Service Hub: Agents (16)
 
-> **Priority:** P2 Extended | **Status:** Backend Rich (6 controllers, 43 endpoints), Frontend Not Built
+> **Priority:** P2 Extended | **Status:** Backend Rich (6 controllers, 42 endpoints), Frontend Not Built
 > **Source of Truth** — dev_docs_v3 era | Last verified: 2026-03-09 (PST-16 tribunal)
 > **Design specs:** `dev_docs/12-Rabih-design-Process/15-agents/` (9 files)
 > **Tribunal file:** `dev_docs_v3/05-audit/tribunal/per-service/PST-16-agents.md`
@@ -14,7 +14,7 @@
 | **Health Score** | B- (6.5/10) |
 | **Confidence** | High — code-verified via PST-16 tribunal |
 | **Last Verified** | 2026-03-09 |
-| **Backend** | 6 controllers, 43 endpoints in `apps/api/src/modules/agents/` |
+| **Backend** | 6 controllers, 42 endpoints in `apps/api/src/modules/agents/` |
 | **Frontend** | Not Built — no pages, no components, no hooks |
 | **Components** | None |
 | **Hooks** | None |
@@ -32,7 +32,7 @@
 | Layer | Status | Notes |
 |-------|--------|-------|
 | Service Definition | Done | 9 design spec files cover full vision |
-| Backend Controllers | Done | 6 controllers: agents (13), agreements (6), assignments (8), commissions (3), leads (8), statements (4) = 43 endpoints |
+| Backend Controllers | Done | 6 controllers: agents (13), agreements (6), assignments (8), commissions (3), leads (8), statements (4) = 42 endpoints |
 | Backend Services | Done | AgentsService, AgentAgreementsService, CustomerAssignmentsService, AgentCommissionsService, AgentLeadsService, AgentStatementsService |
 | Prisma Models | Done | 9 models with 10 enums, rich field sets including financial, territory, portal access |
 | Frontend Pages | Not Built | No `/agents` routes exist |
@@ -133,7 +133,7 @@
 | GET | `/api/v1/agents/:id/statements/:statementId` | Built | Get statement detail |
 | GET | `/api/v1/agents/:id/statements/:statementId/pdf` | Built | Download statement as PDF |
 
-**Total: 43 endpoints across 6 controllers (all built, no frontend consumption)**
+**Total: 42 endpoints across 6 controllers (all built, no frontend consumption)**
 
 ---
 
@@ -582,7 +582,7 @@ SUBMITTED -> IN_REVIEW -> QUALIFIED -> WORKING -> CONVERTED
 | **3 controllers missing RolesGuard** — AgentAgreementsController, CustomerAssignmentsController, AgentLeadsController have `@Roles` decorators but no `RolesGuard` to enforce them | P0 BUG | **Open** | Any authenticated user can access agreements, assignments, and leads endpoints |
 | **Tenant leak in rankings query** — `AgentCommissionsService.rankings()` fetches agent details with `agent.findMany({ where: { id: { in: agentIds } } })` missing tenantId filter | P0 BUG | **Open** | Could leak agent names from other tenants into rankings response |
 | No frontend pages — zero routes for agents | P1 | Open | 9 design specs exist, none built |
-| No hooks or components | P1 | Open | 43 backend endpoints have no frontend consumers |
+| No hooks or components | P1 | Open | 42 backend endpoints have no frontend consumers |
 | Agent portal (AgentPortalUser) has no UI | P2 | Open | Schema and model exist, no login/portal pages |
 | Rankings endpoint duplicated in AgentsController and CommissionsController | P2 | Open | Both expose `GET /agents/rankings` — potential conflict |
 | No commission calculation engine | P1 | Open | Commission records exist but no service calculates them from load data; only reads/aggregates |
@@ -626,7 +626,7 @@ SUBMITTED -> IN_REVIEW -> QUALIFIED -> WORKING -> CONVERTED
 | AGT-010 | Build useAgentLeads hook | S (2h) | P2 | Lead pipeline with qualify/convert/reject actions |
 | AGT-011 | Build useAgentCustomers hook | S (2h) | P2 | Customer assignment CRUD with transfer/sunset |
 | AGT-012 | Build useAgentStatements hook | S (1h) | P2 | Statement list + PDF download |
-| AGT-013 | Expand test coverage (43 endpoints) | L (8-10h) | P1 | 28 tests exist but coverage is shallow; add integration tests |
+| AGT-013 | Expand test coverage (42 endpoints) | L (8-10h) | P1 | 28 tests exist but coverage is shallow; add integration tests |
 | AGT-014 | Build Agent Territories page | M (4h) | P3 | Design spec: `07-agent-territories.md`, map-based |
 | AGT-015 | Build Agent Reports page | M (4h) | P3 | Design spec: `08-agent-reports.md`, rankings and payouts |
 | AGT-016 | Build Agent Portal login and restricted UI | XL (12h+) | P3 | AgentPortalUser model ready, need auth flow and restricted views |
@@ -658,7 +658,7 @@ SUBMITTED -> IN_REVIEW -> QUALIFIED -> WORKING -> CONVERTED
 
 | Area | Original Hub (7 sections) | Actual State | Gap |
 |------|---------------------------|--------------|-----|
-| Endpoints | 6 listed | 43 across 6 controllers (agents, agreements, assignments, commissions, leads, statements) | Backend is 7x richer than documented |
+| Endpoints | 6 listed | 42 across 6 controllers (agents, agreements, assignments, commissions, leads, statements) | Backend is 7x richer than documented |
 | Controllers | 1 implied | 6 controllers with dedicated sub-modules | Massive undocumented backend |
 | Data Models | Agent, AgentCommission mentioned | 9 models: Agent, AgentAgreement, AgentCommission, AgentCustomerAssignment, AgentLead, AgentPayout, AgentContact, AgentDrawBalance, AgentPortalUser | 7 models were undocumented |
 | Enums | None listed | 10 enums covering agent types, statuses, commission splits, lead pipeline | Entirely undocumented |

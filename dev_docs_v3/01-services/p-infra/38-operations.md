@@ -10,12 +10,12 @@
 
 | Field | Value |
 |-------|-------|
-| **Health Score** | B+ (7.5/10) — 61 endpoints, 100% guard coverage, 2 P0 tenant bugs |
+| **Health Score** | B+ (7.5/10) — 62 endpoints, 100% guard coverage, 2 P0 tenant bugs |
 | **Confidence** | High — code-verified via PST-38 tribunal |
 | **Last Verified** | 2026-03-09 |
-| **Backend** | Production — `apps/api/src/modules/operations/` with 7 sub-modules, 61 endpoints, ~5,500+ LOC |
+| **Backend** | Production — `apps/api/src/modules/operations/` with 7 sub-modules, 62 endpoints, ~5,500+ LOC |
 | **Frontend** | Production — pages live under TMS Core (Service 05), 13+ pages consume these endpoints |
-| **Tests** | None — 0 spec files, 0% coverage on 61 endpoints (largest untested module by endpoint count) |
+| **Tests** | None — 0 spec files, 0% coverage on 62 endpoints (largest untested module by endpoint count) |
 | **Note** | OperationsModule (33 LOC) is an umbrella — imports/exports 7 sub-modules that power TMS Core, Sales, and Carrier Management frontends. |
 
 ---
@@ -25,7 +25,7 @@
 | Layer | Status | Notes |
 |-------|--------|-------|
 | Service Definition | Done | Umbrella module with 7 sub-modules |
-| Backend Controllers | Production | 7 controllers, 61 endpoints, all auth-guarded |
+| Backend Controllers | Production | 7 controllers, 62 endpoints, all auth-guarded |
 | Prisma Models | 10+ owned | OperationsCarrier, LoadPlannerQuote, LoadHistory, TruckType, etc. |
 | Frontend Pages | Production | 13+ pages across TMS Core, Sales, Carriers |
 | Tests | None | 0% coverage — P1 to add tests for carriers, load-history, load-planner-quotes |
@@ -92,7 +92,7 @@ Total: 38+ files, ~5,500+ active LOC
 
 ---
 
-## 5. API Endpoints (61 total)
+## 5. API Endpoints (62 total)
 
 ### Carriers (21 endpoints)
 | Method | Path | Status | Notes |
@@ -198,6 +198,16 @@ Total: 38+ files, ~5,500+ active LOC
 - InlandServiceType
 - LoadHistory (has own Prisma model)
 
+### Cross-Referenced Models (via dashboard.service.ts) (Added post-verification)
+
+The dashboard service queries these core models for KPIs and aggregations. Full definitions are in their owning service hubs.
+
+| Model | Scalar Fields | Owning Hub | Cross-Reference Purpose |
+|-------|---------------|------------|------------------------|
+| Load | 37 | 05-tms-core | Dashboard KPIs: load counts by status, revenue totals, delivery metrics |
+| Order | 39 | 05-tms-core | Dashboard KPIs: order volume, customer revenue, conversion rates |
+| StatusHistory | 18 | 05-tms-core | Dashboard: status transition tracking, timeline events |
+
 ---
 
 ## 8. Business Rules
@@ -228,7 +238,7 @@ The frontend pages for these sub-modules are documented in their respective P0 s
 |-------|----------|--------|-------|
 | `getByCarrier()` missing tenantId | **P0 BUG** | **Open** | load-history.service.ts:~259 — cross-tenant load history leakage |
 | `getSimilarLoads()` missing tenantId | **P0 BUG** | **Open** | load-history.service.ts:~289 — cross-tenant similar loads leakage |
-| 0% test coverage on 61 endpoints | P1 | Open | Largest untested module by endpoint count |
+| 0% test coverage on 62 endpoints | P1 | Open | Largest untested module by endpoint count |
 | Dashboard sparklines return empty arrays | P2 | Open | dashboard.service.ts:207-214 — cosmetic, incomplete feature |
 | Equipment silent failure on query | P2 | Open | equipment.service.ts:53 — returns [] instead of throwing |
 | Equipment raw SQL + table fallback | P2 | Open | Suggests incomplete migration, dual table names |
@@ -257,7 +267,7 @@ The frontend pages for these sub-modules are documented in their respective P0 s
 
 | Category | Score |
 |----------|-------|
-| Functionality | 8/10 — 61 endpoints working, dashboard sparklines incomplete |
+| Functionality | 8/10 — 62 endpoints working, dashboard sparklines incomplete |
 | Security | 7/10 — 100% guard coverage, but 2 P0 tenant bugs |
 | Code Quality | 7/10 — clean layers, some raw SQL, 1 monolithic service |
 | Testing | 0/10 — zero tests |
@@ -277,9 +287,9 @@ The frontend pages for these sub-modules are documented in their respective P0 s
 
 | Original Plan | Actual | Delta |
 |--------------|--------|-------|
-| Hub listed 7 sub-modules, no detail | 61 endpoints across 7 controllers, fully documented | Hub was a stub |
+| Hub listed 7 sub-modules, no detail | 62 endpoints across 7 controllers, fully documented | Hub was a stub |
 | Health Score 7/10 | 7.5/10 verified by PST-38 tribunal | +0.5 — strong guards offset by 2 P0 bugs |
-| No endpoint counts | 61 endpoints cataloged | Largest functional module by endpoint count |
+| No endpoint counts | 62 endpoints cataloged | Largest functional module by endpoint count |
 | No security analysis | 100% guard coverage documented, 2 P0 tenant bugs found | First full security audit |
 | No test status | 0% confirmed — largest untested module | Gap identified |
 

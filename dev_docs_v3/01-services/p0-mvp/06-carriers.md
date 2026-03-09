@@ -15,7 +15,7 @@
 | **Health Score** | B+ (8.0/10) |
 | **Confidence** | High — code-verified via PST-06 tribunal |
 | **Last Verified** | 2026-03-09 |
-| **Backend** | DUAL MODULE ARCHITECTURE: (1) `modules/operations/carriers/` — 22 endpoints, `OperationsCarrier` model, **used by frontend**. (2) `modules/carrier/` — 52 endpoints, `Carrier` model, rich FMCSA/compliance/insurance logic, **not used by frontend**. Hub documents the Operations module (what frontend calls). |
+| **Backend** | DUAL MODULE ARCHITECTURE: (1) `modules/operations/carriers/` — 22 endpoints, `OperationsCarrier` model, **used by frontend**. (2) `modules/carrier/` — 50 endpoints, `Carrier` model, rich FMCSA/compliance/insurance logic, **not used by frontend**. Hub documents the Operations module (what frontend calls). |
 | **Frontend** | Built — 6 pages (594+198+73+271 LOC + columns + actions-menu), 17 components in `components/carriers/`, 34 hooks |
 | **Tests** | 45+ backend unit tests (5 files in `modules/carrier/`), 1 E2E Playwright test (`apps/e2e/tests/carriers/carrier-management.spec.ts`), 1 `window.confirm` regression test |
 | **PROTECTED FILE** | `apps/web/app/(dashboard)/truck-types/page.tsx` — Gold standard 8/10 |
@@ -30,8 +30,8 @@
 | Service Definition | Done | Carrier service definition in dev_docs |
 | Design Specs | Done | 13 files, all 15-section |
 | Backend — Operations Carriers | Production | `apps/api/src/modules/operations/carriers/` — 22 endpoints, 789 LOC. **This is what frontend calls.** |
-| Backend — Carriers (Original) | Production | `apps/api/src/modules/carrier/` — 52 endpoints, 6 controllers, 6 services, 823 LOC service. FMCSA, compliance, insurance, approval workflow. **Not called by frontend.** |
-| Prisma Models | Production | `OperationsCarrier`, `OperationsCarrierDriver`, `OperationsCarrierTruck`, `OperationsCarrierDocument` (frontend). Original: `Carrier`, `CarrierContact`, `CarrierDriver`, `CarrierInsurance`, `CarrierDocument` (unused by frontend). |
+| Backend — Carriers (Original) | Production | `apps/api/src/modules/carrier/` — 50 endpoints, 6 controllers, 6 services, 823 LOC service. FMCSA, compliance, insurance, approval workflow. **Not called by frontend.** |
+| Prisma Models | Production | `OperationsCarrier`, `OperationsCarrierDriver`, `OperationsCarrierTruck`, `OperationsCarrierDocument` (frontend). Original: `Carrier`, `CarrierContact`, `Driver`, `InsuranceCertificate`, `CarrierDocument` (unused by frontend). |
 | Frontend Pages | Built | 6 pages: list (594 LOC), detail (198 LOC), edit (73 LOC), scorecard (271 LOC), + columns.tsx, carrier-actions-menu.tsx |
 | React Hooks | Built | 34 hooks across 3 files: `use-carriers.ts` (31 hooks, 519 LOC), `use-fmcsa.ts` (2 hooks), `use-carrier-scorecard.ts` (1 hook) |
 | Components | Built | 17 components in `components/carriers/` + 4 related (load-board carrier-match-card/panel, tms carrier-selector, load-carrier-tab) |
@@ -91,10 +91,10 @@
 
 ### Original Carrier Module — Administrative/Compliance Backend (not used by frontend)
 
-The original `modules/carrier/` module has 52 endpoints across 6 controllers (carriers, contacts, drivers, insurance, documents, FMCSA). It uses the `Carrier` Prisma model (70 fields) with rich features:
+The original `modules/carrier/` module has 50 endpoints across 6 controllers (carriers, contacts, drivers, insurance, documents, FMCSA). It uses the `Carrier` Prisma model (70 fields) with rich features:
 
 - FMCSA lookup + compliance log + CSA scores + 10 authority fields
-- Separate `CarrierInsurance` model with full CRUD (type, provider, policy#, coverage, expiry, verification)
+- Separate `InsuranceCertificate` model with full CRUD (type, provider, policy#, coverage, expiry, verification)
 - `CarrierContact` model (21 fields, primary/active, role, preferences)
 - Carrier status machine with business rule enforcement (PENDING→ACTIVE→INACTIVE/SUSPENDED/BLACKLISTED)
 - Performance scorecard, compliance endpoints, approval workflow
@@ -199,7 +199,7 @@ The original `modules/carrier/` module has 52 endpoints across 6 controllers (ca
 ## 7. Business Rules
 
 1. **Carrier Onboarding Requirements:** A carrier cannot be set to ACTIVE status until: (1) Valid MC# or DOT# is provided, (2) FMCSA authority is AUTHORIZED, (3) Auto liability insurance >= $750,000 is on file, (4) Cargo insurance >= $100,000 is on file. All four conditions must be met. **Note:** These rules are enforced in the original `carrier/` module. The operations module uses a simple status string field with no enforcement.
-2. **Insurance Tracking — Architecture Split:** Original module: separate `CarrierInsurance` model with full CRUD (type, provider, policy#, coverage, expiry, verification) + `checkExpiredInsurance()` job (no cron trigger found). Operations module: 4 denormalized fields on `OperationsCarrier` (insuranceCompany, insurancePolicyNumber, insuranceExpiryDate, cargoInsuranceLimitCents) — no separate tracking.
+2. **Insurance Tracking — Architecture Split:** Original module: separate `InsuranceCertificate` model with full CRUD (type, provider, policy#, coverage, expiry, verification) + `checkExpiredInsurance()` job (no cron trigger found). Operations module: 4 denormalized fields on `OperationsCarrier` (insuranceCompany, insurancePolicyNumber, insuranceExpiryDate, cargoInsuranceLimitCents) — no separate tracking.
 3. **Carrier Performance Scoring:** Score = (On-time delivery x 40%) + (Claims ratio inverse x 30%) + (Check call compliance x 20%) + (Service quality x 10%). Scale: 0-100. PREFERRED >= 85, APPROVED >= 70, CONDITIONAL >= 50, SUSPENDED < 50. Operations module stores: onTimePickupRate, onTimeDeliveryRate, claimsRate, avgRating, acceptanceRate, totalLoadsCompleted, performanceScore.
 4. **Status Hierarchy (Original Module):** BLACKLISTED is permanent and can only be unset by ADMIN with written reason. SUSPENDED is temporary (auto from insurance expiry, or manual). BLACKLISTED carriers cannot be assigned loads under any circumstances. **Operations module:** Simple string status field with no state machine enforcement.
 5. **FMCSA Lookup:** The system auto-verifies MC#/DOT# on carrier creation via FMCSA hooks. FMCSA data is cached for 24 hours. **Note:** FMCSA integration lives in the original carrier module, not operations.
@@ -366,15 +366,127 @@ OperationsCarrierDocument {
 
 ### Original Module Models (not used by frontend — reference only)
 
-The original `modules/carrier/` uses separate Prisma models: `Carrier` (70 fields), `CarrierContact` (21 fields), `CarrierDriver` (14 fields), `CarrierInsurance` (13 fields), `CarrierDocument`. Key architectural differences:
+The original `modules/carrier/` uses separate Prisma models: `Carrier` (70 fields), `CarrierContact` (21 fields), `Driver` (31 fields), `InsuranceCertificate` (28 fields), `CarrierDocument`. Key architectural differences:
 
 | Feature | Operations Module | Original Module |
 |---------|-------------------|-----------------|
-| Insurance | 4 denormalized fields on carrier | Separate `CarrierInsurance` model with full CRUD |
+| Insurance | 4 denormalized fields on carrier | Separate `InsuranceCertificate` model with full CRUD |
 | Contacts | Not present | `CarrierContact` model (21 fields) |
 | FMCSA | Not in module | Full lookup + compliance log + CSA scores |
 | Trucks | Full `OperationsCarrierTruck` (33 fields) | Not in module |
 | Status Machine | Simple string, no enforcement | PENDING->ACTIVE->INACTIVE/SUSPENDED/BLACKLISTED with rules |
+
+### Driver (31 scalar fields) (Added post-verification)
+
+```
+Driver {
+  id                      String (UUID, PK)
+  tenantId                String (FK → Tenant)
+  carrierId               String (FK → Carrier)
+  firstName               String @db.VarChar(100)
+  lastName                String @db.VarChar(100)
+  email                   String? @db.VarChar(255)
+  phone                   String? @db.VarChar(50)
+  cdlNumber               String? @db.VarChar(50)
+  cdlState                String? @db.VarChar(3)
+  cdlExpiration            DateTime?
+  cdlClass                String? @db.VarChar(5)
+  endorsements            String[] @db.VarChar(20)
+  status                  String @default("ACTIVE") @db.VarChar(50)
+  currentLocationLat      Decimal? @db.Decimal(10,7)
+  currentLocationLng      Decimal? @db.Decimal(10,7)
+  locationUpdatedAt       DateTime?
+  totalLoads              Int @default(0)
+  onTimeRate              Decimal? @db.Decimal(5,2)
+  avgRating               Decimal? @db.Decimal(3,2)
+  preferredLanguage       String @default("en") @db.VarChar(10)
+  appUserId               String?
+  eldProvider             String? @db.VarChar(50)
+  eldDriverId             String? @db.VarChar(100)
+  externalId              String?
+  sourceSystem            String?
+  customFields            Json
+  createdAt               DateTime
+  updatedAt               DateTime
+  deletedAt               DateTime?
+  createdById             String?
+  updatedById             String?
+}
+```
+
+**Note:** The Prisma model name is `Driver` (not `CarrierDriver`). Linked to Carrier via `carrierId` FK. Has unique constraint on `[tenantId, carrierId, cdlNumber]`. Relations: `DriverQualificationFile[]`, `SafetyIncident[]`, `SafetyInspection[]`.
+
+### InsuranceCertificate (28 scalar fields) (Added post-verification)
+
+```
+InsuranceCertificate {
+  id                    String (UUID, PK)
+  tenantId              String (FK → Tenant)
+  carrierId             String (FK → Carrier)
+  insuranceType         String @db.VarChar(50)
+  policyNumber          String? @db.VarChar(100)
+  insuranceCompany      String @db.VarChar(255)
+  coverageAmount        Decimal @db.Decimal(14,2)
+  deductible            Decimal? @db.Decimal(12,2)
+  effectiveDate         DateTime
+  expirationDate        DateTime
+  certificateHolderName String? @db.VarChar(255)
+  additionalInsured     Boolean @default(false)
+  documentUrl           String? @db.VarChar(500)
+  status                String @default("ACTIVE") @db.VarChar(50)
+  verified              Boolean @default(false)
+  verifiedById          String?
+  verifiedAt            DateTime?
+  expirationNotified30  Boolean @default(false)
+  expirationNotified14  Boolean @default(false)
+  expirationNotified7   Boolean @default(false)
+  createdAt             DateTime
+  updatedAt             DateTime
+  createdById           String?
+  customFields          Json
+  deletedAt             DateTime?
+  externalId            String?
+  sourceSystem          String?
+  updatedById           String?
+}
+```
+
+**Note:** The Prisma model name is `InsuranceCertificate` (not `CarrierInsurance`). Has unique constraint on `[carrierId, insuranceType, policyNumber]`. Includes 3 expiration notification flags (30/14/7 day).
+
+### FmcsaComplianceLog (28 scalar fields) (Added post-verification)
+
+```
+FmcsaComplianceLog {
+  id                   String (UUID, PK)
+  tenantId             String (FK → Tenant)
+  carrierId            String (FK → Carrier)
+  checkedAt            DateTime
+  dotNumber            String? @db.VarChar(20)
+  mcNumber             String? @db.VarChar(20)
+  authorityStatus      String? @db.VarChar(50)
+  commonAuthority      Boolean?
+  contractAuthority    Boolean?
+  brokerAuthority      Boolean?
+  safetyRating         String? @db.VarChar(50)
+  outOfService         Boolean?
+  driverInspections    Int?
+  driverOosRate        Decimal? @db.Decimal(5,2)
+  vehicleInspections   Int?
+  vehicleOosRate       Decimal? @db.Decimal(5,2)
+  fmcsaInsuranceOnFile Boolean?
+  fmcsaInsuranceAmount Decimal? @db.Decimal(14,2)
+  changesDetected      Json @default("[]")
+  rawResponse          Json?
+  createdAt            DateTime
+  createdById          String?
+  customFields         Json
+  deletedAt            DateTime?
+  externalId           String?
+  sourceSystem         String?
+  updatedAt            DateTime
+  updatedById          String?
+}
+```
 
 ---
 
@@ -496,7 +608,7 @@ EXPIRED -> ACTIVE (new certificate uploaded + verified)
 | Original Plan | Actual | Delta |
 |--------------|--------|-------|
 | Carrier Detail page built | Detail EXISTS with 8 tabs, 17 components | Ahead of plan |
-| Single carrier module | **TWO modules**: operations (22 endpoints, frontend) + original (52 endpoints, unused) | Architectural divergence |
+| Single carrier module | **TWO modules**: operations (22 endpoints, frontend) + original (50 endpoints, unused) | Architectural divergence |
 | Compliance basic | FMCSA lookup + CSA scores implemented (in original module) | Exceeds plan — but in wrong module |
 | Preferred carriers = future | qualificationTier + tier fields on OperationsCarrier | Earlier than planned |
 | 13 screens planned | 6 built + Truck Types (PROTECTED) | 6 not built (Phase 2) |

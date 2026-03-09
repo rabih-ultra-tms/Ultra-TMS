@@ -14,7 +14,7 @@
 | **Health Score** | A- (8.0/10) |
 | **Confidence** | High — code-verified via PST-30 tribunal |
 | **Last Verified** | 2026-03-09 |
-| **Backend** | Production — 33 endpoints across 8 controllers, event-driven architecture, hash chain integrity, alert processing |
+| **Backend** | Production — 31 endpoints across 8 controllers, event-driven architecture, hash chain integrity, alert processing |
 | **Frontend** | Stub — 3 components + 1 page (91 LOC total); AuditLog screen lives under Auth & Admin |
 | **Tests** | 12 spec files, ~56 tests, ~820 LOC |
 | **Priority** | P1 — fix RolesGuard (decorative on all 8 controllers), add soft-delete filtering, implement retention purge cron |
@@ -27,7 +27,7 @@
 |-------|--------|-------|
 | Service Definition | Done | Cross-cutting infrastructure used by ALL services |
 | Design Specs | Done | 7 design files in `dev_docs/12-Rabih-design-Process/22-audit/` |
-| Backend Controllers | Production | 8 controllers, 33 endpoints, all JwtAuthGuard-protected |
+| Backend Controllers | Production | 8 controllers, 31 endpoints, all JwtAuthGuard-protected |
 | Prisma Models | Production | 9 models (AuditLog, APIAuditLog, LoginAudit, AccessLog, ChangeHistory, ComplianceCheckpoint, AuditAlert, AuditAlertIncident, AuditRetentionPolicy) |
 | Frontend Pages | Stub | 1 page (`/admin/audit-logs`, 13 LOC stub) + 3 components (78 LOC) |
 | React Hooks | None | No dedicated audit hooks |
@@ -111,7 +111,7 @@
 | PATCH | `/api/v1/audit/retention/:id` | RetentionController | Production | Update retention policy |
 | DELETE | `/api/v1/audit/retention/:id` | RetentionController | Production | Delete retention policy |
 
-**Total: 33 endpoints across 8 controllers**
+**Total: 31 endpoints across 8 controllers**
 
 ---
 
@@ -254,7 +254,7 @@ Note: `SafetyAuditTrail` also exists in Prisma but belongs to the Safety module.
 | Hub rated D+ (3/10) | Verified 8.0/10 by PST-30 tribunal | +5.0 delta — hub was catastrophically outdated |
 | "Tests: None" | 12 spec files, ~56 tests, ~820 LOC | Hub was FALSE |
 | "AuditLog + related tables" (1 model) | 9 fully verified models with field counts | Hub missed 8 models (worst data model section of all 30 services) |
-| 31 endpoints | 33 endpoints (missed logins/summary, api/errors) | Hub undercounted by 2 |
+| 31 endpoints | 31 endpoints | Count corrected |
 | Known Issues: 6 items | 4 items were from Feedback service (copy-paste contamination) | Worst doc error of any service |
 
 ---

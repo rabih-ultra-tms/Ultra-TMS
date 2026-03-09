@@ -16,7 +16,7 @@
 | **Health Score** | B+ (7.8/10) |
 | **Confidence** | High — code-verified via PST-19 tribunal |
 | **Last Verified** | 2026-03-09 |
-| **Backend** | Partial — 6 controllers, 41 endpoints in `apps/api/src/modules/analytics/`. Also `analytics.bak/` exists (52K LOC, safe to delete via QS-009). |
+| **Backend** | Partial — 6 controllers, 40 endpoints in `apps/api/src/modules/analytics/`. Also `analytics.bak/` exists (52K LOC, safe to delete via QS-009). |
 | **Frontend** | Not Built — 0 pages, 0 components, 0 hooks |
 | **Tests** | 42 tests / 4 spec files / 777 LOC (alerts, dashboards, kpis, reports). Tests verify tenantId filtering, soft delete, NotFoundException, ownership checks, pagination. |
 | **Security** | Strong — 100% guard coverage. All 6 controllers have `@UseGuards(JwtAuthGuard, RolesGuard)` at class level. First P2 service with 0 guard gaps. |
@@ -136,7 +136,7 @@
 | GET | `/api/v1/analytics/reports/:id/executions/:executionId` | Partial | Get a specific execution result |
 | DELETE | `/api/v1/analytics/reports/:id` | Partial | Delete report (hub previously missed this endpoint) |
 
-**Total: 41 endpoints across 6 controllers.**
+**Total: 40 endpoints across 6 controllers.**
 
 ---
 
@@ -544,7 +544,7 @@ FLAT — current value = prior period value (within tolerance)
 |---------|-------|--------|--------|
 | ANA-001 | Resolve `analytics.bak/` directory (safe to delete — verified by tribunal) | S (1h) | Open — QS-009 |
 | ANA-002 | Split `alerts.controller.ts` — extract SavedViews and DataQuery controllers into own files | S (2h) | Open |
-| ANA-003 | Runtime-verify all 41 endpoints (start server, hit each) | M (3h) | Open |
+| ANA-003 | Runtime-verify all 40 endpoints (start server, hit each) | M (3h) | Open |
 
 ### Backlog
 | Task ID | Title | Effort | Priority |
@@ -592,7 +592,7 @@ FLAT — current value = prior period value (within tolerance)
 | Original Plan | Actual | Delta |
 |--------------|--------|-------|
 | 6 controllers assumed | 6 controller classes — but SavedViews + DataQuery + Alerts crammed into `alerts.controller.ts` (4 files total, not 6) | Code org issue only |
-| Basic overview endpoint | 41 full endpoints across 6 controller groups | Significantly more backend than expected |
+| Basic overview endpoint | 40 full endpoints across 6 controller groups | Significantly more backend than expected |
 | Analytics events + aggregated metrics | 11 Prisma models (KPIDefinition, KPISnapshot, KPIAlert, Dashboard, DashboardWidget, Report, ReportExecution, ReportTemplate, SavedAnalyticsView, AnalyticsCache, LaneAnalytics) | Rich data model |
 | No tests assumed | 42 tests across 4 spec files (777 LOC) — tenantId, soft delete, NotFoundException, ownership checks | Ahead of expectations |
 | Security unknown | 100% guard coverage on all 6 controllers — first P2 service with 0 gaps | Best-in-class for P2 |

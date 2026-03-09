@@ -15,10 +15,10 @@
 | **Health Score** | A- (8.5/10) |
 | **Confidence** | High — code-verified via PST-08 tribunal |
 | **Last Verified** | 2026-03-09 |
-| **Backend** | Production — 31 endpoints across 5 controllers (entries, payouts, plans, dashboard, agent commissions) |
+| **Backend** | Production — 28 endpoints across 5 controllers (entries, payouts, plans, dashboard, agent commissions) |
 | **Frontend** | Built — 11 pages, 18 hook functions (5 files), 10 components. Avg quality 8.5/10. Model implementation. |
-| **Tests** | 63 total — 21 frontend (3 suites), 42 backend (4 spec files) |
-| **Security** | Strong — 100% auth guards (JwtAuthGuard + RolesGuard) on all 31 endpoints, 100% tenant isolation |
+| **Tests** | 54 total — 21 frontend (3 suites), 33 backend (4 spec files) |
+| **Security** | Strong — 100% auth guards (JwtAuthGuard + RolesGuard) on all 28 endpoints, 100% tenant isolation |
 | **Reference Quality** | Cleanest P0 service — zero frontend anti-patterns. Backend has soft-delete gap (60% coverage). |
 
 ---
@@ -35,8 +35,8 @@
 | Frontend Pages | Built | 11 pages in `app/(dashboard)/commissions/` |
 | React Hooks | Built | 5 hook files, 18 exported hook functions in `lib/hooks/commissions/` |
 | Components | Built | 10 components in `components/commissions/` |
-| Tests | Built | 63 tests — FE: `__tests__/commissions/commissions.test.tsx` (21 tests, 3 suites) + BE: 4 spec files (42 tests) |
-| Security | Strong | All 31 endpoints have JwtAuthGuard + RolesGuard with appropriate role restrictions |
+| Tests | Built | 54 tests — FE: `__tests__/commissions/commissions.test.tsx` (21 tests, 3 suites) + BE: 4 spec files (33 tests) |
+| Security | Strong | All 28 endpoints have JwtAuthGuard + RolesGuard with appropriate role restrictions |
 
 ---
 
@@ -439,7 +439,7 @@ PENDING_APPROVAL/APPROVED → VOID (cancelled)
 | Commission auto-calculation trigger (on invoice PAID) needs to be WIRED — not just verified | P1 | **Open** | `calculateLoadCommission()` method exists with full plan-type handling, but no event listener or cron job triggers it. Needs event listener on invoice status change. See COMM-107. |
 | Soft-delete gap: 60% of backend queries don't filter `deletedAt: null` | P1 BUG | **Open** | CommissionEntry (0/7), CommissionPayout (0/6), AgentCommission (0/3), Dashboard (3/8) queries missing filter. Only CommissionPlans (6/6) properly filters. Deleted records inflate KPIs and appear in transaction lists. |
 | Multi-step operations lack Prisma `$transaction` wrapping | P2 BUG | **Open** | `createPayout` (create payout + link entries) and `processPayout` (update payout + mark entries PAID) are not transactional. Race conditions could leave orphaned state. |
-| ~~No tests~~ | — | ~~FIXED~~ | ~~63 tests exist — 21 FE (3 suites) + 42 BE (4 spec files)~~ |
+| ~~No tests~~ | — | ~~FIXED~~ | ~~54 tests exist — 21 FE (3 suites) + 33 BE (4 spec files)~~ |
 | ~~Security guards on commission endpoints need verification~~ | — | ~~FIXED~~ | ~~FALSE — all 31 endpoints have JwtAuthGuard + RolesGuard with appropriate role restrictions. 100% auth guard coverage confirmed by PST-08.~~ |
 
 **Previously listed — now resolved:**
@@ -467,7 +467,7 @@ PENDING_APPROVAL/APPROVED → VOID (cancelled)
 | COMM-104 | QA Commission Reports (exists, 8/10) | S (30m) | P1 |
 | COMM-105 | QA Commission Payouts (exists, 8/10) | S (30m) | P1 |
 | COMM-107 | Wire auto-calculation trigger on invoice PAID event (not just verify — trigger mechanism needs to be BUILT) | M (3-4h) | P0 |
-| COMM-108 | Expand commission test coverage — 42 BE tests already exist, focus on integration tests and soft-delete edge cases | M (2h) | P1 |
+| COMM-108 | Expand commission test coverage — 33 BE tests already exist, focus on integration tests and soft-delete edge cases | M (2h) | P1 |
 | COMM-110 | Add `deletedAt: null` filter to CommissionEntry queries (7 methods) | M (1h) | P1 |
 | COMM-111 | Add `deletedAt: null` filter to CommissionPayout queries (6 methods) | M (1h) | P1 |
 | COMM-112 | Add `deletedAt: null` filter to AgentCommission queries (3 methods) | S (30m) | P1 |
@@ -493,7 +493,7 @@ PENDING_APPROVAL/APPROVED → VOID (cancelled)
 | Commission frontend in scope | 11 pages built, avg 8.5/10 quality | Exceeds plan |
 | Auto-calculation on invoice paid | Backend method exists, trigger not wired | Needs COMM-107 |
 | 6 screens planned | 11 built (model implementation quality) | Exceeds plan |
-| Tests required | 63 tests (21 FE + 42 BE) — most tested P0 service | Exceeds plan |
+| Tests required | 54 tests (21 FE + 33 BE) — most tested P0 service | Exceeds plan |
 | 6 hooks planned | 18 hook functions across 5 files | Exceeds plan |
 | 5 components planned | 10 components built (~16 exported components) | Exceeds plan |
 | 3 data models | 7 Prisma models (169 fields) including agent system | Exceeds plan |

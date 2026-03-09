@@ -15,7 +15,7 @@
 | **Health Score** | B- (7.5/10) |
 | **Confidence** | High — code-verified via PST-26 tribunal |
 | **Last Verified** | 2026-03-09 |
-| **Backend** | Partial — 8 controllers, 38 endpoints (CRUD layer production-quality, EDI-specific logic stubbed) |
+| **Backend** | Partial — 8 controllers, 35 endpoints (CRUD layer production-quality, EDI-specific logic stubbed) |
 | **Frontend** | Not Started — no pages, no components, no hooks |
 | **Tests** | 7 spec files, 42 test cases, 759 LOC |
 | **Priority** | P3 Future — enterprise-tier feature |
@@ -29,7 +29,7 @@
 |-------|--------|-------|
 | Service Definition | Partial | No standalone service doc; logic lives in code |
 | Design Specs | Done | 9 files in `dev_docs/12-Rabih-design-Process/24-edi/` |
-| Backend Controllers | Partial | 8 controllers, 38 endpoints. CRUD layer production-quality; parser/generator/transport stubs |
+| Backend Controllers | Partial | 8 controllers, 35 endpoints. CRUD layer production-quality; parser/generator/transport stubs |
 | Prisma Models | Done | 9 models, 5 enums — fully defined with relations, indices, unique constraints |
 | Frontend Pages | Not Started | No routes exist |
 | React Hooks | Not Started | No hooks exist |
@@ -124,7 +124,7 @@
 | POST | `/api/v1/edi/queue/:id/cancel` | EdiQueueController | Production | Cancel queue item |
 | POST | `/api/v1/edi/queue/process` | EdiQueueController | Stub | Process pending queue (naive — marks as SENT without transport) |
 
-> **Total: 38 endpoints across 8 controllers.** CRUD/lifecycle layer is production-quality. Generation, send, and transport are stubs (return JSON, no real X12 or network calls).
+> **Total: 35 endpoints across 8 controllers.** CRUD/lifecycle layer is production-quality. Generation, send, and transport are stubs (return JSON, no real X12 or network calls).
 
 ---
 
@@ -425,7 +425,7 @@ EDI_322
 ### Backlog (P3 Future)
 | Task ID | Title | Effort | Priority |
 |---------|-------|--------|----------|
-| EDI-001 | Verify and document all 38 endpoint behaviors | L (8h) | P3 |
+| EDI-001 | Verify and document all 35 endpoint behaviors | L (8h) | P3 |
 | EDI-002 | Build Trading Partners CRUD pages | L (8-12h) | P3 |
 | EDI-003 | Build Document Browser + Detail viewer | L (8-12h) | P3 |
 | EDI-004 | Build Mapping Configuration UI | XL (12-16h) | P3 |

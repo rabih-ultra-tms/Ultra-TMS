@@ -15,7 +15,7 @@
 | **Health Score** | B+ (7.8/10) |
 | **Confidence** | High — code-verified via PST-05 tribunal |
 | **Last Verified** | 2026-03-09 |
-| **Backend** | Production — 51 endpoints across 5 controllers, multi-tenant validated, 100% tenant isolation + soft delete + auth guards |
+| **Backend** | Production — 45 endpoints across 5 controllers, multi-tenant validated, 100% tenant isolation + soft delete + auth guards |
 | **Frontend** | Built — 12 of 14 screens exist (10 real, 2 wrapper-stubs delegating to substantial components) |
 | **Tests** | Backend: Tested. Frontend: 16 test files in `__tests__/tms/` |
 | **Active Sprint** | QS-001 (WebSocket Gateways), QS-008 (Runtime Verification) |
@@ -142,7 +142,7 @@
 | GET | `/api/v1/operations/tracking/positions` | OperationsController | Production |
 | GET | `/api/v1/operations/tracking/positions/:loadId` | OperationsController | Production |
 
-**Total: 51 endpoints, all production-ready.**
+**Total: 45 endpoints, all production-ready.**
 
 ### Security Audit (Backend)
 
@@ -455,6 +455,66 @@ CheckCall {
 
 TrackingEvent does NOT exist anywhere in the Prisma schema. Tracking data is stored on the Load model (`currentLocationLat`, `currentLocationLng`, `currentCity`, `currentState`, `lastTrackingUpdate`, `eta`) and in CheckCall records.
 
+### StatusHistory (18 scalar fields) (Added post-verification)
+
+```
+StatusHistory {
+  id           String (UUID, PK)
+  tenantId     String (FK → Tenant)
+  entityType   String @db.VarChar(20)
+  entityId     String
+  oldStatus    String? @db.VarChar(30)
+  newStatus    String @db.VarChar(30)
+  notes        String?
+  createdAt    DateTime
+  createdById  String?
+  loadId       String? (FK → Load)
+  orderId      String? (FK → Order)
+  stopId       String? (FK → Stop)
+  customFields Json
+  deletedAt    DateTime?
+  externalId   String?
+  sourceSystem String?
+  updatedAt    DateTime
+  updatedById  String?
+}
+```
+
+**Note:** StatusHistory is a polymorphic model — `entityType` + `entityId` identify the target, while `loadId`/`orderId`/`stopId` provide direct FK relations for joins. Referenced from Order, Load, and Stop via `StatusHistory[]` relations.
+
+### OrderItem (26 scalar fields) (Added post-verification)
+
+```
+OrderItem {
+  id               String (UUID, PK)
+  tenantId         String (FK → Tenant)
+  orderId          String (FK → Order)
+  stopId           String? (FK → Stop)
+  description      String @db.VarChar(255)
+  quantity         Int @default(1)
+  quantityType     String? @db.VarChar(20)
+  weightLbs        Decimal? @db.Decimal(10,2)
+  dimensionsLength Int?
+  dimensionsWidth  Int?
+  dimensionsHeight Int?
+  commodityClass   String? @db.VarChar(10)
+  nmfcCode         String? @db.VarChar(20)
+  isHazmat         Boolean @default(false)
+  hazmatClass      String? @db.VarChar(20)
+  unNumber         String? @db.VarChar(20)
+  sku              String? @db.VarChar(100)
+  lotNumber        String? @db.VarChar(100)
+  createdAt        DateTime
+  updatedAt        DateTime
+  createdById      String?
+  customFields     Json
+  deletedAt        DateTime?
+  externalId       String?
+  sourceSystem     String?
+  updatedById      String?
+}
+```
+
 ---
 
 ## 9. Validation Rules
@@ -553,7 +613,7 @@ The `type` field does not exist on CheckCall. The previous hub documented 6 valu
 | TMS-018 | Implement Load tender/accept/reject endpoints | L (4-6h) | P1 | Open |
 | TMS-019 | Refactor use-checkcalls.ts field mapping (11 fallbacks) | S (1h) | P1 | Open |
 | TMS-020 | ~~Rewrite hub data model section from Prisma schema~~ | M (3-4h) | P0 | **Done** (this correction) |
-| TMS-021 | ~~Rewrite hub API endpoints section (51 actual vs 65 claimed)~~ | M (2-3h) | P0 | **Done** (this correction) |
+| TMS-021 | ~~Rewrite hub API endpoints section (45 actual vs 65 claimed)~~ | M (2-3h) | P0 | **Done** (this correction) |
 
 ### QA Backlog (screens exist — verify and fix)
 
@@ -644,7 +704,7 @@ Both features reuse `apps/api/src/modules/accounting/services/pdf.service.ts` wh
 |--------------|--------|-------|
 | Frontend to be built first | Backend 9/10 quality, frontend 7.75/10 avg | Both substantially built |
 | 14 screens planned | 12 built (10 real, 2 wrappers), 2 integrated into tabs | ~86% complete |
-| 65 API endpoints | 51 actual endpoints (14 phantom removed) | 78% of claimed count |
+| 65 API endpoints | 45 actual endpoints (20 phantom removed) | 69% of claimed count |
 | WebSocket in "Phase 4" | WebSocket needed in Phase 1 for Dispatch Board | QS-001 — still the critical blocker |
 | Single TMS module | Separate Orders, Loads, Stops, CheckCalls modules | Better modularity |
 | Dispatch Board = 1 task | Dispatch board component built with kanban + table views | QA needed, not a build task |

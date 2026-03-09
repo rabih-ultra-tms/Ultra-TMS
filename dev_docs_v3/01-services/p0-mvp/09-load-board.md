@@ -396,6 +396,165 @@ LoadBoardProvider {
 | LoadPost | Legacy posting model (v1 API) | Used by PostingController, separate from LoadPosting |
 | CarrierLoadView | Tracks carrier views on postings | Referenced in LoadPosting relations |
 
+### CapacitySearch (24 scalar fields) (Added post-verification)
+
+```
+CapacitySearch {
+  id             String (UUID, PK)
+  tenantId       String (FK → Tenant)
+  accountId      String?
+  searchNumber   String @unique @db.VarChar(50)
+  originCity     String? @db.VarChar(100)
+  originState    String @db.VarChar(2)
+  originRadius   Int?
+  destCity       String? @db.VarChar(100)
+  destState      String @db.VarChar(2)
+  destRadius     Int?
+  equipmentType  String @db.VarChar(50)
+  availableDate  DateTime @db.Date
+  minLength      Int?
+  minWeight      Int?
+  maxAge         String? @db.VarChar(50)
+  resultCount    Int @default(0)
+  externalId     String?
+  sourceSystem   String?
+  customFields   Json
+  createdAt      DateTime
+  updatedAt      DateTime
+  deletedAt      DateTime?
+  createdById    String?
+  updatedById    String?
+}
+```
+
+### CapacityResult (28 scalar fields) (Added post-verification)
+
+```
+CapacityResult {
+  id             String (UUID, PK)
+  tenantId       String (FK → Tenant)
+  searchId       String (FK → CapacitySearch)
+  carrierName    String @db.VarChar(255)
+  carrierMC      String? @db.VarChar(20)
+  carrierDOT     String? @db.VarChar(20)
+  contactName    String? @db.VarChar(255)
+  contactPhone   String? @db.VarChar(20)
+  truckLocation  String @db.VarChar(500)
+  truckCity      String? @db.VarChar(100)
+  truckState     String? @db.VarChar(2)
+  truckZip       String? @db.VarChar(10)
+  equipmentType  String @db.VarChar(50)
+  availableDate  DateTime @db.Date
+  length         Int?
+  comments       String?
+  contacted      Boolean @default(false)
+  contactedAt    DateTime?
+  interested     Boolean?
+  notes          String?
+  externalId     String?
+  sourceSystem   String?
+  customFields   Json
+  createdAt      DateTime
+  updatedAt      DateTime
+  deletedAt      DateTime?
+  createdById    String?
+  updatedById    String?
+}
+```
+
+### CarrierCapacity (23 scalar fields) (Added post-verification)
+
+```
+CarrierCapacity {
+  id             String (UUID, PK)
+  tenantId       String (FK → Tenant)
+  carrierId      String (FK → Carrier)
+  equipmentType  String @db.VarChar(50)
+  availableUnits Int @default(0)
+  totalUnits     Int
+  city           String? @db.VarChar(100)
+  state          String? @db.VarChar(50)
+  zipCode        String? @db.VarChar(20)
+  lat            Decimal? @db.Decimal(10,7)
+  lng            Decimal? @db.Decimal(10,7)
+  effectiveDate  DateTime @db.Date
+  expiresAt      DateTime? @db.Date
+  status         CapacityStatus @default(AVAILABLE)
+  notes          String?
+  externalId     String?
+  sourceSystem   String?
+  customFields   Json
+  createdAt      DateTime
+  updatedAt      DateTime
+  deletedAt      DateTime?
+  createdById    String?
+  updatedById    String?
+}
+```
+
+### PostLead (29 scalar fields) (Added post-verification)
+
+```
+PostLead {
+  id              String (UUID, PK)
+  tenantId        String (FK → Tenant)
+  postId          String (FK → LoadPost)
+  carrierId       String? (FK → Carrier)
+  carrierName     String @db.VarChar(255)
+  carrierMC       String? @db.VarChar(20)
+  carrierDOT      String? @db.VarChar(20)
+  contactName     String @db.VarChar(255)
+  contactPhone    String @db.VarChar(20)
+  contactEmail    String? @db.VarChar(255)
+  quotedRate      Decimal? @db.Decimal(10,2)
+  availableDate   DateTime? @db.Date
+  equipmentInfo   String?
+  notes           String?
+  status          PostLeadStatus @default(NEW)
+  contactedAt     DateTime?
+  lastContactedAt DateTime?
+  nextFollowUpAt  DateTime?
+  acceptedAt      DateTime?
+  declinedAt      DateTime?
+  declinedReason  String?
+  externalId      String?
+  sourceSystem    String?
+  customFields    Json
+  createdAt       DateTime
+  updatedAt       DateTime
+  deletedAt       DateTime?
+  createdById     String?
+  updatedById     String?
+}
+```
+
+### PostingRule (20 scalar fields) (Added post-verification)
+
+```
+PostingRule {
+  id              String (UUID, PK)
+  tenantId        String (FK → Tenant)
+  accountId       String?
+  ruleName        String @db.VarChar(255)
+  isActive        Boolean @default(true)
+  conditions      Json
+  frequency       PostingFrequency (enum)
+  scheduleTime    String? @db.VarChar(10)
+  expirationHours Int?
+  rulesMatched    Int @default(0)
+  postsCreated    Int @default(0)
+  lastTriggeredAt DateTime?
+  externalId      String?
+  sourceSystem    String?
+  customFields    Json
+  createdAt       DateTime
+  updatedAt       DateTime
+  deletedAt       DateTime?
+  createdById     String?
+  updatedById     String?
+}
+```
+
 ---
 
 ## 9. Validation Rules

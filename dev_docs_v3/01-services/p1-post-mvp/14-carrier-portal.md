@@ -1,6 +1,6 @@
 # Service Hub: Carrier Portal (14)
 
-> **Priority:** P1 Post-MVP | **Status:** Backend Rich (56 endpoints), Frontend Not Built
+> **Priority:** P1 Post-MVP | **Status:** Backend Rich (54 endpoints), Frontend Not Built
 > **Source of Truth** -- dev_docs_v3 era | Last verified: 2026-03-09 (PST-14 tribunal)
 > **Original definition:** `dev_docs/02-services/` (Carrier Portal service definition)
 > **Design specs:** `dev_docs/12-Rabih-design-Process/13-carrier-portal/` (12 files)
@@ -16,7 +16,7 @@
 | **Health Score** | B- (7.5/10) -- well-architected backend (dual guard, 12 DTOs, quick pay), zero frontend |
 | **Confidence** | High -- code-verified via PST-14 tribunal |
 | **Last Verified** | 2026-03-09 |
-| **Backend** | Substantial -- 56 endpoints across 7 controllers, 8 portal models (6 specific + 2 linked), 6 enums, 12 DTOs |
+| **Backend** | Substantial -- 54 endpoints across 7 controllers, 8 portal models (6 specific + 2 linked), 6 enums, 12 DTOs |
 | **Frontend** | Not Built -- no pages, no components, no hooks |
 | **Tests** | 69 tests / 10 spec files / 911 LOC -- all real (9 unit + 1 e2e, 0 stubs) |
 | **Auth** | Separate JWT secret: `CARRIER_PORTAL_JWT_SECRET`, dual guard (CarrierPortalAuthGuard + CarrierScopeGuard) |
@@ -152,7 +152,7 @@ All screens are planned (from design specs) but not yet built.
 | GET | `/api/v1/carrier-portal/compliance/documents/:id` | CarrierPortalComplianceController | Built | Compliance doc detail (not /authority) |
 | GET | `/api/v1/carrier-portal/compliance/expiring` | CarrierPortalComplianceController | Built | Expiring items |
 
-**Total: 56 endpoints across 7 controllers. 50/56 auth-guarded (CarrierPortalAuthGuard + CarrierScopeGuard). 7 auth endpoints unguarded by design.**
+**Total: 54 endpoints across 7 controllers. 47/54 auth-guarded (CarrierPortalAuthGuard + CarrierScopeGuard). 7 auth endpoints unguarded by design.**
 
 ---
 
@@ -201,7 +201,7 @@ No hooks exist. All must be built for the portal frontend.
 ## 7. Business Rules
 
 1. **Separate Auth:** Carrier portal uses its own `CARRIER_PORTAL_JWT_SECRET`, completely separate from the main TMS JWT. Carrier contacts log in with email + password. Registration requires approval. Magic link login is planned for drivers.
-2. **Dual Guard Architecture:** All protected endpoints (50/56) use CarrierPortalAuthGuard + CarrierScopeGuard -- same pattern as Customer Portal's PortalAuthGuard + CompanyScopeGuard. Every query filters by `tenantId` + `carrierId` from JWT.
+2. **Dual Guard Architecture:** All protected endpoints (47/54) use CarrierPortalAuthGuard + CarrierScopeGuard -- same pattern as Customer Portal's PortalAuthGuard + CompanyScopeGuard. Every query filters by `tenantId` + `carrierId` from JWT.
 3. **Quick Pay Workflow:** Carriers can request early payment on settlements via `POST /quick-pay/:settlementId`. Fee: 2% of settlement amount. Minimum settlement: $100. Carrier must accept terms (`acceptTerms: true` in DTO). Flow: request -> fee calculation -> net amount -> QuickPayStatus tracking (PENDING -> APPROVED/REJECTED -> PAID).
 4. **Load Bidding & Matching:** Carriers can bid on available loads (`POST /loads/:id/bid`) and view AI/criteria-matched loads (`GET /loads/matching`). Carriers can save loads for later review (`POST /loads/available/:id/save`).
 5. **Real-Time Status Updates:** Carriers report location (`POST /loads/:id/location`), update ETA (`POST /loads/:id/eta`), change load status (`POST /loads/:id/status`), and message dispatchers (`POST /loads/:id/message`) -- all from the portal.
@@ -395,37 +395,37 @@ OVERDUE     -- Payment past due date
 
 | Task ID | Title | Effort | Priority | Notes |
 |---------|-------|--------|----------|-------|
-| CPORT-101 | Set up portal app shell + routing + layout (mobile-first) | L (8h) | P1 | Portal shell, nav, responsive layout |
-| CPORT-102 | Build portal auth flow (login, register, forgot/reset password) | L (8h) | P1 | Separate JWT, httpOnly cookies |
-| CPORT-103 | Build portal dashboard | M (5h) | P1 | KPI cards, active loads, payment summary, compliance, alerts |
-| CPORT-104 | Build Available Loads browser + saved loads | M (5h) | P1 | Search, filter, save, bid, matching |
-| CPORT-105 | Build My Loads list + load detail | L (8h) | P1 | Status updates, location reporting, ETA, messaging |
-| CPORT-106 | Build POD/BOL upload (camera support) | M (4h) | P1 | Camera capture, drag-drop, progress |
-| CPORT-107 | Build Payment History + Quick Pay | M (5h) | P2 | Invoice submit, settlements, quick pay request, PDF download |
-| CPORT-108 | Build My Profile + user management | M (4h) | P2 | Profile edit, password change, multi-user |
-| CPORT-109 | Build Compliance management | M (4h) | P2 | Upload compliance docs, view expiry, alerts |
-| CPORT-110 | Build Equipment Manager | S (3h) | P2 | Truck/trailer CRUD |
-| CPORT-111 | Build Support Chat | L (8h) | P3 | Real-time messaging with dispatcher |
-| CPORT-112 | Write hooks for all 7 controller domains | L (8h) | P1 | 7 hooks covering 56 endpoints |
+| CPRT-101 | Set up portal app shell + routing + layout (mobile-first) | L (8h) | P1 | Portal shell, nav, responsive layout |
+| CPRT-102 | Build portal auth flow (login, register, forgot/reset password) | L (8h) | P1 | Separate JWT, httpOnly cookies |
+| CPRT-103 | Build portal dashboard | M (5h) | P1 | KPI cards, active loads, payment summary, compliance, alerts |
+| CPRT-104 | Build Available Loads browser + saved loads | M (5h) | P1 | Search, filter, save, bid, matching |
+| CPRT-105 | Build My Loads list + load detail | L (8h) | P1 | Status updates, location reporting, ETA, messaging |
+| CPRT-106 | Build POD/BOL upload (camera support) | M (4h) | P1 | Camera capture, drag-drop, progress |
+| CPRT-107 | Build Payment History + Quick Pay | M (5h) | P2 | Invoice submit, settlements, quick pay request, PDF download |
+| CPRT-108 | Build My Profile + user management | M (4h) | P2 | Profile edit, password change, multi-user |
+| CPRT-109 | Build Compliance management | M (4h) | P2 | Upload compliance docs, view expiry, alerts |
+| CPRT-110 | Build Equipment Manager | S (3h) | P2 | Truck/trailer CRUD |
+| CPRT-111 | Build Support Chat | L (8h) | P3 | Real-time messaging with dispatcher |
+| CPRT-112 | Write hooks for all 7 controller domains | L (8h) | P1 | 7 hooks covering 54 endpoints |
 
 ### Critical Backend Fixes (before portal frontend launch)
 
 | Task ID | Title | Effort | Priority | Notes |
 |---------|-------|--------|----------|-------|
-| CPORT-120 | Fix soft-delete filtering in 5 services | M (3h) | P0 | Add `deletedAt: null` to dashboard, compliance, documents, invoices, loads |
-| CPORT-121 | Fix login tenant isolation | S (1h) | P0 | Add tenantId to login query (require tenant header or subdomain) |
-| CPORT-122 | Add rate limiting to register, forgotPassword, resetPassword | S (1h) | P1 | Add @Throttle decorators |
-| CPORT-123 | Add @Roles() decorator-level guards for admin actions | S (2h) | P2 | inviteUser, updateUser, deactivateUser |
+| CPRT-120 | Fix soft-delete filtering in 5 services | M (3h) | P0 | Add `deletedAt: null` to dashboard, compliance, documents, invoices, loads |
+| CPRT-121 | Fix login tenant isolation | S (1h) | P0 | Add tenantId to login query (require tenant header or subdomain) |
+| CPRT-122 | Add rate limiting to register, forgotPassword, resetPassword | S (1h) | P1 | Add @Throttle decorators |
+| CPRT-123 | Add @Roles() decorator-level guards for admin actions | S (2h) | P2 | inviteUser, updateUser, deactivateUser |
 
 ### Previously Listed Tasks (from v1 hub -- superseded)
 
 | Old Task ID | Title | Status |
 |-------------|-------|--------|
-| CPORT-201 | Build Carrier Portal shell + auth | Superseded by CPORT-101 + CPORT-102 |
-| CPORT-202 | Build My Loads + stop management | Superseded by CPORT-105 |
-| CPORT-203 | Build Check Call submission (mobile) | Removed -- no check call endpoints in portal (phantom) |
-| CPORT-204 | Build POD upload (camera) | Superseded by CPORT-106 |
-| CPORT-205 | Build Rate Confirmation view + e-signature | Removed -- no rate-con endpoints in portal (phantom) |
+| CPRT-201 | Build Carrier Portal shell + auth | Superseded by CPRT-101 + CPRT-102 |
+| CPRT-202 | Build My Loads + stop management | Superseded by CPRT-105 |
+| CPRT-203 | Build Check Call submission (mobile) | Removed -- no check call endpoints in portal (phantom) |
+| CPRT-204 | Build POD upload (camera) | Superseded by CPRT-106 |
+| CPRT-205 | Build Rate Confirmation view + e-signature | Removed -- no rate-con endpoints in portal (phantom) |
 
 ---
 
@@ -452,7 +452,7 @@ OVERDUE     -- Payment past due date
 
 | Original Plan | Actual | Delta |
 |--------------|--------|-------|
-| ~8 endpoints assumed | 56 endpoints across 7 controllers | Backend is 7x richer than originally documented |
+| ~8 endpoints assumed | 54 endpoints across 7 controllers | Backend is ~7x richer than originally documented |
 | Auth = simple login | Full auth flow: register, verify-email, forgot/reset password, refresh, logout (7 endpoints) + dual guard | Exceeds plan |
 | No compliance management | 5 compliance endpoints (documents, expiring) | New capability |
 | No invoice/payment visibility | 8 invoice/settlement/payment endpoints + quick pay | New capability |

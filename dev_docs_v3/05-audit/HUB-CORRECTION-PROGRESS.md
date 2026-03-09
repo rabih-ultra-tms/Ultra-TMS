@@ -108,3 +108,41 @@
 | 5 | 2026-03-09 | Analytics (19), Workflow (20), Integration Hub (21), Search (22), HR (23), Scheduler (24) | 6 P2 Platform + P3 — parallel agents |
 | 6 | 2026-03-09 | Safety (25), EDI (26), Help Desk (27), Feedback (28), Rate Intelligence (29), Audit (30) | 6 P3 remainder — 2 batches of 3 parallel |
 | 7 | 2026-03-09 | Config (31), Cache (32), Super Admin (33), Email (34), Storage (35), Redis (36), Health (37), Operations (38) | 8 Infra — 3+3+2 parallel. No duplicates found to clean. |
+
+## Post-Verification Fixes (2026-03-09)
+
+7 automated verification tests identified residual documentation errors after the hub correction pass. Fixes executed in 3 phases:
+
+### Phase 1: Targeted Fixes (7 items)
+
+1. Communication hub — corrected hooks count and test count
+2. Commission hub — test count 42→33
+3. Cache hub — spec files 6→8, tests 38→40
+4. TMS Core hub — endpoints 51→45, CheckCall fields 6→20
+5. CRM hub — added 6 missing customer routes to Section 3
+6. Root index — 38→39 services, added Command Center
+7. Created `p0-mvp/_index.md` with 11 entries
+
+### Phase 2: Missing Models + Consumers + Counts (5 items)
+
+8. Added 16 missing Prisma models to 6 hub Section 8s (with field counts from schema)
+9. Fixed @Global() consumer lists in Email/Storage/Redis hubs
+10. Fixed endpoint counts for 9 services (Commission, EDI, Carrier Portal, Carriers, Audit, Agents, Analytics, CRM, Operations)
+11. Removed phantom TrackingEvent from TMS Core (already marked)
+12. Renamed task prefixes: COMM-→NOTIF- (Communication), CPORT-→CPRT- (Carrier Portal)
+
+### Phase 3: Documented Accepted Gaps (3 items)
+
+- Scaffold field counts note added to session-kickoff.md
+- Cross-hub dependency asymmetry accepted (66 refs, style choice)
+- Orphan Prisma models accepted (18+ dead code, backlog item)
+
+### Test Result Files
+
+- [test-1-code-to-doc-ground-truth.md](test-results/test-1-code-to-doc-ground-truth.md)
+- [test-2-cross-hub-consistency.md](test-results/test-2-cross-hub-consistency.md)
+- [test-3-prisma-schema-source-of-truth.md](test-results/test-3-prisma-schema-source-of-truth.md)
+- [test-4-endpoint-count-verification.md](test-results/test-4-endpoint-count-verification.md)
+- [test-5-frontend-route-to-hub-mapping.md](test-results/test-5-frontend-route-to-hub-mapping.md)
+- [test-6-task-issue-deduplication.md](test-results/test-6-task-issue-deduplication.md)
+- [test-7-index-file-accuracy.md](test-results/test-7-index-file-accuracy.md)

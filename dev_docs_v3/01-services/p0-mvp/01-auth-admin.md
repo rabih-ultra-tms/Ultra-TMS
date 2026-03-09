@@ -374,6 +374,42 @@ AuditLog {
 
 **Note:** AuditLog does NOT have `before`/`after` Json snapshot fields. It has `category`, `severity`, `description`, and `metadata` instead. Has `updatedAt` and `deletedAt` — immutability is NOT enforced at schema level.
 
+### Session (12 scalar fields) (Added post-verification)
+
+```
+Session {
+  id               String (UUID, PK)
+  userId           String (FK → User)
+  refreshTokenHash String @db.VarChar(255)
+  userAgent        String?
+  ipAddress        String? @db.VarChar(45)
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  createdAt        DateTime
+  externalId       String?
+  sourceSystem     String?
+  tenantId         String? (FK → Tenant)
+  updatedAt        DateTime?
+}
+```
+
+### PasswordResetToken (10 scalar fields) (Added post-verification)
+
+```
+PasswordResetToken {
+  id           String (UUID, PK)
+  userId       String (FK → User)
+  tokenHash    String @db.VarChar(255)
+  expiresAt    DateTime
+  usedAt       DateTime?
+  createdAt    DateTime
+  externalId   String?
+  sourceSystem String?
+  tenantId     String?
+  updatedAt    DateTime?
+}
+```
+
 ---
 
 ## 9. Validation Rules

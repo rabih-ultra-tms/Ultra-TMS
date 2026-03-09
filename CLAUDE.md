@@ -9,7 +9,7 @@
 **Repo:** `rabih-ultra-tms/Ultra-TMS` | Contributor: `primovera12`
 **MVP Focus:** 8 services, ~30 screens, 16-week timeline (not 38 services / 362 screens)
 
-## Current State (as of 2026-03-07)
+## Current State (as of 2026-03-09)
 
 **Overall Score: 7.0/10 (B-)** — Strong backend, frontend much further along than originally documented.
 
@@ -18,14 +18,27 @@
 | Architecture & Infra | B+ | Solid monorepo, modern stack, well-structured modules |
 | Code Quality | C+ | Some bugs remain, 858-line monoliths, 8.7% frontend test coverage |
 | Design Quality | C | Improved — Commission module is 8.5/10 model. Some pages still have hardcoded colors. |
-| Planning & Docs | A | 504 doc files, 89 screen specs with 15-section detail |
+| Planning & Docs | A+ | **Documentation fully audited and verified.** 39 PST audits, 37 hub corrections, 7 verification tests, 10-round tribunal. |
 | Industry Readiness | C | TMS Core frontend exists (12 pages). Most services have frontend pages built. |
 
 **What works:** Auth, CRM (15 pages), Sales (Load Planner 9/10), TMS Core (12 pages), Carriers (6 pages + 17 components), Accounting (10 pages), Commission (11 pages, model quality), Load Board (4 pages)
-**Backend services with frontend wired up:** LoadsService, OrdersService, RateConfirmationService, Check Calls, dispatch — all have corresponding frontend pages and hooks
-**What needs QA:** Runtime verification of all routes (QS-008), dashboard endpoint (QS-003)
+**Backend:** 1,230 endpoints across 33 modules (verified by grep), 260 Prisma models, 114 enums
+**What needs QA:** Runtime verification of all routes (QS-008)
 
-Reviews: `dev_docs/Claude-review-v1/` (37 files) | `dev_docs/gemini-review-v2/` (2 files — corrects Claude's backend assessment)
+### Documentation Audit (Complete — 2026-03-09)
+
+| Phase | What | Result |
+|-------|------|--------|
+| Per-Service Tribunal | 39 services audited against actual code | 37 MODIFY, 1 CONFIRM, 1 READY |
+| Hub Corrections | 37 hub files rewritten from PST findings | 7 sessions, 37/37 done |
+| Verification Tests | 7 automated tests (ground truth, Prisma schema, endpoints, routes, consistency, tasks, indexes) | Endpoint accuracy 99.5%, model names 99.3% |
+| Post-Verification Fixes | 3 phases of targeted corrections from test findings | 16 missing models added, consumer lists fixed, counts corrected |
+| 10-Round Tribunal | Adversarial review with 10 expert personas | Completed |
+
+**Documentation score: 4.5/10 → 9.5/10** — Hub files are now code-verified, not spec-derived.
+**Key files:** `dev_docs_v3/05-audit/HUB-CORRECTION-PROGRESS.md` (tracker), `dev_docs_v3/05-audit/POST-VERIFICATION-FIXES.md` (fix plan), `dev_docs_v3/05-audit/test-results/` (7 test reports)
+
+Reviews: `dev_docs/Claude-review-v1/` (37 files) | `dev_docs/gemini-review-v2/` (2 files) | `dev_docs_v3/05-audit/tribunal/per-service/` (39 PST files)
 
 ## UI Strategy: Rebuild from Design Specs
 
@@ -71,19 +84,30 @@ All other services (Compliance, Safety, Fleet, Warehousing, etc.) are **future �
 | JWT logged to console | `admin/layout.tsx` (10 console.logs) | Security vulnerability |
 | localStorage tokens | `lib/api/client.ts:59,77` | Contradicts XSS-safe cookie policy |
 | `window.confirm()` x7 | carriers, load-history, quote-history, truck-types | Should use ConfirmDialog |
-| QS-003 dashboard endpoint | Backend controller | Accounting dashboard needs this |
+| QS-003 dashboard endpoint | Backend controller | Accounting dashboard — EXISTS per PST-07, needs runtime verify |
 
-**Previously listed — now resolved (2026-03-07 audit):**
-- ~~Carrier detail 404~~ — `carriers/[id]/page.tsx` EXISTS (7/10, tabbed detail)
-- ~~Load history detail 404~~ — `load-history/[id]/page.tsx` EXISTS (5/10)
-- ~~5 sidebar links to 404~~ — Most now route to existing pages (accounting, commissions, load-board)
-- ~~No search debounce x3~~ — Carriers page HAS debounce (3 refs found)
+**P0 Security (from tribunal, cross-cutting):**
 
-Full inventory: `dev_docs/Claude-review-v1/01-code-review/05-bug-inventory.md` (29 bugs total)
+| Bug | Scope | Impact |
+|-----|-------|--------|
+| Cross-tenant mutations (no tenantId in WHERE) | 9+ services (Auth, CRM, Sales, Accounting, Carriers, Contracts, Agents, Cache, Operations) | Any authenticated user can mutate other tenants' data if UUID known |
+| RolesGuard gaps | 12+ services (any auth user can access admin endpoints) | See `_CROSS-CUTTING-ADDENDUM.md` CCF-017 |
+| Plaintext API keys | EDI (ftpPassword), Rate Intelligence (apiKey), Factoring (apiKey) | Credential exposure |
+| Soft-delete not filtered | 15+ services (deleted records appear in queries) | Data integrity |
+| Cache cross-tenant | 8/20 Cache endpoints accept ops without tenantId | Any user can manipulate other tenants' caches |
+
+**Previously listed — now resolved (confirmed via tribunal 2026-03-09):**
+- ~~Carrier detail 404~~ — EXISTS (7/10, tabbed detail, PST-06 verified)
+- ~~Load history detail 404~~ — EXISTS (5/10, PST-05 verified)
+- ~~5 sidebar links to 404~~ — All route to real pages (PST verified)
+- ~~No search debounce~~ — Carriers page HAS debounce (PST-06 verified)
+- ~~QS-003 not built~~ — EXISTS per PST-07 (needs runtime verify)
+
+Full inventory: `dev_docs_v3/05-audit/tribunal/per-service/_CROSS-CUTTING-ADDENDUM.md` (37 systemic findings)
 
 ## Starting Any Work Session
 
-> **Active source of truth: `dev_docs_v3/`** (updated 2026-03-07 — covers ALL 38 services)
+> **Active source of truth: `dev_docs_v3/`** (audited + verified 2026-03-09 — covers ALL 39 services)
 
 1. **Read the service hub file** → `dev_docs_v3/01-services/p0-mvp/{service}.md` — single source of truth
 2. Read `dev_docs_v3/STATUS.md` → find your specific task and check assignments

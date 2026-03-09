@@ -1,4 +1,4 @@
-# Service Index — All 38 Services
+# Service Index — All 39 Services
 
 > **Active docs:** `dev_docs_v3/01-services/` — read/write
 > **Historical refs:** `dev_docs/02-services/` (definitions) | `dev_docs_v2/03-services/` (v2 hubs)
@@ -6,7 +6,7 @@
 
 ---
 
-## P0: MVP Services (10 services — 16-week sprint)
+## P0: MVP Services (11 services — 16-week sprint)
 
 | # | Service | Hub File | Backend | Frontend | Tests | Health | Priority |
 |---|---------|----------|---------|----------|-------|--------|----------|
@@ -20,6 +20,7 @@
 | 08 | Commission | [08-commission.md](p0-mvp/08-commission.md) | Production (backend) | Not Built | None | D 3/10 | P0-Medium |
 | 09 | Load Board | [09-load-board.md](p0-mvp/09-load-board.md) | Partial (backend stub) | Not Built | None | D 2/10 | P0-Medium |
 | 13 | Customer Portal | [13-customer-portal.md](p0-mvp/13-customer-portal.md) | Partial (7 controllers) | Not Built | None | D 2/10 | P0-High |
+| 39 | Command Center | [39-command-center.md](p0-mvp/39-command-center.md) | Not Built | Not Built | None | — | P0-High |
 
 ---
 

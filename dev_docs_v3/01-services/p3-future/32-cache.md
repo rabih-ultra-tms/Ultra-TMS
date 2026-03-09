@@ -18,7 +18,7 @@
 | **Last Verified** | 2026-03-09 |
 | **Backend** | Partial — 4 controllers, 20 endpoints, 8 services, ~836 LOC in `apps/api/src/modules/cache/` |
 | **Frontend** | Not Built — no pages, no components, no hooks |
-| **Tests** | Partial — 8 spec files, 38 tests, ~676 LOC |
+| **Tests** | Partial — 8 spec files, 40 tests, ~676 LOC |
 | **Scope** | Hybrid Prisma+Redis cache management; configuration, stats, locks, and rate limits persisted in Prisma; actual cache ops via Redis |
 | **Active Sprint** | None — P3 Future |
 
@@ -37,7 +37,7 @@
 | Frontend Pages | Not Built | |
 | React Hooks | Not Built | |
 | Components | Not Built | |
-| Tests | Partial | 8 spec files, 38 tests (~676 LOC): cache-config, invalidation, distributed-lock, cache-management, rate-limit.guard, rate-limit.service, cache-stats, cache-warmer |
+| Tests | Partial | 8 spec files, 40 tests (~676 LOC): cache-config, invalidation, distributed-lock, cache-management, rate-limit.guard, rate-limit.service, cache-stats, cache-warmer |
 
 ---
 
