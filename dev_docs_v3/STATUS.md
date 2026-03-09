@@ -33,7 +33,7 @@
 | ID | Task | Effort | Priority | Assignee | Status |
 |----|------|--------|----------|----------|--------|
 | QS-001 | WebSocket Gateway (/notifications only) | L | P0 | Claude Code | **DONE** (2026-03-09) |
-| QS-002 | Soft Delete Migration (Order, Quote, Invoice, Settlement, Payment) | M | P0 | Claude Code | planned |
+| QS-002 | Soft Delete Migration (Order, Quote, Invoice, Settlement, Payment) | M | P0 | Claude Code | **DONE** (2026-03-09) |
 | QS-003 | Accounting Dashboard Endpoint | M | P1 | Claude Code | planned |
 | QS-004 | CSA Scores Endpoint | S | P1 | Claude Code | planned |
 | QS-005 | Profile Page (currently 0/10 stub) | L | P1 | Claude Code | planned |

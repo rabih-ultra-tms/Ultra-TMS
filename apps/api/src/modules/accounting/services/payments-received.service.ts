@@ -228,8 +228,8 @@ export class PaymentsReceivedService {
     // Reverse all applications in a transaction
     return this.prisma.$transaction(async (tx) => {
       for (const application of payment.applications) {
-        const invoice = await tx.invoice.findUnique({
-          where: { id: application.invoiceId },
+        const invoice = await tx.invoice.findFirst({
+          where: { id: application.invoiceId, deletedAt: null },
         });
 
         if (invoice) {

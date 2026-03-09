@@ -1,8 +1,8 @@
 # QS-002: Soft Delete Migration
 
-**Priority:** P1
-**Effort:** M (2-4 hours)
-**Status:** planned
+**Priority:** P0
+**Effort:** S (was M — most work already done)
+**Status:** **DONE** (2026-03-09)
 **Assigned:** Claude Code
 
 ---
@@ -10,43 +10,41 @@
 ## Context Header (Read These First)
 
 1. `apps/api/prisma/schema.prisma` — Find Order, Quote, Invoice, Settlement, PaymentMade, PaymentReceived models
-2. `apps/api/src/modules/operations/orders.service.ts` — OrdersService delete method (may do hard delete)
-3. `apps/api/src/modules/accounting/invoices.service.ts` — InvoicesService delete method
+2. `apps/api/src/modules/sales/quotes.service.ts` — QuotesService generateQuoteNumber (had gap)
+3. `apps/api/src/modules/accounting/services/payments-received.service.ts` — markBounced (had gap)
 4. `dev_docs_v3/00-foundations/domain-rules.md` — 7-year financial data retention rule
 
 ---
 
 ## Objective
 
-Add `deletedAt DateTime?` field to 5 entities that currently lack soft delete. Create Prisma migration. Update service delete methods to set `deletedAt` instead of using `prisma.entity.delete()`. Update all find queries to filter `deletedAt: null`.
+Verify all 6 entities have `deletedAt DateTime?` in schema, all services use soft delete, and all queries filter `deletedAt: null`. Fix any gaps.
 
 ---
 
-## Entities Missing Soft Delete
+## Resolution Notes (2026-03-09)
 
-| Entity | Model | Risk of Missing |
-|--------|-------|----------------|
-| Order | `Order` | Orders permanently deleted — breaks order history |
-| Quote | `Quote` | Quotes permanently deleted — breaks quote history |
-| Invoice | `Invoice` | Financial audit trail broken — compliance risk |
-| Settlement | `Settlement` | Financial audit trail broken — compliance risk |
-| PaymentMade | `PaymentMade` | Payment records lost |
-| PaymentReceived | `PaymentReceived` | Payment records lost |
+**Schema:** All 6 models already had `deletedAt DateTime?` — no migration needed.
+
+**Services:** All 6 services already used soft delete patterns (set `deletedAt` instead of hard delete). Only 2 minor query gaps found and fixed:
+
+| Gap | File | Fix |
+|-----|------|-----|
+| `generateQuoteNumber()` query missing `deletedAt: null` | `quotes.service.ts:22` | Added `deletedAt: null` to where clause |
+| `markBounced()` invoice lookup missing `deletedAt: null` | `payments-received.service.ts:231` | Changed `findUnique` to `findFirst` with `deletedAt: null` |
+
+**Hard deletes (justified):** Orders and Quotes hard-delete child records (Stop, QuoteStop) during updates due to `@@unique` constraints on `[orderId, stopSequence]`. These are intentional and documented.
+
+**Prisma tenant extension (QS-014):** Exists at `prisma-tenant.extension.ts` and auto-injects `deletedAt: null` into reads, but no services use `forTenant()` yet. Manual filters are correct across all 6 services.
 
 ---
 
-## File Plan
+## File Plan (Actual Changes)
 
 | File | Change |
 |------|--------|
-| `apps/api/prisma/schema.prisma` | Add `deletedAt DateTime?` to 6 models |
-| `apps/api/prisma/migrations/YYYYMMDD_add_soft_delete/migration.sql` | Auto-generated migration |
-| `apps/api/src/modules/operations/orders.service.ts` | Replace `prisma.order.delete()` with `update({data: {deletedAt: new Date()}})` + add `deletedAt: null` to all findMany |
-| `apps/api/src/modules/operations/loads.service.ts` | Add `deletedAt: null` filter (verify if already has soft delete) |
-| `apps/api/src/modules/sales/quotes.service.ts` | Same pattern as orders |
-| `apps/api/src/modules/accounting/invoices.service.ts` | Same pattern |
-| `apps/api/src/modules/accounting/settlements.service.ts` | Same pattern |
-| `apps/api/src/modules/accounting/payments.service.ts` | Same pattern |
+| `apps/api/src/modules/sales/quotes.service.ts` | Added `deletedAt: null` to `generateQuoteNumber()` findFirst query |
+| `apps/api/src/modules/accounting/services/payments-received.service.ts` | Changed `findUnique` to `findFirst` with `deletedAt: null` in `markBounced()` |
 
 ---
 

@@ -21,6 +21,7 @@ export class QuotesService {
     const lastQuote = await this.prisma.quote.findFirst({
       where: {
         tenantId,
+        deletedAt: null,
         quoteNumber: {
           startsWith: `Q-${yearMonth}-`,
         },
