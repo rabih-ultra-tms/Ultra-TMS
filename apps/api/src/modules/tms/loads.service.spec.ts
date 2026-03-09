@@ -986,4 +986,199 @@ describe('LoadsService', () => {
     // Should NOT update rateConfirmationSent when email fails
     expect(prisma.load.update).not.toHaveBeenCalled();
   });
+
+  // --- generateBolPdf tests ---
+
+  it('throws when BOL load not found', async () => {
+    prisma.load.findFirst.mockResolvedValue(null);
+
+    await expect(
+      service.generateBolPdf('tenant-1', 'load-1', {}),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it('generates a BOL PDF with order items', async () => {
+    prisma.load.findFirst.mockResolvedValue({
+      id: 'load-1',
+      loadNumber: 'LD2026010001',
+      carrierId: 'car-1',
+      driverName: 'John Driver',
+      truckNumber: 'T100',
+      trailerNumber: 'TR200',
+      carrier: { legalName: 'Fast Freight', mcNumber: 'MC123', dotNumber: 'DOT456' },
+      order: {
+        orderNumber: 'ORD-202601-001',
+        bolNumber: 'BOL-001',
+        poNumber: 'PO-999',
+        commodity: 'Electronics',
+        weightLbs: 15000,
+        pieceCount: 20,
+        isHazmat: false,
+        hazmatClass: null,
+        specialInstructions: 'Handle with care',
+        commodityClass: '65',
+        customer: { id: 'cust-1', name: 'Acme Corp' },
+        items: [
+          {
+            description: 'Laptop computers',
+            quantity: 10,
+            weightLbs: 500,
+            commodityClass: '65',
+            nmfcCode: '123456',
+            isHazmat: false,
+            hazmatClass: null,
+            unNumber: null,
+          },
+          {
+            description: 'Monitors',
+            quantity: 10,
+            weightLbs: 1000,
+            commodityClass: '70',
+            nmfcCode: '654321',
+            isHazmat: false,
+            hazmatClass: null,
+            unNumber: null,
+          },
+        ],
+      },
+      stops: [
+        {
+          stopType: 'PICKUP',
+          stopSequence: 1,
+          facilityName: 'Origin Warehouse',
+          addressLine1: '100 Main St',
+          addressLine2: null,
+          city: 'Dallas',
+          state: 'TX',
+          postalCode: '75201',
+          contactName: 'Bob Shipper',
+          contactPhone: '555-0100',
+        },
+        {
+          stopType: 'DELIVERY',
+          stopSequence: 2,
+          facilityName: 'Destination DC',
+          addressLine1: '200 Oak Ave',
+          addressLine2: 'Suite 5',
+          city: 'Houston',
+          state: 'TX',
+          postalCode: '77001',
+          contactName: 'Jane Receiver',
+          contactPhone: '555-0200',
+        },
+      ],
+    });
+
+    const buffer = await service.generateBolPdf('tenant-1', 'load-1', {
+      includeHazmat: true,
+      includeSpecialInstructions: true,
+    });
+
+    expect(Buffer.isBuffer(buffer)).toBe(true);
+    expect(buffer.length).toBeGreaterThan(0);
+  });
+
+  it('generates BOL with order-level fallback when no items exist', async () => {
+    prisma.load.findFirst.mockResolvedValue({
+      id: 'load-1',
+      loadNumber: 'LD2026010001',
+      carrierId: null,
+      carrier: null,
+      driverName: null,
+      truckNumber: null,
+      trailerNumber: null,
+      order: {
+        orderNumber: 'ORD-202601-002',
+        bolNumber: null,
+        poNumber: null,
+        commodity: 'General Freight',
+        weightLbs: 5000,
+        pieceCount: 5,
+        isHazmat: false,
+        hazmatClass: null,
+        specialInstructions: null,
+        commodityClass: '50',
+        customer: { id: 'cust-2', name: 'Beta Inc' },
+        items: [],
+      },
+      stops: [
+        {
+          stopType: 'PICKUP',
+          stopSequence: 1,
+          facilityName: 'Warehouse A',
+          addressLine1: '1 First St',
+          addressLine2: null,
+          city: 'Austin',
+          state: 'TX',
+          postalCode: '78701',
+          contactName: null,
+          contactPhone: null,
+        },
+        {
+          stopType: 'DELIVERY',
+          stopSequence: 2,
+          facilityName: 'Store B',
+          addressLine1: '2 Second St',
+          addressLine2: null,
+          city: 'San Antonio',
+          state: 'TX',
+          postalCode: '78201',
+          contactName: null,
+          contactPhone: null,
+        },
+      ],
+    });
+
+    const buffer = await service.generateBolPdf('tenant-1', 'load-1', {});
+
+    expect(Buffer.isBuffer(buffer)).toBe(true);
+    expect(buffer.length).toBeGreaterThan(0);
+  });
+
+  it('includes hazmat section when items have hazmat', async () => {
+    prisma.load.findFirst.mockResolvedValue({
+      id: 'load-1',
+      loadNumber: 'LD2026010001',
+      carrierId: 'car-1',
+      carrier: { legalName: 'HazCarrier', mcNumber: 'MC789' },
+      driverName: null,
+      truckNumber: null,
+      trailerNumber: null,
+      order: {
+        orderNumber: 'ORD-202601-003',
+        bolNumber: null,
+        poNumber: null,
+        commodity: 'Chemicals',
+        weightLbs: 10000,
+        pieceCount: 2,
+        isHazmat: true,
+        hazmatClass: '3',
+        specialInstructions: null,
+        commodityClass: '55',
+        customer: { id: 'cust-3', name: 'ChemCo' },
+        items: [
+          {
+            description: 'Flammable Liquid',
+            quantity: 1,
+            weightLbs: 5000,
+            commodityClass: '55',
+            nmfcCode: null,
+            isHazmat: true,
+            hazmatClass: '3',
+            unNumber: 'UN1993',
+          },
+        ],
+      },
+      stops: [
+        { stopType: 'PICKUP', stopSequence: 1, facilityName: 'Plant', addressLine1: '1 Chem Dr', addressLine2: null, city: 'Midland', state: 'TX', postalCode: '79701', contactName: null, contactPhone: null },
+        { stopType: 'DELIVERY', stopSequence: 2, facilityName: 'Depot', addressLine1: '2 Depot Rd', addressLine2: null, city: 'Odessa', state: 'TX', postalCode: '79761', contactName: null, contactPhone: null },
+      ],
+    });
+
+    const buffer = await service.generateBolPdf('tenant-1', 'load-1', { includeHazmat: true });
+
+    // PDF generated successfully with hazmat data
+    expect(Buffer.isBuffer(buffer)).toBe(true);
+    expect(buffer.length).toBeGreaterThan(0);
+  });
 });

@@ -43,8 +43,8 @@
 | QS-009 | Delete .bak Directories | S | P2 | Codex/Gemini | planned |
 | QS-010 | Triage 339 TODOs | M | P2 | Codex/Gemini | planned |
 | QS-011 | Customer Portal — Basic 4-Page MVP | L | P0 | Claude Code | planned |
-| QS-012 | Rate Confirmation PDF Generation | M | P0 | Claude Code | planned |
-| QS-013 | BOL PDF Generation | M | P0 | Claude Code | planned |
+| QS-012 | Rate Confirmation PDF Generation | M | P0 | Claude Code | **DONE** (2026-03-09) |
+| QS-013 | BOL PDF Generation | M | P0 | Claude Code | **DONE** (2026-03-09) |
 | QS-014 | Prisma Client Extension for Auto tenantId | L | P0 | Claude Code | **DONE** (2026-03-09) |
 | QS-015 | Financial Calculation Tests (10 tests) | L | P0 | Claude Code | planned |
 | QS-016 | Tenant Isolation Tests (5 tests) | M | P0 | Claude Code | planned |
@@ -105,7 +105,6 @@
 | BUILD-001 | Accounting Dashboard Screen | QS-003 | Endpoint must exist before building screen |
 | TMS-001/002 | TMS Core screens | QS-008 | Runtime verification determines what needs to be fixed |
 | TMS-003/004 | Dispatch + Tracking | QS-001 | WebSocket must exist before real-time screens work |
-| QS-013 | BOL PDF Generation | QS-012 | Shared PDF engine must exist first |
 | QS-016 | Tenant Isolation Tests | QS-014 (preferred) | Prisma Client Extension should exist for cleaner test setup |
 
 **No hard blockers in Quality Sprint** — QS-001 through QS-009 can start immediately in parallel.

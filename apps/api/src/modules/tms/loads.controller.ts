@@ -19,7 +19,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { LoadsService } from './loads.service';
-import { CreateLoadDto, UpdateLoadDto, AssignCarrierDto, UpdateLoadLocationDto, LoadQueryDto, CreateCheckCallDto, RateConfirmationOptionsDto, PaginationDto } from './dto';
+import { CreateLoadDto, UpdateLoadDto, AssignCarrierDto, UpdateLoadLocationDto, LoadQueryDto, CreateCheckCallDto, RateConfirmationOptionsDto, BolOptionsDto, PaginationDto } from './dto';
 import { Roles } from '../../common/decorators';
 import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
 
@@ -256,6 +256,29 @@ export class LoadsController {
     @Body() options: RateConfirmationOptionsDto,
   ) {
     return this.loadsService.sendRateConfirmation(tenantId, id, options, userId);
+  }
+
+  @Post(':id/bol')
+  @ApiOperation({ summary: 'Generate Bill of Lading PDF' })
+  @ApiParam({ name: 'id', description: 'Load ID' })
+  @ApiStandardResponse('BOL PDF')
+  @ApiErrorResponses()
+  @Roles('ADMIN', 'DISPATCHER')
+  async generateBol(
+    @CurrentTenant() tenantId: string,
+    @Param('id') id: string,
+    @Body() options: BolOptionsDto,
+    @Res() res: Response,
+  ) {
+    const pdfBuffer = await this.loadsService.generateBolPdf(tenantId, id, options);
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="bol-${id}.pdf"`,
+      'Content-Length': pdfBuffer.length,
+    });
+
+    res.send(pdfBuffer);
   }
 
   @Delete(':id')

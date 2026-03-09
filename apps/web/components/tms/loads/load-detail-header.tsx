@@ -11,11 +11,12 @@ import {
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Load, LoadStatus } from "@/types/loads";
-import { ChevronDown, Edit, Printer, Copy, Mail, Send } from "lucide-react";
+import { ChevronDown, Edit, Printer, Copy, Mail, Send, FileText, Download, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LoadStatusBadge } from "./load-status-badge";
 import { EmailPreviewDialog, EmailType } from "@/components/tms/emails/email-preview-dialog";
+import { useBol } from "@/lib/hooks/tms/use-bol";
 
 interface LoadDetailHeaderProps {
     load: Load;
@@ -69,6 +70,8 @@ export function LoadDetailHeader({ load }: LoadDetailHeaderProps) {
     const router = useRouter();
     const [emailDialogOpen, setEmailDialogOpen] = useState(false);
     const [activeEmailType, setActiveEmailType] = useState<EmailType>("rate_confirmation");
+
+    const { generate: generateBol, download: downloadBol, isGenerating: isBolGenerating, hasGenerated: hasBol } = useBol(load.id);
 
     const availableEmails = getAvailableEmails(load);
 
@@ -157,6 +160,17 @@ export function LoadDetailHeader({ load }: LoadDetailHeaderProps) {
                             <DropdownMenuItem onClick={() => window.print()}>
                                 <Printer className="h-4 w-4 mr-2" /> Print Summary
                             </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuLabel>Documents</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => generateBol({})} disabled={isBolGenerating}>
+                                {isBolGenerating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
+                                {isBolGenerating ? "Generating BOL..." : "Generate BOL"}
+                            </DropdownMenuItem>
+                            {hasBol && (
+                                <DropdownMenuItem onClick={downloadBol}>
+                                    <Download className="h-4 w-4 mr-2" /> Download BOL
+                                </DropdownMenuItem>
+                            )}
                             <DropdownMenuSeparator />
                             <DropdownMenuItem className="text-red-600" disabled>
                                 Delete Load

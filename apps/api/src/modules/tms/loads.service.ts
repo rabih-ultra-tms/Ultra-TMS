@@ -3,7 +3,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../prisma.service';
 import { EmailService } from '../communication/email.service';
 import PDFDocument from 'pdfkit';
-import { CreateLoadDto, UpdateLoadDto, AssignCarrierDto, UpdateLoadLocationDto, LoadQueryDto, CreateCheckCallDto, PaginationDto, RateConfirmationOptionsDto } from './dto';
+import { CreateLoadDto, UpdateLoadDto, AssignCarrierDto, UpdateLoadLocationDto, LoadQueryDto, CreateCheckCallDto, PaginationDto, RateConfirmationOptionsDto, BolOptionsDto } from './dto';
 
 @Injectable()
 export class LoadsService {
@@ -667,6 +667,253 @@ export class LoadsService {
       logId: result.logId,
       error: result.error,
     };
+  }
+
+  async generateBolPdf(
+    tenantId: string,
+    loadId: string,
+    options: BolOptionsDto,
+  ): Promise<Buffer> {
+    const load = await this.prisma.load.findFirst({
+      where: { id: loadId, tenantId, deletedAt: null },
+      include: {
+        order: {
+          include: {
+            customer: true,
+            items: { where: { deletedAt: null } },
+          },
+        },
+        carrier: true,
+        stops: { where: { deletedAt: null }, orderBy: { stopSequence: 'asc' } },
+      },
+    });
+
+    if (!load) {
+      throw new NotFoundException('Load not found');
+    }
+
+    const stops = load.stops ?? [];
+    const pickupStops = stops.filter((s) => s.stopType === 'PICKUP');
+    const deliveryStops = stops.filter((s) => s.stopType === 'DELIVERY');
+    const order = load.order;
+    const items = order?.items ?? [];
+
+    const doc = new PDFDocument({ margin: 40, size: 'LETTER' });
+    const chunks: Buffer[] = [];
+    doc.on('data', (chunk: Buffer) => chunks.push(chunk));
+
+    // ── Header ──
+    doc.fontSize(16).font('Helvetica-Bold').text('BILL OF LADING', { align: 'center' });
+    doc.fontSize(9).font('Helvetica').text('STRAIGHT BILL OF LADING — SHORT FORM', { align: 'center' });
+    doc.moveDown(0.5);
+
+    // Reference numbers
+    const refY = doc.y;
+    doc.fontSize(9);
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, 40, refY);
+    doc.text(`Load #: ${load.loadNumber}`, 250, refY);
+    if (order?.bolNumber) doc.text(`BOL #: ${order.bolNumber}`, 400, refY);
+    doc.y = refY + 15;
+    if (order?.orderNumber) doc.text(`Order #: ${order.orderNumber}`, 40);
+    if (order?.poNumber) doc.text(`PO #: ${order.poNumber}`, 250);
+    doc.moveDown(0.5);
+
+    // Divider
+    doc.moveTo(40, doc.y).lineTo(572, doc.y).stroke();
+    doc.moveDown(0.5);
+
+    // ── Shipper / Consignee side-by-side ──
+    const sectionTop = doc.y;
+
+    // Shipper (left)
+    doc.fontSize(10).font('Helvetica-Bold').text('SHIPPER', 40, sectionTop);
+    doc.font('Helvetica').fontSize(9);
+    const shipper = pickupStops[0];
+    if (shipper) {
+      doc.text(shipper.facilityName || '', 40, sectionTop + 14);
+      doc.text(shipper.addressLine1 || '', 40);
+      if (shipper.addressLine2) doc.text(shipper.addressLine2, 40);
+      doc.text(`${shipper.city || ''}, ${shipper.state || ''} ${shipper.postalCode || ''}`, 40);
+      if (shipper.contactName) doc.text(`Contact: ${shipper.contactName}`, 40);
+      if (shipper.contactPhone) doc.text(`Phone: ${shipper.contactPhone}`, 40);
+    }
+
+    // Consignee (right)
+    doc.fontSize(10).font('Helvetica-Bold').text('CONSIGNEE', 310, sectionTop);
+    doc.font('Helvetica').fontSize(9);
+    const consignee = deliveryStops[0];
+    if (consignee) {
+      doc.text(consignee.facilityName || '', 310, sectionTop + 14);
+      doc.text(consignee.addressLine1 || '', 310);
+      if (consignee.addressLine2) doc.text(consignee.addressLine2, 310);
+      doc.text(`${consignee.city || ''}, ${consignee.state || ''} ${consignee.postalCode || ''}`, 310);
+      if (consignee.contactName) doc.text(`Contact: ${consignee.contactName}`, 310);
+      if (consignee.contactPhone) doc.text(`Phone: ${consignee.contactPhone}`, 310);
+    }
+
+    // Move past both columns
+    doc.y = Math.max(doc.y, sectionTop + 90);
+    doc.moveDown(0.5);
+    doc.moveTo(40, doc.y).lineTo(572, doc.y).stroke();
+    doc.moveDown(0.5);
+
+    // ── Carrier info ──
+    doc.fontSize(10).font('Helvetica-Bold').text('CARRIER');
+    doc.font('Helvetica').fontSize(9);
+    doc.text(`Name: ${load.carrier?.legalName || 'N/A'}`);
+    if (load.carrier?.mcNumber) doc.text(`MC #: ${load.carrier.mcNumber}`);
+    if (load.carrier?.dotNumber) doc.text(`DOT #: ${load.carrier.dotNumber}`);
+    if (load.driverName) doc.text(`Driver: ${load.driverName}`);
+    if (load.truckNumber) doc.text(`Truck #: ${load.truckNumber}`);
+    if (load.trailerNumber) doc.text(`Trailer #: ${load.trailerNumber}`);
+    doc.moveDown(0.5);
+    doc.moveTo(40, doc.y).lineTo(572, doc.y).stroke();
+    doc.moveDown(0.5);
+
+    // ── Commodity table ──
+    doc.fontSize(10).font('Helvetica-Bold').text('COMMODITY DESCRIPTION');
+    doc.moveDown(0.3);
+
+    // Table header
+    const tableX = 40;
+    const colWidths = { qty: 50, desc: 200, weight: 70, class: 60, nmfc: 70, hazmat: 82 };
+    const headerY = doc.y;
+    doc.fontSize(8).font('Helvetica-Bold');
+    let cx = tableX;
+    doc.text('QTY', cx, headerY, { width: colWidths.qty });
+    cx += colWidths.qty;
+    doc.text('DESCRIPTION', cx, headerY, { width: colWidths.desc });
+    cx += colWidths.desc;
+    doc.text('WEIGHT (LBS)', cx, headerY, { width: colWidths.weight });
+    cx += colWidths.weight;
+    doc.text('CLASS', cx, headerY, { width: colWidths.class });
+    cx += colWidths.class;
+    doc.text('NMFC #', cx, headerY, { width: colWidths.nmfc });
+    cx += colWidths.nmfc;
+    doc.text('HAZMAT', cx, headerY, { width: colWidths.hazmat });
+
+    doc.moveTo(tableX, headerY + 12).lineTo(572, headerY + 12).stroke();
+
+    // Table rows
+    doc.font('Helvetica').fontSize(8);
+    let rowY = headerY + 16;
+
+    if (items.length > 0) {
+      for (const item of items) {
+        cx = tableX;
+        doc.text(String(item.quantity ?? 1), cx, rowY, { width: colWidths.qty });
+        cx += colWidths.qty;
+        doc.text(item.description || '', cx, rowY, { width: colWidths.desc });
+        cx += colWidths.desc;
+        doc.text(item.weightLbs ? Number(item.weightLbs).toFixed(0) : '', cx, rowY, { width: colWidths.weight });
+        cx += colWidths.weight;
+        doc.text(item.commodityClass || '', cx, rowY, { width: colWidths.class });
+        cx += colWidths.class;
+        doc.text(item.nmfcCode || '', cx, rowY, { width: colWidths.nmfc });
+        cx += colWidths.nmfc;
+        doc.text(item.isHazmat ? `Yes (${item.hazmatClass || ''})` : 'No', cx, rowY, { width: colWidths.hazmat });
+        rowY += 14;
+      }
+    } else {
+      // Fallback: use order-level commodity data
+      cx = tableX;
+      doc.text(String(order?.pieceCount ?? ''), cx, rowY, { width: colWidths.qty });
+      cx += colWidths.qty;
+      doc.text(order?.commodity || 'General Freight', cx, rowY, { width: colWidths.desc });
+      cx += colWidths.desc;
+      doc.text(order?.weightLbs ? Number(order.weightLbs).toFixed(0) : '', cx, rowY, { width: colWidths.weight });
+      cx += colWidths.weight;
+      doc.text(order?.commodityClass || '', cx, rowY, { width: colWidths.class });
+      cx += colWidths.class;
+      doc.text('', cx, rowY, { width: colWidths.nmfc }); // no NMFC at order level
+      cx += colWidths.nmfc;
+      doc.text(order?.isHazmat ? `Yes (${order.hazmatClass || ''})` : 'No', cx, rowY, { width: colWidths.hazmat });
+      rowY += 14;
+    }
+
+    // Totals row
+    doc.moveTo(tableX, rowY).lineTo(572, rowY).stroke();
+    rowY += 4;
+    const totalWeight = items.length > 0
+      ? items.reduce((sum, i) => sum + Number(i.weightLbs ?? 0) * (i.quantity ?? 1), 0)
+      : Number(order?.weightLbs ?? 0);
+    const totalPieces = items.length > 0
+      ? items.reduce((sum, i) => sum + (i.quantity ?? 1), 0)
+      : (order?.pieceCount ?? 0);
+    doc.font('Helvetica-Bold').fontSize(8);
+    doc.text(`Total: ${totalPieces} pcs`, tableX, rowY, { width: colWidths.qty + colWidths.desc });
+    doc.text(`${totalWeight > 0 ? totalWeight.toFixed(0) : ''} lbs`, tableX + colWidths.qty + colWidths.desc, rowY);
+    doc.y = rowY + 16;
+
+    // ── Hazmat section ──
+    if (options.includeHazmat && (order?.isHazmat || items.some((i) => i.isHazmat))) {
+      doc.moveTo(40, doc.y).lineTo(572, doc.y).stroke();
+      doc.moveDown(0.3);
+      doc.font('Helvetica-Bold').fontSize(10).text('HAZARDOUS MATERIALS');
+      doc.font('Helvetica').fontSize(9);
+      doc.text('This shipment contains hazardous materials as described above.');
+      doc.text('Emergency Contact: [See carrier safety documentation]');
+      if (order?.hazmatClass) doc.text(`Hazmat Class: ${order.hazmatClass}`);
+      const hazItems = items.filter((i) => i.isHazmat);
+      for (const hi of hazItems) {
+        const parts = [`Class: ${hi.hazmatClass || 'N/A'}`];
+        if (hi.unNumber) parts.push(`UN#: ${hi.unNumber}`);
+        doc.text(`  - ${hi.description}: ${parts.join(', ')}`);
+      }
+      doc.moveDown(0.5);
+    }
+
+    // ── Special instructions ──
+    if (options.includeSpecialInstructions && order?.specialInstructions) {
+      doc.moveTo(40, doc.y).lineTo(572, doc.y).stroke();
+      doc.moveDown(0.3);
+      doc.font('Helvetica-Bold').fontSize(10).text('SPECIAL INSTRUCTIONS');
+      doc.font('Helvetica').fontSize(9).text(order.specialInstructions);
+      doc.moveDown(0.5);
+    }
+
+    // ── Additional stops (multi-stop loads) ──
+    if (stops.length > 2) {
+      doc.moveTo(40, doc.y).lineTo(572, doc.y).stroke();
+      doc.moveDown(0.3);
+      doc.font('Helvetica-Bold').fontSize(10).text('ADDITIONAL STOPS');
+      doc.font('Helvetica').fontSize(9);
+      for (let i = 0; i < stops.length; i++) {
+        const stop = stops[i]!;
+        doc.text(
+          `Stop ${i + 1} (${stop.stopType}): ${stop.facilityName || ''} — ${stop.city || ''}, ${stop.state || ''}`,
+        );
+      }
+      doc.moveDown(0.5);
+    }
+
+    // ── Signatures ──
+    doc.moveTo(40, doc.y).lineTo(572, doc.y).stroke();
+    doc.moveDown(0.5);
+    doc.font('Helvetica').fontSize(8);
+    doc.text(
+      'The carrier acknowledges receipt of the above-described commodities in apparent good order, except as noted.',
+      40,
+    );
+    doc.moveDown(1);
+
+    const sigY = doc.y;
+    doc.text('Shipper Signature: _______________________________', 40, sigY);
+    doc.text('Date: _______________', 340, sigY);
+    doc.moveDown(1.5);
+    const sigY2 = doc.y;
+    doc.text('Carrier Signature: _______________________________', 40, sigY2);
+    doc.text('Date: _______________', 340, sigY2);
+    doc.moveDown(1.5);
+    const sigY3 = doc.y;
+    doc.text('Consignee Signature: _____________________________', 40, sigY3);
+    doc.text('Date: _______________', 340, sigY3);
+
+    doc.end();
+
+    return new Promise((resolve) => {
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+    });
   }
 
   async getLoadBoard(tenantId: string, options: {

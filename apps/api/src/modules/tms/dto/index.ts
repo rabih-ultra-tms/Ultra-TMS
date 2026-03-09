@@ -7,6 +7,7 @@ export * from './create-check-call.dto';
 export * from './update-stop.dto';
 export * from './create-order-from-template.dto';
 export * from './rate-confirmation.dto';
+export * from './bol-options.dto';
 export * from './tracking.dto';
 export { UpdateLoadDto, AssignCarrierDto, UpdateLoadLocationDto } from './create-load.dto';
 export {
