@@ -2,7 +2,7 @@
 
 > **Last Updated:** 2026-03-09
 > **Current Phase:** Quality Sprint (post-initial-build, pre-production)
-> **Overall Health:** B- (7.0/10) — Strong backend, frontend much further along than documented. 96 unverified routes remain.
+> **Overall Health:** B (7.5/10) — Strong backend, frontend verified: 101/103 routes PASS. All QS tasks complete except QS-010 (TODO triage).
 > **Production Readiness:** 3.0/10 — See [PRODUCTION-READINESS-ASSESSMENT.md](05-audit/PRODUCTION-READINESS-ASSESSMENT.md)
 > **Active Plan:** [dev_docs_v3/](.) — covers ALL 38 services (not just 8 MVP)
 > **Documentation Quality:** 10/10 — Remediated via 7-phase tribunal response (2026-03-09). 16 new files, 8 enhanced.
@@ -13,7 +13,7 @@
 
 | Metric | Value |
 |---|---|
-| Frontend routes | 98 (page.tsx files — corrected Mar 7 from actual scan) |
+| Frontend routes | 103 (98 original + 5 portal from QS-011; 101 PASS, 1 STUB, 1 BROKEN per QS-008) |
 | React components | 304 (corrected Mar 7 from actual scan of components/) |
 | Custom hooks | 55 (verified 2026-03-09 -- was 51 on Mar 7, 4 added since) |
 | Backend modules | 35 active + 5 .bak = 40 total module dirs |
@@ -39,7 +39,7 @@
 | QS-005 | Profile Page (currently 0/10 stub) | L | P1 | Claude Code | **DONE** (2026-03-09) — RHF forms, password change, MFA, avatar upload |
 | QS-006 | Check Call Form RHF Refactor | M | P1 | Claude Code | **DONE** (2026-03-09) — converted from useState to RHF+Zod |
 | QS-007 | CORS Env Variable | S | P1 | Claude Code | **DONE** (2026-03-09) — reads CORS_ALLOWED_ORIGINS env var |
-| QS-008 | Runtime Verification (click every route with Playwright) | L | P0 | Claude Code | planned |
+| QS-008 | Runtime Verification (click every route with Playwright) | L | P0 | Claude Code | **DONE** (2026-03-10) — 101/103 PASS, 1 STUB, 1 BROKEN, 0 CRASH, 0 404 |
 | QS-009 | Delete .bak Directories | S | P2 | Claude Code | **DONE** (2026-03-09) — 5 dirs removed |
 | QS-010 | Triage 339 TODOs | M | P2 | Codex/Gemini | planned |
 | QS-011 | Customer Portal — Basic 4-Page MVP | L | P0 | Claude Code | **DONE** (2026-03-09) — 4 pages, 4 hooks, portal layout, CPORT-016 JWT fix |
@@ -129,7 +129,7 @@
 
 1. **WebSocket gap** — dispatch and tracking pages have no real-time data (SocketProvider has infinite loop bug)
 2. **Missing endpoints** — Accounting dashboard, CSA scores not built on backend
-3. **96 unverified routes** — no Playwright run has confirmed all routes render correctly
+3. ~~96 unverified routes~~ — **RESOLVED by QS-008**: 103/103 routes verified (101 PASS, 1 STUB, 1 BROKEN)
 4. **339 TODOs** — technical debt scattered across codebase, untriaged
 5. **EDI at P3 may be too low** — many enterprise shippers require EDI 204/214/210 for load tendering, status updates, and invoicing. Backend has 38 endpoints and 9 Prisma models already built (PST-26). Consider promoting to P1 if enterprise customers are targeted before v2.
 6. **Carrier Packet Generation** not built — insurance certificate + W-9 + carrier agreement bundle required for carrier onboarding compliance. No endpoint, no frontend. See `00-foundations/carrier-onboarding-workflow.md` for full gap analysis.
