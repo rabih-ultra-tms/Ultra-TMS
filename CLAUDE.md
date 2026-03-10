@@ -7,7 +7,8 @@
 **Monorepo:** Next.js 16 + React 19 + NestJS 10 + PostgreSQL + Prisma 6 + Redis + Elasticsearch
 **Architecture:** Migration-first, multi-tenant, modular monolith (40 modules)
 **Repo:** `rabih-ultra-tms/Ultra-TMS` | Contributor: `primovera12`
-**MVP Focus:** 8 services, ~30 screens, 16-week timeline (not 38 services / 362 screens)
+**Full Scope:** 39 services, 24 sprints (MP-01–MP-24), 5 phases, 48-week timeline
+**Master Project Plan:** `dev_docs_v3/08-sprints/master-project-plan.md` — SINGLE source of truth for all sprint planning
 
 ## Current State (as of 2026-03-09)
 
@@ -55,24 +56,19 @@ Reviews: `dev_docs/Claude-review-v1/` (37 files) | `dev_docs/gemini-review-v2/` 
 
 **For every other screen:** Build fresh from design spec. Don't patch old code.
 
-## P0 MVP Scope
+## Project Scope — All 39 Services
 
-**Only these 8 services are in scope for the 16-week MVP:**
+**Master Project Plan:** `dev_docs_v3/08-sprints/master-project-plan.md`
 
-| # | Service | Status | Priority |
-|---|---------|--------|----------|
-| 1 | Auth & Admin | 17/20 screens built | QA from spec |
-| 2 | CRM / Customers | 15 pages built | QA + fix BUG-009/010 |
-| 3 | Sales / Quotes + Load Planner | Load Planner PROTECTED (9/10), quotes basic | Rebuild quotes, PROTECT Load Planner |
-| 4 | TMS Core (Orders, Loads, Dispatch) | 12 pages built (7.4/10) | QA from spec |
-| 5 | Carrier Management | 6 pages + 17 components built | QA from spec, PROTECT Truck Types |
-| 6 | Accounting (Invoices, Settlements) | 10 pages built (7.9/10) | QA, needs QS-003 endpoint |
-| 7 | Load Board | 4 pages + 10 components built | QA, backend stubs need real logic |
-| 8 | Commission | 11 pages built (8.5/10, model quality) | QA, verify auto-calc trigger |
+| Phase | Sprints | Weeks | Services | Gate |
+|-------|---------|-------|----------|------|
+| Phase 1: MVP Completion | MP-01–06 | 1-12 | 11 P0 services (Auth, Dashboard, CRM, Sales, TMS Core, Carriers, Accounting, Commission, Load Board, Customer Portal, Command Center) | G1: MVP Beta |
+| Phase 2: Core Expansion | MP-07–12 | 13-24 | P1 (Documents, Communication, Carrier Portal) + P2 Financial (Claims, Contracts, Agents, Credit, Factoring) | G2: Core Expansion |
+| Phase 3: Platform Services | MP-13–18 | 25-36 | P2 Platform (Analytics, Search, Workflow, Integration Hub) + Command Center Full + Audit + Config | G3: Platform Release |
+| Phase 4: Enterprise | MP-19–22 | 37-44 | P3 (EDI, Safety, HR, Scheduler, Help Desk, Feedback, Rate Intelligence, Cache) | G4: Enterprise Release |
+| Phase 5: Maturity | MP-23–24 | 45-48 | Cross-cutting hardening + GA Launch | G5: General Availability |
 
-All other services (Compliance, Safety, Fleet, Warehousing, etc.) are **future — do not build**.
-
-**16-week phases:** See `dev_docs/Claude-review-v1/00-executive-summary/prioritized-action-plan.md`
+**Current sprint:** MP-01 Security Hardening (30 tasks, STOP-SHIP items)
 
 ## Known Critical Issues
 
@@ -109,10 +105,11 @@ Full inventory: `dev_docs_v3/05-audit/tribunal/per-service/_CROSS-CUTTING-ADDEND
 
 > **Active source of truth: `dev_docs_v3/`** (audited + verified 2026-03-09 — covers ALL 39 services)
 
-1. **Read the service hub file** → `dev_docs_v3/01-services/p0-mvp/{service}.md` — single source of truth
-2. Read `dev_docs_v3/STATUS.md` → find your specific task and check assignments
-3. Read the task file in `dev_docs_v3/03-tasks/sprint-quality/` → detailed acceptance criteria
-4. Maximum 6 files before coding — see `dev_docs_v3/00-foundations/session-kickoff.md`
+1. **Read the Master Project Plan** → `dev_docs_v3/08-sprints/master-project-plan.md` → find your current sprint (MP-XX)
+2. **Read the service hub file** → `dev_docs_v3/01-services/{tier}/{service}.md` — single source of truth
+3. Read `dev_docs_v3/STATUS.md` → find your specific task and check assignments
+4. Read the PST file → `dev_docs_v3/05-audit/tribunal/per-service/PST-XX-{service}.md` → tribunal findings
+5. Maximum 6 files before coding — see `dev_docs_v3/00-foundations/session-kickoff.md`
 
 **Hub files (source of truth):** `dev_docs_v3/01-services/p0-mvp/` — one file per MVP service with everything consolidated.
 **Execution layer:** `dev_docs_v3/` has tasks, audit results, quality gates, and API catalog.
