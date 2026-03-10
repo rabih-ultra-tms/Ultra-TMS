@@ -152,6 +152,24 @@ export function useUpdateOrder() {
     });
 }
 
+export function useDeleteOrder() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (orderId: string) => {
+            await apiClient.delete(`/orders/${orderId}`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: orderKeys.lists() });
+            toast.success('Order deleted');
+        },
+        onError: (error: Error) => {
+            const errorMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || error?.message || 'Failed to delete order';
+            toast.error('Error deleting order', { description: errorMessage });
+        },
+    });
+}
+
 export function useOrderFromQuote(quoteId: string) {
     return useQuery<OrderDetailResponse>({
         queryKey: ['order-from-quote', quoteId],

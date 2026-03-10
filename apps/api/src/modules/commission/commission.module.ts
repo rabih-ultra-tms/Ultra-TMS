@@ -12,6 +12,7 @@ import {
   CommissionPayoutsController,
   CommissionsDashboardController,
 } from './controllers';
+import { CommissionEventsListener } from './listeners/commission-events.listener';
 
 @Module({
   controllers: [
@@ -26,6 +27,7 @@ import {
     CommissionEntriesService,
     CommissionPayoutsService,
     CommissionsDashboardService,
+    CommissionEventsListener,
   ],
   exports: [
     CommissionPlansService,

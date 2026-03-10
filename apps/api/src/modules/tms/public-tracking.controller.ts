@@ -1,5 +1,6 @@
 import { Controller, Get, NotFoundException, Param } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { Public } from '../../common/decorators/public.decorator';
 import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
 import { TrackingService } from './tracking.service';
@@ -11,6 +12,7 @@ export class PublicTrackingController {
   constructor(private readonly trackingService: TrackingService) {}
 
   @Get(':trackingCode')
+  @Throttle({ long: { limit: 30, ttl: 60000 } })
   @ApiOperation({
     summary: 'Get public shipment tracking data (no auth required)',
   })

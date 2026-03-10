@@ -131,12 +131,8 @@ export class TrackingService {
         deletedAt: null,
       },
       select: {
-        id: true,
         loadNumber: true,
         status: true,
-        equipmentType: true,
-        currentLocationLat: true,
-        currentLocationLng: true,
         currentCity: true,
         currentState: true,
         lastTrackingUpdate: true,
@@ -146,31 +142,31 @@ export class TrackingService {
         deliveredAt: true,
         order: {
           select: {
-            orderNumber: true,
-            customer: {
-              select: { name: true },
-            },
             stops: {
               where: { deletedAt: null },
               orderBy: { stopSequence: 'asc' },
               select: {
-                id: true,
                 stopType: true,
                 stopSequence: true,
-                facilityName: true,
                 city: true,
                 state: true,
-                postalCode: true,
                 status: true,
                 appointmentDate: true,
-                appointmentTimeStart: true,
-                appointmentTimeEnd: true,
                 arrivedAt: true,
                 departedAt: true,
-                latitude: true,
-                longitude: true,
               },
             },
+          },
+        },
+        StatusHistory: {
+          where: {
+            entityType: 'LOAD',
+          },
+          orderBy: { createdAt: 'asc' },
+          select: {
+            oldStatus: true,
+            newStatus: true,
+            createdAt: true,
           },
         },
       },
@@ -180,44 +176,44 @@ export class TrackingService {
       return null;
     }
 
+    const stops = load.order?.stops || [];
+    const originStop = stops.find((s: { stopType: string }) => s.stopType === 'PICKUP');
+    const destinationStop = [...stops].reverse().find((s: { stopType: string }) => s.stopType === 'DELIVERY');
+
     return {
-      loadNumber: load.loadNumber,
-      orderNumber: load.order?.orderNumber,
+      trackingNumber: load.loadNumber,
       status: load.status,
-      equipmentType: load.equipmentType,
-      customerName: load.order?.customer?.name,
-      currentLocation: load.currentLocationLat && load.currentLocationLng
-        ? {
-            lat: Number(load.currentLocationLat),
-            lng: Number(load.currentLocationLng),
-            city: load.currentCity,
-            state: load.currentState,
-            updatedAt: load.lastTrackingUpdate,
-          }
+      origin: originStop
+        ? { city: originStop.city, state: originStop.state }
         : null,
-      eta: load.eta,
-      pickupDate: (load.order?.stops || []).find((s: { stopType: string }) => s.stopType === 'PICKUP')?.appointmentDate ?? null,
-      deliveryDate: (load.order?.stops || []).find((s: { stopType: string }) => s.stopType === 'DELIVERY')?.appointmentDate ?? null,
-      dispatchedAt: load.dispatchedAt,
-      pickedUpAt: load.pickedUpAt,
-      deliveredAt: load.deliveredAt,
-      stops: (load.order?.stops || []).map((stop) => ({
-        id: stop.id,
+      destination: destinationStop
+        ? { city: destinationStop.city, state: destinationStop.state }
+        : null,
+      estimatedDelivery: load.eta ?? destinationStop?.appointmentDate ?? null,
+      actualDelivery: load.deliveredAt,
+      lastKnownLocation:
+        load.currentCity && load.currentState
+          ? { city: load.currentCity, state: load.currentState, updatedAt: load.lastTrackingUpdate }
+          : null,
+      timeline: {
+        dispatchedAt: load.dispatchedAt,
+        pickedUpAt: load.pickedUpAt,
+        deliveredAt: load.deliveredAt,
+      },
+      stops: stops.map((stop) => ({
         type: stop.stopType,
         sequence: stop.stopSequence,
-        facilityName: stop.facilityName,
         city: stop.city,
         state: stop.state,
-        zip: stop.postalCode,
         status: stop.status,
         appointmentDate: stop.appointmentDate,
-        appointmentTimeStart: stop.appointmentTimeStart,
-        appointmentTimeEnd: stop.appointmentTimeEnd,
         arrivedAt: stop.arrivedAt,
         departedAt: stop.departedAt,
-        location: stop.latitude && stop.longitude
-          ? { lat: Number(stop.latitude), lng: Number(stop.longitude) }
-          : null,
+      })),
+      statusHistory: load.StatusHistory.map((h) => ({
+        fromStatus: h.oldStatus,
+        toStatus: h.newStatus,
+        timestamp: h.createdAt,
       })),
     };
   }

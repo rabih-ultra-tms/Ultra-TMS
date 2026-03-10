@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma.service';
 import { CreateQuoteDto, UpdateQuoteDto, QuickQuoteDto, CalculateRateDto } from './dto';
@@ -7,6 +7,9 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class QuotesService {
+  private readonly logger = new Logger(QuotesService.name);
+  private readonly DEFAULT_MINIMUM_MARGIN_PERCENT = 10;
+
   constructor(
     private prisma: PrismaService,
     private rateCalculationService: RateCalculationService,
@@ -160,6 +163,51 @@ export class QuotesService {
     };
   }
 
+  /**
+   * Validates that the quote margin meets the minimum threshold.
+   * Margin = (totalRevenue - totalCost) / totalRevenue * 100
+   * If marginPercent is provided directly, it is used; otherwise it is calculated
+   * from totalAmount and cost components.
+   */
+  private validateMinimumMargin(
+    params: {
+      marginPercent?: number;
+      totalAmount: number;
+      totalCost: number;
+      overrideMarginCheck?: boolean;
+    },
+    tenantId: string,
+    userId: string,
+  ): void {
+    const minimumMargin = this.DEFAULT_MINIMUM_MARGIN_PERCENT;
+
+    // Determine the effective margin
+    let effectiveMargin: number;
+    if (params.marginPercent !== undefined && params.marginPercent !== null) {
+      effectiveMargin = params.marginPercent;
+    } else if (params.totalAmount > 0) {
+      effectiveMargin = ((params.totalAmount - params.totalCost) / params.totalAmount) * 100;
+    } else {
+      // Cannot calculate margin without revenue; skip validation
+      return;
+    }
+
+    if (effectiveMargin < minimumMargin) {
+      if (params.overrideMarginCheck) {
+        this.logger.warn(
+          `Margin override used: quote margin ${effectiveMargin.toFixed(1)}% is below minimum ${minimumMargin}% ` +
+          `(tenant: ${tenantId}, user: ${userId})`,
+        );
+        return;
+      }
+
+      throw new BadRequestException(
+        `Quote margin of ${effectiveMargin.toFixed(1)}% is below the minimum required margin of ${minimumMargin}%. ` +
+        `Set overrideMarginCheck to true for manager-approved exceptions.`,
+      );
+    }
+  }
+
   async create(tenantId: string, userId: string, dto: CreateQuoteDto) {
     const { stops } = dto;
 
@@ -168,6 +216,18 @@ export class QuotesService {
     const fuel = dto.fuelSurcharge || 0;
     const accessorialsTotal = dto.accessorialsTotal || 0;
     const totalAmount = dto.totalAmount || (linehaulRate + fuel + accessorialsTotal);
+
+    // Enforce minimum margin
+    this.validateMinimumMargin(
+      {
+        marginPercent: dto.marginPercent,
+        totalAmount,
+        totalCost: linehaulRate, // linehaul is the cost basis; fuel + accessorials are revenue add-ons
+        overrideMarginCheck: dto.overrideMarginCheck,
+      },
+      tenantId,
+      userId,
+    );
 
     const quote = await this.prisma.quote.create({
       data: {
@@ -236,7 +296,7 @@ export class QuotesService {
   }
 
   async update(tenantId: string, id: string, userId: string, dto: UpdateQuoteDto) {
-    await this.findOne(tenantId, id);
+    const existing = await this.findOne(tenantId, id);
 
     // Recalculate totals if pricing changed
     let totalAmount: number | undefined;
@@ -249,6 +309,30 @@ export class QuotesService {
       const fuel = dto.fuelSurcharge || 0;
       const accessorialsTotal = dto.accessorialsTotal || 0;
       totalAmount = dto.totalAmount || (linehaulRate + fuel + accessorialsTotal);
+    }
+
+    // Enforce minimum margin when pricing fields are being updated
+    const effectiveTotalAmount = totalAmount ?? dto.totalAmount ?? Number(existing.totalAmount);
+    const effectiveMarginPercent = dto.marginPercent ?? (existing.marginPercent !== null ? Number(existing.marginPercent) : undefined);
+    const effectiveLinehaulRate = dto.linehaulRate ?? Number(existing.linehaulRate ?? 0);
+
+    if (
+      dto.marginPercent !== undefined ||
+      dto.totalAmount !== undefined ||
+      dto.linehaulRate !== undefined ||
+      dto.fuelSurcharge !== undefined ||
+      dto.accessorialsTotal !== undefined
+    ) {
+      this.validateMinimumMargin(
+        {
+          marginPercent: effectiveMarginPercent,
+          totalAmount: effectiveTotalAmount,
+          totalCost: effectiveLinehaulRate,
+          overrideMarginCheck: dto.overrideMarginCheck,
+        },
+        tenantId,
+        userId,
+      );
     }
 
     // Replace stops if provided
@@ -607,6 +691,9 @@ export class QuotesService {
     const quote = await this.findOne(tenantId, id);
     if (!['SENT', 'VIEWED'].includes(quote.status)) {
       throw new BadRequestException(`Cannot accept a quote with status ${quote.status}`);
+    }
+    if (quote.validUntil && new Date(quote.validUntil) < new Date()) {
+      throw new BadRequestException('Quote has expired');
     }
     return this.prisma.quote.update({
       where: { id, tenantId },

@@ -12,7 +12,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, FileText, Truck, Ban, Building2 } from "lucide-react";
+import { MoreHorizontal, FileText, Truck, Ban, Building2, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { StatusBadge } from "@/components/tms/primitives/status-badge";
 import { Intent } from "@/lib/design-tokens";
@@ -103,7 +103,7 @@ interface OrderColumnsProps {
 }
 
 export const getOrderColumns = ({
-    onDelete: _onDelete,
+    onDelete,
     onStatusChange,
 }: OrderColumnsProps): ColumnDef<Order>[] => [
     {
@@ -344,6 +344,16 @@ export const getOrderColumns = ({
                                 Cancel Order
                             </DropdownMenuItem>
                         )}
+                        <DropdownMenuItem
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onDelete(order.id);
+                            }}
+                            className="text-destructive"
+                        >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete Order
+                        </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             );

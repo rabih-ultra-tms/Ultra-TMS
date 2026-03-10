@@ -4,13 +4,23 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { ListPage } from "@/components/patterns/list-page";
 import { getOrderColumns } from "@/components/tms/orders/order-columns";
 import { OrderFilters } from "@/components/tms/orders/order-filters";
-import { useOrders, useUpdateOrder } from "@/lib/hooks/tms/use-orders";
+import { useOrders, useUpdateOrder, useDeleteOrder } from "@/lib/hooks/tms/use-orders";
 import { OrderStatus, Order } from "@/types/orders";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Plus, Package, Clock, Truck, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 function StatsCard({
     label,
@@ -42,6 +52,11 @@ export default function OrdersPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const updateOrder = useUpdateOrder();
+    const deleteOrder = useDeleteOrder();
+
+    // Delete confirmation state
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
 
     // Parse URL params
     const page = parseInt(searchParams.get("page") || "1");
@@ -88,9 +103,22 @@ export default function OrdersPage() {
         router.push(`/operations/orders/${row.id}`);
     };
 
-    const handleDelete = async (_id: string) => {
-        toast.info("Delete not available yet");
-    };
+    const handleDelete = useCallback((id: string) => {
+        setOrderToDelete(id);
+        setDeleteDialogOpen(true);
+    }, []);
+
+    const confirmDelete = useCallback(async () => {
+        if (!orderToDelete) return;
+        try {
+            await deleteOrder.mutateAsync(orderToDelete);
+        } catch {
+            // Error toast is handled by the mutation hook
+        } finally {
+            setDeleteDialogOpen(false);
+            setOrderToDelete(null);
+        }
+    }, [orderToDelete, deleteOrder]);
 
     const handleStatusChange = async (id: string, newStatus: OrderStatus) => {
         try {
@@ -103,6 +131,7 @@ export default function OrdersPage() {
     };
 
     return (
+        <>
         <ListPage
             title="Orders"
             description="Manage customer orders and shipments."
@@ -161,5 +190,27 @@ export default function OrdersPage() {
             onRowSelectionChange={setRowSelection}
             entityLabel="orders"
         />
+
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Order</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Are you sure you want to delete this order? This action cannot be undone.
+                        Orders with existing loads cannot be deleted.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                        onClick={confirmDelete}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                        {deleteOrder.isPending ? "Deleting..." : "Delete"}
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+        </>
     );
 }

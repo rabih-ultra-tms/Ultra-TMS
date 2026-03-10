@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, IsUUID, IsDateString, IsArray, IsObject, ValidateNested } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsUUID, IsDateString, IsArray, IsObject, IsBoolean, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class QuoteStopDto {
@@ -161,6 +161,10 @@ export class CreateQuoteDto {
   specialInstructions?: string;
 
   @IsOptional()
+  @IsBoolean()
+  overrideMarginCheck?: boolean;
+
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => QuoteStopDto)
@@ -255,6 +259,10 @@ export class UpdateQuoteDto {
   @IsOptional()
   @IsString()
   customerNotes?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  overrideMarginCheck?: boolean;
 
   @IsOptional()
   @IsArray()

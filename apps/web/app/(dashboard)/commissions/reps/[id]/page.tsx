@@ -134,15 +134,15 @@ export default function RepDetailPage() {
           <div className="flex items-center gap-4">
             <div className="flex-1">
               <p className="text-sm text-text-muted">Current plan:</p>
-              <p className="font-medium text-text-primary">
+              <div className="font-medium text-text-primary">
                 {repLoading ? (
-                  <Skeleton className="h-5 w-32 inline-block" />
+                  <Skeleton className="h-5 w-32" />
                 ) : rep?.planName ? (
                   rep.planName
                 ) : (
                   <span className="italic text-text-muted">No plan assigned</span>
                 )}
-              </p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <Select value={selectedPlanId} onValueChange={setSelectedPlanId}>
