@@ -27,5 +27,6 @@ import { ApiLogsController, SyncJobsController, TransformationsController } from
     CredentialMaskerService,
     EncryptionService,
   ],
+  exports: [EncryptionService],
 })
 export class IntegrationHubModule {}

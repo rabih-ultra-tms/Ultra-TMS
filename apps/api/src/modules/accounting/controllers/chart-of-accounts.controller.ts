@@ -11,13 +11,16 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../common/guards/roles.guard';
+import { Roles } from '../../../common/decorators/roles.decorator';
 import { CurrentTenant } from '../../../common/decorators/current-tenant.decorator';
 import { ChartOfAccountsService } from '../services';
 import { CreateChartOfAccountDto } from '../dto';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('chart-of-accounts')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('ADMIN', 'ACCOUNTING')
 @ApiTags('Accounting')
 @ApiBearerAuth('JWT-auth')
 export class ChartOfAccountsController {

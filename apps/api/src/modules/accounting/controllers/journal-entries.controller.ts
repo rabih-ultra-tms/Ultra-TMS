@@ -9,6 +9,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../common/guards/roles.guard';
+import { Roles } from '../../../common/decorators/roles.decorator';
 import { CurrentTenant } from '../../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
@@ -17,7 +19,8 @@ import { CreateJournalEntryDto } from '../dto';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('journal-entries')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('ADMIN', 'ACCOUNTING')
 @ApiTags('Accounting')
 @ApiBearerAuth('JWT-auth')
 export class JournalEntriesController {

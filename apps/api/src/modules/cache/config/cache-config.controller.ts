@@ -1,16 +1,18 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards';
-import { CurrentTenant, CurrentUser } from '../../../common/decorators';
+import { RolesGuard } from '../../../common/guards/roles.guard';
+import { CurrentTenant, CurrentUser, Roles } from '../../../common/decorators';
 import { CacheConfigService } from './cache-config.service';
 import { UpdateCacheConfigDto, CreateInvalidationRuleDto } from '../dto/cache.dto';
 import { InvalidationService } from '../invalidation/invalidation.service';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('cache')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Cache')
 @ApiBearerAuth('JWT-auth')
+@Roles('SUPER_ADMIN')
 export class CacheConfigController {
   constructor(
     private readonly cacheConfigService: CacheConfigService,

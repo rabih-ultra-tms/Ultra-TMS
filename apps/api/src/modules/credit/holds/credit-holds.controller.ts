@@ -1,6 +1,7 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators';
 import { CurrentTenant } from '../../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
@@ -12,7 +13,7 @@ import { PaginationDto } from '../dto/pagination.dto';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('credit/holds')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Credit Holds')
 @ApiBearerAuth('JWT-auth')
 @Roles('ADMIN', 'CREDIT_ANALYST')

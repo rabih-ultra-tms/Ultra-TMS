@@ -4,13 +4,14 @@ import { SlasService } from './slas.service';
 import { CreateSlaDto } from './dto/create-sla.dto';
 import { UpdateSlaDto } from './dto/update-sla.dto';
 import { JwtAuthGuard } from '../../auth/guards';
+import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import type { CurrentUserData } from '../../../common/decorators/current-user.decorator';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Contracts')
 @ApiBearerAuth('JWT-auth')
 @Roles('USER', 'MANAGER', 'ADMIN')

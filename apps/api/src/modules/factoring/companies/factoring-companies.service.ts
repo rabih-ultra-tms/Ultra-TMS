@@ -9,6 +9,31 @@ import { UpdateFactoringCompanyDto } from './dto/update-factoring-company.dto';
 
 @Injectable()
 export class FactoringCompaniesService {
+  /** Select all FactoringCompany fields EXCEPT apiKey to prevent plaintext credential exposure. */
+  private readonly safeSelect = {
+    id: true,
+    tenantId: true,
+    companyCode: true,
+    name: true,
+    email: true,
+    phone: true,
+    fax: true,
+    address: true,
+    verificationMethod: true,
+    apiEndpoint: true,
+    // apiKey deliberately excluded — SS-010
+    verificationSLAHours: true,
+    status: true,
+    externalId: true,
+    sourceSystem: true,
+    customFields: true,
+    createdAt: true,
+    updatedAt: true,
+    deletedAt: true,
+    createdById: true,
+    updatedById: true,
+  } as const;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventEmitter: EventEmitter2,
@@ -41,6 +66,7 @@ export class FactoringCompaniesService {
         updatedById: userId,
         customFields: Prisma.JsonNull,
       },
+      select: this.safeSelect,
     });
 
     this.eventEmitter.emit('factoring.company.created', {
@@ -71,7 +97,7 @@ export class FactoringCompaniesService {
     };
 
     const [data, total] = await Promise.all([
-      this.prisma.factoringCompany.findMany({ where, skip, take: limit, orderBy: { createdAt: 'desc' } }),
+      this.prisma.factoringCompany.findMany({ where, skip, take: limit, orderBy: { createdAt: 'desc' }, select: this.safeSelect }),
       this.prisma.factoringCompany.count({ where }),
     ]);
 
@@ -116,6 +142,7 @@ export class FactoringCompaniesService {
         ...(dto.status !== undefined ? { status: dto.status } : {}),
         updatedById: userId,
       },
+      select: this.safeSelect,
     });
   }
 
@@ -126,6 +153,7 @@ export class FactoringCompaniesService {
     return this.prisma.factoringCompany.update({
       where: { id },
       data: { status: nextStatus, updatedById: userId },
+      select: this.safeSelect,
     });
   }
 
@@ -143,6 +171,7 @@ export class FactoringCompaniesService {
   private async requireCompany(tenantId: string, id: string) {
     const company = await this.prisma.factoringCompany.findFirst({
       where: { id, tenantId, deletedAt: null },
+      select: this.safeSelect,
     });
 
     if (!company) {

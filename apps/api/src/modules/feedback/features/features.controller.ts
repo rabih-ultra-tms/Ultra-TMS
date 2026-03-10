@@ -1,15 +1,17 @@
 import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards';
-import { CurrentTenant, CurrentUser } from '../../../common/decorators';
+import { RolesGuard } from '../../../common/guards/roles.guard';
+import { CurrentTenant, CurrentUser, Roles } from '../../../common/decorators';
 import { FeaturesService } from './features.service';
 import { AddFeatureCommentDto, SubmitFeatureRequestDto, UpdateFeatureRequestDto } from '../dto/feedback.dto';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('feedback/features')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Feedback')
 @ApiBearerAuth('JWT-auth')
+@Roles('ADMIN')
 export class FeaturesController {
   constructor(private readonly features: FeaturesService) {}
 

@@ -1,16 +1,17 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards';
+import { RolesGuard } from '../../../common/guards/roles.guard';
 import { CurrentTenant, CurrentUser, Roles } from '../../../common/decorators';
 import { EntitySearchService } from './entity-search.service';
 import { EntitySearchDto } from '../dto';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('search')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Entity Search')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'OPERATIONS_MANAGER', 'DISPATCHER', 'SALES_REP', 'ACCOUNTING', 'CARRIER_MANAGER', 'AGENT')
 export class EntitySearchController {
   constructor(private readonly entitySearchService: EntitySearchService) {}
 

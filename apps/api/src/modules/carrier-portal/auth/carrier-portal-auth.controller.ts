@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { CarrierPortalAuthService } from './carrier-portal-auth.service';
@@ -20,7 +20,11 @@ export class CarrierPortalAuthController {
   @ApiStandardResponse('Carrier portal login successful')
   @ApiErrorResponses()
   login(@Body() dto: CarrierPortalLoginDto, @Req() req: any) {
-    return this.authService.login(dto, { ipAddress: req.ip, userAgent: req.headers['user-agent'] });
+    const tenantId = req.headers['x-tenant-id'];
+    if (!tenantId) {
+      throw new BadRequestException('x-tenant-id header is required');
+    }
+    return this.authService.login(dto, String(tenantId), { ipAddress: req.ip, userAgent: req.headers['user-agent'] });
   }
 
   @Post('refresh')
@@ -43,8 +47,12 @@ export class CarrierPortalAuthController {
   @ApiOperation({ summary: 'Request carrier portal password reset' })
   @ApiStandardResponse('Carrier portal password reset requested')
   @ApiErrorResponses()
-  forgot(@Body() dto: ForgotPasswordDto) {
-    return this.authService.forgotPassword(dto);
+  forgot(@Body() dto: ForgotPasswordDto, @Req() req: any) {
+    const tenantId = req.headers['x-tenant-id'];
+    if (!tenantId) {
+      throw new BadRequestException('x-tenant-id header is required');
+    }
+    return this.authService.forgotPassword(dto, String(tenantId));
   }
 
   @Post('reset-password')

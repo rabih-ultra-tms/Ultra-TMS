@@ -110,7 +110,7 @@ export class AccessorialRatesService {
     await this.findOne(tenantId, id);
 
     return this.prisma.accessorialRate.update({
-      where: { id },
+      where: { id, tenantId },
       data: {
         name: dto.name,
         description: dto.description,
@@ -138,7 +138,7 @@ export class AccessorialRatesService {
     await this.findOne(tenantId, id);
 
     await this.prisma.accessorialRate.delete({
-      where: { id },
+      where: { id, tenantId },
     });
 
     return { success: true };

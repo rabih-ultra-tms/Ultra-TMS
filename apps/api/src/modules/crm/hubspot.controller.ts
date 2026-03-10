@@ -27,7 +27,7 @@ export class HubspotController {
     @Headers('x-hubspot-signature') _signature: string,
     @Body() payload: Record<string, unknown>,
   ) {
-    // TODO: Verify HubSpot signature using _signature
+    // Backlog SEC-006: Verify HubSpot signature using _signature
     void _signature; // Will be used for signature verification
     // For now, extract tenantId from payload or use default
     const tenantId = (payload.portalId as string) || 'default';

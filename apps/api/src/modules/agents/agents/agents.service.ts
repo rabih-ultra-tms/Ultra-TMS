@@ -106,7 +106,7 @@ export class AgentsService {
     await this.requireAgent(tenantId, id);
 
     return this.prisma.agent.update({
-      where: { id },
+      where: { id, tenantId },
       data: {
         ...dto,
         territories: dto.territories
@@ -123,7 +123,7 @@ export class AgentsService {
     await this.requireAgent(tenantId, id);
 
     return this.prisma.agent.update({
-      where: { id },
+      where: { id, tenantId },
       data: { deletedAt: new Date(), status: AgentStatus.TERMINATED },
     });
   }
@@ -132,7 +132,7 @@ export class AgentsService {
     await this.requireAgent(tenantId, id);
 
     const updated = await this.prisma.agent.update({
-      where: { id },
+      where: { id, tenantId },
       data: { status: AgentStatus.ACTIVE, activatedAt: new Date(), activatedBy: userId },
     });
 
@@ -144,7 +144,7 @@ export class AgentsService {
     await this.requireAgent(tenantId, id);
 
     const updated = await this.prisma.agent.update({
-      where: { id },
+      where: { id, tenantId },
       data: { status: AgentStatus.SUSPENDED },
     });
 
@@ -161,7 +161,7 @@ export class AgentsService {
     await this.requireAgent(tenantId, id);
 
     const updated = await this.prisma.agent.update({
-      where: { id },
+      where: { id, tenantId },
       data: {
         status: AgentStatus.TERMINATED,
         terminatedAt: new Date(),
@@ -216,7 +216,7 @@ export class AgentsService {
     await this.requireContact(tenantId, contactId);
 
     return this.prisma.agentContact.update({
-      where: { id: contactId },
+      where: { id: contactId, tenantId },
       data: dto,
     });
   }
@@ -226,7 +226,7 @@ export class AgentsService {
     await this.requireContact(tenantId, contactId);
 
     return this.prisma.agentContact.update({
-      where: { id: contactId },
+      where: { id: contactId, tenantId },
       data: { isActive: false },
     });
   }

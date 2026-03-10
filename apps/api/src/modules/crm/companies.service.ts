@@ -105,7 +105,7 @@ export class CompaniesService {
     await this.findOne(tenantId, id);
 
     return this.prisma.company.update({
-      where: { id },
+      where: { id, tenantId },
       data: {
         ...dto,
         customFields: dto.customFields || undefined,
@@ -119,7 +119,7 @@ export class CompaniesService {
     await this.findOne(tenantId, id);
 
     await this.prisma.company.update({
-      where: { id },
+      where: { id, tenantId },
       data: { deletedAt: new Date(), updatedById: userId },
     });
 
@@ -171,7 +171,7 @@ export class CompaniesService {
     await this.findOne(tenantId, id);
 
     return this.prisma.company.update({
-      where: { id },
+      where: { id, tenantId },
       data: {
         assignedUserId: dto.salesRepId,
         updatedById: userId,
@@ -184,7 +184,7 @@ export class CompaniesService {
     const oldTier = company.tier;
 
     const updated = await this.prisma.company.update({
-      where: { id },
+      where: { id, tenantId },
       data: { tier, updatedById: userId },
     });
 

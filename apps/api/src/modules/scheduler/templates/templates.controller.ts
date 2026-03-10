@@ -1,13 +1,15 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../modules/auth/guards/jwt-auth.guard';
-import { CurrentTenant, CurrentUser } from '../../../common/decorators';
+import { RolesGuard } from '../../../common/guards/roles.guard';
+import { CurrentTenant, CurrentUser, Roles } from '../../../common/decorators';
 import { CreateJobDto } from '../dto/job.dto';
 import { TemplatesService } from './templates.service';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('jobs/templates')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('ADMIN', 'OPERATIONS_MANAGER')
 @ApiTags('Scheduler')
 @ApiBearerAuth('JWT-auth')
 export class TemplatesController {

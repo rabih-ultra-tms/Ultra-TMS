@@ -33,7 +33,7 @@ describe('DistributedLockService', () => {
   it('returns lock details', async () => {
     prisma.distributedLock.findFirst.mockResolvedValue({ lockKey: 'k1' });
 
-    const result = await service.lockDetails('k1');
+    const result = await service.lockDetails('t1', 'k1');
 
     expect(result?.lockKey).toBe('k1');
   });
@@ -41,7 +41,7 @@ describe('DistributedLockService', () => {
   it('forces release', async () => {
     prisma.distributedLock.updateMany.mockResolvedValue({ count: 1 });
 
-    const result = await service.forceRelease('k1');
+    const result = await service.forceRelease('t1', 'k1');
 
     expect(result.released).toBe(true);
   });
@@ -49,7 +49,7 @@ describe('DistributedLockService', () => {
   it('returns history', async () => {
     prisma.distributedLock.findMany.mockResolvedValue([]);
 
-    const result = await service.history('k1');
+    const result = await service.history('t1', 'k1');
 
     expect(result).toEqual([]);
   });

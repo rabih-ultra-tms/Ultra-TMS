@@ -43,7 +43,7 @@ describe('RateLimitService', () => {
   it('returns usage defaults when missing', async () => {
     prisma.rateLimit.findFirst.mockResolvedValue(null);
 
-    const result = await service.usage('key-1');
+    const result = await service.usage('tenant-1', 'key-1');
 
     expect(result).toEqual({ identifier: 'key-1', current: 0, limit: 0, windowSeconds: 0, resetAt: null });
   });
@@ -59,7 +59,7 @@ describe('RateLimitService', () => {
     });
     prisma.rateLimit.update.mockResolvedValue({ identifier: 'key-1' });
 
-    await service.update('key-1', { requestsPerMinute: 120 } as any);
+    await service.update('key-1', { requestsPerMinute: 120 } as any, 'tenant-1');
 
     expect(prisma.rateLimit.update).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -91,7 +91,7 @@ describe('RateLimitService', () => {
     prisma.rateLimit.findFirst.mockResolvedValue({ scope: 'GLOBAL', identifier: 'key-1' });
     prisma.rateLimit.update.mockResolvedValue({});
 
-    const result = await service.reset('key-1');
+    const result = await service.reset('tenant-1', 'key-1');
 
     expect(result).toEqual({ reset: true });
     expect(prisma.rateLimit.update).toHaveBeenCalledWith(

@@ -102,7 +102,7 @@ export class OpportunitiesService {
     const stageChanged = dto.stage && dto.stage !== existing.stage;
 
     return this.prisma.opportunity.update({
-      where: { id },
+      where: { id, tenantId },
       data: {
         name: dto.name,
         primaryContactId: dto.primaryContactId,
@@ -131,7 +131,7 @@ export class OpportunitiesService {
     await this.findOne(tenantId, id);
 
     await this.prisma.opportunity.update({
-      where: { id },
+      where: { id, tenantId },
       data: { deletedAt: new Date(), updatedById: userId },
     });
 
@@ -208,7 +208,7 @@ export class OpportunitiesService {
     }
 
     const updated = await this.prisma.opportunity.update({
-      where: { id },
+      where: { id, tenantId },
       data,
       include: {
         company: { select: { id: true, name: true } },
@@ -228,7 +228,7 @@ export class OpportunitiesService {
 
     // Update company type to CUSTOMER
     await this.prisma.company.update({
-      where: { id: opportunity.companyId },
+      where: { id: opportunity.companyId, tenantId },
       data: {
         companyType: 'CUSTOMER',
         updatedById: userId,
@@ -276,7 +276,7 @@ export class OpportunitiesService {
     await this.findOne(tenantId, id);
 
     return this.prisma.opportunity.update({
-      where: { id },
+      where: { id, tenantId },
       data: { ownerId: newOwnerId, updatedById: userId },
       include: {
         owner: { select: { id: true, firstName: true, lastName: true, email: true } },

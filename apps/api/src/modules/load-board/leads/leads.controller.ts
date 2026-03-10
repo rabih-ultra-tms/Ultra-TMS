@@ -1,7 +1,8 @@
 import { Body, Controller, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { CurrentTenant } from '../../../common/decorators';
+import { RolesGuard } from '../../../common/guards/roles.guard';
+import { CurrentTenant, Roles } from '../../../common/decorators';
 import { LeadsService } from './leads.service';
 import {
   AssignLeadDto,
@@ -14,7 +15,8 @@ import {
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('ADMIN', 'DISPATCHER', 'SALES_REP')
 @ApiTags('Load Board')
 @ApiBearerAuth('JWT-auth')
 export class LeadsController {

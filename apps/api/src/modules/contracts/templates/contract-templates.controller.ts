@@ -4,13 +4,14 @@ import { ContractTemplatesService } from './contract-templates.service';
 import { CreateTemplateDto } from './dto/create-template.dto';
 import { UpdateTemplateDto } from './dto/update-template.dto';
 import { JwtAuthGuard } from '../../auth/guards';
+import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import type { CurrentUserData } from '../../../common/decorators/current-user.decorator';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('contract-templates')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Contract Templates')
 @ApiBearerAuth('JWT-auth')
 @Roles('ADMIN', 'CONTRACTS_MANAGER', 'CONTRACTS_VIEWER')

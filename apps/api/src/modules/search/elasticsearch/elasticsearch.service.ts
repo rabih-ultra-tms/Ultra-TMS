@@ -53,7 +53,7 @@ export class ElasticsearchService {
     return 0;
   }
 
-  async searchGlobal(query: string, entityTypes?: string[], limit = 20, offset = 0): Promise<SearchResultDto> {
+  async searchGlobal(tenantId: string, query: string, entityTypes?: string[], limit = 20, offset = 0): Promise<SearchResultDto> {
     const indices = entityTypes?.length ? entityTypes.map((e) => this.indexName(e)) : `${this.prefix}-*-v1`;
 
     const res = await this.client.search({
@@ -61,10 +61,17 @@ export class ElasticsearchService {
       from: offset,
       size: limit,
       query: {
-        multi_match: {
-          query,
-          fields: ['title^2', 'name^2', 'description', 'content'],
-          operator: 'and',
+        bool: {
+          must: [
+            {
+              multi_match: {
+                query,
+                fields: ['title^2', 'name^2', 'description', 'content'],
+                operator: 'and',
+              },
+            },
+          ],
+          filter: [{ term: { tenantId } }],
         },
       },
     });
@@ -79,7 +86,7 @@ export class ElasticsearchService {
     return { total: this.totalCount(res.hits.total), items, facets: {} };
   }
 
-  async searchEntity(entityType: string, query: string | undefined, filters: Record<string, unknown> | undefined, limit = 20, offset = 0): Promise<SearchResultDto> {
+  async searchEntity(tenantId: string, entityType: string, query: string | undefined, filters: Record<string, unknown> | undefined, limit = 20, offset = 0): Promise<SearchResultDto> {
     const must: any[] = [];
 
     if (query) {
@@ -98,11 +105,13 @@ export class ElasticsearchService {
       });
     }
 
+    const filter: any[] = [{ term: { tenantId } }];
+
     const res = await this.client.search({
       index: this.indexName(entityType),
       from: offset,
       size: limit,
-      query: must.length ? { bool: { must } } : { match_all: {} },
+      query: { bool: { must: must.length ? must : [{ match_all: {} }], filter } },
     });
 
     const items = res.hits.hits.map((hit: any) => ({
@@ -115,10 +124,11 @@ export class ElasticsearchService {
     return { total: this.totalCount(res.hits.total), items, facets: {} };
   }
 
-  async suggest(query: string, limit = 10): Promise<SuggestionResultDto> {
+  async suggest(tenantId: string, query: string, limit = 10): Promise<SuggestionResultDto> {
     const res = await this.client.search({
       index: `${this.prefix}-*-v1`,
       size: 0,
+      query: { term: { tenantId } },
       suggest: {
         text: query,
         name_suggest: {

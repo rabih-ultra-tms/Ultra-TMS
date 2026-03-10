@@ -4,13 +4,14 @@ import { VolumeCommitmentsService } from './volume-commitments.service';
 import { CreateVolumeCommitmentDto } from './dto/create-volume-commitment.dto';
 import { UpdateVolumeCommitmentDto } from './dto/update-volume-commitment.dto';
 import { JwtAuthGuard } from '../../auth/guards';
+import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import type { CurrentUserData } from '../../../common/decorators/current-user.decorator';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Contracts')
 @ApiBearerAuth('JWT-auth')
 @Roles('USER', 'MANAGER', 'ADMIN')

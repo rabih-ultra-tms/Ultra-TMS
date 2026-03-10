@@ -1,16 +1,18 @@
 import { Body, Controller, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards';
-import { CurrentTenant, CurrentUser } from '../../../common/decorators';
+import { RolesGuard } from '../../../common/guards/roles.guard';
+import { CurrentTenant, CurrentUser, Roles } from '../../../common/decorators';
 import { NpsSurveysService } from './nps-surveys.service';
 import { FeedbackAnalyticsService } from '../analytics/feedback-analytics.service';
 import { CreateNpsSurveyDto, SubmitNpsResponseDto, UpdateNpsSurveyDto } from '../dto/feedback.dto';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('feedback/nps')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Feedback')
 @ApiBearerAuth('JWT-auth')
+@Roles('ADMIN')
 export class NpsController {
   constructor(
     private readonly surveys: NpsSurveysService,

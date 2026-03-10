@@ -100,7 +100,7 @@ export class ActivitiesService {
     await this.findOne(tenantId, id);
 
     return this.prisma.activity.update({
-      where: { id },
+      where: { id, tenantId },
       data: {
         subject: dto.subject,
         description: dto.description,
@@ -120,7 +120,7 @@ export class ActivitiesService {
   async delete(tenantId: string, id: string, userId?: string) {
     await this.findOne(tenantId, id);
     await this.prisma.activity.update({
-      where: { id },
+      where: { id, tenantId },
       data: { deletedAt: new Date(), updatedById: userId },
     });
     return { success: true };
@@ -201,7 +201,7 @@ export class ActivitiesService {
     await this.findOne(tenantId, id);
 
     return this.prisma.activity.update({
-      where: { id },
+      where: { id, tenantId },
       data: {
         completedAt: new Date(),
         status: 'COMPLETED',
@@ -218,7 +218,7 @@ export class ActivitiesService {
     await this.findOne(tenantId, id);
 
     return this.prisma.activity.update({
-      where: { id },
+      where: { id, tenantId },
       data: {
         completedAt: null,
         status: 'PENDING',
@@ -231,7 +231,7 @@ export class ActivitiesService {
     await this.findOne(tenantId, id);
 
     return this.prisma.activity.update({
-      where: { id },
+      where: { id, tenantId },
       data: {
         dueDate: new Date(newDueDate),
         updatedById: userId,

@@ -69,7 +69,7 @@ export class AuthService {
 
     if (tenantId) {
       user = await this.prisma.user.findFirst({
-        where: { email, tenantId },
+        where: { email, tenantId, deletedAt: null },
         include: { role: true },
       });
     } else {

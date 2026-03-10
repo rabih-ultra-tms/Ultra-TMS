@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
+import { IntegrationHubModule } from '../integration-hub/integration-hub.module';
 import { TradingPartnersController } from './trading-partners/trading-partners.controller';
 import { TradingPartnersService } from './trading-partners/trading-partners.service';
 import {
@@ -26,6 +27,7 @@ import { SftpTransport } from './transport/sftp.transport';
 import { As2Transport } from './transport/as2.transport';
 
 @Module({
+  imports: [IntegrationHubModule],
   controllers: [
     TradingPartnersController,
     EdiDocumentsController,

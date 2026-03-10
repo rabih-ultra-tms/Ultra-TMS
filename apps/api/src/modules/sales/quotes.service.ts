@@ -274,7 +274,7 @@ export class QuotesService {
     }
 
     return this.prisma.quote.update({
-      where: { id },
+      where: { id, tenantId },
       data: {
         companyId: dto.companyId,
         contactId: dto.contactId,
@@ -311,7 +311,7 @@ export class QuotesService {
     await this.findOne(tenantId, id);
 
     await this.prisma.quote.update({
-      where: { id },
+      where: { id, tenantId },
       data: { deletedAt: new Date(), updatedById: userId },
     });
 
@@ -367,7 +367,7 @@ export class QuotesService {
 
     // Update quote status
     await this.prisma.quote.update({
-      where: { id },
+      where: { id, tenantId },
       data: {
         status: 'CONVERTED',
         convertedOrderId: order.id,
@@ -596,7 +596,7 @@ export class QuotesService {
     const existing: unknown[] = Array.isArray(cf.notes) ? (cf.notes as unknown[]) : [];
     const newNote = { id: crypto.randomUUID(), content, createdAt: new Date().toISOString(), createdById: userId };
     const updated = await this.prisma.quote.update({
-      where: { id },
+      where: { id, tenantId },
       data: { customFields: { ...cf, notes: [...existing, newNote] } as Prisma.InputJsonValue },
     });
     void updated;
@@ -609,7 +609,7 @@ export class QuotesService {
       throw new BadRequestException(`Cannot accept a quote with status ${quote.status}`);
     }
     return this.prisma.quote.update({
-      where: { id },
+      where: { id, tenantId },
       data: { status: 'ACCEPTED', respondedAt: new Date(), updatedById: userId },
     });
   }
@@ -620,7 +620,7 @@ export class QuotesService {
       throw new BadRequestException(`Cannot reject a quote with status ${quote.status}`);
     }
     return this.prisma.quote.update({
-      where: { id },
+      where: { id, tenantId },
       data: { status: 'REJECTED', respondedAt: new Date(), rejectionReason: reason, updatedById: userId },
     });
   }
@@ -629,7 +629,7 @@ export class QuotesService {
     const quote = await this.findOne(tenantId, id);
 
     const updated = await this.prisma.quote.update({
-      where: { id },
+      where: { id, tenantId },
       data: {
         status: 'SENT',
         sentAt: new Date(),

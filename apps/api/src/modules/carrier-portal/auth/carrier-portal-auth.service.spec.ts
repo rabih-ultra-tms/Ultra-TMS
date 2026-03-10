@@ -40,13 +40,13 @@ describe('CarrierPortalAuthService', () => {
   it('rejects invalid credentials', async () => {
     prisma.carrierPortalUser.findFirst.mockResolvedValue(null);
 
-    await expect(service.login({ email: 'a@b.com', password: 'bad' } as any, {})).rejects.toThrow(UnauthorizedException);
+    await expect(service.login({ email: 'a@b.com', password: 'bad' } as any, 't1', {})).rejects.toThrow(UnauthorizedException);
   });
 
   it('rejects suspended user', async () => {
     prisma.carrierPortalUser.findFirst.mockResolvedValue({ id: 'u1', password: 'pw', status: PortalUserStatus.SUSPENDED });
 
-    await expect(service.login({ email: 'a@b.com', password: 'pw' } as any, {})).rejects.toThrow(UnauthorizedException);
+    await expect(service.login({ email: 'a@b.com', password: 'pw' } as any, 't1', {})).rejects.toThrow(UnauthorizedException);
   });
 
   it('logs in and creates session', async () => {
@@ -55,7 +55,7 @@ describe('CarrierPortalAuthService', () => {
     prisma.carrierPortalSession.create.mockResolvedValue({ id: 's1' });
     prisma.carrierPortalUser.update.mockResolvedValue({ id: 'u1' });
 
-    const result = await service.login({ email: 'a@b.com', password: 'pw' } as any, { userAgent: 'ua' });
+    const result = await service.login({ email: 'a@b.com', password: 'pw' } as any, 't1', { userAgent: 'ua' });
 
     expect(result.accessToken).toBe('access');
     expect(result.refreshToken).toBe('refresh');
@@ -89,7 +89,7 @@ describe('CarrierPortalAuthService', () => {
   it('forgot password returns success if user missing', async () => {
     prisma.carrierPortalUser.findFirst.mockResolvedValue(null);
 
-    const result = await service.forgotPassword({ email: 'a@b.com' } as any);
+    const result = await service.forgotPassword({ email: 'a@b.com' } as any, 't1');
 
     expect(result.success).toBe(true);
   });

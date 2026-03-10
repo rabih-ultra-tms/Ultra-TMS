@@ -1,12 +1,14 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { CurrentTenant } from '../../../common/decorators';
+import { RolesGuard } from '../../../common/guards/roles.guard';
+import { CurrentTenant, Roles } from '../../../common/decorators';
 import { AnalyticsService } from './analytics.service';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('load-board/analytics')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('ADMIN', 'DISPATCHER', 'OPERATIONS_MANAGER')
 @ApiTags('Load Board')
 @ApiBearerAuth('JWT-auth')
 export class AnalyticsController {

@@ -1,12 +1,14 @@
 import { Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../modules/auth/guards/jwt-auth.guard';
-import { CurrentTenant } from '../../../common/decorators';
+import { RolesGuard } from '../../../common/guards/roles.guard';
+import { CurrentTenant, Roles } from '../../../common/decorators';
 import { ExecutionsService } from './executions.service';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('jobs/:jobId/executions')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('ADMIN', 'OPERATIONS_MANAGER')
 @ApiTags('Scheduler')
 @ApiBearerAuth('JWT-auth')
 export class ExecutionsController {

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
+import { IntegrationHubModule } from '../integration-hub/integration-hub.module';
 import { RateLookupController } from './lookup/rate-lookup.controller';
 import { RateLookupService } from './lookup/rate-lookup.service';
 import { RateAggregatorService } from './lookup/rate-aggregator.service';
@@ -19,6 +20,7 @@ import { TruckstopProvider } from './providers/truckstop.provider';
 import { GreenscreensProvider } from './providers/greenscreens.provider';
 
 @Module({
+  imports: [IntegrationHubModule],
   controllers: [
     RateLookupController,
     RateHistoryController,

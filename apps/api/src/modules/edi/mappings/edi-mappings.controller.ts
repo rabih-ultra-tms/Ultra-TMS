@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators';
 import { CurrentTenant } from '../../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
@@ -10,10 +11,10 @@ import { EdiMappingsService } from './edi-mappings.service';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('edi/mappings')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('EDI Transactions')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'EDI_MANAGER', 'OPERATIONS_MANAGER')
 export class EdiMappingsController {
   constructor(private readonly service: EdiMappingsService) {}
 

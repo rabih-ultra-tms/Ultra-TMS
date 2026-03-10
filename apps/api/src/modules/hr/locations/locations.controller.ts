@@ -1,13 +1,14 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards';
+import { RolesGuard } from '../../../common/guards/roles.guard';
 import { CurrentTenant, Roles } from '../../../common/decorators';
 import { LocationsService } from './locations.service';
 import { CreateLocationDto, UpdateLocationDto } from '../dto/hr.dto';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('hr/locations')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Teams')
 @ApiBearerAuth('JWT-auth')
 @Roles('USER', 'MANAGER', 'ADMIN')

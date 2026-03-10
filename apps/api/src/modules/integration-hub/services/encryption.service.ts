@@ -55,6 +55,14 @@ export class EncryptionService {
       return Buffer.from(keyHex.slice(0, 64), 'hex');
     }
 
+    const nodeEnv = this.configService.get<string>('NODE_ENV');
+    if (nodeEnv === 'production') {
+      throw new Error(
+        'ENCRYPTION_KEY environment variable is required in production. Must be a 64-character hex string (32 bytes).',
+      );
+    }
+
+    // Dev/test fallback only — derive key from JWT_SECRET or a local default
     const fallback =
       this.configService.get<string>('JWT_SECRET') ||
       this.configService.get<string>('PORTAL_JWT_SECRET') ||

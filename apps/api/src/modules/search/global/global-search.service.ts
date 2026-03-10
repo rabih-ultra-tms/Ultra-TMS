@@ -14,7 +14,7 @@ export class GlobalSearchService {
   async search(tenantId: string, userId: string, dto: GlobalSearchDto): Promise<SearchResultDto> {
     const limit = dto.limit ?? 20;
     const offset = dto.offset ?? 0;
-    const result = await this.elasticsearch.searchGlobal(dto.q, dto.entityTypes, limit, offset);
+    const result = await this.elasticsearch.searchGlobal(tenantId, dto.q, dto.entityTypes, limit, offset);
 
     const entityTypeForHistory = this.pickEntityType(dto.entityTypes);
     await this.prisma.searchHistory.create({
@@ -46,7 +46,7 @@ export class GlobalSearchService {
       return { suggestions: fromSuggestions.map(s => s.suggestionText) };
     }
 
-    return this.elasticsearch.suggest(query, limit);
+    return this.elasticsearch.suggest(tenantId, query, limit);
   }
 
   async recent(tenantId: string, userId: string) {

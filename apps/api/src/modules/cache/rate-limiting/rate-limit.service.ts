@@ -11,12 +11,12 @@ export class RateLimitService {
     return this.prisma.rateLimit.findMany({ where: tenantId ? { tenantId } : {}, orderBy: { createdAt: 'desc' } });
   }
 
-  async getByKey(key: string) {
-    return this.prisma.rateLimit.findFirst({ where: { identifier: key } });
+  async getByKey(tenantId: string, key: string) {
+    return this.prisma.rateLimit.findFirst({ where: { tenantId, identifier: key } });
   }
 
-  async update(key: string, dto: UpdateRateLimitDto, tenantId?: string) {
-    const existing = await this.getByKey(key);
+  async update(key: string, dto: UpdateRateLimitDto, tenantId: string) {
+    const existing = await this.getByKey(tenantId, key);
     const windowSeconds = dto.requestsPerMinute
       ? 60
       : dto.requestsPerHour
@@ -43,7 +43,7 @@ export class RateLimitService {
 
     return this.prisma.rateLimit.create({
       data: {
-        tenantId: tenantId ?? null,
+        tenantId,
         scope,
         identifier: key,
         maxRequests,
@@ -55,8 +55,8 @@ export class RateLimitService {
     });
   }
 
-  async usage(key: string) {
-    const record = await this.getByKey(key);
+  async usage(tenantId: string, key: string) {
+    const record = await this.getByKey(tenantId, key);
     if (!record) {
       return { identifier: key, current: 0, limit: 0, windowSeconds: 0, resetAt: null };
     }
@@ -71,8 +71,8 @@ export class RateLimitService {
     };
   }
 
-  async reset(key: string) {
-    const existing = await this.getByKey(key);
+  async reset(tenantId: string, key: string) {
+    const existing = await this.getByKey(tenantId, key);
     if (!existing) return { reset: false };
     await this.prisma.rateLimit.update({
       where: { scope_identifier: { scope: existing.scope, identifier: existing.identifier } },

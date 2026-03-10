@@ -1,13 +1,14 @@
 import { Body, Controller, Get, Param, Put, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../common/guards/roles.guard';
 import { CurrentTenant, CurrentUser, Roles } from '../../../common/decorators';
 import { AlertsService } from './alerts.service';
 import { CreateAuditAlertDto, IncidentQueryDto, UpdateAuditAlertDto } from '../dto';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('audit/alerts')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('COMPLIANCE', 'ADMIN', 'SUPER_ADMIN')
 @ApiTags('Audit')
 @ApiBearerAuth('JWT-auth')

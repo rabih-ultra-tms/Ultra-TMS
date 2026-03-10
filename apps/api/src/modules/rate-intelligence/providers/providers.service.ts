@@ -1,10 +1,33 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { RateProvider } from '@prisma/client';
 import { PrismaService } from '../../../prisma.service';
+import { EncryptionService } from '../../integration-hub/services/encryption.service';
 import { RateLookupDto } from '../lookup/dto/rate-lookup.dto';
 import { DatProvider } from './dat.provider';
 import { GreenscreensProvider } from './greenscreens.provider';
 import { TruckstopProvider } from './truckstop.provider';
+
+/** Fields safe to return in API responses (excludes apiKey, apiSecret, password). */
+const safeSelect = {
+  id: true,
+  tenantId: true,
+  provider: true,
+  apiEndpoint: true,
+  username: true,
+  isActive: true,
+  rateLimitPerHour: true,
+  cacheDurationMins: true,
+  queriesThisMonth: true,
+  lastQueryAt: true,
+  externalId: true,
+  sourceSystem: true,
+  customFields: true,
+  createdAt: true,
+  updatedAt: true,
+  deletedAt: true,
+  createdById: true,
+  updatedById: true,
+} as const;
 
 @Injectable()
 export class ProvidersService {
@@ -12,13 +35,17 @@ export class ProvidersService {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly encryptionService: EncryptionService,
     private readonly dat: DatProvider,
     private readonly truckstop: TruckstopProvider,
     private readonly greenscreens: GreenscreensProvider,
   ) {}
 
   async list(tenantId: string) {
-    return this.prisma.rateProviderConfig.findMany({ where: { tenantId, deletedAt: null } });
+    return this.prisma.rateProviderConfig.findMany({
+      where: { tenantId, deletedAt: null },
+      select: safeSelect,
+    });
   }
 
   async create(tenantId: string, userId: string, dto: any) {
@@ -26,9 +53,11 @@ export class ProvidersService {
       data: {
         tenantId,
         provider: dto.provider as RateProvider,
-        apiKey: dto.apiKey,
-        apiSecret: dto.apiSecret,
+        apiKey: dto.apiKey ? this.encryptionService.encrypt(dto.apiKey) : undefined,
+        apiSecret: dto.apiSecret ? this.encryptionService.encrypt(dto.apiSecret) : undefined,
+        apiEndpoint: dto.apiEndpoint,
         username: dto.username,
+        password: dto.password ? this.encryptionService.encrypt(dto.password) : undefined,
         isActive: dto.isActive ?? true,
         rateLimitPerHour: dto.rateLimitPerHour,
         cacheDurationMins: dto.cacheDurationMins ?? 60,
@@ -36,12 +65,23 @@ export class ProvidersService {
         createdById: userId,
         customFields: dto.customFields ?? {},
       },
+      select: safeSelect,
     });
   }
 
   async update(tenantId: string, id: string, dto: any) {
     await this.ensureConfig(tenantId, id);
-    return this.prisma.rateProviderConfig.update({ where: { id }, data: dto });
+
+    const data = { ...dto };
+    if (data.apiKey) data.apiKey = this.encryptionService.encrypt(data.apiKey);
+    if (data.apiSecret) data.apiSecret = this.encryptionService.encrypt(data.apiSecret);
+    if (data.password) data.password = this.encryptionService.encrypt(data.password);
+
+    return this.prisma.rateProviderConfig.update({
+      where: { id },
+      data,
+      select: safeSelect,
+    });
   }
 
   async test(tenantId: string, id: string) {

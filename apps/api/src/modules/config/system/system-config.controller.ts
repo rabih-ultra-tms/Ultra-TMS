@@ -1,13 +1,15 @@
 import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../modules/auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../common/guards/roles.guard';
 import { CurrentUser, Roles } from '../../../common/decorators';
 import { UpdateSystemConfigDto } from '../dto';
 import { SystemConfigService } from './system-config.service';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('config/system')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('SUPER_ADMIN')
 @ApiTags('Config')
 @ApiBearerAuth('JWT-auth')
 export class SystemConfigController {

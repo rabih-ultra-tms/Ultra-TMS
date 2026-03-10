@@ -1,13 +1,14 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators';
 import { CurrentTenant } from '../../../common/decorators/current-tenant.decorator';
 import { ReportsService } from '../services';
 import { AgingReportDto, ReportQueryDto } from '../dto/reports.dto';
 
 @Controller('reports')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN', 'ACCOUNTING', 'MANAGER')
 @ApiTags('Reports')
 @ApiBearerAuth('JWT-auth')

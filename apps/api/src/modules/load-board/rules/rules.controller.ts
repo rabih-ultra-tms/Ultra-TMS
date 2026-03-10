@@ -1,13 +1,15 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { CurrentTenant, CurrentUser } from '../../../common/decorators';
+import { RolesGuard } from '../../../common/guards/roles.guard';
+import { CurrentTenant, CurrentUser, Roles } from '../../../common/decorators';
 import { CreatePostingRuleDto, RuleQueryDto, UpdatePostingRuleDto } from './dto';
 import { RulesService } from './rules.service';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('load-board/rules')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('ADMIN', 'DISPATCHER')
 @ApiTags('Load Board')
 @ApiBearerAuth('JWT-auth')
 export class RulesController {

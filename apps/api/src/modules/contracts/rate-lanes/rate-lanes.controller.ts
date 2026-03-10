@@ -4,13 +4,14 @@ import { RateLanesService } from './rate-lanes.service';
 import { CreateRateLaneDto } from './dto/create-rate-lane.dto';
 import { UpdateRateLaneDto } from './dto/update-rate-lane.dto';
 import { JwtAuthGuard } from '../../auth/guards';
+import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import type { CurrentUserData } from '../../../common/decorators/current-user.decorator';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('rate-tables/:rateTableId/lanes')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Contract Rates')
 @ApiBearerAuth('JWT-auth')
 @Roles('USER', 'MANAGER', 'ADMIN')

@@ -27,15 +27,17 @@ export class CacheManagementService {
     return this.stats.recent(tenantId);
   }
 
-  async listKeys(pattern = '*') {
-    return this.redis.keys(pattern);
+  async listKeys(tenantId: string, pattern = '*') {
+    const scopedPattern = `tenant:${tenantId}:${pattern}`;
+    return this.redis.keys(scopedPattern);
   }
 
-  async deleteByPattern(pattern: string) {
-    const deleted = await this.redis.deleteByPattern(pattern);
-    await this.stats.recordDelete(null, 'GENERIC', deleted);
-    this.events.emit('cache.invalidated', { pattern, count: deleted });
-    return { pattern, deleted };
+  async deleteByPattern(tenantId: string, pattern: string) {
+    const scopedPattern = `tenant:${tenantId}:${pattern}`;
+    const deleted = await this.redis.deleteByPattern(scopedPattern);
+    await this.stats.recordDelete(tenantId, 'GENERIC', deleted);
+    this.events.emit('cache.invalidated', { pattern: scopedPattern, count: deleted, tenantId });
+    return { pattern: scopedPattern, deleted };
   }
 
   async invalidate(tenantId: string, dto: InvalidateCacheDto) {

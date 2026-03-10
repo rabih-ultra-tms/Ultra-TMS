@@ -1,6 +1,7 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators';
 import { CurrentTenant } from '../../../common/decorators/current-tenant.decorator';
 import { ReportsService } from '../services';
@@ -8,7 +9,7 @@ import { AgingReportDto } from '../dto/reports.dto';
 import { ApiStandardResponse, ApiErrorResponses } from '../../../common/swagger';
 
 @Controller('accounting')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN', 'ACCOUNTING', 'ACCOUNTING_MANAGER', 'MANAGER', 'SUPER_ADMIN')
 @ApiTags('Accounting')
 @ApiBearerAuth('JWT-auth')

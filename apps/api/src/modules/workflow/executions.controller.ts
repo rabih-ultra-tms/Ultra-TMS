@@ -1,13 +1,14 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
 import { CurrentTenant, CurrentUser, Roles } from '../../common/decorators';
 import { ExecutionsService } from './executions.service';
 import { CancelExecutionDto, ExecutionQueryDto, RetryExecutionDto } from './dto';
 import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
 
 @Controller('workflow-executions')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Workflow Executions')
 @ApiBearerAuth('JWT-auth')
 @Roles('USER', 'MANAGER', 'ADMIN')
@@ -85,7 +86,7 @@ export class ExecutionsController {
 }
 
 @Controller('workflows/:workflowId/executions')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Workflow Executions')
 @ApiBearerAuth('JWT-auth')
 @Roles('USER', 'MANAGER', 'ADMIN')

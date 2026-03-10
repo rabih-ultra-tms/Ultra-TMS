@@ -1,15 +1,17 @@
 import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards';
-import { CurrentTenant } from '../../../common/decorators';
+import { RolesGuard } from '../../../common/guards/roles.guard';
+import { CurrentTenant, Roles } from '../../../common/decorators';
 import { CacheManagementService } from './cache-management.service';
 import { InvalidateCacheDto } from '../dto/cache.dto';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('cache')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Cache')
 @ApiBearerAuth('JWT-auth')
+@Roles('SUPER_ADMIN')
 export class CacheManagementController {
   constructor(private readonly cacheService: CacheManagementService) {}
 
@@ -34,8 +36,8 @@ export class CacheManagementController {
   @ApiQuery({ name: 'pattern', required: false, type: String })
   @ApiStandardResponse('Cache keys list')
   @ApiErrorResponses()
-  keys(@Query('pattern') pattern?: string) {
-    return this.cacheService.listKeys(pattern ?? '*');
+  keys(@CurrentTenant() tenantId: string, @Query('pattern') pattern?: string) {
+    return this.cacheService.listKeys(tenantId, pattern ?? '*');
   }
 
   @Delete('keys/:pattern')
@@ -43,8 +45,8 @@ export class CacheManagementController {
   @ApiParam({ name: 'pattern', description: 'Cache key pattern' })
   @ApiStandardResponse('Cache keys deleted')
   @ApiErrorResponses()
-  deletePattern(@Param('pattern') pattern: string) {
-    return this.cacheService.deleteByPattern(pattern);
+  deletePattern(@CurrentTenant() tenantId: string, @Param('pattern') pattern: string) {
+    return this.cacheService.deleteByPattern(tenantId, pattern);
   }
 
   @Post('invalidate')

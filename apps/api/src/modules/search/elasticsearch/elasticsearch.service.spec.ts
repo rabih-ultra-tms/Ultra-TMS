@@ -25,7 +25,7 @@ describe('ElasticsearchService', () => {
       hits: { total: { value: 1 }, hits: [{ _id: '1', _index: 'ultra-orders-v1', _score: 1, _source: { title: 'A' } }] },
     });
 
-    const result = await service.searchGlobal('a');
+    const result = await service.searchGlobal('tenant-1', 'a');
 
     expect(result.total).toBe(1);
     expect(result.items[0]?.entityType).toBe('orders');
@@ -38,7 +38,7 @@ describe('ElasticsearchService', () => {
       hits: { total: 2, hits: [{ _id: '1', _score: 1, _source: { name: 'A' } }] },
     });
 
-    const result = await service.searchEntity('companies', 'a', { status: 'ACTIVE' });
+    const result = await service.searchEntity('tenant-1', 'companies', 'a', { status: 'ACTIVE' });
 
     expect(result.total).toBe(2);
   });
@@ -48,7 +48,7 @@ describe('ElasticsearchService', () => {
     const client = getClient();
     client.search.mockResolvedValue({ suggest: { name_suggest: [{ options: [{ text: 'Alpha' }] }] } });
 
-    const result = await service.suggest('a');
+    const result = await service.suggest('tenant-1', 'a');
 
     expect(result.suggestions).toEqual(['Alpha']);
   });

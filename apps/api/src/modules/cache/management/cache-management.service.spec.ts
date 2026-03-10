@@ -57,20 +57,20 @@ describe('CacheManagementService', () => {
   it('lists keys by pattern', async () => {
     redis.keys.mockResolvedValue(['k1']);
 
-    const result = await service.listKeys('t:*');
+    const result = await service.listKeys('tenant-1', 't:*');
 
     expect(result).toEqual(['k1']);
-    expect(redis.keys).toHaveBeenCalledWith('t:*');
+    expect(redis.keys).toHaveBeenCalledWith('tenant:tenant-1:t:*');
   });
 
   it('deletes by pattern and emits invalidation', async () => {
     redis.deleteByPattern.mockResolvedValue(4);
 
-    const result = await service.deleteByPattern('t:*');
+    const result = await service.deleteByPattern('tenant-1', 't:*');
 
-    expect(result).toEqual({ pattern: 't:*', deleted: 4 });
-    expect(stats.recordDelete).toHaveBeenCalledWith(null, 'GENERIC', 4);
-    expect(events.emit).toHaveBeenCalledWith('cache.invalidated', { pattern: 't:*', count: 4 });
+    expect(result).toEqual({ pattern: 'tenant:tenant-1:t:*', deleted: 4 });
+    expect(stats.recordDelete).toHaveBeenCalledWith('tenant-1', 'GENERIC', 4);
+    expect(events.emit).toHaveBeenCalledWith('cache.invalidated', { pattern: 'tenant:tenant-1:t:*', count: 4, tenantId: 'tenant-1' });
   });
 
   it('delegates to invalidation service', async () => {

@@ -21,7 +21,7 @@ const REQUIRED_DOCUMENTS = [
 export function CarrierDocumentsSection({ carrierId }: CarrierDocumentsSectionProps) {
   void carrierId;
 
-  // TODO: Wire to carrier documents API when available
+  // Backlog UX-006: Wire to carrier documents API when available
   // For now, show document checklist with empty states
   return (
     <div className="space-y-4">

@@ -1,13 +1,15 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../modules/auth/guards/jwt-auth.guard';
-import { CurrentTenant } from '../../../common/decorators';
+import { RolesGuard } from '../../../common/guards/roles.guard';
+import { CurrentTenant, Roles } from '../../../common/decorators';
 import { CreateHolidayDto, UpdateBusinessHoursDto } from '../dto';
 import { BusinessHoursService } from './business-hours.service';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('config')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('ADMIN')
 @ApiTags('Config')
 @ApiBearerAuth('JWT-auth')
 export class BusinessHoursController {

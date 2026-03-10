@@ -45,8 +45,8 @@ export class CarrierPortalAuthService {
     });
   }
 
-  async login(dto: CarrierPortalLoginDto, meta: { ipAddress?: string; userAgent?: string }) {
-    const user = await this.prisma.carrierPortalUser.findFirst({ where: { email: dto.email, deletedAt: null } });
+  async login(dto: CarrierPortalLoginDto, tenantId: string, meta: { ipAddress?: string; userAgent?: string }) {
+    const user = await this.prisma.carrierPortalUser.findFirst({ where: { email: dto.email, tenantId, deletedAt: null } });
     if (!user || !(await bcrypt.compare(dto.password, user.password))) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -108,8 +108,8 @@ export class CarrierPortalAuthService {
     return { success: true };
   }
 
-  async forgotPassword(dto: ForgotPasswordDto) {
-    const user = await this.prisma.carrierPortalUser.findFirst({ where: { email: dto.email } });
+  async forgotPassword(dto: ForgotPasswordDto, tenantId: string) {
+    const user = await this.prisma.carrierPortalUser.findFirst({ where: { email: dto.email, tenantId, deletedAt: null } });
     if (!user) return { success: true };
     const token = randomBytes(16).toString('hex');
     await this.prisma.carrierPortalUser.update({ where: { id: user.id }, data: { verificationToken: token } });
@@ -117,7 +117,7 @@ export class CarrierPortalAuthService {
   }
 
   async resetPassword(dto: ResetPasswordDto) {
-    const user = await this.prisma.carrierPortalUser.findFirst({ where: { verificationToken: dto.token } });
+    const user = await this.prisma.carrierPortalUser.findFirst({ where: { verificationToken: dto.token, deletedAt: null } });
     if (!user) throw new BadRequestException('Invalid reset token');
     const hashed = await bcrypt.hash(dto.newPassword, 12);
     await this.prisma.carrierPortalUser.update({ where: { id: user.id }, data: { password: hashed, verificationToken: null } });
@@ -125,7 +125,7 @@ export class CarrierPortalAuthService {
   }
 
   async verifyEmail(token: string) {
-    const user = await this.prisma.carrierPortalUser.findFirst({ where: { verificationToken: token } });
+    const user = await this.prisma.carrierPortalUser.findFirst({ where: { verificationToken: token, deletedAt: null } });
     if (!user) throw new BadRequestException('Invalid verification token');
     await this.prisma.carrierPortalUser.update({
       where: { id: user.id },

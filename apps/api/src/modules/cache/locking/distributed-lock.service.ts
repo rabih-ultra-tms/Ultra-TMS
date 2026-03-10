@@ -22,23 +22,23 @@ export class DistributedLockService {
     });
   }
 
-  async lockDetails(lockKey: string) {
-    return this.prisma.distributedLock.findFirst({ where: { lockKey }, orderBy: { acquiredAt: 'desc' } });
+  async lockDetails(tenantId: string, lockKey: string) {
+    return this.prisma.distributedLock.findFirst({ where: { tenantId, lockKey }, orderBy: { acquiredAt: 'desc' } });
   }
 
-  async forceRelease(lockKey: string) {
+  async forceRelease(tenantId: string, lockKey: string) {
     const client = this.redis.getClient();
     await client.del(`lock:${lockKey}`);
     await this.prisma.distributedLock.updateMany({
-      where: { lockKey, releasedAt: null },
+      where: { tenantId, lockKey, releasedAt: null },
       data: { releasedAt: new Date() },
     });
     return { released: true };
   }
 
-  async history(lockKey?: string) {
+  async history(tenantId: string, lockKey?: string) {
     return this.prisma.distributedLock.findMany({
-      where: lockKey ? { lockKey } : {},
+      where: { tenantId, ...(lockKey ? { lockKey } : {}) },
       orderBy: { acquiredAt: 'desc' },
       take: 200,
     });

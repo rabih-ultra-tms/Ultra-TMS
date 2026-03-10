@@ -35,8 +35,7 @@ export class NotificationsService {
       `Notification created for user ${dto.userId}: ${dto.title}`,
     );
 
-    // TODO: Emit WebSocket event for real-time delivery
-    // this.eventEmitter.emit('notification.created', notification);
+    // WebSocket real-time delivery: see QS-001 (WebSocket gateways task)
 
     return notification;
   }

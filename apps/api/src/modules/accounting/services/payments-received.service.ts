@@ -168,7 +168,7 @@ export class PaymentsReceivedService {
         const newStatus = newBalanceDue <= 0 ? 'PAID' : 'PARTIAL';
 
         await tx.invoice.update({
-          where: { id: application.invoiceId },
+          where: { id: application.invoiceId, tenantId },
           data: {
             amountPaid: newAmountPaid,
             balanceDue: newBalanceDue,
@@ -182,7 +182,7 @@ export class PaymentsReceivedService {
       const newStatus = newUnapplied <= 0 ? 'APPLIED' : 'PARTIAL';
 
       return tx.paymentReceived.update({
-        where: { id: paymentId },
+        where: { id: paymentId, tenantId },
         data: {
           unappliedAmount: newUnapplied,
           status: newStatus,
@@ -207,7 +207,7 @@ export class PaymentsReceivedService {
     }
 
     return this.prisma.paymentReceived.update({
-      where: { id },
+      where: { id, tenantId },
       data: {
         deletedAt: new Date(),
         updatedById: userId,
@@ -229,7 +229,7 @@ export class PaymentsReceivedService {
     return this.prisma.$transaction(async (tx) => {
       for (const application of payment.applications) {
         const invoice = await tx.invoice.findFirst({
-          where: { id: application.invoiceId, deletedAt: null },
+          where: { id: application.invoiceId, tenantId, deletedAt: null },
         });
 
         if (invoice) {
@@ -237,7 +237,7 @@ export class PaymentsReceivedService {
           const newBalanceDue = Number(invoice.totalAmount) - newAmountPaid;
 
           await tx.invoice.update({
-            where: { id: application.invoiceId },
+            where: { id: application.invoiceId, tenantId },
             data: {
               amountPaid: newAmountPaid,
               balanceDue: newBalanceDue,
@@ -252,7 +252,7 @@ export class PaymentsReceivedService {
       }
 
       return tx.paymentReceived.update({
-        where: { id },
+        where: { id, tenantId },
         data: {
           status: 'BOUNCED',
           unappliedAmount: 0,
@@ -317,7 +317,7 @@ export class PaymentsReceivedService {
             const newStatus = newBalanceDue <= 0 ? 'PAID' : 'PARTIAL';
 
             await this.prisma.invoice.update({
-              where: { id: allocation.invoiceId },
+              where: { id: allocation.invoiceId, tenantId },
               data: {
                 amountPaid: newAmountPaid,
                 balanceDue: newBalanceDue,
@@ -327,7 +327,7 @@ export class PaymentsReceivedService {
           }
 
           await this.prisma.paymentReceived.update({
-            where: { id: payment.id },
+            where: { id: payment.id, tenantId },
             data: { unappliedAmount: 0, status: 'APPLIED' },
           });
         }

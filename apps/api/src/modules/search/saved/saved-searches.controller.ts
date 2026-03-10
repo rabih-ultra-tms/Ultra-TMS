@@ -1,16 +1,17 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards';
+import { RolesGuard } from '../../../common/guards/roles.guard';
 import { CurrentTenant, CurrentUser, Roles } from '../../../common/decorators';
 import { SavedSearchesService } from './saved-searches.service';
 import { CreateSavedSearchDto, ShareSavedSearchDto, UpdateSavedSearchDto } from '../dto';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('searches/saved')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Saved Searches')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'OPERATIONS_MANAGER', 'DISPATCHER', 'SALES_REP', 'ACCOUNTING', 'CARRIER_MANAGER', 'AGENT')
 export class SavedSearchesController {
   constructor(private readonly savedSearchesService: SavedSearchesService) {}
 

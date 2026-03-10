@@ -123,7 +123,7 @@ export class RateContractsService {
     }
 
     return this.prisma.rateContract.update({
-      where: { id },
+      where: { id, tenantId },
       data: {
         name: dto.name,
         contractNumber: dto.contractNumber,
@@ -152,7 +152,7 @@ export class RateContractsService {
 
     // Soft delete
     await this.prisma.rateContract.update({
-      where: { id },
+      where: { id, tenantId },
       data: { deletedAt: new Date(), updatedById: userId },
     });
 
@@ -167,7 +167,7 @@ export class RateContractsService {
     }
 
     return this.prisma.rateContract.update({
-      where: { id },
+      where: { id, tenantId },
       data: { status: 'ACTIVE', updatedById: userId },
     });
   }
@@ -176,7 +176,7 @@ export class RateContractsService {
     await this.findOne(tenantId, id);
 
     return this.prisma.rateContract.update({
-      where: { id },
+      where: { id, tenantId },
       data: { status: 'TERMINATED', updatedById: userId },
     });
   }
@@ -309,7 +309,7 @@ export class RateContractsService {
     await this.findOne(tenantId, contractId);
 
     const lane = await this.prisma.contractLaneRate.findFirst({
-      where: { id: laneId, contractId },
+      where: { id: laneId, contractId, tenantId },
     });
 
     if (!lane) {
@@ -317,7 +317,7 @@ export class RateContractsService {
     }
 
     return this.prisma.contractLaneRate.update({
-      where: { id: laneId },
+      where: { id: laneId, tenantId },
       data: this.mapLaneRateDto(dto as any),
     });
   }
@@ -326,7 +326,7 @@ export class RateContractsService {
     await this.findOne(tenantId, contractId);
 
     const lane = await this.prisma.contractLaneRate.findFirst({
-      where: { id: laneId, contractId },
+      where: { id: laneId, contractId, tenantId },
     });
 
     if (!lane) {
@@ -334,7 +334,7 @@ export class RateContractsService {
     }
 
     await this.prisma.contractLaneRate.delete({
-      where: { id: laneId },
+      where: { id: laneId, tenantId },
     });
 
     return { success: true };

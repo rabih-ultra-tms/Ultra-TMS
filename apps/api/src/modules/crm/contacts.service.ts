@@ -79,7 +79,7 @@ export class ContactsService {
     await this.findOne(tenantId, id);
 
     return this.prisma.contact.update({
-      where: { id },
+      where: { id, tenantId },
       data: {
         ...dto,
         customFields: dto.customFields || undefined,
@@ -94,7 +94,7 @@ export class ContactsService {
     await this.findOne(tenantId, id);
 
     await this.prisma.contact.update({
-      where: { id },
+      where: { id, tenantId },
       data: { deletedAt: new Date(), updatedById: userId },
     });
 
@@ -135,7 +135,7 @@ export class ContactsService {
 
     // Set this contact as primary
     return this.prisma.contact.update({
-      where: { id },
+      where: { id, tenantId },
       data: { isPrimary: true, updatedById: userId },
       include: { company: { select: { id: true, name: true } } },
     });

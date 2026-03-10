@@ -1,15 +1,17 @@
 import { Body, Controller, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards';
-import { CurrentTenant } from '../../../common/decorators';
+import { RolesGuard } from '../../../common/guards/roles.guard';
+import { CurrentTenant, Roles } from '../../../common/decorators';
 import { RateLimitService } from './rate-limit.service';
 import { UpdateRateLimitDto } from '../dto/cache.dto';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('cache/rate-limits')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Cache')
 @ApiBearerAuth('JWT-auth')
+@Roles('SUPER_ADMIN')
 export class RateLimitController {
   constructor(private readonly rateLimitService: RateLimitService) {}
 
@@ -26,8 +28,8 @@ export class RateLimitController {
   @ApiParam({ name: 'key', description: 'Rate limit key' })
   @ApiStandardResponse('Rate limit details')
   @ApiErrorResponses()
-  get(@Param('key') key: string) {
-    return this.rateLimitService.getByKey(key);
+  get(@CurrentTenant() tenantId: string, @Param('key') key: string) {
+    return this.rateLimitService.getByKey(tenantId, key);
   }
 
   @Put(':key')
@@ -44,8 +46,8 @@ export class RateLimitController {
   @ApiQuery({ name: 'key', required: true, type: String })
   @ApiStandardResponse('Rate limit usage')
   @ApiErrorResponses()
-  usage(@Query('key') key: string) {
-    return this.rateLimitService.usage(key);
+  usage(@CurrentTenant() tenantId: string, @Query('key') key: string) {
+    return this.rateLimitService.usage(tenantId, key);
   }
 
   @Post(':key/reset')
@@ -53,7 +55,7 @@ export class RateLimitController {
   @ApiParam({ name: 'key', description: 'Rate limit key' })
   @ApiStandardResponse('Rate limit reset')
   @ApiErrorResponses()
-  reset(@Param('key') key: string) {
-    return this.rateLimitService.reset(key);
+  reset(@CurrentTenant() tenantId: string, @Param('key') key: string) {
+    return this.rateLimitService.reset(tenantId, key);
   }
 }

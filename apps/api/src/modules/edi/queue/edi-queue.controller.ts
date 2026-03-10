@@ -1,16 +1,17 @@
 import { Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators';
 import { CurrentTenant } from '../../../common/decorators/current-tenant.decorator';
 import { EdiQueueService } from './edi-queue.service';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('edi/queue')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('EDI Transactions')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'EDI_MANAGER')
 export class EdiQueueController {
   constructor(private readonly service: EdiQueueService) {}
 

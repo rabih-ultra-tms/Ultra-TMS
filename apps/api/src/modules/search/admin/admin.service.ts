@@ -76,7 +76,7 @@ export class AdminService {
   }
 
   async deleteSynonym(tenantId: string, id: string) {
-    await this.prisma.searchSynonym.update({ where: { id }, data: { deletedAt: new Date(), isActive: false } });
+    await this.prisma.searchSynonym.update({ where: { id, tenantId }, data: { deletedAt: new Date(), isActive: false } });
     return { success: true };
   }
 

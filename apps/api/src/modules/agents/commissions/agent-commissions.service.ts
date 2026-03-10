@@ -61,7 +61,7 @@ export class AgentCommissionsService {
     });
 
     const agentIds = rankings.map((r) => r.agentId);
-    const agents = await this.prisma.agent.findMany({ where: { id: { in: agentIds } } });
+    const agents = await this.prisma.agent.findMany({ where: { id: { in: agentIds }, tenantId } });
 
     return rankings.map((row) => ({
       agentId: row.agentId,

@@ -34,7 +34,7 @@ export class EntitySearchService {
 
     const limit = dto.limit ?? 20;
     const offset = dto.offset ?? 0;
-    const result = await this.elasticsearch.searchEntity(entityType, dto.q, dto.filters, limit, offset);
+    const result = await this.elasticsearch.searchEntity(tenantId, entityType, dto.q, dto.filters, limit, offset);
 
     await this.prisma.searchHistory.create({
       data: {

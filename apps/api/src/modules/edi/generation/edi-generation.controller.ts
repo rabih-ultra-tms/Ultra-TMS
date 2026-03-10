@@ -1,6 +1,7 @@
 import { Body, Controller, Param, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators';
 import { CurrentTenant } from '../../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
@@ -13,10 +14,10 @@ import { EdiGenerationService } from './edi-generation.service';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('edi/generate')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('EDI Transactions')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'EDI_MANAGER')
 export class EdiGenerationController {
   constructor(private readonly service: EdiGenerationService) {}
 
@@ -82,10 +83,10 @@ export class EdiGenerationController {
 }
 
 @Controller('edi')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('EDI Transactions')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'EDI_MANAGER')
 export class EdiSendController {
   constructor(private readonly service: EdiGenerationService) {}
 

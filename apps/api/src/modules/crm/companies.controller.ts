@@ -274,7 +274,7 @@ export class CompaniesController {
     const isProduction = process.env.NODE_ENV === 'production';
     
     if (isProduction) {
-      // TODO: Implement cloud storage upload
+      // Backlog INFRA-006: Implement cloud storage upload
       // const cloudUrl = await cloudStorageService.uploadFile(file, 'logos');
       // return { data: { logoUrl: cloudUrl } };
       throw new BadRequestException('Cloud storage not configured. Please configure AWS S3, Azure Blob Storage, or GCS.');

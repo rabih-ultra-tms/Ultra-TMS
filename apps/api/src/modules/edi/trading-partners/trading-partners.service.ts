@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EdiCommunicationProtocol, Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma.service';
+import { EncryptionService } from '../../integration-hub/services/encryption.service';
 import { EdiPartnerType } from '../dto/enums';
 import { As2Transport } from '../transport/as2.transport';
 import { FtpTransport } from '../transport/ftp.transport';
@@ -9,6 +10,41 @@ import { SftpTransport } from '../transport/sftp.transport';
 import { CreateTradingPartnerDto } from './dto/create-trading-partner.dto';
 import { TradingPartnerQueryDto } from './dto/trading-partner-query.dto';
 import { UpdateTradingPartnerDto } from './dto/update-trading-partner.dto';
+
+/** Prisma select that returns all EdiTradingPartner fields EXCEPT ftpPassword */
+const safeSelect = {
+  id: true,
+  tenantId: true,
+  partnerName: true,
+  partnerType: true,
+  isActive: true,
+  isaId: true,
+  gsId: true,
+  duns: true,
+  scac: true,
+  protocol: true,
+  ftpHost: true,
+  ftpPort: true,
+  ftpUsername: true,
+  // ftpPassword intentionally excluded
+  ftpInboundPath: true,
+  ftpOutboundPath: true,
+  as2Url: true,
+  as2Identifier: true,
+  vanMailbox: true,
+  sendFunctionalAck: true,
+  requireFunctionalAck: true,
+  testMode: true,
+  fieldMappings: true,
+  externalId: true,
+  sourceSystem: true,
+  customFields: true,
+  createdAt: true,
+  updatedAt: true,
+  deletedAt: true,
+  createdById: true,
+  updatedById: true,
+} satisfies Prisma.EdiTradingPartnerSelect;
 
 @Injectable()
 export class TradingPartnersService {
@@ -18,6 +54,7 @@ export class TradingPartnersService {
     private readonly ftpTransport: FtpTransport,
     private readonly sftpTransport: SftpTransport,
     private readonly as2Transport: As2Transport,
+    private readonly encryptionService: EncryptionService,
   ) {}
 
   async create(tenantId: string, userId: string, dto: CreateTradingPartnerDto) {
@@ -39,7 +76,7 @@ export class TradingPartnersService {
         ftpHost: dto.ftpHost,
         ftpPort: dto.ftpPort,
         ftpUsername: dto.ftpUsername,
-        ftpPassword: dto.ftpPassword,
+        ftpPassword: dto.ftpPassword ? this.encryptionService.encrypt(dto.ftpPassword) : dto.ftpPassword,
         ftpInboundPath: dto.ftpInboundPath,
         ftpOutboundPath: dto.ftpOutboundPath,
         as2Url: dto.as2Url,
@@ -54,6 +91,7 @@ export class TradingPartnersService {
         createdById: userId,
         updatedById: userId,
       },
+      select: safeSelect,
     });
   }
 
@@ -80,7 +118,7 @@ export class TradingPartnersService {
     };
 
     const [data, total] = await Promise.all([
-      this.prisma.ediTradingPartner.findMany({ where, skip, take: limit, orderBy: { createdAt: 'desc' } }),
+      this.prisma.ediTradingPartner.findMany({ where, skip, take: limit, orderBy: { createdAt: 'desc' }, select: safeSelect }),
       this.prisma.ediTradingPartner.count({ where }),
     ]);
 
@@ -88,7 +126,14 @@ export class TradingPartnersService {
   }
 
   async findOne(tenantId: string, id: string) {
-    return this.requirePartner(tenantId, id);
+    const partner = await this.prisma.ediTradingPartner.findFirst({
+      where: { id, tenantId, deletedAt: null },
+      select: safeSelect,
+    });
+    if (!partner) {
+      throw new NotFoundException('Trading partner not found');
+    }
+    return partner;
   }
 
   async update(tenantId: string, userId: string, id: string, dto: UpdateTradingPartnerDto) {
@@ -114,7 +159,9 @@ export class TradingPartnersService {
         ...(dto.ftpHost !== undefined ? { ftpHost: dto.ftpHost } : {}),
         ...(dto.ftpPort !== undefined ? { ftpPort: dto.ftpPort } : {}),
         ...(dto.ftpUsername !== undefined ? { ftpUsername: dto.ftpUsername } : {}),
-        ...(dto.ftpPassword !== undefined ? { ftpPassword: dto.ftpPassword } : {}),
+        ...(dto.ftpPassword !== undefined
+          ? { ftpPassword: dto.ftpPassword ? this.encryptionService.encrypt(dto.ftpPassword) : dto.ftpPassword }
+          : {}),
         ...(dto.ftpInboundPath !== undefined ? { ftpInboundPath: dto.ftpInboundPath } : {}),
         ...(dto.ftpOutboundPath !== undefined ? { ftpOutboundPath: dto.ftpOutboundPath } : {}),
         ...(dto.as2Url !== undefined ? { as2Url: dto.as2Url } : {}),
@@ -128,6 +175,7 @@ export class TradingPartnersService {
           : {}),
         updatedById: userId,
       },
+      select: safeSelect,
     });
   }
 
@@ -136,6 +184,7 @@ export class TradingPartnersService {
     return this.prisma.ediTradingPartner.update({
       where: { id: partner.id },
       data: { isActive: !partner.isActive, updatedById: userId },
+      select: safeSelect,
     });
   }
 

@@ -262,6 +262,7 @@ export class LoadHistoryService {
         tenantId,
         carrierId,
         isActive: true,
+        deletedAt: null,
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -303,6 +304,7 @@ export class LoadHistoryService {
           gte: sixMonthsAgo,
         },
         isActive: true,
+        deletedAt: null,
       },
       orderBy: { pickupDate: 'desc' },
       take: 10,

@@ -82,7 +82,6 @@ export class StopsService {
     return stop;
   }
 
-  // TODO: Phase 1.2 - Implement stop update with UpdateStopDto
   async update(tenantId: string, userId: string, id: string, dto: UpdateStopDto) {
     const stop = await this.prisma.stop.findFirst({
       where: { id, tenantId, deletedAt: null },

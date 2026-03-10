@@ -7,8 +7,10 @@ export class RateLimitGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
+    const tenantId = request.user?.tenantId;
+    if (!tenantId) return true;
     const key = request.user?.id ? `user:${request.user.id}` : request.ip;
-    const record = await this.rateLimitService.getByKey(key);
+    const record = await this.rateLimitService.getByKey(tenantId, key);
     if (!record) return true;
 
     const now = new Date();
@@ -17,7 +19,7 @@ export class RateLimitGuard implements CanActivate {
 
     if (now > windowEnd) {
       currentRequests = 0;
-      await this.rateLimitService.reset(key);
+      await this.rateLimitService.reset(tenantId, key);
     }
 
     if (currentRequests >= record.maxRequests) {

@@ -1,6 +1,7 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../common/guards/roles.guard';
 import { CurrentTenant, Roles } from '../../../common/decorators';
 import { AuditLogsService } from '../logs/audit-logs.service';
 import { AccessLogService } from './access-log.service';
@@ -9,7 +10,7 @@ import { AccessLogQueryDto, LoginAuditQueryDto, UserActivityQueryDto } from '../
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('audit')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('COMPLIANCE', 'ADMIN', 'SUPER_ADMIN')
 @ApiTags('Audit')
 @ApiBearerAuth('JWT-auth')

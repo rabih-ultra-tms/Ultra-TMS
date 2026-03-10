@@ -1,6 +1,7 @@
 import { Body, Controller, Get, HttpCode, Param, Post, Put, Query, Request, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators';
 import { AgentLeadsService } from './agent-leads.service';
 import {
@@ -14,7 +15,7 @@ import {
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Agents')
 @ApiBearerAuth('JWT-auth')
 @Roles('ADMIN', 'AGENT_MANAGER', 'AGENT')

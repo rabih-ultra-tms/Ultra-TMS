@@ -1,14 +1,16 @@
 import { Controller, Delete, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards';
-import { CurrentTenant } from '../../../common/decorators';
+import { RolesGuard } from '../../../common/guards/roles.guard';
+import { CurrentTenant, Roles } from '../../../common/decorators';
 import { DistributedLockService } from './distributed-lock.service';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller('cache/locks')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Cache')
 @ApiBearerAuth('JWT-auth')
+@Roles('SUPER_ADMIN')
 export class LocksController {
   constructor(private readonly locks: DistributedLockService) {}
 
@@ -25,8 +27,8 @@ export class LocksController {
   @ApiQuery({ name: 'key', required: false, type: String })
   @ApiStandardResponse('Lock history')
   @ApiErrorResponses()
-  history(@Query('key') key?: string) {
-    return this.locks.history(key);
+  history(@CurrentTenant() tenantId: string, @Query('key') key?: string) {
+    return this.locks.history(tenantId, key);
   }
 
   @Get(':key')
@@ -34,8 +36,8 @@ export class LocksController {
   @ApiParam({ name: 'key', description: 'Lock key' })
   @ApiStandardResponse('Lock details')
   @ApiErrorResponses()
-  details(@Param('key') key: string) {
-    return this.locks.lockDetails(key);
+  details(@CurrentTenant() tenantId: string, @Param('key') key: string) {
+    return this.locks.lockDetails(tenantId, key);
   }
 
   @Delete(':key')
@@ -43,7 +45,7 @@ export class LocksController {
   @ApiParam({ name: 'key', description: 'Lock key' })
   @ApiStandardResponse('Lock released')
   @ApiErrorResponses()
-  forceRelease(@Param('key') key: string) {
-    return this.locks.forceRelease(key);
+  forceRelease(@CurrentTenant() tenantId: string, @Param('key') key: string) {
+    return this.locks.forceRelease(tenantId, key);
   }
 }
