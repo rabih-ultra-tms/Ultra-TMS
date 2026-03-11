@@ -1,147 +1,201 @@
-"use client";
+'use client';
 
-import { useLoads, useLoadStats } from "@/lib/hooks/tms/use-loads";
-import { LoadsDataTable } from "@/components/tms/loads/loads-data-table";
-import { LoadsFilterBar } from "@/components/tms/loads/loads-filter-bar";
-import { KPIStatCards } from "@/components/tms/loads/kpi-stat-cards";
-import { LoadDrawer } from "@/components/tms/loads/load-drawer";
-import { ColumnSettingsDrawer } from "@/components/tms/loads/column-settings-drawer";
-import { TablePagination } from "@/components/tms/tables/table-pagination";
-import { useState } from "react";
-import { Load, LoadStatus } from "@/types/loads";
-import { Button } from "@/components/ui/button";
-import { Settings, Plus } from "lucide-react";
-import { VisibilityState } from "@tanstack/react-table";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import Link from "next/link";
+import { useLoads, useLoadStats } from '@/lib/hooks/tms/use-loads';
+import { LoadsDataTable } from '@/components/tms/loads/loads-data-table';
+import { LoadsFilterBar } from '@/components/tms/loads/loads-filter-bar';
+import { KPIStatCards } from '@/components/tms/loads/kpi-stat-cards';
+import { LoadDrawer } from '@/components/tms/loads/load-drawer';
+import { ColumnSettingsDrawer } from '@/components/tms/loads/column-settings-drawer';
+import { TablePagination } from '@/components/tms/tables/table-pagination';
+import { useState, useCallback } from 'react';
+import { Load, LoadStatus } from '@/types/loads';
+import { Button } from '@/components/ui/button';
+import { Settings, Plus, Download } from 'lucide-react';
+import { exportToCsv } from '@/lib/utils/csv-export';
+import { toast } from 'sonner';
+import { VisibilityState } from '@tanstack/react-table';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
 
 export default function LoadsListPage() {
-    const searchParams = useSearchParams();
-    const router = useRouter();
-    const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
 
-    // -- State --
-    const [selectedLoad, setSelectedLoad] = useState<Load | null>(null);
-    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  // -- State --
+  const [selectedLoad, setSelectedLoad] = useState<Load | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-    // Table State
-    // Default visibility based on design (showing key fields)
-    const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
-        // all visible by default
-    });
+  // Table State
+  // Default visibility based on design (showing key fields)
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
+    // all visible by default
+  });
 
-    // -- Data Fetching --
-    const page = Number(searchParams.get("page")) || 1;
-    const limit = Number(searchParams.get("limit")) || 20;
+  // -- Data Fetching --
+  const page = Number(searchParams.get('page')) || 1;
+  const limit = Number(searchParams.get('limit')) || 20;
 
-    // Construct query from URL params
-    const query = {
-        page,
-        limit,
-        status: (searchParams.get("status") as LoadStatus | "all") || undefined,
-        carrierId: searchParams.get("carrierId") || undefined,
-        search: searchParams.get("search") || undefined,
-    };
+  // Construct query from URL params
+  const query = {
+    page,
+    limit,
+    status: (searchParams.get('status') as LoadStatus | 'all') || undefined,
+    carrierId: searchParams.get('carrierId') || undefined,
+    search: searchParams.get('search') || undefined,
+  };
 
-    const { data, isLoading } = useLoads(query);
-    const { data: stats, isLoading: statsLoading } = useLoadStats();
+  const { data, isLoading } = useLoads(query);
+  const { data: stats, isLoading: statsLoading } = useLoadStats();
 
-    // -- Handlers --
-    const handleRowClick = (load: Load) => {
-        setSelectedLoad(load);
-        setIsDrawerOpen(true);
-    };
+  // -- Handlers --
+  const handleRowClick = (load: Load) => {
+    setSelectedLoad(load);
+    setIsDrawerOpen(true);
+  };
 
-    const handleEdit = (load: Load) => {
-        router.push(`/operations/loads/${load.id}/edit`);
-    };
+  const handleEdit = (load: Load) => {
+    router.push(`/operations/loads/${load.id}/edit`);
+  };
 
-    const handleViewDetails = (load: Load) => {
-        router.push(`/operations/loads/${load.id}`);
-    };
+  const handleViewDetails = (load: Load) => {
+    router.push(`/operations/loads/${load.id}`);
+  };
 
-    const handlePageChange = (pageIndex: number) => {
-        const params = new URLSearchParams(searchParams);
-        params.set("page", (pageIndex + 1).toString());
-        router.replace(`${pathname}?${params.toString()}`);
-    };
+  const handleExportCsv = useCallback(() => {
+    const loads = data?.data || [];
+    if (loads.length === 0) {
+      toast.info('No data to export');
+      return;
+    }
+    const dateStr = new Date().toISOString().slice(0, 10);
+    exportToCsv(`loads-${dateStr}.csv`, loads, [
+      { header: 'Load #', accessor: (l) => l.loadNumber },
+      { header: 'Status', accessor: (l) => l.status },
+      { header: 'Order #', accessor: (l) => l.order?.orderNumber ?? '' },
+      { header: 'Customer', accessor: (l) => l.order?.customer?.name ?? '' },
+      { header: 'Carrier', accessor: (l) => l.carrier?.legalName ?? '' },
+      { header: 'MC #', accessor: (l) => l.carrier?.mcNumber ?? '' },
+      { header: 'Driver', accessor: (l) => l.driverName ?? '' },
+      { header: 'Equipment', accessor: (l) => l.equipmentType ?? '' },
+      {
+        header: 'Origin',
+        accessor: (l) =>
+          [l.originCity, l.originState].filter(Boolean).join(', '),
+      },
+      {
+        header: 'Destination',
+        accessor: (l) =>
+          [l.destinationCity, l.destinationState].filter(Boolean).join(', '),
+      },
+      {
+        header: 'Pickup Date',
+        accessor: (l) =>
+          l.pickupDate ? new Date(l.pickupDate).toLocaleDateString() : '',
+      },
+      {
+        header: 'Delivery Date',
+        accessor: (l) =>
+          l.deliveryDate ? new Date(l.deliveryDate).toLocaleDateString() : '',
+      },
+      { header: 'Carrier Rate', accessor: (l) => l.carrierRate ?? '' },
+      { header: 'Weight', accessor: (l) => l.weight ?? '' },
+      { header: 'Miles', accessor: (l) => l.miles ?? '' },
+      {
+        header: 'Created',
+        accessor: (l) =>
+          l.createdAt ? new Date(l.createdAt).toLocaleDateString() : '',
+      },
+    ]);
+    toast.success(`Exported ${loads.length} loads`);
+  }, [data]);
 
-    return (
-        <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-950/20">
-            {/* Header Area */}
-            <div className="flex flex-col">
-                <div className="px-6 py-2 border-b bg-background flex items-center justify-between">
-                    <h1 className="text-lg font-bold text-foreground">Dispatch Board</h1>
-                    <div className="flex items-center gap-2">
-                        <Button asChild>
-                            <Link href="/operations/loads/new">
-                                <Plus className="mr-2 h-4 w-4" />
-                                New Load
-                            </Link>
-                        </Button>
-                    </div>
-                </div>
+  const handlePageChange = (pageIndex: number) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('page', (pageIndex + 1).toString());
+    router.replace(`${pathname}?${params.toString()}`);
+  };
 
-                {/* Filters */}
-                <LoadsFilterBar />
-
-                {/* Stats */}
-                <div className="px-6 py-4 border-b bg-background/50">
-                    <KPIStatCards stats={stats} isLoading={statsLoading} />
-                </div>
-            </div>
-
-            {/* Main Content Area */}
-            <div className="flex-1 p-6 overflow-hidden flex flex-col relative">
-                <div className="flex-1 overflow-auto rounded-lg border bg-background shadow-sm relative">
-                    <LoadsDataTable
-                        data={data?.data || []}
-                        isLoading={isLoading}
-                        onRowClick={handleRowClick}
-                        onViewDetails={handleViewDetails}
-                        onEdit={handleEdit}
-                    />
-                    {data && data.total > 0 && (
-                        <TablePagination
-                            pageIndex={page - 1}
-                            pageCount={Math.ceil(data.total / limit)}
-                            totalRows={data.total}
-                            pageSize={limit}
-                            canPreviousPage={page > 1}
-                            canNextPage={page < Math.ceil(data.total / limit)}
-                            onPageChange={handlePageChange}
-                            entityLabel="loads"
-                        />
-                    )}
-                </div>
-
-                {/* Floating Settings Trigger (Bottom Right) */}
-                <Button
-                    variant="outline"
-                    size="icon"
-                    className="absolute bottom-6 right-6 h-12 w-12 rounded-xl shadow-lg border-muted-foreground/20 bg-background hover:bg-slate-100 hover:text-blue-600 transition-all hover:scale-105 z-10"
-                    onClick={() => setIsSettingsOpen(true)}
-                >
-                    <Settings className="h-6 w-6" />
-                </Button>
-            </div>
-
-            {/* Drawers */}
-            <LoadDrawer
-                load={selectedLoad}
-                open={isDrawerOpen}
-                onClose={() => setIsDrawerOpen(false)}
-                onEdit={handleEdit}
-                onViewDetails={handleViewDetails}
-            />
-
-            <ColumnSettingsDrawer
-                open={isSettingsOpen}
-                onClose={() => setIsSettingsOpen(false)}
-                currentVisibility={columnVisibility}
-                onVisibilityChange={setColumnVisibility}
-            />
+  return (
+    <div className="flex flex-col h-full bg-slate-50/50 dark:bg-slate-950/20">
+      {/* Header Area */}
+      <div className="flex flex-col">
+        <div className="px-6 py-2 border-b bg-background flex items-center justify-between">
+          <h1 className="text-lg font-bold text-foreground">Dispatch Board</h1>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handleExportCsv}>
+              <Download className="mr-2 h-4 w-4" />
+              Export CSV
+            </Button>
+            <Button asChild>
+              <Link href="/operations/loads/new">
+                <Plus className="mr-2 h-4 w-4" />
+                New Load
+              </Link>
+            </Button>
+          </div>
         </div>
-    );
+
+        {/* Filters */}
+        <LoadsFilterBar />
+
+        {/* Stats */}
+        <div className="px-6 py-4 border-b bg-background/50">
+          <KPIStatCards stats={stats} isLoading={statsLoading} />
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="flex-1 p-6 overflow-hidden flex flex-col relative">
+        <div className="flex-1 overflow-auto rounded-lg border bg-background shadow-sm relative">
+          <LoadsDataTable
+            data={data?.data || []}
+            isLoading={isLoading}
+            onRowClick={handleRowClick}
+            onViewDetails={handleViewDetails}
+            onEdit={handleEdit}
+          />
+          {data && data.total > 0 && (
+            <TablePagination
+              pageIndex={page - 1}
+              pageCount={Math.ceil(data.total / limit)}
+              totalRows={data.total}
+              pageSize={limit}
+              canPreviousPage={page > 1}
+              canNextPage={page < Math.ceil(data.total / limit)}
+              onPageChange={handlePageChange}
+              entityLabel="loads"
+            />
+          )}
+        </div>
+
+        {/* Floating Settings Trigger (Bottom Right) */}
+        <Button
+          variant="outline"
+          size="icon"
+          className="absolute bottom-6 right-6 h-12 w-12 rounded-xl shadow-lg border-muted-foreground/20 bg-background hover:bg-slate-100 hover:text-blue-600 transition-all hover:scale-105 z-10"
+          onClick={() => setIsSettingsOpen(true)}
+        >
+          <Settings className="h-6 w-6" />
+        </Button>
+      </div>
+
+      {/* Drawers */}
+      <LoadDrawer
+        load={selectedLoad}
+        open={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        onEdit={handleEdit}
+        onViewDetails={handleViewDetails}
+      />
+
+      <ColumnSettingsDrawer
+        open={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        currentVisibility={columnVisibility}
+        onVisibilityChange={setColumnVisibility}
+      />
+    </div>
+  );
 }

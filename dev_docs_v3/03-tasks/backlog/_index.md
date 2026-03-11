@@ -40,7 +40,7 @@
 | ~~BUG-012~~ | ~~localStorage token storage (XSS)~~   | ~~P0~~   | ~~M~~  | **DONE** — HTTP-only cookies implemented, zero localStorage usage                                                                 |
 | ~~BUG-013~~ | ~~Pipeline stage confirm dialog~~      | ~~P1~~   | ~~S~~  | **DONE** — Pipeline drag-drop uses ConfirmDialog (warning variant) for stage changes                                              |
 | ~~BUG-014~~ | ~~window.confirm() remaining x3~~      | ~~P1~~   | ~~S~~  | **DONE** — Zero window.confirm() calls remain. All 4 pages use ConfirmDialog. Regression test at `bug-006-window-confirm.test.ts` |
-| BUG-015     | No search debounce on carrier list     | P2       | S (1h) | Use `use-debounce` hook on search input                                                                                           |
+| ~~BUG-015~~ | ~~No search debounce on carrier list~~ | ~~P2~~   | ~~S~~  | **DONE** — Already implemented: `useDebounce(searchQuery, 300)` in carriers page                                                  |
 | ~~BUG-016~~ | ~~useDashboard KPI cards hardcoded 0~~ | ~~P1~~   | ~~S~~  | **DONE** — 3 real API hooks fetch live data (carriers, loads, quotes stats)                                                       |
 
 ---
@@ -119,14 +119,14 @@
 
 ## P2 — UX Polish
 
-| ID         | Title                                     | Priority | Effort   | Notes                                                                                                         |
-| ---------- | ----------------------------------------- | -------- | -------- | ------------------------------------------------------------------------------------------------------------- |
-| ~~UX-001~~ | ~~Add search debounce to all list pages~~ | ~~P2~~   | ~~S~~    | **DONE** — Custom `useDebounce` hook deployed across 8+ list pages with tests                                 |
-| UX-002     | Replace window.confirm() everywhere       | P2       | S (2h)   | Already partially done                                                                                        |
-| UX-003     | Add export buttons (Orders, Loads)        | P3       | M (2-4h) | Backend endpoints exist (unused)                                                                              |
-| UX-004     | Add bulk status update (Orders)           | P3       | M (2-4h) | Backend endpoint exists (unused)                                                                              |
-| ~~UX-005~~ | ~~Add aging report UI~~                   | ~~P2~~   | ~~M~~    | **DONE** — Backend endpoint + frontend page with customer/date filters fully built                            |
-| ~~UX-006~~ | ~~Wire carrier documents API to UI~~      | ~~P2~~   | ~~M~~    | **DONE** — File upload via `FileInterceptor` + `IStorageService`, download URL endpoint, localStorage removed |
+| ID         | Title                                     | Priority | Effort | Notes                                                                                                         |
+| ---------- | ----------------------------------------- | -------- | ------ | ------------------------------------------------------------------------------------------------------------- |
+| ~~UX-001~~ | ~~Add search debounce to all list pages~~ | ~~P2~~   | ~~S~~  | **DONE** — Custom `useDebounce` hook deployed across 8+ list pages with tests                                 |
+| ~~UX-002~~ | ~~Replace window.confirm() everywhere~~   | ~~P2~~   | ~~S~~  | **DONE** — Zero `window.confirm()` calls remain. All pages use ConfirmDialog.                                 |
+| ~~UX-003~~ | ~~Add export buttons (Orders, Loads)~~    | ~~P3~~   | ~~M~~  | **DONE** — Client-side CSV export on Orders + Loads pages. Exports visible or selected rows.                  |
+| ~~UX-004~~ | ~~Add bulk status update (Orders)~~       | ~~P3~~   | ~~M~~  | **DONE** — `useBulkUpdateOrderStatus` hook + bulk action bar with status selector dialog on Orders page.      |
+| ~~UX-005~~ | ~~Add aging report UI~~                   | ~~P2~~   | ~~M~~  | **DONE** — Backend endpoint + frontend page with customer/date filters fully built                            |
+| ~~UX-006~~ | ~~Wire carrier documents API to UI~~      | ~~P2~~   | ~~M~~  | **DONE** — File upload via `FileInterceptor` + `IStorageService`, download URL endpoint, localStorage removed |
 
 ---
 

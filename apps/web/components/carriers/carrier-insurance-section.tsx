@@ -65,8 +65,13 @@ function formatDate(dateStr: string): string {
   });
 }
 
-export function CarrierInsuranceSection({ carrier }: CarrierInsuranceSectionProps) {
-  const hasInsurance = carrier.insuranceCompany || carrier.insurancePolicyNumber || carrier.insuranceExpiryDate;
+export function CarrierInsuranceSection({
+  carrier,
+}: CarrierInsuranceSectionProps) {
+  const hasInsurance =
+    carrier.insuranceCompany ||
+    carrier.insurancePolicyNumber ||
+    carrier.insuranceExpiryDate;
 
   if (!hasInsurance) {
     return (
@@ -75,7 +80,8 @@ export function CarrierInsuranceSection({ carrier }: CarrierInsuranceSectionProp
           <Shield className="h-10 w-10 text-muted-foreground" />
           <h3 className="font-medium">No insurance information</h3>
           <p className="text-sm text-muted-foreground text-center max-w-sm">
-            Insurance details have not been added for this carrier. Edit the carrier to add insurance information.
+            Insurance details have not been added for this carrier. Edit the
+            carrier to add insurance information.
           </p>
         </CardContent>
       </Card>
@@ -102,8 +108,9 @@ export function CarrierInsuranceSection({ carrier }: CarrierInsuranceSectionProp
         <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
           <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
           <p className="text-sm text-amber-800">
-            Insurance expires in {expiryStatus.daysRemaining} days ({formatDate(carrier.insuranceExpiryDate!)}).
-            Request an updated certificate.
+            Insurance expires in {expiryStatus.daysRemaining} days (
+            {formatDate(carrier.insuranceExpiryDate!)}). Request an updated
+            certificate.
           </p>
         </div>
       )}
@@ -118,21 +125,29 @@ export function CarrierInsuranceSection({ carrier }: CarrierInsuranceSectionProp
         <CardContent className="space-y-3">
           {carrier.insuranceCompany && (
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Insurance Company</span>
-              <span className="text-sm font-medium">{carrier.insuranceCompany}</span>
+              <span className="text-sm text-muted-foreground">
+                Insurance Company
+              </span>
+              <span className="text-sm font-medium">
+                {carrier.insuranceCompany}
+              </span>
             </div>
           )}
           {carrier.insurancePolicyNumber && (
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Policy Number</span>
-              <span className="text-sm font-medium font-mono">{carrier.insurancePolicyNumber}</span>
+              <span className="text-sm text-muted-foreground">
+                Policy Number
+              </span>
+              <span className="text-sm font-medium font-mono">
+                {carrier.insurancePolicyNumber}
+              </span>
             </div>
           )}
-          {carrier.insuranceCargoLimitCents != null && (
+          {carrier.cargoInsuranceLimitCents != null && (
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Cargo Limit</span>
               <span className="text-sm font-medium">
-                {formatCurrency(carrier.insuranceCargoLimitCents)}
+                {formatCurrency(carrier.cargoInsuranceLimitCents)}
               </span>
             </div>
           )}
@@ -140,8 +155,12 @@ export function CarrierInsuranceSection({ carrier }: CarrierInsuranceSectionProp
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Expiry Date</span>
               <div className="flex items-center gap-2">
-                <span className="text-sm">{formatDate(carrier.insuranceExpiryDate)}</span>
-                <Badge className={expiryStatus.className}>{expiryStatus.label}</Badge>
+                <span className="text-sm">
+                  {formatDate(carrier.insuranceExpiryDate)}
+                </span>
+                <Badge className={expiryStatus.className}>
+                  {expiryStatus.label}
+                </Badge>
               </div>
             </div>
           )}
@@ -152,8 +171,8 @@ export function CarrierInsuranceSection({ carrier }: CarrierInsuranceSectionProp
             <ComplianceRow
               label="Cargo Insurance >= $100,000"
               pass={
-                carrier.insuranceCargoLimitCents != null &&
-                carrier.insuranceCargoLimitCents >= 10000000
+                carrier.cargoInsuranceLimitCents != null &&
+                carrier.cargoInsuranceLimitCents >= 10000000
               }
             />
             <ComplianceRow
