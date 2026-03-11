@@ -13,13 +13,18 @@ import { useState, useCallback } from 'react';
 import { DispatchToolbar } from './dispatch-toolbar';
 import { DispatchStatsBar } from './dispatch-stats-bar';
 import { DispatchDataTable } from './dispatch-data-table';
+import { KanbanBoard } from './kanban-board';
 import { DispatchDetailDrawer } from './dispatch-detail-drawer';
 import { NewLoadDialog } from './new-load-dialog';
 import { NewQuoteDialog } from './new-quote-dialog';
 import { useDispatchLoads } from '@/lib/hooks/tms/use-dispatch';
 import { useDispatchBoardUpdates } from '@/lib/hooks/tms/use-dispatch-ws';
 import { useSocketStatus } from '@/lib/socket/use-socket-status';
-import type { DispatchFilters, SortConfig, DispatchLoad } from '@/lib/types/dispatch';
+import type {
+  DispatchFilters,
+  SortConfig,
+  DispatchLoad,
+} from '@/lib/types/dispatch';
 import { AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -28,7 +33,9 @@ export function DispatchBoard() {
   // Filter state
   const [filters, setFilters] = useState<DispatchFilters>({
     dateFrom: new Date().toISOString().split('T')[0],
-    dateTo: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    dateTo: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split('T')[0],
   });
 
   // Sort state
@@ -38,6 +45,7 @@ export function DispatchBoard() {
   });
 
   // View state
+  const [viewMode, setViewMode] = useState<'kanban' | 'table'>('table');
   const [grouped, setGrouped] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [drawerLoad, setDrawerLoad] = useState<DispatchLoad | null>(null);
@@ -56,16 +64,23 @@ export function DispatchBoard() {
   });
 
   // Fetch data (poll fallback when WS down)
-  const { data: boardData, isLoading, isError, error, refetch } = useDispatchLoads(
-    filters,
-    sortConfig,
-    { refetchInterval: connected ? undefined : 30000 }
-  );
+  const {
+    data: boardData,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useDispatchLoads(filters, sortConfig, {
+    refetchInterval: connected ? undefined : 30000,
+  });
 
   // Handlers
-  const handleFilterChange = useCallback((newFilters: Partial<DispatchFilters>) => {
-    setFilters((prev) => ({ ...prev, ...newFilters }));
-  }, []);
+  const handleFilterChange = useCallback(
+    (newFilters: Partial<DispatchFilters>) => {
+      setFilters((prev) => ({ ...prev, ...newFilters }));
+    },
+    []
+  );
 
   const handleSearch = useCallback((query: string) => {
     setFilters((prev) => ({ ...prev, search: query || undefined }));
@@ -91,6 +106,8 @@ export function DispatchBoard() {
     onSearch: handleSearch,
     grouped,
     onGroupToggle: handleGroupToggle,
+    viewMode,
+    onViewModeChange: setViewMode,
     onRefresh: () => refetch(),
     onNewLoad: () => setNewLoadOpen(true),
     onNewQuote: () => setNewQuoteOpen(true),
@@ -105,7 +122,9 @@ export function DispatchBoard() {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-slate-700 border-r-transparent" />
-            <p className="text-sm text-muted-foreground">Loading dispatch board...</p>
+            <p className="text-sm text-muted-foreground">
+              Loading dispatch board...
+            </p>
           </div>
         </div>
         <NewLoadDialog open={newLoadOpen} onOpenChange={setNewLoadOpen} />
@@ -124,9 +143,13 @@ export function DispatchBoard() {
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription className="ml-2">
               <div className="space-y-2">
-                <p className="font-semibold">Unable to load the dispatch board</p>
+                <p className="font-semibold">
+                  Unable to load the dispatch board
+                </p>
                 <p className="text-sm">
-                  {error instanceof Error ? error.message : 'An unexpected error occurred'}
+                  {error instanceof Error
+                    ? error.message
+                    : 'An unexpected error occurred'}
                 </p>
                 <Button onClick={() => refetch()} size="sm" variant="outline">
                   Retry
@@ -143,7 +166,10 @@ export function DispatchBoard() {
 
   // ── Empty state ────────────────────────────────────────────────────
   if (!boardData || boardData.loads.length === 0) {
-    const isFiltered = filters.search || filters.equipmentTypes?.length || filters.statuses?.length;
+    const isFiltered =
+      filters.search ||
+      filters.equipmentTypes?.length ||
+      filters.statuses?.length;
 
     return (
       <div className="flex h-full flex-col overflow-hidden">
@@ -167,9 +193,12 @@ export function DispatchBoard() {
             </div>
             {isFiltered ? (
               <>
-                <h3 className="text-lg font-semibold">No loads match your filters</h3>
+                <h3 className="text-lg font-semibold">
+                  No loads match your filters
+                </h3>
                 <p className="text-sm text-muted-foreground max-w-md">
-                  Try adjusting your date range, status, or search terms to see loads.
+                  Try adjusting your date range, status, or search terms to see
+                  loads.
                 </p>
                 <Button
                   onClick={() =>
@@ -187,7 +216,9 @@ export function DispatchBoard() {
               </>
             ) : (
               <>
-                <h3 className="text-lg font-semibold">Your dispatch board is empty</h3>
+                <h3 className="text-lg font-semibold">
+                  Your dispatch board is empty
+                </h3>
                 <p className="text-sm text-muted-foreground max-w-md">
                   Create your first load or import orders to start dispatching.
                 </p>
@@ -213,14 +244,22 @@ export function DispatchBoard() {
       {/* Stats Bar */}
       <DispatchStatsBar stats={boardData.stats} loads={boardData.loads} />
 
-      {/* Data Table */}
-      <DispatchDataTable
-        loads={boardData.loads}
-        grouped={grouped}
-        selectedIds={selectedIds}
-        onSelectionChange={setSelectedIds}
-        onLoadClick={handleLoadClick}
-      />
+      {/* Board Content — Kanban or Table */}
+      {viewMode === 'kanban' ? (
+        <KanbanBoard
+          boardData={boardData}
+          sortConfig={sortConfig}
+          onSortChange={setSortConfig}
+        />
+      ) : (
+        <DispatchDataTable
+          loads={boardData.loads}
+          grouped={grouped}
+          selectedIds={selectedIds}
+          onSelectionChange={setSelectedIds}
+          onLoadClick={handleLoadClick}
+        />
+      )}
 
       {/* Detail Drawer */}
       <DispatchDetailDrawer
