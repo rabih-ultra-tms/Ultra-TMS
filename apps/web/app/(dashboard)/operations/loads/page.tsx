@@ -44,6 +44,8 @@ export default function LoadsListPage() {
     status: (searchParams.get('status') as LoadStatus | 'all') || undefined,
     carrierId: searchParams.get('carrierId') || undefined,
     search: searchParams.get('search') || undefined,
+    fromDate: searchParams.get('fromDate') || undefined,
+    toDate: searchParams.get('toDate') || undefined,
   };
 
   const { data, isLoading } = useLoads(query);
