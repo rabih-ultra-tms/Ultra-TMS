@@ -1,24 +1,37 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, ChevronLeft, ChevronRight, Save, Loader2, FileText, CheckCircle, Check } from "lucide-react";
-import { toast } from "sonner";
+import * as React from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  Save,
+  Loader2,
+  FileText,
+  CheckCircle,
+  Check,
+} from 'lucide-react';
+import { toast } from 'sonner';
 
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Form } from "@/components/ui/form";
-import { PageHeader } from "@/components/tms/layout/page-header";
-import { ConfirmDialog } from "@/components/shared/confirm-dialog";
-import { useCreateOrder, useOrderFromQuote, useUpdateOrder } from "@/lib/hooks/tms/use-orders";
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Form } from '@/components/ui/form';
+import { PageHeader } from '@/components/tms/layout/page-header';
+import { ConfirmDialog } from '@/components/shared/confirm-dialog';
+import {
+  useCreateOrder,
+  useOrderFromQuote,
+  useUpdateOrder,
+} from '@/lib/hooks/tms/use-orders';
 
-import { OrderCustomerStep } from "./order-customer-step";
-import { OrderCargoStep } from "./order-cargo-step";
-import { OrderStopsBuilder } from "./order-stops-builder";
-import { OrderRateStep } from "./order-rate-step";
-import { OrderReviewStep } from "./order-review-step";
+import { OrderCustomerStep } from './order-customer-step';
+import { OrderCargoStep } from './order-cargo-step';
+import { OrderStopsBuilder } from './order-stops-builder';
+import { OrderRateStep } from './order-rate-step';
+import { OrderReviewStep } from './order-review-step';
 
 import {
   orderFormSchema,
@@ -27,7 +40,7 @@ import {
   type OrderFormValues,
   type StopFormValues,
   type OrderEquipmentType,
-} from "./order-form-schema";
+} from './order-form-schema';
 
 // --- Quote prefill shape (from useOrderFromQuote) ---
 
@@ -64,7 +77,7 @@ interface QuotePrefillData {
 // --- Component Props ---
 
 export interface OrderFormProps {
-  mode?: "create" | "edit";
+  mode?: 'create' | 'edit';
   orderId?: string;
   initialData?: Partial<OrderFormValues>;
   orderStatus?: string;
@@ -73,11 +86,11 @@ export interface OrderFormProps {
 // --- Step definitions ---
 
 const STEPS = [
-  { label: "Customer & Ref", shortLabel: "Customer" },
-  { label: "Cargo Details", shortLabel: "Cargo" },
-  { label: "Stops", shortLabel: "Stops" },
-  { label: "Rate & Billing", shortLabel: "Rate" },
-  { label: "Review & Submit", shortLabel: "Review" },
+  { label: 'Customer & Ref', shortLabel: 'Customer' },
+  { label: 'Cargo Details', shortLabel: 'Cargo' },
+  { label: 'Stops', shortLabel: 'Stops' },
+  { label: 'Rate & Billing', shortLabel: 'Rate' },
+  { label: 'Review & Submit', shortLabel: 'Review' },
 ] as const;
 
 // --- Stepper Component ---
@@ -104,10 +117,10 @@ function Stepper({
               {index > 0 && (
                 <div
                   className={cn(
-                    "flex-1 h-0.5 mx-2",
+                    'flex-1 h-0.5 mx-2',
                     isCompleted || index <= currentStep
-                      ? "bg-primary"
-                      : "bg-muted"
+                      ? 'bg-primary'
+                      : 'bg-muted'
                   )}
                 />
               )}
@@ -116,20 +129,18 @@ function Stepper({
                 onClick={() => isClickable && onStepClick(index)}
                 disabled={!isClickable}
                 className={cn(
-                  "flex flex-col items-center gap-1.5 group",
-                  isClickable && "cursor-pointer"
+                  'flex flex-col items-center gap-1.5 group',
+                  isClickable && 'cursor-pointer'
                 )}
               >
                 <div
                   className={cn(
-                    "flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-colors",
-                    isActive && "bg-primary text-primary-foreground",
-                    isCompleted &&
-                      !isActive &&
-                      "bg-emerald-500 text-white",
+                    'flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-colors',
+                    isActive && 'bg-primary text-primary-foreground',
+                    isCompleted && !isActive && 'bg-emerald-500 text-white',
                     !isActive &&
                       !isCompleted &&
-                      "bg-muted text-muted-foreground"
+                      'bg-muted text-muted-foreground'
                   )}
                 >
                   {isCompleted && !isActive ? (
@@ -140,10 +151,10 @@ function Stepper({
                 </div>
                 <span
                   className={cn(
-                    "text-xs font-medium hidden sm:block",
-                    isActive && "text-primary",
-                    isCompleted && !isActive && "text-emerald-600",
-                    !isActive && !isCompleted && "text-muted-foreground"
+                    'text-xs font-medium hidden sm:block',
+                    isActive && 'text-primary',
+                    isCompleted && !isActive && 'text-emerald-600',
+                    !isActive && !isCompleted && 'text-muted-foreground'
                   )}
                 >
                   {step.shortLabel}
@@ -169,9 +180,11 @@ function OrderSummaryPanel({ values }: { values: OrderFormValues }) {
     (values.fuelSurcharge || 0) +
     totalAccessorials;
 
-  const pickupStop = values.stops.find((s: StopFormValues) => s.type === "PICKUP");
+  const pickupStop = values.stops.find(
+    (s: StopFormValues) => s.type === 'PICKUP'
+  );
   const deliveryStop = values.stops
-    .filter((s: StopFormValues) => s.type === "DELIVERY")
+    .filter((s: StopFormValues) => s.type === 'DELIVERY')
     .pop();
 
   return (
@@ -181,25 +194,23 @@ function OrderSummaryPanel({ values }: { values: OrderFormValues }) {
       <div className="space-y-2 text-sm">
         <SummaryRow
           label="Customer"
-          value={values.customerName || "Not selected"}
+          value={values.customerName || 'Not selected'}
           muted={!values.customerName}
         />
-        {values.poNumber && (
-          <SummaryRow label="PO #" value={values.poNumber} />
-        )}
+        {values.poNumber && <SummaryRow label="PO #" value={values.poNumber} />}
         <SummaryRow
           label="Equipment"
           value={
             values.equipmentType
-              ? values.equipmentType.replace(/_/g, " ")
-              : "Not selected"
+              ? values.equipmentType.replace(/_/g, ' ')
+              : 'Not selected'
           }
           muted={!values.equipmentType}
         />
         {values.commodity && (
           <SummaryRow
             label="Cargo"
-            value={`${values.commodity}${values.weight ? `, ${values.weight.toLocaleString()} lbs` : ""}`}
+            value={`${values.commodity}${values.weight ? `, ${values.weight.toLocaleString()} lbs` : ''}`}
           />
         )}
         <SummaryRow
@@ -207,7 +218,7 @@ function OrderSummaryPanel({ values }: { values: OrderFormValues }) {
           value={
             pickupStop?.city && deliveryStop?.city
               ? `${pickupStop.city}, ${pickupStop.state} → ${deliveryStop.city}, ${deliveryStop.state}`
-              : "Not configured"
+              : 'Not configured'
           }
           muted={!pickupStop?.city}
         />
@@ -215,8 +226,8 @@ function OrderSummaryPanel({ values }: { values: OrderFormValues }) {
           label="Rate"
           value={
             values.customerRate
-              ? `$${values.customerRate.toLocaleString("en-US", { minimumFractionDigits: 2 })}`
-              : "Not entered"
+              ? `$${values.customerRate.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+              : 'Not entered'
           }
           muted={!values.customerRate}
         />
@@ -224,7 +235,7 @@ function OrderSummaryPanel({ values }: { values: OrderFormValues }) {
           <div className="pt-2 border-t border-border">
             <SummaryRow
               label="Total"
-              value={`$${totalCharges.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
+              value={`$${totalCharges.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
               bold
             />
           </div>
@@ -250,9 +261,9 @@ function SummaryRow({
       <span className="text-muted-foreground shrink-0">{label}</span>
       <span
         className={cn(
-          "text-right truncate",
-          muted && "text-muted-foreground italic",
-          bold && "font-semibold"
+          'text-right truncate',
+          muted && 'text-muted-foreground italic',
+          bold && 'font-semibold'
         )}
       >
         {value}
@@ -264,14 +275,14 @@ function SummaryRow({
 // --- Main Form Component ---
 
 export function OrderForm({
-  mode = "create",
+  mode = 'create',
   orderId,
   initialData,
   orderStatus,
 }: OrderFormProps = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const quoteId = searchParams.get("quoteId") || "";
+  const quoteId = searchParams.get('quoteId') || '';
 
   const [currentStep, setCurrentStep] = React.useState(0);
   const [completedSteps, setCompletedSteps] = React.useState<Set<number>>(
@@ -283,16 +294,18 @@ export function OrderForm({
   const updateOrder = useUpdateOrder();
   const { data: quoteData } = useOrderFromQuote(quoteId);
 
-  const isEditMode = mode === "edit";
-  const isCustomerLocked: boolean = isEditMode && !!orderStatus && !["PENDING", "QUOTED"].includes(orderStatus);
+  const isEditMode = mode === 'edit';
+  const isCustomerLocked: boolean =
+    isEditMode && !!orderStatus && !['PENDING', 'QUOTED'].includes(orderStatus);
 
   const form = useForm<OrderFormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Zod v4 + react-hook-form type inference mismatch
     resolver: zodResolver(orderFormSchema) as any,
-    defaultValues: isEditMode && initialData
-      ? { ...ORDER_FORM_DEFAULTS, ...initialData }
-      : ORDER_FORM_DEFAULTS,
-    mode: "onTouched",
+    defaultValues:
+      isEditMode && initialData
+        ? { ...ORDER_FORM_DEFAULTS, ...initialData }
+        : ORDER_FORM_DEFAULTS,
+    mode: 'onTouched',
   });
 
   const { isDirty } = form.formState;
@@ -312,7 +325,8 @@ export function OrderForm({
       const prefill: Partial<OrderFormValues> = {};
 
       if (q.customerId) prefill.customerId = q.customerId;
-      if (q.customer?.companyName) prefill.customerName = q.customer.companyName;
+      if (q.customer?.companyName)
+        prefill.customerName = q.customer.companyName;
       if (q.commodity) prefill.commodity = q.commodity;
       if (q.weightLbs) prefill.weight = q.weightLbs;
       if (q.pieceCount) prefill.pieces = q.pieceCount;
@@ -325,23 +339,24 @@ export function OrderForm({
         prefill.stops = q.stops.map(
           (s, i): StopFormValues => ({
             id: crypto.randomUUID(),
-            type: s.stopType || s.type || "PICKUP",
-            facilityName: s.facilityName || "",
-            address: s.addressLine1 || s.address || "",
-            city: s.city || "",
-            state: s.state || "",
-            zipCode: s.postalCode || s.zipCode || "",
-            contactName: s.contactName || "",
-            contactPhone: s.contactPhone || "",
-            appointmentDate: s.appointmentDate || "",
-            appointmentTimeFrom: s.appointmentTimeStart || s.appointmentTime || "",
-            appointmentTimeTo: s.appointmentTimeEnd || "",
+            type: s.stopType || s.type || 'PICKUP',
+            facilityName: s.facilityName || '',
+            address: s.addressLine1 || s.address || '',
+            city: s.city || '',
+            state: s.state || '',
+            zipCode: s.postalCode || s.zipCode || '',
+            contactName: s.contactName || '',
+            contactPhone: s.contactPhone || '',
+            appointmentDate: s.appointmentDate || '',
+            appointmentTimeFrom:
+              s.appointmentTimeStart || s.appointmentTime || '',
+            appointmentTimeTo: s.appointmentTimeEnd || '',
             weight: null,
             pieces: null,
             pallets: null,
-            commodity: "",
-            instructions: s.specialInstructions || "",
-            referenceNumber: "",
+            commodity: '',
+            instructions: s.specialInstructions || '',
+            referenceNumber: '',
             sequence: i,
           })
         );
@@ -353,14 +368,15 @@ export function OrderForm({
 
   // Warn on browser close with unsaved changes
   React.useEffect(() => {
+    // eslint-disable-next-line no-undef -- BeforeUnloadEvent is a valid global browser type
     const handler = (e: BeforeUnloadEvent) => {
       if (isDirty) {
         e.preventDefault();
-        e.returnValue = "";
+        e.returnValue = '';
       }
     };
-    window.addEventListener("beforeunload", handler);
-    return () => window.removeEventListener("beforeunload", handler);
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
   }, [isDirty]);
 
   // --- Step Navigation ---
@@ -382,7 +398,7 @@ export function OrderForm({
   const handleNext = async () => {
     const valid = await validateCurrentStep();
     if (!valid) {
-      toast.error("Please fix the errors before continuing.");
+      toast.error('Please fix the errors before continuing.');
       return;
     }
     setCompletedSteps((prev) => new Set([...prev, currentStep]));
@@ -401,11 +417,11 @@ export function OrderForm({
 
   // --- Submit ---
 
-  const handleSubmit = async (status: "PENDING" | "BOOKED") => {
+  const handleSubmit = async (status: 'PENDING' | 'BOOKED') => {
     // Validate all steps before submitting
     const isValid = await form.trigger();
-    if (!isValid && status === "BOOKED") {
-      toast.error("Please complete all required fields before confirming.");
+    if (!isValid && status === 'BOOKED') {
+      toast.error('Please complete all required fields before confirming.');
       return;
     }
 
@@ -420,7 +436,7 @@ export function OrderForm({
           status,
         });
 
-        toast.success("Order updated successfully!");
+        toast.success('Order updated successfully!');
         router.push(`/operations/orders/${orderId}`);
       } else {
         // Create new order
@@ -431,17 +447,20 @@ export function OrderForm({
 
         const newOrderId = result.id;
         toast.success(
-          status === "BOOKED" ? "Order created and confirmed!" : "Draft saved!"
+          status === 'BOOKED' ? 'Order created and confirmed!' : 'Draft saved!'
         );
 
         if (newOrderId) {
           router.push(`/operations/orders/${newOrderId}`);
         } else {
-          router.push("/operations/orders");
+          router.push('/operations/orders');
         }
       }
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : `Failed to ${isEditMode ? "update" : "create"} order. Please try again.`;
+      const message =
+        error instanceof Error
+          ? error.message
+          : `Failed to ${isEditMode ? 'update' : 'create'} order. Please try again.`;
       toast.error(message);
     }
   };
@@ -453,7 +472,7 @@ export function OrderForm({
       if (isEditMode && orderId) {
         router.push(`/operations/orders/${orderId}`);
       } else {
-        router.push("/operations/orders");
+        router.push('/operations/orders');
       }
     }
   };
@@ -466,7 +485,9 @@ export function OrderForm({
     const f = form as any;
     switch (currentStep) {
       case 0:
-        return <OrderCustomerStep form={f} isCustomerLocked={isCustomerLocked} />;
+        return (
+          <OrderCustomerStep form={f} isCustomerLocked={isCustomerLocked} />
+        );
       case 1:
         return <OrderCargoStep form={f} />;
       case 2:
@@ -495,7 +516,7 @@ export function OrderForm({
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div className="flex flex-col">
-              <span>{isEditMode ? "Edit Order" : "New Order"}</span>
+              <span>{isEditMode ? 'Edit Order' : 'New Order'}</span>
               {!isEditMode && quoteId && (
                 <span className="text-xs font-normal text-muted-foreground">
                   From Quote
@@ -547,11 +568,11 @@ export function OrderForm({
           {/* Center: Save Draft */}
           <Button
             variant="outline"
-            onClick={() => handleSubmit("PENDING")}
+            onClick={() => handleSubmit('PENDING')}
             disabled={createOrder.isPending || updateOrder.isPending}
           >
             <Save className="mr-2 h-4 w-4" />
-            {isEditMode ? "Save Changes" : "Save Draft"}
+            {isEditMode ? 'Save Changes' : 'Save Draft'}
           </Button>
 
           {/* Right: Back / Next / Submit */}
@@ -572,25 +593,25 @@ export function OrderForm({
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
-                  onClick={() => handleSubmit("PENDING")}
+                  onClick={() => handleSubmit('PENDING')}
                   disabled={createOrder.isPending || updateOrder.isPending}
                 >
                   <FileText className="mr-2 h-4 w-4" />
-                  {isEditMode ? "Save as Draft" : "Create as Draft"}
+                  {isEditMode ? 'Save as Draft' : 'Create as Draft'}
                 </Button>
                 <Button
-                  onClick={() => handleSubmit("BOOKED")}
+                  onClick={() => handleSubmit('BOOKED')}
                   disabled={createOrder.isPending || updateOrder.isPending}
                 >
                   {createOrder.isPending || updateOrder.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {isEditMode ? "Updating..." : "Creating..."}
+                      {isEditMode ? 'Updating...' : 'Creating...'}
                     </>
                   ) : (
                     <>
                       <CheckCircle className="mr-2 h-4 w-4" />
-                      {isEditMode ? "Update & Confirm" : "Create &amp; Confirm"}
+                      {isEditMode ? 'Update & Confirm' : 'Create & Confirm'}
                     </>
                   )}
                 </Button>
@@ -613,7 +634,7 @@ export function OrderForm({
           if (isEditMode && orderId) {
             router.push(`/operations/orders/${orderId}`);
           } else {
-            router.push("/operations/orders");
+            router.push('/operations/orders');
           }
         }}
         onCancel={() => setShowExitDialog(false)}
