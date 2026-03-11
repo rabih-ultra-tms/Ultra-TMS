@@ -24,6 +24,9 @@ import {
   Truck,
   Check,
   X,
+  Phone,
+  Receipt,
+  Upload,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -54,6 +57,8 @@ import { Textarea } from '@/components/ui/textarea';
 
 interface LoadDetailHeaderProps {
   load: Load;
+  onAddCheckCall?: () => void;
+  onUploadPOD?: () => void;
 }
 
 function getCarrierEmail(load: Load): string {
@@ -116,7 +121,11 @@ const EMAIL_LABELS: Record<EmailType, string> = {
   invoice_sent: 'Send Invoice Email',
 };
 
-export function LoadDetailHeader({ load }: LoadDetailHeaderProps) {
+export function LoadDetailHeader({
+  load,
+  onAddCheckCall,
+  onUploadPOD,
+}: LoadDetailHeaderProps) {
   const router = useRouter();
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [activeEmailType, setActiveEmailType] =
@@ -148,6 +157,16 @@ export function LoadDetailHeader({ load }: LoadDetailHeaderProps) {
 
   const canTender = load.status === LoadStatus.PENDING;
   const canAcceptReject = load.status === LoadStatus.TENDERED;
+  const canAddCheckCall = [
+    LoadStatus.DISPATCHED,
+    LoadStatus.AT_PICKUP,
+    LoadStatus.PICKED_UP,
+    LoadStatus.IN_TRANSIT,
+    LoadStatus.AT_DELIVERY,
+  ].includes(load.status);
+  const isDelivered = [LoadStatus.DELIVERED, LoadStatus.COMPLETED].includes(
+    load.status
+  );
 
   const handleTender = () => {
     if (!selectedCarrierId) return;
@@ -278,6 +297,36 @@ export function LoadDetailHeader({ load }: LoadDetailHeaderProps) {
                 Reject Tender
               </Button>
             </>
+          )}
+
+          {/* Add Check Call — visible when dispatched through at_delivery */}
+          {canAddCheckCall && onAddCheckCall && (
+            <Button size="sm" variant="outline" onClick={onAddCheckCall}>
+              <Phone className="h-4 w-4 mr-2" />
+              Add Check Call
+            </Button>
+          )}
+
+          {/* Upload POD — visible when delivered */}
+          {isDelivered && onUploadPOD && (
+            <Button size="sm" variant="outline" onClick={onUploadPOD}>
+              <Upload className="h-4 w-4 mr-2" />
+              Upload POD
+            </Button>
+          )}
+
+          {/* Generate Invoice — visible when delivered */}
+          {isDelivered && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() =>
+                router.push(`/accounting/invoices/new?loadId=${load.id}`)
+              }
+            >
+              <Receipt className="h-4 w-4 mr-2" />
+              Generate Invoice
+            </Button>
           )}
 
           <Button
