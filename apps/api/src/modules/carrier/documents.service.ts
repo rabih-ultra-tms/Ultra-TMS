@@ -1,6 +1,14 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
-import { CreateCarrierDocumentDto, UpdateCarrierDocumentDto, DocumentStatus } from './dto';
+import {
+  CreateCarrierDocumentDto,
+  UpdateCarrierDocumentDto,
+  DocumentStatus,
+} from './dto';
 
 @Injectable()
 export class DocumentsService {
@@ -14,7 +22,11 @@ export class DocumentsService {
     });
   }
 
-  async create(tenantId: string, carrierId: string, dto: CreateCarrierDocumentDto) {
+  async create(
+    tenantId: string,
+    carrierId: string,
+    dto: CreateCarrierDocumentDto
+  ) {
     await this.ensureCarrier(tenantId, carrierId);
 
     return this.prisma.carrierDocument.create({
@@ -26,34 +38,48 @@ export class DocumentsService {
         description: dto.description,
         filePath: dto.filePath,
         mimeType: dto.mimeType,
-        expirationDate: dto.expirationDate ? new Date(dto.expirationDate) : null,
+        expirationDate: dto.expirationDate
+          ? new Date(dto.expirationDate)
+          : null,
         status: DocumentStatus.PENDING,
       },
     });
   }
 
-  async update(tenantId: string, carrierId: string, docId: string, dto: UpdateCarrierDocumentDto) {
+  async update(
+    tenantId: string,
+    carrierId: string,
+    docId: string,
+    dto: UpdateCarrierDocumentDto
+  ) {
     const doc = await this.requireDocument(tenantId, carrierId, docId);
 
     return this.prisma.carrierDocument.update({
-      where: { id: docId },
+      where: { id: docId, tenantId },
       data: {
         documentType: dto.documentType ?? doc.documentType,
         name: dto.name ?? doc.name,
         description: dto.description ?? doc.description,
         filePath: dto.filePath ?? doc.filePath,
         mimeType: dto.mimeType ?? doc.mimeType,
-        expirationDate: dto.expirationDate ? new Date(dto.expirationDate) : doc.expirationDate,
+        expirationDate: dto.expirationDate
+          ? new Date(dto.expirationDate)
+          : doc.expirationDate,
         status: dto.status ?? doc.status,
         rejectionReason: dto.rejectionReason ?? doc.rejectionReason,
       },
     });
   }
 
-  async approve(tenantId: string, carrierId: string, docId: string, reviewerId?: string) {
+  async approve(
+    tenantId: string,
+    carrierId: string,
+    docId: string,
+    reviewerId?: string
+  ) {
     await this.requireDocument(tenantId, carrierId, docId);
     return this.prisma.carrierDocument.update({
-      where: { id: docId },
+      where: { id: docId, tenantId },
       data: {
         status: DocumentStatus.APPROVED,
         reviewedAt: new Date(),
@@ -62,11 +88,17 @@ export class DocumentsService {
     });
   }
 
-  async reject(tenantId: string, carrierId: string, docId: string, reason?: string, reviewerId?: string) {
+  async reject(
+    tenantId: string,
+    carrierId: string,
+    docId: string,
+    reason?: string,
+    reviewerId?: string
+  ) {
     await this.requireDocument(tenantId, carrierId, docId);
     if (!reason) throw new BadRequestException('Rejection reason is required');
     return this.prisma.carrierDocument.update({
-      where: { id: docId },
+      where: { id: docId, tenantId },
       data: {
         status: DocumentStatus.REJECTED,
         rejectionReason: reason,
@@ -78,16 +110,25 @@ export class DocumentsService {
 
   async remove(tenantId: string, carrierId: string, docId: string) {
     await this.requireDocument(tenantId, carrierId, docId);
-    await this.prisma.carrierDocument.update({ where: { id: docId }, data: { deletedAt: new Date(), status: DocumentStatus.REJECTED } });
+    await this.prisma.carrierDocument.update({
+      where: { id: docId, tenantId },
+      data: { deletedAt: new Date(), status: DocumentStatus.REJECTED },
+    });
     return { success: true };
   }
 
   private async ensureCarrier(tenantId: string, carrierId: string) {
-    const carrier = await this.prisma.carrier.findFirst({ where: { id: carrierId, tenantId, deletedAt: null } });
+    const carrier = await this.prisma.carrier.findFirst({
+      where: { id: carrierId, tenantId, deletedAt: null },
+    });
     if (!carrier) throw new NotFoundException('Carrier not found');
   }
 
-  private async requireDocument(tenantId: string, carrierId: string, docId: string) {
+  private async requireDocument(
+    tenantId: string,
+    carrierId: string,
+    docId: string
+  ) {
     const doc = await this.prisma.carrierDocument.findFirst({
       where: { id: docId, carrierId, tenantId, deletedAt: null },
     });

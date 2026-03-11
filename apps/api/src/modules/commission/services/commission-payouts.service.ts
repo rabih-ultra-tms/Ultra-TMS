@@ -88,6 +88,7 @@ export class CommissionPayoutsService {
     // Link entries to payout
     await this.prisma.commissionEntry.updateMany({
       where: {
+        tenantId,
         id: { in: entries.map((e) => e.id) },
       },
       data: {
@@ -107,7 +108,7 @@ export class CommissionPayoutsService {
       status?: string;
       sortBy?: string;
       sortOrder?: 'asc' | 'desc';
-    },
+    }
   ) {
     const { page, limit } = options;
     const skip = (page - 1) * limit;
@@ -249,6 +250,7 @@ export class CommissionPayoutsService {
     // Mark all entries as paid
     await this.prisma.commissionEntry.updateMany({
       where: {
+        tenantId,
         payoutId: id,
       },
       data: {
@@ -284,6 +286,7 @@ export class CommissionPayoutsService {
     // Unlink entries
     await this.prisma.commissionEntry.updateMany({
       where: {
+        tenantId,
         payoutId: id,
       },
       data: {

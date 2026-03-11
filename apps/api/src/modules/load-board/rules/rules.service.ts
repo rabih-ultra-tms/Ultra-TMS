@@ -1,7 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PostingFrequency, Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma.service';
-import { CreatePostingRuleDto, RuleQueryDto, UpdatePostingRuleDto } from './dto';
+import {
+  CreatePostingRuleDto,
+  RuleQueryDto,
+  UpdatePostingRuleDto,
+} from './dto';
 
 @Injectable()
 export class RulesService {
@@ -16,7 +20,12 @@ export class RulesService {
     }
 
     const [data, total] = await Promise.all([
-      this.prisma.postingRule.findMany({ where, skip, take: limit, orderBy: { createdAt: 'desc' } }),
+      this.prisma.postingRule.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      }),
       this.prisma.postingRule.count({ where }),
     ]);
 
@@ -24,7 +33,9 @@ export class RulesService {
   }
 
   async findOne(tenantId: string, id: string) {
-    const rule = await this.prisma.postingRule.findFirst({ where: { id, tenantId, deletedAt: null } });
+    const rule = await this.prisma.postingRule.findFirst({
+      where: { id, tenantId, deletedAt: null },
+    });
     if (!rule) {
       throw new NotFoundException('Posting rule not found');
     }
@@ -38,8 +49,12 @@ export class RulesService {
         ruleName: dto.ruleName,
         isActive: dto.autoPost,
         conditions: dto.conditions as Prisma.InputJsonValue,
-        frequency: dto.autoPost ? PostingFrequency.IMMEDIATE : PostingFrequency.MANUAL,
-        scheduleTime: dto.postDelayMinutes ? `${dto.postDelayMinutes}m` : undefined,
+        frequency: dto.autoPost
+          ? PostingFrequency.IMMEDIATE
+          : PostingFrequency.MANUAL,
+        scheduleTime: dto.postDelayMinutes
+          ? `${dto.postDelayMinutes}m`
+          : undefined,
         customFields: {
           postAccounts: dto.postAccounts,
           rateAdjustmentType: dto.rateAdjustmentType,
@@ -60,8 +75,12 @@ export class RulesService {
       data: {
         ruleName: dto.ruleName,
         isActive: dto.isActive,
-        ...(dto.conditions ? { conditions: dto.conditions as Prisma.InputJsonValue } : {}),
-        ...(dto.postDelayMinutes ? { scheduleTime: `${dto.postDelayMinutes}m` } : {}),
+        ...(dto.conditions
+          ? { conditions: dto.conditions as Prisma.InputJsonValue }
+          : {}),
+        ...(dto.postDelayMinutes
+          ? { scheduleTime: `${dto.postDelayMinutes}m` }
+          : {}),
         ...(dto.postAccounts
           ? {
               customFields: {
@@ -79,12 +98,17 @@ export class RulesService {
 
   async remove(tenantId: string, id: string) {
     await this.assertRule(tenantId, id);
-    await this.prisma.postingRule.update({ where: { id }, data: { deletedAt: new Date(), isActive: false } });
+    await this.prisma.postingRule.update({
+      where: { id, tenantId },
+      data: { deletedAt: new Date(), isActive: false },
+    });
     return { success: true };
   }
 
   private async assertRule(tenantId: string, id: string) {
-    const rule = await this.prisma.postingRule.findFirst({ where: { id, tenantId, deletedAt: null } });
+    const rule = await this.prisma.postingRule.findFirst({
+      where: { id, tenantId, deletedAt: null },
+    });
     if (!rule) {
       throw new NotFoundException('Posting rule not found');
     }

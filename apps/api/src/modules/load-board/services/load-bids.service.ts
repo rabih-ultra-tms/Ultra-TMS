@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma.service';
 import {
   CreateLoadBidDto,
@@ -58,10 +62,14 @@ export class LoadBidsService {
     });
 
     if (existingBid) {
-      throw new BadRequestException('Carrier already has an active bid on this posting');
+      throw new BadRequestException(
+        'Carrier already has an active bid on this posting'
+      );
     }
 
-    const expiresAt = dto.expiresAt ? new Date(dto.expiresAt) : new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const expiresAt = dto.expiresAt
+      ? new Date(dto.expiresAt)
+      : new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     return this.prisma.loadBid.create({
       data: {
@@ -159,7 +167,10 @@ export class LoadBidsService {
       throw new NotFoundException('Load bid not found');
     }
 
-    if (bid.status !== BidStatus.PENDING && bid.status !== BidStatus.COUNTERED) {
+    if (
+      bid.status !== BidStatus.PENDING &&
+      bid.status !== BidStatus.COUNTERED
+    ) {
       throw new BadRequestException('Cannot update bid in current status');
     }
 
@@ -182,8 +193,13 @@ export class LoadBidsService {
       throw new NotFoundException('Load bid not found');
     }
 
-    if (bid.status !== BidStatus.PENDING && bid.status !== BidStatus.COUNTERED) {
-      throw new BadRequestException('Can only accept pending or countered bids');
+    if (
+      bid.status !== BidStatus.PENDING &&
+      bid.status !== BidStatus.COUNTERED
+    ) {
+      throw new BadRequestException(
+        'Can only accept pending or countered bids'
+      );
     }
 
     // Use transaction to update bid, posting, and load
@@ -200,6 +216,7 @@ export class LoadBidsService {
       // Reject all other bids on this posting
       await tx.loadBid.updateMany({
         where: {
+          tenantId,
           postingId: bid.postingId,
           id: { not: id },
           status: { in: [BidStatus.PENDING, BidStatus.COUNTERED] },
@@ -245,8 +262,13 @@ export class LoadBidsService {
       throw new NotFoundException('Load bid not found');
     }
 
-    if (bid.status !== BidStatus.PENDING && bid.status !== BidStatus.COUNTERED) {
-      throw new BadRequestException('Can only reject pending or countered bids');
+    if (
+      bid.status !== BidStatus.PENDING &&
+      bid.status !== BidStatus.COUNTERED
+    ) {
+      throw new BadRequestException(
+        'Can only reject pending or countered bids'
+      );
     }
 
     return this.prisma.loadBid.update({

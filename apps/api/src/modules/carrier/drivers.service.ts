@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../prisma.service';
 import { CreateDriverDto, UpdateDriverDto } from './dto';
@@ -7,10 +11,15 @@ import { CreateDriverDto, UpdateDriverDto } from './dto';
 export class DriversService {
   constructor(
     private prisma: PrismaService,
-    private eventEmitter: EventEmitter2,
+    private eventEmitter: EventEmitter2
   ) {}
 
-  async create(tenantId: string, carrierId: string, _userId: string, dto: CreateDriverDto) {
+  async create(
+    tenantId: string,
+    carrierId: string,
+    _userId: string,
+    dto: CreateDriverDto
+  ) {
     const carrier = await this.prisma.carrier.findFirst({
       where: { id: carrierId, tenantId },
     });
@@ -40,19 +49,29 @@ export class DriversService {
         cdlNumber: dto.licenseNumber,
         cdlState: dto.licenseState,
         cdlClass: dto.cdlClass,
-        cdlExpiration: dto.licenseExpiration ? new Date(dto.licenseExpiration) : null,
+        cdlExpiration: dto.licenseExpiration
+          ? new Date(dto.licenseExpiration)
+          : null,
         phone: dto.phone,
         email: dto.email,
         endorsements: dto.endorsements ?? [],
       },
     });
 
-    this.eventEmitter.emit('driver.created', { driverId: driver.id, carrierId, tenantId });
+    this.eventEmitter.emit('driver.created', {
+      driverId: driver.id,
+      carrierId,
+      tenantId,
+    });
 
     return driver;
   }
 
-  async findAllForCarrier(tenantId: string, carrierId: string, options: { status?: string }) {
+  async findAllForCarrier(
+    tenantId: string,
+    carrierId: string,
+    options: { status?: string }
+  ) {
     const { status } = options;
 
     const carrier = await this.prisma.carrier.findFirst({
@@ -74,7 +93,10 @@ export class DriversService {
     return drivers;
   }
 
-  async findAll(tenantId: string, options: { status?: string; carrierId?: string }) {
+  async findAll(
+    tenantId: string,
+    options: { status?: string; carrierId?: string }
+  ) {
     const where: any = { tenantId };
     if (options.status) where.status = options.status;
     if (options.carrierId) where.carrierId = options.carrierId;
@@ -104,7 +126,9 @@ export class DriversService {
   }
 
   async getLoads(tenantId: string, id: string) {
-    const driver = await this.prisma.driver.findFirst({ where: { id, tenantId } });
+    const driver = await this.prisma.driver.findFirst({
+      where: { id, tenantId },
+    });
     if (!driver) throw new NotFoundException('Driver not found');
 
     const loads = await this.prisma.load.findMany({
@@ -151,7 +175,9 @@ export class DriversService {
         cdlNumber: dto.licenseNumber ?? driver.cdlNumber,
         cdlState: dto.licenseState ?? driver.cdlState,
         cdlClass: dto.cdlClass ?? driver.cdlClass,
-        cdlExpiration: dto.licenseExpiration ? new Date(dto.licenseExpiration) : driver.cdlExpiration,
+        cdlExpiration: dto.licenseExpiration
+          ? new Date(dto.licenseExpiration)
+          : driver.cdlExpiration,
         phone: dto.phone ?? driver.phone,
         email: dto.email ?? driver.email,
         updatedAt: new Date(),
@@ -180,7 +206,7 @@ export class DriversService {
       throw new NotFoundException('Driver not found');
     }
 
-    await this.prisma.driver.delete({ where: { id } });
+    await this.prisma.driver.delete({ where: { id, tenantId } });
 
     return { success: true, message: 'Driver deleted successfully' };
   }

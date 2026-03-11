@@ -1,9 +1,26 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  Logger,
+} from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../prisma.service';
 import { EmailService } from '../communication/email.service';
 import PDFDocument from 'pdfkit';
-import { CreateLoadDto, UpdateLoadDto, AssignCarrierDto, UpdateLoadLocationDto, LoadQueryDto, CreateCheckCallDto, PaginationDto, RateConfirmationOptionsDto, BolOptionsDto, TenderLoadDto, RejectTenderDto } from './dto';
+import {
+  CreateLoadDto,
+  UpdateLoadDto,
+  AssignCarrierDto,
+  UpdateLoadLocationDto,
+  LoadQueryDto,
+  CreateCheckCallDto,
+  PaginationDto,
+  RateConfirmationOptionsDto,
+  BolOptionsDto,
+  TenderLoadDto,
+  RejectTenderDto,
+} from './dto';
 
 @Injectable()
 export class LoadsService {
@@ -12,8 +29,8 @@ export class LoadsService {
   constructor(
     private prisma: PrismaService,
     private eventEmitter: EventEmitter2,
-    private emailService: EmailService,
-  ) { }
+    private emailService: EmailService
+  ) {}
 
   async create(tenantId: string, userId: string, dto: CreateLoadDto) {
     // Verify order exists if orderId is provided
@@ -40,8 +57,12 @@ export class LoadsService {
         truckNumber: dto.truckNumber ?? null,
         trailerNumber: dto.trailerNumber ?? null,
         carrierRate: dto.carrierRate ?? null,
-        ...(dto.accessorialCosts !== undefined ? { accessorialCosts: dto.accessorialCosts } : {}),
-        ...(dto.fuelAdvance !== undefined ? { fuelAdvance: dto.fuelAdvance } : {}),
+        ...(dto.accessorialCosts !== undefined
+          ? { accessorialCosts: dto.accessorialCosts }
+          : {}),
+        ...(dto.fuelAdvance !== undefined
+          ? { fuelAdvance: dto.fuelAdvance }
+          : {}),
         equipmentType: dto.equipmentType ?? null,
         equipmentLength: dto.equipmentLength ?? null,
         equipmentWeightLimit: dto.equipmentWeightLimit ?? null,
@@ -80,12 +101,26 @@ export class LoadsService {
   }
 
   async findAll(tenantId: string, query: LoadQueryDto) {
-    const { page = 1, limit = 20, status, carrierId, orderId, dispatcherId, search, fromDate, toDate, equipmentType } = query;
+    const {
+      page = 1,
+      limit = 20,
+      status,
+      carrierId,
+      orderId,
+      dispatcherId,
+      search,
+      fromDate,
+      toDate,
+      equipmentType,
+    } = query;
     const skip = (page - 1) * limit;
 
     const where: any = { tenantId, deletedAt: null };
     if (status) {
-      const statuses = status.split(',').map(s => s.trim()).filter(Boolean);
+      const statuses = status
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
       where.status = statuses.length === 1 ? statuses[0] : { in: statuses };
     }
     if (carrierId) where.carrierId = carrierId;
@@ -101,7 +136,11 @@ export class LoadsService {
     if (search) {
       where.OR = [
         { loadNumber: { contains: search, mode: 'insensitive' } },
-        { order: { is: { orderNumber: { contains: search, mode: 'insensitive' } } } },
+        {
+          order: {
+            is: { orderNumber: { contains: search, mode: 'insensitive' } },
+          },
+        },
       ];
     }
 
@@ -126,10 +165,10 @@ export class LoadsService {
                   state: true,
                   stopType: true,
                   appointmentDate: true,
-                  stopSequence: true
-                }
-              }
-            }
+                  stopSequence: true,
+                },
+              },
+            },
           },
           carrier: { select: { id: true, legalName: true, mcNumber: true } },
         },
@@ -138,10 +177,14 @@ export class LoadsService {
     ]);
 
     // Map to flat structure for UI
-    const flattenedLoads = loads.map(load => {
+    const flattenedLoads = loads.map((load) => {
       const stops = load.order?.stops || [];
-      const pickup = stops.find((s: typeof stops[number]) => s.stopType === 'PICKUP') || stops[0];
-      const delivery = stops.find((s: typeof stops[number]) => s.stopType === 'DELIVERY') || stops[stops.length - 1];
+      const pickup =
+        stops.find((s: (typeof stops)[number]) => s.stopType === 'PICKUP') ||
+        stops[0];
+      const delivery =
+        stops.find((s: (typeof stops)[number]) => s.stopType === 'DELIVERY') ||
+        stops[stops.length - 1];
 
       return {
         ...load,
@@ -188,7 +231,7 @@ export class LoadsService {
     }
 
     const totalRevenueCents = Math.round(
-      Number(revenueResult._sum.totalCharges ?? 0) * 100,
+      Number(revenueResult._sum.totalCharges ?? 0) * 100
     );
 
     return { total, byStatus, totalRevenueCents };
@@ -217,7 +260,12 @@ export class LoadsService {
     return load;
   }
 
-  async update(tenantId: string, id: string, userId: string, dto: UpdateLoadDto) {
+  async update(
+    tenantId: string,
+    id: string,
+    userId: string,
+    dto: UpdateLoadDto
+  ) {
     const load = await this.prisma.load.findFirst({
       where: { id, tenantId, deletedAt: null },
     });
@@ -228,7 +276,9 @@ export class LoadsService {
 
     // Validate status transitions if changing status
     if (dto.status && !this.isValidStatusTransition(load.status, dto.status)) {
-      throw new BadRequestException(`Cannot transition from ${load.status} to ${dto.status}`);
+      throw new BadRequestException(
+        `Cannot transition from ${load.status} to ${dto.status}`
+      );
     }
 
     const updated = await this.prisma.load.update({
@@ -258,7 +308,14 @@ export class LoadsService {
     });
 
     if (dto.status && dto.status !== load.status) {
-      await this.recordStatusHistory(tenantId, id, load.status, dto.status, userId, 'Status updated');
+      await this.recordStatusHistory(
+        tenantId,
+        id,
+        load.status,
+        dto.status,
+        userId,
+        'Status updated'
+      );
 
       this.eventEmitter.emit('load.status.changed', {
         loadId: id,
@@ -281,7 +338,12 @@ export class LoadsService {
     return updated;
   }
 
-  async assignCarrier(tenantId: string, id: string, userId: string, dto: AssignCarrierDto) {
+  async assignCarrier(
+    tenantId: string,
+    id: string,
+    userId: string,
+    dto: AssignCarrierDto
+  ) {
     const load = await this.prisma.load.findFirst({
       where: { id, tenantId, deletedAt: null },
     });
@@ -314,11 +376,25 @@ export class LoadsService {
       },
       include: {
         order: { select: { id: true, orderNumber: true } },
-        carrier: { select: { id: true, legalName: true, mcNumber: true, dotNumber: true } },
+        carrier: {
+          select: {
+            id: true,
+            legalName: true,
+            mcNumber: true,
+            dotNumber: true,
+          },
+        },
       },
     });
 
-    await this.recordStatusHistory(tenantId, id, load.status, 'ACCEPTED', userId, 'Carrier assigned');
+    await this.recordStatusHistory(
+      tenantId,
+      id,
+      load.status,
+      'ACCEPTED',
+      userId,
+      'Carrier assigned'
+    );
 
     this.eventEmitter.emit('load.assigned', {
       loadId: id,
@@ -338,13 +414,17 @@ export class LoadsService {
   }
 
   async dispatch(tenantId: string, id: string, userId: string) {
-    const load = await this.prisma.load.findFirst({ where: { id, tenantId, deletedAt: null } });
+    const load = await this.prisma.load.findFirst({
+      where: { id, tenantId, deletedAt: null },
+    });
     if (!load) {
       throw new NotFoundException('Load not found');
     }
 
     if (!this.isValidStatusTransition(load.status, 'DISPATCHED')) {
-      throw new BadRequestException(`Cannot dispatch from status ${load.status}`);
+      throw new BadRequestException(
+        `Cannot dispatch from status ${load.status}`
+      );
     }
 
     const updated = await this.prisma.load.update({
@@ -357,7 +437,14 @@ export class LoadsService {
       },
     });
 
-    await this.recordStatusHistory(tenantId, id, load.status, 'DISPATCHED', userId, 'Load dispatched');
+    await this.recordStatusHistory(
+      tenantId,
+      id,
+      load.status,
+      'DISPATCHED',
+      userId,
+      'Load dispatched'
+    );
 
     this.eventEmitter.emit('load.dispatched', {
       loadId: id,
@@ -375,14 +462,24 @@ export class LoadsService {
     return updated;
   }
 
-  async updateStatus(tenantId: string, id: string, userId: string, status: string, notes?: string) {
-    const load = await this.prisma.load.findFirst({ where: { id, tenantId, deletedAt: null } });
+  async updateStatus(
+    tenantId: string,
+    id: string,
+    userId: string,
+    status: string,
+    notes?: string
+  ) {
+    const load = await this.prisma.load.findFirst({
+      where: { id, tenantId, deletedAt: null },
+    });
     if (!load) {
       throw new NotFoundException('Load not found');
     }
 
     if (!this.isValidStatusTransition(load.status, status)) {
-      throw new BadRequestException(`Cannot transition from ${load.status} to ${status}`);
+      throw new BadRequestException(
+        `Cannot transition from ${load.status} to ${status}`
+      );
     }
 
     const deliveryTimestamp = status === 'DELIVERED' ? new Date() : undefined;
@@ -397,7 +494,14 @@ export class LoadsService {
       },
     });
 
-    await this.recordStatusHistory(tenantId, id, load.status, status, userId, notes);
+    await this.recordStatusHistory(
+      tenantId,
+      id,
+      load.status,
+      status,
+      userId,
+      notes
+    );
 
     this.eventEmitter.emit('load.status.changed', {
       loadId: id,
@@ -407,7 +511,8 @@ export class LoadsService {
     });
 
     if (status === 'DELIVERED') {
-      const actualDelivery = deliveryTimestamp ?? updated.deliveredAt ?? new Date();
+      const actualDelivery =
+        deliveryTimestamp ?? updated.deliveredAt ?? new Date();
       this.eventEmitter.emit('load.delivered', {
         loadId: id,
         orderId: load.orderId,
@@ -418,7 +523,11 @@ export class LoadsService {
     return updated;
   }
 
-  async updateLocation(tenantId: string, id: string, dto: UpdateLoadLocationDto) {
+  async updateLocation(
+    tenantId: string,
+    id: string,
+    dto: UpdateLoadLocationDto
+  ) {
     const load = await this.prisma.load.findFirst({
       where: { id, tenantId, deletedAt: null },
     });
@@ -442,7 +551,12 @@ export class LoadsService {
     return updated;
   }
 
-  async addCheckCall(tenantId: string, loadId: string, userId: string, data: CreateCheckCallDto) {
+  async addCheckCall(
+    tenantId: string,
+    loadId: string,
+    userId: string,
+    data: CreateCheckCallDto
+  ) {
     const load = await this.prisma.load.findFirst({
       where: { id: loadId, tenantId, deletedAt: null },
     });
@@ -514,7 +628,9 @@ export class LoadsService {
         skip,
         take: limit,
       }),
-      this.prisma.checkCall.count({ where: { loadId, tenantId, deletedAt: null } }),
+      this.prisma.checkCall.count({
+        where: { loadId, tenantId, deletedAt: null },
+      }),
     ]);
 
     return { data, total, page, limit };
@@ -524,7 +640,7 @@ export class LoadsService {
     tenantId: string,
     loadId: string,
     options: RateConfirmationOptionsDto,
-    _userId: string,
+    _userId: string
   ): Promise<Buffer> {
     const load = await this.prisma.load.findFirst({
       where: { id: loadId, tenantId, deletedAt: null },
@@ -574,9 +690,11 @@ export class LoadsService {
     doc.text('STOPS', { underline: true });
     for (const stop of load.stops) {
       doc.text(`${stop.stopType}: ${stop.facilityName || ''}`);
-      doc.text(`  ${stop.addressLine1 || ''}, ${stop.city || ''}, ${stop.state || ''} ${stop.postalCode || ''}`);
       doc.text(
-        `  Appointment: ${stop.appointmentDate ? stop.appointmentDate.toDateString() : ''} ${stop.appointmentTimeStart || ''}`,
+        `  ${stop.addressLine1 || ''}, ${stop.city || ''}, ${stop.state || ''} ${stop.postalCode || ''}`
+      );
+      doc.text(
+        `  Appointment: ${stop.appointmentDate ? stop.appointmentDate.toDateString() : ''} ${stop.appointmentTimeStart || ''}`
       );
       doc.moveDown(0.5);
     }
@@ -608,7 +726,7 @@ export class LoadsService {
     tenantId: string,
     loadId: string,
     options: RateConfirmationOptionsDto,
-    userId: string,
+    userId: string
   ): Promise<{ success: boolean; logId?: string; error?: string }> {
     const load = await this.prisma.load.findFirst({
       where: { id: loadId, tenantId, deletedAt: null },
@@ -623,14 +741,20 @@ export class LoadsService {
       throw new BadRequestException('Load must be assigned to a carrier');
     }
 
-    const carrierEmail = load.carrier.dispatchEmail || load.carrier.primaryContactEmail;
+    const carrierEmail =
+      load.carrier.dispatchEmail || load.carrier.primaryContactEmail;
     if (!carrierEmail) {
       throw new BadRequestException(
-        'Carrier has no dispatch or primary contact email on file',
+        'Carrier has no dispatch or primary contact email on file'
       );
     }
 
-    const pdfBuffer = await this.generateRateConfirmation(tenantId, loadId, options, userId);
+    const pdfBuffer = await this.generateRateConfirmation(
+      tenantId,
+      loadId,
+      options,
+      userId
+    );
 
     const result = await this.emailService.send(tenantId, userId, {
       subject: `Rate Confirmation - Load ${load.loadNumber}`,
@@ -658,7 +782,7 @@ export class LoadsService {
       });
 
       this.logger.log(
-        `Rate confirmation sent for load ${load.loadNumber} to ${carrierEmail}`,
+        `Rate confirmation sent for load ${load.loadNumber} to ${carrierEmail}`
       );
     }
 
@@ -672,7 +796,7 @@ export class LoadsService {
   async generateBolPdf(
     tenantId: string,
     loadId: string,
-    options: BolOptionsDto,
+    options: BolOptionsDto
   ): Promise<Buffer> {
     const load = await this.prisma.load.findFirst({
       where: { id: loadId, tenantId, deletedAt: null },
@@ -703,8 +827,14 @@ export class LoadsService {
     doc.on('data', (chunk: Buffer) => chunks.push(chunk));
 
     // ── Header ──
-    doc.fontSize(16).font('Helvetica-Bold').text('BILL OF LADING', { align: 'center' });
-    doc.fontSize(9).font('Helvetica').text('STRAIGHT BILL OF LADING — SHORT FORM', { align: 'center' });
+    doc
+      .fontSize(16)
+      .font('Helvetica-Bold')
+      .text('BILL OF LADING', { align: 'center' });
+    doc
+      .fontSize(9)
+      .font('Helvetica')
+      .text('STRAIGHT BILL OF LADING — SHORT FORM', { align: 'center' });
     doc.moveDown(0.5);
 
     // Reference numbers
@@ -733,7 +863,10 @@ export class LoadsService {
       doc.text(shipper.facilityName || '', 40, sectionTop + 14);
       doc.text(shipper.addressLine1 || '', 40);
       if (shipper.addressLine2) doc.text(shipper.addressLine2, 40);
-      doc.text(`${shipper.city || ''}, ${shipper.state || ''} ${shipper.postalCode || ''}`, 40);
+      doc.text(
+        `${shipper.city || ''}, ${shipper.state || ''} ${shipper.postalCode || ''}`,
+        40
+      );
       if (shipper.contactName) doc.text(`Contact: ${shipper.contactName}`, 40);
       if (shipper.contactPhone) doc.text(`Phone: ${shipper.contactPhone}`, 40);
     }
@@ -746,9 +879,14 @@ export class LoadsService {
       doc.text(consignee.facilityName || '', 310, sectionTop + 14);
       doc.text(consignee.addressLine1 || '', 310);
       if (consignee.addressLine2) doc.text(consignee.addressLine2, 310);
-      doc.text(`${consignee.city || ''}, ${consignee.state || ''} ${consignee.postalCode || ''}`, 310);
-      if (consignee.contactName) doc.text(`Contact: ${consignee.contactName}`, 310);
-      if (consignee.contactPhone) doc.text(`Phone: ${consignee.contactPhone}`, 310);
+      doc.text(
+        `${consignee.city || ''}, ${consignee.state || ''} ${consignee.postalCode || ''}`,
+        310
+      );
+      if (consignee.contactName)
+        doc.text(`Contact: ${consignee.contactName}`, 310);
+      if (consignee.contactPhone)
+        doc.text(`Phone: ${consignee.contactPhone}`, 310);
     }
 
     // Move past both columns
@@ -776,7 +914,14 @@ export class LoadsService {
 
     // Table header
     const tableX = 40;
-    const colWidths = { qty: 50, desc: 200, weight: 70, class: 60, nmfc: 70, hazmat: 82 };
+    const colWidths = {
+      qty: 50,
+      desc: 200,
+      weight: 70,
+      class: 60,
+      nmfc: 70,
+      hazmat: 82,
+    };
     const headerY = doc.y;
     doc.fontSize(8).font('Helvetica-Bold');
     let cx = tableX;
@@ -792,7 +937,10 @@ export class LoadsService {
     cx += colWidths.nmfc;
     doc.text('HAZMAT', cx, headerY, { width: colWidths.hazmat });
 
-    doc.moveTo(tableX, headerY + 12).lineTo(572, headerY + 12).stroke();
+    doc
+      .moveTo(tableX, headerY + 12)
+      .lineTo(572, headerY + 12)
+      .stroke();
 
     // Table rows
     doc.font('Helvetica').fontSize(8);
@@ -801,57 +949,103 @@ export class LoadsService {
     if (items.length > 0) {
       for (const item of items) {
         cx = tableX;
-        doc.text(String(item.quantity ?? 1), cx, rowY, { width: colWidths.qty });
+        doc.text(String(item.quantity ?? 1), cx, rowY, {
+          width: colWidths.qty,
+        });
         cx += colWidths.qty;
         doc.text(item.description || '', cx, rowY, { width: colWidths.desc });
         cx += colWidths.desc;
-        doc.text(item.weightLbs ? Number(item.weightLbs).toFixed(0) : '', cx, rowY, { width: colWidths.weight });
+        doc.text(
+          item.weightLbs ? Number(item.weightLbs).toFixed(0) : '',
+          cx,
+          rowY,
+          { width: colWidths.weight }
+        );
         cx += colWidths.weight;
-        doc.text(item.commodityClass || '', cx, rowY, { width: colWidths.class });
+        doc.text(item.commodityClass || '', cx, rowY, {
+          width: colWidths.class,
+        });
         cx += colWidths.class;
         doc.text(item.nmfcCode || '', cx, rowY, { width: colWidths.nmfc });
         cx += colWidths.nmfc;
-        doc.text(item.isHazmat ? `Yes (${item.hazmatClass || ''})` : 'No', cx, rowY, { width: colWidths.hazmat });
+        doc.text(
+          item.isHazmat ? `Yes (${item.hazmatClass || ''})` : 'No',
+          cx,
+          rowY,
+          { width: colWidths.hazmat }
+        );
         rowY += 14;
       }
     } else {
       // Fallback: use order-level commodity data
       cx = tableX;
-      doc.text(String(order?.pieceCount ?? ''), cx, rowY, { width: colWidths.qty });
+      doc.text(String(order?.pieceCount ?? ''), cx, rowY, {
+        width: colWidths.qty,
+      });
       cx += colWidths.qty;
-      doc.text(order?.commodity || 'General Freight', cx, rowY, { width: colWidths.desc });
+      doc.text(order?.commodity || 'General Freight', cx, rowY, {
+        width: colWidths.desc,
+      });
       cx += colWidths.desc;
-      doc.text(order?.weightLbs ? Number(order.weightLbs).toFixed(0) : '', cx, rowY, { width: colWidths.weight });
+      doc.text(
+        order?.weightLbs ? Number(order.weightLbs).toFixed(0) : '',
+        cx,
+        rowY,
+        { width: colWidths.weight }
+      );
       cx += colWidths.weight;
-      doc.text(order?.commodityClass || '', cx, rowY, { width: colWidths.class });
+      doc.text(order?.commodityClass || '', cx, rowY, {
+        width: colWidths.class,
+      });
       cx += colWidths.class;
       doc.text('', cx, rowY, { width: colWidths.nmfc }); // no NMFC at order level
       cx += colWidths.nmfc;
-      doc.text(order?.isHazmat ? `Yes (${order.hazmatClass || ''})` : 'No', cx, rowY, { width: colWidths.hazmat });
+      doc.text(
+        order?.isHazmat ? `Yes (${order.hazmatClass || ''})` : 'No',
+        cx,
+        rowY,
+        { width: colWidths.hazmat }
+      );
       rowY += 14;
     }
 
     // Totals row
     doc.moveTo(tableX, rowY).lineTo(572, rowY).stroke();
     rowY += 4;
-    const totalWeight = items.length > 0
-      ? items.reduce((sum, i) => sum + Number(i.weightLbs ?? 0) * (i.quantity ?? 1), 0)
-      : Number(order?.weightLbs ?? 0);
-    const totalPieces = items.length > 0
-      ? items.reduce((sum, i) => sum + (i.quantity ?? 1), 0)
-      : (order?.pieceCount ?? 0);
+    const totalWeight =
+      items.length > 0
+        ? items.reduce(
+            (sum, i) => sum + Number(i.weightLbs ?? 0) * (i.quantity ?? 1),
+            0
+          )
+        : Number(order?.weightLbs ?? 0);
+    const totalPieces =
+      items.length > 0
+        ? items.reduce((sum, i) => sum + (i.quantity ?? 1), 0)
+        : (order?.pieceCount ?? 0);
     doc.font('Helvetica-Bold').fontSize(8);
-    doc.text(`Total: ${totalPieces} pcs`, tableX, rowY, { width: colWidths.qty + colWidths.desc });
-    doc.text(`${totalWeight > 0 ? totalWeight.toFixed(0) : ''} lbs`, tableX + colWidths.qty + colWidths.desc, rowY);
+    doc.text(`Total: ${totalPieces} pcs`, tableX, rowY, {
+      width: colWidths.qty + colWidths.desc,
+    });
+    doc.text(
+      `${totalWeight > 0 ? totalWeight.toFixed(0) : ''} lbs`,
+      tableX + colWidths.qty + colWidths.desc,
+      rowY
+    );
     doc.y = rowY + 16;
 
     // ── Hazmat section ──
-    if (options.includeHazmat && (order?.isHazmat || items.some((i) => i.isHazmat))) {
+    if (
+      options.includeHazmat &&
+      (order?.isHazmat || items.some((i) => i.isHazmat))
+    ) {
       doc.moveTo(40, doc.y).lineTo(572, doc.y).stroke();
       doc.moveDown(0.3);
       doc.font('Helvetica-Bold').fontSize(10).text('HAZARDOUS MATERIALS');
       doc.font('Helvetica').fontSize(9);
-      doc.text('This shipment contains hazardous materials as described above.');
+      doc.text(
+        'This shipment contains hazardous materials as described above.'
+      );
       doc.text('Emergency Contact: [See carrier safety documentation]');
       if (order?.hazmatClass) doc.text(`Hazmat Class: ${order.hazmatClass}`);
       const hazItems = items.filter((i) => i.isHazmat);
@@ -881,7 +1075,7 @@ export class LoadsService {
       for (let i = 0; i < stops.length; i++) {
         const stop = stops[i]!;
         doc.text(
-          `Stop ${i + 1} (${stop.stopType}): ${stop.facilityName || ''} — ${stop.city || ''}, ${stop.state || ''}`,
+          `Stop ${i + 1} (${stop.stopType}): ${stop.facilityName || ''} — ${stop.city || ''}, ${stop.state || ''}`
         );
       }
       doc.moveDown(0.5);
@@ -893,7 +1087,7 @@ export class LoadsService {
     doc.font('Helvetica').fontSize(8);
     doc.text(
       'The carrier acknowledges receipt of the above-described commodities in apparent good order, except as noted.',
-      40,
+      40
     );
     doc.moveDown(1);
 
@@ -916,10 +1110,13 @@ export class LoadsService {
     });
   }
 
-  async getLoadBoard(tenantId: string, options: {
-    status?: string[];
-    region?: string;
-  } = {}) {
+  async getLoadBoard(
+    tenantId: string,
+    options: {
+      status?: string[];
+      region?: string;
+    } = {}
+  ) {
     const { status = ['PENDING', 'ASSIGNED', 'IN_TRANSIT'] } = options;
 
     const loads = await this.prisma.load.findMany({
@@ -927,10 +1124,7 @@ export class LoadsService {
         tenantId,
         status: { in: status },
       },
-      orderBy: [
-        { status: 'asc' },
-        { createdAt: 'desc' },
-      ],
+      orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
       include: {
         order: {
           include: {
@@ -971,7 +1165,9 @@ export class LoadsService {
     }
 
     if (!['PENDING', 'CANCELLED'].includes(load.status)) {
-      throw new BadRequestException('Only pending or cancelled loads can be deleted');
+      throw new BadRequestException(
+        'Only pending or cancelled loads can be deleted'
+      );
     }
 
     await this.prisma.load.update({
@@ -983,12 +1179,24 @@ export class LoadsService {
       },
     });
 
-    await this.recordStatusHistory(tenantId, id, load.status, 'CANCELLED', userId, 'Load cancelled');
+    await this.recordStatusHistory(
+      tenantId,
+      id,
+      load.status,
+      'CANCELLED',
+      userId,
+      'Load cancelled'
+    );
 
     return { success: true, message: 'Load deleted successfully' };
   }
 
-  async tenderLoad(tenantId: string, id: string, userId: string, dto: TenderLoadDto) {
+  async tenderLoad(
+    tenantId: string,
+    id: string,
+    userId: string,
+    dto: TenderLoadDto
+  ) {
     const load = await this.prisma.load.findFirst({
       where: { id, tenantId, deletedAt: null },
     });
@@ -999,7 +1207,7 @@ export class LoadsService {
 
     if (!['PENDING'].includes(load.status)) {
       throw new BadRequestException(
-        `Cannot tender a load with status ${load.status}. Load must be in PENDING status.`,
+        `Cannot tender a load with status ${load.status}. Load must be in PENDING status.`
       );
     }
 
@@ -1044,7 +1252,9 @@ export class LoadsService {
         carrierId: dto.carrierId,
         carrierRate: dto.rate ?? load.carrierRate,
         dispatchNotes: dto.notes
-          ? [load.dispatchNotes, `Tender note: ${dto.notes}`].filter(Boolean).join('\n')
+          ? [load.dispatchNotes, `Tender note: ${dto.notes}`]
+              .filter(Boolean)
+              .join('\n')
           : load.dispatchNotes,
         updatedAt: new Date(),
         updatedById: userId,
@@ -1055,7 +1265,14 @@ export class LoadsService {
       },
     });
 
-    await this.recordStatusHistory(tenantId, id, load.status, 'TENDERED', userId, dto.notes ?? 'Load tendered to carrier');
+    await this.recordStatusHistory(
+      tenantId,
+      id,
+      load.status,
+      'TENDERED',
+      userId,
+      dto.notes ?? 'Load tendered to carrier'
+    );
 
     this.eventEmitter.emit('load.tendered', {
       loadId: id,
@@ -1085,7 +1302,7 @@ export class LoadsService {
 
     if (load.status !== 'TENDERED') {
       throw new BadRequestException(
-        `Cannot accept a load with status ${load.status}. Load must be in TENDERED status.`,
+        `Cannot accept a load with status ${load.status}. Load must be in TENDERED status.`
       );
     }
 
@@ -1109,6 +1326,7 @@ export class LoadsService {
       // Update the tender recipient record
       await this.prisma.tenderRecipient.updateMany({
         where: {
+          tenantId,
           tenderId: activeTender.id,
           carrierId: load.carrierId ?? undefined,
           status: 'PENDING',
@@ -1135,7 +1353,14 @@ export class LoadsService {
       },
     });
 
-    await this.recordStatusHistory(tenantId, id, 'TENDERED', 'ACCEPTED', userId, 'Tender accepted by carrier');
+    await this.recordStatusHistory(
+      tenantId,
+      id,
+      'TENDERED',
+      'ACCEPTED',
+      userId,
+      'Tender accepted by carrier'
+    );
 
     this.eventEmitter.emit('load.tender.accepted', {
       loadId: id,
@@ -1153,7 +1378,12 @@ export class LoadsService {
     return updated;
   }
 
-  async rejectTender(tenantId: string, id: string, userId: string, dto: RejectTenderDto) {
+  async rejectTender(
+    tenantId: string,
+    id: string,
+    userId: string,
+    dto: RejectTenderDto
+  ) {
     const load = await this.prisma.load.findFirst({
       where: { id, tenantId, deletedAt: null },
     });
@@ -1164,7 +1394,7 @@ export class LoadsService {
 
     if (load.status !== 'TENDERED') {
       throw new BadRequestException(
-        `Cannot reject a load with status ${load.status}. Load must be in TENDERED status.`,
+        `Cannot reject a load with status ${load.status}. Load must be in TENDERED status.`
       );
     }
 
@@ -1186,6 +1416,7 @@ export class LoadsService {
       // Update the tender recipient record
       await this.prisma.tenderRecipient.updateMany({
         where: {
+          tenantId,
           tenderId: activeTender.id,
           carrierId: load.carrierId ?? undefined,
           status: 'PENDING',
@@ -1214,8 +1445,17 @@ export class LoadsService {
       },
     });
 
-    const reason = dto.reason ? `Tender rejected: ${dto.reason}` : 'Tender rejected by carrier';
-    await this.recordStatusHistory(tenantId, id, 'TENDERED', 'PENDING', userId, reason);
+    const reason = dto.reason
+      ? `Tender rejected: ${dto.reason}`
+      : 'Tender rejected by carrier';
+    await this.recordStatusHistory(
+      tenantId,
+      id,
+      'TENDERED',
+      'PENDING',
+      userId,
+      reason
+    );
 
     this.eventEmitter.emit('load.tender.rejected', {
       loadId: id,
@@ -1240,7 +1480,7 @@ export class LoadsService {
     oldStatus: string | null,
     newStatus: string,
     userId: string,
-    notes?: string,
+    notes?: string
   ) {
     await this.prisma.statusHistory.create({
       data: {

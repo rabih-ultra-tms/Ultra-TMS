@@ -380,7 +380,9 @@ export class QuotesService {
 
     // Replace stops if provided
     if (dto.stops && dto.stops.length > 0) {
-      await this.prisma.quoteStop.deleteMany({ where: { quoteId: id } });
+      await this.prisma.quoteStop.deleteMany({
+        where: { quoteId: id, tenantId },
+      });
       await this.prisma.quoteStop.createMany({
         data: dto.stops.map((stop) => ({
           tenantId,
