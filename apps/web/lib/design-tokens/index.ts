@@ -18,10 +18,11 @@ export {
   PAYMENT_STATUSES,
   PAYABLE_STATUSES,
   SETTLEMENT_STATUSES,
+  JOURNAL_ENTRY_STATUSES,
   PRIORITIES,
   getStatusClasses,
   getIntentClasses,
-} from "./status";
+} from './status';
 
 export type {
   LoadStatus,
@@ -34,10 +35,11 @@ export type {
   PaymentStatusToken,
   PayableStatusToken,
   SettlementStatusToken,
+  JournalEntryStatusToken,
   Priority,
   Intent,
   StatusColorToken,
-} from "./status";
+} from './status';
 
 export {
   FONT_FAMILY,
@@ -45,14 +47,8 @@ export {
   FONT_WEIGHT,
   LINE_HEIGHT,
   TEXT_PRESETS,
-} from "./typography";
+} from './typography';
 
-export {
-  SPACING,
-  SPACING_CONTEXTS,
-} from "./spacing";
+export { SPACING, SPACING_CONTEXTS } from './spacing';
 
-export type {
-  SpacingToken,
-  SpacingContext,
-} from "./spacing";
+export type { SpacingToken, SpacingContext } from './spacing';
