@@ -4,8 +4,15 @@
  */
 
 export const EQUIPMENT_TYPES = [
-  'VAN', 'REEFER', 'FLATBED', 'STEP_DECK', 'POWER_ONLY',
-  'BOX_TRUCK', 'SPRINTER', 'INTERMODAL', 'CONESTOGA',
+  'VAN',
+  'REEFER',
+  'FLATBED',
+  'STEP_DECK',
+  'POWER_ONLY',
+  'BOX_TRUCK',
+  'SPRINTER',
+  'INTERMODAL',
+  'CONESTOGA',
 ] as const;
 
 export const CARRIER_EQUIPMENT_TYPE_LABELS: Record<string, string> = {
@@ -21,8 +28,12 @@ export const CARRIER_EQUIPMENT_TYPE_LABELS: Record<string, string> = {
 };
 
 export const DOCUMENT_TYPES = [
-  'W9', 'CARRIER_AGREEMENT', 'AUTHORITY_LETTER',
-  'VOID_CHECK', 'INSURANCE_CERTIFICATE', 'OTHER',
+  'W9',
+  'CARRIER_AGREEMENT',
+  'AUTHORITY_LETTER',
+  'VOID_CHECK',
+  'INSURANCE_CERTIFICATE',
+  'OTHER',
 ] as const;
 
 export const DOCUMENT_TYPE_LABELS: Record<string, string> = {
@@ -47,6 +58,10 @@ export interface OperationsCarrierDocument {
   name: string;
   description?: string;
   expiryDate?: string;
+  expirationDate?: string | null;
+  filePath?: string | null;
+  mimeType?: string | null;
+  fileSize?: number | null;
   status: string;
   createdAt: string;
   updatedAt: string;
@@ -140,7 +155,13 @@ export interface OperationsCarrier {
   insurancePolicyNumber?: string;
   insuranceExpiryDate?: string;
   cargoInsuranceLimitCents?: number;
-  status: 'PENDING' | 'APPROVED' | 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'BLACKLISTED';
+  status:
+    | 'PENDING'
+    | 'APPROVED'
+    | 'ACTIVE'
+    | 'INACTIVE'
+    | 'SUSPENDED'
+    | 'BLACKLISTED';
   notes?: string;
   tier?: string | null;
   onTimePickupRate?: number;
@@ -160,7 +181,10 @@ export interface OperationsCarrier {
   updatedAt: string;
 }
 
-export interface OperationsCarrierListItem extends Omit<OperationsCarrier, 'drivers' | 'trucks' | 'documents'> {
+export interface OperationsCarrierListItem extends Omit<
+  OperationsCarrier,
+  'drivers' | 'trucks' | 'documents'
+> {
   _count: {
     drivers: number;
     trucks: number;

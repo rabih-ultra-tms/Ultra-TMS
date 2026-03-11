@@ -1,3 +1,4 @@
+/* global File */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
@@ -25,7 +26,7 @@ export const useCarriers = (params: CarrierListParams) => {
         page: Number(params.page) || 1,
         limit: Number(params.limit) || 10,
       };
-      
+
       if (params.search) cleanParams.search = params.search;
       if (params.status) cleanParams.status = params.status;
       if (params.carrierType) cleanParams.carrierType = params.carrierType;
@@ -45,9 +46,20 @@ export const useCarriers = (params: CarrierListParams) => {
       if (params.minScore !== undefined && params.minScore > 0) {
         cleanParams.minScore = params.minScore;
       }
-      
-      const raw = await apiClient.get<unknown>('/operations/carriers', cleanParams);
-      const r = raw as { data: OperationsCarrierListItem[]; pagination: { total: number; page: number; limit: number; totalPages: number } };
+
+      const raw = await apiClient.get<unknown>(
+        '/operations/carriers',
+        cleanParams
+      );
+      const r = raw as {
+        data: OperationsCarrierListItem[];
+        pagination: {
+          total: number;
+          page: number;
+          limit: number;
+          totalPages: number;
+        };
+      };
       return {
         data: r.data,
         total: r.pagination?.total ?? 0,
@@ -157,7 +169,15 @@ export const useCarrierStats = () => {
     queryKey: [CARRIERS_KEY, 'stats'],
     queryFn: async () => {
       const raw = await apiClient.get<unknown>('/operations/carriers/stats');
-      return (raw as { data: { total: number; byType: Record<string, number>; byStatus: Record<string, number> } }).data;
+      return (
+        raw as {
+          data: {
+            total: number;
+            byType: Record<string, number>;
+            byStatus: Record<string, number>;
+          };
+        }
+      ).data;
     },
   });
 };
@@ -170,9 +190,11 @@ export const useCarrierDrivers = (carrierId: string) => {
   return useQuery({
     queryKey: [CARRIERS_KEY, carrierId, 'drivers'],
     queryFn: async () => {
-      const raw = await apiClient.get<unknown>(`/operations/carriers/${carrierId}/drivers`);
+      const raw = await apiClient.get<unknown>(
+        `/operations/carriers/${carrierId}/drivers`
+      );
       if (Array.isArray(raw)) return raw as OperationsCarrierDriver[];
-      return ((raw as { data?: OperationsCarrierDriver[] }).data ?? []);
+      return (raw as { data?: OperationsCarrierDriver[] }).data ?? [];
     },
     enabled: !!carrierId,
   });
@@ -266,9 +288,11 @@ export const useCarrierTrucks = (carrierId: string) => {
   return useQuery({
     queryKey: [CARRIERS_KEY, carrierId, 'trucks'],
     queryFn: async () => {
-      const raw = await apiClient.get<unknown>(`/operations/carriers/${carrierId}/trucks`);
+      const raw = await apiClient.get<unknown>(
+        `/operations/carriers/${carrierId}/trucks`
+      );
       if (Array.isArray(raw)) return raw as OperationsCarrierTruck[];
-      return ((raw as { data?: OperationsCarrierTruck[] }).data ?? []);
+      return (raw as { data?: OperationsCarrierTruck[] }).data ?? [];
     },
     enabled: !!carrierId,
   });
@@ -382,14 +406,22 @@ export const useUpdateTruckById = (carrierId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ truckId, data }: { truckId: string; data: Partial<OperationsCarrierTruck> }) => {
+    mutationFn: async ({
+      truckId,
+      data,
+    }: {
+      truckId: string;
+      data: Partial<OperationsCarrierTruck>;
+    }) => {
       return await apiClient.patch<OperationsCarrierTruck>(
         `/operations/carriers/${carrierId}/trucks/${truckId}`,
-        data,
+        data
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [CARRIERS_KEY, carrierId, 'trucks'] });
+      queryClient.invalidateQueries({
+        queryKey: [CARRIERS_KEY, carrierId, 'trucks'],
+      });
       queryClient.invalidateQueries({ queryKey: [CARRIERS_KEY, carrierId] });
       toast.success('Truck updated');
     },
@@ -405,10 +437,14 @@ export const useDeleteTruckById = (carrierId: string) => {
 
   return useMutation({
     mutationFn: async (truckId: string) => {
-      await apiClient.delete(`/operations/carriers/${carrierId}/trucks/${truckId}`);
+      await apiClient.delete(
+        `/operations/carriers/${carrierId}/trucks/${truckId}`
+      );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [CARRIERS_KEY, carrierId, 'trucks'] });
+      queryClient.invalidateQueries({
+        queryKey: [CARRIERS_KEY, carrierId, 'trucks'],
+      });
       queryClient.invalidateQueries({ queryKey: [CARRIERS_KEY, carrierId] });
       toast.success('Truck removed');
     },
@@ -423,14 +459,22 @@ export const useUpdateDriverById = (carrierId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ driverId, data }: { driverId: string; data: Partial<OperationsCarrierDriver> }) => {
+    mutationFn: async ({
+      driverId,
+      data,
+    }: {
+      driverId: string;
+      data: Partial<OperationsCarrierDriver>;
+    }) => {
       return await apiClient.patch<OperationsCarrierDriver>(
         `/operations/carriers/${carrierId}/drivers/${driverId}`,
-        data,
+        data
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [CARRIERS_KEY, carrierId, 'drivers'] });
+      queryClient.invalidateQueries({
+        queryKey: [CARRIERS_KEY, carrierId, 'drivers'],
+      });
       queryClient.invalidateQueries({ queryKey: [CARRIERS_KEY, carrierId] });
       toast.success('Driver updated');
     },
@@ -446,10 +490,14 @@ export const useDeleteDriverById = (carrierId: string) => {
 
   return useMutation({
     mutationFn: async (driverId: string) => {
-      await apiClient.delete(`/operations/carriers/${carrierId}/drivers/${driverId}`);
+      await apiClient.delete(
+        `/operations/carriers/${carrierId}/drivers/${driverId}`
+      );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [CARRIERS_KEY, carrierId, 'drivers'] });
+      queryClient.invalidateQueries({
+        queryKey: [CARRIERS_KEY, carrierId, 'drivers'],
+      });
       queryClient.invalidateQueries({ queryKey: [CARRIERS_KEY, carrierId] });
       toast.success('Driver removed');
     },
@@ -467,10 +515,12 @@ export const useCarrierDocuments = (carrierId: string) => {
   return useQuery({
     queryKey: [CARRIERS_KEY, carrierId, 'documents'],
     queryFn: async () => {
-      const raw = await apiClient.get<unknown>(`/operations/carriers/${carrierId}/documents`);
+      const raw = await apiClient.get<unknown>(
+        `/operations/carriers/${carrierId}/documents`
+      );
       // Guard: API returns raw array; envelope form is handled for safety
       if (Array.isArray(raw)) return raw as OperationsCarrierDocument[];
-      return ((raw as { data?: OperationsCarrierDocument[] }).data ?? []);
+      return (raw as { data?: OperationsCarrierDocument[] }).data ?? [];
     },
     enabled: !!carrierId,
   });
@@ -485,15 +535,25 @@ export const useCreateCarrierDocument = (carrierId: string) => {
       name: string;
       description?: string;
       expiryDate?: string;
+      file?: File;
     }) => {
-      return await apiClient.post<OperationsCarrierDocument>(
-        `/operations/carriers/${carrierId}/documents`,
-        data,
+      const formData = new FormData();
+      formData.append('documentType', data.documentType);
+      formData.append('name', data.name);
+      if (data.description) formData.append('description', data.description);
+      if (data.expiryDate) formData.append('expirationDate', data.expiryDate);
+      if (data.file) formData.append('file', data.file);
+
+      return await apiClient.upload<OperationsCarrierDocument>(
+        `/carriers/${carrierId}/documents`,
+        formData
       );
     },
     onSuccess: () => {
       toast.success('Document added');
-      queryClient.invalidateQueries({ queryKey: [CARRIERS_KEY, carrierId, 'documents'] });
+      queryClient.invalidateQueries({
+        queryKey: [CARRIERS_KEY, carrierId, 'documents'],
+      });
     },
     onError: (error: Error) => {
       toast.error('Failed to add document', { description: error.message });
@@ -506,14 +566,29 @@ export const useDeleteCarrierDocument = (carrierId: string) => {
 
   return useMutation({
     mutationFn: async (documentId: string) => {
-      await apiClient.delete(`/operations/carriers/${carrierId}/documents/${documentId}`);
+      await apiClient.delete(`/carriers/${carrierId}/documents/${documentId}`);
     },
     onSuccess: () => {
       toast.success('Document deleted');
-      queryClient.invalidateQueries({ queryKey: [CARRIERS_KEY, carrierId, 'documents'] });
+      queryClient.invalidateQueries({
+        queryKey: [CARRIERS_KEY, carrierId, 'documents'],
+      });
     },
     onError: (error: Error) => {
       toast.error('Failed to delete document', { description: error.message });
+    },
+  });
+};
+
+export const useCarrierDocumentDownloadUrl = (carrierId: string) => {
+  return useMutation({
+    mutationFn: async (documentId: string) => {
+      return await apiClient.get<{ downloadUrl: string; name: string }>(
+        `/carriers/${carrierId}/documents/${documentId}/download`
+      );
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to get download URL', { description: error.message });
     },
   });
 };

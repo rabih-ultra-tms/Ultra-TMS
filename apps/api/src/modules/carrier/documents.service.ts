@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -9,10 +10,17 @@ import {
   UpdateCarrierDocumentDto,
   DocumentStatus,
 } from './dto';
+import { STORAGE_SERVICE } from '../storage/storage.module';
+import type { IStorageService } from '../storage/storage.interface';
+import { randomBytes } from 'crypto';
+import { extname } from 'path';
 
 @Injectable()
 export class DocumentsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(STORAGE_SERVICE) private readonly storage: IStorageService
+  ) {}
 
   async list(tenantId: string, carrierId: string) {
     await this.ensureCarrier(tenantId, carrierId);
@@ -25,9 +33,27 @@ export class DocumentsService {
   async create(
     tenantId: string,
     carrierId: string,
-    dto: CreateCarrierDocumentDto
+    dto: CreateCarrierDocumentDto,
+    file?: Express.Multer.File
   ) {
     await this.ensureCarrier(tenantId, carrierId);
+
+    let filePath: string | undefined = dto.filePath;
+    let mimeType: string | undefined = dto.mimeType;
+    let fileSize: number | undefined;
+
+    if (file) {
+      const ext = extname(file.originalname);
+      const uniqueName = `${Date.now()}-${randomBytes(4).toString('hex')}${ext}`;
+      filePath = await this.storage.upload(
+        file.buffer,
+        uniqueName,
+        `carrier-documents/${carrierId}`,
+        file.mimetype
+      );
+      mimeType = file.mimetype;
+      fileSize = file.size;
+    }
 
     return this.prisma.carrierDocument.create({
       data: {
@@ -36,14 +62,31 @@ export class DocumentsService {
         documentType: dto.documentType,
         name: dto.name,
         description: dto.description,
-        filePath: dto.filePath,
-        mimeType: dto.mimeType,
+        filePath,
+        mimeType,
+        fileSize,
         expirationDate: dto.expirationDate
           ? new Date(dto.expirationDate)
           : null,
         status: DocumentStatus.PENDING,
       },
     });
+  }
+
+  async getDownloadUrl(tenantId: string, carrierId: string, docId: string) {
+    const doc = await this.requireDocument(tenantId, carrierId, docId);
+    if (!doc.filePath) {
+      throw new BadRequestException('No file attached to this document');
+    }
+    const downloadUrl = await this.storage.getSignedUrl(doc.filePath, {
+      expiresIn: 900,
+    });
+    return {
+      id: doc.id,
+      name: doc.name,
+      downloadUrl,
+      expiresIn: 900,
+    };
   }
 
   async update(

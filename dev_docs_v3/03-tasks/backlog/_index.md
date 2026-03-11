@@ -10,19 +10,19 @@
 
 > **2026-03-11 Audit:** BUILD-001 through BUILD-006 already exist as real implementations (verified via code scan). Reclassified as DONE.
 
-| ID            | Title                              | Priority | Effort   | Notes                                                                             |
-| ------------- | ---------------------------------- | -------- | -------- | --------------------------------------------------------------------------------- |
-| ~~BUILD-001~~ | ~~Accounting Dashboard Screen~~    | ~~P0~~   | ~~L~~    | **DONE** — 98 LOC, real API calls to `/accounting/dashboard`                      |
-| ~~BUILD-002~~ | ~~Invoice List Screen~~            | ~~P0~~   | ~~L~~    | **DONE** — 128 LOC, full CRUD with pagination/filters                             |
-| ~~BUILD-003~~ | ~~Invoice Create Form~~            | ~~P0~~   | ~~M~~    | **DONE** — 13 LOC wrapper → InvoiceForm component                                 |
-| ~~BUILD-004~~ | ~~Invoice Detail Screen~~          | ~~P0~~   | ~~M~~    | **DONE** — 184 LOC, 3-tab view with send/void/PDF                                 |
-| ~~BUILD-005~~ | ~~Settlement List Screen~~         | ~~P0~~   | ~~M~~    | **DONE** — 71 LOC, real API calls with filters                                    |
-| ~~BUILD-006~~ | ~~Settlement Detail Screen~~       | ~~P0~~   | ~~M~~    | **DONE** — 423 LOC, approval workflow, financial summary                          |
-| ~~BUILD-007~~ | ~~Payment List Screen~~            | ~~P1~~   | ~~M~~    | **DONE** — 120 LOC, real API, RHF+Zod form, 453 LOC detail page (8.5/10)          |
-| ~~BUILD-008~~ | ~~Commission Dashboard Screen~~    | ~~P1~~   | ~~L~~    | **DONE** — 180 LOC, real API, KPI cards, top reps table, error state added (8/10) |
-| ~~BUILD-009~~ | ~~Commission Plans Screen~~        | ~~P1~~   | ~~M~~    | **DONE** — 224 LOC, real API, filters, pagination, RHF+Zod plan form (8/10)       |
-| ~~BUILD-010~~ | ~~Commission Transactions Screen~~ | ~~P1~~   | ~~M~~    | **DONE** — 191 LOC, real API, approve/void with reason validation (8.5/10)        |
-| BUILD-011     | Load Board Screen                  | P2       | L (4-8h) | Backend all stubs — needs real impl                                               |
+| ID            | Title                              | Priority | Effort | Notes                                                                                                 |
+| ------------- | ---------------------------------- | -------- | ------ | ----------------------------------------------------------------------------------------------------- |
+| ~~BUILD-001~~ | ~~Accounting Dashboard Screen~~    | ~~P0~~   | ~~L~~  | **DONE** — 98 LOC, real API calls to `/accounting/dashboard`                                          |
+| ~~BUILD-002~~ | ~~Invoice List Screen~~            | ~~P0~~   | ~~L~~  | **DONE** — 128 LOC, full CRUD with pagination/filters                                                 |
+| ~~BUILD-003~~ | ~~Invoice Create Form~~            | ~~P0~~   | ~~M~~  | **DONE** — 13 LOC wrapper → InvoiceForm component                                                     |
+| ~~BUILD-004~~ | ~~Invoice Detail Screen~~          | ~~P0~~   | ~~M~~  | **DONE** — 184 LOC, 3-tab view with send/void/PDF                                                     |
+| ~~BUILD-005~~ | ~~Settlement List Screen~~         | ~~P0~~   | ~~M~~  | **DONE** — 71 LOC, real API calls with filters                                                        |
+| ~~BUILD-006~~ | ~~Settlement Detail Screen~~       | ~~P0~~   | ~~M~~  | **DONE** — 423 LOC, approval workflow, financial summary                                              |
+| ~~BUILD-007~~ | ~~Payment List Screen~~            | ~~P1~~   | ~~M~~  | **DONE** — 120 LOC, real API, RHF+Zod form, 453 LOC detail page (8.5/10)                              |
+| ~~BUILD-008~~ | ~~Commission Dashboard Screen~~    | ~~P1~~   | ~~L~~  | **DONE** — 180 LOC, real API, KPI cards, top reps table, error state added (8/10)                     |
+| ~~BUILD-009~~ | ~~Commission Plans Screen~~        | ~~P1~~   | ~~M~~  | **DONE** — 224 LOC, real API, filters, pagination, RHF+Zod plan form (8/10)                           |
+| ~~BUILD-010~~ | ~~Commission Transactions Screen~~ | ~~P1~~   | ~~M~~  | **DONE** — 191 LOC, real API, approve/void with reason validation (8.5/10)                            |
+| ~~BUILD-011~~ | ~~Load Board Screen~~              | ~~P2~~   | ~~L~~  | **DONE** — Backend fully implemented (geo search, bids, tenders, expiration). 4 frontend pages built. |
 
 ---
 
@@ -80,14 +80,14 @@
 
 ## P1 — Security Hardening
 
-| ID          | Title                                     | Priority | Effort   | Notes                                                                                                                                                                      |
-| ----------- | ----------------------------------------- | -------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ~~SEC-001~~ | ~~Add CSP headers to Next.js config~~     | ~~P1~~   | ~~M~~    | **DONE** — CSP tightened (Google Maps domains, worker-src, frame-src), HSTS + DNS prefetch added, `helmet` added to NestJS backend                                         |
-| ~~SEC-002~~ | ~~Add rate limiting (@nestjs/throttler)~~ | ~~P1~~   | ~~M~~    | **DONE** — Global ThrottlerGuard (3 tiers), @Throttle on login (5/min), refresh (10/min), forgot-password (3/min), reset-password (5/min), email/SMS send, public tracking |
-| ~~SEC-003~~ | ~~Verify CSRF protection~~                | ~~P1~~   | ~~S~~    | **DONE** — Verified: SameSite=Lax on cookies, CORS credentials:true, origin whitelist. Baseline CSRF protection in place.                                                  |
-| SEC-004     | Add gitleaks pre-commit hook              | P2       | S (1h)   | Secret scanning                                                                                                                                                            |
-| SEC-005     | Account lockout after 10 failed logins    | P2       | M (2-4h) | Track in Redis                                                                                                                                                             |
-| ~~SEC-006~~ | ~~Verify HubSpot webhook signature~~      | ~~P1~~   | ~~S~~    | **DONE** — HubspotWebhookGuard with SHA256 + timing-safe comparison already implemented                                                                                    |
+| ID          | Title                                      | Priority | Effort | Notes                                                                                                                                                                      |
+| ----------- | ------------------------------------------ | -------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ~~SEC-001~~ | ~~Add CSP headers to Next.js config~~      | ~~P1~~   | ~~M~~  | **DONE** — CSP tightened (Google Maps domains, worker-src, frame-src), HSTS + DNS prefetch added, `helmet` added to NestJS backend                                         |
+| ~~SEC-002~~ | ~~Add rate limiting (@nestjs/throttler)~~  | ~~P1~~   | ~~M~~  | **DONE** — Global ThrottlerGuard (3 tiers), @Throttle on login (5/min), refresh (10/min), forgot-password (3/min), reset-password (5/min), email/SMS send, public tracking |
+| ~~SEC-003~~ | ~~Verify CSRF protection~~                 | ~~P1~~   | ~~S~~  | **DONE** — Verified: SameSite=Lax on cookies, CORS credentials:true, origin whitelist. Baseline CSRF protection in place.                                                  |
+| ~~SEC-004~~ | ~~Add gitleaks pre-commit hook~~           | ~~P2~~   | ~~S~~  | **DONE** — `.husky/pre-commit` already has gitleaks scanning (soft enforcement if installed)                                                                               |
+| ~~SEC-005~~ | ~~Account lockout after 10 failed logins~~ | ~~P2~~   | ~~M~~  | **DONE** — Redis-backed lockout with configurable `maxLoginAttempts` (default 5) and `lockoutDuration` (default 15min)                                                     |
+| ~~SEC-006~~ | ~~Verify HubSpot webhook signature~~       | ~~P1~~   | ~~S~~  | **DONE** — HubspotWebhookGuard with SHA256 + timing-safe comparison already implemented                                                                                    |
 
 ---
 
@@ -106,27 +106,27 @@
 
 ## P2 — Infrastructure
 
-| ID            | Title                                      | Priority | Effort   | Notes                                                                                                                   |
-| ------------- | ------------------------------------------ | -------- | -------- | ----------------------------------------------------------------------------------------------------------------------- |
-| ~~INFRA-001~~ | ~~Set up CI/CD pipeline (GitHub Actions)~~ | ~~P1~~   | ~~L~~    | **DONE** — `.github/workflows/ci.yml`: 3 jobs (lint+typecheck, test w/ Postgres+Redis, build). Runs on push/PR to main. |
-| ~~INFRA-002~~ | ~~Add structured logging (Pino)~~          | ~~P2~~   | ~~M~~    | **DONE** — `nestjs-pino` replaces default NestJS logger in `main.ts`                                                    |
-| INFRA-003     | Add correlation IDs                        | P2       | M (2-4h) | Cross-service request tracing                                                                                           |
-| INFRA-004     | Add Sentry error tracking                  | P2       | M (2-4h) | Frontend + backend                                                                                                      |
-| INFRA-005     | Performance budgets (LCP, bundle size)     | P2       | M (2-4h) | Lighthouse CI integration                                                                                               |
-| INFRA-006     | Implement cloud storage (S3/Azure/GCS)     | P2       | L (4-8h) | `file-upload.util.ts` + `companies.controller.ts` — file uploads throw in production                                    |
+| ID            | Title                                      | Priority | Effort | Notes                                                                                                                                       |
+| ------------- | ------------------------------------------ | -------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| ~~INFRA-001~~ | ~~Set up CI/CD pipeline (GitHub Actions)~~ | ~~P1~~   | ~~L~~  | **DONE** — `.github/workflows/ci.yml`: 3 jobs (lint+typecheck, test w/ Postgres+Redis, build). Runs on push/PR to main.                     |
+| ~~INFRA-002~~ | ~~Add structured logging (Pino)~~          | ~~P2~~   | ~~M~~  | **DONE** — `nestjs-pino` replaces default NestJS logger in `main.ts`                                                                        |
+| ~~INFRA-003~~ | ~~Add correlation IDs~~                    | ~~P2~~   | ~~M~~  | **DONE** — `CorrelationIdMiddleware` generates UUID per request, propagates via `x-correlation-id` header + logs                            |
+| ~~INFRA-004~~ | ~~Add Sentry error tracking~~              | ~~P2~~   | ~~M~~  | **DONE** — `@sentry/node` + `@sentry/nextjs` installed. Backend: interceptor + filter. Frontend: client lib + init. Opt-in via `SENTRY_DSN` |
+| ~~INFRA-005~~ | ~~Performance budgets (LCP, bundle size)~~ | ~~P2~~   | ~~M~~  | **DONE** — `@next/bundle-analyzer` + `lighthouserc.js` with LCP/CLS/TBT budgets. Run: `pnpm --filter web build:analyze`                     |
+| ~~INFRA-006~~ | ~~Implement cloud storage (S3/Azure/GCS)~~ | ~~P2~~   | ~~L~~  | **DONE** — `@aws-sdk/client-s3` installed. `S3StorageService` + `LocalStorageService` via `STORAGE_DRIVER` env var                          |
 
 ---
 
 ## P2 — UX Polish
 
-| ID     | Title                                 | Priority | Effort   | Notes                                                                           |
-| ------ | ------------------------------------- | -------- | -------- | ------------------------------------------------------------------------------- |
-| UX-001 | Add search debounce to all list pages | P2       | S (2h)   | Apply use-debounce hook                                                         |
-| UX-002 | Replace window.confirm() everywhere   | P2       | S (2h)   | Already partially done                                                          |
-| UX-003 | Add export buttons (Orders, Loads)    | P3       | M (2-4h) | Backend endpoints exist (unused)                                                |
-| UX-004 | Add bulk status update (Orders)       | P3       | M (2-4h) | Backend endpoint exists (unused)                                                |
-| UX-005 | Add aging report UI                   | P2       | M (2-4h) | After QS-003 aging bucket endpoint                                              |
-| UX-006 | Wire carrier documents API to UI      | P2       | M (2-4h) | `carrier-documents-section.tsx` — shows static checklist, needs API integration |
+| ID         | Title                                     | Priority | Effort   | Notes                                                                                                         |
+| ---------- | ----------------------------------------- | -------- | -------- | ------------------------------------------------------------------------------------------------------------- |
+| ~~UX-001~~ | ~~Add search debounce to all list pages~~ | ~~P2~~   | ~~S~~    | **DONE** — Custom `useDebounce` hook deployed across 8+ list pages with tests                                 |
+| UX-002     | Replace window.confirm() everywhere       | P2       | S (2h)   | Already partially done                                                                                        |
+| UX-003     | Add export buttons (Orders, Loads)        | P3       | M (2-4h) | Backend endpoints exist (unused)                                                                              |
+| UX-004     | Add bulk status update (Orders)           | P3       | M (2-4h) | Backend endpoint exists (unused)                                                                              |
+| ~~UX-005~~ | ~~Add aging report UI~~                   | ~~P2~~   | ~~M~~    | **DONE** — Backend endpoint + frontend page with customer/date filters fully built                            |
+| ~~UX-006~~ | ~~Wire carrier documents API to UI~~      | ~~P2~~   | ~~M~~    | **DONE** — File upload via `FileInterceptor` + `IStorageService`, download URL endpoint, localStorage removed |
 
 ---
 
