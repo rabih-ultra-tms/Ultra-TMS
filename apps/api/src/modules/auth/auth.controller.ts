@@ -9,7 +9,13 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import type { Request } from 'express';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards';
@@ -46,7 +52,9 @@ export class AuthController {
     const ipAddress = req.ip || req.connection.remoteAddress;
 
     const result = await this.authService.login(loginDto, userAgent, ipAddress);
-    const user = result.userId ? await this.authService.getMe(result.userId) : null;
+    const user = result.userId
+      ? await this.authService.getMe(result.userId)
+      : null;
 
     return {
       data: {
@@ -63,6 +71,7 @@ export class AuthController {
    */
   @Post('refresh')
   @Public()
+  @Throttle({ long: { limit: 10, ttl: 60000 } })
   @ApiOperation({ summary: 'Refresh access token' })
   @ApiBody({ type: RefreshTokenDto })
   @ApiResponse({ status: 200, description: 'Token refreshed' })
@@ -124,9 +133,13 @@ export class AuthController {
    */
   @Post('forgot-password')
   @Public()
+  @Throttle({ long: { limit: 3, ttl: 60000 } })
   @ApiOperation({ summary: 'Request password reset' })
   @ApiBody({ type: ForgotPasswordDto })
-  @ApiResponse({ status: 200, description: 'Password reset email sent if user exists' })
+  @ApiResponse({
+    status: 200,
+    description: 'Password reset email sent if user exists',
+  })
   @ApiResponse({ status: 400, description: 'Validation error' })
   @HttpCode(HttpStatus.OK)
   async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
@@ -144,6 +157,7 @@ export class AuthController {
    */
   @Post('reset-password')
   @Public()
+  @Throttle({ long: { limit: 5, ttl: 60000 } })
   @ApiOperation({ summary: 'Reset password with token' })
   @ApiBody({ type: ResetPasswordDto })
   @ApiResponse({ status: 200, description: 'Password reset successful' })
@@ -167,7 +181,10 @@ export class AuthController {
   @ApiOperation({ summary: 'Verify email address' })
   @ApiBody({ type: VerifyEmailDto })
   @ApiResponse({ status: 200, description: 'Email verified' })
-  @ApiResponse({ status: 400, description: 'Invalid or expired verification token' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid or expired verification token',
+  })
   @HttpCode(HttpStatus.OK)
   async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
     await this.authService.verifyEmail(verifyEmailDto);

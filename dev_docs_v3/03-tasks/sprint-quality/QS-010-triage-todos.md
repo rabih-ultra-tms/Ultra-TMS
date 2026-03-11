@@ -2,7 +2,7 @@
 
 **Priority:** P2
 **Effort:** M (2-4 hours)
-**Status:** planned
+**Status:** DONE (2026-03-10)
 **Assigned:** Claude Code
 
 ---
@@ -23,6 +23,7 @@ Find all TODO/FIXME comments in the codebase. Categorize them. Create backlog ta
 ## Process
 
 ### Step 1: Find All TODOs
+
 ```bash
 grep -rn "TODO\|FIXME\|HACK\|XXX" apps/ --include="*.ts" --include="*.tsx" | \
   grep -v "node_modules" | \
@@ -33,19 +34,20 @@ wc -l /tmp/todos.txt  # Expect ~339
 
 ### Step 2: Categorize Each TODO
 
-| Category | Action |
-|----------|--------|
-| WebSocket implementation | Already covered by QS-001 — add note, then delete TODO |
-| Soft delete | Already covered by QS-002 — add note, then delete TODO |
-| API connection (FE hook) | Add to "Build screens" backlog, then delete TODO |
-| Test coverage | Add to testing backlog, then delete TODO |
-| Business logic stub | Review and add specific task, or delete if out of scope |
-| Obsolete (feature removed/changed) | Delete immediately |
-| Already done | Delete immediately |
+| Category                           | Action                                                  |
+| ---------------------------------- | ------------------------------------------------------- |
+| WebSocket implementation           | Already covered by QS-001 — add note, then delete TODO  |
+| Soft delete                        | Already covered by QS-002 — add note, then delete TODO  |
+| API connection (FE hook)           | Add to "Build screens" backlog, then delete TODO        |
+| Test coverage                      | Add to testing backlog, then delete TODO                |
+| Business logic stub                | Review and add specific task, or delete if out of scope |
+| Obsolete (feature removed/changed) | Delete immediately                                      |
+| Already done                       | Delete immediately                                      |
 
 ### Step 3: Create Backlog Tasks
 
 For each meaningful TODO, add an entry to `dev_docs_v3/03-tasks/backlog/_index.md`:
+
 ```markdown
 | BUG-XXX | TODO at file:line — description | P1 | 1-2h |
 ```
@@ -53,6 +55,7 @@ For each meaningful TODO, add an entry to `dev_docs_v3/03-tasks/backlog/_index.m
 ### Step 4: Delete Resolved TODOs
 
 For each TODO that's either covered by an existing task or obsolete:
+
 ```bash
 # Remove the TODO comment (but keep the code if it's a real stub)
 # Use Edit tool to remove the comment line
@@ -62,10 +65,10 @@ For each TODO that's either covered by an existing task or obsolete:
 
 ## File Plan
 
-| File | Change |
-|------|--------|
+| File                                     | Change                                    |
+| ---------------------------------------- | ----------------------------------------- |
 | `dev_docs_v3/03-tasks/backlog/_index.md` | Add new tasks discovered from TODO triage |
-| Various `*.ts` and `*.tsx` files | Remove obsolete TODO comments |
+| Various `*.ts` and `*.tsx` files         | Remove obsolete TODO comments             |
 
 ---
 

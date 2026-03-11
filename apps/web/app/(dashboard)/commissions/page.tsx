@@ -67,7 +67,7 @@ function formatCurrency(value: number): string {
 
 export default function CommissionDashboardPage() {
   const router = useRouter();
-  const { data, isLoading } = useCommissionDashboard();
+  const { data, isLoading, error } = useCommissionDashboard();
 
   return (
     <div className="space-y-6 p-6">
@@ -78,6 +78,13 @@ export default function CommissionDashboardPage() {
           Sales commission tracking — pending, paid, and rep performance
         </p>
       </div>
+
+      {/* Error State */}
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          Failed to load commission data. Please try refreshing the page.
+        </div>
+      )}
 
       {/* KPI Cards */}
       <CommissionDashboardStats data={data} isLoading={isLoading} />

@@ -10,19 +10,19 @@
 
 > **2026-03-11 Audit:** BUILD-001 through BUILD-006 already exist as real implementations (verified via code scan). Reclassified as DONE.
 
-| ID            | Title                           | Priority | Effort   | Notes                                                        |
-| ------------- | ------------------------------- | -------- | -------- | ------------------------------------------------------------ |
-| ~~BUILD-001~~ | ~~Accounting Dashboard Screen~~ | ~~P0~~   | ~~L~~    | **DONE** — 98 LOC, real API calls to `/accounting/dashboard` |
-| ~~BUILD-002~~ | ~~Invoice List Screen~~         | ~~P0~~   | ~~L~~    | **DONE** — 128 LOC, full CRUD with pagination/filters        |
-| ~~BUILD-003~~ | ~~Invoice Create Form~~         | ~~P0~~   | ~~M~~    | **DONE** — 13 LOC wrapper → InvoiceForm component            |
-| ~~BUILD-004~~ | ~~Invoice Detail Screen~~       | ~~P0~~   | ~~M~~    | **DONE** — 184 LOC, 3-tab view with send/void/PDF            |
-| ~~BUILD-005~~ | ~~Settlement List Screen~~      | ~~P0~~   | ~~M~~    | **DONE** — 71 LOC, real API calls with filters               |
-| ~~BUILD-006~~ | ~~Settlement Detail Screen~~    | ~~P0~~   | ~~M~~    | **DONE** — 423 LOC, approval workflow, financial summary     |
-| BUILD-007     | Payment List Screen             | P1       | M (2-4h) | Already exists (120 LOC) — needs QA                          |
-| BUILD-008     | Commission Dashboard Screen     | P1       | L (4-8h) | Backend partial                                              |
-| BUILD-009     | Commission Plans Screen         | P1       | M (2-4h) | Already exists (224 LOC) — needs QA                          |
-| BUILD-010     | Commission Transactions Screen  | P1       | M (2-4h) | Already exists (191 LOC) — needs QA                          |
-| BUILD-011     | Load Board Screen               | P2       | L (4-8h) | Backend all stubs — needs real impl                          |
+| ID            | Title                              | Priority | Effort   | Notes                                                                             |
+| ------------- | ---------------------------------- | -------- | -------- | --------------------------------------------------------------------------------- |
+| ~~BUILD-001~~ | ~~Accounting Dashboard Screen~~    | ~~P0~~   | ~~L~~    | **DONE** — 98 LOC, real API calls to `/accounting/dashboard`                      |
+| ~~BUILD-002~~ | ~~Invoice List Screen~~            | ~~P0~~   | ~~L~~    | **DONE** — 128 LOC, full CRUD with pagination/filters                             |
+| ~~BUILD-003~~ | ~~Invoice Create Form~~            | ~~P0~~   | ~~M~~    | **DONE** — 13 LOC wrapper → InvoiceForm component                                 |
+| ~~BUILD-004~~ | ~~Invoice Detail Screen~~          | ~~P0~~   | ~~M~~    | **DONE** — 184 LOC, 3-tab view with send/void/PDF                                 |
+| ~~BUILD-005~~ | ~~Settlement List Screen~~         | ~~P0~~   | ~~M~~    | **DONE** — 71 LOC, real API calls with filters                                    |
+| ~~BUILD-006~~ | ~~Settlement Detail Screen~~       | ~~P0~~   | ~~M~~    | **DONE** — 423 LOC, approval workflow, financial summary                          |
+| ~~BUILD-007~~ | ~~Payment List Screen~~            | ~~P1~~   | ~~M~~    | **DONE** — 120 LOC, real API, RHF+Zod form, 453 LOC detail page (8.5/10)          |
+| ~~BUILD-008~~ | ~~Commission Dashboard Screen~~    | ~~P1~~   | ~~L~~    | **DONE** — 180 LOC, real API, KPI cards, top reps table, error state added (8/10) |
+| ~~BUILD-009~~ | ~~Commission Plans Screen~~        | ~~P1~~   | ~~M~~    | **DONE** — 224 LOC, real API, filters, pagination, RHF+Zod plan form (8/10)       |
+| ~~BUILD-010~~ | ~~Commission Transactions Screen~~ | ~~P1~~   | ~~M~~    | **DONE** — 191 LOC, real API, approve/void with reason validation (8.5/10)        |
+| BUILD-011     | Load Board Screen                  | P2       | L (4-8h) | Backend all stubs — needs real impl                                               |
 
 ---
 
@@ -30,18 +30,18 @@
 
 > **2026-03-11 Audit:** BUG-001, BUG-012, BUG-016 already resolved. Cross-tenant security fixes (SEC-TENANT) applied.
 
-| ID          | Title                                  | Priority | Effort | Notes                                                                                                                                                                                           |
-| ----------- | -------------------------------------- | -------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ~~BUG-001~~ | ~~Carrier Detail 404~~                 | ~~P0~~   | ~~M~~  | **DONE** — page exists (198 LOC, 8 tabs, fully functional)                                                                                                                                      |
-| BUG-002     | Load History Detail 404                | P1       | S (1h) | Route `carriers/[id]/load-history/[loadId]` not needed — loads shown via CarrierLoadsTab in carrier detail. Load history at `/load-history/[id]` exists (192 LOC). **Reclassified: not a bug.** |
-| BUG-009     | CRM Contacts — Add delete button       | P1       | S (1h) | Backend `DELETE /crm/contacts/:id` exists                                                                                                                                                       |
-| BUG-010     | CRM Leads — Add delete button          | P1       | S (1h) | Backend `DELETE /crm/opportunities/:id` exists                                                                                                                                                  |
-| BUG-011     | CRM Lead — Add convert button          | P1       | M (2h) | `POST /crm/opportunities/:id/convert` (verify endpoint)                                                                                                                                         |
-| ~~BUG-012~~ | ~~localStorage token storage (XSS)~~   | ~~P0~~   | ~~M~~  | **DONE** — HTTP-only cookies implemented, zero localStorage usage                                                                                                                               |
-| BUG-013     | Pipeline stage confirm dialog          | P1       | S (1h) | Add ConfirmDialog before stage change                                                                                                                                                           |
-| BUG-014     | window.confirm() remaining x3          | P1       | S (2h) | Replace with ConfirmDialog in 3 places                                                                                                                                                          |
-| BUG-015     | No search debounce on carrier list     | P2       | S (1h) | Use `use-debounce` hook on search input                                                                                                                                                         |
-| ~~BUG-016~~ | ~~useDashboard KPI cards hardcoded 0~~ | ~~P1~~   | ~~S~~  | **DONE** — 3 real API hooks fetch live data (carriers, loads, quotes stats)                                                                                                                     |
+| ID          | Title                                  | Priority | Effort | Notes                                                                                                                             |
+| ----------- | -------------------------------------- | -------- | ------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| ~~BUG-001~~ | ~~Carrier Detail 404~~                 | ~~P0~~   | ~~M~~  | **DONE** — page exists (198 LOC, 8 tabs, fully functional)                                                                        |
+| ~~BUG-002~~ | ~~Load History Detail 404~~            | ~~P1~~   | ~~S~~  | **CLOSED** — Not a bug. Loads shown via CarrierLoadsTab. Load history at `/load-history/[id]` exists (192 LOC).                   |
+| ~~BUG-009~~ | ~~CRM Contacts — Add delete button~~   | ~~P1~~   | ~~S~~  | **DONE** — Delete button + ConfirmDialog in `contacts-table.tsx`, `useDeleteContact()` hook wired                                 |
+| ~~BUG-010~~ | ~~CRM Leads — Add delete button~~      | ~~P1~~   | ~~S~~  | **DONE** — Delete button + ConfirmDialog in `leads-table.tsx`, `useDeleteLead()` hook wired                                       |
+| ~~BUG-011~~ | ~~CRM Lead — Add convert button~~      | ~~P1~~   | ~~M~~  | **DONE** — "Convert to Customer" button on lead detail (WON stage), `LeadConvertDialog` + `useConvertLead()` hook                 |
+| ~~BUG-012~~ | ~~localStorage token storage (XSS)~~   | ~~P0~~   | ~~M~~  | **DONE** — HTTP-only cookies implemented, zero localStorage usage                                                                 |
+| ~~BUG-013~~ | ~~Pipeline stage confirm dialog~~      | ~~P1~~   | ~~S~~  | **DONE** — Pipeline drag-drop uses ConfirmDialog (warning variant) for stage changes                                              |
+| ~~BUG-014~~ | ~~window.confirm() remaining x3~~      | ~~P1~~   | ~~S~~  | **DONE** — Zero window.confirm() calls remain. All 4 pages use ConfirmDialog. Regression test at `bug-006-window-confirm.test.ts` |
+| BUG-015     | No search debounce on carrier list     | P2       | S (1h) | Use `use-debounce` hook on search input                                                                                           |
+| ~~BUG-016~~ | ~~useDashboard KPI cards hardcoded 0~~ | ~~P1~~   | ~~S~~  | **DONE** — 3 real API hooks fetch live data (carriers, loads, quotes stats)                                                       |
 
 ---
 
@@ -80,40 +80,40 @@
 
 ## P1 — Security Hardening
 
-| ID      | Title                                    | Priority | Effort   | Notes                                                              |
-| ------- | ---------------------------------------- | -------- | -------- | ------------------------------------------------------------------ |
-| SEC-001 | Add CSP headers to Next.js config        | P1       | M (2-4h) | next.config.js headers()                                           |
-| SEC-002 | Add rate limiting (@nestjs/throttler)    | P1       | M (2-4h) | 5 req/min auth, 100 req/min API                                    |
-| SEC-003 | Verify CSRF protection (SameSite cookie) | P1       | S (1h)   | Check auth cookie config                                           |
-| SEC-004 | Add gitleaks pre-commit hook             | P2       | S (1h)   | Secret scanning                                                    |
-| SEC-005 | Account lockout after 10 failed logins   | P2       | M (2-4h) | Track in Redis                                                     |
-| SEC-006 | Verify HubSpot webhook signature         | P1       | S (1h)   | `hubspot.controller.ts:30` — currently accepts unverified payloads |
+| ID          | Title                                     | Priority | Effort   | Notes                                                                                                                                                                      |
+| ----------- | ----------------------------------------- | -------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ~~SEC-001~~ | ~~Add CSP headers to Next.js config~~     | ~~P1~~   | ~~M~~    | **DONE** — CSP tightened (Google Maps domains, worker-src, frame-src), HSTS + DNS prefetch added, `helmet` added to NestJS backend                                         |
+| ~~SEC-002~~ | ~~Add rate limiting (@nestjs/throttler)~~ | ~~P1~~   | ~~M~~    | **DONE** — Global ThrottlerGuard (3 tiers), @Throttle on login (5/min), refresh (10/min), forgot-password (3/min), reset-password (5/min), email/SMS send, public tracking |
+| ~~SEC-003~~ | ~~Verify CSRF protection~~                | ~~P1~~   | ~~S~~    | **DONE** — Verified: SameSite=Lax on cookies, CORS credentials:true, origin whitelist. Baseline CSRF protection in place.                                                  |
+| SEC-004     | Add gitleaks pre-commit hook              | P2       | S (1h)   | Secret scanning                                                                                                                                                            |
+| SEC-005     | Account lockout after 10 failed logins    | P2       | M (2-4h) | Track in Redis                                                                                                                                                             |
+| ~~SEC-006~~ | ~~Verify HubSpot webhook signature~~      | ~~P1~~   | ~~S~~    | **DONE** — HubspotWebhookGuard with SHA256 + timing-safe comparison already implemented                                                                                    |
 
 ---
 
 ## P1 — Testing Coverage
 
-| ID       | Title                               | Priority | Effort   | Notes                  |
-| -------- | ----------------------------------- | -------- | -------- | ---------------------- |
-| TEST-001 | Add Playwright E2E: Login flow      | P0       | M (2-4h) | Most critical flow     |
-| TEST-002 | Add Playwright E2E: Quote creation  | P1       | M (2-4h) | Revenue-critical flow  |
-| TEST-003 | Add Playwright E2E: Load lifecycle  | P1       | L (4-8h) | End-to-end TMS flow    |
-| TEST-004 | Add unit tests: Accounting service  | P1       | M (2-4h) | 0% coverage currently  |
-| TEST-005 | Add unit tests: Commission service  | P1       | M (2-4h) | 0% coverage currently  |
-| TEST-006 | Add unit tests: TMS Core operations | P1       | L (4-8h) | <5% coverage currently |
+| ID           | Title                                   | Priority | Effort | Notes                                                                                                           |
+| ------------ | --------------------------------------- | -------- | ------ | --------------------------------------------------------------------------------------------------------------- |
+| ~~TEST-001~~ | ~~Add Playwright E2E: Login flow~~      | ~~P0~~   | ~~M~~  | **DONE** — 183 LOC, 14 tests in `apps/e2e/tests/auth/login.spec.ts` (global setup, auth fixtures, 3 test users) |
+| ~~TEST-002~~ | ~~Add Playwright E2E: Quote creation~~  | ~~P1~~   | ~~M~~  | **DONE** — `apps/e2e/tests/sales/quote-lifecycle.spec.ts` exists                                                |
+| ~~TEST-003~~ | ~~Add Playwright E2E: Load lifecycle~~  | ~~P1~~   | ~~L~~  | **DONE** — `apps/e2e/tests/operations/loads-lifecycle.spec.ts` exists                                           |
+| ~~TEST-004~~ | ~~Add unit tests: Accounting service~~  | ~~P1~~   | ~~M~~  | **DONE** — 5 spec files (pdf, reports, chart-of-accounts, invoices, journal-entries)                            |
+| ~~TEST-005~~ | ~~Add unit tests: Commission service~~  | ~~P1~~   | ~~M~~  | **DONE** — 3 spec files (entries, payouts, plans)                                                               |
+| ~~TEST-006~~ | ~~Add unit tests: TMS Core operations~~ | ~~P1~~   | ~~L~~  | **DONE** — 4 spec files (loads, orders, stops, tracking)                                                        |
 
 ---
 
 ## P2 — Infrastructure
 
-| ID        | Title                                  | Priority | Effort   | Notes                                                                                |
-| --------- | -------------------------------------- | -------- | -------- | ------------------------------------------------------------------------------------ |
-| INFRA-001 | Set up CI/CD pipeline (GitHub Actions) | P1       | L (4-8h) | No .github/workflows/ currently                                                      |
-| INFRA-002 | Add structured logging (Pino)          | P2       | M (2-4h) | Replace NestJS default logger                                                        |
-| INFRA-003 | Add correlation IDs                    | P2       | M (2-4h) | Cross-service request tracing                                                        |
-| INFRA-004 | Add Sentry error tracking              | P2       | M (2-4h) | Frontend + backend                                                                   |
-| INFRA-005 | Performance budgets (LCP, bundle size) | P2       | M (2-4h) | Lighthouse CI integration                                                            |
-| INFRA-006 | Implement cloud storage (S3/Azure/GCS) | P2       | L (4-8h) | `file-upload.util.ts` + `companies.controller.ts` — file uploads throw in production |
+| ID            | Title                                      | Priority | Effort   | Notes                                                                                                                   |
+| ------------- | ------------------------------------------ | -------- | -------- | ----------------------------------------------------------------------------------------------------------------------- |
+| ~~INFRA-001~~ | ~~Set up CI/CD pipeline (GitHub Actions)~~ | ~~P1~~   | ~~L~~    | **DONE** — `.github/workflows/ci.yml`: 3 jobs (lint+typecheck, test w/ Postgres+Redis, build). Runs on push/PR to main. |
+| ~~INFRA-002~~ | ~~Add structured logging (Pino)~~          | ~~P2~~   | ~~M~~    | **DONE** — `nestjs-pino` replaces default NestJS logger in `main.ts`                                                    |
+| INFRA-003     | Add correlation IDs                        | P2       | M (2-4h) | Cross-service request tracing                                                                                           |
+| INFRA-004     | Add Sentry error tracking                  | P2       | M (2-4h) | Frontend + backend                                                                                                      |
+| INFRA-005     | Performance budgets (LCP, bundle size)     | P2       | M (2-4h) | Lighthouse CI integration                                                                                               |
+| INFRA-006     | Implement cloud storage (S3/Azure/GCS)     | P2       | L (4-8h) | `file-upload.util.ts` + `companies.controller.ts` — file uploads throw in production                                    |
 
 ---
 
@@ -132,14 +132,14 @@
 
 ## P3 — Pre-Launch
 
-| ID         | Title                        | Priority | Effort | Notes                        |
-| ---------- | ---------------------------- | -------- | ------ | ---------------------------- |
-| LEGAL-001  | Privacy Policy document      | P2       | -      | Legal review required        |
-| LEGAL-002  | Terms of Service document    | P2       | -      | Legal review required        |
-| LAUNCH-001 | Production environment setup | P1       | L      | Docker deploy config         |
-| LAUNCH-002 | Monitoring & alerting setup  | P1       | L      | Uptime, error rate alerts    |
-| LAUNCH-003 | Database backup strategy     | P0       | M      | Automated PostgreSQL backups |
-| DOCS-001   | User onboarding guide        | P2       | L      | Help center content          |
+| ID             | Title                            | Priority | Effort | Notes                                                                                                                                                      |
+| -------------- | -------------------------------- | -------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| LEGAL-001      | Privacy Policy document          | P2       | -      | Legal review required                                                                                                                                      |
+| LEGAL-002      | Terms of Service document        | P2       | -      | Legal review required                                                                                                                                      |
+| ~~LAUNCH-001~~ | ~~Production environment setup~~ | ~~P1~~   | ~~L~~  | **DONE** — Dockerfiles (API + Web multi-stage), `docker-compose.prod.yml` with resource limits, healthchecks, restart policies, `.dockerignore`            |
+| ~~LAUNCH-002~~ | ~~Monitoring & alerting setup~~  | ~~P1~~   | ~~L~~  | **DONE** — Health endpoints (`/health`, `/ready`, `/live`), Pino structured logging, Sentry framework (opt-in via `SENTRY_DSN`), `helmet` security headers |
+| ~~LAUNCH-003~~ | ~~Database backup strategy~~     | ~~P0~~   | ~~M~~  | **DONE** — 3 scripts (`pg-backup.sh`, `pg-restore.sh`, `pg-verify.sh`), GitHub Actions daily at 2AM UTC, rotation policy (7/4/12)                          |
+| DOCS-001       | User onboarding guide            | P2       | L      | Help center content                                                                                                                                        |
 
 ---
 

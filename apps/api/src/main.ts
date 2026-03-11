@@ -10,6 +10,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { Logger as PinoLogger } from 'nestjs-pino';
 import { join } from 'path';
+import helmet from 'helmet';
 import { SentryExceptionFilter } from './common/filters/sentry-exception.filter';
 import { SentryInterceptor } from './common/interceptors/sentry.interceptor';
 
@@ -71,6 +72,14 @@ async function bootstrap() {
       prefix: '/uploads',
     });
   }
+
+  // Security headers (SEC-001)
+  app.use(
+    helmet({
+      contentSecurityPolicy: false, // CSP handled by Next.js frontend
+      crossOriginEmbedderPolicy: false, // Allow loading cross-origin resources
+    })
+  );
 
   // Enable CORS for frontend
   const corsOrigins = process.env.CORS_ALLOWED_ORIGINS
