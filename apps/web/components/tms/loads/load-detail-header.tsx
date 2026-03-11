@@ -381,6 +381,13 @@ export function LoadDetailHeader({
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuLabel>Documents</DropdownMenuLabel>
+              {load.carrierId && (
+                <DropdownMenuItem asChild>
+                  <Link href={`/operations/loads/${load.id}/rate-con`}>
+                    <FileText className="h-4 w-4 mr-2" /> Rate Confirmation
+                  </Link>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem
                 onClick={() => generateBol({})}
                 disabled={isBolGenerating}
