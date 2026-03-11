@@ -9,7 +9,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 
 @Controller('config/tenant')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('ADMIN')
+@Roles('ADMIN', 'SUPER_ADMIN')
 @ApiTags('Config')
 @ApiBearerAuth('JWT-auth')
 export class TenantConfigController {

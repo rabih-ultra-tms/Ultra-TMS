@@ -1,6 +1,6 @@
 # RolesGuard Coverage Matrix
 
-> **Last Updated:** 2026-03-09
+> **Last Updated:** 2026-03-11
 > **Purpose:** Track authorization guard coverage across all backend controllers
 > **Source:** Per-Service Tribunal verdicts (PST-01 through PST-38)
 > **Companion:** [SECURITY-REMEDIATION.md](SECURITY-REMEDIATION.md)
@@ -10,10 +10,13 @@
 ## Summary
 
 - **Total services with controllers:** 32 (6 infra modules have 0-1 controllers)
-- **Services with 100% RolesGuard coverage:** 5 (Commission, Customer Portal, Documents, Analytics, Operations)
-- **Services with 0% RolesGuard coverage:** 10 (Credit, HR, Scheduler, Help Desk, Feedback, Audit, Cache, Config effectively 11%)
-- **Financial controllers without guards:** 17 controllers across 5 services (HIGHEST RISK)
-- **Total controllers without RolesGuard:** ~85 controllers across 23 services
+- **Services with 100% RolesGuard coverage:** 16 (Commission, Customer Portal, Documents, Analytics, Operations, Accounting, Contracts, Credit, Factoring, Agents — MP-01-002; **Config, Audit, Load Board, HR, Scheduler, Safety** — MP-01-003)
+- **Services with 0% RolesGuard coverage:** 4 (Help Desk, Feedback, Cache — MP-01-004 scope; Claims Reports — 1 controller)
+- **Financial controllers without guards:** ~~17~~ **0** — ALL fixed 2026-03-11 (MP-01-002)
+- **Data-modifying controllers without guards:** **0** — ALL fixed 2026-03-11 (MP-01-003: 38 controllers across 6 services)
+- **Total controllers without RolesGuard:** ~20 controllers across 7 services (was ~58 across 18)
+
+> **NOTE (2026-03-11):** RolesGuard is registered globally via `APP_GUARD` in `app.module.ts`. The `@Roles()` decorator was always enforced — the gap was that `RolesGuard` was not explicitly listed in local `@UseGuards()`, making intent unclear. All financial controllers now explicitly include `@UseGuards(JwtAuthGuard, RolesGuard)` for consistency and clarity.
 
 ---
 
@@ -21,19 +24,19 @@
 
 Sorted by risk level (financial-first), then by gap percentage descending.
 
-### TIER 1: Financial Controllers (HIGHEST RISK — Fix First)
+### TIER 1: Financial Controllers — **FIXED** (2026-03-11, MP-01-002)
 
 | # | Service | Tier | Total Controllers | With RolesGuard | Without | Gap % | Risk Level | Notes |
 |---|---------|------|-------------------|-----------------|---------|-------|------------|-------|
-| 07 | Accounting | P0-MVP | 10 | 4 | **6** | **60%** | **CRITICAL** | ChartOfAccounts, Settlements, PaymentsReceived, PaymentsMade, JournalEntries, Payments(batch) — any auth user can approve settlements, post journal entries |
-| 15 | Contracts | P2 | 8 | 2 | **6** | **75%** | **CRITICAL** | Amendments, RateLanes, SLAs, FuelSurcharge, Templates, VolumeCommitments — financial contract terms writable by any user |
-| 17 | Credit | P2 | 5 | 0 | **5** | **100%** | **CRITICAL** | All 5 controllers — credit holds, adjustments, collections. 0/5 have @UseGuards(RolesGuard) |
-| 18 | Factoring | P2 | 5 | 2 | **3** | **60%** | **CRITICAL** | 3 controllers missing guards — factoring company management, advance processing |
-| 16 | Agents | P2 | 6 | 3 | **3** | **50%** | **HIGH** | AgentAgreements, CustomerAssignments, AgentLeads — @Roles decorative |
+| 07 | Accounting | P0-MVP | 10 | **10** | **0** | **0%** | **RESOLVED** | All 10 controllers now have explicit `@UseGuards(JwtAuthGuard, RolesGuard)` |
+| 15 | Contracts | P2 | 8 | **8** | **0** | **0%** | **RESOLVED** | All 8 controllers now have explicit guards |
+| 17 | Credit | P2 | 5 | **5** | **0** | **0%** | **RESOLVED** | All 5 controllers now have explicit guards |
+| 18 | Factoring | P2 | 5 | **5** | **0** | **0%** | **RESOLVED** | All 5 controllers now have explicit guards |
+| 16 | Agents | P2 | 6 | **6** | **0** | **0%** | **RESOLVED** | All 6 controllers now have explicit guards |
 
-**Financial subtotal: 34 controllers, 11 covered, 23 missing (68% gap)**
+**Financial subtotal: 34 controllers, 34 covered, 0 missing (0% gap)**
 
-### TIER 2: Data-Modifying Controllers (HIGH RISK — Fix Second)
+### TIER 2: Data-Modifying Controllers — **FIXED** (2026-03-11, MP-01-003)
 
 | # | Service | Tier | Total Controllers | With RolesGuard | Without | Gap % | Risk Level | Notes |
 |---|---------|------|-------------------|-----------------|---------|-------|------------|-------|

@@ -9,8 +9,8 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 
 @Controller('features')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('ADMIN')
 @ApiTags('Config')
+@Roles('ADMIN', 'SUPER_ADMIN')
 @ApiBearerAuth('JWT-auth')
 export class FeaturesController {
   constructor(private readonly service: FeaturesService) {}

@@ -8,7 +8,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 
 @Controller('jobs/:jobId/executions')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('ADMIN', 'OPERATIONS_MANAGER')
+@Roles('ADMIN', 'OPERATIONS_MANAGER', 'DISPATCHER')
 @ApiTags('Scheduler')
 @ApiBearerAuth('JWT-auth')
 export class ExecutionsController {

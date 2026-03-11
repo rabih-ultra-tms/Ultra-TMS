@@ -101,7 +101,12 @@
 
 **Quality Sprint COMPLETE** — 16/16 tasks done. All QS tasks COMPLETE (QS-001 through QS-016).
 
-**Next up:** MP-01 Security Hardening (30 tasks) — see [Master Project Plan](08-sprints/master-project-plan.md#mp-01-security-hardening-weeks-1-2)
+**Active:** MP-01 Security Hardening (30 tasks, 4 DONE) — see [Master Project Plan](08-sprints/master-project-plan.md#mp-01-security-hardening-weeks-1-2)
+
+- MP-01-001: ~~Prisma Client Extension~~ **DONE**
+- MP-01-002: ~~RolesGuard financial controllers (27 controllers across 5 services)~~ **DONE** (2026-03-11)
+- MP-01-003: ~~RolesGuard data-modifying controllers (38 controllers across 6 services)~~ **DONE** (2026-03-11)
+- MP-01-022: ~~CORS env variable~~ **DONE**
 
 **Full project timeline:** 24 sprints × 2 weeks = 48 weeks across 5 phases:
 

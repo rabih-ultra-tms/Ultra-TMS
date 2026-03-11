@@ -9,7 +9,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 
 @Controller()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('ADMIN', 'DISPATCHER')
+@Roles('ADMIN', 'DISPATCHER', 'AGENT')
 @ApiTags('Load Board')
 @ApiBearerAuth('JWT-auth')
 export class PostingController {

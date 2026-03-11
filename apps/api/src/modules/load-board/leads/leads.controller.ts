@@ -16,7 +16,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 
 @Controller()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('ADMIN', 'DISPATCHER', 'SALES_REP')
+@Roles('ADMIN', 'DISPATCHER', 'SALES_REP' , 'AGENT')
 @ApiTags('Load Board')
 @ApiBearerAuth('JWT-auth')
 export class LeadsController {
