@@ -7,7 +7,6 @@ import { getOrderColumns } from '@/components/tms/orders/order-columns';
 import { OrderFilters } from '@/components/tms/orders/order-filters';
 import {
   useOrders,
-  useUpdateOrder,
   useDeleteOrder,
   useBulkUpdateOrderStatus,
 } from '@/lib/hooks/tms/use-orders';
@@ -74,7 +73,6 @@ function StatsCard({
 export default function OrdersPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const updateOrder = useUpdateOrder();
   const deleteOrder = useDeleteOrder();
   const bulkUpdateStatus = useBulkUpdateOrderStatus();
 
@@ -162,12 +160,50 @@ export default function OrdersPage() {
         ? orders.filter((o) => selectedIds.includes(o.id))
         : orders;
     const dateStr = new Date().toISOString().slice(0, 10);
+    const getFirstStop = (o: Order) =>
+      o.stops?.find((s) => s.stopSequence === 1) ?? o.stops?.[0];
+    const getLastStop = (o: Order) =>
+      o.stops?.length > 1
+        ? [...o.stops].sort((a, b) => b.stopSequence - a.stopSequence)[0]
+        : null;
     exportToCsv(`orders-${dateStr}.csv`, rows, [
       { header: 'Order #', accessor: (o) => o.orderNumber },
       { header: 'Status', accessor: (o) => o.status },
       { header: 'Customer', accessor: (o) => o.customer?.name ?? '' },
       { header: 'Reference', accessor: (o) => o.customerReference ?? '' },
       { header: 'Equipment', accessor: (o) => o.equipmentType ?? '' },
+      {
+        header: 'Origin',
+        accessor: (o) => {
+          const s = getFirstStop(o);
+          return s ? `${s.city}, ${s.state}` : '';
+        },
+      },
+      {
+        header: 'Destination',
+        accessor: (o) => {
+          const s = getLastStop(o);
+          return s ? `${s.city}, ${s.state}` : '';
+        },
+      },
+      {
+        header: 'Pickup Date',
+        accessor: (o) => {
+          const s = getFirstStop(o);
+          return s?.appointmentDate
+            ? new Date(s.appointmentDate).toLocaleDateString()
+            : '';
+        },
+      },
+      {
+        header: 'Delivery Date',
+        accessor: (o) => {
+          const s = getLastStop(o);
+          return s?.appointmentDate
+            ? new Date(s.appointmentDate).toLocaleDateString()
+            : '';
+        },
+      },
       { header: 'Commodity', accessor: (o) => o.commodity ?? '' },
       { header: 'Weight (lbs)', accessor: (o) => o.weightLbs ?? '' },
       { header: 'Customer Rate', accessor: (o) => o.customerRate ?? '' },
@@ -205,13 +241,10 @@ export default function OrdersPage() {
 
   const handleStatusChange = async (id: string, newStatus: OrderStatus) => {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await updateOrder.mutateAsync({
-        id,
-        formData: {} as any,
-        status: newStatus as any,
+      await bulkUpdateStatus.mutateAsync({
+        orderIds: [id],
+        status: newStatus,
       });
-      toast.success(`Order status changed to ${newStatus}`);
     } catch {
       toast.error('Failed to update order status');
     }
