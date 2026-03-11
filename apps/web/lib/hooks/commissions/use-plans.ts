@@ -1,8 +1,4 @@
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-} from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { apiClient } from '@/lib/api-client';
 
@@ -158,10 +154,18 @@ export function usePlans(params: PlanListParams = {}) {
       const url = query ? `/commissions/plans?${query}` : '/commissions/plans';
       const response = await apiClient.get(url);
       // The global interceptor returns { success, data: [...], pagination: {...} }
-      const raw = response as { data: any[]; pagination: PlanListResponse['pagination'] };
+      const raw = response as {
+        data: CommissionPlan[];
+        pagination: PlanListResponse['pagination'];
+      };
       return {
         data: raw.data ?? [],
-        pagination: raw.pagination ?? { page: 1, limit: 20, total: 0, totalPages: 0 },
+        pagination: raw.pagination ?? {
+          page: 1,
+          limit: 20,
+          total: 0,
+          totalPages: 0,
+        },
       };
     },
     placeholderData: (previousData) => previousData,

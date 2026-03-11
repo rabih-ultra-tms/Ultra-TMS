@@ -1,10 +1,13 @@
-import { Module, Global } from '@nestjs/common';
+import { Module, Global, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { IStorageService } from './storage.interface';
 import { LocalStorageService } from './local-storage.service';
+import { S3StorageService } from './s3-storage.service';
 
-// Factory to select storage provider based on config
+// Injection token — use @Inject(STORAGE_SERVICE) to get the active IStorageService
 export const STORAGE_SERVICE = 'STORAGE_SERVICE';
+
+const logger = new Logger('StorageModule');
 
 @Global()
 @Module({
@@ -15,12 +18,12 @@ export const STORAGE_SERVICE = 'STORAGE_SERVICE';
         const driver = configService.get<string>('STORAGE_DRIVER', 'local');
 
         switch (driver) {
+          case 's3':
+            logger.log('Using S3 storage driver');
+            return new S3StorageService(configService);
           case 'local':
-            return new LocalStorageService(configService);
-          // Future: Add S3StorageService here
-          // case 's3':
-          //   return new S3StorageService(configService);
           default:
+            logger.log('Using local filesystem storage driver');
             return new LocalStorageService(configService);
         }
       },

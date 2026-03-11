@@ -1,4 +1,22 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
+# Secret scanning with gitleaks (soft enforcement if not installed)
+if command -v gitleaks >/dev/null 2>&1; then
+  echo "Running gitleaks secret scan on staged files..."
+  gitleaks protect --staged --no-banner
+  GITLEAKS_EXIT=$?
+  if [ $GITLEAKS_EXIT -ne 0 ]; then
+    echo ""
+    echo "ERROR: gitleaks detected secrets in staged files."
+    echo "Please remove secrets before committing."
+    echo "To see details, run: gitleaks protect --staged --verbose"
+    echo ""
+    exit $GITLEAKS_EXIT
+  fi
+else
+  echo "WARNING: gitleaks is not installed. Skipping secret scan."
+  echo "Install it: https://github.com/gitleaks/gitleaks#installing"
+fi
+
 pnpm lint-staged

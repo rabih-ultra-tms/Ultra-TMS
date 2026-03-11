@@ -1,18 +1,12 @@
 {
   "$schema": "https://turborepo.com/schema.json",
   "ui": "tui",
-  "globalEnv": [
-    "ANTHROPIC_API_KEY",
-    "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY"
-  ],
+  "globalEnv": ["ANTHROPIC_API_KEY", "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "env": [
-        "ANTHROPIC_API_KEY",
-        "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY"
-      ],
+      "env": ["ANTHROPIC_API_KEY", "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY"],
       "outputs": [".next/**", "!.next/cache/**"]
     },
     "lint": {
@@ -32,15 +26,15 @@
         "ELASTIC_MAX_RETRIES",
         "ELASTIC_NAME_PREFIX",
         "ELASTIC_REQUEST_TIMEOUT",
-        "ELASTIC_USE_COMPAT_HEADERS"
+        "ELASTIC_USE_COMPAT_HEADERS",
+        "LOG_LEVEL",
+        "SENTRY_DSN",
+        "CORS_ALLOWED_ORIGINS"
       ]
     },
     "check-types": {
       "dependsOn": ["^check-types"],
-      "env": [
-        "ANTHROPIC_API_KEY",
-        "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY"
-      ]
+      "env": ["ANTHROPIC_API_KEY", "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY"]
     },
     "dev": {
       "cache": false,

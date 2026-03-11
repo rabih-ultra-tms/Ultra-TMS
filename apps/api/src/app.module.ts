@@ -3,6 +3,8 @@ import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ConfigModule as NestConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { LoggerModule } from 'nestjs-pino';
+import { randomUUID } from 'crypto';
 import { PrismaService } from './prisma.service';
 import { RolesGuard } from './common/guards/roles.guard';
 import { JwtAuthGuard } from './modules/auth/guards';
@@ -10,7 +12,6 @@ import { ResponseTransformInterceptor } from './common/interceptors/response-tra
 import { AuditInterceptor } from './modules/audit/interceptors/audit.interceptor';
 import { CustomThrottlerGuard } from './common/guards/custom-throttler.guard';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
-import { RequestLoggingMiddleware } from './common/middleware/request-logging.middleware';
 
 // Core infrastructure modules
 import { RedisModule } from './modules/redis/redis.module';
@@ -57,7 +58,8 @@ import { OperationsModule } from './modules/operations/operations.module';
 // import { IntegrationHubModule } from './modules/integration-hub/integration-hub.module';
 // import { WorkflowModule } from './modules/workflow/workflow.module';
 
-const isTestEnv = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID !== undefined;
+const isTestEnv =
+  process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID !== undefined;
 
 @Module({
   imports: [
@@ -65,6 +67,42 @@ const isTestEnv = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID 
     NestConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+    }),
+    // Structured logging with Pino (INFRA-002 + INFRA-003)
+    LoggerModule.forRoot({
+      pinoHttp: {
+        level: process.env.LOG_LEVEL || 'info',
+        // Use correlation ID from existing middleware as the request ID
+        genReqId: (req: any) => req.headers['x-correlation-id'] || randomUUID(),
+        // Custom serializers to avoid logging sensitive headers
+        serializers: {
+          req: (req: any) => ({
+            id: req.id,
+            method: req.method,
+            url: req.url,
+          }),
+          res: (res: any) => ({
+            statusCode: res.statusCode,
+          }),
+        },
+        // Pretty print in development, raw JSON in production
+        transport:
+          process.env.NODE_ENV !== 'production'
+            ? {
+                target: 'pino-pretty',
+                options: {
+                  colorize: true,
+                  singleLine: true,
+                  translateTime: 'SYS:HH:MM:ss.l',
+                  ignore: 'pid,hostname',
+                },
+              }
+            : undefined,
+        // Quiet health check noise
+        autoLogging: {
+          ignore: (req: any) => req.url === '/api/v1/health',
+        },
+      },
     }),
     EventEmitterModule.forRoot({
       // Enable wildcard listeners so audit can capture *.created/updated/deleted events
@@ -96,7 +134,7 @@ const isTestEnv = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID 
               ttl: 60000,
               limit: 100,
             },
-          ],
+          ]
     ),
     // Infrastructure
     RedisModule,
@@ -164,8 +202,9 @@ const isTestEnv = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID 
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(CorrelationIdMiddleware, RequestLoggingMiddleware)
-      .forRoutes('*');
+    // CorrelationIdMiddleware runs first to set x-correlation-id on the request.
+    // pino-http (via LoggerModule) picks it up via genReqId for structured logging.
+    // RequestLoggingMiddleware is no longer needed — pino-http logs requests automatically.
+    consumer.apply(CorrelationIdMiddleware).forRoutes('*');
   }
 }

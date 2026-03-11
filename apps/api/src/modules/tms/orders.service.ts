@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../prisma.service';
 import {
@@ -55,7 +60,7 @@ function toPlainOrder<T extends Record<string, unknown>>(order: T): T {
 export class OrdersService {
   constructor(
     private prisma: PrismaService,
-    private eventEmitter: EventEmitter2,
+    private eventEmitter: EventEmitter2
   ) {}
 
   /**
@@ -85,7 +90,12 @@ export class OrdersService {
         ? {
             OR: [
               { orderNumber: { contains: query.search, mode: 'insensitive' } },
-              { customerReference: { contains: query.search, mode: 'insensitive' } },
+              {
+                customerReference: {
+                  contains: query.search,
+                  mode: 'insensitive',
+                },
+              },
             ],
           }
         : {}),
@@ -98,7 +108,10 @@ export class OrdersService {
         skip,
         take: limit,
         include: {
-          stops: { where: { deletedAt: null }, orderBy: { stopSequence: 'asc' } },
+          stops: {
+            where: { deletedAt: null },
+            orderBy: { stopSequence: 'asc' },
+          },
           loads: { where: { deletedAt: null } },
           customer: { select: { id: true, name: true } },
           _count: { select: { loads: true, stops: true } },
@@ -145,7 +158,9 @@ export class OrdersService {
   async create(tenantId: string, dto: CreateOrderDto, userId: string) {
     // Validate required stops
     if (!dto.stops || dto.stops.length < 2) {
-      throw new BadRequestException('Orders must have at least 2 stops (pickup and delivery)');
+      throw new BadRequestException(
+        'Orders must have at least 2 stops (pickup and delivery)'
+      );
     }
 
     // Check customer exists
@@ -163,18 +178,23 @@ export class OrdersService {
     const orderNumber = `ORD-${today}-${suffix}`;
 
     // Compute accessorial total
-    const accessorialTotal = dto.accessorials?.reduce((sum, a) => sum + (a.amount || 0), 0) ?? 0;
-    const totalCharges = (dto.customerRate ?? 0) + (dto.fuelSurcharge ?? 0) + accessorialTotal;
+    const accessorialTotal =
+      dto.accessorials?.reduce((sum, a) => sum + (a.amount || 0), 0) ?? 0;
+    const totalCharges =
+      (dto.customerRate ?? 0) + (dto.fuelSurcharge ?? 0) + accessorialTotal;
 
     // Store fields without Prisma columns in customFields
     const customFields: Record<string, unknown> = {};
     if (dto.priority) customFields.priority = dto.priority;
     if (dto.paymentTerms) customFields.paymentTerms = dto.paymentTerms;
-    if (dto.specialHandling?.length) customFields.specialHandling = dto.specialHandling;
+    if (dto.specialHandling?.length)
+      customFields.specialHandling = dto.specialHandling;
     if (dto.hazmatUnNumber) customFields.hazmatUnNumber = dto.hazmatUnNumber;
     if (dto.hazmatPlacard) customFields.hazmatPlacard = dto.hazmatPlacard;
-    if (dto.estimatedCarrierRate) customFields.estimatedCarrierRate = dto.estimatedCarrierRate;
-    if (dto.billingContactId) customFields.billingContactId = dto.billingContactId;
+    if (dto.estimatedCarrierRate)
+      customFields.estimatedCarrierRate = dto.estimatedCarrierRate;
+    if (dto.billingContactId)
+      customFields.billingContactId = dto.billingContactId;
     if (dto.billingNotes) customFields.billingNotes = dto.billingNotes;
     if (dto.accessorials?.length) customFields.accessorials = dto.accessorials;
 
@@ -206,7 +226,10 @@ export class OrdersService {
         fuelSurcharge: dto.fuelSurcharge ?? 0,
         accessorialCharges: accessorialTotal,
         totalCharges: totalCharges > 0 ? totalCharges : undefined,
-        customFields: Object.keys(customFields).length > 0 ? (customFields as Prisma.InputJsonValue) : undefined,
+        customFields:
+          Object.keys(customFields).length > 0
+            ? (customFields as Prisma.InputJsonValue)
+            : undefined,
 
         // Create stops — field names now match Prisma schema directly
         stops: {
@@ -225,7 +248,9 @@ export class OrdersService {
               contactPhone: stop.contactPhone,
               contactEmail: stop.contactEmail,
               appointmentRequired: stop.appointmentRequired ?? false,
-              appointmentDate: stop.appointmentDate ? new Date(stop.appointmentDate) : null,
+              appointmentDate: stop.appointmentDate
+                ? new Date(stop.appointmentDate)
+                : null,
               appointmentTimeStart: stop.appointmentTimeStart,
               appointmentTimeEnd: stop.appointmentTimeEnd,
               specialInstructions: stop.specialInstructions,
@@ -310,28 +335,31 @@ export class OrdersService {
 
     const customerId = quote.companyId;
     if (!customerId) {
-      throw new BadRequestException('Quote is missing companyId for conversion');
+      throw new BadRequestException(
+        'Quote is missing companyId for conversion'
+      );
     }
 
     const createDto: CreateOrderDto = {
       customerId,
       customerReference: quote.quoteNumber ?? undefined,
       specialInstructions: quote.specialInstructions ?? undefined,
-      stops: quote.stops?.map((s: any, idx: number) => ({
-        stopType: s.stopType ?? 'PICKUP',
-        facilityName: s.facilityName ?? undefined,
-        addressLine1: s.addressLine1 ?? '',
-        city: s.city ?? '',
-        state: s.state ?? '',
-        postalCode: s.postalCode ?? '',
-        contactName: s.contactName ?? undefined,
-        contactPhone: s.contactPhone ?? undefined,
-        contactEmail: s.contactEmail ?? undefined,
-        appointmentDate: s.earliestTime ?? undefined,
-        appointmentTimeStart: s.latestTime ?? undefined,
-        specialInstructions: s.instructions ?? undefined,
-        stopSequence: s.stopSequence ?? idx + 1,
-      })) ?? [],
+      stops:
+        quote.stops?.map((s: any, idx: number) => ({
+          stopType: s.stopType ?? 'PICKUP',
+          facilityName: s.facilityName ?? undefined,
+          addressLine1: s.addressLine1 ?? '',
+          city: s.city ?? '',
+          state: s.state ?? '',
+          postalCode: s.postalCode ?? '',
+          contactName: s.contactName ?? undefined,
+          contactPhone: s.contactPhone ?? undefined,
+          contactEmail: s.contactEmail ?? undefined,
+          appointmentDate: s.earliestTime ?? undefined,
+          appointmentTimeStart: s.latestTime ?? undefined,
+          specialInstructions: s.instructions ?? undefined,
+          stopSequence: s.stopSequence ?? idx + 1,
+        })) ?? [],
       items: [],
     };
 
@@ -354,7 +382,7 @@ export class OrdersService {
     tenantId: string,
     userId: string,
     templateId: string,
-    overrides: CreateOrderFromTemplateDto,
+    overrides: CreateOrderFromTemplateDto
   ) {
     const template = await this.prisma.order.findFirst({
       where: { id: templateId, tenantId, deletedAt: null },
@@ -388,8 +416,8 @@ export class OrdersService {
         appointmentDate: override?.appointmentDate
           ? override.appointmentDate
           : stop.appointmentDate
-          ? stop.appointmentDate.toISOString()
-          : undefined,
+            ? stop.appointmentDate.toISOString()
+            : undefined,
         appointmentTimeStart:
           override?.appointmentTime || stop.appointmentTimeStart || undefined,
         stopSequence: stop.stopSequence || index + 1,
@@ -425,12 +453,19 @@ export class OrdersService {
   /**
    * Update order
    */
-  async update(tenantId: string, id: string, dto: UpdateOrderDto, userId: string) {
+  async update(
+    tenantId: string,
+    id: string,
+    dto: UpdateOrderDto,
+    userId: string
+  ) {
     const order = await this.findOne(tenantId, id);
 
     // Cannot modify if delivered/completed
     if (['DELIVERED', 'COMPLETED', 'CANCELLED'].includes(order.status)) {
-      throw new ConflictException(`Cannot modify order in ${order.status} status`);
+      throw new ConflictException(
+        `Cannot modify order in ${order.status} status`
+      );
     }
 
     // Track changes for event
@@ -439,60 +474,98 @@ export class OrdersService {
       if (newVal !== undefined && newVal !== oldVal) changes[field] = newVal;
     };
 
-    trackChange('customerReference', dto.customerReferenceNumber ?? dto.customerReference, order.customerReference);
+    trackChange(
+      'customerReference',
+      dto.customerReferenceNumber ?? dto.customerReference,
+      order.customerReference
+    );
     trackChange('status', dto.status, order.status);
     trackChange('commodity', dto.commodity, order.commodity);
     trackChange('equipmentType', dto.equipmentType, order.equipmentType);
 
     // Compute accessorial total if provided
     const customFields = (order.customFields as Record<string, unknown>) || {};
-    if (dto.specialHandling?.length) customFields.specialHandling = dto.specialHandling;
+    if (dto.specialHandling?.length)
+      customFields.specialHandling = dto.specialHandling;
     if (dto.hazmatUnNumber) customFields.hazmatUnNumber = dto.hazmatUnNumber;
     if (dto.hazmatPlacard) customFields.hazmatPlacard = dto.hazmatPlacard;
-    if (dto.estimatedCarrierRate !== undefined) customFields.estimatedCarrierRate = dto.estimatedCarrierRate;
-    if (dto.billingContactId) customFields.billingContactId = dto.billingContactId;
+    if (dto.estimatedCarrierRate !== undefined)
+      customFields.estimatedCarrierRate = dto.estimatedCarrierRate;
+    if (dto.billingContactId)
+      customFields.billingContactId = dto.billingContactId;
     if (dto.billingNotes) customFields.billingNotes = dto.billingNotes;
     if (dto.priority) customFields.priority = dto.priority;
     if (dto.paymentTerms) customFields.paymentTerms = dto.paymentTerms;
     if (dto.accessorials?.length) customFields.accessorials = dto.accessorials;
 
-    const accessorialTotal = dto.accessorials?.reduce((sum, a) => sum + (a.amount || 0), 0);
+    const accessorialTotal = dto.accessorials?.reduce(
+      (sum, a) => sum + (a.amount || 0),
+      0
+    );
     const customerRate = dto.customerRate ?? (Number(order.customerRate) || 0);
-    const fuelSurcharge = dto.fuelSurcharge ?? (Number(order.fuelSurcharge) || 0);
-    const accCharges = accessorialTotal ?? (Number(order.accessorialCharges) || 0);
+    const fuelSurcharge =
+      dto.fuelSurcharge ?? (Number(order.fuelSurcharge) || 0);
+    const accCharges =
+      accessorialTotal ?? (Number(order.accessorialCharges) || 0);
     const totalCharges = customerRate + fuelSurcharge + accCharges;
 
-    const updated = await this.prisma.order.update({
+    await this.prisma.order.update({
       where: { id },
       data: {
         ...(dto.customerId !== undefined && { customerId: dto.customerId }),
-        customerReference: dto.customerReferenceNumber ?? dto.customerReference ?? order.customerReference,
+        customerReference:
+          dto.customerReferenceNumber ??
+          dto.customerReference ??
+          order.customerReference,
         ...(dto.poNumber !== undefined && { poNumber: dto.poNumber }),
         ...(dto.bolNumber !== undefined && { bolNumber: dto.bolNumber }),
-        ...(dto.salesRepId !== undefined && { salesRepId: dto.salesRepId || null }),
+        ...(dto.salesRepId !== undefined && {
+          salesRepId: dto.salesRepId || null,
+        }),
         ...(dto.status !== undefined && { status: dto.status }),
-        ...(dto.priority !== undefined && { /* stored in customFields */ }),
-        specialInstructions: dto.specialInstructions ?? order.specialInstructions,
-        ...(dto.internalNotes !== undefined && { internalNotes: dto.internalNotes }),
+        ...(dto.priority !== undefined &&
+          {
+            /* stored in customFields */
+          }),
+        specialInstructions:
+          dto.specialInstructions ?? order.specialInstructions,
+        ...(dto.internalNotes !== undefined && {
+          internalNotes: dto.internalNotes,
+        }),
         // Cargo
         ...(dto.commodity !== undefined && { commodity: dto.commodity }),
         ...(dto.weightLbs !== undefined && { weightLbs: dto.weightLbs }),
         ...(dto.pieceCount !== undefined && { pieceCount: dto.pieceCount }),
         ...(dto.palletCount !== undefined && { palletCount: dto.palletCount }),
-        ...(dto.equipmentType !== undefined && { equipmentType: dto.equipmentType }),
+        ...(dto.equipmentType !== undefined && {
+          equipmentType: dto.equipmentType,
+        }),
         ...(dto.isHazmat !== undefined && { isHazmat: dto.isHazmat }),
         ...(dto.hazmatClass !== undefined && { hazmatClass: dto.hazmatClass }),
-        ...(dto.temperatureMin !== undefined && { temperatureMin: dto.temperatureMin }),
-        ...(dto.temperatureMax !== undefined && { temperatureMax: dto.temperatureMax }),
+        ...(dto.temperatureMin !== undefined && {
+          temperatureMin: dto.temperatureMin,
+        }),
+        ...(dto.temperatureMax !== undefined && {
+          temperatureMax: dto.temperatureMax,
+        }),
         // Financial
-        ...(dto.customerRate !== undefined && { customerRate: dto.customerRate }),
-        ...(dto.fuelSurcharge !== undefined && { fuelSurcharge: dto.fuelSurcharge }),
-        ...(accessorialTotal !== undefined && { accessorialCharges: accessorialTotal }),
+        ...(dto.customerRate !== undefined && {
+          customerRate: dto.customerRate,
+        }),
+        ...(dto.fuelSurcharge !== undefined && {
+          fuelSurcharge: dto.fuelSurcharge,
+        }),
+        ...(accessorialTotal !== undefined && {
+          accessorialCharges: accessorialTotal,
+        }),
         totalCharges: totalCharges > 0 ? totalCharges : undefined,
         // Flags
         ...(dto.isHot !== undefined && { isHot: dto.isHot }),
         // Metadata
-        customFields: Object.keys(customFields).length > 0 ? customFields as any : undefined,
+        customFields:
+          Object.keys(customFields).length > 0
+            ? (customFields as any)
+            : undefined,
         updatedById: userId,
       },
       include: {
@@ -527,7 +600,9 @@ export class OrdersService {
           contactPhone: stop.contactPhone,
           contactEmail: stop.contactEmail,
           appointmentRequired: stop.appointmentRequired ?? false,
-          appointmentDate: stop.appointmentDate ? new Date(stop.appointmentDate) : null,
+          appointmentDate: stop.appointmentDate
+            ? new Date(stop.appointmentDate)
+            : null,
           appointmentTimeStart: stop.appointmentTimeStart,
           appointmentTimeEnd: stop.appointmentTimeEnd,
           specialInstructions: stop.specialInstructions,
@@ -552,7 +627,12 @@ export class OrdersService {
   /**
    * Clone order
    */
-  async clone(tenantId: string, id: string, dto: CloneOrderDto, userId: string) {
+  async clone(
+    tenantId: string,
+    id: string,
+    dto: CloneOrderDto,
+    userId: string
+  ) {
     const original = await this.findOne(tenantId, id);
 
     // Generate new order number
@@ -590,7 +670,10 @@ export class OrdersService {
               contactName: stop.contactName,
               contactPhone: stop.contactPhone,
               contactEmail: stop.contactEmail,
-              appointmentDate: pickupDate && stop.stopType === 'PICKUP' ? pickupDate : stop.appointmentDate,
+              appointmentDate:
+                pickupDate && stop.stopType === 'PICKUP'
+                  ? pickupDate
+                  : stop.appointmentDate,
               appointmentTimeStart: stop.appointmentTimeStart,
               appointmentTimeEnd: stop.appointmentTimeEnd,
               stopSequence: stop.stopSequence,
@@ -626,7 +709,12 @@ export class OrdersService {
     });
   }
 
-  async createLoadForOrder(tenantId: string, userId: string, orderId: string, dto: CreateLoadDto) {
+  async createLoadForOrder(
+    tenantId: string,
+    userId: string,
+    orderId: string,
+    dto: CreateLoadDto
+  ) {
     await this.findOne(tenantId, orderId);
     const today = new Date().toISOString().split('T')[0]!.replace(/-/g, '');
     const loadNumber = `LD-${today}-${generateRandomSuffix(4)}`;
@@ -660,7 +748,12 @@ export class OrdersService {
     });
   }
 
-  async addItem(tenantId: string, userId: string, orderId: string, dto: CreateOrderItemDto) {
+  async addItem(
+    tenantId: string,
+    userId: string,
+    orderId: string,
+    dto: CreateOrderItemDto
+  ) {
     await this.findOne(tenantId, orderId);
     return this.prisma.orderItem.create({
       data: {
@@ -688,10 +781,12 @@ export class OrdersService {
     userId: string,
     orderId: string,
     itemId: string,
-    dto: Partial<CreateOrderItemDto>,
+    dto: Partial<CreateOrderItemDto>
   ) {
     await this.findOne(tenantId, orderId);
-    const item = await this.prisma.orderItem.findFirst({ where: { id: itemId, orderId, tenantId, deletedAt: null } });
+    const item = await this.prisma.orderItem.findFirst({
+      where: { id: itemId, orderId, tenantId, deletedAt: null },
+    });
     if (!item) {
       throw new NotFoundException(`Order item ${itemId} not found`);
     }
@@ -715,9 +810,16 @@ export class OrdersService {
     });
   }
 
-  async removeItem(tenantId: string, userId: string, orderId: string, itemId: string) {
+  async removeItem(
+    tenantId: string,
+    userId: string,
+    orderId: string,
+    itemId: string
+  ) {
     await this.findOne(tenantId, orderId);
-    const item = await this.prisma.orderItem.findFirst({ where: { id: itemId, orderId, tenantId, deletedAt: null } });
+    const item = await this.prisma.orderItem.findFirst({
+      where: { id: itemId, orderId, tenantId, deletedAt: null },
+    });
     if (!item) {
       throw new NotFoundException(`Order item ${itemId} not found`);
     }
@@ -734,7 +836,12 @@ export class OrdersService {
   /**
    * Change order status
    */
-  async changeStatus(tenantId: string, id: string, dto: ChangeOrderStatusDto, userId: string) {
+  async changeStatus(
+    tenantId: string,
+    id: string,
+    dto: ChangeOrderStatusDto,
+    userId: string
+  ) {
     const order = await this.findOne(tenantId, id);
 
     // Validate status transition
@@ -794,12 +901,19 @@ export class OrdersService {
   /**
    * Cancel order
    */
-  async cancel(tenantId: string, id: string, dto: CancelOrderDto, userId: string) {
+  async cancel(
+    tenantId: string,
+    id: string,
+    dto: CancelOrderDto,
+    userId: string
+  ) {
     const order = await this.findOne(tenantId, id);
 
     // Cannot cancel if already completed/invoiced
     if (['COMPLETED', 'INVOICED'].includes(order.status)) {
-      throw new ConflictException(`Cannot cancel order in ${order.status} status`);
+      throw new ConflictException(
+        `Cannot cancel order in ${order.status} status`
+      );
     }
 
     const updated = await this.prisma.order.update({

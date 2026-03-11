@@ -1,4 +1,4 @@
-import { IsOptional, IsEnum, IsString, IsDateString } from 'class-validator';
+import { IsOptional, IsString, IsDateString } from 'class-validator';
 import { PaginationDto } from './pagination.dto';
 
 export enum LoadStatusEnum {

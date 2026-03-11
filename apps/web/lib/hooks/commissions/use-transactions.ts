@@ -1,8 +1,4 @@
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-} from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { apiClient } from '@/lib/api-client';
 
@@ -71,10 +67,12 @@ function unwrap<T>(response: unknown): T {
   return (body.data ?? response) as T;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapTransaction(raw: any): CommissionTransaction {
   const firstName = raw.user?.firstName ?? '';
   const lastName = raw.user?.lastName ?? '';
-  const repName = `${firstName} ${lastName}`.trim() || raw.user?.email || 'Unknown';
+  const repName =
+    `${firstName} ${lastName}`.trim() || raw.user?.email || 'Unknown';
   return {
     id: raw.id,
     date: raw.commissionPeriod ?? raw.createdAt,
@@ -83,7 +81,8 @@ function mapTransaction(raw: any): CommissionTransaction {
     loadId: raw.loadId ?? '',
     loadNumber: raw.load?.loadNumber ?? 'N/A',
     orderNumber: raw.order?.orderNumber ?? 'N/A',
-    orderAmount: raw.order?.totalCharges != null ? Number(raw.order.totalCharges) : 0,
+    orderAmount:
+      raw.order?.totalCharges != null ? Number(raw.order.totalCharges) : 0,
     marginPercent: raw.rateApplied != null ? Number(raw.rateApplied) : 0,
     commissionAmount: Number(raw.commissionAmount ?? 0),
     rate: Number(raw.rateApplied ?? 0),
@@ -117,7 +116,10 @@ export function useTransactions(params: TransactionListParams = {}) {
         '/commissions/transactions',
         searchParams
       );
-      const raw = response as { data: any[]; pagination: TransactionListResponse['pagination'] };
+      const raw = response as {
+        data: Record<string, unknown>[];
+        pagination: TransactionListResponse['pagination'];
+      };
       return {
         data: (raw.data ?? []).map(mapTransaction),
         pagination: raw.pagination,

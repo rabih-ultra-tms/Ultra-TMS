@@ -6,13 +6,27 @@ import { PrismaService } from '../../../prisma.service';
 describe('PaymentsReceivedService', () => {
   let service: PaymentsReceivedService;
   let prisma: {
-    paymentReceived: { findFirst: jest.Mock; create: jest.Mock; findMany: jest.Mock; count: jest.Mock };
+    paymentReceived: {
+      findFirst: jest.Mock;
+      create: jest.Mock;
+      findMany: jest.Mock;
+      count: jest.Mock;
+      update: jest.Mock;
+    };
+    invoice: { findFirst: jest.Mock };
     $transaction: jest.Mock;
   };
 
   beforeEach(async () => {
     prisma = {
-      paymentReceived: { findFirst: jest.fn(), create: jest.fn(), findMany: jest.fn(), count: jest.fn() },
+      paymentReceived: {
+        findFirst: jest.fn(),
+        create: jest.fn(),
+        findMany: jest.fn(),
+        count: jest.fn(),
+        update: jest.fn(),
+      },
+      invoice: { findFirst: jest.fn() },
       $transaction: jest.fn(),
     };
 
@@ -29,27 +43,40 @@ describe('PaymentsReceivedService', () => {
   it('throws when payment not found', async () => {
     prisma.paymentReceived.findFirst.mockResolvedValue(null);
 
-    await expect(
-      service.findOne('pay-1', 'tenant-1'),
-    ).rejects.toThrow(NotFoundException);
+    await expect(service.findOne('pay-1', 'tenant-1')).rejects.toThrow(
+      NotFoundException
+    );
   });
 
   it('rejects apply when amount exceeds unapplied', async () => {
-    prisma.paymentReceived.findFirst.mockResolvedValue({ id: 'pay-1', unappliedAmount: 10 });
+    prisma.paymentReceived.findFirst.mockResolvedValue({
+      id: 'pay-1',
+      unappliedAmount: 10,
+    });
 
     await expect(
       service.applyToInvoice('pay-1', 'tenant-1', 'user-1', [
         { invoiceId: 'inv-1', amount: 20 },
-      ] as any),
+      ] as any)
     ).rejects.toThrow(BadRequestException);
   });
 
   it('applies payment and marks invoice paid when fully covered', async () => {
-    prisma.paymentReceived.findFirst.mockResolvedValue({ id: 'pay-1', unappliedAmount: 2500 });
+    prisma.paymentReceived.findFirst.mockResolvedValue({
+      id: 'pay-1',
+      unappliedAmount: 2500,
+    });
 
     const tx = {
       invoice: {
-        findFirst: jest.fn().mockResolvedValue({ id: 'inv-1', balanceDue: 2500, amountPaid: 0, totalAmount: 2500 }),
+        findFirst: jest
+          .fn()
+          .mockResolvedValue({
+            id: 'inv-1',
+            balanceDue: 2500,
+            amountPaid: 0,
+            totalAmount: 2500,
+          }),
         update: jest.fn().mockResolvedValue({ id: 'inv-1', status: 'PAID' }),
       },
       paymentApplication: {
@@ -67,20 +94,39 @@ describe('PaymentsReceivedService', () => {
     ] as any);
 
     expect(tx.invoice.update).toHaveBeenCalledWith({
-      where: { id: 'inv-1' },
-      data: expect.objectContaining({ status: 'PAID' }),
+      where: { id: 'inv-1', tenantId: 'tenant-1' },
+      data: expect.objectContaining({
+        status: 'PAID',
+        amountPaid: 2500,
+        balanceDue: 0,
+      }),
     });
     expect(tx.paymentReceived.update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ status: 'APPLIED', unappliedAmount: 0 }) }),
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: 'APPLIED',
+          unappliedAmount: 0,
+        }),
+      })
     );
   });
 
   it('applies payment and leaves invoice partial when underpaid', async () => {
-    prisma.paymentReceived.findFirst.mockResolvedValue({ id: 'pay-1', unappliedAmount: 2500 });
+    prisma.paymentReceived.findFirst.mockResolvedValue({
+      id: 'pay-1',
+      unappliedAmount: 2500,
+    });
 
     const tx = {
       invoice: {
-        findFirst: jest.fn().mockResolvedValue({ id: 'inv-1', balanceDue: 2500, amountPaid: 0, totalAmount: 2500 }),
+        findFirst: jest
+          .fn()
+          .mockResolvedValue({
+            id: 'inv-1',
+            balanceDue: 2500,
+            amountPaid: 0,
+            totalAmount: 2500,
+          }),
         update: jest.fn().mockResolvedValue({ id: 'inv-1', status: 'PARTIAL' }),
       },
       paymentApplication: {
@@ -98,16 +144,28 @@ describe('PaymentsReceivedService', () => {
     ] as any);
 
     expect(tx.invoice.update).toHaveBeenCalledWith({
-      where: { id: 'inv-1' },
-      data: expect.objectContaining({ status: 'PARTIAL' }),
+      where: { id: 'inv-1', tenantId: 'tenant-1' },
+      data: expect.objectContaining({
+        status: 'PARTIAL',
+        amountPaid: 1000,
+        balanceDue: 1500,
+      }),
     });
     expect(tx.paymentReceived.update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ status: 'PARTIAL', unappliedAmount: 1500 }) }),
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: 'PARTIAL',
+          unappliedAmount: 1500,
+        }),
+      })
     );
   });
 
   it('throws when invoice is not found during apply', async () => {
-    prisma.paymentReceived.findFirst.mockResolvedValue({ id: 'pay-1', unappliedAmount: 100 });
+    prisma.paymentReceived.findFirst.mockResolvedValue({
+      id: 'pay-1',
+      unappliedAmount: 100,
+    });
 
     const tx = {
       invoice: {
@@ -126,7 +184,7 @@ describe('PaymentsReceivedService', () => {
     await expect(
       service.applyToInvoice('pay-1', 'tenant-1', 'user-1', [
         { invoiceId: 'inv-404', amount: 100 },
-      ] as any),
+      ] as any)
     ).rejects.toThrow(NotFoundException);
   });
 
@@ -138,7 +196,13 @@ describe('PaymentsReceivedService', () => {
 
     const tx = {
       invoice: {
-        findUnique: jest.fn().mockResolvedValue({ id: 'inv-1', totalAmount: 200, amountPaid: 150 }),
+        findFirst: jest
+          .fn()
+          .mockResolvedValue({
+            id: 'inv-1',
+            totalAmount: 200,
+            amountPaid: 150,
+          }),
         update: jest.fn().mockResolvedValue({ id: 'inv-1', status: 'PARTIAL' }),
       },
       paymentApplication: {
@@ -153,19 +217,77 @@ describe('PaymentsReceivedService', () => {
 
     await service.markBounced('pay-1', 'tenant-1');
 
-    expect(tx.invoice.update).toHaveBeenCalledWith({
-      where: { id: 'inv-1' },
-      data: expect.objectContaining({ status: 'PARTIAL' }),
+    // Reversal: amountPaid goes from 150 to 50, balanceDue = 200 - 50 = 150
+    expect(tx.invoice.findFirst).toHaveBeenCalledWith({
+      where: { id: 'inv-1', tenantId: 'tenant-1', deletedAt: null },
     });
-    expect(tx.paymentApplication.delete).toHaveBeenCalledWith({ where: { id: 'app-1' } });
+    expect(tx.invoice.update).toHaveBeenCalledWith({
+      where: { id: 'inv-1', tenantId: 'tenant-1' },
+      data: expect.objectContaining({
+        amountPaid: 50,
+        balanceDue: 150,
+        status: 'PARTIAL',
+      }),
+    });
+    expect(tx.paymentApplication.delete).toHaveBeenCalledWith({
+      where: { id: 'app-1' },
+    });
     expect(tx.paymentReceived.update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ status: 'BOUNCED', unappliedAmount: 0 }) }),
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: 'BOUNCED',
+          unappliedAmount: 0,
+        }),
+      })
+    );
+  });
+
+  it('marks bounced with no applications does not update invoices', async () => {
+    prisma.paymentReceived.findFirst.mockResolvedValue({
+      id: 'pay-1',
+      applications: [],
+    });
+
+    const tx = {
+      invoice: {
+        findFirst: jest.fn(),
+        update: jest.fn(),
+      },
+      paymentApplication: {
+        delete: jest.fn(),
+      },
+      paymentReceived: {
+        update: jest.fn().mockResolvedValue({ id: 'pay-1', status: 'BOUNCED' }),
+      },
+    } as any;
+
+    prisma.$transaction.mockImplementation(async (cb: any) => cb(tx));
+
+    await service.markBounced('pay-1', 'tenant-1');
+
+    expect(tx.invoice.findFirst).not.toHaveBeenCalled();
+    expect(tx.invoice.update).not.toHaveBeenCalled();
+    expect(tx.paymentReceived.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: 'BOUNCED' }),
+      })
+    );
+  });
+
+  it('markBounced throws when payment not found', async () => {
+    prisma.paymentReceived.findFirst.mockResolvedValue(null);
+
+    await expect(service.markBounced('pay-404', 'tenant-1')).rejects.toThrow(
+      NotFoundException
     );
   });
 
   it('creates payment received', async () => {
     prisma.paymentReceived.findFirst.mockResolvedValue(null);
-    prisma.paymentReceived.create.mockResolvedValue({ id: 'pay-1', paymentNumber: 'PMT-000001' });
+    prisma.paymentReceived.create.mockResolvedValue({
+      id: 'pay-1',
+      paymentNumber: 'PMT-000001',
+    });
 
     const result = await service.create('tenant-1', 'user-1', {
       companyId: 'c1',
@@ -183,7 +305,12 @@ describe('PaymentsReceivedService', () => {
 
     const result = await service.findAll('tenant-1', { status: 'RECEIVED' });
 
-    expect(result).toEqual({ payments: [{ id: 'pay-1' }], total: 1 });
+    expect(result).toEqual({
+      data: [{ id: 'pay-1' }],
+      total: 1,
+      page: 1,
+      limit: 20,
+    });
   });
 
   it('returns payment when found', async () => {
@@ -198,9 +325,20 @@ describe('PaymentsReceivedService', () => {
     prisma.paymentReceived.findFirst.mockResolvedValue(null);
     prisma.paymentReceived.create.mockResolvedValue({ id: 'pay-1' });
 
-    const result = await service.processBatch('tenant-1', {
-      payments: [{ companyId: 'c1', paymentDate: new Date().toISOString(), paymentMethod: 'CHECK', amount: 50 }],
-    } as any, 'user-1');
+    const result = await service.processBatch(
+      'tenant-1',
+      {
+        payments: [
+          {
+            companyId: 'c1',
+            paymentDate: new Date().toISOString(),
+            paymentMethod: 'CHECK',
+            amount: 50,
+          },
+        ],
+      } as any,
+      'user-1'
+    );
 
     expect(result.processed).toBe(1);
     expect(result.failed).toBe(0);

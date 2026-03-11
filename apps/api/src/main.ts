@@ -1,13 +1,37 @@
 import { NestFactory, Reflector } from '@nestjs/core';
-import { ClassSerializerInterceptor, Logger, ValidationPipe } from '@nestjs/common';
+import {
+  ClassSerializerInterceptor,
+  Logger,
+  ValidationPipe,
+} from '@nestjs/common';
 import { AppModule } from './app.module';
 import { setupSwagger } from './swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { IoAdapter } from '@nestjs/platform-socket.io';
+import { Logger as PinoLogger } from 'nestjs-pino';
 import { join } from 'path';
+import { SentryExceptionFilter } from './common/filters/sentry-exception.filter';
+import { SentryInterceptor } from './common/interceptors/sentry.interceptor';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
+
+  // INFRA-004: Initialize Sentry error tracking (opt-in via SENTRY_DSN)
+  if (process.env.SENTRY_DSN) {
+    try {
+      const Sentry = require('@sentry/node');
+      Sentry.init({
+        dsn: process.env.SENTRY_DSN,
+        environment: process.env.NODE_ENV || 'development',
+        tracesSampleRate: 0.1,
+      });
+      logger.log('Sentry error tracking initialized');
+    } catch {
+      logger.warn(
+        'SENTRY_DSN is set but @sentry/node is not installed — Sentry disabled'
+      );
+    }
+  }
 
   const requiredEnvVars = ['JWT_SECRET', 'DATABASE_URL', 'REDIS_URL'];
   const optionalEnvVars = [
@@ -20,7 +44,7 @@ async function bootstrap() {
   const missing = requiredEnvVars.filter((v) => !process.env[v]);
   if (missing.length > 0) {
     logger.error(
-      `FATAL: Missing required environment variables: ${missing.join(', ')}`,
+      `FATAL: Missing required environment variables: ${missing.join(', ')}`
     );
     process.exit(1);
   }
@@ -28,13 +52,18 @@ async function bootstrap() {
   const missingOptional = optionalEnvVars.filter((v) => !process.env[v]);
   if (missingOptional.length > 0) {
     logger.warn(
-      `Optional environment variables not set: ${missingOptional.join(', ')}`,
+      `Optional environment variables not set: ${missingOptional.join(', ')}`
     );
   }
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     rawBody: true, // Preserve raw body for webhook signature verification (e.g. HubSpot)
+    bufferLogs: true, // Buffer logs until Pino logger is attached
   });
+
+  // Replace default NestJS logger with Pino (INFRA-002)
+  // All existing Logger usage (new Logger('Context')) will automatically route through Pino
+  app.useLogger(app.get(PinoLogger));
 
   // Serve static files (uploads) in development
   if (process.env.NODE_ENV !== 'production') {
@@ -68,15 +97,20 @@ async function bootstrap() {
       transformOptions: {
         enableImplicitConversion: true,
       },
-    }),
+    })
   );
 
-  // Global serialization
+  // Global serialization + Sentry interceptor (INFRA-004)
   app.useGlobalInterceptors(
     new ClassSerializerInterceptor(app.get(Reflector), {
       excludeExtraneousValues: true,
     }),
+    new SentryInterceptor()
   );
+
+  // INFRA-004: Global Sentry exception filter (reports 5xx to Sentry, then delegates to default handler)
+  const httpAdapter = app.getHttpAdapter();
+  app.useGlobalFilters(new SentryExceptionFilter(httpAdapter));
 
   setupSwagger(app);
 

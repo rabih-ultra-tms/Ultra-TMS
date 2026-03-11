@@ -11,8 +11,14 @@ export class LocalStorageService implements IStorageService, OnModuleInit {
   private readonly publicUrl: string;
 
   constructor(private configService: ConfigService) {
-    this.storagePath = this.configService.get<string>('STORAGE_LOCAL_PATH', './uploads');
-    this.publicUrl = this.configService.get<string>('STORAGE_PUBLIC_URL', 'http://localhost:3001/uploads');
+    this.storagePath = this.configService.get<string>(
+      'STORAGE_LOCAL_PATH',
+      './uploads'
+    );
+    this.publicUrl = this.configService.get<string>(
+      'STORAGE_PUBLIC_URL',
+      'http://localhost:3001/uploads'
+    );
   }
 
   async onModuleInit() {
@@ -28,10 +34,16 @@ export class LocalStorageService implements IStorageService, OnModuleInit {
   /**
    * Upload a file to local filesystem
    */
-  async upload(file: Buffer, filename: string, folder?: string): Promise<string> {
+  async upload(
+    file: Buffer,
+    filename: string,
+    folder?: string
+  ): Promise<string> {
     try {
       // Construct full path
-      const folderPath = folder ? path.join(this.storagePath, folder) : this.storagePath;
+      const folderPath = folder
+        ? path.join(this.storagePath, folder)
+        : this.storagePath;
       const filepath = path.join(folderPath, filename);
 
       // Ensure folder exists
@@ -43,11 +55,24 @@ export class LocalStorageService implements IStorageService, OnModuleInit {
       // Return public URL
       const relativePath = folder ? `${folder}/${filename}` : filename;
       this.logger.log(`File uploaded: ${relativePath}`);
-      
+
       return this.getUrl(relativePath);
     } catch (error) {
       this.logger.error('Failed to upload file:', error);
       throw new Error('File upload failed');
+    }
+  }
+
+  /**
+   * Download a file from local filesystem
+   */
+  async download(filepath: string): Promise<Buffer> {
+    try {
+      const fullPath = path.join(this.storagePath, filepath);
+      return await fs.readFile(fullPath);
+    } catch (error) {
+      this.logger.error(`Failed to download file: ${filepath}`, error);
+      throw new Error('File download failed');
     }
   }
 
@@ -75,7 +100,10 @@ export class LocalStorageService implements IStorageService, OnModuleInit {
   /**
    * Get signed URL for a file (local storage uses a simple expiring query param)
    */
-  async getSignedUrl(filepath: string, options?: { expiresIn?: number }): Promise<string> {
+  async getSignedUrl(
+    filepath: string,
+    options?: { expiresIn?: number }
+  ): Promise<string> {
     const url = this.getUrl(filepath);
     if (!options?.expiresIn) {
       return url;

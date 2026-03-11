@@ -1,8 +1,4 @@
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-} from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { apiClient } from '@/lib/api-client';
 
@@ -110,10 +106,18 @@ export function useReps(params: RepListParams = {}) {
       const url = query ? `/commissions/reps?${query}` : '/commissions/reps';
       const response = await apiClient.get(url);
       // The global interceptor returns { success, data: [...], pagination: {...} }
-      const raw = response as { data: any[]; pagination: RepListResponse['pagination'] };
+      const raw = response as {
+        data: CommissionRep[];
+        pagination: RepListResponse['pagination'];
+      };
       return {
         data: raw.data ?? [],
-        pagination: raw.pagination ?? { page: 1, limit: 20, total: 0, totalPages: 0 },
+        pagination: raw.pagination ?? {
+          page: 1,
+          limit: 20,
+          total: 0,
+          totalPages: 0,
+        },
       };
     },
     placeholderData: (previousData) => previousData,
@@ -139,10 +143,18 @@ export function useRepTransactions(id: string, page = 1, limit = 20) {
       const response = await apiClient.get(
         `/commissions/reps/${id}/transactions?page=${page}&limit=${limit}`
       );
-      const raw = response as { data: any[]; pagination: TransactionsResponse['pagination'] };
+      const raw = response as {
+        data: RepTransaction[];
+        pagination: TransactionsResponse['pagination'];
+      };
       return {
         data: raw.data ?? [],
-        pagination: raw.pagination ?? { page: 1, limit: 20, total: 0, totalPages: 0 },
+        pagination: raw.pagination ?? {
+          page: 1,
+          limit: 20,
+          total: 0,
+          totalPages: 0,
+        },
       };
     },
     enabled: !!id,
@@ -157,7 +169,13 @@ export function useRepTransactions(id: string, page = 1, limit = 20) {
 export function useAssignPlan() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ repId, planId }: { repId: string; planId: string }) => {
+    mutationFn: async ({
+      repId,
+      planId,
+    }: {
+      repId: string;
+      planId: string;
+    }) => {
       const response = await apiClient.post(`/commissions/reps/${repId}/plan`, {
         planId,
       });

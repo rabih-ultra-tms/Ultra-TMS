@@ -1,4 +1,4 @@
-import { IsOptional, IsIn, IsString } from 'class-validator';
+import { IsOptional, IsIn } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class DashboardQueryDto {

@@ -4,18 +4,25 @@ import { BadRequestException } from '@nestjs/common';
 
 export const imageFileFilter = (req: any, file: any, callback: any) => {
   if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
-    return callback(new BadRequestException('Only image files are allowed'), false);
+    return callback(
+      new BadRequestException('Only image files are allowed'),
+      false
+    );
   }
   callback(null, true);
 };
 
 export const documentFileFilter = (req: any, file: any, callback: any) => {
-  if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|pdf|tiff|tif|doc|docx|xls|xlsx|csv|txt)$/i)) {
+  if (
+    !file.originalname.match(
+      /\.(jpg|jpeg|png|gif|webp|pdf|tiff|tif|doc|docx|xls|xlsx|csv|txt)$/i
+    )
+  ) {
     return callback(
       new BadRequestException(
-        'Unsupported file type. Accepted: PDF, JPG, PNG, TIFF, GIF, WEBP, DOC, DOCX, XLS, XLSX, CSV, TXT',
+        'Unsupported file type. Accepted: PDF, JPG, PNG, TIFF, GIF, WEBP, DOC, DOCX, XLS, XLSX, CSV, TXT'
       ),
-      false,
+      false
     );
   }
   callback(null, true);
@@ -50,26 +57,15 @@ export const getDocumentUploadOptions = () => ({
   },
 });
 
+/**
+ * @deprecated Use IStorageService from modules/storage/storage.interface.ts instead.
+ * Inject via @Inject(STORAGE_SERVICE) from modules/storage/storage.module.ts.
+ *
+ * INFRA-006: Cloud storage is now implemented through the StorageModule.
+ * Set STORAGE_DRIVER=s3 and configure AWS_S3_* env vars for production.
+ * See .env.example for all available configuration options.
+ */
 export interface CloudStorageService {
   uploadFile(file: Express.Multer.File, folder: string): Promise<string>;
   deleteFile(fileUrl: string): Promise<void>;
-}
-
-// Placeholder for cloud storage implementation
-// In production, implement this with AWS S3, Azure Blob Storage, or GCS
-export class CloudStorageAdapter implements CloudStorageService {
-  async uploadFile(_file: Express.Multer.File, _folder: string): Promise<string> {
-    // Backlog INFRA-006: Implement cloud storage upload
-    // For AWS S3:
-    // const key = `${folder}/${Date.now()}-${file.originalname}`;
-    // await s3.putObject({ Bucket: bucket, Key: key, Body: file.buffer });
-    // return s3Url;
-    
-    throw new Error('Cloud storage not configured. Please set up AWS S3, Azure Blob, or GCS.');
-  }
-
-  async deleteFile(_fileUrl: string): Promise<void> {
-    // Backlog INFRA-006: Implement cloud storage deletion
-    throw new Error('Cloud storage not configured.');
-  }
 }

@@ -5,6 +5,7 @@ import * as fs from 'fs/promises';
 jest.mock('fs/promises', () => ({
   mkdir: jest.fn(),
   writeFile: jest.fn(),
+  readFile: jest.fn(),
   unlink: jest.fn(),
   access: jest.fn(),
 }));
@@ -16,14 +17,17 @@ describe('LocalStorageService', () => {
     configService = {
       get: jest.fn((key: string, defaultValue?: string) => {
         if (key === 'STORAGE_LOCAL_PATH') return './uploads';
-        if (key === 'STORAGE_PUBLIC_URL') return 'http://localhost:3001/uploads';
+        if (key === 'STORAGE_PUBLIC_URL')
+          return 'http://localhost:3001/uploads';
         return defaultValue;
       }),
     };
   });
 
   it('initializes storage directory', async () => {
-    const service = new LocalStorageService(configService as unknown as ConfigService);
+    const service = new LocalStorageService(
+      configService as unknown as ConfigService
+    );
 
     await service.onModuleInit();
 
@@ -31,7 +35,9 @@ describe('LocalStorageService', () => {
   });
 
   it('uploads file and returns url', async () => {
-    const service = new LocalStorageService(configService as unknown as ConfigService);
+    const service = new LocalStorageService(
+      configService as unknown as ConfigService
+    );
 
     const result = await service.upload(Buffer.from('data'), 'file.txt');
 
@@ -40,22 +46,57 @@ describe('LocalStorageService', () => {
   });
 
   it('uploads file to subfolder', async () => {
-    const service = new LocalStorageService(configService as unknown as ConfigService);
+    const service = new LocalStorageService(
+      configService as unknown as ConfigService
+    );
 
-    const result = await service.upload(Buffer.from('data'), 'file.txt', 'docs');
+    const result = await service.upload(
+      Buffer.from('data'),
+      'file.txt',
+      'docs'
+    );
 
     expect(result).toBe('http://localhost:3001/uploads/docs/file.txt');
   });
 
   it('throws on upload error', async () => {
     (fs.writeFile as jest.Mock).mockRejectedValue(new Error('fail'));
-    const service = new LocalStorageService(configService as unknown as ConfigService);
+    const service = new LocalStorageService(
+      configService as unknown as ConfigService
+    );
 
-    await expect(service.upload(Buffer.from('data'), 'file.txt')).rejects.toThrow('File upload failed');
+    await expect(
+      service.upload(Buffer.from('data'), 'file.txt')
+    ).rejects.toThrow('File upload failed');
+  });
+
+  it('downloads file', async () => {
+    (fs.readFile as jest.Mock).mockResolvedValue(Buffer.from('file-data'));
+    const service = new LocalStorageService(
+      configService as unknown as ConfigService
+    );
+
+    const result = await service.download('file.txt');
+
+    expect(fs.readFile).toHaveBeenCalled();
+    expect(result.toString()).toBe('file-data');
+  });
+
+  it('throws on download error', async () => {
+    (fs.readFile as jest.Mock).mockRejectedValue(new Error('fail'));
+    const service = new LocalStorageService(
+      configService as unknown as ConfigService
+    );
+
+    await expect(service.download('file.txt')).rejects.toThrow(
+      'File download failed'
+    );
   });
 
   it('deletes file', async () => {
-    const service = new LocalStorageService(configService as unknown as ConfigService);
+    const service = new LocalStorageService(
+      configService as unknown as ConfigService
+    );
 
     await service.delete('file.txt');
 
@@ -64,13 +105,19 @@ describe('LocalStorageService', () => {
 
   it('throws on delete error', async () => {
     (fs.unlink as jest.Mock).mockRejectedValue(new Error('fail'));
-    const service = new LocalStorageService(configService as unknown as ConfigService);
+    const service = new LocalStorageService(
+      configService as unknown as ConfigService
+    );
 
-    await expect(service.delete('file.txt')).rejects.toThrow('File deletion failed');
+    await expect(service.delete('file.txt')).rejects.toThrow(
+      'File deletion failed'
+    );
   });
 
   it('returns signed url with expiry', async () => {
-    const service = new LocalStorageService(configService as unknown as ConfigService);
+    const service = new LocalStorageService(
+      configService as unknown as ConfigService
+    );
 
     const result = await service.getSignedUrl('file.txt', { expiresIn: 60 });
 
@@ -79,7 +126,9 @@ describe('LocalStorageService', () => {
 
   it('checks if file exists', async () => {
     (fs.access as jest.Mock).mockResolvedValue(undefined);
-    const service = new LocalStorageService(configService as unknown as ConfigService);
+    const service = new LocalStorageService(
+      configService as unknown as ConfigService
+    );
 
     const exists = await service.exists('file.txt');
 
@@ -88,7 +137,9 @@ describe('LocalStorageService', () => {
 
   it('returns false when file does not exist', async () => {
     (fs.access as jest.Mock).mockRejectedValue(new Error('missing'));
-    const service = new LocalStorageService(configService as unknown as ConfigService);
+    const service = new LocalStorageService(
+      configService as unknown as ConfigService
+    );
 
     const exists = await service.exists('file.txt');
 

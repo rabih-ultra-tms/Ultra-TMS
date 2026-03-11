@@ -1,7 +1,17 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  Logger,
+} from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma.service';
-import { CreateQuoteDto, UpdateQuoteDto, QuickQuoteDto, CalculateRateDto } from './dto';
+import {
+  CreateQuoteDto,
+  UpdateQuoteDto,
+  QuickQuoteDto,
+  CalculateRateDto,
+} from './dto';
 import { RateCalculationService } from './rate-calculation.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
@@ -13,13 +23,13 @@ export class QuotesService {
   constructor(
     private prisma: PrismaService,
     private rateCalculationService: RateCalculationService,
-    private eventEmitter: EventEmitter2,
+    private eventEmitter: EventEmitter2
   ) {}
 
   private async generateQuoteNumber(tenantId: string): Promise<string> {
     const now = new Date();
     const yearMonth = now.toISOString().slice(0, 7).replace('-', ''); // YYYYMM
-    
+
     // Get the last quote number for this tenant and period
     const lastQuote = await this.prisma.quote.findFirst({
       where: {
@@ -48,32 +58,44 @@ export class QuotesService {
     return `Q-${yearMonth}-${sequence.toString().padStart(4, '0')}`;
   }
 
-  async findAll(tenantId: string, options?: {
-    page?: number;
-    limit?: number;
-    status?: string;
-    companyId?: string;
-    salesRepId?: string;
-    search?: string;
-    serviceType?: string;
-  }) {
-    const { page = 1, limit = 20, status, companyId, salesRepId, search, serviceType } = options || {};
+  async findAll(
+    tenantId: string,
+    options?: {
+      page?: number;
+      limit?: number;
+      status?: string;
+      companyId?: string;
+      salesRepId?: string;
+      search?: string;
+      serviceType?: string;
+    }
+  ) {
+    const {
+      page = 1,
+      limit = 20,
+      status,
+      companyId,
+      salesRepId,
+      search,
+      serviceType,
+    } = options || {};
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
     const safeLimit = Number.isFinite(limit) && limit > 0 ? limit : 20;
     const skip = (safePage - 1) * safeLimit;
 
     const where: any = { tenantId, deletedAt: null };
     if (status) {
-      const statuses = status.split(',').map((s) => s.trim()).filter(Boolean);
+      const statuses = status
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
       where.status = statuses.length === 1 ? statuses[0] : { in: statuses };
     }
     if (companyId) where.companyId = companyId;
     if (salesRepId) where.salesRepId = salesRepId;
     if (serviceType) where.serviceType = serviceType;
     if (search) {
-      where.OR = [
-        { quoteNumber: { contains: search, mode: 'insensitive' } },
-      ];
+      where.OR = [{ quoteNumber: { contains: search, mode: 'insensitive' } }];
     }
 
     const [data, total] = await Promise.all([
@@ -91,7 +113,13 @@ export class QuotesService {
       this.prisma.quote.count({ where }),
     ]);
 
-    return { data, total, page: safePage, limit: safeLimit, totalPages: Math.ceil(total / safeLimit) };
+    return {
+      data,
+      total,
+      page: safePage,
+      limit: safeLimit,
+      totalPages: Math.ceil(total / safeLimit),
+    };
   }
 
   async findOne(tenantId: string, id: string) {
@@ -100,7 +128,9 @@ export class QuotesService {
       include: {
         company: true,
         contact: true,
-        salesRep: { select: { id: true, firstName: true, lastName: true, email: true } },
+        salesRep: {
+          select: { id: true, firstName: true, lastName: true, email: true },
+        },
         stops: { orderBy: { stopSequence: 'asc' } },
         accessorials: true,
       },
@@ -177,7 +207,7 @@ export class QuotesService {
       overrideMarginCheck?: boolean;
     },
     tenantId: string,
-    userId: string,
+    userId: string
   ): void {
     const minimumMargin = this.DEFAULT_MINIMUM_MARGIN_PERCENT;
 
@@ -186,7 +216,8 @@ export class QuotesService {
     if (params.marginPercent !== undefined && params.marginPercent !== null) {
       effectiveMargin = params.marginPercent;
     } else if (params.totalAmount > 0) {
-      effectiveMargin = ((params.totalAmount - params.totalCost) / params.totalAmount) * 100;
+      effectiveMargin =
+        ((params.totalAmount - params.totalCost) / params.totalAmount) * 100;
     } else {
       // Cannot calculate margin without revenue; skip validation
       return;
@@ -196,14 +227,14 @@ export class QuotesService {
       if (params.overrideMarginCheck) {
         this.logger.warn(
           `Margin override used: quote margin ${effectiveMargin.toFixed(1)}% is below minimum ${minimumMargin}% ` +
-          `(tenant: ${tenantId}, user: ${userId})`,
+            `(tenant: ${tenantId}, user: ${userId})`
         );
         return;
       }
 
       throw new BadRequestException(
         `Quote margin of ${effectiveMargin.toFixed(1)}% is below the minimum required margin of ${minimumMargin}%. ` +
-        `Set overrideMarginCheck to true for manager-approved exceptions.`,
+          `Set overrideMarginCheck to true for manager-approved exceptions.`
       );
     }
   }
@@ -215,7 +246,8 @@ export class QuotesService {
     const linehaulRate = dto.linehaulRate || 0;
     const fuel = dto.fuelSurcharge || 0;
     const accessorialsTotal = dto.accessorialsTotal || 0;
-    const totalAmount = dto.totalAmount || (linehaulRate + fuel + accessorialsTotal);
+    const totalAmount =
+      dto.totalAmount || linehaulRate + fuel + accessorialsTotal;
 
     // Enforce minimum margin
     this.validateMinimumMargin(
@@ -226,7 +258,7 @@ export class QuotesService {
         overrideMarginCheck: dto.overrideMarginCheck,
       },
       tenantId,
-      userId,
+      userId
     );
 
     const quote = await this.prisma.quote.create({
@@ -295,7 +327,12 @@ export class QuotesService {
     return quote;
   }
 
-  async update(tenantId: string, id: string, userId: string, dto: UpdateQuoteDto) {
+  async update(
+    tenantId: string,
+    id: string,
+    userId: string,
+    dto: UpdateQuoteDto
+  ) {
     const existing = await this.findOne(tenantId, id);
 
     // Recalculate totals if pricing changed
@@ -308,13 +345,19 @@ export class QuotesService {
       const linehaulRate = dto.linehaulRate || 0;
       const fuel = dto.fuelSurcharge || 0;
       const accessorialsTotal = dto.accessorialsTotal || 0;
-      totalAmount = dto.totalAmount || (linehaulRate + fuel + accessorialsTotal);
+      totalAmount = dto.totalAmount || linehaulRate + fuel + accessorialsTotal;
     }
 
     // Enforce minimum margin when pricing fields are being updated
-    const effectiveTotalAmount = totalAmount ?? dto.totalAmount ?? Number(existing.totalAmount);
-    const effectiveMarginPercent = dto.marginPercent ?? (existing.marginPercent !== null ? Number(existing.marginPercent) : undefined);
-    const effectiveLinehaulRate = dto.linehaulRate ?? Number(existing.linehaulRate ?? 0);
+    const effectiveTotalAmount =
+      totalAmount ?? dto.totalAmount ?? Number(existing.totalAmount);
+    const effectiveMarginPercent =
+      dto.marginPercent ??
+      (existing.marginPercent !== null
+        ? Number(existing.marginPercent)
+        : undefined);
+    const effectiveLinehaulRate =
+      dto.linehaulRate ?? Number(existing.linehaulRate ?? 0);
 
     if (
       dto.marginPercent !== undefined ||
@@ -331,7 +374,7 @@ export class QuotesService {
           overrideMarginCheck: dto.overrideMarginCheck,
         },
         tenantId,
-        userId,
+        userId
       );
     }
 
@@ -460,7 +503,12 @@ export class QuotesService {
     });
 
     // Emit quote converted event
-    this.eventEmitter.emit('quote.converted', { quote, order, tenantId, userId });
+    this.eventEmitter.emit('quote.converted', {
+      quote,
+      order,
+      tenantId,
+      userId,
+    });
 
     return order;
   }
@@ -604,7 +652,14 @@ export class QuotesService {
         OR: [{ id: rootId }, { parentQuoteId: rootId }],
       },
       orderBy: { version: 'asc' },
-      select: { id: true, version: true, status: true, totalAmount: true, createdAt: true, createdById: true },
+      select: {
+        id: true,
+        version: true,
+        status: true,
+        totalAmount: true,
+        createdAt: true,
+        createdById: true,
+      },
     });
 
     return versions.map((v) => ({
@@ -621,30 +676,80 @@ export class QuotesService {
     const quote = await this.prisma.quote.findFirst({
       where: { id, tenantId, deletedAt: null },
       select: {
-        createdAt: true, createdById: true,
-        sentAt: true, viewedAt: true, respondedAt: true,
-        convertedAt: true, rejectionReason: true,
-        status: true, customFields: true,
+        createdAt: true,
+        createdById: true,
+        sentAt: true,
+        viewedAt: true,
+        respondedAt: true,
+        convertedAt: true,
+        rejectionReason: true,
+        status: true,
+        customFields: true,
       },
     });
 
     if (!quote) throw new NotFoundException(`Quote with ID ${id} not found`);
 
-    type RawEvent = { type: string; description: string; timestamp: Date; createdBy?: string | null };
+    type RawEvent = {
+      type: string;
+      description: string;
+      timestamp: Date;
+      createdBy?: string | null;
+    };
     const raw: RawEvent[] = [];
 
-    raw.push({ type: 'created', description: 'Quote created', timestamp: quote.createdAt, createdBy: quote.createdById });
-    if (quote.sentAt) raw.push({ type: 'sent', description: 'Quote sent to customer', timestamp: quote.sentAt });
-    if (quote.viewedAt) raw.push({ type: 'viewed', description: 'Quote viewed by customer', timestamp: quote.viewedAt });
-    if (quote.respondedAt && quote.status === 'ACCEPTED') raw.push({ type: 'accepted', description: 'Quote accepted', timestamp: quote.respondedAt });
-    if (quote.respondedAt && quote.status === 'REJECTED') raw.push({ type: 'rejected', description: `Quote rejected${quote.rejectionReason ? `: ${quote.rejectionReason}` : ''}`, timestamp: quote.respondedAt });
-    if (quote.convertedAt) raw.push({ type: 'converted', description: 'Converted to order', timestamp: quote.convertedAt });
+    raw.push({
+      type: 'created',
+      description: 'Quote created',
+      timestamp: quote.createdAt,
+      createdBy: quote.createdById,
+    });
+    if (quote.sentAt)
+      raw.push({
+        type: 'sent',
+        description: 'Quote sent to customer',
+        timestamp: quote.sentAt,
+      });
+    if (quote.viewedAt)
+      raw.push({
+        type: 'viewed',
+        description: 'Quote viewed by customer',
+        timestamp: quote.viewedAt,
+      });
+    if (quote.respondedAt && quote.status === 'ACCEPTED')
+      raw.push({
+        type: 'accepted',
+        description: 'Quote accepted',
+        timestamp: quote.respondedAt,
+      });
+    if (quote.respondedAt && quote.status === 'REJECTED')
+      raw.push({
+        type: 'rejected',
+        description: `Quote rejected${quote.rejectionReason ? `: ${quote.rejectionReason}` : ''}`,
+        timestamp: quote.respondedAt,
+      });
+    if (quote.convertedAt)
+      raw.push({
+        type: 'converted',
+        description: 'Converted to order',
+        timestamp: quote.convertedAt,
+      });
 
     // Include notes as timeline events
     const cf = quote.customFields as Record<string, unknown> | null;
-    const notes: { id?: string; content: string; createdAt: string; createdById?: string }[] = Array.isArray(cf?.notes) ? (cf!.notes as typeof notes) : [];
+    const notes: {
+      id?: string;
+      content: string;
+      createdAt: string;
+      createdById?: string;
+    }[] = Array.isArray(cf?.notes) ? (cf!.notes as typeof notes) : [];
     for (const note of notes) {
-      raw.push({ type: 'note', description: note.content, timestamp: new Date(note.createdAt), createdBy: note.createdById });
+      raw.push({
+        type: 'note',
+        description: note.content,
+        timestamp: new Date(note.createdAt),
+        createdBy: note.createdById,
+      });
     }
 
     return raw
@@ -677,11 +782,23 @@ export class QuotesService {
     if (!quote) throw new NotFoundException(`Quote with ID ${id} not found`);
 
     const cf = (quote.customFields as Record<string, unknown>) || {};
-    const existing: unknown[] = Array.isArray(cf.notes) ? (cf.notes as unknown[]) : [];
-    const newNote = { id: crypto.randomUUID(), content, createdAt: new Date().toISOString(), createdById: userId };
+    const existing: unknown[] = Array.isArray(cf.notes)
+      ? (cf.notes as unknown[])
+      : [];
+    const newNote = {
+      id: crypto.randomUUID(),
+      content,
+      createdAt: new Date().toISOString(),
+      createdById: userId,
+    };
     const updated = await this.prisma.quote.update({
       where: { id, tenantId },
-      data: { customFields: { ...cf, notes: [...existing, newNote] } as Prisma.InputJsonValue },
+      data: {
+        customFields: {
+          ...cf,
+          notes: [...existing, newNote],
+        } as Prisma.InputJsonValue,
+      },
     });
     void updated;
     return newNote;
@@ -690,30 +807,43 @@ export class QuotesService {
   async accept(tenantId: string, id: string, userId: string) {
     const quote = await this.findOne(tenantId, id);
     if (!['SENT', 'VIEWED'].includes(quote.status)) {
-      throw new BadRequestException(`Cannot accept a quote with status ${quote.status}`);
+      throw new BadRequestException(
+        `Cannot accept a quote with status ${quote.status}`
+      );
     }
     if (quote.validUntil && new Date(quote.validUntil) < new Date()) {
       throw new BadRequestException('Quote has expired');
     }
     return this.prisma.quote.update({
       where: { id, tenantId },
-      data: { status: 'ACCEPTED', respondedAt: new Date(), updatedById: userId },
+      data: {
+        status: 'ACCEPTED',
+        respondedAt: new Date(),
+        updatedById: userId,
+      },
     });
   }
 
   async reject(tenantId: string, id: string, userId: string, reason?: string) {
     const quote = await this.findOne(tenantId, id);
     if (!['SENT', 'VIEWED', 'ACCEPTED'].includes(quote.status)) {
-      throw new BadRequestException(`Cannot reject a quote with status ${quote.status}`);
+      throw new BadRequestException(
+        `Cannot reject a quote with status ${quote.status}`
+      );
     }
     return this.prisma.quote.update({
       where: { id, tenantId },
-      data: { status: 'REJECTED', respondedAt: new Date(), rejectionReason: reason, updatedById: userId },
+      data: {
+        status: 'REJECTED',
+        respondedAt: new Date(),
+        rejectionReason: reason,
+        updatedById: userId,
+      },
     });
   }
 
   async send(tenantId: string, id: string, userId: string) {
-    const quote = await this.findOne(tenantId, id);
+    await this.findOne(tenantId, id);
 
     const updated = await this.prisma.quote.update({
       where: { id, tenantId },

@@ -1,18 +1,19 @@
-"use client";
+'use client';
 
-import * as React from "react";
+import * as React from 'react';
 import {
   QueryClient,
   QueryClientProvider,
   QueryCache,
   MutationCache,
-} from "@tanstack/react-query";
-import { ThemeProvider } from "@/lib/theme/theme-provider";
-import { Toaster, toast } from "@/components/ui/sonner";
-import { ApiError } from "@/lib/api/client";
+} from '@tanstack/react-query';
+import { ThemeProvider } from '@/lib/theme/theme-provider';
+import { Toaster, toast } from '@/components/ui/sonner';
+import { ApiError } from '@/lib/api/client';
+import { initSentry } from '@/lib/sentry';
 
 const ReactQueryDevtools = React.lazy(() =>
-  import("@tanstack/react-query-devtools").then((mod) => ({
+  import('@tanstack/react-query-devtools').then((mod) => ({
     default: mod.ReactQueryDevtools,
   }))
 );
@@ -20,28 +21,29 @@ const ReactQueryDevtools = React.lazy(() =>
 function handleQueryError(error: unknown) {
   if (error instanceof ApiError) {
     if (error.status === 401) {
-      if (typeof window !== "undefined") {
-        window.location.href = "/login?expired=true";
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login?expired=true';
       }
       return;
     }
 
     if (error.status === 403) {
-      toast.error("Access Denied", {
-        description: "You do not have permission to perform this action.",
+      toast.error('Access Denied', {
+        description: 'You do not have permission to perform this action.',
       });
       return;
     }
 
     if (error.status === 422 && error.errors) {
-      const messages = Object.values(error.errors).flat().join(", ");
-      toast.error("Validation Error", { description: messages });
+      const messages = Object.values(error.errors).flat().join(', ');
+      toast.error('Validation Error', { description: messages });
       return;
     }
   }
 
-  const message = error instanceof Error ? error.message : "An unexpected error occurred";
-  toast.error("Error", { description: message });
+  const message =
+    error instanceof Error ? error.message : 'An unexpected error occurred';
+  toast.error('Error', { description: message });
 }
 
 function makeQueryClient() {
@@ -57,7 +59,10 @@ function makeQueryClient() {
         staleTime: 60 * 1000,
         gcTime: 5 * 60 * 1000,
         retry: (failureCount, error) => {
-          if (error instanceof ApiError && [401, 403, 404].includes(error.status)) {
+          if (
+            error instanceof ApiError &&
+            [401, 403, 404].includes(error.status)
+          ) {
             return false;
           }
           return failureCount < 2;
@@ -74,7 +79,7 @@ function makeQueryClient() {
 let browserQueryClient: QueryClient | undefined;
 
 function getQueryClient() {
-  if (typeof window === "undefined") {
+  if (typeof window === 'undefined') {
     return makeQueryClient();
   }
 
@@ -87,6 +92,11 @@ interface ProvidersProps {
 }
 
 export function Providers({ children }: ProvidersProps) {
+  // INFRA-004: Initialize Sentry on first render (no-op if DSN not set or package not installed)
+  React.useEffect(() => {
+    initSentry();
+  }, []);
+
   const queryClient = getQueryClient();
 
   return (
@@ -94,7 +104,7 @@ export function Providers({ children }: ProvidersProps) {
       <QueryClientProvider client={queryClient}>
         {children}
         <Toaster position="top-right" richColors closeButton />
-        {process.env.NODE_ENV === "development" && (
+        {process.env.NODE_ENV === 'development' && (
           <React.Suspense fallback={null}>
             <ReactQueryDevtools initialIsOpen={false} />
           </React.Suspense>
@@ -106,11 +116,10 @@ export function Providers({ children }: ProvidersProps) {
 
 export const queryKeys = {
   all: (service: string) => [service] as const,
-  lists: (service: string) => [...queryKeys.all(service), "list"] as const,
-  list: (service: string, params: Record<string, unknown>) => [
-    ...queryKeys.lists(service),
-    params,
-  ] as const,
-  details: (service: string) => [...queryKeys.all(service), "detail"] as const,
-  detail: (service: string, id: string) => [...queryKeys.details(service), id] as const,
+  lists: (service: string) => [...queryKeys.all(service), 'list'] as const,
+  list: (service: string, params: Record<string, unknown>) =>
+    [...queryKeys.lists(service), params] as const,
+  details: (service: string) => [...queryKeys.all(service), 'detail'] as const,
+  detail: (service: string, id: string) =>
+    [...queryKeys.details(service), id] as const,
 };

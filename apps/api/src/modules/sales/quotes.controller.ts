@@ -2,7 +2,6 @@ import {
   Controller,
   Get,
   Post,
-  Put,
   Patch,
   Delete,
   Body,
@@ -21,7 +20,12 @@ import {
 import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards';
 import { QuotesService } from './quotes.service';
-import { CreateQuoteDto, UpdateQuoteDto, QuickQuoteDto, CalculateRateDto } from './dto';
+import {
+  CreateQuoteDto,
+  UpdateQuoteDto,
+  QuickQuoteDto,
+  CalculateRateDto,
+} from './dto';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -55,9 +59,17 @@ export class QuotesController {
     @Query('companyId') companyId?: string,
     @Query('salesRepId') salesRepId?: string,
     @Query('search') search?: string,
-    @Query('serviceType') serviceType?: string,
+    @Query('serviceType') serviceType?: string
   ) {
-    return this.quotesService.findAll(tenantId, { page, limit, status, companyId, salesRepId, search, serviceType });
+    return this.quotesService.findAll(tenantId, {
+      page,
+      limit,
+      status,
+      companyId,
+      salesRepId,
+      search,
+      serviceType,
+    });
   }
 
   @Get('stats')
@@ -87,7 +99,7 @@ export class QuotesController {
   async create(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
-    @Body() dto: CreateQuoteDto,
+    @Body() dto: CreateQuoteDto
   ) {
     return this.quotesService.create(tenantId, userId, dto);
   }
@@ -102,7 +114,7 @@ export class QuotesController {
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
     @Param('id') id: string,
-    @Body() dto: UpdateQuoteDto,
+    @Body() dto: UpdateQuoteDto
   ) {
     return this.quotesService.update(tenantId, id, userId, dto);
   }
@@ -116,7 +128,7 @@ export class QuotesController {
   async delete(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
-    @Param('id') id: string,
+    @Param('id') id: string
   ) {
     return this.quotesService.delete(tenantId, id, userId);
   }
@@ -127,7 +139,10 @@ export class QuotesController {
   @ApiStandardResponse('Quote versions')
   @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'PRICING_ANALYST')
-  async getVersions(@CurrentTenant() tenantId: string, @Param('id') id: string) {
+  async getVersions(
+    @CurrentTenant() tenantId: string,
+    @Param('id') id: string
+  ) {
     return this.quotesService.getVersions(tenantId, id);
   }
 
@@ -137,7 +152,10 @@ export class QuotesController {
   @ApiStandardResponse('Quote timeline')
   @ApiErrorResponses()
   @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'PRICING_ANALYST')
-  async getTimeline(@CurrentTenant() tenantId: string, @Param('id') id: string) {
+  async getTimeline(
+    @CurrentTenant() tenantId: string,
+    @Param('id') id: string
+  ) {
     return this.quotesService.getTimeline(tenantId, id);
   }
 
@@ -161,7 +179,7 @@ export class QuotesController {
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
     @Param('id') id: string,
-    @Body() body: { content: string },
+    @Body() body: { content: string }
   ) {
     return this.quotesService.addNote(tenantId, id, userId, body.content);
   }
@@ -175,7 +193,7 @@ export class QuotesController {
   async accept(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
-    @Param('id') id: string,
+    @Param('id') id: string
   ) {
     return this.quotesService.accept(tenantId, id, userId);
   }
@@ -190,7 +208,7 @@ export class QuotesController {
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
     @Param('id') id: string,
-    @Body() body: { reason?: string },
+    @Body() body: { reason?: string }
   ) {
     return this.quotesService.reject(tenantId, id, userId, body.reason);
   }
@@ -204,7 +222,7 @@ export class QuotesController {
   async clone(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
-    @Param('id') id: string,
+    @Param('id') id: string
   ) {
     return this.quotesService.duplicate(tenantId, id, userId);
   }
@@ -218,7 +236,7 @@ export class QuotesController {
   async createVersion(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
-    @Param('id') id: string,
+    @Param('id') id: string
   ) {
     return this.quotesService.createNewVersion(tenantId, id, userId);
   }
@@ -232,7 +250,7 @@ export class QuotesController {
   async convertToOrder(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
-    @Param('id') id: string,
+    @Param('id') id: string
   ) {
     return this.quotesService.convertToOrder(tenantId, id, userId);
   }
@@ -246,7 +264,7 @@ export class QuotesController {
   async duplicate(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
-    @Param('id') id: string,
+    @Param('id') id: string
   ) {
     return this.quotesService.duplicate(tenantId, id, userId);
   }
@@ -260,7 +278,7 @@ export class QuotesController {
   async createNewVersion(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
-    @Param('id') id: string,
+    @Param('id') id: string
   ) {
     return this.quotesService.createNewVersion(tenantId, id, userId);
   }
@@ -274,7 +292,7 @@ export class QuotesController {
   async send(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
-    @Param('id') id: string,
+    @Param('id') id: string
   ) {
     return this.quotesService.send(tenantId, id, userId);
   }
@@ -288,7 +306,7 @@ export class QuotesController {
   async generatePdf(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,
-    @Res() res: Response,
+    @Res() res: Response
   ) {
     const pdfBuffer = await this.quotesService.generatePdf(tenantId, id);
     res.set({
@@ -307,7 +325,7 @@ export class QuotesController {
   async quickQuote(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
-    @Body() dto: QuickQuoteDto,
+    @Body() dto: QuickQuoteDto
   ) {
     return this.quotesService.quickQuote(tenantId, userId, dto);
   }
@@ -319,7 +337,7 @@ export class QuotesController {
   @Roles('ADMIN', 'SALES_REP', 'SALES_MANAGER', 'PRICING_ANALYST')
   async calculateRate(
     @CurrentTenant() tenantId: string,
-    @Body() dto: CalculateRateDto,
+    @Body() dto: CalculateRateDto
   ) {
     return this.quotesService.calculateRate(tenantId, dto);
   }

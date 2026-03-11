@@ -1,8 +1,4 @@
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-} from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { apiClient } from '@/lib/api-client';
 
@@ -72,10 +68,12 @@ function unwrap<T>(response: unknown): T {
   return (body.data ?? response) as T;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapPayout(raw: any): CommissionPayout {
   const firstName = raw.user?.firstName ?? '';
   const lastName = raw.user?.lastName ?? '';
-  const repName = `${firstName} ${lastName}`.trim() || raw.user?.email || 'Unknown';
+  const repName =
+    `${firstName} ${lastName}`.trim() || raw.user?.email || 'Unknown';
   return {
     id: raw.id,
     repId: raw.userId,
@@ -111,7 +109,10 @@ export function usePayouts(params: PayoutListParams = {}) {
         '/commissions/payouts',
         searchParams
       );
-      const raw = response as { data: any[]; pagination: PayoutListResponse['pagination'] };
+      const raw = response as {
+        data: Record<string, unknown>[];
+        pagination: PayoutListResponse['pagination'];
+      };
       return {
         data: (raw.data ?? []).map(mapPayout),
         pagination: raw.pagination,
