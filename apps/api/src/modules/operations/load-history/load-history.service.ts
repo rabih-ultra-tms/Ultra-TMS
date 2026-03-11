@@ -312,7 +312,7 @@ export class LoadHistoryService {
   }
 
   async getStats(tenantId: string) {
-    const [totalLoads, completedLoads, totalRevenueData, totalCostData] =
+    const [totalLoads, completedLoads, totalRevenueData, totalCostData, totalMilesData] =
       await Promise.all([
         this.prisma.loadHistory.count({
           where: { tenantId, isActive: true },
@@ -328,16 +328,28 @@ export class LoadHistoryService {
           where: { tenantId, isActive: true },
           _sum: { carrierRateCents: true },
         }),
+        this.prisma.loadHistory.aggregate({
+          where: { tenantId, isActive: true },
+          _sum: { totalMiles: true },
+        }),
       ]);
+
+    const totalRevenueCents = totalRevenueData._sum.customerRateCents || 0;
+    const totalMiles = totalMilesData._sum.totalMiles
+      ? Number(totalMilesData._sum.totalMiles)
+      : 0;
 
     return {
       totalLoads,
       completedLoads,
-      totalRevenueCents: totalRevenueData._sum.customerRateCents || 0,
+      totalRevenueCents,
       totalCostCents: totalCostData._sum.carrierRateCents || 0,
       totalMarginCents:
-        (totalRevenueData._sum.customerRateCents || 0) -
+        totalRevenueCents -
         (totalCostData._sum.carrierRateCents || 0),
+      totalMiles,
+      avgRevenuePerMileCents:
+        totalMiles > 0 ? Math.round(totalRevenueCents / totalMiles) : 0,
     };
   }
 

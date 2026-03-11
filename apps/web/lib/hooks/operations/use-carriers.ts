@@ -136,9 +136,10 @@ export const useDeleteCarrier = (id?: string) => {
       if (!targetId) throw new Error('Carrier ID is required for deletion');
       await apiClient.delete(`/operations/carriers/${targetId}`);
     },
-    onSuccess: () => {
+    onSuccess: (_, deleteId) => {
+      const targetId = deleteId || id;
       queryClient.invalidateQueries({
-        queryKey: [CARRIERS_KEY, id],
+        queryKey: [CARRIERS_KEY, targetId],
       });
       queryClient.invalidateQueries({
         queryKey: [CARRIERS_KEY, 'list'],

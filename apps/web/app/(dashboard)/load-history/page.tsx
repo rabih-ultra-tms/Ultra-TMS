@@ -351,7 +351,7 @@ export default function LoadHistoryPage() {
               <div className="flex items-center gap-2">
                 <MapPin className="h-5 w-5 text-cyan-600" />
                 <div>
-                  <div className="text-2xl font-bold">-</div>
+                  <div className="text-2xl font-bold">{stats.avgRevenuePerMileCents ? formatCurrency(stats.avgRevenuePerMileCents) : '-'}</div>
                   <p className="text-xs text-muted-foreground">Avg $/Mile</p>
                 </div>
               </div>

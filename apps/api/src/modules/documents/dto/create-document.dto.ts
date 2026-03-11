@@ -5,6 +5,7 @@ import {
   IsBoolean,
   IsEnum,
   IsArray,
+  Allow,
 } from 'class-validator';
 
 export enum DocumentType {
@@ -113,4 +114,64 @@ export class UpdateDocumentDto {
   @IsOptional()
   @IsString()
   status?: string;
+}
+
+/**
+ * DTO for the body fields sent alongside a multipart file upload.
+ * The actual file is handled by FileInterceptor, not by this DTO.
+ * Fields like fileName, fileSize, filePath, mimeType are extracted
+ * from the uploaded file on the server side.
+ */
+export class UploadDocumentBodyDto {
+  @IsString()
+  name!: string;
+
+  @IsString()
+  documentType!: string;
+
+  @IsOptional()
+  @IsString()
+  entityType?: string;
+
+  @IsOptional()
+  @IsString()
+  entityId?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  loadId?: string;
+
+  @IsOptional()
+  @IsString()
+  orderId?: string;
+
+  @IsOptional()
+  @IsString()
+  carrierId?: string;
+
+  @IsOptional()
+  @IsString()
+  companyId?: string;
+
+  @IsOptional()
+  @IsString()
+  tags?: string;
+
+  // These fields may be sent by the frontend but are ignored
+  // (server extracts them from the uploaded file instead)
+  @IsOptional()
+  @Allow()
+  fileName?: string;
+
+  @IsOptional()
+  @Allow()
+  fileSize?: string;
+
+  @IsOptional()
+  @Allow()
+  mimeType?: string;
 }

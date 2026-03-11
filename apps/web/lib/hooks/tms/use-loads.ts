@@ -347,6 +347,85 @@ export function useBulkUpdateLoadStatus() {
     });
 }
 
+// --- Tender Load to Carrier ---
+
+export interface TenderLoadInput {
+    carrierId: string;
+    notes?: string;
+    expiresAt?: string;
+    rate?: number;
+}
+
+export function useTenderLoad(loadId: string) {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (data: TenderLoadInput) => {
+            const response = await apiClient.post(`/loads/${loadId}/tender`, data);
+            return unwrap<Load>(response);
+        },
+        onSuccess: (load) => {
+            queryClient.invalidateQueries({ queryKey: ['loads'] });
+            queryClient.invalidateQueries({ queryKey: ['load', loadId] });
+            toast.success('Load tendered', {
+                description: `Load ${load.loadNumber} has been tendered to the carrier`,
+            });
+        },
+        onError: (error: Error) => {
+            const errorMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || error?.message || 'Failed to tender load';
+            toast.error('Error tendering load', { description: errorMessage });
+        },
+    });
+}
+
+// --- Accept Load Tender ---
+
+export function useAcceptTender(loadId: string) {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async () => {
+            const response = await apiClient.post(`/loads/${loadId}/accept`, {});
+            return unwrap<Load>(response);
+        },
+        onSuccess: (load) => {
+            queryClient.invalidateQueries({ queryKey: ['loads'] });
+            queryClient.invalidateQueries({ queryKey: ['load', loadId] });
+            toast.success('Tender accepted', {
+                description: `Load ${load.loadNumber} tender has been accepted`,
+            });
+        },
+        onError: (error: Error) => {
+            const errorMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || error?.message || 'Failed to accept tender';
+            toast.error('Error accepting tender', { description: errorMessage });
+        },
+    });
+}
+
+// --- Reject Load Tender ---
+
+export function useRejectTender(loadId: string) {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (data?: { reason?: string }) => {
+            const response = await apiClient.post(`/loads/${loadId}/reject`, data ?? {});
+            return unwrap<Load>(response);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['loads'] });
+            queryClient.invalidateQueries({ queryKey: ['load', loadId] });
+            toast.success('Tender rejected', {
+                description: 'The load tender has been rejected and the load is back to Pending',
+            });
+        },
+        onError: (error: Error) => {
+            const errorMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || error?.message || 'Failed to reject tender';
+            toast.error('Error rejecting tender', { description: errorMessage });
+        },
+    });
+}
+
 // --- Bulk Assign Carrier ---
 
 export function useBulkAssignCarrier() {

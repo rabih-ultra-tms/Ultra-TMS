@@ -404,12 +404,28 @@ class ApiClient {
   }
 
   async upload<T>(endpoint: string, formData: FormData, options?: RequestOptions): Promise<T> {
+    // Proactively refresh token if needed
+    await maybeRefreshOnActivity();
+
     const url = this.getFullUrl(endpoint);
     const { serverCookies, ...fetchOptions } = options || {};
 
     const headers: HeadersInit = {
+      Accept: "application/json",
       ...(options?.headers as Record<string, string>),
     };
+
+    // Add auth header (same as regular request)
+    const hasAuthHeader =
+      typeof (headers as Record<string, string>).Authorization === "string" ||
+      typeof (headers as Record<string, string>).authorization === "string";
+
+    if (!hasAuthHeader) {
+      const accessToken = getClientAccessToken();
+      if (accessToken) {
+        (headers as Record<string, string>).Authorization = `Bearer ${accessToken}`;
+      }
+    }
 
     if (serverCookies) {
       (headers as Record<string, string>)["Cookie"] = serverCookies;
@@ -425,13 +441,25 @@ class ApiClient {
 
     if (!response.ok) {
       let errorBody: unknown;
+      let errors: Record<string, string[]> | undefined;
+      let code: string | undefined;
+      let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
       try {
         errorBody = await response.json();
+        if (typeof errorBody === "object" && errorBody !== null) {
+          const bodyData = errorBody as Record<string, unknown>;
+          errorMessage = (bodyData.message as string) || errorMessage;
+          errors = bodyData.errors as Record<string, string[]>;
+          code = bodyData.code as string;
+        }
       } catch (parseError) {
         console.warn("[api-client] Failed to parse upload error response as JSON:", parseError);
       }
-      const message = (errorBody as { message?: string })?.message || response.statusText;
-      throw new ApiError(message, response.status, response.statusText, errorBody);
+      throw new ApiError(errorMessage, response.status, response.statusText, errorBody, errors, code);
+    }
+
+    if (response.status === 204) {
+      return {} as T;
     }
 
     return response.json();

@@ -19,7 +19,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { LoadsService } from './loads.service';
-import { CreateLoadDto, UpdateLoadDto, AssignCarrierDto, UpdateLoadLocationDto, LoadQueryDto, CreateCheckCallDto, RateConfirmationOptionsDto, BolOptionsDto, PaginationDto } from './dto';
+import { CreateLoadDto, UpdateLoadDto, AssignCarrierDto, UpdateLoadLocationDto, LoadQueryDto, CreateCheckCallDto, RateConfirmationOptionsDto, BolOptionsDto, PaginationDto, TenderLoadDto, RejectTenderDto } from './dto';
 import { Roles } from '../../common/decorators';
 import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
 
@@ -279,6 +279,51 @@ export class LoadsController {
     });
 
     res.send(pdfBuffer);
+  }
+
+  @Post(':id/tender')
+  @ApiOperation({ summary: 'Tender load to carrier' })
+  @ApiParam({ name: 'id', description: 'Load ID' })
+  @ApiStandardResponse('Load tendered to carrier')
+  @ApiErrorResponses()
+  @Roles('ADMIN', 'DISPATCHER')
+  @HttpCode(HttpStatus.OK)
+  async tenderLoad(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+    @Body() dto: TenderLoadDto,
+  ) {
+    return this.loadsService.tenderLoad(tenantId, id, userId, dto);
+  }
+
+  @Post(':id/accept')
+  @ApiOperation({ summary: 'Accept load tender' })
+  @ApiParam({ name: 'id', description: 'Load ID' })
+  @ApiStandardResponse('Load tender accepted')
+  @ApiErrorResponses()
+  @HttpCode(HttpStatus.OK)
+  async acceptTender(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ) {
+    return this.loadsService.acceptTender(tenantId, id, userId);
+  }
+
+  @Post(':id/reject')
+  @ApiOperation({ summary: 'Reject load tender' })
+  @ApiParam({ name: 'id', description: 'Load ID' })
+  @ApiStandardResponse('Load tender rejected')
+  @ApiErrorResponses()
+  @HttpCode(HttpStatus.OK)
+  async rejectTender(
+    @CurrentTenant() tenantId: string,
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+    @Body() dto: RejectTenderDto,
+  ) {
+    return this.loadsService.rejectTender(tenantId, id, userId, dto);
   }
 
   @Delete(':id')

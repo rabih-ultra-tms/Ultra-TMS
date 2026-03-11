@@ -86,6 +86,29 @@ export class AssignCarrierDto {
   carrierRate!: number;
 }
 
+export class TenderLoadDto {
+  @IsUUID()
+  carrierId!: string;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
+
+  @IsOptional()
+  @IsDateString()
+  expiresAt?: string;
+
+  @IsOptional()
+  @IsNumber()
+  rate?: number;
+}
+
+export class RejectTenderDto {
+  @IsOptional()
+  @IsString()
+  reason?: string;
+}
+
 export class UpdateLoadLocationDto {
   @IsNumber()
   latitude!: number;

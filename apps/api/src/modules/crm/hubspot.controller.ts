@@ -5,31 +5,28 @@ import {
   Body,
   Query,
   UseGuards,
-  Headers,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards';
 import { HubspotService } from './hubspot.service';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
+import { HubspotWebhookGuard } from './guards/hubspot-webhook.guard';
 
 @Controller('crm/hubspot')
 @ApiTags('CRM')
 export class HubspotController {
   constructor(private readonly hubspotService: HubspotService) {}
 
-  // Webhook endpoint - no auth (uses HubSpot signature verification)
+  // Webhook endpoint - no JWT auth; secured via HubSpot signature verification (SEC-006)
   @Post('webhook')
+  @UseGuards(HubspotWebhookGuard)
   @ApiOperation({ summary: 'Handle HubSpot webhook' })
   @ApiStandardResponse('Webhook processed')
   @ApiErrorResponses()
   async handleWebhook(
-    @Headers('x-hubspot-signature') _signature: string,
     @Body() payload: Record<string, unknown>,
   ) {
-    // Backlog SEC-006: Verify HubSpot signature using _signature
-    void _signature; // Will be used for signature verification
-    // For now, extract tenantId from payload or use default
     const tenantId = (payload.portalId as string) || 'default';
     return this.hubspotService.handleWebhook(tenantId, payload);
   }

@@ -3,7 +3,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../prisma.service';
 import { EmailService } from '../communication/email.service';
 import PDFDocument from 'pdfkit';
-import { CreateLoadDto, UpdateLoadDto, AssignCarrierDto, UpdateLoadLocationDto, LoadQueryDto, CreateCheckCallDto, PaginationDto, RateConfirmationOptionsDto, BolOptionsDto } from './dto';
+import { CreateLoadDto, UpdateLoadDto, AssignCarrierDto, UpdateLoadLocationDto, LoadQueryDto, CreateCheckCallDto, PaginationDto, RateConfirmationOptionsDto, BolOptionsDto, TenderLoadDto, RejectTenderDto } from './dto';
 
 @Injectable()
 export class LoadsService {
@@ -988,6 +988,252 @@ export class LoadsService {
     return { success: true, message: 'Load deleted successfully' };
   }
 
+  async tenderLoad(tenantId: string, id: string, userId: string, dto: TenderLoadDto) {
+    const load = await this.prisma.load.findFirst({
+      where: { id, tenantId, deletedAt: null },
+    });
+
+    if (!load) {
+      throw new NotFoundException('Load not found');
+    }
+
+    if (!['PENDING'].includes(load.status)) {
+      throw new BadRequestException(
+        `Cannot tender a load with status ${load.status}. Load must be in PENDING status.`,
+      );
+    }
+
+    // Verify carrier exists and is not deleted
+    const carrier = await this.prisma.carrier.findFirst({
+      where: { id: dto.carrierId, tenantId, deletedAt: null },
+    });
+
+    if (!carrier) {
+      throw new NotFoundException('Carrier not found');
+    }
+
+    // Create the LoadTender record
+    const tender = await this.prisma.loadTender.create({
+      data: {
+        tenantId,
+        loadId: id,
+        tenderType: 'DIRECT',
+        tenderRate: dto.rate ?? load.carrierRate ?? 0,
+        status: 'ACTIVE',
+        expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : null,
+        createdById: userId,
+        recipients: {
+          create: {
+            tenantId,
+            carrierId: dto.carrierId,
+            position: 1,
+            status: 'PENDING',
+            offeredAt: new Date(),
+            expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : null,
+            createdById: userId,
+          },
+        },
+      },
+    });
+
+    // Update load status to TENDERED and assign the carrier
+    const updated = await this.prisma.load.update({
+      where: { id },
+      data: {
+        status: 'TENDERED',
+        carrierId: dto.carrierId,
+        carrierRate: dto.rate ?? load.carrierRate,
+        dispatchNotes: dto.notes
+          ? [load.dispatchNotes, `Tender note: ${dto.notes}`].filter(Boolean).join('\n')
+          : load.dispatchNotes,
+        updatedAt: new Date(),
+        updatedById: userId,
+      },
+      include: {
+        order: { select: { id: true, orderNumber: true } },
+        carrier: { select: { id: true, legalName: true, mcNumber: true } },
+      },
+    });
+
+    await this.recordStatusHistory(tenantId, id, load.status, 'TENDERED', userId, dto.notes ?? 'Load tendered to carrier');
+
+    this.eventEmitter.emit('load.tendered', {
+      loadId: id,
+      carrierId: dto.carrierId,
+      tenderId: tender.id,
+      tenantId,
+    });
+
+    this.eventEmitter.emit('load.status.changed', {
+      loadId: id,
+      oldStatus: load.status,
+      newStatus: 'TENDERED',
+      tenantId,
+    });
+
+    return { ...updated, tenderId: tender.id };
+  }
+
+  async acceptTender(tenantId: string, id: string, userId: string) {
+    const load = await this.prisma.load.findFirst({
+      where: { id, tenantId, deletedAt: null },
+    });
+
+    if (!load) {
+      throw new NotFoundException('Load not found');
+    }
+
+    if (load.status !== 'TENDERED') {
+      throw new BadRequestException(
+        `Cannot accept a load with status ${load.status}. Load must be in TENDERED status.`,
+      );
+    }
+
+    // Update the active tender record
+    const activeTender = await this.prisma.loadTender.findFirst({
+      where: { loadId: id, tenantId, status: 'ACTIVE', deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (activeTender) {
+      await this.prisma.loadTender.update({
+        where: { id: activeTender.id },
+        data: {
+          status: 'ACCEPTED',
+          acceptedByCarrierId: load.carrierId,
+          acceptedAt: new Date(),
+          updatedById: userId,
+        },
+      });
+
+      // Update the tender recipient record
+      await this.prisma.tenderRecipient.updateMany({
+        where: {
+          tenderId: activeTender.id,
+          carrierId: load.carrierId ?? undefined,
+          status: 'PENDING',
+        },
+        data: {
+          status: 'ACCEPTED',
+          respondedAt: new Date(),
+          updatedById: userId,
+        },
+      });
+    }
+
+    // Update load status to ACCEPTED
+    const updated = await this.prisma.load.update({
+      where: { id },
+      data: {
+        status: 'ACCEPTED',
+        updatedAt: new Date(),
+        updatedById: userId,
+      },
+      include: {
+        order: { select: { id: true, orderNumber: true } },
+        carrier: { select: { id: true, legalName: true, mcNumber: true } },
+      },
+    });
+
+    await this.recordStatusHistory(tenantId, id, 'TENDERED', 'ACCEPTED', userId, 'Tender accepted by carrier');
+
+    this.eventEmitter.emit('load.tender.accepted', {
+      loadId: id,
+      carrierId: load.carrierId,
+      tenantId,
+    });
+
+    this.eventEmitter.emit('load.status.changed', {
+      loadId: id,
+      oldStatus: 'TENDERED',
+      newStatus: 'ACCEPTED',
+      tenantId,
+    });
+
+    return updated;
+  }
+
+  async rejectTender(tenantId: string, id: string, userId: string, dto: RejectTenderDto) {
+    const load = await this.prisma.load.findFirst({
+      where: { id, tenantId, deletedAt: null },
+    });
+
+    if (!load) {
+      throw new NotFoundException('Load not found');
+    }
+
+    if (load.status !== 'TENDERED') {
+      throw new BadRequestException(
+        `Cannot reject a load with status ${load.status}. Load must be in TENDERED status.`,
+      );
+    }
+
+    // Update the active tender record
+    const activeTender = await this.prisma.loadTender.findFirst({
+      where: { loadId: id, tenantId, status: 'ACTIVE', deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (activeTender) {
+      await this.prisma.loadTender.update({
+        where: { id: activeTender.id },
+        data: {
+          status: 'REJECTED',
+          updatedById: userId,
+        },
+      });
+
+      // Update the tender recipient record
+      await this.prisma.tenderRecipient.updateMany({
+        where: {
+          tenderId: activeTender.id,
+          carrierId: load.carrierId ?? undefined,
+          status: 'PENDING',
+        },
+        data: {
+          status: 'DECLINED',
+          respondedAt: new Date(),
+          declineReason: dto.reason,
+          updatedById: userId,
+        },
+      });
+    }
+
+    // Set load back to PENDING, clear carrier assignment
+    const updated = await this.prisma.load.update({
+      where: { id },
+      data: {
+        status: 'PENDING',
+        carrierId: null,
+        updatedAt: new Date(),
+        updatedById: userId,
+      },
+      include: {
+        order: { select: { id: true, orderNumber: true } },
+        carrier: { select: { id: true, legalName: true, mcNumber: true } },
+      },
+    });
+
+    const reason = dto.reason ? `Tender rejected: ${dto.reason}` : 'Tender rejected by carrier';
+    await this.recordStatusHistory(tenantId, id, 'TENDERED', 'PENDING', userId, reason);
+
+    this.eventEmitter.emit('load.tender.rejected', {
+      loadId: id,
+      carrierId: load.carrierId,
+      reason: dto.reason,
+      tenantId,
+    });
+
+    this.eventEmitter.emit('load.status.changed', {
+      loadId: id,
+      oldStatus: 'TENDERED',
+      newStatus: 'PENDING',
+      tenantId,
+    });
+
+    return updated;
+  }
+
   private async recordStatusHistory(
     tenantId: string,
     loadId: string,
@@ -1034,7 +1280,7 @@ export class LoadsService {
   private isValidStatusTransition(current: string, next: string): boolean {
     const transitions: Record<string, string[]> = {
       PENDING: ['TENDERED', 'ACCEPTED', 'CANCELLED'],
-      TENDERED: ['ACCEPTED', 'CANCELLED'],
+      TENDERED: ['ACCEPTED', 'PENDING', 'CANCELLED'],
       ACCEPTED: ['DISPATCHED', 'CANCELLED'],
       DISPATCHED: ['AT_PICKUP', 'IN_TRANSIT', 'CANCELLED'],
       AT_PICKUP: ['PICKED_UP', 'IN_TRANSIT'],

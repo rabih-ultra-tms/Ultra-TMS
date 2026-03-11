@@ -5,6 +5,7 @@ import { ContactsService } from './contacts.service';
 import { OpportunitiesService } from './opportunities.service';
 import { ActivitiesService } from './activities.service';
 import { HubspotService } from './hubspot.service';
+import { HubspotWebhookGuard } from './guards/hubspot-webhook.guard';
 import { CompaniesController } from './companies.controller';
 import { ContactsController } from './contacts.controller';
 import { OpportunitiesController } from './opportunities.controller';
@@ -26,6 +27,7 @@ import { HubspotController } from './hubspot.controller';
     OpportunitiesService,
     ActivitiesService,
     HubspotService,
+    HubspotWebhookGuard,
   ],
   exports: [
     CompaniesService,

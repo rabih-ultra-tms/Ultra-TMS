@@ -9,17 +9,25 @@ import {
   Query,
   Request,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
+  Inject,
   SerializeOptions,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { plainToInstance } from 'class-transformer';
 import { DocumentsService } from '../services';
-import { CreateDocumentDto, UpdateDocumentDto, DocumentDownloadDto, DocumentResponseDto } from '../dto';
+import { CreateDocumentDto, UpdateDocumentDto, UploadDocumentBodyDto, DocumentDownloadDto, DocumentResponseDto } from '../dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { DocumentAccessGuard } from '../guards/document-access.guard';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
+import type { IStorageService } from '../../storage/storage.interface';
+import { STORAGE_SERVICE } from '../../storage/storage.module';
+import { getDocumentUploadOptions } from '../../../common/utils/file-upload.util';
 
 @Controller('documents')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -27,14 +35,91 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @ApiTags('Documents')
 @ApiBearerAuth('JWT-auth')
 export class DocumentsController {
-  constructor(private readonly documentsService: DocumentsService) {}
+  constructor(
+    private readonly documentsService: DocumentsService,
+    @Inject(STORAGE_SERVICE) private readonly storageService: IStorageService,
+  ) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create document' })
+  @ApiOperation({ summary: 'Upload document' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Multipart form data with file and metadata fields',
+    schema: {
+      type: 'object',
+      properties: {
+        file: { type: 'string', format: 'binary' },
+        name: { type: 'string' },
+        documentType: { type: 'string' },
+        entityType: { type: 'string' },
+        entityId: { type: 'string' },
+        description: { type: 'string' },
+      },
+      required: ['file', 'name', 'documentType'],
+    },
+  })
   @ApiStandardResponse('Document created')
   @ApiErrorResponses()
   @Roles('ADMIN', 'OPERATIONS', 'ACCOUNTING', 'COMPLIANCE')
-  create(@Request() req: any, @Body() createDto: CreateDocumentDto) {
+  @UseInterceptors(FileInterceptor('file', getDocumentUploadOptions()))
+  async upload(
+    @Request() req: any,
+    @UploadedFile() file: Express.Multer.File,
+    @Body() body: UploadDocumentBodyDto,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+
+    // Upload file to storage
+    const fileExtension = file.originalname.split('.').pop() || '';
+    const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}.${fileExtension}`;
+    const folder = body.entityType
+      ? `documents/${body.entityType.toLowerCase()}`
+      : 'documents';
+
+    const filePath = await this.storageService.upload(
+      file.buffer,
+      uniqueName,
+      folder,
+    );
+
+    // Build DTO from form fields + uploaded file metadata
+    const createDto: CreateDocumentDto = {
+      name: body.name,
+      documentType: body.documentType as any,
+      fileName: file.originalname,
+      filePath,
+      fileSize: file.size,
+      mimeType: file.mimetype,
+      fileExtension,
+      entityType: body.entityType as any,
+      entityId: body.entityId,
+      description: body.description,
+      loadId: body.loadId,
+      orderId: body.orderId,
+      carrierId: body.carrierId,
+      companyId: body.companyId,
+      tags: body.tags ? body.tags.split(',').map((t) => t.trim()) : undefined,
+    };
+
+    return this.documentsService.create(
+      req.user.tenantId,
+      createDto,
+      req.user.userId,
+    );
+  }
+
+  /**
+   * POST /documents/metadata
+   * Create a document record without file upload (for external/pre-uploaded files)
+   */
+  @Post('metadata')
+  @ApiOperation({ summary: 'Create document record (metadata only, no file upload)' })
+  @ApiStandardResponse('Document created')
+  @ApiErrorResponses()
+  @Roles('ADMIN', 'OPERATIONS', 'ACCOUNTING', 'COMPLIANCE')
+  createFromMetadata(@Request() req: any, @Body() createDto: CreateDocumentDto) {
     return this.documentsService.create(
       req.user.tenantId,
       createDto,

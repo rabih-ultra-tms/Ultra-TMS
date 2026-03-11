@@ -1,10 +1,22 @@
-import { diskStorage } from 'multer';
+import { diskStorage, memoryStorage } from 'multer';
 import { extname } from 'path';
 import { BadRequestException } from '@nestjs/common';
 
 export const imageFileFilter = (req: any, file: any, callback: any) => {
   if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
     return callback(new BadRequestException('Only image files are allowed'), false);
+  }
+  callback(null, true);
+};
+
+export const documentFileFilter = (req: any, file: any, callback: any) => {
+  if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|pdf|tiff|tif|doc|docx|xls|xlsx|csv|txt)$/i)) {
+    return callback(
+      new BadRequestException(
+        'Unsupported file type. Accepted: PDF, JPG, PNG, TIFF, GIF, WEBP, DOC, DOCX, XLS, XLSX, CSV, TXT',
+      ),
+      false,
+    );
   }
   callback(null, true);
 };
@@ -22,6 +34,19 @@ export const getLocalStorageOptions = (destination: string) => ({
   fileFilter: imageFileFilter,
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB
+  },
+});
+
+/**
+ * Multer options for document uploads.
+ * Uses memory storage so the file buffer is available for the storage service.
+ * Accepts common document types up to 25MB.
+ */
+export const getDocumentUploadOptions = () => ({
+  storage: memoryStorage(),
+  fileFilter: documentFileFilter,
+  limits: {
+    fileSize: 25 * 1024 * 1024, // 25MB — matches frontend limit
   },
 });
 

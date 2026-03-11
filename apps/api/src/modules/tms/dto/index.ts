@@ -9,7 +9,7 @@ export * from './create-order-from-template.dto';
 export * from './rate-confirmation.dto';
 export * from './bol-options.dto';
 export * from './tracking.dto';
-export { UpdateLoadDto, AssignCarrierDto, UpdateLoadLocationDto } from './create-load.dto';
+export { UpdateLoadDto, AssignCarrierDto, UpdateLoadLocationDto, TenderLoadDto, RejectTenderDto } from './create-load.dto';
 export {
 	UpdateOrderDto,
 	CloneOrderDto,

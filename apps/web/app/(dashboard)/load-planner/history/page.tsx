@@ -24,6 +24,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
   Table,
   TableBody,
   TableCell,
@@ -90,6 +100,7 @@ export default function LoadPlannerHistoryPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [page, setPage] = useState(1)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [batchDeleteDialogOpen, setBatchDeleteDialogOpen] = useState(false)
   const pageSize = 25
 
   const { data, isLoading, error } = useLoadPlannerQuotes({
@@ -196,18 +207,21 @@ export default function LoadPlannerHistoryPage() {
     setSelectedIds(new Set())
   }
 
-  const handleBatchDelete = async () => {
+  const handleBatchDelete = () => {
     if (selectedIds.size === 0) return
-    if (confirm(`Are you sure you want to delete ${selectedIds.size} quotes? This cannot be undone.`)) {
-      const ids = Array.from(selectedIds)
-      try {
-        await Promise.all(ids.map((id) => deleteQuoteMutation.mutateAsync(id)))
-        setSelectedIds(new Set())
-        toast.success(`Deleted ${ids.length} quotes`)
-      } catch (error: unknown) {
-        toast.error('Failed to delete some quotes', { description: (error as Error).message })
-      }
+    setBatchDeleteDialogOpen(true)
+  }
+
+  const confirmBatchDelete = async () => {
+    const ids = Array.from(selectedIds)
+    try {
+      await Promise.all(ids.map((id) => deleteQuoteMutation.mutateAsync(id)))
+      setSelectedIds(new Set())
+      toast.success(`Deleted ${ids.length} quotes`)
+    } catch (error: unknown) {
+      toast.error('Failed to delete some quotes', { description: (error as Error).message })
     }
+    setBatchDeleteDialogOpen(false)
   }
 
   const clearFilters = () => {
@@ -579,6 +593,23 @@ export default function LoadPlannerHistoryPage() {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={batchDeleteDialogOpen} onOpenChange={setBatchDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedIds.size} quotes?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. The selected quotes will be permanently deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmBatchDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

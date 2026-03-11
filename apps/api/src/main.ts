@@ -32,7 +32,9 @@ async function bootstrap() {
     );
   }
 
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    rawBody: true, // Preserve raw body for webhook signature verification (e.g. HubSpot)
+  });
 
   // Serve static files (uploads) in development
   if (process.env.NODE_ENV !== 'production') {

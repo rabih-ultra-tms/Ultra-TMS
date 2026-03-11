@@ -137,6 +137,8 @@ export const useLoadHistoryStats = () => {
           totalRevenueCents: number;
           totalCostCents: number;
           totalMarginCents: number;
+          totalMiles: number;
+          avgRevenuePerMileCents: number;
         };
       }>('/operations/load-history/stats');
       return response.data;

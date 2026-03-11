@@ -11,12 +11,24 @@ import {
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Load, LoadStatus } from "@/types/loads";
-import { ChevronDown, Edit, Printer, Copy, Mail, Send, FileText, Download, Loader2 } from "lucide-react";
+import { ChevronDown, Edit, Printer, Copy, Mail, Send, FileText, Download, Loader2, Truck, Check, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LoadStatusBadge } from "./load-status-badge";
 import { EmailPreviewDialog, EmailType } from "@/components/tms/emails/email-preview-dialog";
 import { useBol } from "@/lib/hooks/tms/use-bol";
+import { useTenderLoad, useAcceptTender, useRejectTender, useCarriers, TenderLoadInput } from "@/lib/hooks/tms/use-loads";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 interface LoadDetailHeaderProps {
     load: Load;
@@ -70,8 +82,62 @@ export function LoadDetailHeader({ load }: LoadDetailHeaderProps) {
     const router = useRouter();
     const [emailDialogOpen, setEmailDialogOpen] = useState(false);
     const [activeEmailType, setActiveEmailType] = useState<EmailType>("rate_confirmation");
+    const [tenderDialogOpen, setTenderDialogOpen] = useState(false);
+    const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+    const [tenderCarrierSearch, setTenderCarrierSearch] = useState("");
+    const [selectedCarrierId, setSelectedCarrierId] = useState("");
+    const [tenderNotes, setTenderNotes] = useState("");
+    const [tenderRate, setTenderRate] = useState("");
+    const [rejectReason, setRejectReason] = useState("");
 
     const { generate: generateBol, download: downloadBol, isGenerating: isBolGenerating, hasGenerated: hasBol } = useBol(load.id);
+
+    const tenderMutation = useTenderLoad(load.id);
+    const acceptMutation = useAcceptTender(load.id);
+    const rejectMutation = useRejectTender(load.id);
+
+    const { data: carrierData } = useCarriers({
+        search: tenderCarrierSearch,
+        limit: 10,
+    });
+    const carriers = carrierData?.data ?? [];
+
+    const canTender = load.status === LoadStatus.PENDING;
+    const canAcceptReject = load.status === LoadStatus.TENDERED;
+
+    const handleTender = () => {
+        if (!selectedCarrierId) return;
+        const input: TenderLoadInput = {
+            carrierId: selectedCarrierId,
+            ...(tenderNotes ? { notes: tenderNotes } : {}),
+            ...(tenderRate ? { rate: parseFloat(tenderRate) } : {}),
+        };
+        tenderMutation.mutate(input, {
+            onSuccess: () => {
+                setTenderDialogOpen(false);
+                setSelectedCarrierId("");
+                setTenderNotes("");
+                setTenderRate("");
+                setTenderCarrierSearch("");
+            },
+        });
+    };
+
+    const handleAccept = () => {
+        acceptMutation.mutate();
+    };
+
+    const handleReject = () => {
+        rejectMutation.mutate(
+            rejectReason ? { reason: rejectReason } : undefined,
+            {
+                onSuccess: () => {
+                    setRejectDialogOpen(false);
+                    setRejectReason("");
+                },
+            },
+        );
+    };
 
     const availableEmails = getAvailableEmails(load);
 
@@ -119,6 +185,28 @@ export function LoadDetailHeader({ load }: LoadDetailHeaderProps) {
                 </div>
 
                 <div className="flex items-center gap-2">
+                    {/* Tender button — visible when load is PENDING */}
+                    {canTender && (
+                        <Button size="sm" onClick={() => setTenderDialogOpen(true)}>
+                            <Truck className="h-4 w-4 mr-2" />
+                            Tender to Carrier
+                        </Button>
+                    )}
+
+                    {/* Accept / Reject buttons — visible when load is TENDERED */}
+                    {canAcceptReject && (
+                        <>
+                            <Button size="sm" variant="default" onClick={handleAccept} disabled={acceptMutation.isPending}>
+                                {acceptMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Check className="h-4 w-4 mr-2" />}
+                                Accept Tender
+                            </Button>
+                            <Button size="sm" variant="destructive" onClick={() => setRejectDialogOpen(true)} disabled={rejectMutation.isPending}>
+                                <X className="h-4 w-4 mr-2" />
+                                Reject Tender
+                            </Button>
+                        </>
+                    )}
+
                     <Button variant="outline" size="sm" onClick={() => router.push(`/operations/loads/${load.id}/edit`)}>
                         <Edit className="h-4 w-4 mr-2" />
                         Edit Load
@@ -203,6 +291,120 @@ export function LoadDetailHeader({ load }: LoadDetailHeaderProps) {
                     deliveryDate: load.deliveryDate,
                 }}
             />
+
+            {/* Tender to Carrier Dialog */}
+            <Dialog open={tenderDialogOpen} onOpenChange={setTenderDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Tender Load to Carrier</DialogTitle>
+                        <DialogDescription>
+                            Select a carrier to tender load {load.loadNumber} to.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="carrier-search">Search Carriers</Label>
+                            <Input
+                                id="carrier-search"
+                                placeholder="Search by name, MC#..."
+                                value={tenderCarrierSearch}
+                                onChange={(e) => setTenderCarrierSearch(e.target.value)}
+                            />
+                            {carriers.length > 0 && (
+                                <div className="border rounded-md max-h-48 overflow-y-auto">
+                                    {carriers.map((carrier) => (
+                                        <button
+                                            key={carrier.id}
+                                            type="button"
+                                            className={`w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors ${selectedCarrierId === carrier.id ? "bg-primary/10 border-l-2 border-primary" : ""}`}
+                                            onClick={() => setSelectedCarrierId(carrier.id)}
+                                        >
+                                            <div className="font-medium">{carrier.legalName}</div>
+                                            <div className="text-muted-foreground text-xs">
+                                                MC# {carrier.mcNumber}
+                                                {carrier.scorecard ? ` | Score: ${carrier.scorecard.score}` : ""}
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                            {tenderCarrierSearch && carriers.length === 0 && (
+                                <p className="text-sm text-muted-foreground py-2">No carriers found</p>
+                            )}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="tender-rate">Rate ($)</Label>
+                            <Input
+                                id="tender-rate"
+                                type="number"
+                                step="0.01"
+                                placeholder={load.carrierRate ? String(load.carrierRate) : "Enter rate"}
+                                value={tenderRate}
+                                onChange={(e) => setTenderRate(e.target.value)}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="tender-notes">Notes (optional)</Label>
+                            <Textarea
+                                id="tender-notes"
+                                placeholder="Any notes for the carrier..."
+                                value={tenderNotes}
+                                onChange={(e) => setTenderNotes(e.target.value)}
+                                rows={3}
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setTenderDialogOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleTender}
+                            disabled={!selectedCarrierId || tenderMutation.isPending}
+                        >
+                            {tenderMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                            Tender Load
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Reject Tender Dialog */}
+            <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Reject Tender</DialogTitle>
+                        <DialogDescription>
+                            Rejecting the tender will set the load back to Pending and unassign the carrier.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="reject-reason">Reason (optional)</Label>
+                            <Textarea
+                                id="reject-reason"
+                                placeholder="Reason for rejecting..."
+                                value={rejectReason}
+                                onChange={(e) => setRejectReason(e.target.value)}
+                                rows={3}
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setRejectDialogOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={handleReject}
+                            disabled={rejectMutation.isPending}
+                        >
+                            {rejectMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                            Reject Tender
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
