@@ -1,30 +1,30 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
-import { DetailPage, DetailTab } from "@/components/patterns/detail-page";
-import { PaymentStatusBadge } from "@/components/accounting/payment-status-badge";
+import * as React from 'react';
+import { useRouter } from 'next/navigation';
+import { DetailPage, DetailTab } from '@/components/patterns/detail-page';
+import { PaymentStatusBadge } from '@/components/accounting/payment-status-badge';
 import {
   PaymentAllocation,
   AllocationEntry,
-} from "@/components/accounting/payment-allocation";
+} from '@/components/accounting/payment-allocation';
 import {
   usePayment,
   useAllocatePayment,
   useDeletePayment,
-} from "@/lib/hooks/accounting/use-payments";
-import { useInvoices } from "@/lib/hooks/accounting/use-invoices";
-import { toast } from "sonner";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
+} from '@/lib/hooks/accounting/use-payments';
+import { useInvoices } from '@/lib/hooks/accounting/use-invoices';
+import { toast } from 'sonner';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
 import {
   LayoutDashboard,
   CreditCard,
@@ -32,29 +32,30 @@ import {
   MoreHorizontal,
   Trash2,
   Save,
-} from "lucide-react";
+} from 'lucide-react';
+import { ConfirmDialog } from '@/components/shared/confirm-dialog';
 
 function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
     minimumFractionDigits: 2,
   }).format(value);
 }
 
 function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
+  return new Date(dateString).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
   });
 }
 
 const METHOD_LABELS: Record<string, string> = {
-  CHECK: "Check",
-  ACH: "ACH",
-  WIRE: "Wire",
-  CREDIT_CARD: "Credit Card",
+  CHECK: 'Check',
+  ACH: 'ACH',
+  WIRE: 'Wire',
+  CREDIT_CARD: 'Credit Card',
 };
 
 export default function PaymentDetailPage({
@@ -69,6 +70,7 @@ export default function PaymentDetailPage({
 
   const [allocations, setAllocations] = React.useState<AllocationEntry[]>([]);
   const [hasChanges, setHasChanges] = React.useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
 
   // Load customer's open invoices for allocation
   const { data: invoiceData, isLoading: invoicesLoading } = useInvoices({
@@ -101,11 +103,11 @@ export default function PaymentDetailPage({
         id: params.id,
         allocations: allocations.filter((a) => a.amount > 0),
       });
-      toast.success("Payment allocation saved");
+      toast.success('Payment allocation saved');
       setHasChanges(false);
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : "Failed to save allocation";
+        err instanceof Error ? err.message : 'Failed to save allocation';
       toast.error(message);
     }
   };
@@ -113,19 +115,18 @@ export default function PaymentDetailPage({
   const handleDelete = async () => {
     try {
       await deletePayment.mutateAsync(params.id);
-      toast.success("Payment deleted");
-      router.push("/accounting/payments");
+      toast.success('Payment deleted');
+      router.push('/accounting/payments');
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : "Failed to delete payment";
+        err instanceof Error ? err.message : 'Failed to delete payment';
       toast.error(message);
     }
   };
 
   const canDelete =
-    payment?.status !== "VOIDED" && payment?.status !== "APPLIED";
-  const canAllocate =
-    payment?.status !== "VOIDED";
+    payment?.status !== 'VOIDED' && payment?.status !== 'APPLIED';
+  const canAllocate = payment?.status !== 'VOIDED';
 
   const actions = (
     <>
@@ -136,7 +137,7 @@ export default function PaymentDetailPage({
           disabled={allocatePayment.isPending}
         >
           <Save className="mr-2 size-4" />
-          {allocatePayment.isPending ? "Saving..." : "Save Allocation"}
+          {allocatePayment.isPending ? 'Saving...' : 'Save Allocation'}
         </Button>
       )}
       <DropdownMenu>
@@ -151,7 +152,7 @@ export default function PaymentDetailPage({
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-destructive"
-                onClick={handleDelete}
+                onClick={() => setShowDeleteConfirm(true)}
                 disabled={deletePayment.isPending}
               >
                 <Trash2 className="mr-2 size-4" />
@@ -166,22 +167,20 @@ export default function PaymentDetailPage({
 
   const tabs: DetailTab[] = [
     {
-      value: "overview",
-      label: "Overview",
+      value: 'overview',
+      label: 'Overview',
       icon: LayoutDashboard,
       content: payment ? <PaymentOverviewTab payment={payment} /> : null,
     },
     {
-      value: "allocations",
+      value: 'allocations',
       label: `Allocations (${payment?.allocations?.length || 0})`,
       icon: ListChecks,
-      content: payment ? (
-        <PaymentAllocationsTab payment={payment} />
-      ) : null,
+      content: payment ? <PaymentAllocationsTab payment={payment} /> : null,
     },
     {
-      value: "allocate",
-      label: "Allocate Payment",
+      value: 'allocate',
+      label: 'Allocate Payment',
       icon: CreditCard,
       content:
         payment && canAllocate ? (
@@ -201,27 +200,38 @@ export default function PaymentDetailPage({
   ];
 
   return (
-    <DetailPage
-      title={payment?.paymentNumber || "Payment Details"}
-      subtitle={
-        payment?.customerName && `Customer: ${payment.customerName}`
-      }
-      tags={
-        payment && <PaymentStatusBadge status={payment.status} size="md" />
-      }
-      actions={actions}
-      backLink="/accounting/payments"
-      backLabel="Back to Payments"
-      breadcrumb={
-        <span>
-          Accounting / Payments / {payment?.paymentNumber || "..."}
-        </span>
-      }
-      tabs={tabs}
-      isLoading={isLoading}
-      error={error as Error}
-      onRetry={refetch}
-    />
+    <>
+      <DetailPage
+        title={payment?.paymentNumber || 'Payment Details'}
+        subtitle={payment?.customerName && `Customer: ${payment.customerName}`}
+        tags={
+          payment && <PaymentStatusBadge status={payment.status} size="md" />
+        }
+        actions={actions}
+        backLink="/accounting/payments"
+        backLabel="Back to Payments"
+        breadcrumb={
+          <span>Accounting / Payments / {payment?.paymentNumber || '...'}</span>
+        }
+        tabs={tabs}
+        isLoading={isLoading}
+        error={error as Error}
+        onRetry={refetch}
+      />
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        title="Delete Payment"
+        description="Are you sure you want to delete this payment? This action cannot be undone."
+        confirmLabel="Delete"
+        variant="destructive"
+        onConfirm={async () => {
+          await handleDelete();
+          setShowDeleteConfirm(false);
+        }}
+        onCancel={() => setShowDeleteConfirm(false)}
+        isLoading={deletePayment.isPending}
+      />
+    </>
   );
 }
 
@@ -232,7 +242,7 @@ export default function PaymentDetailPage({
 function PaymentOverviewTab({
   payment,
 }: {
-  payment: NonNullable<ReturnType<typeof usePayment>["data"]>;
+  payment: NonNullable<ReturnType<typeof usePayment>['data']>;
 }) {
   return (
     <div className="grid gap-6 md:grid-cols-2">
@@ -289,8 +299,8 @@ function PaymentOverviewTab({
               <span
                 className={`text-base font-bold ${
                   payment.unappliedAmount > 0
-                    ? "text-amber-600"
-                    : "text-emerald-600"
+                    ? 'text-amber-600'
+                    : 'text-emerald-600'
                 }`}
               >
                 {formatCurrency(payment.unappliedAmount)}
@@ -343,7 +353,7 @@ function PaymentOverviewTab({
 function PaymentAllocationsTab({
   payment,
 }: {
-  payment: NonNullable<ReturnType<typeof usePayment>["data"]>;
+  payment: NonNullable<ReturnType<typeof usePayment>['data']>;
 }) {
   const allocs = payment.allocations || [];
 
@@ -417,8 +427,8 @@ function PaymentAllocationsTab({
                 <td
                   className={`px-4 py-3 text-right font-bold ${
                     payment.unappliedAmount > 0
-                      ? "text-amber-600"
-                      : "text-emerald-600"
+                      ? 'text-amber-600'
+                      : 'text-emerald-600'
                   }`}
                 >
                   {formatCurrency(payment.unappliedAmount)}
@@ -436,13 +446,7 @@ function PaymentAllocationsTab({
 // Shared helpers
 // ===========================
 
-function InfoRow({
-  label,
-  value,
-}: {
-  label: string;
-  value: React.ReactNode;
-}) {
+function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-4">
       <span className="text-sm text-text-muted">{label}</span>
