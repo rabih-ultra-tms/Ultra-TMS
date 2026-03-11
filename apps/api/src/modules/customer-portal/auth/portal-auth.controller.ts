@@ -22,10 +22,11 @@ export class PortalAuthController {
   @ApiStandardResponse('Portal login successful')
   @ApiErrorResponses()
   login(@Body() dto: PortalLoginDto, @Req() req: any) {
+    const tenantId = req.headers['x-tenant-id'];
     return this.authService.login(dto, {
       ipAddress: req.ip,
       userAgent: req.headers['user-agent'],
-    });
+    }, tenantId ? String(tenantId) : undefined);
   }
 
   @Post('refresh')

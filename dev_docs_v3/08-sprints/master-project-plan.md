@@ -209,12 +209,12 @@ Every service entering a sprint gets work across 5 layers:
 | MP-01-002 | ~~Fix RolesGuard gaps — financial controllers (Accounting 10, Credit 5, Contracts 6, Factoring 3, Agents 3 = 27 controllers)~~ | SEC | 4h | P0 | **DONE** (2026-03-11) |
 | MP-01-003 | ~~Fix RolesGuard gaps — data-modifying controllers (Config 8, Audit 8, Load Board 6, HR 6, Scheduler 5, Safety 5)~~ | SEC | 6h | P0 | **DONE** (2026-03-11) |
 | MP-01-004 | Fix RolesGuard gaps — remaining controllers (Help Desk 5, Feedback 5, Cache 4, EDI 4, Search 2, Workflow 3, Claims 1) | SEC | 4h | P1 | S4-04, CCF-017 |
-| MP-01-005 | Fix JWT secret inconsistency — Customer Portal (PORTAL_JWT_SECRET vs CUSTOMER_PORTAL_JWT_SECRET) | SEC | 30min | P0 | PST-13 |
-| MP-01-006 | Fix Carrier Portal login tenant isolation (add tenantId to login query) | SEC | 30min | P0 | PST-14 |
-| MP-01-007 | Fix plaintext credentials — Factoring apiKey (@Exclude or select clause) | SEC | 1h | P0 | PST-18 |
+| MP-01-005 | ~~Fix JWT secret inconsistency — already correct, both portals use CUSTOMER/CARRIER_PORTAL_JWT_SECRET~~ | SEC | 30min | P0 | **DONE** (2026-03-11) |
+| MP-01-006 | ~~Fix Carrier Portal + Customer Portal login tenant isolation (added tenantId to login query + deletedAt filters)~~ | SEC | 30min | P0 | **DONE** (2026-03-11) |
+| MP-01-007 | ~~Fix plaintext credentials — Factoring apiKey (stripSensitive on all responses)~~ | SEC | 1h | P0 | **DONE** (2026-03-11) |
 | MP-01-008 | Fix Integration Hub EncryptionService hardcoded fallback key (fail-fast in production) | SEC | 1h | P0 | PST-21 |
 | MP-01-009 | Fix plaintext credentials — Rate Intelligence (encrypt apiKey, apiSecret, password) | SEC | 2h | P0 | PST-29 |
-| MP-01-010 | Fix plaintext credentials — EDI ftpPassword (encrypt + @Exclude on response) | SEC | 1h | P0 | PST-26 |
+| MP-01-010 | ~~Fix plaintext credentials — EDI ftpPassword (stripSensitive on all responses)~~ | SEC | 1h | P0 | **DONE** (2026-03-11) |
 | MP-01-011 | Fix Elasticsearch queries — add tenantId filtering in Search service | SEC | 2h | P0 | PST-22, CCF-036 |
 | MP-01-012 | Fix Cache 8/20 endpoints missing tenantId | SEC | 2h | P0 | PST-32, CCF-036 |
 | MP-01-013 | Fix Operations LoadHistory 2 tenant bugs (getByCarrier + getSimilarLoads) | SEC | 1h | P0 | PST-38, CCF-034 |
@@ -222,9 +222,9 @@ Every service entering a sprint gets work across 5 layers:
 | MP-01-015 | Fix Accounting 4 cross-tenant bugs in PaymentReceived | SEC | 2h | P0 | PST-07, CCF-021 |
 | MP-01-016 | Fix Sales tenant isolation in mutations (Quotes, RateContracts, AccessorialRates) | SEC | 2h | P0 | PST-04, CCF-004 |
 | MP-01-017 | Fix Contracts FuelSurchargeTier missing tenantId (migration + backfill) | SEC | 1h | P0 | PST-15 |
-| MP-01-018 | Fix Agents rankings tenant leak | SEC | 30min | P0 | PST-16 |
-| MP-01-019 | Fix Search deleteSynonym cross-tenant bug | SEC | 30min | P0 | PST-22 |
-| MP-01-020 | Fix Super Admin deleted admin auth (add deletedAt filter) | SEC | 15min | P0 | PST-33 |
+| MP-01-018 | ~~Fix Agents rankings tenant leak (added tenantId to agent lookup)~~ | SEC | 30min | P0 | **DONE** (2026-03-11) |
+| MP-01-019 | ~~Fix Search deleteSynonym cross-tenant (verify ownership before delete)~~ | SEC | 30min | P0 | **DONE** (2026-03-11) |
+| MP-01-020 | ~~Fix Super Admin deleted admin auth (added deletedAt:null to forgotPassword)~~ | SEC | 15min | P0 | **DONE** (2026-03-11) |
 | MP-01-021 | Migrate localStorage tokens to HttpOnly cookies | SEC | 4h | P0 | P0-001 |
 | MP-01-022 | ~~Fix CORS env variable (QS-007)~~ | SEC | 30min | P1 | **DONE** |
 | MP-01-023 | Add CSP headers to Next.js config | SEC | 2h | P1 | S4-23 |

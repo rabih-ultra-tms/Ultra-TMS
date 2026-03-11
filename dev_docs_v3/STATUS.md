@@ -101,11 +101,18 @@
 
 **Quality Sprint COMPLETE** — 16/16 tasks done. All QS tasks COMPLETE (QS-001 through QS-016).
 
-**Active:** MP-01 Security Hardening (30 tasks, 4 DONE) — see [Master Project Plan](08-sprints/master-project-plan.md#mp-01-security-hardening-weeks-1-2)
+**Active:** MP-01 Security Hardening (30 tasks, 11 DONE) — see [Master Project Plan](08-sprints/master-project-plan.md#mp-01-security-hardening-weeks-1-2)
 
 - MP-01-001: ~~Prisma Client Extension~~ **DONE**
 - MP-01-002: ~~RolesGuard financial controllers (27 controllers across 5 services)~~ **DONE** (2026-03-11)
 - MP-01-003: ~~RolesGuard data-modifying controllers (38 controllers across 6 services)~~ **DONE** (2026-03-11)
+- MP-01-005: ~~JWT secret inconsistency~~ **DONE** (2026-03-11) — verified: no inconsistency, both portals use correct naming
+- MP-01-006: ~~Carrier Portal login tenant isolation~~ **DONE** (2026-03-11) — added tenantId to login query + deletedAt filters to forgotPassword/resetPassword/verifyEmail (both portals)
+- MP-01-007: ~~Factoring apiKey plaintext~~ **DONE** (2026-03-11) — stripSensitive removes apiKey from all API responses
+- MP-01-010: ~~EDI ftpPassword plaintext~~ **DONE** (2026-03-11) — stripSensitive removes ftpPassword from all API responses
+- MP-01-018: ~~Agents rankings tenant leak~~ **DONE** (2026-03-11) — added tenantId filter to agent lookup in rankings()
+- MP-01-019: ~~Search deleteSynonym cross-tenant~~ **DONE** (2026-03-11) — verify ownership before delete
+- MP-01-020: ~~Super Admin deleted admin auth~~ **DONE** (2026-03-11) — added deletedAt:null to forgotPassword query
 - MP-01-022: ~~CORS env variable~~ **DONE**
 
 **Full project timeline:** 24 sprints × 2 weeks = 48 weeks across 5 phases:

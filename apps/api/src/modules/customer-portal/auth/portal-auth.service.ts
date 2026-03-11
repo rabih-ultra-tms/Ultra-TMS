@@ -48,12 +48,11 @@ export class PortalAuthService {
     });
   }
 
-  async login(dto: PortalLoginDto, metadata: { ipAddress?: string; userAgent?: string }) {
+  async login(dto: PortalLoginDto, metadata: { ipAddress?: string; userAgent?: string }, tenantId?: string) {
+    const where: any = { email: dto.email, deletedAt: null };
+    if (tenantId) where.tenantId = tenantId;
     const user = await this.prisma.portalUser.findFirst({
-      where: {
-        email: dto.email,
-        deletedAt: null,
-      },
+      where,
     });
 
     if (!user || !(await bcrypt.compare(dto.password, user.password))) {
@@ -127,7 +126,7 @@ export class PortalAuthService {
   }
 
   async forgotPassword(dto: ForgotPasswordDto) {
-    const user = await this.prisma.portalUser.findFirst({ where: { email: dto.email } });
+    const user = await this.prisma.portalUser.findFirst({ where: { email: dto.email, deletedAt: null } });
     if (!user) {
       return { success: true };
     }
@@ -142,7 +141,7 @@ export class PortalAuthService {
   }
 
   async resetPassword(dto: ResetPasswordDto) {
-    const user = await this.prisma.portalUser.findFirst({ where: { verificationToken: dto.token } });
+    const user = await this.prisma.portalUser.findFirst({ where: { verificationToken: dto.token, deletedAt: null } });
     if (!user) {
       throw new BadRequestException('Invalid reset token');
     }
@@ -157,7 +156,7 @@ export class PortalAuthService {
   }
 
   async verifyEmail(token: string) {
-    const user = await this.prisma.portalUser.findFirst({ where: { verificationToken: token } });
+    const user = await this.prisma.portalUser.findFirst({ where: { verificationToken: token, deletedAt: null } });
     if (!user) {
       throw new BadRequestException('Invalid verification token');
     }

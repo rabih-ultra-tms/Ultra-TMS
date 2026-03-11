@@ -10,9 +10,9 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
-import { Roles } from '../../../common/decorators/roles.decorator';
 import { CurrentTenant } from '../../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
+import { Roles } from '../../../common/decorators/roles.decorator';
 import { PaymentsReceivedService } from '../services';
 import { CreatePaymentReceivedDto, ApplyPaymentDto } from '../dto';
 import { BatchPaymentDto } from '../dto/batch-payment.dto';
@@ -20,7 +20,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 
 @Controller('payments-received')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('ADMIN', 'ACCOUNTING')
+@Roles('ADMIN', 'ACCOUNTING', 'ACCOUNTING_MANAGER')
 @ApiTags('Accounting')
 @ApiBearerAuth('JWT-auth')
 export class PaymentsReceivedController {
