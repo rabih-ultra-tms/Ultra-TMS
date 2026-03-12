@@ -1,4 +1,9 @@
-import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  OnModuleInit,
+  OnModuleDestroy,
+  Logger,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 
@@ -10,8 +15,9 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   constructor(private configService: ConfigService) {}
 
   async onModuleInit() {
-    const redisUrl = this.configService.get<string>('REDIS_URL') || 'redis://localhost:6379';
-    
+    const redisUrl =
+      this.configService.get<string>('REDIS_URL') || 'redis://localhost:6379';
+
     this.client = new Redis(redisUrl, {
       retryStrategy: (times) => {
         const delay = Math.min(times * 50, 2000);
@@ -41,8 +47,28 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     return this.client.ping();
   }
 
+  /**
+   * SEC-028: Use SCAN instead of KEYS to avoid blocking Redis.
+   * KEYS command blocks the entire server and should never be used in production.
+   * SCAN iterates through keys without blocking.
+   */
   async keys(pattern: string): Promise<string[]> {
-    return this.client.keys(pattern);
+    const keys: string[] = [];
+    let cursor = '0';
+
+    do {
+      const [nextCursor, batchKeys] = await this.client.scan(
+        cursor,
+        'MATCH',
+        pattern,
+        'COUNT',
+        100
+      );
+      keys.push(...batchKeys);
+      cursor = nextCursor;
+    } while (cursor !== '0');
+
+    return keys;
   }
 
   async deleteByPattern(pattern: string): Promise<number> {
@@ -55,7 +81,11 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     return this.client.get(key);
   }
 
-  async setValue(key: string, value: string, ttlSeconds?: number): Promise<void> {
+  async setValue(
+    key: string,
+    value: string,
+    ttlSeconds?: number
+  ): Promise<void> {
     if (ttlSeconds && ttlSeconds > 0) {
       await this.client.set(key, value, 'EX', ttlSeconds);
     } else {
@@ -79,14 +109,22 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  async setJson(key: string, value: unknown, ttlSeconds?: number): Promise<void> {
+  async setJson(
+    key: string,
+    value: unknown,
+    ttlSeconds?: number
+  ): Promise<void> {
     await this.setValue(key, JSON.stringify(value), ttlSeconds);
   }
 
   /**
    * Basic set helper with TTL (in seconds) for generic caching use cases.
    */
-  async setWithTTL(key: string, value: string, ttlSeconds: number): Promise<void> {
+  async setWithTTL(
+    key: string,
+    value: string,
+    ttlSeconds: number
+  ): Promise<void> {
     await this.client.set(key, value, 'EX', ttlSeconds);
   }
 
@@ -98,7 +136,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     userId: string,
     sessionId: string,
     refreshTokenHash: string,
-    expiresInSeconds: number,
+    expiresInSeconds: number
   ): Promise<void> {
     const key = `session:${userId}:${sessionId}`;
     const data = {
@@ -116,7 +154,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   async getSession(userId: string, sessionId: string): Promise<any> {
     const key = `session:${userId}:${sessionId}`;
     const data = await this.client.get(key);
-    
+
     if (!data) {
       return null;
     }
@@ -138,8 +176,8 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
    */
   async revokeAllUserSessions(userId: string): Promise<void> {
     const pattern = `session:${userId}:*`;
-    const keys = await this.client.keys(pattern);
-    
+    const keys = await this.keys(pattern); // SEC-028: Use SCAN instead of KEYS
+
     if (keys.length > 0) {
       await this.client.del(...keys);
       this.logger.debug(`Revoked ${keys.length} sessions for user ${userId}`);
@@ -151,9 +189,11 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
    */
   async getUserSessions(userId: string): Promise<string[]> {
     const pattern = `session:${userId}:*`;
-    const keys = await this.client.keys(pattern);
-    
-    return keys.map((key) => key.split(':')[2]).filter((id): id is string => id !== undefined); // Extract sessionId
+    const keys = await this.keys(pattern); // SEC-028: Use SCAN instead of KEYS
+
+    return keys
+      .map((key) => key.split(':')[2])
+      .filter((id): id is string => id !== undefined); // Extract sessionId
   }
 
   /**
@@ -161,7 +201,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
    */
   async getUserSessionCount(userId: string): Promise<number> {
     const pattern = `session:${userId}:*`;
-    const keys = await this.client.keys(pattern);
+    const keys = await this.keys(pattern); // SEC-028: Use SCAN instead of KEYS
     return keys.length;
   }
 
@@ -191,7 +231,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   async storePasswordResetToken(
     userId: string,
     tokenHash: string,
-    expiresInSeconds: number,
+    expiresInSeconds: number
   ): Promise<void> {
     const key = `reset:${userId}:${tokenHash}`;
     await this.client.setex(key, expiresInSeconds, new Date().toISOString());
@@ -201,15 +241,18 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   /**
    * Verify and consume password reset token
    */
-  async consumePasswordResetToken(userId: string, tokenHash: string): Promise<boolean> {
+  async consumePasswordResetToken(
+    userId: string,
+    tokenHash: string
+  ): Promise<boolean> {
     const key = `reset:${userId}:${tokenHash}`;
     const exists = await this.client.exists(key);
-    
+
     if (exists) {
       await this.client.del(key);
       return true;
     }
-    
+
     return false;
   }
 
@@ -220,12 +263,12 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   async incrementLoginAttempts(email: string): Promise<number> {
     const key = `login_attempts:${email}`;
     const attempts = await this.client.incr(key);
-    
+
     // Set expiration on first attempt
     if (attempts === 1) {
       await this.client.expire(key, 900); // 15 minutes
     }
-    
+
     return attempts;
   }
 
@@ -270,7 +313,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   async storeEmailVerificationToken(
     userId: string,
     tokenHash: string,
-    expiresInSeconds: number,
+    expiresInSeconds: number
   ): Promise<void> {
     const key = `email_verify:${userId}:${tokenHash}`;
     await this.client.setex(key, expiresInSeconds, new Date().toISOString());
@@ -279,15 +322,18 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   /**
    * Verify and consume email verification token
    */
-  async consumeEmailVerificationToken(userId: string, tokenHash: string): Promise<boolean> {
+  async consumeEmailVerificationToken(
+    userId: string,
+    tokenHash: string
+  ): Promise<boolean> {
     const key = `email_verify:${userId}:${tokenHash}`;
     const exists = await this.client.exists(key);
-    
+
     if (exists) {
       await this.client.del(key);
       return true;
     }
-    
+
     return false;
   }
 
@@ -298,7 +344,11 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     return this.client.get(key);
   }
 
-  async set(key: string, value: string, expiresInSeconds?: number): Promise<void> {
+  async set(
+    key: string,
+    value: string,
+    expiresInSeconds?: number
+  ): Promise<void> {
     if (expiresInSeconds) {
       await this.client.setex(key, expiresInSeconds, value);
     } else {
