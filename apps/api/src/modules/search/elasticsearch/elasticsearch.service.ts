@@ -53,7 +53,7 @@ export class ElasticsearchService {
     return 0;
   }
 
-  async searchGlobal(tenantId: string, query: string, entityTypes?: string[], limit = 20, offset = 0): Promise<SearchResultDto> {
+  async searchGlobal(query: string, tenantId: string, entityTypes?: string[], limit = 20, offset = 0): Promise<SearchResultDto> {
     const indices = entityTypes?.length ? entityTypes.map((e) => this.indexName(e)) : `${this.prefix}-*-v1`;
 
     const res = await this.client.search({
@@ -86,7 +86,7 @@ export class ElasticsearchService {
     return { total: this.totalCount(res.hits.total), items, facets: {} };
   }
 
-  async searchEntity(tenantId: string, entityType: string, query: string | undefined, filters: Record<string, unknown> | undefined, limit = 20, offset = 0): Promise<SearchResultDto> {
+  async searchEntity(entityType: string, tenantId: string, query: string | undefined, filters: Record<string, unknown> | undefined, limit = 20, offset = 0): Promise<SearchResultDto> {
     const must: any[] = [];
 
     if (query) {
@@ -124,11 +124,11 @@ export class ElasticsearchService {
     return { total: this.totalCount(res.hits.total), items, facets: {} };
   }
 
-  async suggest(tenantId: string, query: string, limit = 10): Promise<SuggestionResultDto> {
+  async suggest(query: string, tenantId: string, limit = 10): Promise<SuggestionResultDto> {
     const res = await this.client.search({
       index: `${this.prefix}-*-v1`,
       size: 0,
-      query: { term: { tenantId } },
+      query: { bool: { filter: [{ term: { tenantId } }] } },
       suggest: {
         text: query,
         name_suggest: {
@@ -194,6 +194,7 @@ export class ElasticsearchService {
       index,
       mappings: {
         properties: {
+          tenantId: { type: 'keyword' },
           title: { type: 'text' },
           name: { type: 'text', fields: { keyword: { type: 'keyword' } } },
           description: { type: 'text' },

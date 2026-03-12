@@ -63,7 +63,7 @@ export class CommissionPayoutsService {
 
       // Generate payout number
       const count = await tx.commissionPayout.count({
-        where: { tenantId },
+        where: { tenantId, deletedAt: null },
       });
       const payoutNumber = `PAY-${String(count + 1).padStart(6, '0')}`;
 

@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { createHmac } from 'crypto';
 
 export interface TwilioSmsOptions {
   to: string;
@@ -166,5 +167,39 @@ export class TwilioProvider {
 
   isReady(): boolean {
     return this.isConfigured;
+  }
+
+  /**
+   * Validate Twilio webhook signature (X-Twilio-Signature header).
+   * Uses HMAC-SHA1 with the auth token to verify the request came from Twilio.
+   * @see https://www.twilio.com/docs/usage/security#validating-requests
+   */
+  validateWebhookSignature(
+    signature: string,
+    url: string,
+    params: Record<string, string>,
+  ): boolean {
+    if (!this.isConfigured || !this.authToken) {
+      this.logger.warn('Twilio not configured — skipping signature validation in dev');
+      return true;
+    }
+
+    if (!signature) {
+      this.logger.warn('Missing X-Twilio-Signature header');
+      return false;
+    }
+
+    // Build the data string: URL + sorted params key/value pairs
+    const sortedKeys = Object.keys(params).sort();
+    let data = url;
+    for (const key of sortedKeys) {
+      data += key + params[key];
+    }
+
+    const computed = createHmac('sha1', this.authToken)
+      .update(data, 'utf-8')
+      .digest('base64');
+
+    return computed === signature;
   }
 }

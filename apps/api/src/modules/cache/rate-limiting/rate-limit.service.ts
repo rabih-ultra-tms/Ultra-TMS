@@ -12,11 +12,11 @@ export class RateLimitService {
   }
 
   async getByKey(tenantId: string, key: string) {
-    return this.prisma.rateLimit.findFirst({ where: { tenantId, identifier: key } });
+    return this.prisma.rateLimit.findFirst({ where: { identifier: key, tenantId } });
   }
 
-  async update(key: string, dto: UpdateRateLimitDto, tenantId: string) {
-    const existing = await this.getByKey(tenantId, key);
+  async update(key: string, dto: UpdateRateLimitDto, tenantId?: string) {
+    const existing = tenantId ? await this.getByKey(tenantId, key) : null;
     const windowSeconds = dto.requestsPerMinute
       ? 60
       : dto.requestsPerHour

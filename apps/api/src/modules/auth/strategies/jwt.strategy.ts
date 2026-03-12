@@ -2,8 +2,11 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { PrismaService } from '../../../prisma.service';
 import type { Request } from 'express';
+import { PrismaService } from '../../../prisma.service';
+
+export const AUTH_COOKIE_NAME = 'accessToken';
+export const REFRESH_COOKIE_NAME = 'refreshToken';
 
 export interface JwtPayload {
   sub: string; // User ID
@@ -17,26 +20,6 @@ export interface JwtPayload {
   exp?: number;
 }
 
-/**
- * Extract JWT from Authorization header first, then fall back to HttpOnly cookie.
- * SEC-001: Supports both Bearer token and cookie-based auth.
- */
-function extractJwtFromHeaderOrCookie(req: Request): string | null {
-  // Try Authorization header first (backwards-compatible)
-  const fromHeader = ExtractJwt.fromAuthHeaderAsBearerToken()(req);
-  if (fromHeader) {
-    return fromHeader;
-  }
-
-  // Fall back to HttpOnly cookie
-  const cookieToken = req.cookies?.accessToken;
-  if (typeof cookieToken === 'string' && cookieToken.length > 0) {
-    return cookieToken;
-  }
-
-  return null;
-}
-
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
@@ -48,8 +31,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new Error('FATAL: JWT_SECRET environment variable is required');
     }
 
+    // Extract JWT from Authorization header first, then fall back to HttpOnly cookie
+    const fromHeaderOrCookie = (req: Request): string | null => {
+      const fromHeader = ExtractJwt.fromAuthHeaderAsBearerToken()(req);
+      if (fromHeader) return fromHeader;
+      return req?.cookies?.[AUTH_COOKIE_NAME] || null;
+    };
+
     super({
-      jwtFromRequest: extractJwtFromHeaderOrCookie,
+      jwtFromRequest: fromHeaderOrCookie,
       ignoreExpiration: false,
       secretOrKey: jwtSecret,
     });

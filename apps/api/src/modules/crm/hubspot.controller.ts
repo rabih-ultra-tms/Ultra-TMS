@@ -5,18 +5,32 @@ import {
   Body,
   Query,
   UseGuards,
+  Headers,
+  ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
+import { createHash } from 'crypto';
 import { JwtAuthGuard } from '../auth/guards';
 import { HubspotService } from './hubspot.service';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
 import { HubspotWebhookGuard } from './guards/hubspot-webhook.guard';
 
 @Controller('crm/hubspot')
 @ApiTags('CRM')
 export class HubspotController {
-  constructor(private readonly hubspotService: HubspotService) {}
+  private readonly logger = new Logger(HubspotController.name);
+  private readonly clientSecret: string;
+
+  constructor(
+    private readonly hubspotService: HubspotService,
+    private readonly configService: ConfigService,
+  ) {
+    this.clientSecret = this.configService.get<string>('HUBSPOT_CLIENT_SECRET') || '';
+  }
 
   // Webhook endpoint - no JWT auth; secured via HubSpot signature verification (SEC-006)
   @Post('webhook')
@@ -25,8 +39,24 @@ export class HubspotController {
   @ApiStandardResponse('Webhook processed')
   @ApiErrorResponses()
   async handleWebhook(
+    @Headers('x-hubspot-signature') signature: string,
     @Body() payload: Record<string, unknown>,
   ) {
+    // Validate HubSpot v1 signature: SHA-256(clientSecret + requestBody)
+    if (this.clientSecret) {
+      if (!signature) {
+        throw new ForbiddenException('Missing HubSpot signature');
+      }
+      const sourceString = this.clientSecret + JSON.stringify(payload);
+      const computed = createHash('sha256').update(sourceString).digest('hex');
+      if (computed !== signature) {
+        this.logger.warn('Invalid HubSpot webhook signature');
+        throw new ForbiddenException('Invalid webhook signature');
+      }
+    } else {
+      this.logger.warn('HUBSPOT_CLIENT_SECRET not configured — skipping signature validation');
+    }
+
     const tenantId = (payload.portalId as string) || 'default';
     return this.hubspotService.handleWebhook(tenantId, payload);
   }

@@ -165,6 +165,10 @@ export class CreateQuoteDto {
   overrideMarginCheck?: boolean;
 
   @IsOptional()
+  @IsBoolean()
+  overrideMinimumMargin?: boolean;
+
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => QuoteStopDto)
@@ -263,6 +267,10 @@ export class UpdateQuoteDto {
   @IsOptional()
   @IsBoolean()
   overrideMarginCheck?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  overrideMinimumMargin?: boolean;
 
   @IsOptional()
   @IsArray()

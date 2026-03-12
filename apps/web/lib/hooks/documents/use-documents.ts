@@ -83,7 +83,7 @@ export function useUploadDocument() {
         formData.append("description", params.description);
       }
 
-      const response = await apiClient.post<Document>("/documents", formData);
+      const response = await apiClient.post<Document>("/documents/upload", formData);
       return response;
     },
     onSuccess: (_data, variables) => {

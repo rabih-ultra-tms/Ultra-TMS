@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common';
 import { LocalStorageService } from './local-storage.service';
 import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs/promises';
@@ -144,5 +145,39 @@ describe('LocalStorageService', () => {
     const exists = await service.exists('file.txt');
 
     expect(exists).toBe(false);
+  });
+
+  describe('path traversal prevention', () => {
+    it('rejects traversal in upload filename', async () => {
+      const service = new LocalStorageService(configService as unknown as ConfigService);
+
+      await expect(
+        service.upload(Buffer.from('data'), '../../etc/passwd'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('rejects traversal in upload folder', async () => {
+      const service = new LocalStorageService(configService as unknown as ConfigService);
+
+      await expect(
+        service.upload(Buffer.from('data'), 'file.txt', '../../etc'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('rejects traversal in delete path', async () => {
+      const service = new LocalStorageService(configService as unknown as ConfigService);
+
+      await expect(
+        service.delete('../../etc/passwd'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('rejects traversal in exists path', async () => {
+      const service = new LocalStorageService(configService as unknown as ConfigService);
+
+      await expect(
+        service.exists('../../etc/passwd'),
+      ).rejects.toThrow(BadRequestException);
+    });
   });
 });

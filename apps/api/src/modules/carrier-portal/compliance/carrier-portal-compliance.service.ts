@@ -7,7 +7,7 @@ export class CarrierPortalComplianceService {
   constructor(private readonly prisma: PrismaService) {}
 
   async status(tenantId: string, carrierId: string) {
-    const docs = await this.prisma.carrierPortalDocument.findMany({ where: { tenantId, carrierId } });
+    const docs = await this.prisma.carrierPortalDocument.findMany({ where: { tenantId, carrierId, deletedAt: null } });
     const expiring = docs.filter((d) => d.status === CarrierDocumentStatus.REVIEWING).length;
     return { total: docs.length, expiring, approved: docs.filter((d) => d.status === CarrierDocumentStatus.APPROVED).length };
   }
@@ -38,10 +38,10 @@ export class CarrierPortalComplianceService {
   }
 
   async docStatus(tenantId: string, carrierId: string, id: string) {
-    return this.prisma.carrierPortalDocument.findFirst({ where: { id, tenantId, carrierId } });
+    return this.prisma.carrierPortalDocument.findFirst({ where: { id, tenantId, carrierId, deletedAt: null } });
   }
 
   async expiring(tenantId: string, carrierId: string) {
-    return this.prisma.carrierPortalDocument.findMany({ where: { tenantId, carrierId, status: CarrierDocumentStatus.REVIEWING } });
+    return this.prisma.carrierPortalDocument.findMany({ where: { tenantId, carrierId, status: CarrierDocumentStatus.REVIEWING, deletedAt: null } });
   }
 }

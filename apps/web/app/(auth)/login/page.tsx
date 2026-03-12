@@ -29,7 +29,6 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AUTH_CONFIG } from "@/lib/config/auth";
-import { setAuthTokens } from "@/lib/api/client";
 
 // ✅ Define schema locally - no external imports that cause issues
 const loginSchema = z.object({
@@ -91,15 +90,7 @@ function LoginPageContent() {
         return;
       }
 
-      const accessToken = result?.data?.accessToken as string | undefined;
-      const refreshToken = result?.data?.refreshToken as string | undefined;
-      const expiresIn = result?.data?.expiresIn as number | undefined;
-
-      if (accessToken) {
-        setAuthTokens({ accessToken, refreshToken, expiresIn });
-      }
-
-      // ✅ Use window.location, NOT router.push()
+      // HttpOnly cookies are set by the backend — no client-side token handling needed
       window.location.href = returnUrl;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Invalid credentials");

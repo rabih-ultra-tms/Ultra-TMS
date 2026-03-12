@@ -7,7 +7,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { apiClient, ApiError } from "@/lib/api";
-import { setAuthTokens, clearAuthTokens } from "@/lib/api/client";
 import { AUTH_CONFIG } from "@/lib/config/auth";
 import { toast } from "sonner";
 import type {
@@ -50,12 +49,7 @@ export function useLogin() {
       if (response.requiresMfa) {
         router.push(`/mfa?token=${response.mfaToken}`);
       } else {
-        if (response.accessToken) {
-          setAuthTokens({
-            accessToken: response.accessToken,
-            refreshToken: response.refreshToken,
-          });
-        }
+        // HttpOnly cookies are set by the backend — no client-side token handling needed
         queryClient.setQueryData(authKeys.user(), { data: response.user });
         router.push(AUTH_CONFIG.defaultRedirect);
         toast.success("Welcome back!");
@@ -75,12 +69,7 @@ export function useVerifyMFA() {
     mutationFn: (data: MFAVerifyRequest) =>
       apiClient.post<LoginResponse>("/auth/mfa/verify", data),
     onSuccess: (response) => {
-      if (response.accessToken) {
-        setAuthTokens({
-          accessToken: response.accessToken,
-          refreshToken: response.refreshToken,
-        });
-      }
+      // HttpOnly cookies are set by the backend — no client-side token handling needed
       queryClient.setQueryData(authKeys.user(), { data: response.user });
       router.push(AUTH_CONFIG.defaultRedirect);
       toast.success("Welcome back!");
@@ -113,14 +102,14 @@ export function useLogout() {
   return useMutation({
     mutationFn: () => apiClient.post("/auth/logout"),
     onSuccess: () => {
+      // Backend clears HttpOnly cookies on logout
       queryClient.clear();
-      clearAuthTokens();
       router.push(AUTH_CONFIG.loginPath);
       toast.success("Logged out successfully");
     },
     onError: () => {
+      // Even on error, redirect to login (cookies may still be cleared)
       queryClient.clear();
-      clearAuthTokens();
       router.push(AUTH_CONFIG.loginPath);
     },
   });

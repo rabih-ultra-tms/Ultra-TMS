@@ -208,33 +208,33 @@ Every service entering a sprint gets work across 5 layers:
 | MP-01-001 | ~~QS-014: Prisma Client Extension for auto tenantId + deletedAt~~ | SEC | 8h | P0 | **DONE** |
 | MP-01-002 | ~~Fix RolesGuard gaps — financial controllers (Accounting 10, Credit 5, Contracts 6, Factoring 3, Agents 3 = 27 controllers)~~ | SEC | 4h | P0 | **DONE** (2026-03-11) |
 | MP-01-003 | ~~Fix RolesGuard gaps — data-modifying controllers (Config 8, Audit 8, Load Board 6, HR 6, Scheduler 5, Safety 5)~~ | SEC | 6h | P0 | **DONE** (2026-03-11) |
-| MP-01-004 | Fix RolesGuard gaps — remaining controllers (Help Desk 5, Feedback 5, Cache 4, EDI 4, Search 2, Workflow 3, Claims 1) | SEC | 4h | P1 | S4-04, CCF-017 |
+| MP-01-004 | ~~Fix RolesGuard gaps — remaining controllers (Help Desk 5, Feedback 5, Cache 4, EDI 3, Search 2, Workflow 2, Claims 1 = 22 controllers)~~ | SEC | 4h | P1 | **DONE** (2026-03-11) |
 | MP-01-005 | ~~Fix JWT secret inconsistency — already correct, both portals use CUSTOMER/CARRIER_PORTAL_JWT_SECRET~~ | SEC | 30min | P0 | **DONE** (2026-03-11) |
 | MP-01-006 | ~~Fix Carrier Portal + Customer Portal login tenant isolation (added tenantId to login query + deletedAt filters)~~ | SEC | 30min | P0 | **DONE** (2026-03-11) |
 | MP-01-007 | ~~Fix plaintext credentials — Factoring apiKey (stripSensitive on all responses)~~ | SEC | 1h | P0 | **DONE** (2026-03-11) |
-| MP-01-008 | Fix Integration Hub EncryptionService hardcoded fallback key (fail-fast in production) | SEC | 1h | P0 | PST-21 |
-| MP-01-009 | Fix plaintext credentials — Rate Intelligence (encrypt apiKey, apiSecret, password) | SEC | 2h | P0 | PST-29 |
+| MP-01-008 | ~~Fix Integration Hub EncryptionService hardcoded fallback key (fail-fast in production)~~ | SEC | 1h | P0 | **DONE** (2026-03-11) |
+| MP-01-009 | ~~Fix plaintext credentials — Rate Intelligence (stripSensitive on apiKey, apiSecret, password)~~ | SEC | 2h | P0 | **DONE** (2026-03-11) |
 | MP-01-010 | ~~Fix plaintext credentials — EDI ftpPassword (stripSensitive on all responses)~~ | SEC | 1h | P0 | **DONE** (2026-03-11) |
-| MP-01-011 | Fix Elasticsearch queries — add tenantId filtering in Search service | SEC | 2h | P0 | PST-22, CCF-036 |
-| MP-01-012 | Fix Cache 8/20 endpoints missing tenantId | SEC | 2h | P0 | PST-32, CCF-036 |
-| MP-01-013 | Fix Operations LoadHistory 2 tenant bugs (getByCarrier + getSimilarLoads) | SEC | 1h | P0 | PST-38, CCF-034 |
-| MP-01-014 | Fix CRM tenant isolation in mutations (4 services) | SEC | 2h | P0 | PST-03, CCF-004 |
-| MP-01-015 | Fix Accounting 4 cross-tenant bugs in PaymentReceived | SEC | 2h | P0 | PST-07, CCF-021 |
-| MP-01-016 | Fix Sales tenant isolation in mutations (Quotes, RateContracts, AccessorialRates) | SEC | 2h | P0 | PST-04, CCF-004 |
-| MP-01-017 | Fix Contracts FuelSurchargeTier missing tenantId (migration + backfill) | SEC | 1h | P0 | PST-15 |
+| MP-01-011 | ~~Fix Elasticsearch queries — add tenantId filtering in Search service (searchGlobal, searchEntity, suggest + indexed docs)~~ | SEC | 2h | P0 | **DONE** (2026-03-11) |
+| MP-01-012 | ~~Fix Cache 8/20 endpoints missing tenantId (keys, deletePattern, locks 3, rate-limit 3)~~ | SEC | 2h | P0 | **DONE** (2026-03-11) |
+| MP-01-013 | ~~Fix Operations LoadHistory 2 tenant bugs (added deletedAt:null to getByCarrier + getSimilarLoads)~~ | SEC | 1h | P0 | **DONE** (2026-03-11) |
+| MP-01-014 | ~~Fix CRM tenant isolation in mutations (17 mutations across 4 services: Companies, Contacts, Activities, Opportunities)~~ | SEC | 2h | P0 | **DONE** (2026-03-11) |
+| MP-01-015 | ~~Fix Accounting PaymentReceived cross-tenant bug — added tenantId to markBounced() invoice findFirst~~ | SEC | 2h | P0 | **DONE** (2026-03-11) |
+| MP-01-016 | ~~Fix Sales tenant isolation — added tenantId to QuoteStop deleteMany, ContractLaneRate findMany/findFirst (5 locations across Quotes + RateContracts)~~ | SEC | 2h | P0 | **DONE** (2026-03-11) |
+| MP-01-017 | ~~Fix Contracts FuelSurchargeTier missing tenantId — added tenantId column, migration with backfill from parent table, updated all tier queries/creates~~ | SEC | 1h | P0 | **DONE** (2026-03-11) |
 | MP-01-018 | ~~Fix Agents rankings tenant leak (added tenantId to agent lookup)~~ | SEC | 30min | P0 | **DONE** (2026-03-11) |
 | MP-01-019 | ~~Fix Search deleteSynonym cross-tenant (verify ownership before delete)~~ | SEC | 30min | P0 | **DONE** (2026-03-11) |
 | MP-01-020 | ~~Fix Super Admin deleted admin auth (added deletedAt:null to forgotPassword)~~ | SEC | 15min | P0 | **DONE** (2026-03-11) |
 | MP-01-021 | Migrate localStorage tokens to HttpOnly cookies | SEC | 4h | P0 | P0-001 |
 | MP-01-022 | ~~Fix CORS env variable (QS-007)~~ | SEC | 30min | P1 | **DONE** |
-| MP-01-023 | Add CSP headers to Next.js config | SEC | 2h | P1 | S4-23 |
-| MP-01-024 | Add @nestjs/throttler rate limiting (auth: 5/min, API: 100/min) | SEC | 2h | P1 | S4-24 |
-| MP-01-025 | Fix webhook auth — Communication SMS (@Public + Twilio signature validation) | SEC | 2h | P1 | PST-12, CCF-030 |
-| MP-01-026 | Fix webhook auth — CRM HubSpot (disable or authenticate) | SEC | 1h | P1 | PST-03, CCF-030 |
-| MP-01-027 | Fix Storage path traversal vulnerability (path.resolve + startsWith check) | SEC | 1h | P2 | PST-35 |
-| MP-01-028 | Fix Redis KEYS command — replace with SCAN iterator in 4 methods | SEC | 2h | P2 | PST-36 |
-| MP-01-029 | Verify CSRF protection (SameSite cookie attribute) | SEC | 30min | P2 | S4-29 |
-| MP-01-030 | Add gitleaks pre-commit hook | SEC | 1h | P2 | S4-30 |
+| MP-01-023 | ~~Add CSP headers to Next.js config~~ | SEC | 2h | P1 | **DONE** (2026-03-11) |
+| MP-01-024 | ~~Add @nestjs/throttler rate limiting (auth: 5/min, API: 100/min)~~ | SEC | 2h | P1 | **DONE** (pre-existing — v6.5.0, CustomThrottlerGuard global, 3 tiers) |
+| MP-01-025 | ~~Fix webhook auth — Communication SMS (@Public + Twilio signature validation)~~ | SEC | 2h | P1 | **DONE** (2026-03-11) |
+| MP-01-026 | ~~Fix webhook auth — CRM HubSpot (@Public + SHA-256 signature validation)~~ | SEC | 1h | P1 | **DONE** (2026-03-11) |
+| MP-01-027 | ~~Fix Storage path traversal vulnerability (safePath() with path.resolve + startsWith)~~ | SEC | 1h | P2 | **DONE** (2026-03-11) |
+| MP-01-028 | ~~Fix Redis KEYS command — replaced with SCAN iterator (scanKeys) in 4 methods~~ | SEC | 2h | P2 | **DONE** (2026-03-11) |
+| MP-01-029 | ~~Verify CSRF protection (SameSite=Lax + HttpOnly + secure=isProduction)~~ | SEC | 30min | P2 | **DONE** (2026-03-11) |
+| MP-01-030 | ~~Add gitleaks pre-commit hook (.husky/pre-commit + .gitleaks.toml)~~ | SEC | 1h | P2 | **DONE** (2026-03-11) |
 
 **Exit Criteria:**
 
@@ -252,25 +252,25 @@ Every service entering a sprint gets work across 5 layers:
 **Services touched:** TMS Core (#05), Accounting (#07), Commission (#08), Customer Portal (#13), Documents (#11), Sales (#04)
 **Absorbs:** REMEDIATION-ROADMAP S5, BLD-001–006, parts of BACK-004/005/007/010
 
-| ID        | Task                                                                                | Layer | Effort | Priority | Source              |
-| --------- | ----------------------------------------------------------------------------------- | ----- | ------ | -------- | ------------------- |
-| MP-02-001 | ~~QS-012: Rate Confirmation PDF Generation~~                                        | BLD   | 8h     | P0       | **DONE**            |
-| MP-02-002 | ~~QS-013: BOL PDF Generation~~                                                      | BLD   | 6h     | P0       | **DONE**            |
-| MP-02-003 | ~~QS-011: Customer Portal — Basic 4-Page MVP~~                                      | BLD   | 16h    | P0       | **DONE**            |
-| MP-02-004 | Wire commission auto-calculation trigger (event on load delivery → commission calc) | WIR   | 4h     | P1       | PST-08, e2e Step 10 |
-| MP-02-005 | Wire `enforceMinimumMargin()` into quote create/update flow                         | WIR   | 2h     | P0       | PST-04, e2e Step 1  |
-| MP-02-006 | Create quote expiry cron job (check validUntil, mark EXPIRED)                       | WIR   | 1h     | P0       | PST-04, e2e Step 1  |
-| MP-02-007 | Fix document upload architecture (add FileInterceptor or S3-first flow)             | BLD   | 3h     | P0       | PST-11, e2e Step 7  |
-| MP-02-008 | Wire Orders delete handler (currently no-op toast)                                  | WIR   | 2h     | P1       | PST-05              |
-| MP-02-009 | Build Invoice Edit page (`/accounting/invoices/[id]/edit`)                          | BLD   | 3h     | P1       | PST-07, e2e Step 8  |
-| MP-02-010 | Build public tracking endpoint `GET /portal/track/:code` for Customer Portal        | BLD   | 4h     | P0       | PST-13, e2e Step 5  |
-| MP-02-011 | Wrap Commission createPayout/processPayout in $transaction                          | SEC   | 1h     | P1       | PST-08, CCF-023     |
-| MP-02-012 | Connect notification bell to backend unread-count API                               | WIR   | 1h     | P1       | PST-12              |
-| MP-02-013 | Implement Load tender/accept/reject endpoints (carrier workflow)                    | BLD   | 6h     | P1       | PST-05, e2e Step 4  |
-| MP-02-014 | Carrier Portal soft-delete filtering (5/7 services)                                 | SEC   | 3h     | P0       | PST-14, CCF-011     |
-| MP-02-015 | Add `deletedAt: null` to accounting services (7 models, only Reports filters)       | SEC   | 2h     | P1       | PST-07, CCF-011     |
-| MP-02-016 | Add `deletedAt: null` to Commission (21/34 methods, 60% gap)                        | SEC   | 3h     | P1       | PST-08, CCF-022     |
-| MP-02-017 | Build Settlement Create page (`/accounting/settlements/new`)                        | BLD   | 3h     | P1       | e2e Step 9          |
+| ID | Task | Layer | Effort | Priority | Source |
+|----|------|-------|--------|----------|--------|
+| MP-02-001 | ~~QS-012: Rate Confirmation PDF Generation~~ | BLD | 8h | P0 | **DONE** |
+| MP-02-002 | ~~QS-013: BOL PDF Generation~~ | BLD | 6h | P0 | **DONE** |
+| MP-02-003 | ~~QS-011: Customer Portal — Basic 4-Page MVP~~ | BLD | 16h | P0 | **DONE** |
+| MP-02-004 | Wire commission auto-calculation trigger (event on load delivery → commission calc) | WIR | 4h | P1 | PST-08, e2e Step 10 |
+| MP-02-005 | ~~Wire `enforceMinimumMargin()` into quote create/update flow~~ | WIR | 2h | P0 | **DONE** (2026-03-11) |
+| MP-02-006 | ~~Create quote expiry cron job (check validUntil, mark EXPIRED)~~ | WIR | 1h | P0 | **DONE** (2026-03-11) |
+| MP-02-007 | ~~Fix document upload architecture (add FileInterceptor or S3-first flow)~~ | BLD | 3h | P0 | **DONE** (2026-03-11) — FileInterceptor already implemented on POST /documents/upload |
+| MP-02-008 | Wire Orders delete handler (currently no-op toast) | WIR | 2h | P1 | PST-05 |
+| MP-02-009 | Build Invoice Edit page (`/accounting/invoices/[id]/edit`) | BLD | 3h | P1 | PST-07, e2e Step 8 |
+| MP-02-010 | ~~Build public tracking endpoint `GET /portal/track/:code` for Customer Portal~~ | BLD | 4h | P0 | **DONE** (2026-03-11) — GET /public/tracking/:trackingCode + frontend /track/[trackingCode] page already built |
+| MP-02-011 | Wrap Commission createPayout/processPayout in $transaction | SEC | 1h | P1 | PST-08, CCF-023 |
+| MP-02-012 | Connect notification bell to backend unread-count API | WIR | 1h | P1 | PST-12 |
+| MP-02-013 | Implement Load tender/accept/reject endpoints (carrier workflow) | BLD | 6h | P1 | PST-05, e2e Step 4 |
+| MP-02-014 | ~~Carrier Portal soft-delete filtering (5/7 services)~~ | SEC | 3h | P0 | **DONE** (2026-03-11) — deletedAt:null added to all read queries in 5 services (Compliance, Dashboard, Documents, Invoices, Loads) |
+| MP-02-015 | ~~Add `deletedAt: null` to accounting services~~ | SEC | 2h | P1 | **DONE** (2026-03-11) — Fixed Invoice, Settlement, PaymentMade, PaymentReceived number generators. Note: ChartOfAccount + JournalEntry models lack deletedAt field (no fix needed) |
+| MP-02-016 | ~~Add `deletedAt: null` to Commission (21/34 methods, 60% gap)~~ | SEC | 3h | P1 | **DONE** (2026-03-11) — Fixed 48 queries across 4 services (Entries, Payouts, Plans, Dashboard) |
+| MP-02-017 | Build Settlement Create page (`/accounting/settlements/new`) | BLD | 3h | P1 | e2e Step 9 |
 
 **Exit Criteria:**
 

@@ -42,13 +42,28 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   }
 
   async keys(pattern: string): Promise<string[]> {
-    return this.client.keys(pattern);
+    return this.scanKeys(pattern);
   }
 
   async deleteByPattern(pattern: string): Promise<number> {
-    const keys = await this.keys(pattern);
+    const keys = await this.scanKeys(pattern);
     if (!keys.length) return 0;
     return this.client.del(...keys);
+  }
+
+  /**
+   * Use SCAN instead of KEYS to avoid blocking Redis on large datasets.
+   * SCAN iterates incrementally with O(1) per call instead of O(N) for KEYS.
+   */
+  private async scanKeys(pattern: string): Promise<string[]> {
+    const result: string[] = [];
+    let cursor = '0';
+    do {
+      const [nextCursor, keys] = await this.client.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
+      cursor = nextCursor;
+      result.push(...keys);
+    } while (cursor !== '0');
+    return result;
   }
 
   async getValue(key: string): Promise<string | null> {
@@ -138,7 +153,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
    */
   async revokeAllUserSessions(userId: string): Promise<void> {
     const pattern = `session:${userId}:*`;
-    const keys = await this.client.keys(pattern);
+    const keys = await this.scanKeys(pattern);
     
     if (keys.length > 0) {
       await this.client.del(...keys);
@@ -151,7 +166,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
    */
   async getUserSessions(userId: string): Promise<string[]> {
     const pattern = `session:${userId}:*`;
-    const keys = await this.client.keys(pattern);
+    const keys = await this.scanKeys(pattern);
     
     return keys.map((key) => key.split(':')[2]).filter((id): id is string => id !== undefined); // Extract sessionId
   }
@@ -161,7 +176,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
    */
   async getUserSessionCount(userId: string): Promise<number> {
     const pattern = `session:${userId}:*`;
-    const keys = await this.client.keys(pattern);
+    const keys = await this.scanKeys(pattern);
     return keys.length;
   }
 

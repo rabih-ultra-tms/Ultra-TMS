@@ -282,7 +282,7 @@ export class RateContractsService {
     await this.findOne(tenantId, contractId);
 
     return this.prisma.contractLaneRate.findMany({
-      where: { contractId },
+      where: { contractId, tenantId },
       orderBy: [{ originState: 'asc' }, { destinationState: 'asc' }],
     });
   }
@@ -375,7 +375,7 @@ export class RateContractsService {
 
     // Copy lane rates
     const lanesToCopy = await this.prisma.contractLaneRate.findMany({
-      where: { contractId: id },
+      where: { contractId: id, tenantId },
     });
 
     if (lanesToCopy.length > 0) {

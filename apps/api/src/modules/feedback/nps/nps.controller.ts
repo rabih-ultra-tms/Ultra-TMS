@@ -12,7 +12,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Feedback')
 @ApiBearerAuth('JWT-auth')
-@Roles('ADMIN')
+@Roles('USER', 'MANAGER', 'ADMIN')
 export class NpsController {
   constructor(
     private readonly surveys: NpsSurveysService,

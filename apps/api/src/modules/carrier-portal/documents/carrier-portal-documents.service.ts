@@ -7,7 +7,7 @@ export class CarrierPortalDocumentsService {
   constructor(private readonly prisma: PrismaService) {}
 
   list(tenantId: string, carrierId: string) {
-    return this.prisma.carrierPortalDocument.findMany({ where: { tenantId, carrierId } });
+    return this.prisma.carrierPortalDocument.findMany({ where: { tenantId, carrierId, deletedAt: null } });
   }
 
   async upload(tenantId: string, carrierId: string, userId: string, payload: { loadId?: string; fileName: string; fileSize: number; mimeType: string; documentType?: CarrierDocumentType }) {
@@ -27,7 +27,7 @@ export class CarrierPortalDocumentsService {
   }
 
   async get(tenantId: string, carrierId: string, id: string) {
-    const doc = await this.prisma.carrierPortalDocument.findFirst({ where: { id, tenantId, carrierId } });
+    const doc = await this.prisma.carrierPortalDocument.findFirst({ where: { id, tenantId, carrierId, deletedAt: null } });
     if (!doc) throw new NotFoundException('Document not found');
     return doc;
   }

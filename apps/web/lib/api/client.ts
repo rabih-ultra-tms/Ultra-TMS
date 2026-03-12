@@ -4,9 +4,10 @@
  * SEC-001 Authentication Strategy:
  * - HttpOnly cookies are set by the backend on login/refresh
  * - Cookies are automatically sent with credentials: 'include'
- * - JavaScript CANNOT read HttpOnly cookies (XSS-safe)
+ * - JavaScript CANNOT read or write auth tokens (XSS-safe)
  * - For Server Components, cookies are forwarded via Next.js headers
- * - NO localStorage, NO document.cookie token management
+ * - On 401, the client attempts a silent refresh via /auth/refresh
+ * - NO localStorage, NO client-side cookie manipulation for tokens
  */
 
 import { AUTH_CONFIG } from '@/lib/config/auth';
@@ -28,29 +29,20 @@ function getCsrfToken(): string | undefined {
     : undefined;
 }
 
-interface TokenPair {
-  accessToken: string;
-  refreshToken?: string;
-  expiresIn?: number;
-}
-
 /**
- * SEC-001: setAuthTokens is now a no-op on the client.
- * The backend sets HttpOnly cookies via Set-Cookie headers.
- * This function is kept for backward compatibility with login page code
- * that calls it after receiving the login response.
+ * @deprecated No-op. Tokens are now managed as HttpOnly cookies by the backend.
+ * Kept for backwards compatibility during migration — will be removed in a future sprint.
  */
-export function setAuthTokens(_tokens: TokenPair): void {
-  // No-op: backend sets HttpOnly cookies via Set-Cookie header
+export function setAuthTokens(_tokens?: unknown): void {
+  // No-op: HttpOnly cookies are set by the backend
 }
 
 /**
- * SEC-001: clearAuthTokens is now a no-op on the client.
- * The actual HttpOnly cookies are cleared by the backend on
- * POST /auth/logout via Set-Cookie with Max-Age=0.
+ * @deprecated No-op. Tokens are now cleared by the backend on logout.
+ * Kept for backwards compatibility during migration — will be removed in a future sprint.
  */
 export function clearAuthTokens(): void {
-  // No-op: backend clears HttpOnly cookies on logout
+  // No-op: HttpOnly cookies are cleared by the backend on logout
 }
 
 function redirectToLogin(): void {
@@ -60,15 +52,15 @@ function redirectToLogin(): void {
   window.location.href = loginUrl;
 }
 
-let refreshPromise: Promise<TokenPair | null> | null = null;
+let refreshPromise: Promise<boolean> | null = null;
 
 /**
- * SEC-001: Refresh tokens via the backend.
- * The refresh token is in an HttpOnly cookie, sent automatically
- * via credentials: 'include'. No body needed.
+ * SEC-001: Attempt to refresh tokens via HttpOnly cookies.
+ * The backend reads the refresh token from the cookie and sets new HttpOnly cookies.
+ * Returns true if refresh succeeded, false otherwise.
  */
-async function refreshTokens(): Promise<TokenPair | null> {
-  if (typeof window === 'undefined') return null;
+async function refreshTokens(): Promise<boolean> {
+  if (typeof window === 'undefined') return false;
 
   if (refreshPromise) {
     return refreshPromise;
@@ -89,18 +81,9 @@ async function refreshTokens(): Promise<TokenPair | null> {
         body: JSON.stringify({}),
       });
 
-      if (!response.ok) {
-        return null;
-      }
-
-      const payload = (await response.json()) as { data?: TokenPair };
-      if (payload?.data?.accessToken) {
-        return payload.data;
-      }
-
-      return null;
+      return response.ok;
     } catch {
-      return null;
+      return false;
     } finally {
       refreshPromise = null;
     }
@@ -171,6 +154,21 @@ interface RequestOptions extends Omit<RequestInit, 'body'> {
   serverCookies?: string;
 }
 
+const AUTH_ENDPOINTS = [
+  "/auth/login",
+  "/auth/refresh",
+  "/auth/register",
+  "/auth/forgot-password",
+  "/auth/reset-password",
+  "/auth/verify-email",
+  "/auth/mfa",
+  "/auth/logout",
+];
+
+function isAuthEndpoint(endpoint: string): boolean {
+  return AUTH_ENDPOINTS.some((path) => endpoint.startsWith(path));
+}
+
 class ApiClient {
   private baseUrl: string;
 
@@ -235,19 +233,10 @@ class ApiClient {
       credentials: 'include',
     });
 
-    const skipRefresh =
-      endpoint.startsWith('/auth/login') ||
-      endpoint.startsWith('/auth/refresh') ||
-      endpoint.startsWith('/auth/register') ||
-      endpoint.startsWith('/auth/forgot-password') ||
-      endpoint.startsWith('/auth/reset-password') ||
-      endpoint.startsWith('/auth/verify-email') ||
-      endpoint.startsWith('/auth/mfa') ||
-      endpoint.startsWith('/auth/logout');
-
-    if (response.status === 401 && !hasRetried && !skipRefresh) {
+    // On 401, attempt a silent token refresh (unless this is an auth endpoint or already retried)
+    if (response.status === 401 && !hasRetried && !isAuthEndpoint(endpoint)) {
       const refreshed = await refreshTokens();
-      if (refreshed?.accessToken) {
+      if (refreshed) {
         return this.request<T>(endpoint, options, true);
       }
 

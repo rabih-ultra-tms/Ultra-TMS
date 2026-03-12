@@ -29,7 +29,6 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AUTH_CONFIG } from "@/lib/config/auth";
-import { setAuthTokens } from "@/lib/api/client";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -84,14 +83,7 @@ function SuperAdminLoginContent() {
         return;
       }
 
-      const accessToken = result?.data?.accessToken as string | undefined;
-      const refreshToken = result?.data?.refreshToken as string | undefined;
-      const expiresIn = result?.data?.expiresIn as number | undefined;
-
-      if (accessToken) {
-        setAuthTokens({ accessToken, refreshToken, expiresIn });
-      }
-
+      // HttpOnly cookies are set by the backend — no client-side token handling needed
       window.location.href = returnUrl;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Invalid credentials");

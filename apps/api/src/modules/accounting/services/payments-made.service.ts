@@ -8,7 +8,7 @@ export class PaymentsMadeService {
 
   private async generatePaymentNumber(tenantId: string): Promise<string> {
     const lastPayment = await this.prisma.paymentMade.findFirst({
-      where: { tenantId },
+      where: { tenantId, deletedAt: null },
       orderBy: { createdAt: 'desc' },
       select: { paymentNumber: true },
     });

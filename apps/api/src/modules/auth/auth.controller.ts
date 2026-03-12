@@ -8,20 +8,17 @@ import {
   Res,
   HttpCode,
   HttpStatus,
+  UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Throttle } from '@nestjs/throttler';
-import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
-import { AuthService, TokenPair } from './auth.service';
+import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { Public } from '../../common/decorators';
+import { AUTH_COOKIE_NAME, REFRESH_COOKIE_NAME } from './strategies/jwt.strategy';
 import {
   LoginDto,
   ForgotPasswordDto,
@@ -30,50 +27,51 @@ import {
   RefreshTokenDto,
 } from './dto';
 
-const IS_PRODUCTION = process.env.NODE_ENV === 'production';
-
-/**
- * SEC-001: Set HttpOnly cookies for access and refresh tokens.
- * Cookies are automatically sent by the browser on every request,
- * and cannot be read by JavaScript (XSS-safe).
- */
-function setAuthCookies(res: Response, tokens: TokenPair): void {
-  const cookieOptions = {
-    httpOnly: true,
-    secure: IS_PRODUCTION,
-    sameSite: 'lax' as const,
-    path: '/',
-  };
-
-  res.cookie('accessToken', tokens.accessToken, {
-    ...cookieOptions,
-    maxAge: (tokens.expiresIn || 15 * 60) * 1000,
-  });
-
-  if (tokens.refreshToken) {
-    res.cookie('refreshToken', tokens.refreshToken, {
-      ...cookieOptions,
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-    });
-  }
-}
-
-function clearAuthCookies(res: Response): void {
-  const cookieOptions = {
-    httpOnly: true,
-    secure: IS_PRODUCTION,
-    sameSite: 'lax' as const,
-    path: '/',
-  };
-
-  res.clearCookie('accessToken', cookieOptions);
-  res.clearCookie('refreshToken', cookieOptions);
-}
+const ACCESS_MAX_AGE_MS = 15 * 60 * 1000; // 15 minutes
+const REFRESH_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 @Controller('auth')
 @ApiTags('Auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  private readonly isProduction: boolean;
+
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {
+    this.isProduction = configService.get<string>('NODE_ENV') === 'production';
+  }
+
+  private setTokenCookies(res: Response, accessToken: string, refreshToken: string): void {
+    const cookieOptions = {
+      httpOnly: true,
+      secure: this.isProduction,
+      sameSite: 'lax' as const,
+      path: '/',
+    };
+
+    res.cookie(AUTH_COOKIE_NAME, accessToken, {
+      ...cookieOptions,
+      maxAge: ACCESS_MAX_AGE_MS,
+    });
+
+    res.cookie(REFRESH_COOKIE_NAME, refreshToken, {
+      ...cookieOptions,
+      maxAge: REFRESH_MAX_AGE_MS,
+    });
+  }
+
+  private clearTokenCookies(res: Response): void {
+    const cookieOptions = {
+      httpOnly: true,
+      secure: this.isProduction,
+      sameSite: 'lax' as const,
+      path: '/',
+    };
+
+    res.clearCookie(AUTH_COOKIE_NAME, cookieOptions);
+    res.clearCookie(REFRESH_COOKIE_NAME, cookieOptions);
+  }
 
   /**
    * POST /api/v1/auth/login
@@ -91,7 +89,7 @@ export class AuthController {
   async login(
     @Body() loginDto: LoginDto,
     @Req() req: Request,
-    @Res({ passthrough: true }) res: Response
+    @Res({ passthrough: true }) res: Response,
   ) {
     const userAgent = req.headers['user-agent'];
     const ipAddress = req.ip || req.connection.remoteAddress;
@@ -101,12 +99,12 @@ export class AuthController {
       ? await this.authService.getMe(result.userId)
       : null;
 
-    // SEC-001: Set HttpOnly cookies
-    setAuthCookies(res, result);
+    // SEC-001: Set HttpOnly cookies — tokens never exposed to JavaScript
+    this.setTokenCookies(res, result.accessToken, result.refreshToken);
 
     return {
       data: {
-        ...result,
+        expiresIn: result.expiresIn,
         user,
       },
       message: 'Login successful',
@@ -121,33 +119,31 @@ export class AuthController {
   @Public()
   @Throttle({ long: { limit: 10, ttl: 60000 } })
   @ApiOperation({ summary: 'Refresh access token' })
-  @ApiBody({ type: RefreshTokenDto })
+  @ApiBody({ type: RefreshTokenDto, required: false })
   @ApiResponse({ status: 200, description: 'Token refreshed' })
   @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
   @HttpCode(HttpStatus.OK)
   async refresh(
     @Body() refreshTokenDto: RefreshTokenDto,
     @Req() req: Request,
-    @Res({ passthrough: true }) res: Response
+    @Res({ passthrough: true }) res: Response,
   ) {
-    // SEC-001: Accept refresh token from body OR HttpOnly cookie
-    const refreshToken =
-      refreshTokenDto?.refreshToken || req.cookies?.refreshToken;
+    // SEC-001: Read refresh token from cookie if not provided in body
+    const tokenFromBody = refreshTokenDto?.refreshToken;
+    const tokenFromCookie = req?.cookies?.[REFRESH_COOKIE_NAME];
+    const refreshToken = tokenFromBody || tokenFromCookie;
 
     if (!refreshToken) {
-      return {
-        data: null,
-        message: 'No refresh token provided',
-      };
+      throw new UnauthorizedException('No refresh token provided');
     }
 
     const tokens = await this.authService.refresh({ refreshToken });
 
     // SEC-001: Set new HttpOnly cookies (token rotation)
-    setAuthCookies(res, tokens);
+    this.setTokenCookies(res, tokens.accessToken, tokens.refreshToken);
 
     return {
-      data: tokens,
+      data: { expiresIn: tokens.expiresIn },
       message: 'Token refreshed successfully',
     };
   }
@@ -165,12 +161,12 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async logout(
     @CurrentUser() user: { sub: string },
-    @Res({ passthrough: true }) res: Response
+    @Res({ passthrough: true }) res: Response,
   ) {
     await this.authService.logoutAll(user.sub);
 
     // SEC-001: Clear HttpOnly cookies
-    clearAuthCookies(res);
+    this.clearTokenCookies(res);
 
     return {
       data: { success: true },
@@ -191,12 +187,12 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async logoutAll(
     @CurrentUser() user: { sub: string },
-    @Res({ passthrough: true }) res: Response
+    @Res({ passthrough: true }) res: Response,
   ) {
     await this.authService.logoutAll(user.sub);
 
     // SEC-001: Clear HttpOnly cookies
-    clearAuthCookies(res);
+    this.clearTokenCookies(res);
 
     return {
       data: { success: true },

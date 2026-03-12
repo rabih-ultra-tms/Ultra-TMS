@@ -14,12 +14,13 @@ export class CommissionsDashboardService {
     const [pendingAgg, paidMTDAgg, paidYTDAgg, allApprovedEntries] =
       await Promise.all([
         this.prisma.commissionEntry.aggregate({
-          where: { tenantId, status: 'PENDING' },
+          where: { tenantId, deletedAt: null, status: 'PENDING' },
           _sum: { commissionAmount: true },
         }),
         this.prisma.commissionEntry.aggregate({
           where: {
             tenantId,
+            deletedAt: null,
             status: 'PAID',
             paidAt: { gte: startOfMonth },
           },
@@ -28,6 +29,7 @@ export class CommissionsDashboardService {
         this.prisma.commissionEntry.aggregate({
           where: {
             tenantId,
+            deletedAt: null,
             status: 'PAID',
             paidAt: { gte: startOfYear },
           },
@@ -36,6 +38,7 @@ export class CommissionsDashboardService {
         this.prisma.commissionEntry.findMany({
           where: {
             tenantId,
+            deletedAt: null,
             status: { in: ['APPROVED', 'PAID'] },
           },
           select: { rateApplied: true },
@@ -95,12 +98,13 @@ export class CommissionsDashboardService {
         const [pendingAgg, paidMTDAgg, paidYTDAgg, loadCount] =
           await Promise.all([
             this.prisma.commissionEntry.aggregate({
-              where: { tenantId, userId: a.userId, status: 'PENDING' },
+              where: { tenantId, deletedAt: null, userId: a.userId, status: 'PENDING' },
               _sum: { commissionAmount: true },
             }),
             this.prisma.commissionEntry.aggregate({
               where: {
                 tenantId,
+                deletedAt: null,
                 userId: a.userId,
                 status: 'PAID',
                 paidAt: { gte: startOfMonth },
@@ -110,6 +114,7 @@ export class CommissionsDashboardService {
             this.prisma.commissionEntry.aggregate({
               where: {
                 tenantId,
+                deletedAt: null,
                 userId: a.userId,
                 status: 'PAID',
                 paidAt: { gte: startOfYear },
@@ -119,6 +124,7 @@ export class CommissionsDashboardService {
             this.prisma.commissionEntry.count({
               where: {
                 tenantId,
+                deletedAt: null,
                 userId: a.userId,
                 loadId: { not: null },
                 status: { in: ['APPROVED', 'PAID'] },
@@ -219,12 +225,13 @@ export class CommissionsDashboardService {
         const [pendingAgg, paidMTDAgg, paidYTDAgg, loadCount] =
           await Promise.all([
             this.prisma.commissionEntry.aggregate({
-              where: { tenantId, userId: a.userId, status: 'PENDING' },
+              where: { tenantId, deletedAt: null, userId: a.userId, status: 'PENDING' },
               _sum: { commissionAmount: true },
             }),
             this.prisma.commissionEntry.aggregate({
               where: {
                 tenantId,
+                deletedAt: null,
                 userId: a.userId,
                 status: 'PAID',
                 paidAt: { gte: startOfMonth },
@@ -234,6 +241,7 @@ export class CommissionsDashboardService {
             this.prisma.commissionEntry.aggregate({
               where: {
                 tenantId,
+                deletedAt: null,
                 userId: a.userId,
                 status: 'PAID',
                 paidAt: { gte: startOfYear },
@@ -243,6 +251,7 @@ export class CommissionsDashboardService {
             this.prisma.commissionEntry.count({
               where: {
                 tenantId,
+                deletedAt: null,
                 userId: a.userId,
                 loadId: { not: null },
                 status: { in: ['APPROVED', 'PAID'] },
@@ -306,12 +315,13 @@ export class CommissionsDashboardService {
 
     const [pendingAgg, paidMTDAgg, paidYTDAgg, loadCount] = await Promise.all([
       this.prisma.commissionEntry.aggregate({
-        where: { tenantId, userId, status: 'PENDING' },
+        where: { tenantId, deletedAt: null, userId, status: 'PENDING' },
         _sum: { commissionAmount: true },
       }),
       this.prisma.commissionEntry.aggregate({
         where: {
           tenantId,
+          deletedAt: null,
           userId,
           status: 'PAID',
           paidAt: { gte: startOfMonth },
@@ -321,6 +331,7 @@ export class CommissionsDashboardService {
       this.prisma.commissionEntry.aggregate({
         where: {
           tenantId,
+          deletedAt: null,
           userId,
           status: 'PAID',
           paidAt: { gte: startOfYear },
@@ -330,6 +341,7 @@ export class CommissionsDashboardService {
       this.prisma.commissionEntry.count({
         where: {
           tenantId,
+          deletedAt: null,
           userId,
           loadId: { not: null },
           status: { in: ['APPROVED', 'PAID'] },
@@ -362,7 +374,7 @@ export class CommissionsDashboardService {
 
     const [entries, total] = await Promise.all([
       this.prisma.commissionEntry.findMany({
-        where: { tenantId, userId },
+        where: { tenantId, deletedAt: null, userId },
         include: {
           load: { select: { id: true, loadNumber: true } },
           order: { select: { id: true, orderNumber: true } },
@@ -372,7 +384,7 @@ export class CommissionsDashboardService {
         skip,
         take: limit,
       }),
-      this.prisma.commissionEntry.count({ where: { tenantId, userId } }),
+      this.prisma.commissionEntry.count({ where: { tenantId, deletedAt: null, userId } }),
     ]);
 
     const data = entries.map((e) => ({
@@ -415,7 +427,7 @@ export class CommissionsDashboardService {
     const { page, limit } = options;
     const skip = (page - 1) * limit;
 
-    const where: any = { tenantId };
+    const where: any = { tenantId, deletedAt: null };
 
     if (options.status && options.status !== 'all') {
       where.status = options.status.toUpperCase();
@@ -548,6 +560,7 @@ export class CommissionsDashboardService {
   ) {
     const where: any = {
       tenantId,
+      deletedAt: null,
       status: { in: ['APPROVED', 'PAID'] },
     };
     if (dateFilter) where.commissionPeriod = dateFilter;
@@ -611,6 +624,7 @@ export class CommissionsDashboardService {
         const agg = await this.prisma.commissionEntry.aggregate({
           where: {
             tenantId,
+            deletedAt: null,
             planId,
             status: { in: ['APPROVED', 'PAID'] },
           },

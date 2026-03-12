@@ -6,16 +6,24 @@ import {
   Body,
   Param,
   Query,
+  Headers,
+  Req,
   UseGuards,
+  ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
+import type { Request } from 'express';
 import { JwtAuthGuard } from '../auth/guards';
 import { SmsService } from './sms.service';
+import { TwilioProvider } from './providers/twilio.provider';
+import type { TwilioInboundMessage } from './providers/twilio.provider';
 import { SendSmsDto, ReplySmsDto } from './dto';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
 
@@ -24,7 +32,12 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
 @ApiTags('Communication')
 @ApiBearerAuth('JWT-auth')
 export class SmsController {
-  constructor(private readonly smsService: SmsService) {}
+  private readonly logger = new Logger(SmsController.name);
+
+  constructor(
+    private readonly smsService: SmsService,
+    private readonly twilioProvider: TwilioProvider,
+  ) {}
 
   @Post('send')
   @Roles('ADMIN', 'DISPATCHER', 'OPERATIONS')
@@ -135,20 +148,36 @@ export class SmsController {
     return this.smsService.getStats(tenantId);
   }
 
-  // Twilio webhook - no auth required (validated by Twilio signature)
   @Post('webhook')
-  @ApiOperation({ summary: 'Handle inbound SMS webhook' })
+  @Public()
+  @ApiOperation({ summary: 'Handle inbound SMS webhook (Twilio)' })
   @ApiQuery({ name: 'tenantId', required: true, type: String })
   @ApiStandardResponse('SMS webhook processed')
   @ApiErrorResponses()
   async handleWebhook(
     @Query('tenantId') tenantId: string,
-    @Body() body: any,
+    @Headers('x-twilio-signature') signature: string,
+    @Req() req: Request,
+    @Body() body: TwilioInboundMessage,
   ) {
-    // In production, validate Twilio signature here
     if (!tenantId) {
-      return { error: 'tenantId required' };
+      throw new ForbiddenException('tenantId required');
     }
+
+    // Validate Twilio signature to prevent spoofed webhooks
+    const url = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+    const params: Record<string, string> = {};
+    for (const [key, value] of Object.entries(body)) {
+      if (typeof value === 'string') {
+        params[key] = value;
+      }
+    }
+
+    if (!this.twilioProvider.validateWebhookSignature(signature, url, params)) {
+      this.logger.warn(`Invalid Twilio signature for webhook from ${req.ip}`);
+      throw new ForbiddenException('Invalid webhook signature');
+    }
+
     return this.smsService.handleInboundWebhook(tenantId, body);
   }
 }

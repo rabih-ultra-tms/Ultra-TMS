@@ -101,7 +101,7 @@
 
 **Quality Sprint COMPLETE** — 16/16 tasks done. All QS tasks COMPLETE (QS-001 through QS-016).
 
-**Active:** MP-01 Security Hardening (30 tasks, 11 DONE) — see [Master Project Plan](08-sprints/master-project-plan.md#mp-01-security-hardening-weeks-1-2)
+**Active:** MP-02 Table-Stakes Features (17 tasks, 3 pre-done from QS) — see [Master Project Plan](08-sprints/master-project-plan.md#mp-02-table-stakes-features--revenue-lifecycle-weeks-3-4)
 
 - MP-01-001: ~~Prisma Client Extension~~ **DONE**
 - MP-01-002: ~~RolesGuard financial controllers (27 controllers across 5 services)~~ **DONE** (2026-03-11)
@@ -109,11 +109,30 @@
 - MP-01-005: ~~JWT secret inconsistency~~ **DONE** (2026-03-11) — verified: no inconsistency, both portals use correct naming
 - MP-01-006: ~~Carrier Portal login tenant isolation~~ **DONE** (2026-03-11) — added tenantId to login query + deletedAt filters to forgotPassword/resetPassword/verifyEmail (both portals)
 - MP-01-007: ~~Factoring apiKey plaintext~~ **DONE** (2026-03-11) — stripSensitive removes apiKey from all API responses
+- MP-01-008: ~~EncryptionService hardcoded fallback~~ **DONE** (2026-03-11) — fail-fast in production, removed 'local-dev-secret', dev uses JWT_SECRET fallback
+- MP-01-009: ~~Rate Intelligence plaintext credentials~~ **DONE** (2026-03-11) — stripSensitive removes apiKey, apiSecret, password from all API responses
+- MP-01-011: ~~Elasticsearch tenantId filtering~~ **DONE** (2026-03-11) — added tenantId filter to searchGlobal, searchEntity, suggest; tenantId indexed in all documents
+- MP-01-012: ~~Cache 8/20 endpoints missing tenantId~~ **DONE** (2026-03-11) — fixed keys/deletePattern (scoped), locks history/details/forceRelease, rate-limit get/usage/reset
+- MP-01-013: ~~Operations LoadHistory tenant bugs~~ **DONE** (2026-03-11) — tenantId already correct; added missing deletedAt:null to getByCarrier + getSimilarLoads
+- MP-01-014: ~~CRM tenant isolation in mutations~~ **DONE** (2026-03-11) — added tenantId to WHERE in 17 mutations across Companies (4), Contacts (3), Activities (5), Opportunities (5)
 - MP-01-010: ~~EDI ftpPassword plaintext~~ **DONE** (2026-03-11) — stripSensitive removes ftpPassword from all API responses
 - MP-01-018: ~~Agents rankings tenant leak~~ **DONE** (2026-03-11) — added tenantId filter to agent lookup in rankings()
 - MP-01-019: ~~Search deleteSynonym cross-tenant~~ **DONE** (2026-03-11) — verify ownership before delete
+- MP-01-015: ~~Fix Accounting PaymentReceived cross-tenant bug in markBounced (added tenantId to invoice findFirst)~~ **DONE** (2026-03-11)
+- MP-01-016: ~~Fix Sales tenant isolation (5 locations: QuoteStop deleteMany, ContractLaneRate findMany/findFirst)~~ **DONE** (2026-03-11)
+- MP-01-017: ~~Fix Contracts FuelSurchargeTier missing tenantId (migration + backfill + service fix)~~ **DONE** (2026-03-11)
+- MP-01-004: ~~Fix RolesGuard gaps — 22 remaining controllers (Help Desk 5, Feedback 5, Cache 4, EDI 3, Search 2, Workflow 2, Claims 1)~~ **DONE** (2026-03-11)
 - MP-01-020: ~~Super Admin deleted admin auth~~ **DONE** (2026-03-11) — added deletedAt:null to forgotPassword query
+- MP-01-021: ~~Migrate localStorage tokens to HttpOnly cookies~~ **DONE** (2026-03-11) — backend sets HttpOnly cookies on login/refresh/logout, frontend no longer reads/writes tokens, JWT strategy extracts from cookie fallback
 - MP-01-022: ~~CORS env variable~~ **DONE**
+- MP-01-023: ~~Add CSP headers to Next.js config~~ **DONE** (2026-03-11) — CSP + X-Content-Type-Options + Referrer-Policy + X-Frame-Options + Permissions-Policy + X-DNS-Prefetch-Control
+- MP-01-024: ~~Add @nestjs/throttler rate limiting~~ **DONE** (pre-existing) — already installed (v6.5.0), CustomThrottlerGuard active globally (3 tiers), @Throttle on auth login, database-driven RateLimitGuard also available
+- MP-01-025: ~~Fix webhook auth — Communication SMS~~ **DONE** (2026-03-11) — @Public() on webhook, Twilio HMAC-SHA1 signature validation, typed body as TwilioInboundMessage
+- MP-01-026: ~~Fix webhook auth — CRM HubSpot~~ **DONE** (2026-03-11) — @Public() on webhook, HubSpot v1 SHA-256 signature validation via HUBSPOT_CLIENT_SECRET
+- MP-01-027: ~~Fix Storage path traversal~~ **DONE** (2026-03-11) — safePath() helper with path.resolve + startsWith check on upload/delete/exists, 4 new tests (13 total)
+- MP-01-028: ~~Fix Redis KEYS command~~ **DONE** (2026-03-11) — replaced all this.client.keys() with SCAN iterator (scanKeys private method), 4 call sites fixed, 31+6 tests pass
+- MP-01-029: ~~Verify CSRF protection~~ **DONE** (2026-03-11) — verified: SameSite=Lax, HttpOnly, secure=isProduction, path=/ on both access and refresh cookies
+- MP-01-030: ~~Add gitleaks pre-commit hook~~ **DONE** (2026-03-11) — added to .husky/pre-commit with graceful fallback, .gitleaks.toml config excludes node_modules/tests/dist
 
 **Full project timeline:** 24 sprints × 2 weeks = 48 weeks across 5 phases:
 

@@ -11,7 +11,7 @@ import { IoAdapter } from '@nestjs/platform-socket.io';
 import { Logger as PinoLogger } from 'nestjs-pino';
 import { join } from 'path';
 import helmet from 'helmet';
-import cookieParser from 'cookie-parser';
+import * as cookieParser from 'cookie-parser';
 import { SentryExceptionFilter } from './common/filters/sentry-exception.filter';
 import { SentryInterceptor } from './common/interceptors/sentry.interceptor';
 import { SanitizeInputInterceptor } from './common/interceptors/sanitize-input.interceptor';

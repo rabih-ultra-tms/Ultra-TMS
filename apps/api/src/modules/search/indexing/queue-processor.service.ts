@@ -48,7 +48,7 @@ export class QueueProcessorService {
         return { processed: false, error: 'Entity not found' };
       }
 
-      const document = this.mapDocument(next.entityType, record);
+      const document = this.mapDocument(next.entityType, record, tenantId);
       await this.elasticsearch.indexDocument(next.entityType, next.entityId, document);
       await this.indexingService.markCompleted(next.id);
       await this.indexManager.setStatus(tenantId, next.entityType, 'READY');
@@ -65,7 +65,7 @@ export class QueueProcessorService {
     let indexed = 0;
 
     for (const record of records) {
-      const document = this.mapDocument(entityType, record);
+      const document = this.mapDocument(entityType, record, tenantId);
       await this.elasticsearch.indexDocument(entityType, record.id, document);
       indexed += 1;
     }
@@ -107,11 +107,12 @@ export class QueueProcessorService {
     }
   }
 
-  private mapDocument(entityType: string, record: any) {
+  private mapDocument(entityType: string, record: any, tenantId: string) {
     switch (entityType) {
       case 'customers':
         return {
           id: record.id,
+          tenantId,
           entityType,
           title: record.name,
           name: record.name,
@@ -126,6 +127,7 @@ export class QueueProcessorService {
       case 'orders':
         return {
           id: record.id,
+          tenantId,
           entityType,
           title: record.orderNumber,
           name: record.orderNumber,
@@ -142,6 +144,7 @@ export class QueueProcessorService {
       case 'loads':
         return {
           id: record.id,
+          tenantId,
           entityType,
           title: record.loadNumber,
           name: record.loadNumber,
@@ -158,6 +161,7 @@ export class QueueProcessorService {
       case 'carriers':
         return {
           id: record.id,
+          tenantId,
           entityType,
           title: record.legalName || record.dbaName,
           name: record.legalName,
@@ -173,6 +177,7 @@ export class QueueProcessorService {
       case 'documents':
         return {
           id: record.id,
+          tenantId,
           entityType,
           title: record.name,
           name: record.name,
@@ -186,7 +191,7 @@ export class QueueProcessorService {
           content: record.description,
         };
       default:
-        return { id: record.id, entityType, title: record.id };
+        return { id: record.id, tenantId, entityType, title: record.id };
     }
   }
 }

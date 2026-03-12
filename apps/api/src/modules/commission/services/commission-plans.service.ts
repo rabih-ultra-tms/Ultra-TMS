@@ -206,6 +206,7 @@ export class CommissionPlansService {
     const plans = await this.prisma.commissionPlan.findMany({
       where: {
         tenantId,
+        deletedAt: null,
         status: 'ACTIVE',
         effectiveDate: { lte: now },
         OR: [{ endDate: null }, { endDate: { gte: now } }],

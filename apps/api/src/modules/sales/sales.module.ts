@@ -12,6 +12,7 @@ import { QuotesController } from './quotes.controller';
 import { RateContractsController } from './rate-contracts.controller';
 import { AccessorialRatesController } from './accessorial-rates.controller';
 import { SalesPerformanceController } from './sales-performance.controller';
+import { QuoteExpiryJob } from './quote-expiry.job';
 
 @Module({
   imports: [EventEmitterModule, ScheduleModule.forRoot()],
@@ -29,6 +30,7 @@ import { SalesPerformanceController } from './sales-performance.controller';
     SalesPerformanceService,
     RateCalculationService,
     QuoteExpiryCron,
+    QuoteExpiryJob,
   ],
   exports: [
     QuotesService,

@@ -84,8 +84,8 @@ export function ExtractedItemsList({ items, onChange }: ExtractedItemsListProps)
 
       const response = await fetch('/api/v1/operations/load-planner-quotes/cargo-images/upload', {
         method: 'POST',
-        credentials: 'include',
         body: formData,
+        credentials: 'include',
       })
 
       if (!response.ok) {
