@@ -7,19 +7,20 @@
 **Monorepo:** Next.js 16 + React 19 + NestJS 10 + PostgreSQL + Prisma 6 + Redis + Elasticsearch
 **Architecture:** Migration-first, multi-tenant, modular monolith (40 modules)
 **Repo:** `rabih-ultra-tms/Ultra-TMS` | Contributor: `primovera12`
-**MVP Focus:** 8 services, ~30 screens, 16-week timeline (not 38 services / 362 screens)
+**Full Scope:** 39 services, 24 sprints (MP-01–MP-24), 5 phases, 48-week timeline
+**Master Project Plan:** `dev_docs_v3/08-sprints/master-project-plan.md` — SINGLE source of truth for all sprint planning
 
 ## Current State (as of 2026-03-09)
 
 **Overall Score: 7.0/10 (B-)** — Strong backend, frontend much further along than originally documented.
 
-| Area | Grade | Status |
-|------|-------|--------|
-| Architecture & Infra | B+ | Solid monorepo, modern stack, well-structured modules |
-| Code Quality | C+ | Some bugs remain, 858-line monoliths, 8.7% frontend test coverage |
-| Design Quality | C | Improved — Commission module is 8.5/10 model. Some pages still have hardcoded colors. |
-| Planning & Docs | A+ | **Documentation fully audited and verified.** 39 PST audits, 37 hub corrections, 7 verification tests, 10-round tribunal. |
-| Industry Readiness | C | TMS Core frontend exists (12 pages). Most services have frontend pages built. |
+| Area                 | Grade | Status                                                                                                                    |
+| -------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------- |
+| Architecture & Infra | B+    | Solid monorepo, modern stack, well-structured modules                                                                     |
+| Code Quality         | C+    | Some bugs remain, 858-line monoliths, 8.7% frontend test coverage                                                         |
+| Design Quality       | C     | Improved — Commission module is 8.5/10 model. Some pages still have hardcoded colors.                                     |
+| Planning & Docs      | A+    | **Documentation fully audited and verified.** 39 PST audits, 37 hub corrections, 7 verification tests, 10-round tribunal. |
+| Industry Readiness   | C     | TMS Core frontend exists (12 pages). Most services have frontend pages built.                                             |
 
 **What works:** Auth, CRM (15 pages), Sales (Load Planner 9/10), TMS Core (12 pages), Carriers (6 pages + 17 components), Accounting (10 pages), Commission (11 pages, model quality), Load Board (4 pages)
 **Backend:** 1,230 endpoints across 33 modules (verified by grep), 260 Prisma models, 114 enums
@@ -27,13 +28,13 @@
 
 ### Documentation Audit (Complete — 2026-03-09)
 
-| Phase | What | Result |
-|-------|------|--------|
-| Per-Service Tribunal | 39 services audited against actual code | 37 MODIFY, 1 CONFIRM, 1 READY |
-| Hub Corrections | 37 hub files rewritten from PST findings | 7 sessions, 37/37 done |
-| Verification Tests | 7 automated tests (ground truth, Prisma schema, endpoints, routes, consistency, tasks, indexes) | Endpoint accuracy 99.5%, model names 99.3% |
-| Post-Verification Fixes | 3 phases of targeted corrections from test findings | 16 missing models added, consumer lists fixed, counts corrected |
-| 10-Round Tribunal | Adversarial review with 10 expert personas | Completed |
+| Phase                   | What                                                                                            | Result                                                          |
+| ----------------------- | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Per-Service Tribunal    | 39 services audited against actual code                                                         | 37 MODIFY, 1 CONFIRM, 1 READY                                   |
+| Hub Corrections         | 37 hub files rewritten from PST findings                                                        | 7 sessions, 37/37 done                                          |
+| Verification Tests      | 7 automated tests (ground truth, Prisma schema, endpoints, routes, consistency, tasks, indexes) | Endpoint accuracy 99.5%, model names 99.3%                      |
+| Post-Verification Fixes | 3 phases of targeted corrections from test findings                                             | 16 missing models added, consumer lists fixed, counts corrected |
+| 10-Round Tribunal       | Adversarial review with 10 expert personas                                                      | Completed                                                       |
 
 **Documentation score: 4.5/10 → 9.5/10** — Hub files are now code-verified, not spec-derived.
 **Key files:** `dev_docs_v3/05-audit/HUB-CORRECTION-PROGRESS.md` (tracker), `dev_docs_v3/05-audit/POST-VERIFICATION-FIXES.md` (fix plan), `dev_docs_v3/05-audit/test-results/` (7 test reports)
@@ -45,58 +46,56 @@ Reviews: `dev_docs/Claude-review-v1/` (37 files) | `dev_docs/gemini-review-v2/` 
 **All frontend screens are being rebuilt from the 89 design specs.** Existing UI code is reference only (for API call patterns), not code to patch.
 
 **PROTECT LIST — Do NOT rebuild these pages (they work):**
+
 - **Load Planner** (`/load-planner/[id]/edit`) — 1,825 LOC, AI cargo extraction, Google Maps, full quote lifecycle. Production-ready.
 - **Truck Types** (`/truck-types`) — 8/10 quality, clean CRUD with inline editing. Gold standard.
 - **Login** (`/login`) — 8/10 quality, working auth flow.
 
 **ALWAYS fix regardless of rebuild:**
+
 - Security bugs (JWT console logs, localStorage tokens) — apply to shared code, not page-specific
 - Sidebar 404 links — navigation config, not page code
 
 **For every other screen:** Build fresh from design spec. Don't patch old code.
 
-## P0 MVP Scope
+## Project Scope — All 39 Services
 
-**Only these 8 services are in scope for the 16-week MVP:**
+**Master Project Plan:** `dev_docs_v3/08-sprints/master-project-plan.md`
 
-| # | Service | Status | Priority |
-|---|---------|--------|----------|
-| 1 | Auth & Admin | 17/20 screens built | QA from spec |
-| 2 | CRM / Customers | 15 pages built | QA + fix BUG-009/010 |
-| 3 | Sales / Quotes + Load Planner | Load Planner PROTECTED (9/10), quotes basic | Rebuild quotes, PROTECT Load Planner |
-| 4 | TMS Core (Orders, Loads, Dispatch) | 12 pages built (7.4/10) | QA from spec |
-| 5 | Carrier Management | 6 pages + 17 components built | QA from spec, PROTECT Truck Types |
-| 6 | Accounting (Invoices, Settlements) | 10 pages built (7.9/10) | QA, needs QS-003 endpoint |
-| 7 | Load Board | 4 pages + 10 components built | QA, backend stubs need real logic |
-| 8 | Commission | 11 pages built (8.5/10, model quality) | QA, verify auto-calc trigger |
+| Phase                      | Sprints  | Weeks | Services                                                                                                                              | Gate                     |
+| -------------------------- | -------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| Phase 1: MVP Completion    | MP-01–06 | 1-12  | 11 P0 services (Auth, Dashboard, CRM, Sales, TMS Core, Carriers, Accounting, Commission, Load Board, Customer Portal, Command Center) | G1: MVP Beta             |
+| Phase 2: Core Expansion    | MP-07–12 | 13-24 | P1 (Documents, Communication, Carrier Portal) + P2 Financial (Claims, Contracts, Agents, Credit, Factoring)                           | G2: Core Expansion       |
+| Phase 3: Platform Services | MP-13–18 | 25-36 | P2 Platform (Analytics, Search, Workflow, Integration Hub) + Command Center Full + Audit + Config                                     | G3: Platform Release     |
+| Phase 4: Enterprise        | MP-19–22 | 37-44 | P3 (EDI, Safety, HR, Scheduler, Help Desk, Feedback, Rate Intelligence, Cache)                                                        | G4: Enterprise Release   |
+| Phase 5: Maturity          | MP-23–24 | 45-48 | Cross-cutting hardening + GA Launch                                                                                                   | G5: General Availability |
 
-All other services (Compliance, Safety, Fleet, Warehousing, etc.) are **future — do not build**.
-
-**16-week phases:** See `dev_docs/Claude-review-v1/00-executive-summary/prioritized-action-plan.md`
+**Current sprint:** MP-01 Security Hardening (30 tasks, STOP-SHIP items)
 
 ## Known Critical Issues
 
 **Must fix before building new features:**
 
-| Bug | File | Impact |
-|-----|------|--------|
-| `useMemo` side effect | `truck-types/page.tsx:270` | Form data won't populate in React 19 |
-| JWT logged to console | `admin/layout.tsx` (10 console.logs) | Security vulnerability |
-| localStorage tokens | `lib/api/client.ts:59,77` | Contradicts XSS-safe cookie policy |
-| `window.confirm()` x7 | carriers, load-history, quote-history, truck-types | Should use ConfirmDialog |
-| QS-003 dashboard endpoint | Backend controller | Accounting dashboard — EXISTS per PST-07, needs runtime verify |
+| Bug                       | File                                               | Impact                                                         |
+| ------------------------- | -------------------------------------------------- | -------------------------------------------------------------- |
+| `useMemo` side effect     | `truck-types/page.tsx:270`                         | Form data won't populate in React 19                           |
+| JWT logged to console     | `admin/layout.tsx` (10 console.logs)               | Security vulnerability                                         |
+| localStorage tokens       | `lib/api/client.ts:59,77`                          | Contradicts XSS-safe cookie policy                             |
+| `window.confirm()` x7     | carriers, load-history, quote-history, truck-types | Should use ConfirmDialog                                       |
+| QS-003 dashboard endpoint | Backend controller                                 | Accounting dashboard — EXISTS per PST-07, needs runtime verify |
 
 **P0 Security (from tribunal, cross-cutting):**
 
-| Bug | Scope | Impact |
-|-----|-------|--------|
+| Bug                                           | Scope                                                                                      | Impact                                                              |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------- |
 | Cross-tenant mutations (no tenantId in WHERE) | 9+ services (Auth, CRM, Sales, Accounting, Carriers, Contracts, Agents, Cache, Operations) | Any authenticated user can mutate other tenants' data if UUID known |
-| RolesGuard gaps | 12+ services (any auth user can access admin endpoints) | See `_CROSS-CUTTING-ADDENDUM.md` CCF-017 |
-| Plaintext API keys | EDI (ftpPassword), Rate Intelligence (apiKey), Factoring (apiKey) | Credential exposure |
-| Soft-delete not filtered | 15+ services (deleted records appear in queries) | Data integrity |
-| Cache cross-tenant | 8/20 Cache endpoints accept ops without tenantId | Any user can manipulate other tenants' caches |
+| RolesGuard gaps                               | 12+ services (any auth user can access admin endpoints)                                    | See `_CROSS-CUTTING-ADDENDUM.md` CCF-017                            |
+| Plaintext API keys                            | EDI (ftpPassword), Rate Intelligence (apiKey), Factoring (apiKey)                          | Credential exposure                                                 |
+| Soft-delete not filtered                      | 15+ services (deleted records appear in queries)                                           | Data integrity                                                      |
+| Cache cross-tenant                            | 8/20 Cache endpoints accept ops without tenantId                                           | Any user can manipulate other tenants' caches                       |
 
 **Previously listed — now resolved (confirmed via tribunal 2026-03-09):**
+
 - ~~Carrier detail 404~~ — EXISTS (7/10, tabbed detail, PST-06 verified)
 - ~~Load history detail 404~~ — EXISTS (5/10, PST-05 verified)
 - ~~5 sidebar links to 404~~ — All route to real pages (PST verified)
@@ -109,10 +108,11 @@ Full inventory: `dev_docs_v3/05-audit/tribunal/per-service/_CROSS-CUTTING-ADDEND
 
 > **Active source of truth: `dev_docs_v3/`** (audited + verified 2026-03-09 — covers ALL 39 services)
 
-1. **Read the service hub file** → `dev_docs_v3/01-services/p0-mvp/{service}.md` — single source of truth
-2. Read `dev_docs_v3/STATUS.md` → find your specific task and check assignments
-3. Read the task file in `dev_docs_v3/03-tasks/sprint-quality/` → detailed acceptance criteria
-4. Maximum 6 files before coding — see `dev_docs_v3/00-foundations/session-kickoff.md`
+1. **Read the Master Project Plan** → `dev_docs_v3/08-sprints/master-project-plan.md` → find your current sprint (MP-XX)
+2. **Read the service hub file** → `dev_docs_v3/01-services/{tier}/{service}.md` — single source of truth
+3. Read `dev_docs_v3/STATUS.md` → find your specific task and check assignments
+4. Read the PST file → `dev_docs_v3/05-audit/tribunal/per-service/PST-XX-{service}.md` → tribunal findings
+5. Maximum 6 files before coding — see `dev_docs_v3/00-foundations/session-kickoff.md`
 
 **Hub files (source of truth):** `dev_docs_v3/01-services/p0-mvp/` — one file per MVP service with everything consolidated.
 **Execution layer:** `dev_docs_v3/` has tasks, audit results, quality gates, and API catalog.
@@ -136,19 +136,23 @@ Before starting any feature, verify:
 Pick the list that matches your task:
 
 **Fixing bugs:**
+
 1. `dev_docs/Claude-review-v1/01-code-review/05-bug-inventory.md` — All 29 bugs with file paths and line numbers
 
 **Building a new screen:**
+
 1. Design spec in `dev_docs/12-Rabih-design-Process/{service-folder}/{screen}.md`
 2. `dev_docs/08-standards/74-pre-feature-checklist.md`
 3. `dev_docs/Claude-review-v1/04-screen-integration/01-design-to-code-workflow.md`
 4. `dev_docs/Claude-review-v1/03-design-strategy/05-quality-gates.md`
 
 **Refactoring existing pages:**
+
 1. `dev_docs/Claude-review-v1/03-design-strategy/01-current-state-diagnosis.md` — Root cause analysis
 2. `dev_docs/Claude-review-v1/03-design-strategy/02-design-system-enforcement.md` — Token system, ESLint rules
 
 **Understanding scope & priorities:**
+
 1. `dev_docs/Claude-review-v1/02-plan-review/03-mvp-reprioritization.md` — P0/P1/P2/P3 tiers
 2. `dev_docs/Claude-review-v1/00-executive-summary/prioritized-action-plan.md` — 16-week plan
 
@@ -240,7 +244,7 @@ packages/
 ```typescript
 // ALWAYS filter by tenantId + soft delete
 await prisma.carrier.findMany({
-  where: { tenantId, deletedAt: null }
+  where: { tenantId, deletedAt: null },
 });
 ```
 
@@ -254,18 +258,18 @@ Every entity includes: `external_id`, `source_system`, `custom_fields`, `tenant_
 
 ## Key Files
 
-| File | Purpose |
-|------|---------|
-| `turbo.json` | Monorepo task pipeline |
-| `pnpm-workspace.yaml` | Workspace definition |
-| `docker-compose.yml` | PostgreSQL 15, Redis 7, ES 8.13, Kibana |
-| `apps/api/src/main.ts` | API bootstrap (guards, CORS, validation, Swagger) |
-| `apps/api/prisma/schema.prisma` | Database schema (source of truth) |
-| `apps/web/next.config.js` | API proxy rewrite rules |
-| `apps/web/app/layout.tsx` | Root layout with providers |
-| `dev_docs/00-master/00-master-development-guide.md` | Master development reference |
-| `dev_docs/08-standards/65-development-standards-overview.md` | Golden rules + standards index |
-| `dev_docs/12-Rabih-design-Process/` | 89 screen specs with full UX/UI details |
+| File                                                         | Purpose                                           |
+| ------------------------------------------------------------ | ------------------------------------------------- |
+| `turbo.json`                                                 | Monorepo task pipeline                            |
+| `pnpm-workspace.yaml`                                        | Workspace definition                              |
+| `docker-compose.yml`                                         | PostgreSQL 15, Redis 7, ES 8.13, Kibana           |
+| `apps/api/src/main.ts`                                       | API bootstrap (guards, CORS, validation, Swagger) |
+| `apps/api/prisma/schema.prisma`                              | Database schema (source of truth)                 |
+| `apps/web/next.config.js`                                    | API proxy rewrite rules                           |
+| `apps/web/app/layout.tsx`                                    | Root layout with providers                        |
+| `dev_docs/00-master/00-master-development-guide.md`          | Master development reference                      |
+| `dev_docs/08-standards/65-development-standards-overview.md` | Golden rules + standards index                    |
+| `dev_docs/12-Rabih-design-Process/`                          | 89 screen specs with full UX/UI details           |
 
 ## Environment
 
@@ -285,17 +289,17 @@ Every entity includes: `external_id`, `source_system`, `custom_fields`, `tenant_
 
 13 plugins installed. Use them in this order during development:
 
-| Stage | Plugin | Command |
-|-------|--------|---------|
-| Plan | superpowers | `/brainstorming`, `/writing-plans` |
-| Research | context7 | Auto - queries library docs (Next.js, Prisma, NestJS) |
-| Build | feature-dev | `/feature-dev [description]` - 7-phase guided development |
-| Design | frontend-design | `/frontend-design` - production-grade UI from screen specs |
-| Test | playwright | Browser automation for E2E visual testing |
-| Review | pr-review-toolkit | `/review-pr` - multi-agent code review |
-| Review | code-review | `/code-review` - quick standalone review |
-| Commit | commit-commands | `/commit`, `/commit-push-pr` |
-| Maintain | claude-md-management | `/revise-claude-md`, `/claude-md-improver` |
+| Stage    | Plugin               | Command                                                    |
+| -------- | -------------------- | ---------------------------------------------------------- |
+| Plan     | superpowers          | `/brainstorming`, `/writing-plans`                         |
+| Research | context7             | Auto - queries library docs (Next.js, Prisma, NestJS)      |
+| Build    | feature-dev          | `/feature-dev [description]` - 7-phase guided development  |
+| Design   | frontend-design      | `/frontend-design` - production-grade UI from screen specs |
+| Test     | playwright           | Browser automation for E2E visual testing                  |
+| Review   | pr-review-toolkit    | `/review-pr` - multi-agent code review                     |
+| Review   | code-review          | `/code-review` - quick standalone review                   |
+| Commit   | commit-commands      | `/commit`, `/commit-push-pr`                               |
+| Maintain | claude-md-management | `/revise-claude-md`, `/claude-md-improver`                 |
 
 ## Gotchas
 
@@ -313,6 +317,7 @@ Every entity includes: `external_id`, `source_system`, `custom_fields`, `tenant_
 ## Before Any Feature
 
 Read these docs in order:
+
 1. `dev_docs/08-standards/74-pre-feature-checklist.md` - What to verify
 2. `dev_docs/08-standards/65-development-standards-overview.md` - Golden rules
 3. Relevant standard: API (`66`), Database (`67`), Frontend (`68`), UI (`69`), Types (`70`)
