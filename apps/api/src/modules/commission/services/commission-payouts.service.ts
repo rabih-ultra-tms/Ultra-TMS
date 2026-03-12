@@ -26,6 +26,7 @@ export class CommissionPayoutsService {
     const entries = await this.prisma.commissionEntry.findMany({
       where: {
         tenantId,
+        deletedAt: null,
         userId: dto.userId,
         status: 'APPROVED',
         payoutId: null,
@@ -113,7 +114,7 @@ export class CommissionPayoutsService {
     const { page, limit } = options;
     const skip = (page - 1) * limit;
 
-    const where: any = { tenantId };
+    const where: any = { tenantId, deletedAt: null };
 
     if (options.userId) {
       where.userId = options.userId;
@@ -168,7 +169,7 @@ export class CommissionPayoutsService {
 
   async findOne(tenantId: string, id: string) {
     const payout = await this.prisma.commissionPayout.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
       include: {
         user: true,
         entries: {
@@ -194,7 +195,7 @@ export class CommissionPayoutsService {
     _userId?: string
   ) {
     const payout = await this.prisma.commissionPayout.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!payout) {
@@ -222,7 +223,7 @@ export class CommissionPayoutsService {
     _userId?: string
   ) {
     const payout = await this.prisma.commissionPayout.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
       include: { entries: true },
     });
 
@@ -264,7 +265,7 @@ export class CommissionPayoutsService {
 
   async void(tenantId: string, id: string, _userId?: string) {
     const payout = await this.prisma.commissionPayout.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!payout) {

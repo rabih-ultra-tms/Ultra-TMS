@@ -53,7 +53,7 @@ export class CommissionEntriesService {
     status?: string,
     period?: string
   ) {
-    const where: any = { tenantId };
+    const where: any = { tenantId, deletedAt: null };
 
     if (userId) {
       where.userId = userId;
@@ -82,7 +82,7 @@ export class CommissionEntriesService {
 
   async findOne(tenantId: string, id: string) {
     const entry = await this.prisma.commissionEntry.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
       include: {
         user: true,
         load: true,
@@ -107,7 +107,7 @@ export class CommissionEntriesService {
     _userId?: string
   ) {
     const entry = await this.prisma.commissionEntry.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!entry) {
@@ -133,7 +133,7 @@ export class CommissionEntriesService {
     userId?: string
   ) {
     const entry = await this.prisma.commissionEntry.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!entry) {
@@ -164,6 +164,7 @@ export class CommissionEntriesService {
     const entries = await this.prisma.commissionEntry.findMany({
       where: {
         tenantId,
+        deletedAt: null,
         userId,
         commissionPeriod: {
           gte: periodStart,
