@@ -249,10 +249,10 @@ export function useAccountingDashboard() {
 export function useRecentInvoices() {
   return shared.recentInvoices;
 }
-export function useInvoices() {
+export function useInvoices(_params?: unknown) {
   return shared.invoices;
 }
-export function useInvoice() {
+export function useInvoice(_id?: string) {
   return shared.invoice;
 }
 export function useCreateInvoice() {
