@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../common/guards/roles.guard';
 import { CurrentTenant, CurrentUser, Roles } from '../../../common/decorators';
 import { CreateRateAlertDto } from './dto/create-rate-alert.dto';
 import { UpdateRateAlertDto } from './dto/update-rate-alert.dto';
@@ -8,10 +9,10 @@ import { RateAlertsService } from './rate-alerts.service';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Market Rates')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'SALES_MANAGER', 'OPERATIONS_MANAGER')
 export class RateAlertsController {
   constructor(private readonly service: RateAlertsService) {}
 
@@ -19,7 +20,7 @@ export class RateAlertsController {
   @ApiOperation({ summary: 'List rate alerts' })
   @ApiStandardResponse('Rate alerts list')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'SALES_MANAGER', 'OPERATIONS_MANAGER', 'SALES_REP', 'DISPATCHER', 'CARRIER_MANAGER')
   list(@CurrentTenant() tenantId: string) {
     return this.service.list(tenantId);
   }
@@ -50,7 +51,7 @@ export class RateAlertsController {
   @ApiParam({ name: 'id', description: 'Alert ID' })
   @ApiStandardResponse('Rate alert deleted')
   @ApiErrorResponses()
-  @Roles('MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'SALES_MANAGER')
   remove(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.service.remove(tenantId, id);
   }
@@ -60,7 +61,7 @@ export class RateAlertsController {
   @ApiParam({ name: 'id', description: 'Alert ID' })
   @ApiStandardResponse('Rate alert history')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'SALES_MANAGER', 'OPERATIONS_MANAGER', 'SALES_REP', 'DISPATCHER', 'CARRIER_MANAGER')
   history(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.service.history(tenantId, id);
   }

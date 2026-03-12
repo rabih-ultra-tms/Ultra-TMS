@@ -11,7 +11,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Tickets')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'SUPPORT_MANAGER')
 export class SlaPoliciesController {
   constructor(private readonly slaService: SlaService) {}
 
@@ -19,7 +19,7 @@ export class SlaPoliciesController {
   @ApiOperation({ summary: 'List SLA policies' })
   @ApiStandardResponse('SLA policies list')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'SUPPORT_MANAGER', 'SUPPORT_AGENT', 'OPERATIONS_MANAGER')
   list(@CurrentTenant() tenantId: string) {
     return this.slaService.listPolicies(tenantId);
   }

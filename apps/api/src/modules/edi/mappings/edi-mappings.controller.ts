@@ -22,7 +22,7 @@ export class EdiMappingsController {
   @ApiOperation({ summary: 'List EDI mappings' })
   @ApiStandardResponse('EDI mappings list')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'EDI_MANAGER', 'OPERATIONS_MANAGER')
   list(
     @CurrentTenant() tenantId: string,
     @Query('tradingPartnerId') tradingPartnerId?: string,
@@ -49,7 +49,7 @@ export class EdiMappingsController {
   @ApiParam({ name: 'id', description: 'Mapping ID' })
   @ApiStandardResponse('EDI mapping details')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'EDI_MANAGER', 'OPERATIONS_MANAGER')
   findOne(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.service.findOne(tenantId, id);
   }

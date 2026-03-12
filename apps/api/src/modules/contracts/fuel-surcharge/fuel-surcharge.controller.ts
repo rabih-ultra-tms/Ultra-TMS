@@ -17,7 +17,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Contract Rates')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'CONTRACTS_MANAGER', 'SALES_MANAGER', 'OPERATIONS_MANAGER')
 export class FuelSurchargeController {
   constructor(private readonly service: FuelSurchargeService) {}
 
@@ -25,7 +25,7 @@ export class FuelSurchargeController {
   @ApiOperation({ summary: 'List fuel surcharge tables' })
   @ApiStandardResponse('Fuel tables list')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'CONTRACTS_MANAGER', 'CONTRACTS_VIEWER', 'SALES_MANAGER', 'OPERATIONS_MANAGER', 'ACCOUNTING')
   list(@CurrentUser() user: CurrentUserData) {
     return this.service.list(user.tenantId);
   }
@@ -44,7 +44,7 @@ export class FuelSurchargeController {
   @ApiParam({ name: 'id', description: 'Fuel table ID' })
   @ApiStandardResponse('Fuel table details')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'CONTRACTS_MANAGER', 'CONTRACTS_VIEWER', 'SALES_MANAGER', 'OPERATIONS_MANAGER', 'ACCOUNTING')
   detail(@Param('id') id: string, @CurrentUser() user: CurrentUserData) {
     return this.service.detail(user.tenantId, id);
   }
@@ -73,7 +73,7 @@ export class FuelSurchargeController {
   @ApiParam({ name: 'id', description: 'Fuel table ID' })
   @ApiStandardResponse('Fuel tiers list')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'CONTRACTS_MANAGER', 'CONTRACTS_VIEWER', 'SALES_MANAGER', 'OPERATIONS_MANAGER', 'ACCOUNTING')
   listTiers(@Param('id') id: string, @CurrentUser() user: CurrentUserData) {
     return this.service.listTiers(user.tenantId, id);
   }
@@ -100,7 +100,7 @@ export class FuelSurchargeController {
   @ApiOperation({ summary: 'Calculate fuel surcharge' })
   @ApiStandardResponse('Fuel surcharge calculation')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'CONTRACTS_MANAGER', 'CONTRACTS_VIEWER', 'SALES_MANAGER', 'OPERATIONS_MANAGER', 'ACCOUNTING')
   calculate(@Query() query: CalculateFuelSurchargeDto, @CurrentUser() user: CurrentUserData) {
     return this.service.calculate(user.tenantId, query);
   }

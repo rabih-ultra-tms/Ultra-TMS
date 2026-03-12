@@ -17,7 +17,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('NOA Management')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'FACTORING_MANAGER', 'ACCOUNTING')
 export class NoaRecordsController {
   constructor(private readonly service: NoaRecordsService) {}
 
@@ -25,7 +25,7 @@ export class NoaRecordsController {
   @ApiOperation({ summary: 'List NOA records' })
   @ApiStandardResponse('NOA records list')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'FACTORING_MANAGER', 'ACCOUNTING', 'BILLING', 'COLLECTIONS_AGENT')
   async findAll(
     @CurrentTenant() tenantId: string,
     @Query() query: NoaQueryDto,
@@ -50,7 +50,7 @@ export class NoaRecordsController {
   @ApiParam({ name: 'id', description: 'NOA record ID' })
   @ApiStandardResponse('NOA record details')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'FACTORING_MANAGER', 'ACCOUNTING', 'BILLING', 'COLLECTIONS_AGENT')
   async findOne(
     @CurrentTenant() tenantId: string,
     @Param('id') id: string,

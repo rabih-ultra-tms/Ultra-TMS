@@ -14,7 +14,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Contracts')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'CONTRACTS_MANAGER', 'SALES_MANAGER', 'OPERATIONS_MANAGER')
 export class SlasController {
   constructor(private readonly service: SlasService) {}
 
@@ -23,7 +23,7 @@ export class SlasController {
   @ApiParam({ name: 'contractId', description: 'Contract ID' })
   @ApiStandardResponse('Contract SLAs list')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'CONTRACTS_MANAGER', 'CONTRACTS_VIEWER', 'SALES_MANAGER', 'OPERATIONS_MANAGER', 'ACCOUNTING')
   list(@Param('contractId') contractId: string, @CurrentUser() user: CurrentUserData) {
     return this.service.list(user.tenantId, contractId);
   }
@@ -42,7 +42,7 @@ export class SlasController {
   @ApiParam({ name: 'id', description: 'SLA ID' })
   @ApiStandardResponse('SLA details')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'CONTRACTS_MANAGER', 'CONTRACTS_VIEWER', 'SALES_MANAGER', 'OPERATIONS_MANAGER', 'ACCOUNTING')
   detail(@Param('id') id: string, @CurrentUser() user: CurrentUserData) {
     return this.service.detail(id, user.tenantId);
   }
@@ -61,7 +61,7 @@ export class SlasController {
   @ApiParam({ name: 'id', description: 'SLA ID' })
   @ApiStandardResponse('SLA deleted')
   @ApiErrorResponses()
-  @Roles('MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'CONTRACTS_MANAGER')
   delete(@Param('id') id: string, @CurrentUser() user: CurrentUserData) {
     return this.service.delete(id, user.tenantId);
   }
@@ -72,7 +72,7 @@ export class SlasController {
   @ApiQuery({ name: 'actual', required: false, description: 'Actual value override' })
   @ApiStandardResponse('SLA performance')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'CONTRACTS_MANAGER', 'CONTRACTS_VIEWER', 'SALES_MANAGER', 'OPERATIONS_MANAGER', 'ACCOUNTING')
   performance(@Param('id') id: string, @Query('actual') actual: string | undefined, @CurrentUser() user: CurrentUserData) {
     const actualValue = actual !== undefined ? Number(actual) : undefined;
     return this.service.performance(id, user.tenantId, actualValue);

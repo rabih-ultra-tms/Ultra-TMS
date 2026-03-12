@@ -19,7 +19,7 @@ export class SavedSearchesController {
   @ApiOperation({ summary: 'List saved searches' })
   @ApiStandardResponse('Saved searches list')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'OPERATIONS_MANAGER', 'DISPATCHER', 'SALES_REP', 'ACCOUNTING', 'CARRIER_MANAGER', 'AGENT')
   list(
     @CurrentTenant() tenantId: string,
     @CurrentUser('userId') userId: string,
@@ -32,7 +32,7 @@ export class SavedSearchesController {
   @ApiParam({ name: 'id', description: 'Saved search ID' })
   @ApiStandardResponse('Saved search details')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'OPERATIONS_MANAGER', 'DISPATCHER', 'SALES_REP', 'ACCOUNTING', 'CARRIER_MANAGER', 'AGENT')
   getOne(
     @CurrentTenant() tenantId: string,
     @CurrentUser('userId') userId: string,
@@ -72,7 +72,7 @@ export class SavedSearchesController {
   @ApiParam({ name: 'id', description: 'Saved search ID' })
   @ApiStandardResponse('Saved search deleted')
   @ApiErrorResponses()
-  @Roles('MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'OPERATIONS_MANAGER')
   async remove(
     @CurrentTenant() tenantId: string,
     @CurrentUser('userId') userId: string,

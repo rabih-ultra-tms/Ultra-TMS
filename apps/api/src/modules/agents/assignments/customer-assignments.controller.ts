@@ -17,7 +17,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Agents')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'AGENT_MANAGER', 'SALES_MANAGER')
 export class CustomerAssignmentsController {
   constructor(private readonly assignmentsService: CustomerAssignmentsService) {}
 
@@ -26,7 +26,7 @@ export class CustomerAssignmentsController {
   @ApiParam({ name: 'id', description: 'Agent ID' })
   @ApiStandardResponse('Assigned customers list')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'AGENT_MANAGER', 'SALES_MANAGER', 'AGENT')
   listByAgent(@Request() req: any, @Param('id') id: string) {
     return this.assignmentsService.listByAgent(req.user.tenantId, id);
   }
@@ -49,7 +49,7 @@ export class CustomerAssignmentsController {
   @ApiParam({ name: 'id', description: 'Assignment ID' })
   @ApiStandardResponse('Assignment details')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'AGENT_MANAGER', 'SALES_MANAGER', 'AGENT')
   findOne(@Request() req: any, @Param('id') id: string) {
     return this.assignmentsService.findOne(req.user.tenantId, id);
   }
@@ -100,7 +100,7 @@ export class CustomerAssignmentsController {
   @ApiParam({ name: 'id', description: 'Customer ID' })
   @ApiStandardResponse('Customer agent')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'AGENT_MANAGER', 'SALES_MANAGER', 'AGENT')
   getAgent(@Request() req: any, @Param('id') id: string) {
     return this.assignmentsService.getAgentForCustomer(req.user.tenantId, id);
   }

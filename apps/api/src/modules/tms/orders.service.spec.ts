@@ -118,12 +118,19 @@ describe('OrdersService', () => {
   });
 
   it('updates order and emits event', async () => {
-    prisma.order.findFirst.mockResolvedValue({
-      id: 'o1',
-      status: 'PENDING',
-      customerReference: 'R0',
-      specialInstructions: 'old',
-    });
+    prisma.order.findFirst
+      .mockResolvedValueOnce({
+        id: 'o1',
+        status: 'PENDING',
+        customerReference: 'R0',
+        specialInstructions: 'old',
+      })
+      .mockResolvedValueOnce({
+        id: 'o1',
+        status: 'PENDING',
+        customerReference: 'R1',
+        specialInstructions: 'old',
+      });
     prisma.order.update.mockResolvedValue({ id: 'o1', customerReference: 'R1' });
 
     const result = await service.update('tenant-1', 'o1', { customerReference: 'R1' } as any, 'user-1');
@@ -310,5 +317,88 @@ describe('OrdersService', () => {
     const result = await service.updateItem('tenant-1', 'user-1', 'o1', 'i1', { description: 'New' } as any);
 
     expect(result.description).toBe('New');
+  });
+
+  // --- createLoadForOrder tests ---
+
+  it('creates load for order and emits event', async () => {
+    prisma.order.findFirst.mockResolvedValue({ id: 'o1', stops: [], loads: [], items: [] });
+    prisma.load.create.mockResolvedValue({ id: 'l1', loadNumber: 'LD-20260312-ABCD', orderId: 'o1' });
+
+    const result = await service.createLoadForOrder('tenant-1', 'user-1', 'o1', {} as any);
+
+    expect(result.id).toBe('l1');
+    expect(result.orderId).toBe('o1');
+    expect(events.emit).toHaveBeenCalledWith('load.created',
+      expect.objectContaining({ loadId: 'l1', orderId: 'o1', tenantId: 'tenant-1' }),
+    );
+  });
+
+  it('throws when order not found on createLoadForOrder', async () => {
+    prisma.order.findFirst.mockResolvedValue(null);
+
+    await expect(service.createLoadForOrder('tenant-1', 'user-1', 'o1', {} as any)).rejects.toThrow(NotFoundException);
+  });
+
+  // --- getTimeline tests ---
+
+  it('returns timeline with created event and status history', async () => {
+    prisma.order.findFirst.mockResolvedValue({
+      id: 'o1',
+      createdAt: new Date('2026-01-01T00:00:00Z'),
+      orderNumber: 'ORD-20260101-ABCD',
+    });
+    prisma.statusHistory.findMany.mockResolvedValue([
+      {
+        id: 'h1',
+        createdAt: new Date('2026-01-02T00:00:00Z'),
+        oldStatus: 'PENDING',
+        newStatus: 'QUOTED',
+        createdById: 'user-1',
+        notes: null,
+      },
+    ]);
+
+    const result = await service.getTimeline('tenant-1', 'o1');
+
+    expect(result.data).toHaveLength(2);
+    expect(result.data[0]).toEqual(expect.objectContaining({
+      eventType: 'CREATED',
+      description: 'Order ORD-20260101-ABCD created',
+    }));
+    expect(result.data[1]).toEqual(expect.objectContaining({
+      eventType: 'STATUS_CHANGE',
+      description: 'Status changed from PENDING to QUOTED',
+      userId: 'user-1',
+    }));
+  });
+
+  it('throws when order not found on getTimeline', async () => {
+    prisma.order.findFirst.mockResolvedValue(null);
+
+    await expect(service.getTimeline('tenant-1', 'o1')).rejects.toThrow(NotFoundException);
+  });
+
+  it('returns timeline with notes in metadata', async () => {
+    prisma.order.findFirst.mockResolvedValue({
+      id: 'o1',
+      createdAt: new Date('2026-01-01T00:00:00Z'),
+      orderNumber: 'ORD-20260101-ABCD',
+    });
+    prisma.statusHistory.findMany.mockResolvedValue([
+      {
+        id: 'h1',
+        createdAt: new Date('2026-01-02T00:00:00Z'),
+        oldStatus: null,
+        newStatus: 'PENDING',
+        createdById: null,
+        notes: 'Initial status',
+      },
+    ]);
+
+    const result = await service.getTimeline('tenant-1', 'o1');
+
+    expect(result.data[1]?.description).toBe('Status set to PENDING');
+    expect(result.data[1]?.metadata).toEqual({ notes: 'Initial status' });
   });
 });

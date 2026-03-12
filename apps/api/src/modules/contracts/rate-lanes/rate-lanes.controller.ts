@@ -14,7 +14,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Contract Rates')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'CONTRACTS_MANAGER', 'SALES_MANAGER', 'OPERATIONS_MANAGER')
 export class RateLanesController {
   constructor(private readonly service: RateLanesService) {}
 
@@ -23,7 +23,7 @@ export class RateLanesController {
   @ApiParam({ name: 'rateTableId', description: 'Rate table ID' })
   @ApiStandardResponse('Rate lanes list')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'CONTRACTS_MANAGER', 'CONTRACTS_VIEWER', 'SALES_MANAGER', 'OPERATIONS_MANAGER', 'ACCOUNTING')
   list(@Param('rateTableId') rateTableId: string, @CurrentUser() user: CurrentUserData) {
     return this.service.list(user.tenantId, rateTableId);
   }
@@ -42,7 +42,7 @@ export class RateLanesController {
   @ApiParam({ name: 'id', description: 'Rate lane ID' })
   @ApiStandardResponse('Rate lane details')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'CONTRACTS_MANAGER', 'CONTRACTS_VIEWER', 'SALES_MANAGER', 'OPERATIONS_MANAGER', 'ACCOUNTING')
   detail(@Param('id') id: string, @CurrentUser() user: CurrentUserData) {
     return this.service.detail(id, user.tenantId);
   }
@@ -61,7 +61,7 @@ export class RateLanesController {
   @ApiParam({ name: 'id', description: 'Rate lane ID' })
   @ApiStandardResponse('Rate lane deleted')
   @ApiErrorResponses()
-  @Roles('MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'CONTRACTS_MANAGER')
   delete(@Param('id') id: string, @CurrentUser() user: CurrentUserData) {
     return this.service.delete(id, user.tenantId);
   }

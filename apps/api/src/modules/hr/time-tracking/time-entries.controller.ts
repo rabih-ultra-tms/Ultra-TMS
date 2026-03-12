@@ -11,7 +11,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Employees')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'HR_MANAGER', 'OPERATIONS_MANAGER')
 export class TimeEntriesController {
   constructor(private readonly timeEntriesService: TimeEntriesService) {}
 
@@ -19,7 +19,7 @@ export class TimeEntriesController {
   @ApiOperation({ summary: 'List time entries' })
   @ApiStandardResponse('Time entries list')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'HR_MANAGER', 'HR_VIEWER', 'OPERATIONS_MANAGER')
   list(@CurrentTenant() tenantId: string) {
     return this.timeEntriesService.list(tenantId);
   }
@@ -46,7 +46,7 @@ export class TimeEntriesController {
   @ApiParam({ name: 'id', description: 'Time entry ID' })
   @ApiStandardResponse('Time entry approved')
   @ApiErrorResponses()
-  @Roles('MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'HR_MANAGER')
   approve(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -60,7 +60,7 @@ export class TimeEntriesController {
   @ApiOperation({ summary: 'Get time entry summary' })
   @ApiStandardResponse('Time entry summary')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'HR_MANAGER', 'HR_VIEWER', 'OPERATIONS_MANAGER')
   summary(@CurrentTenant() tenantId: string) {
     return this.timeEntriesService.summary(tenantId);
   }

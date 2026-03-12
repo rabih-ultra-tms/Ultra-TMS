@@ -11,7 +11,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Teams')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'SUPPORT_MANAGER', 'SUPPORT_AGENT')
 export class TeamsController {
   constructor(private readonly teamsService: TeamsService) {}
 
@@ -19,7 +19,7 @@ export class TeamsController {
   @ApiOperation({ summary: 'List support teams' })
   @ApiStandardResponse('Teams list')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'SUPPORT_MANAGER', 'SUPPORT_AGENT', 'OPERATIONS_MANAGER')
   list(@CurrentTenant() tenantId: string) {
     return this.teamsService.list(tenantId);
   }
@@ -38,7 +38,7 @@ export class TeamsController {
   @ApiParam({ name: 'id', description: 'Team ID' })
   @ApiStandardResponse('Team details')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'SUPPORT_MANAGER', 'SUPPORT_AGENT', 'OPERATIONS_MANAGER')
   getOne(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.teamsService.findOne(tenantId, id);
   }

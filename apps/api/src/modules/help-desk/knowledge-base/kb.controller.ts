@@ -19,7 +19,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Knowledge Base')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'SUPPORT_MANAGER', 'SUPPORT_AGENT')
 export class KbController {
   constructor(private readonly categories: CategoriesService, private readonly articles: ArticlesService) {}
 
@@ -27,7 +27,7 @@ export class KbController {
   @ApiOperation({ summary: 'List knowledge base categories' })
   @ApiStandardResponse('KB categories list')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'SUPPORT_MANAGER', 'SUPPORT_AGENT', 'OPERATIONS_MANAGER')
   listCategories(@CurrentTenant() tenantId: string) {
     return this.categories.listCategories(tenantId);
   }
@@ -55,7 +55,7 @@ export class KbController {
   @ApiOperation({ summary: 'List knowledge base articles' })
   @ApiStandardResponse('KB articles list')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'SUPPORT_MANAGER', 'SUPPORT_AGENT', 'OPERATIONS_MANAGER')
   listArticles(@CurrentTenant() tenantId: string) {
     return this.articles.list(tenantId);
   }
@@ -77,7 +77,7 @@ export class KbController {
   @ApiParam({ name: 'id', description: 'Article ID' })
   @ApiStandardResponse('KB article details')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'SUPPORT_MANAGER', 'SUPPORT_AGENT', 'OPERATIONS_MANAGER')
   getArticle(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.articles.findOne(tenantId, id);
   }

@@ -11,7 +11,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Employees')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'HR_MANAGER', 'OPERATIONS_MANAGER')
 export class EmployeesController {
   constructor(private readonly employeesService: EmployeesService) {}
 
@@ -19,7 +19,7 @@ export class EmployeesController {
   @ApiOperation({ summary: 'List employees' })
   @ApiStandardResponse('Employees list')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'HR_MANAGER', 'HR_VIEWER', 'OPERATIONS_MANAGER')
   list(@CurrentTenant() tenantId: string) {
     return this.employeesService.list(tenantId);
   }
@@ -37,7 +37,7 @@ export class EmployeesController {
   @ApiParam({ name: 'id', description: 'Employee ID' })
   @ApiStandardResponse('Employee details')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'HR_MANAGER', 'HR_VIEWER', 'OPERATIONS_MANAGER')
   getOne(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.employeesService.findOne(tenantId, id);
   }
@@ -61,7 +61,7 @@ export class EmployeesController {
   @ApiParam({ name: 'id', description: 'Employee ID' })
   @ApiStandardResponse('Employee deleted')
   @ApiErrorResponses()
-  @Roles('MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'HR_MANAGER')
   delete(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.employeesService.remove(tenantId, id);
   }
@@ -71,7 +71,7 @@ export class EmployeesController {
   @ApiParam({ name: 'id', description: 'Employee ID' })
   @ApiStandardResponse('Org chart')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'HR_MANAGER', 'HR_VIEWER', 'OPERATIONS_MANAGER')
   orgChart(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.employeesService.orgChart(tenantId, id);
   }
@@ -95,7 +95,7 @@ export class EmployeesController {
   @ApiParam({ name: 'id', description: 'Employee ID' })
   @ApiStandardResponse('Employee history')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'HR_MANAGER', 'HR_VIEWER', 'OPERATIONS_MANAGER')
   history(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.employeesService.history(tenantId, id);
   }

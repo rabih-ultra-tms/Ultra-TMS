@@ -15,7 +15,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Safety Scores')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'SAFETY_MANAGER', 'CARRIER_MANAGER')
 export class WatchlistController {
   constructor(private readonly service: WatchlistService) {}
 
@@ -23,7 +23,7 @@ export class WatchlistController {
   @ApiOperation({ summary: 'List safety watchlist entries' })
   @ApiStandardResponse('Watchlist entries')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'SAFETY_MANAGER', 'CARRIER_MANAGER', 'DISPATCHER', 'OPERATIONS_MANAGER')
   list(@CurrentTenant() tenantId: string) {
     return this.service.list(tenantId);
   }

@@ -17,7 +17,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Tickets')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'SUPPORT_MANAGER', 'SUPPORT_AGENT')
 export class TicketsController {
   constructor(private readonly ticketsService: TicketsService) {}
 
@@ -25,7 +25,7 @@ export class TicketsController {
   @ApiOperation({ summary: 'List help desk tickets' })
   @ApiStandardResponse('Tickets list')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'SUPPORT_MANAGER', 'SUPPORT_AGENT', 'OPERATIONS_MANAGER')
   list(@CurrentTenant() tenantId: string) {
     return this.ticketsService.list(tenantId);
   }
@@ -43,7 +43,7 @@ export class TicketsController {
   @ApiParam({ name: 'id', description: 'Ticket ID' })
   @ApiStandardResponse('Ticket details')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'SUPPORT_MANAGER', 'SUPPORT_AGENT', 'OPERATIONS_MANAGER')
   getOne(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.ticketsService.findOne(tenantId, id);
   }
@@ -67,7 +67,7 @@ export class TicketsController {
   @ApiParam({ name: 'id', description: 'Ticket ID' })
   @ApiStandardResponse('Ticket deleted')
   @ApiErrorResponses()
-  @Roles('MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'SUPPORT_MANAGER')
   delete(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.ticketsService.remove(tenantId, id);
   }

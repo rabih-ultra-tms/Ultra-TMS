@@ -14,7 +14,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Safety Scores')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'SAFETY_MANAGER', 'CARRIER_MANAGER')
 export class AlertsController {
   constructor(private readonly service: AlertsService) {}
 
@@ -22,7 +22,7 @@ export class AlertsController {
   @ApiOperation({ summary: 'List safety alerts' })
   @ApiStandardResponse('Safety alerts list')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'SAFETY_MANAGER', 'CARRIER_MANAGER', 'DISPATCHER', 'OPERATIONS_MANAGER')
   list(@CurrentTenant() tenantId: string, @Query('isActive') isActive?: string) {
     const activeFlag = isActive === undefined ? undefined : isActive === 'true';
     return this.service.list(tenantId, activeFlag);
@@ -33,7 +33,7 @@ export class AlertsController {
   @ApiParam({ name: 'id', description: 'Alert ID' })
   @ApiStandardResponse('Safety alert details')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'SAFETY_MANAGER', 'CARRIER_MANAGER', 'DISPATCHER', 'OPERATIONS_MANAGER')
   get(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.service.get(tenantId, id);
   }

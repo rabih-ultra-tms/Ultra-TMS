@@ -11,7 +11,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('FAQ')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'SUPPORT_MANAGER', 'SUPPORT_AGENT')
 export class CannedResponsesController {
   constructor(private readonly cannedResponsesService: CannedResponsesService) {}
 
@@ -19,7 +19,7 @@ export class CannedResponsesController {
   @ApiOperation({ summary: 'List canned responses' })
   @ApiStandardResponse('Canned responses list')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'SUPPORT_MANAGER', 'SUPPORT_AGENT', 'OPERATIONS_MANAGER')
   list(@CurrentTenant() tenantId: string) {
     return this.cannedResponsesService.list(tenantId);
   }

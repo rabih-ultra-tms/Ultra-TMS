@@ -19,7 +19,7 @@ export class EdiQueueController {
   @ApiOperation({ summary: 'List EDI queue items' })
   @ApiStandardResponse('EDI queue list')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'EDI_MANAGER', 'OPERATIONS_MANAGER')
   list(@CurrentTenant() tenantId: string) {
     return this.service.list(tenantId);
   }
@@ -28,7 +28,7 @@ export class EdiQueueController {
   @ApiOperation({ summary: 'Get EDI queue statistics' })
   @ApiStandardResponse('EDI queue stats')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'EDI_MANAGER', 'OPERATIONS_MANAGER')
   stats(@CurrentTenant() tenantId: string) {
     return this.service.stats(tenantId);
   }
@@ -38,7 +38,7 @@ export class EdiQueueController {
   @ApiParam({ name: 'id', description: 'Queue item ID' })
   @ApiStandardResponse('EDI queue item details')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'EDI_MANAGER', 'OPERATIONS_MANAGER')
   findOne(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.service.findOne(tenantId, id);
   }

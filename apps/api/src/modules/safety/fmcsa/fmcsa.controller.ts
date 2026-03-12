@@ -13,7 +13,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('FMCSA Data')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'SAFETY_MANAGER', 'CARRIER_MANAGER')
 export class FmcsaController {
   constructor(private readonly service: FmcsaService) {}
 
@@ -21,7 +21,7 @@ export class FmcsaController {
   @ApiOperation({ summary: 'Lookup FMCSA data' })
   @ApiStandardResponse('FMCSA lookup results')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'SAFETY_MANAGER', 'CARRIER_MANAGER', 'DISPATCHER', 'OPERATIONS_MANAGER')
   lookup(@CurrentTenant() tenantId: string, @Query() query: FmcsaLookupDto) {
     return this.service.lookup(tenantId, query);
   }
@@ -59,7 +59,7 @@ export class FmcsaController {
   @ApiParam({ name: 'carrierId', description: 'Carrier ID' })
   @ApiStandardResponse('FMCSA record')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'SAFETY_MANAGER', 'CARRIER_MANAGER', 'DISPATCHER', 'OPERATIONS_MANAGER')
   getRecord(@CurrentTenant() tenantId: string, @Param('carrierId') carrierId: string) {
     return this.service.getRecord(tenantId, carrierId);
   }

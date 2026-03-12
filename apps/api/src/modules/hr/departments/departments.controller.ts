@@ -11,7 +11,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Departments')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'HR_MANAGER', 'OPERATIONS_MANAGER')
 export class DepartmentsController {
   constructor(private readonly departmentsService: DepartmentsService) {}
 
@@ -19,7 +19,7 @@ export class DepartmentsController {
   @ApiOperation({ summary: 'List departments' })
   @ApiStandardResponse('Departments list')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'HR_MANAGER', 'HR_VIEWER', 'OPERATIONS_MANAGER')
   list(@CurrentTenant() tenantId: string) {
     return this.departmentsService.list(tenantId);
   }
@@ -37,7 +37,7 @@ export class DepartmentsController {
   @ApiParam({ name: 'id', description: 'Department ID' })
   @ApiStandardResponse('Department details')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'HR_MANAGER', 'HR_VIEWER', 'OPERATIONS_MANAGER')
   getOne(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.departmentsService.findOne(tenantId, id);
   }

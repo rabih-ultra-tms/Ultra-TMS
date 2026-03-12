@@ -11,8 +11,11 @@ describe('LoadsService', () => {
     order: { findFirst: jest.Mock };
     load: { findFirst: jest.Mock; findMany: jest.Mock; count: jest.Mock; create: jest.Mock; update: jest.Mock };
     carrier: { findFirst: jest.Mock };
+    stop: { updateMany: jest.Mock };
     checkCall: { create: jest.Mock; findMany: jest.Mock; count: jest.Mock };
     statusHistory: { create: jest.Mock };
+    loadTender: { create: jest.Mock; findFirst: jest.Mock; update: jest.Mock };
+    tenderRecipient: { updateMany: jest.Mock };
   };
   const eventEmitter = { emit: jest.fn() };
   const emailService = { send: jest.fn() };
@@ -28,8 +31,11 @@ describe('LoadsService', () => {
         update: jest.fn(),
       },
       carrier: { findFirst: jest.fn() },
+      stop: { updateMany: jest.fn() },
       checkCall: { create: jest.fn(), findMany: jest.fn(), count: jest.fn() },
       statusHistory: { create: jest.fn() },
+      loadTender: { create: jest.fn(), findFirst: jest.fn(), update: jest.fn() },
+      tenderRecipient: { updateMany: jest.fn() },
     };
 
     eventEmitter.emit.mockClear();
@@ -1133,6 +1139,152 @@ describe('LoadsService', () => {
 
     expect(Buffer.isBuffer(buffer)).toBe(true);
     expect(buffer.length).toBeGreaterThan(0);
+  });
+
+  // --- tenderLoad tests ---
+
+  it('tenders load to carrier and emits events', async () => {
+    prisma.load.findFirst.mockResolvedValue({ id: 'load-1', status: 'PENDING', carrierRate: 1500, dispatchNotes: null });
+    prisma.carrier.findFirst.mockResolvedValue({ id: 'car-1' });
+    prisma.loadTender.create.mockResolvedValue({ id: 'tender-1' });
+    prisma.load.update.mockResolvedValue({ id: 'load-1', status: 'TENDERED', carrierId: 'car-1', tenderId: 'tender-1' });
+    prisma.statusHistory.create.mockResolvedValue({});
+
+    const result = await service.tenderLoad('tenant-1', 'load-1', 'user-1', { carrierId: 'car-1', rate: 2000 } as any);
+
+    expect(result.status).toBe('TENDERED');
+    expect(result.tenderId).toBe('tender-1');
+    expect(eventEmitter.emit).toHaveBeenCalledWith('load.tendered',
+      expect.objectContaining({ loadId: 'load-1', carrierId: 'car-1', tenderId: 'tender-1', tenantId: 'tenant-1' }),
+    );
+    expect(eventEmitter.emit).toHaveBeenCalledWith('load.status.changed',
+      expect.objectContaining({ loadId: 'load-1', oldStatus: 'PENDING', newStatus: 'TENDERED', tenantId: 'tenant-1' }),
+    );
+  });
+
+  it('throws when tendering missing load', async () => {
+    prisma.load.findFirst.mockResolvedValue(null);
+
+    await expect(
+      service.tenderLoad('tenant-1', 'load-1', 'user-1', { carrierId: 'car-1' } as any),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it('rejects tender when load is not PENDING', async () => {
+    prisma.load.findFirst.mockResolvedValue({ id: 'load-1', status: 'DISPATCHED' });
+
+    await expect(
+      service.tenderLoad('tenant-1', 'load-1', 'user-1', { carrierId: 'car-1' } as any),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('throws when tender carrier not found', async () => {
+    prisma.load.findFirst.mockResolvedValue({ id: 'load-1', status: 'PENDING' });
+    prisma.carrier.findFirst.mockResolvedValue(null);
+
+    await expect(
+      service.tenderLoad('tenant-1', 'load-1', 'user-1', { carrierId: 'car-1' } as any),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  // --- acceptTender tests ---
+
+  it('accepts tender and emits events', async () => {
+    prisma.load.findFirst.mockResolvedValue({ id: 'load-1', status: 'TENDERED', carrierId: 'car-1' });
+    prisma.loadTender.findFirst.mockResolvedValue({ id: 'tender-1' });
+    prisma.loadTender.update.mockResolvedValue({ id: 'tender-1', status: 'ACCEPTED' });
+    prisma.tenderRecipient.updateMany.mockResolvedValue({ count: 1 });
+    prisma.load.update.mockResolvedValue({ id: 'load-1', status: 'ACCEPTED' });
+    prisma.statusHistory.create.mockResolvedValue({});
+
+    const result = await service.acceptTender('tenant-1', 'load-1', 'user-1');
+
+    expect(result.status).toBe('ACCEPTED');
+    expect(eventEmitter.emit).toHaveBeenCalledWith('load.tender.accepted',
+      expect.objectContaining({ loadId: 'load-1', carrierId: 'car-1', tenantId: 'tenant-1' }),
+    );
+    expect(eventEmitter.emit).toHaveBeenCalledWith('load.status.changed',
+      expect.objectContaining({ loadId: 'load-1', oldStatus: 'TENDERED', newStatus: 'ACCEPTED', tenantId: 'tenant-1' }),
+    );
+  });
+
+  it('throws when accepting tender for missing load', async () => {
+    prisma.load.findFirst.mockResolvedValue(null);
+
+    await expect(service.acceptTender('tenant-1', 'load-1', 'user-1')).rejects.toThrow(NotFoundException);
+  });
+
+  it('rejects acceptTender when load is not TENDERED', async () => {
+    prisma.load.findFirst.mockResolvedValue({ id: 'load-1', status: 'PENDING' });
+
+    await expect(service.acceptTender('tenant-1', 'load-1', 'user-1')).rejects.toThrow(BadRequestException);
+  });
+
+  it('handles acceptTender when no active tender record exists', async () => {
+    prisma.load.findFirst.mockResolvedValue({ id: 'load-1', status: 'TENDERED', carrierId: 'car-1' });
+    prisma.loadTender.findFirst.mockResolvedValue(null);
+    prisma.load.update.mockResolvedValue({ id: 'load-1', status: 'ACCEPTED' });
+    prisma.statusHistory.create.mockResolvedValue({});
+
+    const result = await service.acceptTender('tenant-1', 'load-1', 'user-1');
+
+    expect(result.status).toBe('ACCEPTED');
+    expect(prisma.loadTender.update).not.toHaveBeenCalled();
+  });
+
+  // --- rejectTender tests ---
+
+  it('rejects tender and resets load to PENDING', async () => {
+    prisma.load.findFirst.mockResolvedValue({ id: 'load-1', status: 'TENDERED', carrierId: 'car-1' });
+    prisma.loadTender.findFirst.mockResolvedValue({ id: 'tender-1' });
+    prisma.loadTender.update.mockResolvedValue({ id: 'tender-1', status: 'REJECTED' });
+    prisma.tenderRecipient.updateMany.mockResolvedValue({ count: 1 });
+    prisma.load.update.mockResolvedValue({ id: 'load-1', status: 'PENDING', carrierId: null });
+    prisma.statusHistory.create.mockResolvedValue({});
+
+    const result = await service.rejectTender('tenant-1', 'load-1', 'user-1', { reason: 'Rate too low' } as any);
+
+    expect(result.status).toBe('PENDING');
+    expect(result.carrierId).toBeNull();
+    expect(eventEmitter.emit).toHaveBeenCalledWith('load.tender.rejected',
+      expect.objectContaining({ loadId: 'load-1', carrierId: 'car-1', reason: 'Rate too low', tenantId: 'tenant-1' }),
+    );
+    expect(eventEmitter.emit).toHaveBeenCalledWith('load.status.changed',
+      expect.objectContaining({ loadId: 'load-1', oldStatus: 'TENDERED', newStatus: 'PENDING', tenantId: 'tenant-1' }),
+    );
+  });
+
+  it('throws when rejecting tender for missing load', async () => {
+    prisma.load.findFirst.mockResolvedValue(null);
+
+    await expect(
+      service.rejectTender('tenant-1', 'load-1', 'user-1', { reason: 'N/A' } as any),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it('rejects rejectTender when load is not TENDERED', async () => {
+    prisma.load.findFirst.mockResolvedValue({ id: 'load-1', status: 'ACCEPTED' });
+
+    await expect(
+      service.rejectTender('tenant-1', 'load-1', 'user-1', { reason: 'N/A' } as any),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('records reject reason in status history', async () => {
+    prisma.load.findFirst.mockResolvedValue({ id: 'load-1', status: 'TENDERED', carrierId: 'car-1' });
+    prisma.loadTender.findFirst.mockResolvedValue({ id: 'tender-1' });
+    prisma.loadTender.update.mockResolvedValue({});
+    prisma.tenderRecipient.updateMany.mockResolvedValue({ count: 1 });
+    prisma.load.update.mockResolvedValue({ id: 'load-1', status: 'PENDING' });
+    prisma.statusHistory.create.mockResolvedValue({});
+
+    await service.rejectTender('tenant-1', 'load-1', 'user-1', { reason: 'Too expensive' } as any);
+
+    expect(prisma.statusHistory.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ notes: 'Tender rejected: Too expensive' }),
+      }),
+    );
   });
 
   it('includes hazmat section when items have hazmat', async () => {

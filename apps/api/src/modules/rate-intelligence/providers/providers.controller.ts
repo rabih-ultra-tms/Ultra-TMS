@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../common/guards/roles.guard';
 import { CurrentTenant, CurrentUser, Roles } from '../../../common/decorators';
 import { CreateProviderConfigDto } from './dto/create-provider-config.dto';
 import { UpdateProviderConfigDto } from './dto/update-provider-config.dto';
@@ -8,10 +9,10 @@ import { ProvidersService } from './providers.service';
 import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
 
 @Controller()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Market Rates')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'SALES_MANAGER', 'OPERATIONS_MANAGER')
 export class ProvidersController {
   constructor(private readonly service: ProvidersService) {}
 
@@ -19,7 +20,7 @@ export class ProvidersController {
   @ApiOperation({ summary: 'List rate data providers' })
   @ApiStandardResponse('Provider list')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'SALES_MANAGER', 'OPERATIONS_MANAGER', 'SALES_REP', 'DISPATCHER', 'CARRIER_MANAGER')
   list(@CurrentTenant() tenantId: string) {
     return this.service.list(tenantId);
   }

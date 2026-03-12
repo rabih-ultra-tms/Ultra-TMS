@@ -16,7 +16,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Workflows')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'OPERATIONS_MANAGER', 'DISPATCHER')
 export class ApprovalsController {
   constructor(private readonly approvalsService: ApprovalsService) {}
 
@@ -24,7 +24,7 @@ export class ApprovalsController {
   @ApiOperation({ summary: 'List approvals' })
   @ApiStandardResponse('Approvals list')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'OPERATIONS_MANAGER', 'DISPATCHER', 'SALES_REP')
   findAll(@CurrentTenant() tenantId: string, @Query() query: ApprovalQueryDto) {
     return this.approvalsService.findAll(tenantId, query);
   }
@@ -33,7 +33,7 @@ export class ApprovalsController {
   @ApiOperation({ summary: 'List pending approvals' })
   @ApiStandardResponse('Pending approvals list')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'OPERATIONS_MANAGER', 'DISPATCHER', 'SALES_REP')
   findPending(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -46,7 +46,7 @@ export class ApprovalsController {
   @ApiOperation({ summary: 'Get approvals stats' })
   @ApiStandardResponse('Approvals stats')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'OPERATIONS_MANAGER', 'DISPATCHER', 'SALES_REP')
   stats(@CurrentTenant() tenantId: string) {
     return this.approvalsService.stats(tenantId);
   }
@@ -56,7 +56,7 @@ export class ApprovalsController {
   @ApiParam({ name: 'id', description: 'Approval ID' })
   @ApiStandardResponse('Approval details')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'OPERATIONS_MANAGER', 'DISPATCHER', 'SALES_REP')
   findOne(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.approvalsService.findOne(tenantId, id);
   }
@@ -66,7 +66,7 @@ export class ApprovalsController {
   @ApiParam({ name: 'id', description: 'Approval ID' })
   @ApiStandardResponse('Approval accepted')
   @ApiErrorResponses()
-  @Roles('MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'OPERATIONS_MANAGER')
   @HttpCode(HttpStatus.OK)
   approve(
     @CurrentTenant() tenantId: string,
@@ -82,7 +82,7 @@ export class ApprovalsController {
   @ApiParam({ name: 'id', description: 'Approval ID' })
   @ApiStandardResponse('Approval rejected')
   @ApiErrorResponses()
-  @Roles('MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'OPERATIONS_MANAGER')
   @HttpCode(HttpStatus.OK)
   reject(
     @CurrentTenant() tenantId: string,

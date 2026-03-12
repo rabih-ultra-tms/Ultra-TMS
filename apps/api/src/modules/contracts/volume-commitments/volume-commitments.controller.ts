@@ -14,7 +14,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Contracts')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'CONTRACTS_MANAGER', 'SALES_MANAGER', 'OPERATIONS_MANAGER')
 export class VolumeCommitmentsController {
   constructor(private readonly service: VolumeCommitmentsService) {}
 
@@ -23,7 +23,7 @@ export class VolumeCommitmentsController {
   @ApiParam({ name: 'contractId', description: 'Contract ID' })
   @ApiStandardResponse('Volume commitments list')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'CONTRACTS_MANAGER', 'CONTRACTS_VIEWER', 'SALES_MANAGER', 'OPERATIONS_MANAGER', 'ACCOUNTING')
   list(@Param('contractId') contractId: string, @CurrentUser() user: CurrentUserData) {
     return this.service.list(user.tenantId, contractId);
   }
@@ -42,7 +42,7 @@ export class VolumeCommitmentsController {
   @ApiParam({ name: 'id', description: 'Volume commitment ID' })
   @ApiStandardResponse('Volume commitment details')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'CONTRACTS_MANAGER', 'CONTRACTS_VIEWER', 'SALES_MANAGER', 'OPERATIONS_MANAGER', 'ACCOUNTING')
   detail(@Param('id') id: string, @CurrentUser() user: CurrentUserData) {
     return this.service.detail(id, user.tenantId);
   }
@@ -61,7 +61,7 @@ export class VolumeCommitmentsController {
   @ApiParam({ name: 'id', description: 'Volume commitment ID' })
   @ApiStandardResponse('Volume commitment deleted')
   @ApiErrorResponses()
-  @Roles('MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'CONTRACTS_MANAGER')
   delete(@Param('id') id: string, @CurrentUser() user: CurrentUserData) {
     return this.service.delete(id, user.tenantId);
   }
@@ -71,7 +71,7 @@ export class VolumeCommitmentsController {
   @ApiParam({ name: 'id', description: 'Volume commitment ID' })
   @ApiStandardResponse('Volume commitment performance')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'CONTRACTS_MANAGER', 'CONTRACTS_VIEWER', 'SALES_MANAGER', 'OPERATIONS_MANAGER', 'ACCOUNTING')
   performance(@Param('id') id: string, @CurrentUser() user: CurrentUserData) {
     return this.service.performance(id, user.tenantId);
   }

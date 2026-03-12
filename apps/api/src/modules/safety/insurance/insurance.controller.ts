@@ -15,7 +15,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Insurance')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'SAFETY_MANAGER', 'CARRIER_MANAGER')
 export class InsuranceController {
   constructor(private readonly service: InsuranceService) {}
 
@@ -23,7 +23,7 @@ export class InsuranceController {
   @ApiOperation({ summary: 'List insurance certificates' })
   @ApiStandardResponse('Insurance list')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'SAFETY_MANAGER', 'CARRIER_MANAGER', 'DISPATCHER', 'OPERATIONS_MANAGER')
   list(@CurrentTenant() tenantId: string, @Query() query: InsuranceQueryDto) {
     return this.service.list(tenantId, query);
   }
@@ -44,7 +44,7 @@ export class InsuranceController {
   @ApiOperation({ summary: 'List expiring insurance certificates' })
   @ApiStandardResponse('Expiring insurance certificates')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'SAFETY_MANAGER', 'CARRIER_MANAGER', 'DISPATCHER', 'OPERATIONS_MANAGER')
   getExpiring(@CurrentTenant() tenantId: string, @Query('days') days?: string) {
     const numDays = days ? parseInt(days, 10) : 30;
     return this.service.expiring(tenantId, Number.isFinite(numDays) ? numDays : 30);
@@ -55,7 +55,7 @@ export class InsuranceController {
   @ApiParam({ name: 'id', description: 'Insurance ID' })
   @ApiStandardResponse('Insurance certificate details')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'SAFETY_MANAGER', 'CARRIER_MANAGER', 'DISPATCHER', 'OPERATIONS_MANAGER')
   get(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.service.get(tenantId, id);
   }
@@ -79,7 +79,7 @@ export class InsuranceController {
   @ApiParam({ name: 'id', description: 'Insurance ID' })
   @ApiStandardResponse('Insurance certificate deleted')
   @ApiErrorResponses()
-  @Roles('MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'SAFETY_MANAGER')
   @HttpCode(HttpStatus.OK)
   remove(
     @CurrentTenant() tenantId: string,

@@ -11,7 +11,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Workflow Executions')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'OPERATIONS_MANAGER', 'DISPATCHER')
 export class ExecutionsController {
   constructor(private readonly executionsService: ExecutionsService) {}
 
@@ -19,7 +19,7 @@ export class ExecutionsController {
   @ApiOperation({ summary: 'List workflow executions' })
   @ApiStandardResponse('Workflow executions list')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'OPERATIONS_MANAGER', 'DISPATCHER', 'SALES_REP')
   findAll(@CurrentTenant() tenantId: string, @Query() query: ExecutionQueryDto) {
     return this.executionsService.findAll(tenantId, query);
   }
@@ -29,7 +29,7 @@ export class ExecutionsController {
   @ApiParam({ name: 'id', description: 'Execution ID' })
   @ApiStandardResponse('Workflow execution details')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'OPERATIONS_MANAGER', 'DISPATCHER', 'SALES_REP')
   findOne(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.executionsService.findOne(tenantId, id);
   }
@@ -39,7 +39,7 @@ export class ExecutionsController {
   @ApiParam({ name: 'id', description: 'Execution ID' })
   @ApiStandardResponse('Workflow execution steps')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'OPERATIONS_MANAGER', 'DISPATCHER', 'SALES_REP')
   steps(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.executionsService.getSteps(tenantId, id);
   }
@@ -49,7 +49,7 @@ export class ExecutionsController {
   @ApiParam({ name: 'id', description: 'Execution ID' })
   @ApiStandardResponse('Workflow execution logs')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'OPERATIONS_MANAGER', 'DISPATCHER', 'SALES_REP')
   logs(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.executionsService.getLogs(tenantId, id);
   }
@@ -89,7 +89,7 @@ export class ExecutionsController {
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Workflow Executions')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'OPERATIONS_MANAGER', 'DISPATCHER')
 export class WorkflowExecutionsController {
   constructor(private readonly executionsService: ExecutionsService) {}
 
@@ -98,7 +98,7 @@ export class WorkflowExecutionsController {
   @ApiParam({ name: 'workflowId', description: 'Workflow ID' })
   @ApiStandardResponse('Workflow executions list')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'OPERATIONS_MANAGER', 'DISPATCHER', 'SALES_REP')
   findByWorkflow(
     @CurrentTenant() tenantId: string,
     @Param('workflowId') workflowId: string,

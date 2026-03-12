@@ -16,7 +16,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Employees')
 @ApiBearerAuth('JWT-auth')
-@Roles('USER', 'MANAGER', 'ADMIN')
+@Roles('ADMIN', 'HR_MANAGER', 'OPERATIONS_MANAGER')
 export class TimeOffController {
   constructor(private readonly timeOffService: TimeOffService) {}
 
@@ -24,7 +24,7 @@ export class TimeOffController {
   @ApiOperation({ summary: 'List time-off balances' })
   @ApiStandardResponse('Time-off balances')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'HR_MANAGER', 'HR_VIEWER', 'OPERATIONS_MANAGER')
   listBalances(@CurrentTenant() tenantId: string) {
     return this.timeOffService.listBalances(tenantId);
   }
@@ -33,7 +33,7 @@ export class TimeOffController {
   @ApiOperation({ summary: 'List time-off requests' })
   @ApiStandardResponse('Time-off requests list')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'HR_MANAGER', 'HR_VIEWER', 'OPERATIONS_MANAGER')
   listRequests(@CurrentTenant() tenantId: string) {
     return this.timeOffService.listRequests(tenantId);
   }
@@ -51,7 +51,7 @@ export class TimeOffController {
   @ApiParam({ name: 'id', description: 'Request ID' })
   @ApiStandardResponse('Time-off request details')
   @ApiErrorResponses()
-  @Roles('VIEWER', 'USER', 'MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'HR_MANAGER', 'HR_VIEWER', 'OPERATIONS_MANAGER')
   getRequest(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.timeOffService.findOne(tenantId, id);
   }
@@ -70,7 +70,7 @@ export class TimeOffController {
   @ApiParam({ name: 'id', description: 'Request ID' })
   @ApiStandardResponse('Time-off request approved')
   @ApiErrorResponses()
-  @Roles('MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'HR_MANAGER')
   approveRequest(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
@@ -85,7 +85,7 @@ export class TimeOffController {
   @ApiParam({ name: 'id', description: 'Request ID' })
   @ApiStandardResponse('Time-off request denied')
   @ApiErrorResponses()
-  @Roles('MANAGER', 'ADMIN')
+  @Roles('ADMIN', 'HR_MANAGER')
   denyRequest(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
