@@ -1,5 +1,19 @@
-import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { PortalAuthService } from './portal-auth.service';
 import { PortalLoginDto } from './dto/portal-login.dto';
@@ -9,7 +23,10 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { PortalRegisterDto } from './dto/register.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { PortalAuthGuard } from '../guards/portal-auth.guard';
-import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
+import {
+  ApiErrorResponses,
+  ApiStandardResponse,
+} from '../../../common/swagger';
 
 @Controller('portal/auth')
 @ApiTags('Customer Portal')
@@ -22,7 +39,11 @@ export class PortalAuthController {
   @ApiStandardResponse('Portal login successful')
   @ApiErrorResponses()
   login(@Body() dto: PortalLoginDto, @Req() req: any) {
-    return this.authService.login(dto, {
+    const tenantId = req.headers['x-tenant-id'];
+    if (!tenantId) {
+      throw new BadRequestException('x-tenant-id header is required');
+    }
+    return this.authService.login(dto, String(tenantId), {
       ipAddress: req.ip,
       userAgent: req.headers['user-agent'],
     });
@@ -67,7 +88,8 @@ export class PortalAuthController {
   @ApiStandardResponse('Portal registration completed')
   @ApiErrorResponses()
   register(@Body() dto: PortalRegisterDto, @Req() req: any) {
-    const tenantId = req.headers['x-tenant-id'] || dto.companyId || 'default-tenant';
+    const tenantId =
+      req.headers['x-tenant-id'] || dto.companyId || 'default-tenant';
     return this.authService.register(String(tenantId), dto);
   }
 

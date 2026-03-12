@@ -18,7 +18,6 @@ env:
   REDIS_URL: redis://localhost:6379
   CARRIER_PORTAL_JWT_SECRET: test-carrier-portal-secret
   CUSTOMER_PORTAL_JWT_SECRET: test-customer-portal-secret
-  PORTAL_JWT_SECRET: test-portal-secret
   ELASTIC_NODE: http://localhost:9200
 
 jobs:

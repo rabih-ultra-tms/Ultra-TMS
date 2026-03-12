@@ -288,8 +288,9 @@ export class PaymentsReceivedService {
           });
         }
 
-        await tx.paymentApplication.delete({
-          where: { id: application.id },
+        await tx.paymentApplication.update({
+          where: { id: application.id, tenantId },
+          data: { deletedAt: new Date() },
         });
       }
 

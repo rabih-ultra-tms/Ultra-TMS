@@ -42,32 +42,61 @@ describe('PortalAuthService', () => {
   });
 
   it('logs in with valid credentials', async () => {
-    prisma.portalUser.findFirst.mockResolvedValue({ id: 'u1', tenantId: 't1', role: 'USER', password: 'pw', status: 'ACTIVE' });
+    prisma.portalUser.findFirst.mockResolvedValue({
+      id: 'u1',
+      tenantId: 't1',
+      role: 'USER',
+      password: 'pw',
+      status: 'ACTIVE',
+    });
     prisma.portalUser.update.mockResolvedValue({});
-    jwtService.sign.mockReturnValueOnce('access').mockReturnValueOnce('refresh');
+    jwtService.sign
+      .mockReturnValueOnce('access')
+      .mockReturnValueOnce('refresh');
 
-    const result = await service.login({ email: 'a@b.com', password: 'pw' } as any, {});
+    const result = await service.login(
+      { email: 'a@b.com', password: 'pw' } as any,
+      't1',
+      {}
+    );
 
     expect(result.accessToken).toBe('access');
     expect(prisma.portalSession.create).toHaveBeenCalled();
   });
 
   it('rejects suspended user login', async () => {
-    prisma.portalUser.findFirst.mockResolvedValue({ id: 'u1', tenantId: 't1', role: 'USER', password: 'pw', status: 'SUSPENDED' });
+    prisma.portalUser.findFirst.mockResolvedValue({
+      id: 'u1',
+      tenantId: 't1',
+      role: 'USER',
+      password: 'pw',
+      status: 'SUSPENDED',
+    });
 
-    await expect(service.login({ email: 'a@b.com', password: 'pw' } as any, {})).rejects.toThrow(UnauthorizedException);
+    await expect(
+      service.login({ email: 'a@b.com', password: 'pw' } as any, 't1', {})
+    ).rejects.toThrow(UnauthorizedException);
   });
 
   it('rejects invalid credentials', async () => {
     prisma.portalUser.findFirst.mockResolvedValue(null);
 
-    await expect(service.login({ email: 'a@b.com', password: 'pw' } as any, {})).rejects.toThrow(UnauthorizedException);
+    await expect(
+      service.login({ email: 'a@b.com', password: 'pw' } as any, 't1', {})
+    ).rejects.toThrow(UnauthorizedException);
   });
 
   it('refreshes access token', async () => {
     jwtService.verify.mockReturnValue({ sub: 'u1', type: 'refresh' });
-    prisma.portalSession.findFirst.mockResolvedValue({ id: 's1', expiresAt: new Date(Date.now() + 1000) });
-    prisma.portalUser.findUnique.mockResolvedValue({ id: 'u1', tenantId: 't1', role: 'USER' });
+    prisma.portalSession.findFirst.mockResolvedValue({
+      id: 's1',
+      expiresAt: new Date(Date.now() + 1000),
+    });
+    prisma.portalUser.findUnique.mockResolvedValue({
+      id: 'u1',
+      tenantId: 't1',
+      role: 'USER',
+    });
     jwtService.sign.mockReturnValue('access');
 
     const result = await service.refresh({ refreshToken: 'token' } as any);
@@ -78,20 +107,31 @@ describe('PortalAuthService', () => {
   it('rejects refresh token with wrong type', async () => {
     jwtService.verify.mockReturnValue({ sub: 'u1', type: 'access' });
 
-    await expect(service.refresh({ refreshToken: 'token' } as any)).rejects.toThrow(UnauthorizedException);
+    await expect(
+      service.refresh({ refreshToken: 'token' } as any)
+    ).rejects.toThrow(UnauthorizedException);
   });
 
   it('rejects expired refresh session', async () => {
     jwtService.verify.mockReturnValue({ sub: 'u1', type: 'refresh' });
-    prisma.portalSession.findFirst.mockResolvedValue({ id: 's1', expiresAt: new Date(Date.now() - 1000) });
+    prisma.portalSession.findFirst.mockResolvedValue({
+      id: 's1',
+      expiresAt: new Date(Date.now() - 1000),
+    });
 
-    await expect(service.refresh({ refreshToken: 'token' } as any)).rejects.toThrow(UnauthorizedException);
+    await expect(
+      service.refresh({ refreshToken: 'token' } as any)
+    ).rejects.toThrow(UnauthorizedException);
   });
 
   it('throws on invalid refresh token', async () => {
-    jwtService.verify.mockImplementation(() => { throw new Error('bad'); });
+    jwtService.verify.mockImplementation(() => {
+      throw new Error('bad');
+    });
 
-    await expect(service.refresh({ refreshToken: 'token' } as any)).rejects.toThrow(UnauthorizedException);
+    await expect(
+      service.refresh({ refreshToken: 'token' } as any)
+    ).rejects.toThrow(UnauthorizedException);
   });
 
   it('logs out with refresh token', async () => {
@@ -104,7 +144,7 @@ describe('PortalAuthService', () => {
     await service.logout('u1');
 
     expect(prisma.portalSession.updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { userId: 'u1', revokedAt: null } }),
+      expect.objectContaining({ where: { userId: 'u1', revokedAt: null } })
     );
   });
 
@@ -129,14 +169,19 @@ describe('PortalAuthService', () => {
   it('rejects reset password with invalid token', async () => {
     prisma.portalUser.findFirst.mockResolvedValue(null);
 
-    await expect(service.resetPassword({ token: 'bad', newPassword: 'pw2' } as any)).rejects.toThrow(BadRequestException);
+    await expect(
+      service.resetPassword({ token: 'bad', newPassword: 'pw2' } as any)
+    ).rejects.toThrow(BadRequestException);
   });
 
   it('resets password with valid token', async () => {
     prisma.portalUser.findFirst.mockResolvedValue({ id: 'u1' });
     prisma.portalUser.update.mockResolvedValue({});
 
-    const result = await service.resetPassword({ token: 'good', newPassword: 'pw2' } as any);
+    const result = await service.resetPassword({
+      token: 'good',
+      newPassword: 'pw2',
+    } as any);
 
     expect(result).toEqual({ success: true });
   });
@@ -153,14 +198,19 @@ describe('PortalAuthService', () => {
   it('throws on invalid verification token', async () => {
     prisma.portalUser.findFirst.mockResolvedValue(null);
 
-    await expect(service.verifyEmail('bad')).rejects.toThrow(BadRequestException);
+    await expect(service.verifyEmail('bad')).rejects.toThrow(
+      BadRequestException
+    );
   });
 
   it('registers existing portal user', async () => {
     prisma.portalUser.findFirst.mockResolvedValue({ id: 'u1' });
     prisma.portalUser.update.mockResolvedValue({ id: 'u1' });
 
-    const result = await service.register('tenant-1', { email: 'a@b.com', password: 'pw' } as any);
+    const result = await service.register('tenant-1', {
+      email: 'a@b.com',
+      password: 'pw',
+    } as any);
 
     expect(result).toEqual({ success: true });
   });
@@ -169,7 +219,11 @@ describe('PortalAuthService', () => {
     prisma.portalUser.findFirst.mockResolvedValue(null);
     prisma.portalUser.create.mockResolvedValue({ id: 'u2' });
 
-    const result = await service.register('tenant-1', { email: 'a@b.com', password: 'pw', companyId: 'c1' } as any);
+    const result = await service.register('tenant-1', {
+      email: 'a@b.com',
+      password: 'pw',
+      companyId: 'c1',
+    } as any);
 
     expect(result).toEqual({ success: true });
     expect(prisma.portalUser.create).toHaveBeenCalled();
@@ -178,23 +232,37 @@ describe('PortalAuthService', () => {
   it('requires companyId for new portal user', async () => {
     prisma.portalUser.findFirst.mockResolvedValue(null);
 
-    await expect(service.register('tenant-1', { email: 'a@b.com', password: 'pw' } as any)).rejects.toThrow(
-      BadRequestException,
-    );
+    await expect(
+      service.register('tenant-1', { email: 'a@b.com', password: 'pw' } as any)
+    ).rejects.toThrow(BadRequestException);
   });
 
   it('changes password with valid current password', async () => {
-    prisma.portalUser.findUnique.mockResolvedValue({ id: 'u1', password: 'old' });
+    prisma.portalUser.findUnique.mockResolvedValue({
+      id: 'u1',
+      password: 'old',
+    });
     prisma.portalUser.update.mockResolvedValue({});
 
-    const result = await service.changePassword('u1', { currentPassword: 'old', newPassword: 'new' } as any);
+    const result = await service.changePassword('u1', {
+      currentPassword: 'old',
+      newPassword: 'new',
+    } as any);
 
     expect(result).toEqual({ success: true });
   });
 
   it('rejects change password with invalid current password', async () => {
-    prisma.portalUser.findUnique.mockResolvedValue({ id: 'u1', password: 'old' });
+    prisma.portalUser.findUnique.mockResolvedValue({
+      id: 'u1',
+      password: 'old',
+    });
 
-    await expect(service.changePassword('u1', { currentPassword: 'bad', newPassword: 'new' } as any)).rejects.toThrow(UnauthorizedException);
+    await expect(
+      service.changePassword('u1', {
+        currentPassword: 'bad',
+        newPassword: 'new',
+      } as any)
+    ).rejects.toThrow(UnauthorizedException);
   });
 });

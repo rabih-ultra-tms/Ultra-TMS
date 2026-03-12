@@ -5,6 +5,8 @@
  * for Customer Portal authentication.
  */
 
+import { AUTH_CONFIG } from '@/lib/config/auth';
+
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
@@ -15,7 +17,9 @@ function readCookie(name: string): string | undefined {
   if (typeof document === 'undefined') return undefined;
   const parts = document.cookie.split(';').map((p) => p.trim());
   const match = parts.find((p) => p.startsWith(`${name}=`));
-  return match ? decodeURIComponent(match.substring(name.length + 1)) : undefined;
+  return match
+    ? decodeURIComponent(match.substring(name.length + 1))
+    : undefined;
 }
 
 function writeCookie(name: string, value: string, maxAge: number) {
@@ -60,12 +64,14 @@ export class PortalApiError extends Error {
 
 async function portalRequest<T>(
   endpoint: string,
-  options: RequestInit & { skipAuth?: boolean } = {},
+  // eslint-disable-next-line no-undef
+  options: RequestInit & { skipAuth?: boolean } = {}
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     Accept: 'application/json',
+    'x-tenant-id': AUTH_CONFIG.defaultTenantId,
   };
 
   if (!options.skipAuth) {
@@ -101,7 +107,11 @@ async function portalRequest<T>(
 export const portalApi = {
   get: <T>(endpoint: string) => portalRequest<T>(endpoint),
 
-  post: <T>(endpoint: string, body?: unknown, options?: { skipAuth?: boolean }) =>
+  post: <T>(
+    endpoint: string,
+    body?: unknown,
+    options?: { skipAuth?: boolean }
+  ) =>
     portalRequest<T>(endpoint, {
       method: 'POST',
       body: body ? JSON.stringify(body) : undefined,

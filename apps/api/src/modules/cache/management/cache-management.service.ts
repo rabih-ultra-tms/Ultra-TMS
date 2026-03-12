@@ -15,7 +15,7 @@ export class CacheManagementService {
     private readonly stats: CacheStatsService,
     private readonly invalidation: InvalidationService,
     private readonly warmer: CacheWarmerService,
-    private readonly events: EventEmitter2,
+    private readonly events: EventEmitter2
   ) {}
 
   async health() {
@@ -23,7 +23,7 @@ export class CacheManagementService {
     return { status: 'ok', redis: ping };
   }
 
-  async statsForTenant(tenantId?: string) {
+  async statsForTenant(tenantId: string) {
     return this.stats.recent(tenantId);
   }
 
@@ -36,7 +36,11 @@ export class CacheManagementService {
     const scopedPattern = `tenant:${tenantId}:${pattern}`;
     const deleted = await this.redis.deleteByPattern(scopedPattern);
     await this.stats.recordDelete(tenantId, 'GENERIC', deleted);
-    this.events.emit('cache.invalidated', { pattern: scopedPattern, count: deleted, tenantId });
+    this.events.emit('cache.invalidated', {
+      pattern: scopedPattern,
+      count: deleted,
+      tenantId,
+    });
     return { pattern: scopedPattern, deleted };
   }
 

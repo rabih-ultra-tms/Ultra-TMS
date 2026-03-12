@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PortalUserStatus } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
@@ -13,27 +17,47 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Injectable()
 export class PortalAuthService {
-  constructor(private readonly prisma: PrismaService, private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService
+  ) {}
 
   private hash(value: string) {
     return createHash('sha256').update(value).digest('hex');
   }
 
-  private signAccessToken(user: { id: string; tenantId: string; role: string }) {
+  private signAccessToken(user: {
+    id: string;
+    tenantId: string;
+    role: string;
+  }) {
     return this.jwtService.sign(
       { sub: user.id, tenantId: user.tenantId, role: user.role },
-      { secret: process.env.CUSTOMER_PORTAL_JWT_SECRET || process.env.JWT_SECRET, expiresIn: '2h' },
+      {
+        secret:
+          process.env.CUSTOMER_PORTAL_JWT_SECRET || process.env.JWT_SECRET,
+        expiresIn: '2h',
+      }
     );
   }
 
   private signRefreshToken(user: { id: string; tenantId: string }) {
     return this.jwtService.sign(
       { sub: user.id, tenantId: user.tenantId, type: 'refresh' },
-      { secret: process.env.CUSTOMER_PORTAL_JWT_SECRET || process.env.JWT_SECRET, expiresIn: '7d' },
+      {
+        secret:
+          process.env.CUSTOMER_PORTAL_JWT_SECRET || process.env.JWT_SECRET,
+        expiresIn: '7d',
+      }
     );
   }
 
-  private async createSession(userId: string, tenantId: string, refreshToken: string, metadata: any) {
+  private async createSession(
+    userId: string,
+    tenantId: string,
+    refreshToken: string,
+    metadata: any
+  ) {
     const refreshTokenHash = this.hash(refreshToken);
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7);
     await this.prisma.portalSession.create({
@@ -48,10 +72,15 @@ export class PortalAuthService {
     });
   }
 
-  async login(dto: PortalLoginDto, metadata: { ipAddress?: string; userAgent?: string }) {
+  async login(
+    dto: PortalLoginDto,
+    tenantId: string,
+    metadata: { ipAddress?: string; userAgent?: string }
+  ) {
     const user = await this.prisma.portalUser.findFirst({
       where: {
         email: dto.email,
+        tenantId,
         deletedAt: null,
       },
     });
@@ -60,7 +89,10 @@ export class PortalAuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    if (user.status === PortalUserStatus.SUSPENDED || user.status === PortalUserStatus.DEACTIVATED) {
+    if (
+      user.status === PortalUserStatus.SUSPENDED ||
+      user.status === PortalUserStatus.DEACTIVATED
+    ) {
       throw new UnauthorizedException('Account not active');
     }
 
@@ -84,7 +116,8 @@ export class PortalAuthService {
   async refresh(dto: RefreshTokenDto) {
     try {
       const payload = this.jwtService.verify(dto.refreshToken, {
-        secret: process.env.CUSTOMER_PORTAL_JWT_SECRET || process.env.JWT_SECRET,
+        secret:
+          process.env.CUSTOMER_PORTAL_JWT_SECRET || process.env.JWT_SECRET,
       });
 
       if (payload.type !== 'refresh') {
@@ -93,14 +126,21 @@ export class PortalAuthService {
 
       const refreshTokenHash = this.hash(dto.refreshToken);
       const session = await this.prisma.portalSession.findFirst({
-        where: { userId: payload.sub, refreshTokenHash, revokedAt: null, deletedAt: null },
+        where: {
+          userId: payload.sub,
+          refreshTokenHash,
+          revokedAt: null,
+          deletedAt: null,
+        },
       });
 
       if (!session || session.expiresAt < new Date()) {
         throw new UnauthorizedException('Refresh token expired');
       }
 
-      const user = await this.prisma.portalUser.findUnique({ where: { id: payload.sub } });
+      const user = await this.prisma.portalUser.findUnique({
+        where: { id: payload.sub },
+      });
       if (!user) {
         throw new UnauthorizedException('User not found');
       }
@@ -120,14 +160,19 @@ export class PortalAuthService {
         data: { revokedAt: new Date() },
       });
     } else {
-      await this.prisma.portalSession.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: new Date() } });
+      await this.prisma.portalSession.updateMany({
+        where: { userId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
     }
 
     return { success: true };
   }
 
   async forgotPassword(dto: ForgotPasswordDto) {
-    const user = await this.prisma.portalUser.findFirst({ where: { email: dto.email } });
+    const user = await this.prisma.portalUser.findFirst({
+      where: { email: dto.email },
+    });
     if (!user) {
       return { success: true };
     }
@@ -142,7 +187,9 @@ export class PortalAuthService {
   }
 
   async resetPassword(dto: ResetPasswordDto) {
-    const user = await this.prisma.portalUser.findFirst({ where: { verificationToken: dto.token } });
+    const user = await this.prisma.portalUser.findFirst({
+      where: { verificationToken: dto.token },
+    });
     if (!user) {
       throw new BadRequestException('Invalid reset token');
     }
@@ -157,21 +204,30 @@ export class PortalAuthService {
   }
 
   async verifyEmail(token: string) {
-    const user = await this.prisma.portalUser.findFirst({ where: { verificationToken: token } });
+    const user = await this.prisma.portalUser.findFirst({
+      where: { verificationToken: token },
+    });
     if (!user) {
       throw new BadRequestException('Invalid verification token');
     }
 
     await this.prisma.portalUser.update({
       where: { id: user.id },
-      data: { emailVerified: true, emailVerifiedAt: new Date(), verificationToken: null, status: PortalUserStatus.ACTIVE },
+      data: {
+        emailVerified: true,
+        emailVerifiedAt: new Date(),
+        verificationToken: null,
+        status: PortalUserStatus.ACTIVE,
+      },
     });
 
     return { success: true };
   }
 
   async register(tenantId: string, dto: PortalRegisterDto) {
-    const existing = await this.prisma.portalUser.findFirst({ where: { email: dto.email, tenantId } });
+    const existing = await this.prisma.portalUser.findFirst({
+      where: { email: dto.email, tenantId },
+    });
     if (existing) {
       const hashedPassword = await bcrypt.hash(dto.password, 12);
       await this.prisma.portalUser.update({
@@ -210,7 +266,9 @@ export class PortalAuthService {
   }
 
   async changePassword(userId: string, dto: ChangePasswordDto) {
-    const user = await this.prisma.portalUser.findUnique({ where: { id: userId } });
+    const user = await this.prisma.portalUser.findUnique({
+      where: { id: userId },
+    });
     if (!user || !(await bcrypt.compare(dto.currentPassword, user.password))) {
       throw new UnauthorizedException('Invalid current password');
     }

@@ -5,9 +5,9 @@ import { PrismaService } from '../../../prisma.service';
 export class CacheStatsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async recent(tenantId?: string) {
+  async recent(tenantId: string) {
     return this.prisma.cacheStats.findMany({
-      where: tenantId ? { tenantId } : {},
+      where: { tenantId },
       orderBy: [{ statDate: 'desc' }, { statHour: 'desc' }],
       take: 48,
     });
@@ -15,9 +15,13 @@ export class CacheStatsService {
 
   async recordHit(tenantId: string | null, cacheType: string) {
     const now = new Date();
-    const statDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const statDate = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+    );
     const statHour = now.getUTCHours();
-    const existing = await this.prisma.cacheStats.findFirst({ where: { tenantId: tenantId ?? null, statDate, statHour, cacheType } });
+    const existing = await this.prisma.cacheStats.findFirst({
+      where: { tenantId: tenantId ?? null, statDate, statHour, cacheType },
+    });
     if (existing) {
       await this.prisma.cacheStats.update({
         where: { id: existing.id },
@@ -43,9 +47,13 @@ export class CacheStatsService {
 
   async recordMiss(tenantId: string | null, cacheType: string) {
     const now = new Date();
-    const statDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const statDate = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+    );
     const statHour = now.getUTCHours();
-    const existing = await this.prisma.cacheStats.findFirst({ where: { tenantId: tenantId ?? null, statDate, statHour, cacheType } });
+    const existing = await this.prisma.cacheStats.findFirst({
+      where: { tenantId: tenantId ?? null, statDate, statHour, cacheType },
+    });
     if (existing) {
       await this.prisma.cacheStats.update({
         where: { id: existing.id },
@@ -71,9 +79,13 @@ export class CacheStatsService {
 
   async recordSet(tenantId: string | null, cacheType: string) {
     const now = new Date();
-    const statDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const statDate = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+    );
     const statHour = now.getUTCHours();
-    const existing = await this.prisma.cacheStats.findFirst({ where: { tenantId: tenantId ?? null, statDate, statHour, cacheType } });
+    const existing = await this.prisma.cacheStats.findFirst({
+      where: { tenantId: tenantId ?? null, statDate, statHour, cacheType },
+    });
     if (existing) {
       await this.prisma.cacheStats.update({
         where: { id: existing.id },
@@ -97,11 +109,19 @@ export class CacheStatsService {
     });
   }
 
-  async recordDelete(tenantId: string | null, cacheType: string, count: number) {
+  async recordDelete(
+    tenantId: string | null,
+    cacheType: string,
+    count: number
+  ) {
     const now = new Date();
-    const statDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const statDate = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+    );
     const statHour = now.getUTCHours();
-    const existing = await this.prisma.cacheStats.findFirst({ where: { tenantId: tenantId ?? null, statDate, statHour, cacheType } });
+    const existing = await this.prisma.cacheStats.findFirst({
+      where: { tenantId: tenantId ?? null, statDate, statHour, cacheType },
+    });
     if (existing) {
       await this.prisma.cacheStats.update({
         where: { id: existing.id },

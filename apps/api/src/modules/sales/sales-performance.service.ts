@@ -1,6 +1,14 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
-import { CreateSalesQuotaDto, UpdateSalesQuotaDto, PerformanceQueryDto } from './dto';
+import {
+  CreateSalesQuotaDto,
+  UpdateSalesQuotaDto,
+  PerformanceQueryDto,
+} from './dto';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
@@ -15,13 +23,15 @@ export class SalesPerformanceService {
       userId?: string;
       periodType?: string;
       status?: string;
-    },
+    }
   ) {
     const { page, limit, userId, periodType, status } = options || {};
     const resolvedPage = Number(page);
     const resolvedLimit = Number(limit);
-    const safePage = Number.isFinite(resolvedPage) && resolvedPage > 0 ? resolvedPage : 1;
-    const safeLimit = Number.isFinite(resolvedLimit) && resolvedLimit > 0 ? resolvedLimit : 20;
+    const safePage =
+      Number.isFinite(resolvedPage) && resolvedPage > 0 ? resolvedPage : 1;
+    const safeLimit =
+      Number.isFinite(resolvedLimit) && resolvedLimit > 0 ? resolvedLimit : 20;
     const skip = (safePage - 1) * safeLimit;
 
     const where: Prisma.SalesQuotaWhereInput = { tenantId };
@@ -79,7 +89,7 @@ export class SalesPerformanceService {
 
     // Calculate progress
     const revenueProgress = quota.revenueTarget
-      ? ((Number(quota.revenueActual || 0)) / Number(quota.revenueTarget)) * 100
+      ? (Number(quota.revenueActual || 0) / Number(quota.revenueTarget)) * 100
       : 0;
     const loadsProgress = quota.loadsTarget
       ? ((quota.loadsActual || 0) / quota.loadsTarget) * 100
@@ -99,7 +109,11 @@ export class SalesPerformanceService {
     };
   }
 
-  async createQuota(tenantId: string, userId: string, dto: CreateSalesQuotaDto) {
+  async createQuota(
+    tenantId: string,
+    userId: string,
+    dto: CreateSalesQuotaDto
+  ) {
     // Check for existing quota in the same period
     const existing = await this.prisma.salesQuota.findFirst({
       where: {
@@ -110,7 +124,9 @@ export class SalesPerformanceService {
     });
 
     if (existing) {
-      throw new BadRequestException('A quota already exists for this user in this period');
+      throw new BadRequestException(
+        'A quota already exists for this user in this period'
+      );
     }
 
     return this.prisma.salesQuota.create({
@@ -138,11 +154,16 @@ export class SalesPerformanceService {
     });
   }
 
-  async updateQuota(tenantId: string, id: string, userId: string, dto: UpdateSalesQuotaDto) {
+  async updateQuota(
+    tenantId: string,
+    id: string,
+    userId: string,
+    dto: UpdateSalesQuotaDto
+  ) {
     await this.findOneQuota(tenantId, id);
 
     return this.prisma.salesQuota.update({
-      where: { id },
+      where: { id, tenantId },
       data: {
         periodStart: dto.periodStart ? new Date(dto.periodStart) : undefined,
         periodEnd: dto.periodEnd ? new Date(dto.periodEnd) : undefined,
@@ -165,7 +186,9 @@ export class SalesPerformanceService {
   }
 
   async getPerformance(tenantId: string, query: PerformanceQueryDto) {
-    const startDate = query.startDate ? new Date(query.startDate) : new Date(new Date().getFullYear(), 0, 1);
+    const startDate = query.startDate
+      ? new Date(query.startDate)
+      : new Date(new Date().getFullYear(), 0, 1);
     const endDate = query.endDate ? new Date(query.endDate) : new Date();
 
     const where: Prisma.QuoteWhereInput = {
@@ -193,21 +216,30 @@ export class SalesPerformanceService {
     });
 
     const totalQuotes = quotes.length;
-    const sentQuotes = quotes.filter((q) => ['SENT', 'VIEWED', 'ACCEPTED', 'CONVERTED'].includes(q.status)).length;
-    const convertedQuotes = quotes.filter((q) => q.status === 'CONVERTED').length;
+    const sentQuotes = quotes.filter((q) =>
+      ['SENT', 'VIEWED', 'ACCEPTED', 'CONVERTED'].includes(q.status)
+    ).length;
+    const convertedQuotes = quotes.filter(
+      (q) => q.status === 'CONVERTED'
+    ).length;
     const totalRevenue = quotes
       .filter((q) => q.status === 'CONVERTED')
       .reduce((sum, q) => sum + Number(q.totalAmount || 0), 0);
 
-    const conversionRate = sentQuotes > 0 ? (convertedQuotes / sentQuotes) * 100 : 0;
+    const conversionRate =
+      sentQuotes > 0 ? (convertedQuotes / sentQuotes) * 100 : 0;
 
     // Calculate average time to convert
-    const convertedWithTime = quotes.filter((q) => q.convertedAt && q.createdAt);
+    const convertedWithTime = quotes.filter(
+      (q) => q.convertedAt && q.createdAt
+    );
     const avgTimeToConvert =
       convertedWithTime.length > 0
         ? convertedWithTime.reduce((sum, q) => {
             const days = Math.floor(
-              (new Date(q.convertedAt!).getTime() - new Date(q.createdAt).getTime()) / (1000 * 60 * 60 * 24),
+              (new Date(q.convertedAt!).getTime() -
+                new Date(q.createdAt).getTime()) /
+                (1000 * 60 * 60 * 24)
             );
             return sum + days;
           }, 0) / convertedWithTime.length
@@ -230,7 +262,9 @@ export class SalesPerformanceService {
   }
 
   async getLeaderboard(tenantId: string, query: PerformanceQueryDto) {
-    const startDate = query.startDate ? new Date(query.startDate) : new Date(new Date().getFullYear(), 0, 1);
+    const startDate = query.startDate
+      ? new Date(query.startDate)
+      : new Date(new Date().getFullYear(), 0, 1);
     const endDate = query.endDate ? new Date(query.endDate) : new Date();
 
     // Get all sales reps with their quote stats
@@ -269,16 +303,22 @@ export class SalesPerformanceService {
         });
 
         const convertedQuotes = quotes.filter((q) => q.status === 'CONVERTED');
-        const revenue = convertedQuotes.reduce((sum, q) => sum + Number(q.totalAmount || 0), 0);
+        const revenue = convertedQuotes.reduce(
+          (sum, q) => sum + Number(q.totalAmount || 0),
+          0
+        );
 
         return {
           user: rep,
           totalQuotes: quotes.length,
           convertedQuotes: convertedQuotes.length,
           revenue,
-          conversionRate: quotes.length > 0 ? (convertedQuotes.length / quotes.length) * 100 : 0,
+          conversionRate:
+            quotes.length > 0
+              ? (convertedQuotes.length / quotes.length) * 100
+              : 0,
         };
-      }),
+      })
     );
 
     // Sort by revenue
@@ -294,7 +334,9 @@ export class SalesPerformanceService {
   }
 
   async getConversionMetrics(tenantId: string, query: PerformanceQueryDto) {
-    const startDate = query.startDate ? new Date(query.startDate) : new Date(new Date().getFullYear(), 0, 1);
+    const startDate = query.startDate
+      ? new Date(query.startDate)
+      : new Date(new Date().getFullYear(), 0, 1);
     const endDate = query.endDate ? new Date(query.endDate) : new Date();
 
     const where: Prisma.QuoteWhereInput = {
@@ -319,10 +361,13 @@ export class SalesPerformanceService {
       },
     });
 
-    const byStatus = quotes.reduce((acc, quote) => {
-      acc[quote.status] = (acc[quote.status] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const byStatus = quotes.reduce(
+      (acc, quote) => {
+        acc[quote.status] = (acc[quote.status] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
 
     const sentQuotes = quotes.filter((q) => q.sentAt);
     const convertedQuotes = quotes.filter((q) => q.status === 'CONVERTED');
@@ -331,7 +376,9 @@ export class SalesPerformanceService {
       sentQuotes.length > 0
         ? sentQuotes.reduce((sum, q) => {
             const days = Math.floor(
-              (new Date(q.sentAt!).getTime() - new Date(q.createdAt).getTime()) / (1000 * 60 * 60 * 24),
+              (new Date(q.sentAt!).getTime() -
+                new Date(q.createdAt).getTime()) /
+                (1000 * 60 * 60 * 24)
             );
             return sum + days;
           }, 0) / sentQuotes.length
@@ -341,7 +388,9 @@ export class SalesPerformanceService {
       convertedQuotes.length > 0
         ? convertedQuotes.reduce((sum, q) => {
             const days = Math.floor(
-              (new Date(q.convertedAt!).getTime() - new Date(q.createdAt).getTime()) / (1000 * 60 * 60 * 24),
+              (new Date(q.convertedAt!).getTime() -
+                new Date(q.createdAt).getTime()) /
+                (1000 * 60 * 60 * 24)
             );
             return sum + days;
           }, 0) / convertedQuotes.length
@@ -357,7 +406,10 @@ export class SalesPerformanceService {
         totalQuotes: quotes.length,
         sentQuotes: sentQuotes.length,
         convertedQuotes: convertedQuotes.length,
-        conversionRate: sentQuotes.length > 0 ? (convertedQuotes.length / sentQuotes.length) * 100 : 0,
+        conversionRate:
+          sentQuotes.length > 0
+            ? (convertedQuotes.length / sentQuotes.length) * 100
+            : 0,
         avgTimeToSendDays: Math.round(avgTimeToSend * 10) / 10,
         avgTimeToConvertDays: Math.round(avgTimeToConvert * 10) / 10,
       },
@@ -365,7 +417,9 @@ export class SalesPerformanceService {
   }
 
   async getWinLossAnalysis(tenantId: string, query: PerformanceQueryDto) {
-    const startDate = query.startDate ? new Date(query.startDate) : new Date(new Date().getFullYear(), 0, 1);
+    const startDate = query.startDate
+      ? new Date(query.startDate)
+      : new Date(new Date().getFullYear(), 0, 1);
     const endDate = query.endDate ? new Date(query.endDate) : new Date();
 
     const where: Prisma.QuoteWhereInput = {
@@ -392,17 +446,26 @@ export class SalesPerformanceService {
       },
     });
 
-    const wins = quotes.filter((q) => ['ACCEPTED', 'CONVERTED'].includes(q.status));
+    const wins = quotes.filter((q) =>
+      ['ACCEPTED', 'CONVERTED'].includes(q.status)
+    );
     const losses = quotes.filter((q) => q.status === 'REJECTED');
 
-    const rejectionReasons = losses.reduce((acc, quote) => {
-      const reason = quote.rejectionReason || 'No reason provided';
-      acc[reason] = (acc[reason] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const rejectionReasons = losses.reduce(
+      (acc, quote) => {
+        const reason = quote.rejectionReason || 'No reason provided';
+        acc[reason] = (acc[reason] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
 
     const winRate = quotes.length > 0 ? (wins.length / quotes.length) * 100 : 0;
-    const avgWinValue = wins.length > 0 ? wins.reduce((sum, q) => sum + Number(q.totalAmount || 0), 0) / wins.length : 0;
+    const avgWinValue =
+      wins.length > 0
+        ? wins.reduce((sum, q) => sum + Number(q.totalAmount || 0), 0) /
+          wins.length
+        : 0;
 
     return {
       period: {

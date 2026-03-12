@@ -56,17 +56,19 @@ export class EncryptionService {
     }
 
     const nodeEnv = this.configService.get<string>('NODE_ENV');
-    if (nodeEnv === 'production') {
+    if (nodeEnv !== 'development' && nodeEnv !== 'test') {
       throw new Error(
-        'ENCRYPTION_KEY environment variable is required in production. Must be a 64-character hex string (32 bytes).',
+        'ENCRYPTION_KEY environment variable is required in production. Must be a 64-character hex string (32 bytes).'
       );
     }
 
-    // Dev/test fallback only — derive key from JWT_SECRET or a local default
-    const fallback =
-      this.configService.get<string>('JWT_SECRET') ||
-      this.configService.get<string>('PORTAL_JWT_SECRET') ||
-      'local-dev-secret';
+    // Dev/test fallback only — derive key from JWT_SECRET
+    const fallback = this.configService.get<string>('JWT_SECRET');
+    if (!fallback) {
+      throw new Error(
+        'Either ENCRYPTION_KEY or JWT_SECRET must be set, even in development.'
+      );
+    }
 
     return crypto.createHash('sha256').update(fallback).digest();
   }

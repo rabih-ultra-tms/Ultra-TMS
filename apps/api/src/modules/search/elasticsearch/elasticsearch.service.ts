@@ -19,7 +19,8 @@ export class ElasticsearchService {
     const headers = useCompatHeaders
       ? {
           Accept: 'application/vnd.elasticsearch+json;compatible-with=8',
-          'Content-Type': 'application/vnd.elasticsearch+json;compatible-with=8',
+          'Content-Type':
+            'application/vnd.elasticsearch+json;compatible-with=8',
         }
       : {
           accept: 'application/json',
@@ -53,8 +54,16 @@ export class ElasticsearchService {
     return 0;
   }
 
-  async searchGlobal(tenantId: string, query: string, entityTypes?: string[], limit = 20, offset = 0): Promise<SearchResultDto> {
-    const indices = entityTypes?.length ? entityTypes.map((e) => this.indexName(e)) : `${this.prefix}-*-v1`;
+  async searchGlobal(
+    tenantId: string,
+    query: string,
+    entityTypes?: string[],
+    limit = 20,
+    offset = 0
+  ): Promise<SearchResultDto> {
+    const indices = entityTypes?.length
+      ? entityTypes.map((e) => this.indexName(e))
+      : `${this.prefix}-*-v1`;
 
     const res = await this.client.search({
       index: indices,
@@ -86,7 +95,14 @@ export class ElasticsearchService {
     return { total: this.totalCount(res.hits.total), items, facets: {} };
   }
 
-  async searchEntity(tenantId: string, entityType: string, query: string | undefined, filters: Record<string, unknown> | undefined, limit = 20, offset = 0): Promise<SearchResultDto> {
+  async searchEntity(
+    tenantId: string,
+    entityType: string,
+    query: string | undefined,
+    filters: Record<string, unknown> | undefined,
+    limit = 20,
+    offset = 0
+  ): Promise<SearchResultDto> {
     const must: any[] = [];
 
     if (query) {
@@ -111,7 +127,9 @@ export class ElasticsearchService {
       index: this.indexName(entityType),
       from: offset,
       size: limit,
-      query: { bool: { must: must.length ? must : [{ match_all: {} }], filter } },
+      query: {
+        bool: { must: must.length ? must : [{ match_all: {} }], filter },
+      },
     });
 
     const items = res.hits.hits.map((hit: any) => ({
@@ -124,7 +142,11 @@ export class ElasticsearchService {
     return { total: this.totalCount(res.hits.total), items, facets: {} };
   }
 
-  async suggest(tenantId: string, query: string, limit = 10): Promise<SuggestionResultDto> {
+  async suggest(
+    tenantId: string,
+    query: string,
+    limit = 10
+  ): Promise<SuggestionResultDto> {
     const res = await this.client.search({
       index: `${this.prefix}-*-v1`,
       size: 0,
@@ -141,15 +163,20 @@ export class ElasticsearchService {
       },
     });
 
-    const rawOptions = Array.isArray(res.suggest?.name_suggest) &&
+    const rawOptions =
+      Array.isArray(res.suggest?.name_suggest) &&
       Array.isArray(res.suggest.name_suggest[0]?.options)
-      ? (res.suggest.name_suggest[0]?.options as any[])
-      : [];
+        ? (res.suggest.name_suggest[0]?.options as any[])
+        : [];
     const suggestions = rawOptions.map((o: any) => o.text).filter(Boolean);
     return { suggestions };
   }
 
-  async indexDocument(entityType: string, entityId: string, document: Record<string, unknown>) {
+  async indexDocument(
+    entityType: string,
+    entityId: string,
+    document: Record<string, unknown>
+  ) {
     await this.client.index({
       index: this.indexName(entityType),
       id: entityId,
@@ -165,7 +192,7 @@ export class ElasticsearchService {
         index: this.indexName(entityType),
         id: entityId,
       },
-      { ignore: [404] },
+      { ignore: [404] }
     );
     return { success: true };
   }
@@ -194,6 +221,7 @@ export class ElasticsearchService {
       index,
       mappings: {
         properties: {
+          tenantId: { type: 'keyword' },
           title: { type: 'text' },
           name: { type: 'text', fields: { keyword: { type: 'keyword' } } },
           description: { type: 'text' },

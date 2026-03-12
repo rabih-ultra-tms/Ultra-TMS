@@ -19,8 +19,8 @@ describe('Customer Portal API', () => {
   let invoiceId: string;
 
   beforeAll(async () => {
-    process.env.CUSTOMER_PORTAL_JWT_SECRET = process.env.CUSTOMER_PORTAL_JWT_SECRET || 'portal-secret';
-    process.env.PORTAL_JWT_SECRET = process.env.PORTAL_JWT_SECRET || 'portal-secret';
+    process.env.CUSTOMER_PORTAL_JWT_SECRET =
+      process.env.CUSTOMER_PORTAL_JWT_SECRET || 'portal-secret';
     const sharedPrisma = await getTestPrisma();
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(PrismaService)
@@ -65,13 +65,33 @@ describe('Customer Portal API', () => {
       },
     });
 
-    await prisma.portalUser.deleteMany({ where: { tenantId: TEST_TENANT, email: 'newuser@test.com' } });
+    await prisma.portalUser.deleteMany({
+      where: { tenantId: TEST_TENANT, email: 'newuser@test.com' },
+    });
 
     // Clean test fixtures to keep reruns idempotent
-    await prisma.statusHistory.deleteMany({ where: { tenantId: TEST_TENANT, loadId: { in: (await prisma.load.findMany({ where: { tenantId: TEST_TENANT, loadNumber: 'LOAD-PORTAL-1' }, select: { id: true } })).map((l) => l.id) } } });
-    await prisma.load.deleteMany({ where: { tenantId: TEST_TENANT, loadNumber: 'LOAD-PORTAL-1' } });
-    await prisma.order.deleteMany({ where: { tenantId: TEST_TENANT, orderNumber: 'ORD-PORTAL-1' } });
-    await prisma.invoice.deleteMany({ where: { tenantId: TEST_TENANT, invoiceNumber: 'INV-PORTAL-1' } });
+    await prisma.statusHistory.deleteMany({
+      where: {
+        tenantId: TEST_TENANT,
+        loadId: {
+          in: (
+            await prisma.load.findMany({
+              where: { tenantId: TEST_TENANT, loadNumber: 'LOAD-PORTAL-1' },
+              select: { id: true },
+            })
+          ).map((l) => l.id),
+        },
+      },
+    });
+    await prisma.load.deleteMany({
+      where: { tenantId: TEST_TENANT, loadNumber: 'LOAD-PORTAL-1' },
+    });
+    await prisma.order.deleteMany({
+      where: { tenantId: TEST_TENANT, orderNumber: 'ORD-PORTAL-1' },
+    });
+    await prisma.invoice.deleteMany({
+      where: { tenantId: TEST_TENANT, invoiceNumber: 'INV-PORTAL-1' },
+    });
 
     const order = await prisma.order.create({
       data: {
@@ -131,6 +151,7 @@ describe('Customer Portal API', () => {
     // Authenticate once to obtain tokens for subsequent tests
     const loginRes = await request(app.getHttpServer())
       .post('/api/v1/portal/auth/login')
+      .set('x-tenant-id', TEST_TENANT)
       .send({ email: PORTAL_USER_EMAIL, password: PORTAL_USER_PASSWORD })
       .expect(201);
 
@@ -151,7 +172,9 @@ describe('Customer Portal API', () => {
   });
 
   afterAll(async () => {
-    await prisma.portalActivityLog.deleteMany({ where: { tenantId: TEST_TENANT } });
+    await prisma.portalActivityLog.deleteMany({
+      where: { tenantId: TEST_TENANT },
+    });
     await prisma.portalPayment.deleteMany({ where: { tenantId: TEST_TENANT } });
     await prisma.portalSession.deleteMany({ where: { tenantId: TEST_TENANT } });
     await prisma.quoteRequest.deleteMany({ where: { tenantId: TEST_TENANT } });
@@ -187,6 +210,7 @@ describe('Customer Portal API', () => {
 
     const relogin = await request(app.getHttpServer())
       .post('/api/v1/portal/auth/login')
+      .set('x-tenant-id', TEST_TENANT)
       .send({ email: PORTAL_USER_EMAIL, password: 'newpassword123' })
       .expect(201);
     expect(relogin.body.data.accessToken).toBeDefined();
@@ -319,7 +343,9 @@ describe('Customer Portal API', () => {
 
     expect(paymentRes.body.data.paymentNumber).toBeDefined();
 
-    const updatedInvoice = await prisma.invoice.findUnique({ where: { id: invoiceId } });
+    const updatedInvoice = await prisma.invoice.findUnique({
+      where: { id: invoiceId },
+    });
     expect(Number(updatedInvoice?.amountPaid)).toBe(100);
 
     const history = await request(app.getHttpServer())

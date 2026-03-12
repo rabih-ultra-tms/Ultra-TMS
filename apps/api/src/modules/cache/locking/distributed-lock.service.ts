@@ -6,14 +6,14 @@ import { RedisService } from '../../redis/redis.service';
 export class DistributedLockService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly redis: RedisService,
+    private readonly redis: RedisService
   ) {}
 
-  async listActive(tenantId?: string) {
+  async listActive(tenantId: string) {
     const now = new Date();
     return this.prisma.distributedLock.findMany({
       where: {
-        tenantId: tenantId ?? undefined,
+        tenantId,
         releasedAt: null,
         expiresAt: { gt: now },
       },
@@ -23,12 +23,15 @@ export class DistributedLockService {
   }
 
   async lockDetails(tenantId: string, lockKey: string) {
-    return this.prisma.distributedLock.findFirst({ where: { tenantId, lockKey }, orderBy: { acquiredAt: 'desc' } });
+    return this.prisma.distributedLock.findFirst({
+      where: { tenantId, lockKey },
+      orderBy: { acquiredAt: 'desc' },
+    });
   }
 
   async forceRelease(tenantId: string, lockKey: string) {
     const client = this.redis.getClient();
-    await client.del(`lock:${lockKey}`);
+    await client.del(`lock:${tenantId}:${lockKey}`);
     await this.prisma.distributedLock.updateMany({
       where: { tenantId, lockKey, releasedAt: null },
       data: { releasedAt: new Date() },

@@ -9,14 +9,19 @@ export class InvalidationService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
-    private readonly events: EventEmitter2,
+    private readonly events: EventEmitter2
   ) {}
 
   async invalidate(tenantId: string, dto: InvalidateCacheDto) {
     if (dto.pattern) {
-      const count = await this.redis.deleteByPattern(dto.pattern);
-      this.events.emit('cache.invalidated', { pattern: dto.pattern, count });
-      return { pattern: dto.pattern, deleted: count };
+      const scopedPattern = `tenant:${tenantId}:${dto.pattern}`;
+      const count = await this.redis.deleteByPattern(scopedPattern);
+      this.events.emit('cache.invalidated', {
+        pattern: scopedPattern,
+        count,
+        tenantId,
+      });
+      return { pattern: scopedPattern, deleted: count };
     }
 
     if (dto.tags?.length) {
@@ -33,10 +38,21 @@ export class InvalidationService {
   }
 
   async rules(tenantId: string) {
-    return this.prisma.cacheInvalidationRule.findMany({ where: { tenantId }, orderBy: { createdAt: 'desc' } });
+    return this.prisma.cacheInvalidationRule.findMany({
+      where: { tenantId },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
-  async createRule(tenantId: string, userId: string | null, payload: { triggerEvent: string; cachePattern: string; invalidationType: string }) {
+  async createRule(
+    tenantId: string,
+    userId: string | null,
+    payload: {
+      triggerEvent: string;
+      cachePattern: string;
+      invalidationType: string;
+    }
+  ) {
     return this.prisma.cacheInvalidationRule.create({
       data: {
         tenantId,
@@ -49,7 +65,9 @@ export class InvalidationService {
   }
 
   async deleteRule(tenantId: string, id: string) {
-    await this.prisma.cacheInvalidationRule.deleteMany({ where: { id, tenantId } });
+    await this.prisma.cacheInvalidationRule.deleteMany({
+      where: { id, tenantId },
+    });
     return { deleted: true };
   }
 }

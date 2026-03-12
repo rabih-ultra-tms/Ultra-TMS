@@ -1,10 +1,18 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../../prisma.service';
 
 @Injectable()
 export class PortalAuthGuard implements CanActivate {
-  constructor(private readonly jwtService: JwtService, private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly prisma: PrismaService
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
@@ -21,9 +29,12 @@ export class PortalAuthGuard implements CanActivate {
 
     const token = authHeader.slice(7);
 
-    const portalSecret = process.env.CUSTOMER_PORTAL_JWT_SECRET;
+    const portalSecret =
+      process.env.CUSTOMER_PORTAL_JWT_SECRET || process.env.JWT_SECRET;
     if (!portalSecret) {
-      throw new UnauthorizedException('Customer portal JWT secret not configured');
+      throw new UnauthorizedException(
+        'Customer portal JWT secret not configured'
+      );
     }
 
     try {

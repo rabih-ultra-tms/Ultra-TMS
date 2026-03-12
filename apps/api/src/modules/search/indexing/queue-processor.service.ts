@@ -13,7 +13,7 @@ export class QueueProcessorService {
     private readonly indexingService: IndexingService,
     private readonly elasticsearch: ElasticsearchService,
     private readonly prisma: PrismaService,
-    private readonly indexManager: IndexManagerService,
+    private readonly indexManager: IndexManagerService
   ) {}
 
   async processNext(tenantId: string) {
@@ -38,18 +38,32 @@ export class QueueProcessorService {
       if (next.operation === IndexOperation.REINDEX) {
         const count = await this.reindexAll(tenantId, next.entityType);
         await this.indexingService.markCompleted(next.id);
-        await this.indexManager.setStatus(tenantId, next.entityType, 'READY', undefined, count);
+        await this.indexManager.setStatus(
+          tenantId,
+          next.entityType,
+          'READY',
+          undefined,
+          count
+        );
         return { processed: true, indexed: count };
       }
 
-      const record = await this.fetchEntity(tenantId, next.entityType, next.entityId);
+      const record = await this.fetchEntity(
+        tenantId,
+        next.entityType,
+        next.entityId
+      );
       if (!record) {
         await this.indexingService.markFailed(next.id, 'Entity not found');
         return { processed: false, error: 'Entity not found' };
       }
 
-      const document = this.mapDocument(next.entityType, record);
-      await this.elasticsearch.indexDocument(next.entityType, next.entityId, document);
+      const document = this.mapDocument(next.entityType, record, tenantId);
+      await this.elasticsearch.indexDocument(
+        next.entityType,
+        next.entityId,
+        document
+      );
       await this.indexingService.markCompleted(next.id);
       await this.indexManager.setStatus(tenantId, next.entityType, 'READY');
       return { processed: true };
@@ -65,7 +79,7 @@ export class QueueProcessorService {
     let indexed = 0;
 
     for (const record of records) {
-      const document = this.mapDocument(entityType, record);
+      const document = this.mapDocument(entityType, record, tenantId);
       await this.elasticsearch.indexDocument(entityType, record.id, document);
       indexed += 1;
     }
@@ -76,41 +90,71 @@ export class QueueProcessorService {
   private async fetchAllEntities(tenantId: string, entityType: string) {
     switch (entityType) {
       case 'customers':
-        return this.prisma.company.findMany({ where: { tenantId, companyType: 'CUSTOMER', deletedAt: null } });
+        return this.prisma.company.findMany({
+          where: { tenantId, companyType: 'CUSTOMER', deletedAt: null },
+        });
       case 'orders':
-        return this.prisma.order.findMany({ where: { tenantId, deletedAt: null } });
+        return this.prisma.order.findMany({
+          where: { tenantId, deletedAt: null },
+        });
       case 'loads':
-        return this.prisma.load.findMany({ where: { tenantId, deletedAt: null } });
+        return this.prisma.load.findMany({
+          where: { tenantId, deletedAt: null },
+        });
       case 'carriers':
-        return this.prisma.carrier.findMany({ where: { tenantId, deletedAt: null } });
+        return this.prisma.carrier.findMany({
+          where: { tenantId, deletedAt: null },
+        });
       case 'documents':
-        return this.prisma.document.findMany({ where: { tenantId, deletedAt: null } });
+        return this.prisma.document.findMany({
+          where: { tenantId, deletedAt: null },
+        });
       default:
         return [];
     }
   }
 
-  private async fetchEntity(tenantId: string, entityType: string, entityId: string) {
+  private async fetchEntity(
+    tenantId: string,
+    entityType: string,
+    entityId: string
+  ) {
     switch (entityType) {
       case 'customers':
-        return this.prisma.company.findFirst({ where: { tenantId, id: entityId, companyType: 'CUSTOMER', deletedAt: null } });
+        return this.prisma.company.findFirst({
+          where: {
+            tenantId,
+            id: entityId,
+            companyType: 'CUSTOMER',
+            deletedAt: null,
+          },
+        });
       case 'orders':
-        return this.prisma.order.findFirst({ where: { tenantId, id: entityId, deletedAt: null } });
+        return this.prisma.order.findFirst({
+          where: { tenantId, id: entityId, deletedAt: null },
+        });
       case 'loads':
-        return this.prisma.load.findFirst({ where: { tenantId, id: entityId, deletedAt: null } });
+        return this.prisma.load.findFirst({
+          where: { tenantId, id: entityId, deletedAt: null },
+        });
       case 'carriers':
-        return this.prisma.carrier.findFirst({ where: { tenantId, id: entityId, deletedAt: null } });
+        return this.prisma.carrier.findFirst({
+          where: { tenantId, id: entityId, deletedAt: null },
+        });
       case 'documents':
-        return this.prisma.document.findFirst({ where: { tenantId, id: entityId, deletedAt: null } });
+        return this.prisma.document.findFirst({
+          where: { tenantId, id: entityId, deletedAt: null },
+        });
       default:
         return null;
     }
   }
 
-  private mapDocument(entityType: string, record: any) {
+  private mapDocument(entityType: string, record: any, tenantId: string) {
     switch (entityType) {
       case 'customers':
         return {
+          tenantId,
           id: record.id,
           entityType,
           title: record.name,
@@ -121,10 +165,14 @@ export class QueueProcessorService {
           status: record.status,
           companyType: record.companyType,
           tags: record.tags,
-          content: record.defaultDeliveryInstructions || record.defaultPickupInstructions || record.industry,
+          content:
+            record.defaultDeliveryInstructions ||
+            record.defaultPickupInstructions ||
+            record.industry,
         };
       case 'orders':
         return {
+          tenantId,
           id: record.id,
           entityType,
           title: record.orderNumber,
@@ -141,6 +189,7 @@ export class QueueProcessorService {
         };
       case 'loads':
         return {
+          tenantId,
           id: record.id,
           entityType,
           title: record.loadNumber,
@@ -157,6 +206,7 @@ export class QueueProcessorService {
         };
       case 'carriers':
         return {
+          tenantId,
           id: record.id,
           entityType,
           title: record.legalName || record.dbaName,
@@ -168,10 +218,14 @@ export class QueueProcessorService {
           state: record.state,
           equipmentTypes: record.equipmentTypes,
           serviceStates: record.serviceStates,
-          content: record.primaryContactName || record.primaryContactEmail || record.primaryContactPhone,
+          content:
+            record.primaryContactName ||
+            record.primaryContactEmail ||
+            record.primaryContactPhone,
         };
       case 'documents':
         return {
+          tenantId,
           id: record.id,
           entityType,
           title: record.name,
@@ -186,7 +240,7 @@ export class QueueProcessorService {
           content: record.description,
         };
       default:
-        return { id: record.id, entityType, title: record.id };
+        return { tenantId, id: record.id, entityType, title: record.id };
     }
   }
 }

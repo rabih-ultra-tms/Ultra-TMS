@@ -4,6 +4,7 @@ import { PrismaService } from '../../../prisma.service';
 import { DatProvider } from './dat.provider';
 import { TruckstopProvider } from './truckstop.provider';
 import { GreenscreensProvider } from './greenscreens.provider';
+import { EncryptionService } from '../../integration-hub/services/encryption.service';
 
 const datProvider = { query: jest.fn() };
 const truckstopProvider = { query: jest.fn() };
@@ -30,6 +31,13 @@ describe('ProvidersService', () => {
         { provide: DatProvider, useValue: datProvider },
         { provide: TruckstopProvider, useValue: truckstopProvider },
         { provide: GreenscreensProvider, useValue: greenscreensProvider },
+        {
+          provide: EncryptionService,
+          useValue: {
+            encrypt: jest.fn((v: string) => `enc:${v}`),
+            decrypt: jest.fn((v: string) => v),
+          },
+        },
       ],
     }).compile();
 
@@ -62,7 +70,10 @@ describe('ProvidersService', () => {
   });
 
   it('tests provider and updates last query', async () => {
-    prisma.rateProviderConfig.findFirst.mockResolvedValue({ id: 'p1', provider: 'DAT' });
+    prisma.rateProviderConfig.findFirst.mockResolvedValue({
+      id: 'p1',
+      provider: 'DAT',
+    });
     prisma.rateProviderConfig.update.mockResolvedValue({ id: 'p1' });
     datProvider.query.mockResolvedValue({ provider: 'DAT', averageRate: 100 });
 
@@ -73,8 +84,12 @@ describe('ProvidersService', () => {
   });
 
   it('throws on unsupported provider', async () => {
-    await expect(service.query('UNKNOWN', 't1', { originState: 'TX', destState: 'CA', equipmentType: 'VAN' })).rejects.toThrow(
-      'Unsupported provider',
-    );
+    await expect(
+      service.query('UNKNOWN', 't1', {
+        originState: 'TX',
+        destState: 'CA',
+        equipmentType: 'VAN',
+      })
+    ).rejects.toThrow('Unsupported provider');
   });
 });
