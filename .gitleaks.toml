@@ -3,6 +3,11 @@ title = "Ultra-TMS Gitleaks Configuration"
 [allowlist]
   description = "Allow example files and test files"
   paths = [
+    '''node_modules''',
+    '''\.pnpm''',
+    '''dist''',
+    '''\.next''',
+    '''pnpm-lock\.yaml''',
     '''.env\.example''',
     '''\.spec\.ts$''',
     '''\.test\.ts$''',

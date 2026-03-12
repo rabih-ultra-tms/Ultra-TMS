@@ -72,9 +72,24 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   }
 
   async deleteByPattern(pattern: string): Promise<number> {
-    const keys = await this.keys(pattern);
+    const keys = await this.scanKeys(pattern);
     if (!keys.length) return 0;
     return this.client.del(...keys);
+  }
+
+  /**
+   * Use SCAN instead of KEYS to avoid blocking Redis on large datasets.
+   * SCAN iterates incrementally with O(1) per call instead of O(N) for KEYS.
+   */
+  private async scanKeys(pattern: string): Promise<string[]> {
+    const result: string[] = [];
+    let cursor = '0';
+    do {
+      const [nextCursor, keys] = await this.client.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
+      cursor = nextCursor;
+      result.push(...keys);
+    } while (cursor !== '0');
+    return result;
   }
 
   async getValue(key: string): Promise<string | null> {

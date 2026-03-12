@@ -37,6 +37,55 @@ export class DocumentsService {
     });
   }
 
+  async uploadAndCreate(
+    tenantId: string,
+    file: { buffer: Buffer; originalname: string; size: number; mimetype: string },
+    metadata: {
+      name: string;
+      documentType: string;
+      description?: string;
+      entityType?: string;
+      entityId?: string;
+      loadId?: string;
+      orderId?: string;
+      carrierId?: string;
+      companyId?: string;
+      tags?: string[];
+      isPublic?: boolean;
+    },
+    userId?: string,
+  ) {
+    const fileExtension = file.originalname.split('.').pop() || '';
+    const sanitizedName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const filename = `${tenantId}-${Date.now()}-${sanitizedName}`;
+    const folder = `documents/${tenantId}`;
+
+    const filePath = await this.storageService.upload(file.buffer, filename, folder);
+
+    return this.prisma.document.create({
+      data: {
+        tenantId,
+        name: metadata.name,
+        description: metadata.description,
+        documentType: metadata.documentType,
+        fileName: file.originalname,
+        filePath,
+        fileSize: file.size,
+        mimeType: file.mimetype,
+        fileExtension,
+        entityType: metadata.entityType,
+        entityId: metadata.entityId,
+        loadId: metadata.loadId,
+        orderId: metadata.orderId,
+        carrierId: metadata.carrierId,
+        companyId: metadata.companyId,
+        tags: metadata.tags || [],
+        isPublic: metadata.isPublic || false,
+        uploadedBy: userId,
+      },
+    });
+  }
+
   async findAll(
     tenantId: string,
     documentType?: string,

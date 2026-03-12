@@ -17,7 +17,7 @@ export class InvoicesService {
 
   private async generateInvoiceNumber(tenantId: string): Promise<string> {
     const lastInvoice = await this.prisma.invoice.findFirst({
-      where: { tenantId },
+      where: { tenantId, deletedAt: null },
       orderBy: { createdAt: 'desc' },
       select: { invoiceNumber: true },
     });

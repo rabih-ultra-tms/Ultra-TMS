@@ -9,7 +9,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 
 @Controller('tasks')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('ADMIN', 'OPERATIONS_MANAGER')
+@Roles('ADMIN', 'DISPATCHER', 'OPERATIONS_MANAGER')
 @ApiTags('Scheduler')
 @ApiBearerAuth('JWT-auth')
 export class TasksController {

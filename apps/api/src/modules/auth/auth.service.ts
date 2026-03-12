@@ -244,7 +244,7 @@ export class AuthService {
     const { email } = forgotPasswordDto;
 
     const user = await this.prisma.user.findFirst({
-      where: { email },
+      where: { email, deletedAt: null },
     });
 
     // Don't reveal if user exists - always return success

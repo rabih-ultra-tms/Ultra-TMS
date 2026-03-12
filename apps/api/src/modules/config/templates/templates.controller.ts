@@ -9,8 +9,8 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 
 @Controller('config/templates')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('ADMIN')
 @ApiTags('Config')
+@Roles('ADMIN', 'SUPER_ADMIN')
 @ApiBearerAuth('JWT-auth')
 export class TemplatesController {
   constructor(private readonly service: TemplatesService) {}

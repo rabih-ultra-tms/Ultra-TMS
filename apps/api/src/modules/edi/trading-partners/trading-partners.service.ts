@@ -63,7 +63,7 @@ export class TradingPartnersService {
       throw new BadRequestException('Trading partner with this ISA ID already exists');
     }
 
-    return this.prisma.ediTradingPartner.create({
+    const partner = await this.prisma.ediTradingPartner.create({
       data: {
         tenantId,
         partnerName: dto.partnerName,
@@ -93,6 +93,7 @@ export class TradingPartnersService {
       },
       select: safeSelect,
     });
+    return this.stripSensitive(partner);
   }
 
   async findAll(tenantId: string, query: TradingPartnerQueryDto) {
@@ -122,18 +123,12 @@ export class TradingPartnersService {
       this.prisma.ediTradingPartner.count({ where }),
     ]);
 
-    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
+    return { data: data.map((p) => this.stripSensitive(p)), total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   async findOne(tenantId: string, id: string) {
-    const partner = await this.prisma.ediTradingPartner.findFirst({
-      where: { id, tenantId, deletedAt: null },
-      select: safeSelect,
-    });
-    if (!partner) {
-      throw new NotFoundException('Trading partner not found');
-    }
-    return partner;
+    const partner = await this.requirePartner(tenantId, id);
+    return this.stripSensitive(partner);
   }
 
   async update(tenantId: string, userId: string, id: string, dto: UpdateTradingPartnerDto) {
@@ -146,7 +141,7 @@ export class TradingPartnersService {
       }
     }
 
-    return this.prisma.ediTradingPartner.update({
+    const updated = await this.prisma.ediTradingPartner.update({
       where: { id: partner.id },
       data: {
         ...(dto.partnerName !== undefined ? { partnerName: dto.partnerName } : {}),
@@ -177,15 +172,17 @@ export class TradingPartnersService {
       },
       select: safeSelect,
     });
+    return this.stripSensitive(updated);
   }
 
   async toggleStatus(tenantId: string, userId: string, id: string) {
     const partner = await this.requirePartner(tenantId, id);
-    return this.prisma.ediTradingPartner.update({
+    const updated = await this.prisma.ediTradingPartner.update({
       where: { id: partner.id },
       data: { isActive: !partner.isActive, updatedById: userId },
       select: safeSelect,
     });
+    return this.stripSensitive(updated);
   }
 
   async remove(tenantId: string, userId: string, id: string) {
@@ -254,6 +251,11 @@ export class TradingPartnersService {
       orderBy: { startedAt: 'desc' },
       take: 50,
     });
+  }
+
+  private stripSensitive<T extends Record<string, any>>(obj: T): Omit<T, 'ftpPassword'> {
+    const { ftpPassword: _, ...rest } = obj;
+    return rest as any;
   }
 
   private async requirePartner(tenantId: string, id: string) {

@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { IStorageService } from './storage.interface';
 import * as fs from 'fs/promises';
@@ -32,6 +32,19 @@ export class LocalStorageService implements IStorageService, OnModuleInit {
   }
 
   /**
+   * Resolve a user-supplied path and verify it stays within the storage root.
+   * Prevents path traversal attacks (e.g. "../../etc/passwd").
+   */
+  private safePath(...segments: string[]): string {
+    const resolved = path.resolve(this.storagePath, ...segments);
+    const root = path.resolve(this.storagePath);
+    if (!resolved.startsWith(root + path.sep) && resolved !== root) {
+      throw new BadRequestException('Invalid file path');
+    }
+    return resolved;
+  }
+
+  /**
    * Upload a file to local filesystem
    */
   async upload(
@@ -40,11 +53,8 @@ export class LocalStorageService implements IStorageService, OnModuleInit {
     folder?: string
   ): Promise<string> {
     try {
-      // Construct full path
-      const folderPath = folder
-        ? path.join(this.storagePath, folder)
-        : this.storagePath;
-      const filepath = path.join(folderPath, filename);
+      const folderPath = folder ? this.safePath(folder) : path.resolve(this.storagePath);
+      const filepath = this.safePath(folder || '.', filename);
 
       // SEC-027: Prevent path traversal attacks
       const resolvedFolderPath = path.resolve(folderPath);
@@ -72,6 +82,7 @@ export class LocalStorageService implements IStorageService, OnModuleInit {
 
       return this.getUrl(relativePath);
     } catch (error) {
+      if (error instanceof BadRequestException) throw error;
       this.logger.error('Failed to upload file:', error);
       throw new Error('File upload failed');
     }
@@ -113,6 +124,7 @@ export class LocalStorageService implements IStorageService, OnModuleInit {
       await fs.unlink(fullPath);
       this.logger.log(`File deleted: ${filepath}`);
     } catch (error) {
+      if (error instanceof BadRequestException) throw error;
       this.logger.error('Failed to delete file:', error);
       throw new Error('File deletion failed');
     }
@@ -156,7 +168,8 @@ export class LocalStorageService implements IStorageService, OnModuleInit {
 
       await fs.access(fullPath);
       return true;
-    } catch {
+    } catch (error) {
+      if (error instanceof BadRequestException) throw error;
       return false;
     }
   }

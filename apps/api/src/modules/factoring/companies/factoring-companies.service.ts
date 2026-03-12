@@ -74,7 +74,7 @@ export class FactoringCompaniesService {
       tenantId,
     });
 
-    return company;
+    return this.stripSensitive(company);
   }
 
   async findAll(tenantId: string, query: FactoringCompanyQueryDto) {
@@ -102,7 +102,7 @@ export class FactoringCompaniesService {
     ]);
 
     return {
-      data,
+      data: data.map((c) => this.stripSensitive(c)),
       total,
       page,
       limit,
@@ -111,7 +111,8 @@ export class FactoringCompaniesService {
   }
 
   async findOne(tenantId: string, id: string) {
-    return this.requireCompany(tenantId, id);
+    const company = await this.requireCompany(tenantId, id);
+    return this.stripSensitive(company);
   }
 
   async update(tenantId: string, userId: string, id: string, dto: UpdateFactoringCompanyDto) {
@@ -126,7 +127,7 @@ export class FactoringCompaniesService {
       }
     }
 
-    return this.prisma.factoringCompany.update({
+    const updated = await this.prisma.factoringCompany.update({
       where: { id: company.id },
       data: {
         ...(dto.companyCode ? { companyCode: dto.companyCode } : {}),
@@ -144,17 +145,19 @@ export class FactoringCompaniesService {
       },
       select: this.safeSelect,
     });
+    return this.stripSensitive(updated);
   }
 
   async toggleStatus(tenantId: string, userId: string, id: string, status?: FactoringCompanyStatus) {
     const company = await this.requireCompany(tenantId, id);
     const nextStatus = status ?? (company.status === FactoringCompanyStatus.ACTIVE ? FactoringCompanyStatus.INACTIVE : FactoringCompanyStatus.ACTIVE);
 
-    return this.prisma.factoringCompany.update({
+    const updated = await this.prisma.factoringCompany.update({
       where: { id },
       data: { status: nextStatus, updatedById: userId },
       select: this.safeSelect,
     });
+    return this.stripSensitive(updated);
   }
 
   async remove(tenantId: string, userId: string, id: string) {
@@ -166,6 +169,11 @@ export class FactoringCompaniesService {
     });
 
     return { success: true };
+  }
+
+  private stripSensitive<T extends Record<string, any>>(obj: T): Omit<T, 'apiKey'> {
+    const { apiKey: _, ...rest } = obj;
+    return rest as any;
   }
 
   private async requireCompany(tenantId: string, id: string) {

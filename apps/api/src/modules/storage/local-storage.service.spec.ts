@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common';
 import { LocalStorageService } from './local-storage.service';
 import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs/promises';
@@ -146,43 +147,37 @@ describe('LocalStorageService', () => {
     expect(exists).toBe(false);
   });
 
-  it('prevents path traversal in download', async () => {
-    const service = new LocalStorageService(
-      configService as unknown as ConfigService
-    );
+  describe('path traversal prevention', () => {
+    it('rejects traversal in upload filename', async () => {
+      const service = new LocalStorageService(configService as unknown as ConfigService);
 
-    await expect(service.download('../../../etc/passwd')).rejects.toThrow(
-      'File download failed'
-    );
-  });
+      await expect(
+        service.upload(Buffer.from('data'), '../../etc/passwd'),
+      ).rejects.toThrow(BadRequestException);
+    });
 
-  it('prevents path traversal in delete', async () => {
-    const service = new LocalStorageService(
-      configService as unknown as ConfigService
-    );
+    it('rejects traversal in upload folder', async () => {
+      const service = new LocalStorageService(configService as unknown as ConfigService);
 
-    await expect(service.delete('../../../etc/passwd')).rejects.toThrow(
-      'File deletion failed'
-    );
-  });
+      await expect(
+        service.upload(Buffer.from('data'), 'file.txt', '../../etc'),
+      ).rejects.toThrow(BadRequestException);
+    });
 
-  it('prevents path traversal in upload', async () => {
-    const service = new LocalStorageService(
-      configService as unknown as ConfigService
-    );
+    it('rejects traversal in delete path', async () => {
+      const service = new LocalStorageService(configService as unknown as ConfigService);
 
-    await expect(
-      service.upload(Buffer.from('data'), '../../../etc/passwd')
-    ).rejects.toThrow('File upload failed');
-  });
+      await expect(
+        service.delete('../../etc/passwd'),
+      ).rejects.toThrow(BadRequestException);
+    });
 
-  it('returns false when path traversal detected in exists', async () => {
-    const service = new LocalStorageService(
-      configService as unknown as ConfigService
-    );
+    it('rejects traversal in exists path', async () => {
+      const service = new LocalStorageService(configService as unknown as ConfigService);
 
-    const exists = await service.exists('../../../etc/passwd');
-
-    expect(exists).toBe(false);
+      await expect(
+        service.exists('../../etc/passwd'),
+      ).rejects.toThrow(BadRequestException);
+    });
   });
 });

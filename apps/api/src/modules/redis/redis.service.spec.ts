@@ -4,7 +4,7 @@ describe('RedisService', () => {
   let service: RedisService;
   let client: {
     ping: jest.Mock;
-    keys: jest.Mock;
+    scan: jest.Mock;
     del: jest.Mock;
     get: jest.Mock;
     set: jest.Mock;
@@ -18,7 +18,7 @@ describe('RedisService', () => {
     service = new RedisService({ get: jest.fn() } as any);
     client = {
       ping: jest.fn(),
-      keys: jest.fn(),
+      scan: jest.fn(),
       del: jest.fn(),
       get: jest.fn(),
       set: jest.fn(),
@@ -38,8 +38,8 @@ describe('RedisService', () => {
     expect(result).toBe('PONG');
   });
 
-  it('deletes by pattern using keys', async () => {
-    client.keys.mockResolvedValue(['k1', 'k2']);
+  it('deletes by pattern using SCAN', async () => {
+    client.scan.mockResolvedValue(['0', ['k1', 'k2']]);
     client.del.mockResolvedValue(2);
 
     const result = await service.deleteByPattern('x:*');
@@ -49,7 +49,7 @@ describe('RedisService', () => {
   });
 
   it('returns 0 when no keys match pattern', async () => {
-    client.keys.mockResolvedValue([]);
+    client.scan.mockResolvedValue(['0', []]);
 
     const result = await service.deleteByPattern('x:*');
 
@@ -121,7 +121,7 @@ describe('RedisService', () => {
   });
 
   it('revokes all sessions for user', async () => {
-    client.keys.mockResolvedValue(['session:u1:s1', 'session:u1:s2']);
+    client.scan.mockResolvedValue(['0', ['session:u1:s1', 'session:u1:s2']]);
     client.del.mockResolvedValue(2);
 
     await service.revokeAllUserSessions('u1');
@@ -130,7 +130,7 @@ describe('RedisService', () => {
   });
 
   it('no-op when no sessions found', async () => {
-    client.keys.mockResolvedValue([]);
+    client.scan.mockResolvedValue(['0', []]);
 
     await service.revokeAllUserSessions('u1');
 
@@ -138,7 +138,7 @@ describe('RedisService', () => {
   });
 
   it('gets user sessions and counts', async () => {
-    client.keys.mockResolvedValue(['session:u1:s1', 'session:u1:s2']);
+    client.scan.mockResolvedValue(['0', ['session:u1:s1', 'session:u1:s2']]);
 
     const sessions = await service.getUserSessions('u1');
     const count = await service.getUserSessionCount('u1');

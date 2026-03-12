@@ -195,7 +195,7 @@ export class CommissionEntriesService {
   ) {
     // Get load with order details
     const load = await this.prisma.load.findFirst({
-      where: { id: loadId, tenantId },
+      where: { id: loadId, tenantId, deletedAt: null },
       include: {
         order: {
           include: {
@@ -218,6 +218,7 @@ export class CommissionEntriesService {
     const assignment = await this.prisma.userCommissionAssignment.findFirst({
       where: {
         tenantId,
+        deletedAt: null,
         userId: salesRep.id,
         status: 'ACTIVE',
       },

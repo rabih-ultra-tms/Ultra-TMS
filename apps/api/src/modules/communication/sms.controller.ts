@@ -6,10 +6,13 @@ import {
   Body,
   Param,
   Query,
+  Headers,
+  Req,
   UseGuards,
   BadRequestException,
   UnauthorizedException,
-  Req,
+  ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import type { Request } from 'express';
 import {
@@ -22,13 +25,14 @@ import {
 import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../auth/guards';
 import { SmsService } from './sms.service';
-import { SendSmsDto, ReplySmsDto } from './dto';
+import { TwilioProvider } from './providers/twilio.provider';
 import type { TwilioInboundMessage } from './providers/twilio.provider';
+import { SendSmsDto, ReplySmsDto } from './dto';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
-import { Public } from '../../common/decorators';
 import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
 
 @Controller('communication/sms')
@@ -36,7 +40,12 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
 @ApiTags('Communication')
 @ApiBearerAuth('JWT-auth')
 export class SmsController {
-  constructor(private readonly smsService: SmsService) {}
+  private readonly logger = new Logger(SmsController.name);
+
+  constructor(
+    private readonly smsService: SmsService,
+    private readonly twilioProvider: TwilioProvider,
+  ) {}
 
   @Post('send')
   @Roles('ADMIN', 'DISPATCHER', 'OPERATIONS')
@@ -147,7 +156,7 @@ export class SmsController {
     return this.smsService.getStats(tenantId);
   }
 
-  // Twilio webhook - public but validated by Twilio signature
+  // ✅ Twilio webhook - public but validated by Twilio signature
   @Post('webhook')
   @Public()
   @ApiOperation({ summary: 'Handle inbound SMS webhook from Twilio' })
@@ -156,19 +165,26 @@ export class SmsController {
   @ApiErrorResponses()
   async handleWebhook(
     @Query('tenantId') tenantId: string,
+    @Headers('x-twilio-signature') signature: string,
+    @Req() req: Request,
     @Body() body: TwilioInboundMessage,
-    @Req() req: Request
   ) {
-    // SEC-025: Validate Twilio signature (X-Twilio-Signature header)
     if (!tenantId) {
-      throw new BadRequestException('tenantId query parameter is required');
+      throw new ForbiddenException('tenantId required');
     }
 
-    const isValidSignature = this.smsService.validateTwilioSignature(req);
-    if (!isValidSignature) {
-      throw new UnauthorizedException(
-        'Invalid Twilio signature - request authenticity cannot be verified'
-      );
+    // Validate Twilio signature to prevent spoofed webhooks
+    const url = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+    const params: Record<string, string> = {};
+    for (const [key, value] of Object.entries(body)) {
+      if (typeof value === 'string') {
+        params[key] = value;
+      }
+    }
+
+    if (!this.twilioProvider.validateWebhookSignature(signature, url, params)) {
+      this.logger.warn(`Invalid Twilio signature for webhook from ${req.ip}`);
+      throw new ForbiddenException('Invalid webhook signature');
     }
 
     return this.smsService.handleInboundWebhook(tenantId, body);

@@ -171,7 +171,7 @@ export class PortalAuthService {
 
   async forgotPassword(dto: ForgotPasswordDto) {
     const user = await this.prisma.portalUser.findFirst({
-      where: { email: dto.email },
+      where: { email: dto.email, deletedAt: null },
     });
     if (!user) {
       return { success: true };
@@ -188,7 +188,7 @@ export class PortalAuthService {
 
   async resetPassword(dto: ResetPasswordDto) {
     const user = await this.prisma.portalUser.findFirst({
-      where: { verificationToken: dto.token },
+      where: { verificationToken: dto.token, deletedAt: null },
     });
     if (!user) {
       throw new BadRequestException('Invalid reset token');
@@ -205,7 +205,7 @@ export class PortalAuthService {
 
   async verifyEmail(token: string) {
     const user = await this.prisma.portalUser.findFirst({
-      where: { verificationToken: token },
+      where: { verificationToken: token, deletedAt: null },
     });
     if (!user) {
       throw new BadRequestException('Invalid verification token');

@@ -49,7 +49,7 @@ export function useLogin() {
       if (response.requiresMfa) {
         router.push(`/mfa?token=${response.mfaToken}`);
       } else {
-        // Tokens are set as HttpOnly cookies by the backend
+        // ✅ HttpOnly cookies are set by backend — no client-side token handling needed
         queryClient.setQueryData(authKeys.user(), { data: response.user });
         router.push(AUTH_CONFIG.defaultRedirect);
         toast.success('Welcome back!');
@@ -69,7 +69,7 @@ export function useVerifyMFA() {
     mutationFn: (data: MFAVerifyRequest) =>
       apiClient.post<LoginResponse>('/auth/mfa/verify', data),
     onSuccess: (response) => {
-      // Tokens are set as HttpOnly cookies by the backend
+      // ✅ HttpOnly cookies are set by backend — no client-side token handling needed
       queryClient.setQueryData(authKeys.user(), { data: response.user });
       router.push(AUTH_CONFIG.defaultRedirect);
       toast.success('Welcome back!');
@@ -105,14 +105,14 @@ export function useLogout() {
   return useMutation({
     mutationFn: () => apiClient.post('/auth/logout'),
     onSuccess: () => {
+      // Backend clears HttpOnly cookies on logout
       queryClient.clear();
-      // HttpOnly cookies are cleared by the backend on logout
       router.push(AUTH_CONFIG.loginPath);
       toast.success('Logged out successfully');
     },
     onError: () => {
+      // Even on error, redirect to login (cookies may still be cleared)
       queryClient.clear();
-      // HttpOnly cookies are cleared by the backend on logout
       router.push(AUTH_CONFIG.loginPath);
     },
   });

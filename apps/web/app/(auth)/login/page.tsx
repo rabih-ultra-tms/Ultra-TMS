@@ -102,10 +102,7 @@ function LoginPageContent() {
         return;
       }
 
-      // ✅ Tokens are now set as HttpOnly cookies by the backend.
-      // No need to store them client-side. Proceed to dashboard.
-
-      // ✅ Use window.location, NOT router.push()
+      // ✅ HttpOnly cookies are set by backend — no client-side token handling needed
       window.location.href = returnUrl;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Invalid credentials');

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   Loader2,
@@ -212,7 +213,7 @@ function ProgressBar({ currentStatus }: { currentStatus: string }) {
   );
 }
 
-export default function PublicTrackingPage() {
+function TrackingPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const initialCode = searchParams.get("code") || "";
@@ -263,7 +264,7 @@ export default function PublicTrackingPage() {
     if (initialCode) {
       fetchTracking(initialCode);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line
   }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -634,5 +635,13 @@ export default function PublicTrackingPage() {
         Ultra TMS &mdash; Transportation Management System
       </footer>
     </div>
+  );
+}
+
+export default function PublicTrackingPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-50 flex items-center justify-center">Loading...</div>}>
+      <TrackingPageContent />
+    </Suspense>
   );
 }

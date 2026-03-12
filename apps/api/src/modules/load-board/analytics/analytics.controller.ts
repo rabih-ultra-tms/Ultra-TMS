@@ -8,7 +8,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 
 @Controller('load-board/analytics')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('ADMIN', 'DISPATCHER', 'OPERATIONS_MANAGER')
+@Roles('ADMIN', 'DISPATCHER', 'AGENT')
 @ApiTags('Load Board')
 @ApiBearerAuth('JWT-auth')
 export class AnalyticsController {

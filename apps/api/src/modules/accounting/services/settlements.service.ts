@@ -16,7 +16,7 @@ export class SettlementsService {
 
   private async generateSettlementNumber(tenantId: string): Promise<string> {
     const lastSettlement = await this.prisma.settlement.findFirst({
-      where: { tenantId },
+      where: { tenantId, deletedAt: null },
       orderBy: { createdAt: 'desc' },
       select: { settlementNumber: true },
     });

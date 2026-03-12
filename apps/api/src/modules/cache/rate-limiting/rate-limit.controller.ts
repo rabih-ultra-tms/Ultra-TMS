@@ -11,7 +11,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger'
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Cache')
 @ApiBearerAuth('JWT-auth')
-@Roles('SUPER_ADMIN')
+@Roles('ADMIN')
 export class RateLimitController {
   constructor(private readonly rateLimitService: RateLimitService) {}
 

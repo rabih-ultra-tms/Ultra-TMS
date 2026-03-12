@@ -39,21 +39,21 @@ export class CarrierPortalInvoicesService {
   }
 
   listInvoices(tenantId: string, carrierId: string) {
-    return this.prisma.carrierInvoiceSubmission.findMany({ where: { tenantId, carrierId } });
+    return this.prisma.carrierInvoiceSubmission.findMany({ where: { tenantId, carrierId, deletedAt: null } });
   }
 
   async invoiceDetail(tenantId: string, carrierId: string, id: string) {
-    const invoice = await this.prisma.carrierInvoiceSubmission.findFirst({ where: { id, tenantId, carrierId } });
+    const invoice = await this.prisma.carrierInvoiceSubmission.findFirst({ where: { id, tenantId, carrierId, deletedAt: null } });
     if (!invoice) throw new NotFoundException('Invoice not found');
     return invoice;
   }
 
   settlements(tenantId: string, carrierId: string) {
-    return this.prisma.settlement.findMany({ where: { tenantId, carrierId } });
+    return this.prisma.settlement.findMany({ where: { tenantId, carrierId, deletedAt: null } });
   }
 
   async settlementDetail(tenantId: string, carrierId: string, id: string) {
-    const settlement = await this.prisma.settlement.findFirst({ where: { id, tenantId, carrierId } });
+    const settlement = await this.prisma.settlement.findFirst({ where: { id, tenantId, carrierId, deletedAt: null } });
     if (!settlement) throw new NotFoundException('Settlement not found');
     return settlement;
   }
@@ -90,6 +90,6 @@ export class CarrierPortalInvoicesService {
   }
 
   paymentHistory(tenantId: string, carrierId: string) {
-    return this.prisma.carrierQuickPayRequest.findMany({ where: { tenantId, carrierId } });
+    return this.prisma.carrierQuickPayRequest.findMany({ where: { tenantId, carrierId, deletedAt: null } });
   }
 }

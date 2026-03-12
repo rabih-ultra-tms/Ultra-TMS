@@ -29,6 +29,19 @@ import type { IStorageService } from '../../storage/storage.interface';
 import { STORAGE_SERVICE } from '../../storage/storage.module';
 import { getDocumentUploadOptions } from '../../../common/utils/file-upload.util';
 
+const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
+const ALLOWED_MIME_TYPES = [
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+  'image/tiff',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'text/csv',
+];
+
 @Controller('documents')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @SerializeOptions({ excludeExtraneousValues: false })
@@ -39,6 +52,50 @@ export class DocumentsController {
     private readonly documentsService: DocumentsService,
     @Inject(STORAGE_SERVICE) private readonly storageService: IStorageService,
   ) {}
+
+  @Post('upload')
+  @ApiOperation({ summary: 'Upload a document file with metadata' })
+  @ApiConsumes('multipart/form-data')
+  @ApiStandardResponse('Document uploaded')
+  @ApiErrorResponses()
+  @Roles('ADMIN', 'OPERATIONS', 'ACCOUNTING', 'COMPLIANCE')
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_FILE_SIZE } }))
+  async upload(@Request() req: any, @UploadedFile() file: any, @Body() body: any) {
+    if (!file) {
+      throw new BadRequestException('No file provided');
+    }
+
+    if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+      throw new BadRequestException(
+        `File type "${file.mimetype}" is not allowed. Allowed types: ${ALLOWED_MIME_TYPES.join(', ')}`,
+      );
+    }
+
+    if (!body.name || !body.documentType) {
+      throw new BadRequestException('Missing required fields: name, documentType');
+    }
+
+    const document = await this.documentsService.uploadAndCreate(
+      req.user.tenantId,
+      file,
+      {
+        name: body.name,
+        documentType: body.documentType,
+        description: body.description,
+        entityType: body.entityType,
+        entityId: body.entityId,
+        loadId: body.loadId,
+        orderId: body.orderId,
+        carrierId: body.carrierId,
+        companyId: body.companyId,
+        tags: body.tags ? (Array.isArray(body.tags) ? body.tags : [body.tags]) : undefined,
+        isPublic: body.isPublic === 'true',
+      },
+      req.user.userId,
+    );
+
+    return { data: document };
+  }
 
   @Post()
   @ApiOperation({ summary: 'Upload document' })

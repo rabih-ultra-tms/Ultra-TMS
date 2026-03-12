@@ -39,6 +39,7 @@ describe('DistributedLockService', () => {
   });
 
   it('forces release', async () => {
+    prisma.distributedLock.findFirst.mockResolvedValue({ lockKey: 'k1', tenantId: 't1' });
     prisma.distributedLock.updateMany.mockResolvedValue({ count: 1 });
 
     const result = await service.forceRelease('t1', 'k1');

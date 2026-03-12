@@ -20,8 +20,8 @@ export class RateLimitService {
     });
   }
 
-  async update(key: string, dto: UpdateRateLimitDto, tenantId: string) {
-    const existing = await this.getByKey(tenantId, key);
+  async update(key: string, dto: UpdateRateLimitDto, tenantId?: string) {
+    const existing = tenantId ? await this.getByKey(tenantId, key) : null;
     const windowSeconds = dto.requestsPerMinute
       ? 60
       : dto.requestsPerHour

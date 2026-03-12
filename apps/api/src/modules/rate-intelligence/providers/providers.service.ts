@@ -49,7 +49,7 @@ export class ProvidersService {
   }
 
   async create(tenantId: string, userId: string, dto: any) {
-    return this.prisma.rateProviderConfig.create({
+    const config = await this.prisma.rateProviderConfig.create({
       data: {
         tenantId,
         provider: dto.provider as RateProvider,
@@ -67,6 +67,7 @@ export class ProvidersService {
       },
       select: safeSelect,
     });
+    return this.stripSensitive(config);
   }
 
   async update(tenantId: string, id: string, dto: any) {
@@ -110,6 +111,11 @@ export class ProvidersService {
         this.logger.warn(`Unsupported rate provider ${provider}`);
         throw new Error('Unsupported provider');
     }
+  }
+
+  private stripSensitive<T extends Record<string, any>>(obj: T): Omit<T, 'apiKey' | 'apiSecret' | 'password'> {
+    const { apiKey: _k, apiSecret: _s, password: _p, ...rest } = obj;
+    return rest as any;
   }
 
   private async ensureConfig(tenantId: string, id: string) {

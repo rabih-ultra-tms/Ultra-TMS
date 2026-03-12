@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { IndexOperation, Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma.service';
 import { CreateSynonymDto, QueueQueryDto, SearchAnalyticsDto, SynonymResponseDto } from '../dto';
@@ -76,7 +76,11 @@ export class AdminService {
   }
 
   async deleteSynonym(tenantId: string, id: string) {
-    await this.prisma.searchSynonym.update({ where: { id, tenantId }, data: { deletedAt: new Date(), isActive: false } });
+    const synonym = await this.prisma.searchSynonym.findFirst({ where: { id, tenantId, deletedAt: null } });
+    if (!synonym) {
+      throw new NotFoundException('Synonym not found');
+    }
+    await this.prisma.searchSynonym.update({ where: { id }, data: { deletedAt: new Date(), isActive: false } });
     return { success: true };
   }
 

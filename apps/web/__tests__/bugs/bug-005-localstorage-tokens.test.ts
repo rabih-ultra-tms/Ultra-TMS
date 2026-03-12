@@ -1,8 +1,8 @@
 /**
- * BUG-005 Regression Test: Security — localStorage Token Storage
+ * BUG-005 Regression Test: Security — HttpOnly Cookie Auth
  *
- * Verifies that client.ts does not use localStorage for storing JWT tokens.
- * The auth flow should use httpOnly cookies only.
+ * Verifies that client.ts does not use localStorage or document.cookie
+ * for storing JWT tokens. The auth flow uses HttpOnly cookies set by the backend.
  */
 import * as fs from "fs";
 import * as path from "path";
@@ -16,49 +16,65 @@ function readFile(relativePath: string): string {
   return fs.readFileSync(path.join(WEB_ROOT, relativePath), "utf-8");
 }
 
-describe("BUG-005: No localStorage token storage in client.ts", () => {
+describe("BUG-005: No client-side token storage in client.ts", () => {
   const source = readFile("lib/api/client.ts");
 
-  it("does not use localStorage.getItem for tokens", () => {
-    const matches = source.match(/localStorage\.getItem\s*\(/g);
-    expect(matches).toBeNull();
+  it("does not use localStorage for tokens", () => {
+    expect(source).not.toMatch(/localStorage\.(getItem|setItem|removeItem)\s*\(/);
   });
 
-  it("does not use localStorage.setItem for tokens", () => {
-    const matches = source.match(/localStorage\.setItem\s*\(/g);
-    expect(matches).toBeNull();
+  it("does not read tokens from document.cookie", () => {
+    // The file should not contain document.cookie reads for auth tokens
+    expect(source).not.toMatch(/document\.cookie/);
   });
 
-  it("does not use localStorage.removeItem for tokens", () => {
-    const matches = source.match(/localStorage\.removeItem\s*\(/g);
-    expect(matches).toBeNull();
+  it("does not manually set Authorization headers from stored tokens", () => {
+    // No getClientAccessToken or manual Bearer header injection
+    expect(source).not.toContain("getClientAccessToken");
+    expect(source).not.toMatch(/Authorization.*Bearer.*getClient/);
   });
 
-  it("documents XSS-safe cookie-only policy", () => {
-    expect(source).toContain("NO localStorage usage (XSS-safe)");
+  it("documents HttpOnly cookie strategy", () => {
+    expect(source).toContain("HttpOnly cookies");
+    expect(source).toContain("XSS-safe");
   });
 
-  it("uses readCookie for getting access tokens", () => {
-    expect(source).toContain("readCookie");
+  it("uses credentials: include for automatic cookie sending", () => {
+    expect(source).toContain('credentials: "include"');
   });
 
-  it("uses writeCookie for storing tokens", () => {
-    expect(source).toContain("writeCookie");
+  it("setAuthTokens is a no-op", () => {
+    expect(source).toContain("export function setAuthTokens");
+    expect(source).toMatch(/setAuthTokens.*No-op/s);
   });
 
-  it("uses deleteCookie for clearing tokens", () => {
-    expect(source).toContain("deleteCookie");
+  it("clearAuthTokens is a no-op", () => {
+    expect(source).toContain("export function clearAuthTokens");
+    expect(source).toMatch(/clearAuthTokens.*No-op/s);
   });
 });
 
-describe("BUG-005: No localStorage token storage in use-auth.ts", () => {
+describe("BUG-005: No client-side token storage in use-auth.ts", () => {
   const source = readFile("lib/hooks/use-auth.ts");
 
   it("does not reference localStorage at all", () => {
     expect(source).not.toContain("localStorage");
   });
 
-  it("calls clearAuthTokens on logout", () => {
-    expect(source).toContain("clearAuthTokens");
+  it("does not import setAuthTokens or clearAuthTokens", () => {
+    expect(source).not.toContain("setAuthTokens");
+    expect(source).not.toContain("clearAuthTokens");
+  });
+});
+
+describe("BUG-005: No client-side token storage in login pages", () => {
+  it("login page does not import setAuthTokens", () => {
+    const source = readFile("app/(auth)/login/page.tsx");
+    expect(source).not.toContain("setAuthTokens");
+  });
+
+  it("superadmin login page does not import setAuthTokens", () => {
+    const source = readFile("app/(auth)/superadmin/login/page.tsx");
+    expect(source).not.toContain("setAuthTokens");
   });
 });

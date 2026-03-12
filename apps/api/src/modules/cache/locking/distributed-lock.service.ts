@@ -30,10 +30,12 @@ export class DistributedLockService {
   }
 
   async forceRelease(tenantId: string, lockKey: string) {
+    const lock = await this.prisma.distributedLock.findFirst({ where: { lockKey, tenantId, releasedAt: null } });
+    if (!lock) return { released: false };
     const client = this.redis.getClient();
     await client.del(`lock:${tenantId}:${lockKey}`);
     await this.prisma.distributedLock.updateMany({
-      where: { tenantId, lockKey, releasedAt: null },
+      where: { lockKey, tenantId, releasedAt: null },
       data: { releasedAt: new Date() },
     });
     return { released: true };

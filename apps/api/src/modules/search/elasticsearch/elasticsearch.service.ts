@@ -150,7 +150,7 @@ export class ElasticsearchService {
     const res = await this.client.search({
       index: `${this.prefix}-*-v1`,
       size: 0,
-      query: { term: { tenantId } },
+      query: { bool: { filter: [{ term: { tenantId } }] } },
       suggest: {
         text: query,
         name_suggest: {

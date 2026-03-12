@@ -86,8 +86,7 @@ function SuperAdminLoginContent() {
         return;
       }
 
-      // Tokens are now set as HttpOnly cookies by the backend.
-      // No need to store them client-side. Proceed to admin console.
+      // ✅ HttpOnly cookies are set by backend — no client-side token handling needed
       window.location.href = returnUrl;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Invalid credentials');
