@@ -261,21 +261,6 @@ export class QuotesService {
       userId
     );
 
-    // Enforce minimum margin unless explicitly overridden
-    // Margin is calculated as: (totalAmount - estimatedCost) / totalAmount * 100
-    // where estimatedCost = totalAmount * 0.85 (same ratio used in RateCalculationService)
-    if (!dto.overrideMinimumMargin && totalAmount > 0) {
-      const marginPercent = dto.marginPercent ?? ((totalAmount - totalAmount * 0.85) / totalAmount) * 100;
-      if (marginPercent < 15) {
-        const minimumAmount = (totalAmount * 0.85) / (1 - 15 / 100);
-        throw new BadRequestException(
-          `Quote margin of ${marginPercent.toFixed(1)}% is below the minimum 15%. ` +
-          `Increase the total to at least $${minimumAmount.toFixed(2)}, or ` +
-          `set overrideMinimumMargin to true to bypass (requires SALES_MANAGER or ADMIN role).`,
-        );
-      }
-    }
-
     const quote = await this.prisma.quote.create({
       data: {
         tenantId,
@@ -393,23 +378,11 @@ export class QuotesService {
       );
     }
 
-    // Enforce minimum margin on the effective total amount
-    const effectiveTotal = totalAmount ?? dto.totalAmount;
-    if (!dto.overrideMinimumMargin && effectiveTotal !== undefined && effectiveTotal > 0) {
-      const marginPercent = dto.marginPercent ?? ((effectiveTotal - effectiveTotal * 0.85) / effectiveTotal) * 100;
-      if (marginPercent < 15) {
-        const minimumAmount = (effectiveTotal * 0.85) / (1 - 15 / 100);
-        throw new BadRequestException(
-          `Quote margin of ${marginPercent.toFixed(1)}% is below the minimum 15%. ` +
-          `Increase the total to at least $${minimumAmount.toFixed(2)}, or ` +
-          `set overrideMinimumMargin to true to bypass (requires SALES_MANAGER or ADMIN role).`,
-        );
-      }
-    }
-
     // Replace stops if provided
     if (dto.stops && dto.stops.length > 0) {
-      await this.prisma.quoteStop.deleteMany({ where: { quoteId: id, tenantId } });
+      await this.prisma.quoteStop.deleteMany({
+        where: { quoteId: id, tenantId },
+      });
       await this.prisma.quoteStop.createMany({
         data: dto.stops.map((stop) => ({
           tenantId,
@@ -905,7 +878,10 @@ export class QuotesService {
     });
 
     if (result.count > 0) {
-      this.eventEmitter.emit('quotes.expired', { count: result.count, expiredAt: now });
+      this.eventEmitter.emit('quotes.expired', {
+        count: result.count,
+        expiredAt: now,
+      });
     }
 
     return result.count;

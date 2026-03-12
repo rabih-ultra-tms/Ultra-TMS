@@ -1,7 +1,7 @@
 # Ultra TMS — Project Status Dashboard
 
-> **Last Updated:** 2026-03-12
-> **Current Phase:** MP-01 Security Hardening COMPLETE ✅. Sprints QS, S3, S4, S5 all COMPLETE (4/4). MP-01: 30/30 tasks DONE (100%).
+> **Last Updated:** 2026-03-13
+> **Current Phase:** MP-02 Table-Stakes Features (Weeks 3-4). MP-01 ✅ COMPLETE (30/30). Starting MP-02: 3 key tasks DONE (MP-02-005, 006, 010).
 > **Overall Health:** B+ (7.8/10) — Strong backend, frontend verified: 101/103 routes PASS. Security hardened (MP-01 complete). Agent management frontend built (Sprint 04).
 > **Production Readiness:** 3.0/10 — See [PRODUCTION-READINESS-ASSESSMENT.md](05-audit/PRODUCTION-READINESS-ASSESSMENT.md)
 > **Active Plan:** [Master Project Plan](08-sprints/master-project-plan.md) — ALL 39 services, 24 sprints, 5 phases, 48 weeks
@@ -147,6 +147,20 @@
 - MP-01-030: gitleaks pre-commit hook — verified already implemented with proper fallback (already in place)
 
 **All MP-01 tasks complete: 30/30 ✅**
+
+---
+
+## Next Sprint: MP-02 (Table-Stakes Features + Revenue Lifecycle)
+
+**Status:** 3 key tasks DONE (2026-03-13):
+
+| Task      | Description                                                                                         | Status                       |
+| --------- | --------------------------------------------------------------------------------------------------- | ---------------------------- |
+| MP-02-005 | Enforce 5% minimum margin on quotes (fixed duplicate 15% check, removed conflicting override field) | **DONE** (2026-03-13)        |
+| MP-02-006 | Quote expiry cron job (removed redundant daily cron, keeping hourly job that emits events)          | **DONE** (2026-03-13)        |
+| MP-02-010 | Public shipment tracking endpoint at `GET /api/v1/public/tracking/:trackingCode`                    | **DONE** (already committed) |
+
+**Remaining MP-02 tasks (14 of 17):** MP-02-004, 007–009, 011–017 covering commission auto-calc, document upload, load workflow, settlement creation, soft-delete filtering, and transactional guarantees.
 
 **Full project timeline:** 24 sprints × 2 weeks = 48 weeks across 5 phases:
 

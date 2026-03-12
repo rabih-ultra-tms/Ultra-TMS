@@ -7,7 +7,6 @@ import { RateContractsService } from './rate-contracts.service';
 import { AccessorialRatesService } from './accessorial-rates.service';
 import { SalesPerformanceService } from './sales-performance.service';
 import { RateCalculationService } from './rate-calculation.service';
-import { QuoteExpiryCron } from './quote-expiry.cron';
 import { QuotesController } from './quotes.controller';
 import { RateContractsController } from './rate-contracts.controller';
 import { AccessorialRatesController } from './accessorial-rates.controller';
@@ -29,7 +28,6 @@ import { QuoteExpiryJob } from './quote-expiry.job';
     AccessorialRatesService,
     SalesPerformanceService,
     RateCalculationService,
-    QuoteExpiryCron,
     QuoteExpiryJob,
   ],
   exports: [
