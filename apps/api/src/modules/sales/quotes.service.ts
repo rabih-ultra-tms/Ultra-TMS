@@ -18,7 +18,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 @Injectable()
 export class QuotesService {
   private readonly logger = new Logger(QuotesService.name);
-  private readonly DEFAULT_MINIMUM_MARGIN_PERCENT = 10;
+  private readonly DEFAULT_MINIMUM_MARGIN_PERCENT = 5;
 
   constructor(
     private prisma: PrismaService,
