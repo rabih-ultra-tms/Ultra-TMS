@@ -1,10 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PaymentsReceivedService } from './payments-received.service';
 import { PrismaService } from '../../../prisma.service';
 
 describe('PaymentsReceivedService', () => {
   let service: PaymentsReceivedService;
+  let events: { emit: jest.Mock };
   let prisma: {
     paymentReceived: {
       findFirst: jest.Mock;
@@ -30,10 +32,13 @@ describe('PaymentsReceivedService', () => {
       $transaction: jest.fn(),
     };
 
+    events = { emit: jest.fn() };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PaymentsReceivedService,
         { provide: PrismaService, useValue: prisma },
+        { provide: EventEmitter2, useValue: events },
       ],
     }).compile();
 
@@ -69,14 +74,12 @@ describe('PaymentsReceivedService', () => {
 
     const tx = {
       invoice: {
-        findFirst: jest
-          .fn()
-          .mockResolvedValue({
-            id: 'inv-1',
-            balanceDue: 2500,
-            amountPaid: 0,
-            totalAmount: 2500,
-          }),
+        findFirst: jest.fn().mockResolvedValue({
+          id: 'inv-1',
+          balanceDue: 2500,
+          amountPaid: 0,
+          totalAmount: 2500,
+        }),
         update: jest.fn().mockResolvedValue({ id: 'inv-1', status: 'PAID' }),
       },
       paymentApplication: {
@@ -119,14 +122,12 @@ describe('PaymentsReceivedService', () => {
 
     const tx = {
       invoice: {
-        findFirst: jest
-          .fn()
-          .mockResolvedValue({
-            id: 'inv-1',
-            balanceDue: 2500,
-            amountPaid: 0,
-            totalAmount: 2500,
-          }),
+        findFirst: jest.fn().mockResolvedValue({
+          id: 'inv-1',
+          balanceDue: 2500,
+          amountPaid: 0,
+          totalAmount: 2500,
+        }),
         update: jest.fn().mockResolvedValue({ id: 'inv-1', status: 'PARTIAL' }),
       },
       paymentApplication: {
@@ -196,13 +197,11 @@ describe('PaymentsReceivedService', () => {
 
     const tx = {
       invoice: {
-        findFirst: jest
-          .fn()
-          .mockResolvedValue({
-            id: 'inv-1',
-            totalAmount: 200,
-            amountPaid: 150,
-          }),
+        findFirst: jest.fn().mockResolvedValue({
+          id: 'inv-1',
+          totalAmount: 200,
+          amountPaid: 150,
+        }),
         update: jest.fn().mockResolvedValue({ id: 'inv-1', status: 'PARTIAL' }),
       },
       paymentApplication: {

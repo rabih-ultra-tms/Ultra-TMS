@@ -1,11 +1,22 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../../prisma.service';
 import { CreatePaymentReceivedDto, ApplyPaymentDto } from '../dto';
 import { BatchPaymentDto } from '../dto/batch-payment.dto';
 
 @Injectable()
 export class PaymentsReceivedService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(PaymentsReceivedService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2
+  ) {}
 
   private async generatePaymentNumber(tenantId: string): Promise<string> {
     const lastPayment = await this.prisma.paymentReceived.findFirst({
@@ -18,11 +29,18 @@ export class PaymentsReceivedService {
       return 'PMT-000001';
     }
 
-    const lastNumber = parseInt(lastPayment.paymentNumber.replace('PMT-', ''), 10);
+    const lastNumber = parseInt(
+      lastPayment.paymentNumber.replace('PMT-', ''),
+      10
+    );
     return `PMT-${String(lastNumber + 1).padStart(6, '0')}`;
   }
 
-  async create(tenantId: string, userId: string, data: CreatePaymentReceivedDto) {
+  async create(
+    tenantId: string,
+    userId: string,
+    data: CreatePaymentReceivedDto
+  ) {
     const paymentNumber = await this.generatePaymentNumber(tenantId);
 
     return this.prisma.paymentReceived.create({
@@ -57,7 +75,7 @@ export class PaymentsReceivedService {
       toDate?: Date;
       page?: number;
       limit?: number;
-    },
+    }
   ) {
     const page = options?.page ?? 1;
     const limit = options?.limit ?? 20;
@@ -95,10 +113,14 @@ export class PaymentsReceivedService {
       where: { id, tenantId, deletedAt: null },
       include: {
         company: true,
-        bankAccount: { select: { id: true, accountNumber: true, accountName: true } },
+        bankAccount: {
+          select: { id: true, accountNumber: true, accountName: true },
+        },
         applications: {
           include: {
-            invoice: { select: { id: true, invoiceNumber: true, totalAmount: true } },
+            invoice: {
+              select: { id: true, invoiceNumber: true, totalAmount: true },
+            },
           },
         },
       },
@@ -115,7 +137,7 @@ export class PaymentsReceivedService {
     paymentId: string,
     tenantId: string,
     userId: string,
-    applications: ApplyPaymentDto[],
+    applications: ApplyPaymentDto[]
   ) {
     const payment = await this.prisma.paymentReceived.findFirst({
       where: { id: paymentId, tenantId, deletedAt: null },
@@ -130,24 +152,29 @@ export class PaymentsReceivedService {
 
     if (totalToApply > unapplied) {
       throw new BadRequestException(
-        `Cannot apply more than the unapplied amount (${unapplied})`,
+        `Cannot apply more than the unapplied amount (${unapplied})`
       );
     }
 
+    // Track invoices that become PAID so we can emit events after commit
+    const paidInvoiceIds: string[] = [];
+
     // Apply in a transaction
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       for (const application of applications) {
         const invoice = await tx.invoice.findFirst({
           where: { id: application.invoiceId, tenantId, deletedAt: null },
         });
 
         if (!invoice) {
-          throw new NotFoundException(`Invoice ${application.invoiceId} not found`);
+          throw new NotFoundException(
+            `Invoice ${application.invoiceId} not found`
+          );
         }
 
         if (application.amount > Number(invoice.balanceDue)) {
           throw new BadRequestException(
-            `Amount exceeds invoice balance due (${invoice.balanceDue})`,
+            `Amount exceeds invoice balance due (${invoice.balanceDue})`
           );
         }
 
@@ -175,6 +202,10 @@ export class PaymentsReceivedService {
             status: newStatus,
           },
         });
+
+        if (newStatus === 'PAID') {
+          paidInvoiceIds.push(application.invoiceId);
+        }
       }
 
       // Update payment unapplied amount
@@ -197,6 +228,16 @@ export class PaymentsReceivedService {
         },
       });
     });
+
+    // Emit invoice.paid events AFTER transaction commits
+    for (const invoiceId of paidInvoiceIds) {
+      this.logger.log(
+        `Invoice ${invoiceId} is PAID — emitting invoice.paid event`
+      );
+      this.eventEmitter.emit('invoice.paid', { invoiceId, tenantId });
+    }
+
+    return result;
   }
 
   async delete(id: string, tenantId: string, userId: string) {
@@ -233,7 +274,8 @@ export class PaymentsReceivedService {
         });
 
         if (invoice) {
-          const newAmountPaid = Number(invoice.amountPaid) - Number(application.amount);
+          const newAmountPaid =
+            Number(invoice.amountPaid) - Number(application.amount);
           const newBalanceDue = Number(invoice.totalAmount) - newAmountPaid;
 
           await tx.invoice.update({
@@ -264,11 +306,14 @@ export class PaymentsReceivedService {
   async processBatch(
     tenantId: string,
     dto: BatchPaymentDto,
-    userId: string,
+    userId: string
   ): Promise<{ processed: number; failed: number; results: any[] }> {
     const results: any[] = [];
     let processed = 0;
     let failed = 0;
+
+    // Track invoices that become PAID across the entire batch
+    const paidInvoiceIds: string[] = [];
 
     for (const paymentItem of dto.payments) {
       try {
@@ -299,7 +344,9 @@ export class PaymentsReceivedService {
             });
 
             if (!invoice) {
-              throw new NotFoundException(`Invoice ${allocation.invoiceId} not found`);
+              throw new NotFoundException(
+                `Invoice ${allocation.invoiceId} not found`
+              );
             }
 
             await this.prisma.paymentApplication.create({
@@ -312,7 +359,8 @@ export class PaymentsReceivedService {
               },
             });
 
-            const newAmountPaid = Number(invoice.amountPaid) + allocation.amount;
+            const newAmountPaid =
+              Number(invoice.amountPaid) + allocation.amount;
             const newBalanceDue = Number(invoice.totalAmount) - newAmountPaid;
             const newStatus = newBalanceDue <= 0 ? 'PAID' : 'PARTIAL';
 
@@ -324,6 +372,10 @@ export class PaymentsReceivedService {
                 status: newStatus,
               },
             });
+
+            if (newStatus === 'PAID') {
+              paidInvoiceIds.push(allocation.invoiceId);
+            }
           }
 
           await this.prisma.paymentReceived.update({
@@ -332,12 +384,28 @@ export class PaymentsReceivedService {
           });
         }
 
-        results.push({ companyId: paymentItem.companyId, paymentId: payment.id, status: 'success' });
+        results.push({
+          companyId: paymentItem.companyId,
+          paymentId: payment.id,
+          status: 'success',
+        });
         processed++;
       } catch (error: any) {
-        results.push({ companyId: paymentItem.companyId, status: 'failed', error: error.message });
+        results.push({
+          companyId: paymentItem.companyId,
+          status: 'failed',
+          error: error.message,
+        });
         failed++;
       }
+    }
+
+    // Emit invoice.paid events AFTER batch processing completes
+    for (const invoiceId of paidInvoiceIds) {
+      this.logger.log(
+        `Invoice ${invoiceId} is PAID (batch) — emitting invoice.paid event`
+      );
+      this.eventEmitter.emit('invoice.paid', { invoiceId, tenantId });
     }
 
     return { processed, failed, results };
