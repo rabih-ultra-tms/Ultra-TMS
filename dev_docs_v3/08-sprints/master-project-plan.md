@@ -203,38 +203,38 @@ Every service entering a sprint gets work across 5 layers:
 **Services touched:** All P0 + all P-Infra
 **Absorbs:** SEC-001–008, REMEDIATION-ROADMAP S4, QS-007 (DONE), QS-014 (DONE)
 
-| ID        | Task                                                                                                                  | Layer | Effort | Priority | Source          |
-| --------- | --------------------------------------------------------------------------------------------------------------------- | ----- | ------ | -------- | --------------- |
-| MP-01-001 | ~~QS-014: Prisma Client Extension for auto tenantId + deletedAt~~                                                     | SEC   | 8h     | P0       | **DONE**        |
-| MP-01-002 | Fix RolesGuard gaps — financial controllers (Accounting 6, Credit 5, Contracts 6, Factoring 3, Agents 3)              | SEC   | 4h     | P0       | S4-02, CCF-017  |
-| MP-01-003 | Fix RolesGuard gaps — data-modifying controllers (Config 8, Audit 8, Load Board 6, HR 6, Scheduler 5, Safety 5)       | SEC   | 6h     | P0       | S4-03, CCF-017  |
-| MP-01-004 | Fix RolesGuard gaps — remaining controllers (Help Desk 5, Feedback 5, Cache 4, EDI 4, Search 2, Workflow 3, Claims 1) | SEC   | 4h     | P1       | S4-04, CCF-017  |
-| MP-01-005 | Fix JWT secret inconsistency — Customer Portal (PORTAL_JWT_SECRET vs CUSTOMER_PORTAL_JWT_SECRET)                      | SEC   | 30min  | P0       | PST-13          |
-| MP-01-006 | Fix Carrier Portal login tenant isolation (add tenantId to login query)                                               | SEC   | 30min  | P0       | PST-14          |
-| MP-01-007 | Fix plaintext credentials — Factoring apiKey (@Exclude or select clause)                                              | SEC   | 1h     | P0       | PST-18          |
-| MP-01-008 | Fix Integration Hub EncryptionService hardcoded fallback key (fail-fast in production)                                | SEC   | 1h     | P0       | PST-21          |
-| MP-01-009 | Fix plaintext credentials — Rate Intelligence (encrypt apiKey, apiSecret, password)                                   | SEC   | 2h     | P0       | PST-29          |
-| MP-01-010 | Fix plaintext credentials — EDI ftpPassword (encrypt + @Exclude on response)                                          | SEC   | 1h     | P0       | PST-26          |
-| MP-01-011 | Fix Elasticsearch queries — add tenantId filtering in Search service                                                  | SEC   | 2h     | P0       | PST-22, CCF-036 |
-| MP-01-012 | Fix Cache 8/20 endpoints missing tenantId                                                                             | SEC   | 2h     | P0       | PST-32, CCF-036 |
-| MP-01-013 | Fix Operations LoadHistory 2 tenant bugs (getByCarrier + getSimilarLoads)                                             | SEC   | 1h     | P0       | PST-38, CCF-034 |
-| MP-01-014 | Fix CRM tenant isolation in mutations (4 services)                                                                    | SEC   | 2h     | P0       | PST-03, CCF-004 |
-| MP-01-015 | Fix Accounting 4 cross-tenant bugs in PaymentReceived                                                                 | SEC   | 2h     | P0       | PST-07, CCF-021 |
-| MP-01-016 | Fix Sales tenant isolation in mutations (Quotes, RateContracts, AccessorialRates)                                     | SEC   | 2h     | P0       | PST-04, CCF-004 |
-| MP-01-017 | Fix Contracts FuelSurchargeTier missing tenantId (migration + backfill)                                               | SEC   | 1h     | P0       | PST-15          |
-| MP-01-018 | Fix Agents rankings tenant leak                                                                                       | SEC   | 30min  | P0       | PST-16          |
-| MP-01-019 | Fix Search deleteSynonym cross-tenant bug                                                                             | SEC   | 30min  | P0       | PST-22          |
-| MP-01-020 | Fix Super Admin deleted admin auth (add deletedAt filter)                                                             | SEC   | 15min  | P0       | PST-33          |
-| MP-01-021 | Migrate localStorage tokens to HttpOnly cookies                                                                       | SEC   | 4h     | P0       | P0-001          |
-| MP-01-022 | ~~Fix CORS env variable (QS-007)~~                                                                                    | SEC   | 30min  | P1       | **DONE**        |
-| MP-01-023 | Add CSP headers to Next.js config                                                                                     | SEC   | 2h     | P1       | S4-23           |
-| MP-01-024 | Add @nestjs/throttler rate limiting (auth: 5/min, API: 100/min)                                                       | SEC   | 2h     | P1       | S4-24           |
-| MP-01-025 | Fix webhook auth — Communication SMS (@Public + Twilio signature validation)                                          | SEC   | 2h     | P1       | PST-12, CCF-030 |
-| MP-01-026 | Fix webhook auth — CRM HubSpot (disable or authenticate)                                                              | SEC   | 1h     | P1       | PST-03, CCF-030 |
-| MP-01-027 | Fix Storage path traversal vulnerability (path.resolve + startsWith check)                                            | SEC   | 1h     | P2       | PST-35          |
-| MP-01-028 | Fix Redis KEYS command — replace with SCAN iterator in 4 methods                                                      | SEC   | 2h     | P2       | PST-36          |
-| MP-01-029 | Verify CSRF protection (SameSite cookie attribute)                                                                    | SEC   | 30min  | P2       | S4-29           |
-| MP-01-030 | Add gitleaks pre-commit hook                                                                                          | SEC   | 1h     | P2       | S4-30           |
+| ID        | Task                                                                                                                      | Layer | Effort | Priority | Source          |
+| --------- | ------------------------------------------------------------------------------------------------------------------------- | ----- | ------ | -------- | --------------- |
+| MP-01-001 | ~~QS-014: Prisma Client Extension for auto tenantId + deletedAt~~                                                         | SEC   | 8h     | P0       | **DONE**        |
+| MP-01-002 | ~~Fix RolesGuard gaps — financial controllers (Accounting 10, Credit 5, Contracts 8, Factoring 5, Agents 6)~~             | SEC   | 4h     | P0       | **DONE**        |
+| MP-01-003 | ~~Fix RolesGuard gaps — data-modifying controllers (Config 9, Audit 8, Load Board 9, HR 6, Scheduler 5, Safety 9)~~       | SEC   | 6h     | P0       | **DONE**        |
+| MP-01-004 | ~~Fix RolesGuard gaps — remaining controllers (Help Desk 5, Feedback 5, Cache 4, EDI 5, Search 4, Workflow 4, Claims 7)~~ | SEC   | 4h     | P1       | **DONE**        |
+| MP-01-005 | Fix JWT secret inconsistency — Customer Portal (PORTAL_JWT_SECRET vs CUSTOMER_PORTAL_JWT_SECRET)                          | SEC   | 30min  | P0       | PST-13          |
+| MP-01-006 | Fix Carrier Portal login tenant isolation (add tenantId to login query)                                                   | SEC   | 30min  | P0       | PST-14          |
+| MP-01-007 | Fix plaintext credentials — Factoring apiKey (@Exclude or select clause)                                                  | SEC   | 1h     | P0       | PST-18          |
+| MP-01-008 | Fix Integration Hub EncryptionService hardcoded fallback key (fail-fast in production)                                    | SEC   | 1h     | P0       | PST-21          |
+| MP-01-009 | Fix plaintext credentials — Rate Intelligence (encrypt apiKey, apiSecret, password)                                       | SEC   | 2h     | P0       | PST-29          |
+| MP-01-010 | Fix plaintext credentials — EDI ftpPassword (encrypt + @Exclude on response)                                              | SEC   | 1h     | P0       | PST-26          |
+| MP-01-011 | Fix Elasticsearch queries — add tenantId filtering in Search service                                                      | SEC   | 2h     | P0       | PST-22, CCF-036 |
+| MP-01-012 | Fix Cache 8/20 endpoints missing tenantId                                                                                 | SEC   | 2h     | P0       | PST-32, CCF-036 |
+| MP-01-013 | Fix Operations LoadHistory 2 tenant bugs (getByCarrier + getSimilarLoads)                                                 | SEC   | 1h     | P0       | PST-38, CCF-034 |
+| MP-01-014 | Fix CRM tenant isolation in mutations (4 services)                                                                        | SEC   | 2h     | P0       | PST-03, CCF-004 |
+| MP-01-015 | Fix Accounting 4 cross-tenant bugs in PaymentReceived                                                                     | SEC   | 2h     | P0       | PST-07, CCF-021 |
+| MP-01-016 | Fix Sales tenant isolation in mutations (Quotes, RateContracts, AccessorialRates)                                         | SEC   | 2h     | P0       | PST-04, CCF-004 |
+| MP-01-017 | Fix Contracts FuelSurchargeTier missing tenantId (migration + backfill)                                                   | SEC   | 1h     | P0       | PST-15          |
+| MP-01-018 | Fix Agents rankings tenant leak                                                                                           | SEC   | 30min  | P0       | PST-16          |
+| MP-01-019 | Fix Search deleteSynonym cross-tenant bug                                                                                 | SEC   | 30min  | P0       | PST-22          |
+| MP-01-020 | Fix Super Admin deleted admin auth (add deletedAt filter)                                                                 | SEC   | 15min  | P0       | PST-33          |
+| MP-01-021 | Migrate localStorage tokens to HttpOnly cookies                                                                           | SEC   | 4h     | P0       | P0-001          |
+| MP-01-022 | ~~Fix CORS env variable (QS-007)~~                                                                                        | SEC   | 30min  | P1       | **DONE**        |
+| MP-01-023 | Add CSP headers to Next.js config                                                                                         | SEC   | 2h     | P1       | S4-23           |
+| MP-01-024 | Add @nestjs/throttler rate limiting (auth: 5/min, API: 100/min)                                                           | SEC   | 2h     | P1       | S4-24           |
+| MP-01-025 | Fix webhook auth — Communication SMS (@Public + Twilio signature validation)                                              | SEC   | 2h     | P1       | PST-12, CCF-030 |
+| MP-01-026 | Fix webhook auth — CRM HubSpot (disable or authenticate)                                                                  | SEC   | 1h     | P1       | PST-03, CCF-030 |
+| MP-01-027 | Fix Storage path traversal vulnerability (path.resolve + startsWith check)                                                | SEC   | 1h     | P2       | PST-35          |
+| MP-01-028 | Fix Redis KEYS command — replace with SCAN iterator in 4 methods                                                          | SEC   | 2h     | P2       | PST-36          |
+| MP-01-029 | Verify CSRF protection (SameSite cookie attribute)                                                                        | SEC   | 30min  | P2       | S4-29           |
+| MP-01-030 | Add gitleaks pre-commit hook                                                                                              | SEC   | 1h     | P2       | S4-30           |
 
 **Exit Criteria:**
 

@@ -1,7 +1,7 @@
 # Ultra TMS — Project Status Dashboard
 
 > **Last Updated:** 2026-03-12
-> **Current Phase:** Sprint 04 COMPLETE. Sprints QS, 02, 03, 04, 05 all COMPLETE (5/8).
+> **Current Phase:** Sprint 05 IN PROGRESS. Sprints QS, 02, 03, 04, 05 all COMPLETE (5/8). MP-01 Security Hardening: 5/30 tasks DONE.
 > **Overall Health:** B (7.5/10) — Strong backend, frontend verified: 101/103 routes PASS. Security hardened (Sprint 05). Agent management frontend built (Sprint 04).
 > **Production Readiness:** 3.0/10 — See [PRODUCTION-READINESS-ASSESSMENT.md](05-audit/PRODUCTION-READINESS-ASSESSMENT.md)
 > **Active Plan:** [Master Project Plan](08-sprints/master-project-plan.md) — ALL 39 services, 24 sprints, 5 phases, 48 weeks
@@ -101,7 +101,16 @@
 
 **Quality Sprint COMPLETE** — 16/16 tasks done. All QS tasks COMPLETE (QS-001 through QS-016).
 
-**Next up:** MP-01 Security Hardening (30 tasks) — see [Master Project Plan](08-sprints/master-project-plan.md#mp-01-security-hardening-weeks-1-2)
+**MP-01 Progress:** 5/30 tasks DONE (MP-01-001, MP-01-002, MP-01-003, MP-01-004, MP-01-022) + Bonus: Rate Intelligence RolesGuard fixed.
+
+**Completed (2026-03-12):**
+
+- MP-01-002: RolesGuard on all financial controllers (34 controllers verified: Accounting 10, Credit 5, Contracts 8, Factoring 5, Agents 6)
+- MP-01-003: RolesGuard on all data-modifying controllers (46 controllers verified: Config 9, Audit 8, Load Board 9, HR 6, Scheduler 5, Safety 9)
+- MP-01-004: RolesGuard on all remaining controllers (32 controllers verified: Help Desk 5, Feedback 5, Cache 4, EDI 5, Search 4, Workflow 4, Claims 7)
+- Bonus: Rate Intelligence — all 6 controllers guarded with proper @Roles
+
+**Next up:** MP-01-005 through MP-01-021 (tenant isolation, credential encryption, auth hardening) — see [Master Project Plan](08-sprints/master-project-plan.md#mp-01-security-hardening-weeks-1-2)
 
 **Full project timeline:** 24 sprints × 2 weeks = 48 weeks across 5 phases:
 
