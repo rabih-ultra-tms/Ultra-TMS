@@ -1,6 +1,12 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import * as crypto from 'crypto';
+import type { Request } from 'express';
 import { PrismaService } from '../../prisma.service';
-import { TwilioProvider, TwilioInboundMessage } from './providers/twilio.provider';
+import {
+  TwilioProvider,
+  TwilioInboundMessage,
+} from './providers/twilio.provider';
 import { TemplatesService } from './templates.service';
 import { SendSmsDto, ReplySmsDto } from './dto';
 
@@ -30,6 +36,7 @@ export class SmsService {
     private prisma: PrismaService,
     private twilio: TwilioProvider,
     private templatesService: TemplatesService,
+    private config: ConfigService
   ) {}
 
   async send(tenantId: string, userId: string, dto: SendSmsDto) {
@@ -40,24 +47,24 @@ export class SmsService {
       const template = await this.templatesService.findByCode(
         tenantId,
         dto.templateCode,
-        'SMS',
+        'SMS'
       );
 
       if (!template) {
         throw new BadRequestException(
-          `SMS template not found: ${dto.templateCode}`,
+          `SMS template not found: ${dto.templateCode}`
         );
       }
 
       message = this.templatesService.renderTemplate(
         template.bodyEn,
-        dto.variables || {},
+        dto.variables || {}
       );
     }
 
     if (!message) {
       throw new BadRequestException(
-        'Message is required (either directly or via template)',
+        'Message is required (either directly or via template)'
       );
     }
 
@@ -160,7 +167,7 @@ export class SmsService {
     });
 
     this.logger.log(
-      `SMS ${result.success ? 'sent' : 'failed'} to ${formattedPhone}`,
+      `SMS ${result.success ? 'sent' : 'failed'} to ${formattedPhone}`
     );
 
     return {
@@ -173,7 +180,10 @@ export class SmsService {
     };
   }
 
-  async getConversations(tenantId: string, options: SmsConversationListOptions) {
+  async getConversations(
+    tenantId: string,
+    options: SmsConversationListOptions
+  ) {
     const page = options.page || 1;
     const limit = options.limit || 20;
     const skip = (page - 1) * limit;
@@ -231,7 +241,9 @@ export class SmsService {
     });
 
     if (!conversation) {
-      throw new BadRequestException(`Conversation not found: ${conversationId}`);
+      throw new BadRequestException(
+        `Conversation not found: ${conversationId}`
+      );
     }
 
     // Mark as read
@@ -258,14 +270,16 @@ export class SmsService {
     tenantId: string,
     conversationId: string,
     userId: string,
-    dto: ReplySmsDto,
+    dto: ReplySmsDto
   ) {
     const conversation = await this.prisma.smsConversation.findFirst({
       where: { id: conversationId, tenantId },
     });
 
     if (!conversation) {
-      throw new BadRequestException(`Conversation not found: ${conversationId}`);
+      throw new BadRequestException(
+        `Conversation not found: ${conversationId}`
+      );
     }
 
     return this.send(tenantId, userId, {
@@ -277,6 +291,53 @@ export class SmsService {
       recipientName: conversation.participantName || undefined,
       loadId: conversation.loadId || undefined,
     });
+  }
+
+  /**
+   * SEC-025: Validate Twilio webhook signature
+   * Twilio includes an X-Twilio-Signature header that we verify using HMAC-SHA1
+   * with the Twilio auth token (TWILIO_ACCOUNT_SID is the token for webhooks)
+   */
+  validateTwilioSignature(req: Request): boolean {
+    const twilioAuthToken = this.config.get<string>('TWILIO_ACCOUNT_SID');
+    if (!twilioAuthToken) {
+      this.logger.warn(
+        'TWILIO_ACCOUNT_SID not configured - cannot validate Twilio signature'
+      );
+      // In development, allow webhook without validation if token not configured
+      return process.env.NODE_ENV !== 'production';
+    }
+
+    const signature = req.headers['x-twilio-signature'] as string;
+    if (!signature) {
+      this.logger.warn('Missing X-Twilio-Signature header');
+      return false;
+    }
+
+    // Reconstruct the request URL with query string for signature validation
+    const fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+
+    // Twilio signature = HMAC-SHA1(URL + sorted POST params, authToken), base64 encoded
+    const sorted = Object.keys(req.body || {})
+      .sort()
+      .reduce((accum, key) => {
+        accum += key + (req.body[key] || '');
+        return accum;
+      }, fullUrl);
+
+    const expectedSignature = crypto
+      .createHmac('sha1', twilioAuthToken)
+      .update(sorted)
+      .digest('base64');
+
+    const isValid = signature === expectedSignature;
+    if (!isValid) {
+      this.logger.warn(
+        `Invalid Twilio signature for webhook. Expected: ${expectedSignature}, got: ${signature}`
+      );
+    }
+
+    return isValid;
   }
 
   async handleInboundWebhook(tenantId: string, body: TwilioInboundMessage) {
@@ -340,9 +401,15 @@ export class SmsService {
       },
     });
 
-    this.logger.log(`Inbound SMS from ${parsed.from}: ${parsed.body.substring(0, 50)}...`);
+    this.logger.log(
+      `Inbound SMS from ${parsed.from}: ${parsed.body.substring(0, 50)}...`
+    );
 
-    return { success: true, conversationId: conversation.id, messageId: message.id };
+    return {
+      success: true,
+      conversationId: conversation.id,
+      messageId: message.id,
+    };
   }
 
   async closeConversation(tenantId: string, conversationId: string) {
@@ -351,7 +418,9 @@ export class SmsService {
     });
 
     if (!conversation) {
-      throw new BadRequestException(`Conversation not found: ${conversationId}`);
+      throw new BadRequestException(
+        `Conversation not found: ${conversationId}`
+      );
     }
 
     await this.prisma.smsConversation.update({

@@ -1,32 +1,30 @@
+import { Controller, Get, Post, Body, Query, UseGuards } from '@nestjs/common';
 import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards';
 import { HubspotService } from './hubspot.service';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
 import { HubspotWebhookGuard } from './guards/hubspot-webhook.guard';
+import { Public } from '../../common/decorators';
 
 @Controller('crm/hubspot')
 @ApiTags('CRM')
 export class HubspotController {
   constructor(private readonly hubspotService: HubspotService) {}
 
-  // Webhook endpoint - no JWT auth; secured via HubSpot signature verification (SEC-006)
+  // Webhook endpoint - public but secured via HubSpot signature verification (SEC-026)
   @Post('webhook')
+  @Public()
   @UseGuards(HubspotWebhookGuard)
   @ApiOperation({ summary: 'Handle HubSpot webhook' })
   @ApiStandardResponse('Webhook processed')
   @ApiErrorResponses()
-  async handleWebhook(
-    @Body() payload: Record<string, unknown>,
-  ) {
+  async handleWebhook(@Body() payload: Record<string, unknown>) {
     const tenantId = (payload.portalId as string) || 'default';
     return this.hubspotService.handleWebhook(tenantId, payload);
   }
@@ -39,7 +37,7 @@ export class HubspotController {
   @ApiErrorResponses()
   async syncCompanies(
     @CurrentTenant() tenantId: string,
-    @Body() dto?: { companyIds?: string[] },
+    @Body() dto?: { companyIds?: string[] }
   ) {
     return this.hubspotService.bulkSyncCompanies(tenantId, dto?.companyIds);
   }
@@ -52,7 +50,7 @@ export class HubspotController {
   @ApiErrorResponses()
   async syncContacts(
     @CurrentTenant() tenantId: string,
-    @Body() dto?: { contactIds?: string[] },
+    @Body() dto?: { contactIds?: string[] }
   ) {
     return this.hubspotService.bulkSyncContacts(tenantId, dto?.contactIds);
   }
@@ -65,7 +63,7 @@ export class HubspotController {
   @ApiErrorResponses()
   async syncDeals(
     @CurrentTenant() tenantId: string,
-    @Body() dto?: { opportunityIds?: string[] },
+    @Body() dto?: { opportunityIds?: string[] }
   ) {
     return this.hubspotService.bulkSyncDeals(tenantId, dto?.opportunityIds);
   }
@@ -79,7 +77,7 @@ export class HubspotController {
   @ApiErrorResponses()
   async getSyncStatus(
     @CurrentTenant() tenantId: string,
-    @Query('limit') limit?: number,
+    @Query('limit') limit?: number
   ) {
     return this.hubspotService.getSyncStatus(tenantId, { limit });
   }
@@ -92,7 +90,7 @@ export class HubspotController {
   @ApiErrorResponses()
   async configureFieldMapping(
     @CurrentTenant() tenantId: string,
-    @Body() dto: { mapping: Record<string, string> },
+    @Body() dto: { mapping: Record<string, string> }
   ) {
     return this.hubspotService.configureFieldMapping(tenantId, dto.mapping);
   }

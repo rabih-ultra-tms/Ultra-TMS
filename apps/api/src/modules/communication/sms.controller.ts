@@ -7,8 +7,18 @@ import {
   Param,
   Query,
   UseGuards,
+  BadRequestException,
+  UnauthorizedException,
+  Req,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import type { Request } from 'express';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../auth/guards';
 import { SmsService } from './sms.service';
@@ -17,6 +27,7 @@ import { CurrentTenant } from '../../common/decorators/current-tenant.decorator'
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { Public } from '../../common/decorators';
 import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
 
 @Controller('communication/sms')
@@ -35,7 +46,7 @@ export class SmsController {
   async send(
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
-    @Body() dto: SendSmsDto,
+    @Body() dto: SendSmsDto
   ) {
     return this.smsService.send(tenantId, userId, dto);
   }
@@ -58,7 +69,7 @@ export class SmsController {
     @Query('status') status?: string,
     @Query('participantType') participantType?: string,
     @Query('loadId') loadId?: string,
-    @Query('search') search?: string,
+    @Query('search') search?: string
   ) {
     return this.smsService.getConversations(tenantId, {
       page,
@@ -78,7 +89,7 @@ export class SmsController {
   @ApiErrorResponses()
   async getConversation(
     @CurrentTenant() tenantId: string,
-    @Param('id') id: string,
+    @Param('id') id: string
   ) {
     return this.smsService.getConversation(tenantId, id);
   }
@@ -93,7 +104,7 @@ export class SmsController {
     @CurrentTenant() tenantId: string,
     @CurrentUser('id') userId: string,
     @Param('id') id: string,
-    @Body() dto: ReplySmsDto,
+    @Body() dto: ReplySmsDto
   ) {
     return this.smsService.reply(tenantId, id, userId, dto);
   }
@@ -106,7 +117,7 @@ export class SmsController {
   @ApiErrorResponses()
   async closeConversation(
     @CurrentTenant() tenantId: string,
-    @Param('id') id: string,
+    @Param('id') id: string
   ) {
     return this.smsService.closeConversation(tenantId, id);
   }
@@ -121,7 +132,7 @@ export class SmsController {
   async getLogs(
     @CurrentTenant() tenantId: string,
     @Query('page') page?: number,
-    @Query('limit') limit?: number,
+    @Query('limit') limit?: number
   ) {
     return this.smsService.getLogs(tenantId, { page, limit });
   }
@@ -135,20 +146,30 @@ export class SmsController {
     return this.smsService.getStats(tenantId);
   }
 
-  // Twilio webhook - no auth required (validated by Twilio signature)
+  // Twilio webhook - public but validated by Twilio signature
   @Post('webhook')
-  @ApiOperation({ summary: 'Handle inbound SMS webhook' })
+  @Public()
+  @ApiOperation({ summary: 'Handle inbound SMS webhook from Twilio' })
   @ApiQuery({ name: 'tenantId', required: true, type: String })
   @ApiStandardResponse('SMS webhook processed')
   @ApiErrorResponses()
   async handleWebhook(
     @Query('tenantId') tenantId: string,
-    @Body() body: any,
+    @Body() body: Record<string, unknown>,
+    @Req() req: Request
   ) {
-    // In production, validate Twilio signature here
+    // SEC-025: Validate Twilio signature (X-Twilio-Signature header)
     if (!tenantId) {
-      return { error: 'tenantId required' };
+      throw new BadRequestException('tenantId query parameter is required');
     }
+
+    const isValidSignature = this.smsService.validateTwilioSignature(req);
+    if (!isValidSignature) {
+      throw new UnauthorizedException(
+        'Invalid Twilio signature - request authenticity cannot be verified'
+      );
+    }
+
     return this.smsService.handleInboundWebhook(tenantId, body);
   }
 }
