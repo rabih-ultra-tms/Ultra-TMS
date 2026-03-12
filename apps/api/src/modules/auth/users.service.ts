@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
 import { EmailService } from '../email/email.service';
 import { CreateUserDto, UpdateUserDto } from './dto';
@@ -9,10 +14,18 @@ import * as crypto from 'crypto';
 export class UsersService {
   constructor(
     private prisma: PrismaService,
-    private emailService: EmailService,
+    private emailService: EmailService
   ) {}
 
-  async findAll(tenantId: string, options?: { page?: number; limit?: number; status?: string; search?: string }) {
+  async findAll(
+    tenantId: string,
+    options?: {
+      page?: number;
+      limit?: number;
+      status?: string;
+      search?: string;
+    }
+  ) {
     const { page = 1, limit = 20, status, search } = options || {};
     const skip = (page - 1) * limit;
 
@@ -72,7 +85,9 @@ export class UsersService {
     });
 
     if (existing) {
-      throw new ConflictException(`User with email ${dto.email} already exists`);
+      throw new ConflictException(
+        `User with email ${dto.email} already exists`
+      );
     }
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
@@ -97,7 +112,12 @@ export class UsersService {
     return this.sanitizeUser(user);
   }
 
-  async update(tenantId: string, id: string, updatedById: string, dto: UpdateUserDto) {
+  async update(
+    tenantId: string,
+    id: string,
+    updatedById: string,
+    dto: UpdateUserDto
+  ) {
     await this.findOne(tenantId, id);
 
     const updateData: any = {
@@ -110,20 +130,24 @@ export class UsersService {
       delete updateData.password;
     }
 
-    const updated = await this.prisma.user.update({
-      where: { id },
+    await this.prisma.user.updateMany({
+      where: { id, tenantId },
       data: updateData,
+    });
+
+    const updated = await this.prisma.user.findFirst({
+      where: { id, tenantId, deletedAt: null },
       include: { role: true },
     });
 
-    return this.sanitizeUser(updated);
+    return this.sanitizeUser(updated!);
   }
 
   async delete(tenantId: string, id: string, deletedById: string) {
     await this.findOne(tenantId, id);
 
-    await this.prisma.user.update({
-      where: { id },
+    await this.prisma.user.updateMany({
+      where: { id, tenantId },
       data: { deletedAt: new Date(), updatedById: deletedById },
     });
 
@@ -172,12 +196,17 @@ export class UsersService {
     }
 
     if (user.status !== 'INVITED') {
-      throw new BadRequestException('User must be in INVITED status to send invitation');
+      throw new BadRequestException(
+        'User must be in INVITED status to send invitation'
+      );
     }
 
     // Generate invitation token
     const invitationToken = crypto.randomBytes(32).toString('hex');
-    const invitationTokenHash = crypto.createHash('sha256').update(invitationToken).digest('hex');
+    const invitationTokenHash = crypto
+      .createHash('sha256')
+      .update(invitationToken)
+      .digest('hex');
 
     await this.prisma.passwordResetToken.create({
       data: {
@@ -193,7 +222,7 @@ export class UsersService {
       user.email,
       user.firstName,
       invitationToken,
-      `${inviter.firstName} ${inviter.lastName}`,
+      `${inviter.firstName} ${inviter.lastName}`
     );
 
     return {
@@ -218,18 +247,22 @@ export class UsersService {
       throw new BadRequestException('User is already active');
     }
 
-    const updatedUser = await this.prisma.user.update({
-      where: { id: userId },
+    await this.prisma.user.updateMany({
+      where: { id: userId, tenantId },
       data: {
         status: 'ACTIVE',
         updatedById,
         updatedAt: new Date(),
       },
+    });
+
+    const updatedUser = await this.prisma.user.findFirst({
+      where: { id: userId, tenantId, deletedAt: null },
       include: { role: true },
     });
 
     return {
-      data: this.sanitizeUser(updatedUser),
+      data: this.sanitizeUser(updatedUser!),
       message: 'User activated successfully',
     };
   }
@@ -250,18 +283,22 @@ export class UsersService {
       throw new BadRequestException('User is already inactive');
     }
 
-    const updatedUser = await this.prisma.user.update({
-      where: { id: userId },
+    await this.prisma.user.updateMany({
+      where: { id: userId, tenantId },
       data: {
         status: 'INACTIVE',
         updatedById,
         updatedAt: new Date(),
       },
+    });
+
+    const updatedUser = await this.prisma.user.findFirst({
+      where: { id: userId, tenantId, deletedAt: null },
       include: { role: true },
     });
 
     return {
-      data: this.sanitizeUser(updatedUser),
+      data: this.sanitizeUser(updatedUser!),
       message: 'User deactivated successfully',
     };
   }
@@ -280,7 +317,10 @@ export class UsersService {
 
     // Generate reset token and store hashed for validation
     const resetToken = crypto.randomBytes(32).toString('hex');
-    const tokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+    const tokenHash = crypto
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
 
     await this.prisma.passwordResetToken.create({
       data: {
@@ -292,7 +332,11 @@ export class UsersService {
     });
 
     // Send password reset email
-    await this.emailService.sendPasswordReset(user.email, user.firstName, resetToken);
+    await this.emailService.sendPasswordReset(
+      user.email,
+      user.firstName,
+      resetToken
+    );
 
     return {
       data: { success: true },

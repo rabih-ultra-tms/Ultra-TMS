@@ -10,7 +10,7 @@
  * Design reference: superdesign/design_iterations/dispatch_r4_playground.html
  */
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Plus,
   ChevronDown,
@@ -18,15 +18,20 @@ import {
   Layers,
   Search,
   RefreshCw,
-  X,
   Wifi,
   WifiOff,
   Loader2,
   FileText,
+  LayoutGrid,
+  Table,
 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
-import type { DispatchFilters, LoadStatus, EquipmentType } from '@/lib/types/dispatch';
+import type {
+  DispatchFilters,
+  LoadStatus,
+  EquipmentType,
+} from '@/lib/types/dispatch';
 import type { ConnectionStatus } from '@/lib/socket/socket-config';
 
 // ── Status options ─────────────────────────────────────────────────
@@ -53,6 +58,8 @@ interface DispatchToolbarProps {
   onSearch: (query: string) => void;
   grouped: boolean;
   onGroupToggle: () => void;
+  viewMode?: 'kanban' | 'table';
+  onViewModeChange?: (mode: 'kanban' | 'table') => void;
   onRefresh: () => void;
   onNewLoad: () => void;
   onNewQuote: () => void;
@@ -69,6 +76,8 @@ export function DispatchToolbar({
   onSearch,
   grouped,
   onGroupToggle,
+  viewMode = 'table',
+  onViewModeChange,
   onRefresh,
   onNewLoad,
   onNewQuote,
@@ -95,7 +104,9 @@ export function DispatchToolbar({
   const equipText = (() => {
     if (!filters.equipmentTypes?.length) return 'All Equipment';
     if (filters.equipmentTypes.length === 1) {
-      const opt = EQUIPMENT_OPTIONS.find((o) => o.value === filters.equipmentTypes![0]);
+      const opt = EQUIPMENT_OPTIONS.find(
+        (o) => o.value === filters.equipmentTypes![0]
+      );
       return opt?.label ?? 'All Equipment';
     }
     return `${filters.equipmentTypes.length} Selected`;
@@ -138,7 +149,9 @@ export function DispatchToolbar({
     <>
       {/* Header row */}
       <div className="h-12 bg-[#F8F9FB] border-b flex items-center px-5 gap-4 shrink-0">
-        <h1 className="text-[15px] font-semibold whitespace-nowrap">Dispatch Board</h1>
+        <h1 className="text-[15px] font-semibold whitespace-nowrap">
+          Dispatch Board
+        </h1>
 
         {/* Search */}
         <div className="flex-1 max-w-[400px] mx-auto relative">
@@ -199,13 +212,18 @@ export function DispatchToolbar({
               className="flex items-center gap-2 px-2.5 py-1.5 rounded hover:bg-gray-50 text-xs cursor-pointer"
             >
               <Checkbox
-                checked={!filters.statuses?.length || filters.statuses.includes(opt.value)}
+                checked={
+                  !filters.statuses?.length ||
+                  filters.statuses.includes(opt.value)
+                }
                 onCheckedChange={(checked) => {
                   const current = filters.statuses ?? [];
                   const next = checked
                     ? [...current, opt.value]
                     : current.filter((s) => s !== opt.value);
-                  onFilterChange({ statuses: next.length > 0 ? next : undefined });
+                  onFilterChange({
+                    statuses: next.length > 0 ? next : undefined,
+                  });
                 }}
                 className="h-3.5 w-3.5"
               />
@@ -226,13 +244,18 @@ export function DispatchToolbar({
               className="flex items-center gap-2 px-2.5 py-1.5 rounded hover:bg-gray-50 text-xs cursor-pointer"
             >
               <Checkbox
-                checked={!filters.equipmentTypes?.length || filters.equipmentTypes.includes(opt.value)}
+                checked={
+                  !filters.equipmentTypes?.length ||
+                  filters.equipmentTypes.includes(opt.value)
+                }
                 onCheckedChange={(checked) => {
                   const current = filters.equipmentTypes ?? [];
                   const next = checked
                     ? [...current, opt.value]
                     : current.filter((e) => e !== opt.value);
-                  onFilterChange({ equipmentTypes: next.length > 0 ? next : undefined });
+                  onFilterChange({
+                    equipmentTypes: next.length > 0 ? next : undefined,
+                  });
                 }}
                 className="h-3.5 w-3.5"
               />
@@ -259,19 +282,51 @@ export function DispatchToolbar({
 
         <div className="flex-1" />
 
-        {/* Group toggle */}
-        <button
-          onClick={onGroupToggle}
-          className={cn(
-            'h-[26px] px-2 border rounded-md text-[11px] font-medium flex items-center gap-1 transition-colors',
-            grouped
-              ? 'bg-slate-100 border-slate-700 text-slate-700'
-              : 'border-gray-200 text-muted-foreground hover:border-slate-700 hover:text-slate-700'
-          )}
-        >
-          <Layers className="h-3 w-3" />
-          Group
-        </button>
+        {/* View mode toggle */}
+        {onViewModeChange && (
+          <div className="flex items-center border rounded-md overflow-hidden">
+            <button
+              onClick={() => onViewModeChange('table')}
+              className={cn(
+                'h-[26px] px-2 text-[11px] font-medium flex items-center gap-1 transition-colors',
+                viewMode === 'table'
+                  ? 'bg-slate-100 text-slate-700'
+                  : 'text-muted-foreground hover:text-slate-700'
+              )}
+              title="Table view"
+            >
+              <Table className="h-3 w-3" />
+            </button>
+            <button
+              onClick={() => onViewModeChange('kanban')}
+              className={cn(
+                'h-[26px] px-2 text-[11px] font-medium flex items-center gap-1 transition-colors',
+                viewMode === 'kanban'
+                  ? 'bg-slate-100 text-slate-700'
+                  : 'text-muted-foreground hover:text-slate-700'
+              )}
+              title="Kanban view"
+            >
+              <LayoutGrid className="h-3 w-3" />
+            </button>
+          </div>
+        )}
+
+        {/* Group toggle (table view only) */}
+        {viewMode === 'table' && (
+          <button
+            onClick={onGroupToggle}
+            className={cn(
+              'h-[26px] px-2 border rounded-md text-[11px] font-medium flex items-center gap-1 transition-colors',
+              grouped
+                ? 'bg-slate-100 border-slate-700 text-slate-700'
+                : 'border-gray-200 text-muted-foreground hover:border-slate-700 hover:text-slate-700'
+            )}
+          >
+            <Layers className="h-3 w-3" />
+            Group
+          </button>
+        )}
       </div>
     </>
   );
@@ -288,13 +343,13 @@ function FilterDropdown({
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<React.ElementRef<'div'>>(null);
 
   // Close on outside click
   useEffect(() => {
     if (!open) return;
     function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+      if (ref.current && !ref.current.contains(e.target as globalThis.Node)) {
         setOpen(false);
       }
     }

@@ -23,7 +23,10 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { useCreateCheckCall, type CreateCheckCallData } from '@/lib/hooks/tms/use-checkcalls';
+import {
+  useCreateCheckCall,
+  type CreateCheckCallData,
+} from '@/lib/hooks/tms/use-checkcalls';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -33,11 +36,56 @@ interface CheckCallFormProps {
 }
 
 const US_STATES = [
-  'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
-  'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
-  'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
-  'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
-  'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY',
+  'AL',
+  'AK',
+  'AZ',
+  'AR',
+  'CA',
+  'CO',
+  'CT',
+  'DE',
+  'FL',
+  'GA',
+  'HI',
+  'ID',
+  'IL',
+  'IN',
+  'IA',
+  'KS',
+  'KY',
+  'LA',
+  'ME',
+  'MD',
+  'MA',
+  'MI',
+  'MN',
+  'MS',
+  'MO',
+  'MT',
+  'NE',
+  'NV',
+  'NH',
+  'NJ',
+  'NM',
+  'NY',
+  'NC',
+  'ND',
+  'OH',
+  'OK',
+  'OR',
+  'PA',
+  'RI',
+  'SC',
+  'SD',
+  'TN',
+  'TX',
+  'UT',
+  'VT',
+  'VA',
+  'WA',
+  'WV',
+  'WI',
+  'WY',
 ];
 
 const CHECK_CALL_TYPES = [
@@ -53,6 +101,8 @@ const checkCallSchema = z.object({
   state: z.string().min(1, 'State is required'),
   city: z.string().min(1, 'City is required').max(100),
   locationDescription: z.string().max(200).optional(),
+  etaToNextStop: z.string().optional(),
+  nextCheckCallAt: z.string().optional(),
   notes: z.string().max(500).optional(),
 });
 
@@ -69,6 +119,8 @@ export function CheckCallForm({ loadId, onSuccess }: CheckCallFormProps) {
       state: '',
       city: '',
       locationDescription: '',
+      etaToNextStop: '',
+      nextCheckCallAt: '',
       notes: '',
     },
   });
@@ -84,11 +136,19 @@ export function CheckCallForm({ loadId, onSuccess }: CheckCallFormProps) {
         locationDescription: values.locationDescription,
         notes: values.notes,
         gpsSource: 'MANUAL',
+        ...(values.etaToNextStop
+          ? { etaToNextStop: new Date(values.etaToNextStop).toISOString() }
+          : {}),
+        ...(values.nextCheckCallAt
+          ? { nextCheckCallAt: new Date(values.nextCheckCallAt).toISOString() }
+          : {}),
       });
       form.reset();
       onSuccess?.();
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'An unexpected error occurred');
+      setSubmitError(
+        err instanceof Error ? err.message : 'An unexpected error occurred'
+      );
     }
   };
 
@@ -186,12 +246,45 @@ export function CheckCallForm({ loadId, onSuccess }: CheckCallFormProps) {
               <FormItem>
                 <FormLabel>Location Description</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="e.g., I-55 south, mile marker 142" />
+                  <Input
+                    {...field}
+                    placeholder="e.g., I-55 south, mile marker 142"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="etaToNextStop"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>ETA to Next Stop</FormLabel>
+                  <FormControl>
+                    <Input type="datetime-local" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="nextCheckCallAt"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Next Check Call Reminder</FormLabel>
+                  <FormControl>
+                    <Input type="datetime-local" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
           <FormField
             control={form.control}

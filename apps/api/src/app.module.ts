@@ -12,6 +12,7 @@ import { ResponseTransformInterceptor } from './common/interceptors/response-tra
 import { AuditInterceptor } from './modules/audit/interceptors/audit.interceptor';
 import { CustomThrottlerGuard } from './common/guards/custom-throttler.guard';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
+import { CsrfMiddleware } from './common/middleware/csrf.middleware';
 
 // Core infrastructure modules
 import { RedisModule } from './modules/redis/redis.module';
@@ -206,5 +207,7 @@ export class AppModule implements NestModule {
     // pino-http (via LoggerModule) picks it up via genReqId for structured logging.
     // RequestLoggingMiddleware is no longer needed — pino-http logs requests automatically.
     consumer.apply(CorrelationIdMiddleware).forRoutes('*');
+    // SEC-003: CSRF protection using double-submit cookie pattern
+    consumer.apply(CsrfMiddleware).forRoutes('*');
   }
 }

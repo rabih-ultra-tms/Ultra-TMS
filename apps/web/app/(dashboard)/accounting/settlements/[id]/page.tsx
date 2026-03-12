@@ -1,26 +1,26 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
-import { DetailPage, DetailTab } from "@/components/patterns/detail-page";
-import { SettlementStatusBadge } from "@/components/accounting/settlement-status-badge";
+import * as React from 'react';
+import { useRouter } from 'next/navigation';
+import { DetailPage, DetailTab } from '@/components/patterns/detail-page';
+import { SettlementStatusBadge } from '@/components/accounting/settlement-status-badge';
 import {
   useSettlement,
   useApproveSettlement,
   useProcessSettlement,
   useDeleteSettlement,
-} from "@/lib/hooks/accounting/use-settlements";
-import { toast } from "sonner";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
+} from '@/lib/hooks/accounting/use-settlements';
+import { toast } from 'sonner';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
 import {
   LayoutDashboard,
   ListChecks,
@@ -28,21 +28,22 @@ import {
   Trash2,
   CheckCircle,
   Banknote,
-} from "lucide-react";
+} from 'lucide-react';
+import { ConfirmDialog } from '@/components/shared/confirm-dialog';
 
 function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
     minimumFractionDigits: 2,
   }).format(value);
 }
 
 function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
+  return new Date(dateString).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
   });
 }
 
@@ -62,13 +63,15 @@ export default function SettlementDetailPage({
   const processSettlement = useProcessSettlement();
   const deleteSettlement = useDeleteSettlement();
 
+  const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
+
   const handleApprove = async () => {
     try {
       await approveSettlement.mutateAsync(params.id);
-      toast.success("Settlement approved");
+      toast.success('Settlement approved');
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : "Failed to approve settlement";
+        err instanceof Error ? err.message : 'Failed to approve settlement';
       toast.error(message);
     }
   };
@@ -76,10 +79,10 @@ export default function SettlementDetailPage({
   const handleProcess = async () => {
     try {
       await processSettlement.mutateAsync(params.id);
-      toast.success("Settlement payout processed");
+      toast.success('Settlement payout processed');
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : "Failed to process settlement";
+        err instanceof Error ? err.message : 'Failed to process settlement';
       toast.error(message);
     }
   };
@@ -87,18 +90,18 @@ export default function SettlementDetailPage({
   const handleDelete = async () => {
     try {
       await deleteSettlement.mutateAsync(params.id);
-      toast.success("Settlement deleted");
-      router.push("/accounting/settlements");
+      toast.success('Settlement deleted');
+      router.push('/accounting/settlements');
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : "Failed to delete settlement";
+        err instanceof Error ? err.message : 'Failed to delete settlement';
       toast.error(message);
     }
   };
 
-  const canApprove = settlement?.status === "CREATED";
-  const canProcess = settlement?.status === "APPROVED";
-  const canDelete = settlement?.status === "CREATED";
+  const canApprove = settlement?.status === 'CREATED';
+  const canProcess = settlement?.status === 'APPROVED';
+  const canDelete = settlement?.status === 'CREATED';
 
   const actions = (
     <>
@@ -109,7 +112,7 @@ export default function SettlementDetailPage({
           disabled={approveSettlement.isPending}
         >
           <CheckCircle className="mr-2 size-4" />
-          {approveSettlement.isPending ? "Approving..." : "Approve"}
+          {approveSettlement.isPending ? 'Approving...' : 'Approve'}
         </Button>
       )}
       {canProcess && (
@@ -119,7 +122,7 @@ export default function SettlementDetailPage({
           disabled={processSettlement.isPending}
         >
           <Banknote className="mr-2 size-4" />
-          {processSettlement.isPending ? "Processing..." : "Process Payout"}
+          {processSettlement.isPending ? 'Processing...' : 'Process Payout'}
         </Button>
       )}
       <DropdownMenu>
@@ -134,7 +137,7 @@ export default function SettlementDetailPage({
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-destructive"
-                onClick={handleDelete}
+                onClick={() => setShowDeleteConfirm(true)}
                 disabled={deleteSettlement.isPending}
               >
                 <Trash2 className="mr-2 size-4" />
@@ -151,15 +154,15 @@ export default function SettlementDetailPage({
 
   const tabs: DetailTab[] = [
     {
-      value: "overview",
-      label: "Overview",
+      value: 'overview',
+      label: 'Overview',
       icon: LayoutDashboard,
       content: settlement ? (
         <SettlementOverviewTab settlement={settlement} />
       ) : null,
     },
     {
-      value: "line-items",
+      value: 'line-items',
       label: `Line Items (${lineItemCount})`,
       icon: ListChecks,
       content: settlement ? (
@@ -169,29 +172,44 @@ export default function SettlementDetailPage({
   ];
 
   return (
-    <DetailPage
-      title={settlement?.settlementNumber || "Settlement Details"}
-      subtitle={
-        settlement?.carrierName && `Carrier: ${settlement.carrierName}`
-      }
-      tags={
-        settlement && (
-          <SettlementStatusBadge status={settlement.status} size="md" />
-        )
-      }
-      actions={actions}
-      backLink="/accounting/settlements"
-      backLabel="Back to Settlements"
-      breadcrumb={
-        <span>
-          Accounting / Settlements / {settlement?.settlementNumber || "..."}
-        </span>
-      }
-      tabs={tabs}
-      isLoading={isLoading}
-      error={error as Error}
-      onRetry={refetch}
-    />
+    <>
+      <DetailPage
+        title={settlement?.settlementNumber || 'Settlement Details'}
+        subtitle={
+          settlement?.carrierName && `Carrier: ${settlement.carrierName}`
+        }
+        tags={
+          settlement && (
+            <SettlementStatusBadge status={settlement.status} size="md" />
+          )
+        }
+        actions={actions}
+        backLink="/accounting/settlements"
+        backLabel="Back to Settlements"
+        breadcrumb={
+          <span>
+            Accounting / Settlements / {settlement?.settlementNumber || '...'}
+          </span>
+        }
+        tabs={tabs}
+        isLoading={isLoading}
+        error={error as Error}
+        onRetry={refetch}
+      />
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        title="Delete Settlement"
+        description="Are you sure you want to delete this settlement? This action cannot be undone."
+        confirmLabel="Delete"
+        variant="destructive"
+        onConfirm={async () => {
+          await handleDelete();
+          setShowDeleteConfirm(false);
+        }}
+        onCancel={() => setShowDeleteConfirm(false)}
+        isLoading={deleteSettlement.isPending}
+      />
+    </>
   );
 }
 
@@ -202,7 +220,7 @@ export default function SettlementDetailPage({
 function SettlementOverviewTab({
   settlement,
 }: {
-  settlement: NonNullable<ReturnType<typeof useSettlement>["data"]>;
+  settlement: NonNullable<ReturnType<typeof useSettlement>['data']>;
 }) {
   return (
     <div className="grid gap-6 md:grid-cols-2">
@@ -314,7 +332,7 @@ function SettlementOverviewTab({
 function SettlementLineItemsTab({
   settlement,
 }: {
-  settlement: NonNullable<ReturnType<typeof useSettlement>["data"]>;
+  settlement: NonNullable<ReturnType<typeof useSettlement>['data']>;
 }) {
   const items = settlement.lineItems || [];
 
@@ -407,13 +425,7 @@ function SettlementLineItemsTab({
 // Shared helpers
 // ===========================
 
-function InfoRow({
-  label,
-  value,
-}: {
-  label: string;
-  value: React.ReactNode;
-}) {
+function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-4">
       <span className="text-sm text-text-muted">{label}</span>

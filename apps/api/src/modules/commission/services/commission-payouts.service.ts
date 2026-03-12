@@ -19,84 +19,87 @@ export class CommissionPayoutsService {
     dto: CreateCommissionPayoutDto,
     userId?: string
   ) {
-    const periodStart = new Date(dto.periodStart);
-    const periodEnd = new Date(dto.periodEnd);
+    return this.prisma.$transaction(async (tx) => {
+      const periodStart = new Date(dto.periodStart);
+      const periodEnd = new Date(dto.periodEnd);
 
-    // Get approved commission entries for the period
-    const entries = await this.prisma.commissionEntry.findMany({
-      where: {
-        tenantId,
-        userId: dto.userId,
-        status: 'APPROVED',
-        payoutId: null,
-        commissionPeriod: {
-          gte: periodStart,
-          lte: periodEnd,
+      // Get approved commission entries for the period
+      const entries = await tx.commissionEntry.findMany({
+        where: {
+          tenantId,
+          deletedAt: null,
+          userId: dto.userId,
+          status: 'APPROVED',
+          payoutId: null,
+          commissionPeriod: {
+            gte: periodStart,
+            lte: periodEnd,
+          },
         },
-      },
-    });
+      });
 
-    if (entries.length === 0) {
-      throw new BadRequestException(
-        'No approved commission entries found for period'
-      );
-    }
+      if (entries.length === 0) {
+        throw new BadRequestException(
+          'No approved commission entries found for period'
+        );
+      }
 
-    // Calculate totals
-    const grossCommission = entries.reduce((sum, entry) => {
-      if (entry.entryType === 'DRAW_RECOVERY') {
+      // Calculate totals
+      const grossCommission = entries.reduce((sum, entry) => {
+        if (entry.entryType === 'DRAW_RECOVERY') {
+          return sum;
+        }
+        return sum + Number(entry.commissionAmount);
+      }, 0);
+
+      const drawRecovery = entries.reduce((sum, entry) => {
+        if (entry.entryType === 'DRAW_RECOVERY') {
+          return sum + Math.abs(Number(entry.commissionAmount));
+        }
         return sum;
-      }
-      return sum + Number(entry.commissionAmount);
-    }, 0);
+      }, 0);
 
-    const drawRecovery = entries.reduce((sum, entry) => {
-      if (entry.entryType === 'DRAW_RECOVERY') {
-        return sum + Math.abs(Number(entry.commissionAmount));
-      }
-      return sum;
-    }, 0);
+      const netPayout = grossCommission - drawRecovery;
 
-    const netPayout = grossCommission - drawRecovery;
+      // Generate payout number
+      const count = await tx.commissionPayout.count({
+        where: { tenantId },
+      });
+      const payoutNumber = `PAY-${String(count + 1).padStart(6, '0')}`;
 
-    // Generate payout number
-    const count = await this.prisma.commissionPayout.count({
-      where: { tenantId },
+      // Create payout
+      const payout = await tx.commissionPayout.create({
+        data: {
+          tenantId,
+          payoutNumber,
+          userId: dto.userId,
+          periodStart,
+          periodEnd,
+          payoutDate: new Date(),
+          grossCommission,
+          drawRecovery,
+          netPayout,
+          notes: dto.notes,
+          createdById: userId,
+        },
+        include: {
+          user: true,
+        },
+      });
+
+      // Link entries to payout
+      await tx.commissionEntry.updateMany({
+        where: {
+          tenantId,
+          id: { in: entries.map((e) => e.id) },
+        },
+        data: {
+          payoutId: payout.id,
+        },
+      });
+
+      return payout;
     });
-    const payoutNumber = `PAY-${String(count + 1).padStart(6, '0')}`;
-
-    // Create payout
-    const payout = await this.prisma.commissionPayout.create({
-      data: {
-        tenantId,
-        payoutNumber,
-        userId: dto.userId,
-        periodStart,
-        periodEnd,
-        payoutDate: new Date(),
-        grossCommission,
-        drawRecovery,
-        netPayout,
-        notes: dto.notes,
-        createdById: userId,
-      },
-      include: {
-        user: true,
-      },
-    });
-
-    // Link entries to payout
-    await this.prisma.commissionEntry.updateMany({
-      where: {
-        tenantId,
-        id: { in: entries.map((e) => e.id) },
-      },
-      data: {
-        payoutId: payout.id,
-      },
-    });
-
-    return payout;
   }
 
   async findAll(
@@ -113,7 +116,7 @@ export class CommissionPayoutsService {
     const { page, limit } = options;
     const skip = (page - 1) * limit;
 
-    const where: any = { tenantId };
+    const where: any = { tenantId, deletedAt: null };
 
     if (options.userId) {
       where.userId = options.userId;
@@ -168,7 +171,7 @@ export class CommissionPayoutsService {
 
   async findOne(tenantId: string, id: string) {
     const payout = await this.prisma.commissionPayout.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
       include: {
         user: true,
         entries: {
@@ -194,7 +197,7 @@ export class CommissionPayoutsService {
     _userId?: string
   ) {
     const payout = await this.prisma.commissionPayout.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
     });
 
     if (!payout) {
@@ -221,79 +224,83 @@ export class CommissionPayoutsService {
     dto: ProcessPayoutDto,
     _userId?: string
   ) {
-    const payout = await this.prisma.commissionPayout.findFirst({
-      where: { id, tenantId },
-      include: { entries: true },
+    return this.prisma.$transaction(async (tx) => {
+      const payout = await tx.commissionPayout.findFirst({
+        where: { id, tenantId, deletedAt: null },
+        include: { entries: true },
+      });
+
+      if (!payout) {
+        throw new NotFoundException('Commission payout not found');
+      }
+
+      if (payout.status !== 'APPROVED') {
+        throw new BadRequestException(
+          'Payout must be approved before processing'
+        );
+      }
+
+      // Update payout
+      const updated = await tx.commissionPayout.update({
+        where: { id },
+        data: {
+          status: 'PAID',
+          paymentMethod: dto.paymentMethod,
+          paymentReference: dto.paymentReference,
+          paidAt: new Date(),
+        },
+      });
+
+      // Mark all entries as paid
+      await tx.commissionEntry.updateMany({
+        where: {
+          tenantId,
+          payoutId: id,
+        },
+        data: {
+          status: 'PAID',
+          paidAt: new Date(),
+        },
+      });
+
+      return updated;
     });
-
-    if (!payout) {
-      throw new NotFoundException('Commission payout not found');
-    }
-
-    if (payout.status !== 'APPROVED') {
-      throw new BadRequestException(
-        'Payout must be approved before processing'
-      );
-    }
-
-    // Update payout
-    const updated = await this.prisma.commissionPayout.update({
-      where: { id },
-      data: {
-        status: 'PAID',
-        paymentMethod: dto.paymentMethod,
-        paymentReference: dto.paymentReference,
-        paidAt: new Date(),
-      },
-    });
-
-    // Mark all entries as paid
-    await this.prisma.commissionEntry.updateMany({
-      where: {
-        tenantId,
-        payoutId: id,
-      },
-      data: {
-        status: 'PAID',
-        paidAt: new Date(),
-      },
-    });
-
-    return updated;
   }
 
   async void(tenantId: string, id: string, _userId?: string) {
-    const payout = await this.prisma.commissionPayout.findFirst({
-      where: { id, tenantId },
+    return this.prisma.$transaction(async (tx) => {
+      const payout = await tx.commissionPayout.findFirst({
+        where: { id, tenantId, deletedAt: null },
+      });
+
+      if (!payout) {
+        throw new NotFoundException('Commission payout not found');
+      }
+
+      if (payout.status === 'PAID') {
+        throw new BadRequestException('Cannot void a paid payout');
+      }
+
+      // Update payout
+      const updated = await tx.commissionPayout.update({
+        where: { id },
+        data: {
+          status: 'VOID',
+        },
+      });
+
+      // Unlink entries
+      await tx.commissionEntry.updateMany({
+        where: {
+          tenantId,
+          payoutId: id,
+        },
+        data: {
+          payoutId: null,
+        },
+      });
+
+      return updated;
     });
-
-    if (!payout) {
-      throw new NotFoundException('Commission payout not found');
-    }
-
-    if (payout.status === 'PAID') {
-      throw new BadRequestException('Cannot void a paid payout');
-    }
-
-    // Update payout
-    const updated = await this.prisma.commissionPayout.update({
-      where: { id },
-      data: {
-        status: 'VOID',
-      },
-    });
-
-    // Unlink entries
-    await this.prisma.commissionEntry.updateMany({
-      where: {
-        tenantId,
-        payoutId: id,
-      },
-      data: {
-        payoutId: null,
-      },
-    });
-
-    return updated;
   }
 }

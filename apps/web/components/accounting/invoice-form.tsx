@@ -1,81 +1,96 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
-import { z } from "zod";
-import { UseFormReturn } from "react-hook-form";
-import { Plus, Trash2 } from "lucide-react";
-import { toast } from "sonner";
-import { FormPage, FormSection } from "@/components/patterns/form-page";
+import * as React from 'react';
+import { useRouter } from 'next/navigation';
+import { z } from 'zod';
+import { UseFormReturn } from 'react-hook-form';
+import { Plus, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { FormPage, FormSection } from '@/components/patterns/form-page';
 import {
   FormField,
   FormItem,
   FormLabel,
   FormControl,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { useCreateInvoice } from "@/lib/hooks/accounting/use-invoices";
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import {
+  useCreateInvoice,
+  useUpdateInvoice,
+} from '@/lib/hooks/accounting/use-invoices';
 
 // ===========================
 // Schema
 // ===========================
 
 const lineItemSchema = z.object({
-  description: z.string().min(1, "Description is required"),
-  quantity: z.coerce.number().min(1, "Quantity must be at least 1"),
-  unitPrice: z.coerce.number().min(0, "Unit price must be non-negative"),
+  description: z.string().min(1, 'Description is required'),
+  quantity: z.coerce.number().min(1, 'Quantity must be at least 1'),
+  unitPrice: z.coerce.number().min(0, 'Unit price must be non-negative'),
   loadId: z.string().optional(),
 });
 
 const invoiceFormSchema = z.object({
-  customerId: z.string().min(1, "Customer is required"),
+  customerId: z.string().min(1, 'Customer is required'),
   orderId: z.string().optional(),
   loadId: z.string().optional(),
-  invoiceDate: z.string().min(1, "Invoice date is required"),
-  paymentTerms: z.string().min(1, "Payment terms are required"),
+  invoiceDate: z.string().min(1, 'Invoice date is required'),
+  paymentTerms: z.string().min(1, 'Payment terms are required'),
   notes: z.string().optional(),
   lineItems: z
     .array(lineItemSchema)
-    .min(1, "At least one line item is required"),
+    .min(1, 'At least one line item is required'),
 });
 
 type InvoiceFormValues = z.infer<typeof invoiceFormSchema>;
 
+// ===========================
+// Props
+// ===========================
+
+interface InvoiceFormProps {
+  invoiceId?: string;
+  initialData?: InvoiceFormValues;
+}
+
 const DEFAULT_VALUES: InvoiceFormValues = {
-  customerId: "",
-  orderId: "",
-  loadId: "",
+  customerId: '',
+  orderId: '',
+  loadId: '',
   invoiceDate: new Date().toISOString().slice(0, 10),
-  paymentTerms: "NET30",
-  notes: "",
-  lineItems: [{ description: "", quantity: 1, unitPrice: 0, loadId: "" }],
+  paymentTerms: 'NET30',
+  notes: '',
+  lineItems: [{ description: '', quantity: 1, unitPrice: 0, loadId: '' }],
 };
 
 const PAYMENT_TERMS = [
-  { value: "COD", label: "COD (Cash on Delivery)" },
-  { value: "NET15", label: "NET 15" },
-  { value: "NET21", label: "NET 21" },
-  { value: "NET30", label: "NET 30" },
-  { value: "NET45", label: "NET 45" },
+  { value: 'COD', label: 'COD (Cash on Delivery)' },
+  { value: 'NET15', label: 'NET 15' },
+  { value: 'NET21', label: 'NET 21' },
+  { value: 'NET30', label: 'NET 30' },
+  { value: 'NET45', label: 'NET 45' },
 ];
 
 // ===========================
 // Component
 // ===========================
 
-export function InvoiceForm() {
+export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps = {}) {
   const router = useRouter();
   const createInvoice = useCreateInvoice();
+  const updateInvoice = useUpdateInvoice();
+
+  const isEdit = Boolean(invoiceId);
 
   const handleSubmit = async (values: InvoiceFormValues) => {
     try {
@@ -88,26 +103,43 @@ export function InvoiceForm() {
           loadId: item.loadId || undefined,
         })),
       };
-      const result = await createInvoice.mutateAsync(payload);
-      toast.success("Invoice created successfully");
-      router.push(`/accounting/invoices/${result.id}`);
+
+      if (isEdit) {
+        await updateInvoice.mutateAsync({ id: invoiceId!, ...payload });
+        toast.success('Invoice updated successfully');
+        router.push(`/accounting/invoices/${invoiceId}`);
+      } else {
+        const result = await createInvoice.mutateAsync(payload);
+        toast.success('Invoice created successfully');
+        router.push(`/accounting/invoices/${result.id}`);
+      }
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : "Failed to create invoice";
+        err instanceof Error
+          ? err.message
+          : isEdit
+            ? 'Failed to update invoice'
+            : 'Failed to create invoice';
       toast.error(message);
     }
   };
 
   return (
     <FormPage
-      title="New Invoice"
-      description="Create a customer invoice for delivered loads."
-      backPath="/accounting/invoices"
+      title={isEdit ? 'Edit Invoice' : 'New Invoice'}
+      description={
+        isEdit
+          ? 'Update invoice details.'
+          : 'Create a customer invoice for delivered loads.'
+      }
+      backPath={
+        isEdit ? `/accounting/invoices/${invoiceId}` : '/accounting/invoices'
+      }
       schema={invoiceFormSchema}
-      defaultValues={DEFAULT_VALUES}
+      defaultValues={initialData ?? DEFAULT_VALUES}
       onSubmit={handleSubmit}
-      isSubmitting={createInvoice.isPending}
-      submitLabel="Create Invoice"
+      isSubmitting={isEdit ? updateInvoice.isPending : createInvoice.isPending}
+      submitLabel={isEdit ? 'Save Changes' : 'Create Invoice'}
     >
       {(form) => (
         <>
@@ -169,10 +201,7 @@ function InvoiceDetailsSection({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Payment Terms</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-              >
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select terms" />
@@ -228,21 +257,21 @@ function LineItemsSection({
 }: {
   form: UseFormReturn<InvoiceFormValues>;
 }) {
-  const lineItems = form.watch("lineItems");
+  const lineItems = form.watch('lineItems');
 
   const addLineItem = () => {
-    const current = form.getValues("lineItems");
-    form.setValue("lineItems", [
+    const current = form.getValues('lineItems');
+    form.setValue('lineItems', [
       ...current,
-      { description: "", quantity: 1, unitPrice: 0, loadId: "" },
+      { description: '', quantity: 1, unitPrice: 0, loadId: '' },
     ]);
   };
 
   const removeLineItem = (index: number) => {
-    const current = form.getValues("lineItems");
+    const current = form.getValues('lineItems');
     if (current.length <= 1) return;
     form.setValue(
-      "lineItems",
+      'lineItems',
       current.filter((_, i) => i !== index)
     );
   };
@@ -253,10 +282,7 @@ function LineItemsSection({
   );
 
   return (
-    <FormSection
-      title="Line Items"
-      description="Add charges for this invoice."
-    >
+    <FormSection title="Line Items" description="Add charges for this invoice.">
       <div className="space-y-3">
         {/* Header */}
         <div className="hidden gap-4 text-xs font-medium text-text-muted sm:grid sm:grid-cols-[1fr_80px_120px_80px_40px]">
@@ -328,12 +354,13 @@ function LineItemsSection({
 
             <div className="flex items-center justify-end pt-2 text-sm font-medium text-text-primary sm:pt-2">
               $
-              {(
-                (item.quantity || 0) * (item.unitPrice || 0)
-              ).toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
+              {((item.quantity || 0) * (item.unitPrice || 0)).toLocaleString(
+                'en-US',
+                {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                }
+              )}
             </div>
 
             <div className="flex items-start justify-end pt-1">
@@ -366,7 +393,7 @@ function LineItemsSection({
             <span className="text-sm text-text-muted">Total: </span>
             <span className="text-lg font-bold text-text-primary">
               $
-              {total.toLocaleString("en-US", {
+              {total.toLocaleString('en-US', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}
@@ -378,11 +405,7 @@ function LineItemsSection({
   );
 }
 
-function NotesSection({
-  form,
-}: {
-  form: UseFormReturn<InvoiceFormValues>;
-}) {
+function NotesSection({ form }: { form: UseFormReturn<InvoiceFormValues> }) {
   return (
     <FormSection title="Notes" description="Optional notes for this invoice.">
       <FormField

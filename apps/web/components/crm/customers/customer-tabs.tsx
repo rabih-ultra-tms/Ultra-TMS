@@ -1,28 +1,36 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { usePathname, useRouter } from "next/navigation";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import * as React from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface CustomerTabsProps {
   customerId: string;
+  /** Base path for tab routes. Defaults to "/companies". */
+  basePath?: string;
 }
 
-const tabDefinitions = (id: string) => [
-  { label: "Overview", value: `/companies/${id}` },
-  { label: "Contacts", value: `/companies/${id}/contacts` },
-  { label: "Activities", value: `/companies/${id}/activities` },
+const tabDefinitions = (id: string, base: string) => [
+  { label: 'Overview', value: `${base}/${id}` },
+  { label: 'Contacts', value: `${base}/${id}/contacts` },
+  { label: 'Activities', value: `${base}/${id}/activities` },
 ];
 
-export function CustomerTabs({ customerId }: CustomerTabsProps) {
+export function CustomerTabs({
+  customerId,
+  basePath = '/companies',
+}: CustomerTabsProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const tabs = React.useMemo(() => tabDefinitions(customerId), [customerId]);
+  const tabs = React.useMemo(
+    () => tabDefinitions(customerId, basePath),
+    [customerId, basePath]
+  );
 
   const current = React.useMemo(() => {
     const match = tabs.find((tab) => pathname === tab.value);
-    return match?.value ?? `/companies/${customerId}`;
-  }, [pathname, tabs, customerId]);
+    return match?.value ?? `${basePath}/${customerId}`;
+  }, [pathname, tabs, customerId, basePath]);
 
   return (
     <Tabs value={current} onValueChange={(value) => router.push(value)}>

@@ -36,15 +36,29 @@ export function CarrierOverviewCard({ carrier }: CarrierOverviewCardProps) {
         </CardHeader>
         <CardContent className="space-y-3">
           <InfoRow label="Company Name" value={carrier.companyName} />
-          <InfoRow label="Type" value={carrier.carrierType === 'OWNER_OPERATOR' ? 'Owner Operator' : 'Company'} />
+          <InfoRow
+            label="Type"
+            value={
+              carrier.carrierType === 'OWNER_OPERATOR'
+                ? 'Owner Operator'
+                : 'Company'
+            }
+          />
           {carrier.mcNumber && (
             <InfoRow label="MC Number" value={`MC-${carrier.mcNumber}`} mono />
           )}
           {carrier.dotNumber && (
-            <InfoRow label="DOT Number" value={`DOT# ${carrier.dotNumber}`} mono />
+            <InfoRow
+              label="DOT Number"
+              value={`DOT# ${carrier.dotNumber}`}
+              mono
+            />
           )}
           {carrier.einTaxId && (
-            <InfoRow label="EIN / Tax ID" value={`***-**-${carrier.einTaxId.slice(-4)}`} />
+            <InfoRow
+              label="EIN / Tax ID"
+              value={`***-**-${carrier.einTaxId.slice(-4)}`}
+            />
           )}
         </CardContent>
       </Card>
@@ -62,12 +76,17 @@ export function CarrierOverviewCard({ carrier }: CarrierOverviewCardProps) {
             <MapPin className="mt-0.5 h-4 w-4 text-muted-foreground shrink-0" />
             <div className="text-sm">
               <p>{carrier.address}</p>
-              <p>{carrier.city}, {carrier.state} {carrier.zip}</p>
+              <p>
+                {carrier.city}, {carrier.state} {carrier.zip}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
-            <a href={`tel:${carrier.phone}`} className="text-sm hover:underline">
+            <a
+              href={`tel:${carrier.phone}`}
+              className="text-sm hover:underline"
+            >
               {carrier.phone}
             </a>
             {carrier.phoneSecondary && (
@@ -78,7 +97,10 @@ export function CarrierOverviewCard({ carrier }: CarrierOverviewCardProps) {
           </div>
           <div className="flex items-center gap-2">
             <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
-            <a href={`mailto:${carrier.email}`} className="text-sm hover:underline">
+            <a
+              href={`mailto:${carrier.email}`}
+              className="text-sm hover:underline"
+            >
               {carrier.email}
             </a>
           </div>
@@ -86,7 +108,11 @@ export function CarrierOverviewCard({ carrier }: CarrierOverviewCardProps) {
             <div className="flex items-center gap-2">
               <Globe className="h-4 w-4 text-muted-foreground shrink-0" />
               <a
-                href={carrier.website.startsWith('http') ? carrier.website : `https://${carrier.website}`}
+                href={
+                  carrier.website.startsWith('http')
+                    ? carrier.website
+                    : `https://${carrier.website}`
+                }
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm hover:underline"
@@ -112,9 +138,12 @@ export function CarrierOverviewCard({ carrier }: CarrierOverviewCardProps) {
             value={`NET ${carrier.paymentTermsDays}`}
           />
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Payment Method</span>
+            <span className="text-sm text-muted-foreground">
+              Payment Method
+            </span>
             <Badge variant="outline">
-              {PAYMENT_METHOD_LABELS[carrier.preferredPaymentMethod] || carrier.preferredPaymentMethod}
+              {PAYMENT_METHOD_LABELS[carrier.preferredPaymentMethod] ||
+                carrier.preferredPaymentMethod}
             </Badge>
           </div>
           {carrier.billingEmail && (
@@ -122,12 +151,21 @@ export function CarrierOverviewCard({ carrier }: CarrierOverviewCardProps) {
           )}
           {carrier.factoringCompanyName && (
             <>
-              <InfoRow label="Factoring Company" value={carrier.factoringCompanyName} />
-              {carrier.factoringPhone && (
-                <InfoRow label="Factoring Phone" value={carrier.factoringPhone} />
+              <InfoRow
+                label="Factoring Company"
+                value={carrier.factoringCompanyName}
+              />
+              {carrier.factoringCompanyPhone && (
+                <InfoRow
+                  label="Factoring Phone"
+                  value={carrier.factoringCompanyPhone}
+                />
               )}
-              {carrier.factoringEmail && (
-                <InfoRow label="Factoring Email" value={carrier.factoringEmail} />
+              {carrier.factoringCompanyEmail && (
+                <InfoRow
+                  label="Factoring Email"
+                  value={carrier.factoringCompanyEmail}
+                />
               )}
             </>
           )}

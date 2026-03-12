@@ -20,7 +20,12 @@ export type LoadStatus =
   | 'COMPLETED'
   | 'CANCELLED';
 
-export type EquipmentType = 'DRY_VAN' | 'REEFER' | 'FLATBED' | 'STEP_DECK' | 'OTHER';
+export type EquipmentType =
+  | 'DRY_VAN'
+  | 'REEFER'
+  | 'FLATBED'
+  | 'STEP_DECK'
+  | 'OTHER';
 
 export type LoadPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
 
@@ -81,7 +86,7 @@ export const LANE_CONFIG: Record<KanbanLane, LaneConfig> = {
     lane: 'DISPATCHED',
     label: 'Dispatched',
     color: '#6366F1',
-    statuses: ['ACCEPTED', 'DISPATCHED'],
+    statuses: ['ACCEPTED', 'ASSIGNED', 'DISPATCHED'],
   },
   IN_TRANSIT: {
     lane: 'IN_TRANSIT',
@@ -221,7 +226,12 @@ export interface DispatchFilters {
 /**
  * Sort options for lanes
  */
-export type SortField = 'pickupDate' | 'loadAge' | 'margin' | 'customerRate' | 'customerName';
+export type SortField =
+  | 'pickupDate'
+  | 'loadAge'
+  | 'margin'
+  | 'customerRate'
+  | 'customerName';
 export type SortDirection = 'asc' | 'desc';
 
 export interface SortConfig {
@@ -375,7 +385,10 @@ export const VALID_FORWARD_TRANSITIONS: Record<LoadStatus, LoadStatus[]> = {
 /**
  * Check if status transition is valid
  */
-export function isValidTransition(from: LoadStatus, to: LoadStatus): StatusTransition {
+export function isValidTransition(
+  from: LoadStatus,
+  to: LoadStatus
+): StatusTransition {
   const validForward = VALID_FORWARD_TRANSITIONS[from]?.includes(to);
 
   if (validForward) {

@@ -6,13 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useCheckCalls, type CheckCall } from '@/lib/hooks/tms/use-checkcalls';
 import { format, formatDistanceToNow } from 'date-fns';
-import {
-  PhoneCall,
-  MapPin,
-  AlertCircle,
-  Clock,
-  TruckIcon,
-} from 'lucide-react';
+import { PhoneCall, MapPin, AlertCircle, Clock, TruckIcon } from 'lucide-react';
 
 interface CheckCallTimelineProps {
   loadId: string;
@@ -60,7 +54,8 @@ function calculateTimeSinceLastCheckCall(lastCheckCallAt: string): {
 }
 
 function CheckCallCard({ checkCall }: { checkCall: CheckCall }) {
-  const config = CHECK_CALL_TYPE_CONFIG[checkCall.type] ?? CHECK_CALL_TYPE_CONFIG.CHECK_CALL;
+  const config =
+    CHECK_CALL_TYPE_CONFIG[checkCall.type] ?? CHECK_CALL_TYPE_CONFIG.CHECK_CALL;
   const Icon = config.icon;
 
   return (
@@ -68,7 +63,10 @@ function CheckCallCard({ checkCall }: { checkCall: CheckCall }) {
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <Badge variant="outline" className={cn('font-medium', config.color)}>
+            <Badge
+              variant="outline"
+              className={cn('font-medium', config.color)}
+            >
               <Icon className="w-3 h-3 mr-1" />
               {config.label}
             </Badge>
@@ -76,7 +74,11 @@ function CheckCallCard({ checkCall }: { checkCall: CheckCall }) {
               {format(new Date(checkCall.calledAt), 'MMM dd, h:mm a')}
             </span>
             <span className="text-xs text-muted-foreground">
-              ({formatDistanceToNow(new Date(checkCall.calledAt), { addSuffix: true })})
+              (
+              {formatDistanceToNow(new Date(checkCall.calledAt), {
+                addSuffix: true,
+              })}
+              )
             </span>
           </div>
 
@@ -87,7 +89,10 @@ function CheckCallCard({ checkCall }: { checkCall: CheckCall }) {
                 {checkCall.city}, {checkCall.state}
               </span>
               {checkCall.gpsSource === 'GPS' && (
-                <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                <Badge
+                  variant="outline"
+                  className="text-xs bg-green-50 text-green-700 border-green-200"
+                >
                   GPS
                 </Badge>
               )}
@@ -103,21 +108,25 @@ function CheckCallCard({ checkCall }: { checkCall: CheckCall }) {
               <div className="flex items-center gap-2 text-sm pl-6">
                 <Clock className="w-4 h-4 text-muted-foreground" />
                 <span>
-                  ETA: {format(new Date(checkCall.etaToNextStop), 'MMM dd, h:mm a')}
+                  ETA:{' '}
+                  {format(new Date(checkCall.etaToNextStop), 'MMM dd, h:mm a')}
                 </span>
               </div>
             )}
 
             {checkCall.notes && (
               <div className="pl-6 pt-2 border-t">
-                <p className="text-sm text-foreground italic">{checkCall.notes}</p>
+                <p className="text-sm text-foreground italic">
+                  {checkCall.notes}
+                </p>
               </div>
             )}
           </div>
 
           <div className="flex items-center gap-3 mt-3 pt-3 border-t text-xs text-muted-foreground">
             <span>
-              Logged by: <span className="font-medium">{checkCall.calledBy.name}</span>
+              Logged by:{' '}
+              <span className="font-medium">{checkCall.calledBy.name}</span>
             </span>
             <Badge variant="outline" className="text-xs">
               {checkCall.source}
@@ -129,26 +138,34 @@ function CheckCallCard({ checkCall }: { checkCall: CheckCall }) {
   );
 }
 
-function TimelineGap({ previousCheckCall, currentCheckCall }: {
+function TimelineGap({
+  previousCheckCall,
+  currentCheckCall,
+}: {
   previousCheckCall: CheckCall;
   currentCheckCall: CheckCall;
 }) {
-  const gapMs = new Date(previousCheckCall.calledAt).getTime() - new Date(currentCheckCall.calledAt).getTime();
+  const gapMs =
+    new Date(previousCheckCall.calledAt).getTime() -
+    new Date(currentCheckCall.calledAt).getTime();
   const gapHours = gapMs / (1000 * 60 * 60);
   const isOverdue = gapHours > 4;
 
-  const gapText = gapHours < 1
-    ? `${Math.round(gapHours * 60)} min gap`
-    : `${gapHours.toFixed(1)}h gap`;
+  const gapText =
+    gapHours < 1
+      ? `${Math.round(gapHours * 60)} min gap`
+      : `${gapHours.toFixed(1)}h gap`;
 
   return (
     <div className="flex items-center justify-center py-2">
-      <div className={cn(
-        'text-xs px-2 py-1 rounded',
-        isOverdue
-          ? 'bg-red-50 text-red-700 font-medium'
-          : 'text-muted-foreground'
-      )}>
+      <div
+        className={cn(
+          'text-xs px-2 py-1 rounded',
+          isOverdue
+            ? 'bg-red-50 text-red-700 font-medium'
+            : 'text-muted-foreground'
+        )}
+      >
         {gapText}
         {isOverdue && ' ⚠️ OVERDUE'}
       </div>
@@ -168,7 +185,8 @@ function OverdueWarning({ lastCheckCallAt }: { lastCheckCallAt: string }) {
         <div>
           <p className="font-medium text-red-900">Check Call Overdue</p>
           <p className="text-sm text-red-700">
-            Last check call was {hours.toFixed(1)} hours ago ({'>'}{4}h threshold)
+            Last check call was {hours.toFixed(1)} hours ago ({'>'}
+            {4}h threshold)
           </p>
         </div>
       </div>
@@ -208,10 +226,12 @@ export function CheckCallTimeline({ loadId }: CheckCallTimelineProps) {
     return (
       <Card className="p-8 text-center">
         <PhoneCall className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-        <h3 className="font-semibold text-lg mb-2">No check calls logged yet</h3>
+        <h3 className="font-semibold text-lg mb-2">
+          No check calls logged yet
+        </h3>
         <p className="text-sm text-muted-foreground">
-          Check calls record driver status updates during transit. Log the first check call when
-          the driver contacts you.
+          Check calls record driver status updates during transit. Log the first
+          check call when the driver contacts you.
         </p>
       </Card>
     );
@@ -222,8 +242,30 @@ export function CheckCallTimeline({ loadId }: CheckCallTimelineProps) {
     return null;
   }
 
+  const { hours, isOverdue } = calculateTimeSinceLastCheckCall(
+    lastCheckCall.calledAt
+  );
+  const timeSinceText =
+    hours < 1
+      ? `${Math.round(hours * 60)} min ago`
+      : `${hours.toFixed(1)}h ago`;
+
   return (
     <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Check Call History</h3>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">
+            Last check call: {timeSinceText}
+          </span>
+          {isOverdue && (
+            <Badge variant="destructive" className="text-xs">
+              Overdue
+            </Badge>
+          )}
+        </div>
+      </div>
+
       <OverdueWarning lastCheckCallAt={lastCheckCall.calledAt} />
 
       <div className="space-y-2">

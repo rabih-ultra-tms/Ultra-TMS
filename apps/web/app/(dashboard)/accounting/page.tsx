@@ -13,6 +13,8 @@ import {
   Truck,
   BarChart3,
   ArrowRight,
+  BookOpen,
+  BookText,
 } from 'lucide-react';
 
 const QUICK_LINKS = [
@@ -33,6 +35,18 @@ const QUICK_LINKS = [
     description: 'Carrier settlements & payouts',
     href: '/accounting/settlements',
     icon: Truck,
+  },
+  {
+    label: 'Chart of Accounts',
+    description: 'Manage GL accounts',
+    href: '/accounting/chart-of-accounts',
+    icon: BookOpen,
+  },
+  {
+    label: 'Journal Entries',
+    description: 'View journal entries',
+    href: '/accounting/journal-entries',
+    icon: BookText,
   },
   {
     label: 'Aging Reports',

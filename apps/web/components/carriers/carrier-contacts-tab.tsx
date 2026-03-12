@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { OperationsCarrier } from '@/types/carriers';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Phone, Mail, MapPin, Building2, CreditCard } from 'lucide-react';
@@ -45,7 +46,11 @@ export function CarrierContactsTab({ carrier }: CarrierContactsTabProps) {
               icon={<Building2 className="h-4 w-4" />}
               label="Website"
               value={carrier.website}
-              href={carrier.website.startsWith('http') ? carrier.website : `https://${carrier.website}`}
+              href={
+                carrier.website.startsWith('http')
+                  ? carrier.website
+                  : `https://${carrier.website}`
+              }
               external
             />
           )}
@@ -79,20 +84,20 @@ export function CarrierContactsTab({ carrier }: CarrierContactsTabProps) {
                 label="Factoring Company"
                 value={carrier.factoringCompanyName}
               />
-              {carrier.factoringPhone && (
+              {carrier.factoringCompanyPhone && (
                 <ContactRow
                   icon={<Phone className="h-4 w-4" />}
                   label="Factoring Phone"
-                  value={carrier.factoringPhone}
-                  href={`tel:${carrier.factoringPhone}`}
+                  value={carrier.factoringCompanyPhone}
+                  href={`tel:${carrier.factoringCompanyPhone}`}
                 />
               )}
-              {carrier.factoringEmail && (
+              {carrier.factoringCompanyEmail && (
                 <ContactRow
                   icon={<Mail className="h-4 w-4" />}
                   label="Factoring Email"
-                  value={carrier.factoringEmail}
-                  href={`mailto:${carrier.factoringEmail}`}
+                  value={carrier.factoringCompanyEmail}
+                  href={`mailto:${carrier.factoringCompanyEmail}`}
                 />
               )}
             </>
@@ -125,7 +130,9 @@ function ContactRow({
           <a
             href={href}
             className="text-sm hover:underline break-all"
-            {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+            {...(external
+              ? { target: '_blank', rel: 'noopener noreferrer' }
+              : {})}
           >
             {value}
           </a>

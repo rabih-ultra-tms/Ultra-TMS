@@ -1,24 +1,32 @@
 /**
  * SSR-safe API Client
  *
- * Authentication Strategy:
- * - HTTP-only cookies are set by the backend on login
+ * SEC-001 Authentication Strategy:
+ * - HttpOnly cookies are set by the backend on login/refresh
  * - Cookies are automatically sent with credentials: 'include'
+ * - JavaScript CANNOT read HttpOnly cookies (XSS-safe)
  * - For Server Components, cookies are forwarded via Next.js headers
- * - NO localStorage usage (XSS-safe)
+ * - NO localStorage, NO document.cookie token management
  */
 
-import { AUTH_CONFIG } from "@/lib/config/auth";
+import { AUTH_CONFIG } from '@/lib/config/auth';
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1";
-const AUTH_COOKIE_NAME =
-  process.env.NEXT_PUBLIC_AUTH_COOKIE_NAME || "accessToken";
-const REFRESH_COOKIE_NAME =
-  process.env.NEXT_PUBLIC_REFRESH_COOKIE_NAME || "refreshToken";
+  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
-const DEFAULT_ACCESS_MAX_AGE = 15 * 60;
-const DEFAULT_REFRESH_MAX_AGE = 30 * 24 * 60 * 60;
+/**
+ * SEC-003: Read the CSRF token from the non-HttpOnly cookie.
+ * The backend sets this cookie; we read it and send it back
+ * as the X-CSRF-Token header for double-submit cookie validation.
+ */
+function getCsrfToken(): string | undefined {
+  if (typeof document === 'undefined') return undefined;
+  const parts = document.cookie.split(';').map((p) => p.trim());
+  const match = parts.find((p) => p.startsWith('csrfToken='));
+  return match
+    ? decodeURIComponent(match.substring('csrfToken='.length))
+    : undefined;
+}
 
 interface TokenPair {
   accessToken: string;
@@ -26,90 +34,27 @@ interface TokenPair {
   expiresIn?: number;
 }
 
-function readCookie(cookieString: string, name: string): string | undefined {
-  const parts = cookieString.split(";").map((part) => part.trim());
-  const match = parts.find((part) => part.startsWith(`${name}=`));
-  if (!match) {
-    return undefined;
-  }
-  return decodeURIComponent(match.substring(name.length + 1));
+/**
+ * SEC-001: setAuthTokens is now a no-op on the client.
+ * The backend sets HttpOnly cookies via Set-Cookie headers.
+ * This function is kept for backward compatibility with login page code
+ * that calls it after receiving the login response.
+ */
+export function setAuthTokens(_tokens: TokenPair): void {
+  // No-op: backend sets HttpOnly cookies via Set-Cookie header
 }
 
-function writeCookie(name: string, value: string, maxAge: number) {
-  if (typeof document === "undefined") return;
-  document.cookie = `${name}=${encodeURIComponent(value)}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
-}
-
-function deleteCookie(name: string) {
-  if (typeof document === "undefined") return;
-  document.cookie = `${name}=; Path=/; Max-Age=0; SameSite=Lax`;
-}
-
-function getClientAccessToken(): string | undefined {
-  if (typeof window === "undefined") {
-    return undefined;
-  }
-
-  return readCookie(document.cookie || "", AUTH_COOKIE_NAME);
-}
-
-function getClientRefreshToken(): string | undefined {
-  if (typeof window === "undefined") {
-    return undefined;
-  }
-
-  return readCookie(document.cookie || "", REFRESH_COOKIE_NAME);
-}
-
-function decodeJwtPayload(token: string): Record<string, unknown> | null {
-  try {
-    const payloadSegment = token.split(".")[1];
-    if (!payloadSegment) return null;
-    const normalized = payloadSegment.replace(/-/g, "+").replace(/_/g, "/");
-    const decoded = typeof atob === "function"
-      ? atob(normalized)
-      : typeof Buffer !== "undefined"
-        ? Buffer.from(normalized, "base64").toString("utf-8")
-        : "";
-    if (!decoded) return null;
-    return JSON.parse(decoded) as Record<string, unknown>;
-  } catch {
-    return null;
-  }
-}
-
-function getTokenExpiry(token: string): number | null {
-  const payload = decodeJwtPayload(token);
-  const exp = payload?.exp;
-  if (typeof exp === "number") {
-    return exp;
-  }
-  return null;
-}
-
-export function setAuthTokens(tokens: TokenPair): void {
-  if (typeof window === "undefined") return;
-
-  if (tokens.accessToken) {
-    const accessMaxAge = typeof tokens.expiresIn === "number"
-      ? Math.max(tokens.expiresIn, 60)
-      : DEFAULT_ACCESS_MAX_AGE;
-    writeCookie(AUTH_CONFIG.accessTokenCookie, tokens.accessToken, accessMaxAge);
-  }
-
-  if (tokens.refreshToken) {
-    writeCookie(AUTH_CONFIG.refreshTokenCookie, tokens.refreshToken, DEFAULT_REFRESH_MAX_AGE);
-  }
-}
-
+/**
+ * SEC-001: clearAuthTokens is now a no-op on the client.
+ * The actual HttpOnly cookies are cleared by the backend on
+ * POST /auth/logout via Set-Cookie with Max-Age=0.
+ */
 export function clearAuthTokens(): void {
-  if (typeof window === "undefined") return;
-  deleteCookie(AUTH_CONFIG.accessTokenCookie);
-  deleteCookie(AUTH_CONFIG.refreshTokenCookie);
+  // No-op: backend clears HttpOnly cookies on logout
 }
 
 function redirectToLogin(): void {
-  if (typeof window === "undefined") return;
+  if (typeof window === 'undefined') return;
   const returnUrl = window.location.pathname + window.location.search;
   const loginUrl = `${AUTH_CONFIG.loginPath}?returnUrl=${encodeURIComponent(returnUrl)}`;
   window.location.href = loginUrl;
@@ -117,28 +62,31 @@ function redirectToLogin(): void {
 
 let refreshPromise: Promise<TokenPair | null> | null = null;
 
+/**
+ * SEC-001: Refresh tokens via the backend.
+ * The refresh token is in an HttpOnly cookie, sent automatically
+ * via credentials: 'include'. No body needed.
+ */
 async function refreshTokens(): Promise<TokenPair | null> {
-  if (typeof window === "undefined") return null;
+  if (typeof window === 'undefined') return null;
 
   if (refreshPromise) {
     return refreshPromise;
   }
 
-  const refreshToken = getClientRefreshToken();
-  if (!refreshToken) {
-    return null;
-  }
-
   refreshPromise = (async () => {
     try {
+      const refreshHeaders: Record<string, string> = {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      };
+      // SEC-003: CSRF token not needed for /auth/refresh (exempt in middleware)
+
       const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({ refreshToken }),
+        method: 'POST',
+        headers: refreshHeaders,
+        credentials: 'include',
+        body: JSON.stringify({}),
       });
 
       if (!response.ok) {
@@ -147,13 +95,11 @@ async function refreshTokens(): Promise<TokenPair | null> {
 
       const payload = (await response.json()) as { data?: TokenPair };
       if (payload?.data?.accessToken) {
-        setAuthTokens(payload.data);
         return payload.data;
       }
 
       return null;
-    } catch (error) {
-      console.error("[api-client] Token refresh failed:", error);
+    } catch {
       return null;
     } finally {
       refreshPromise = null;
@@ -161,24 +107,6 @@ async function refreshTokens(): Promise<TokenPair | null> {
   })();
 
   return refreshPromise;
-}
-
-async function maybeRefreshOnActivity(): Promise<void> {
-  if (typeof window === "undefined") return;
-  const accessToken = getClientAccessToken();
-  const refreshToken = getClientRefreshToken();
-  if (!accessToken || !refreshToken) return;
-
-  const exp = getTokenExpiry(accessToken);
-  if (!exp) return;
-  const now = Math.floor(Date.now() / 1000);
-  if (exp - now <= 60) {
-    const refreshed = await refreshTokens();
-    if (!refreshed) {
-      clearAuthTokens();
-      redirectToLogin();
-    }
-  }
 }
 
 export class ApiError extends Error {
@@ -197,7 +125,7 @@ export class ApiError extends Error {
     code?: string
   ) {
     super(message);
-    this.name = "ApiError";
+    this.name = 'ApiError';
     this.status = status;
     this.statusText = statusText;
     this.body = body;
@@ -237,7 +165,8 @@ interface PaginatedResponse<T> {
   };
 }
 
-interface RequestOptions extends Omit<RequestInit, "body"> {
+// eslint-disable-next-line no-undef
+interface RequestOptions extends Omit<RequestInit, 'body'> {
   body?: unknown;
   serverCookies?: string;
 }
@@ -258,66 +187,63 @@ class ApiClient {
     options: RequestOptions = {},
     hasRetried = false
   ): Promise<T> {
-    const skipActivityRefresh =
-      endpoint.startsWith("/auth/login") ||
-      endpoint.startsWith("/auth/refresh") ||
-      endpoint.startsWith("/auth/register") ||
-      endpoint.startsWith("/auth/forgot-password") ||
-      endpoint.startsWith("/auth/reset-password") ||
-      endpoint.startsWith("/auth/verify-email") ||
-      endpoint.startsWith("/auth/mfa") ||
-      endpoint.startsWith("/auth/logout");
-
-    if (!hasRetried && !skipActivityRefresh) {
-      await maybeRefreshOnActivity();
-    }
-
     const url = this.getFullUrl(endpoint);
     const { body, serverCookies, ...fetchOptions } = options;
 
-    const headers: HeadersInit = {};
-    
+    const headers: Record<string, string> = {};
+
     // Only set Content-Type if body is not FormData
     if (!(body instanceof FormData)) {
-      headers["Content-Type"] = "application/json";
-      headers["Accept"] = "application/json";
+      headers['Content-Type'] = 'application/json';
+      headers['Accept'] = 'application/json';
     } else {
-      headers["Accept"] = "application/json";
+      headers['Accept'] = 'application/json';
     }
-    
+
     Object.assign(headers, options.headers as Record<string, string>);
 
-    const hasAuthHeader =
-      typeof (headers as Record<string, string>).Authorization === "string" ||
-      typeof (headers as Record<string, string>).authorization === "string";
-
-    if (!hasAuthHeader) {
-      const accessToken = getClientAccessToken();
-      if (accessToken) {
-        (headers as Record<string, string>).Authorization = `Bearer ${accessToken}`;
-      }
+    // SEC-001: Do NOT inject Authorization header from cookies.
+    // HttpOnly cookies are sent automatically via credentials: 'include'.
+    // Only forward explicit server-side cookies for SSR.
+    if (serverCookies) {
+      (headers as Record<string, string>)['Cookie'] = serverCookies;
     }
 
-    if (serverCookies) {
-      (headers as Record<string, string>)["Cookie"] = serverCookies;
+    // SEC-003: Inject CSRF token header for state-changing requests
+    const requestMethod = (fetchOptions.method || 'GET').toUpperCase();
+    if (
+      requestMethod !== 'GET' &&
+      requestMethod !== 'HEAD' &&
+      requestMethod !== 'OPTIONS'
+    ) {
+      const csrfToken = getCsrfToken();
+      if (csrfToken) {
+        (headers as Record<string, string>)[AUTH_CONFIG.csrfHeaderName] =
+          csrfToken;
+      }
     }
 
     const response = await fetch(url, {
       ...fetchOptions,
       headers,
-      body: body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined),
-      credentials: "include",
+      body:
+        body instanceof FormData
+          ? body
+          : body
+            ? JSON.stringify(body)
+            : undefined,
+      credentials: 'include',
     });
 
     const skipRefresh =
-      endpoint.startsWith("/auth/login") ||
-      endpoint.startsWith("/auth/refresh") ||
-      endpoint.startsWith("/auth/register") ||
-      endpoint.startsWith("/auth/forgot-password") ||
-      endpoint.startsWith("/auth/reset-password") ||
-      endpoint.startsWith("/auth/verify-email") ||
-      endpoint.startsWith("/auth/mfa") ||
-      endpoint.startsWith("/auth/logout");
+      endpoint.startsWith('/auth/login') ||
+      endpoint.startsWith('/auth/refresh') ||
+      endpoint.startsWith('/auth/register') ||
+      endpoint.startsWith('/auth/forgot-password') ||
+      endpoint.startsWith('/auth/reset-password') ||
+      endpoint.startsWith('/auth/verify-email') ||
+      endpoint.startsWith('/auth/mfa') ||
+      endpoint.startsWith('/auth/logout');
 
     if (response.status === 401 && !hasRetried && !skipRefresh) {
       const refreshed = await refreshTokens();
@@ -325,7 +251,6 @@ class ApiClient {
         return this.request<T>(endpoint, options, true);
       }
 
-      clearAuthTokens();
       redirectToLogin();
     }
 
@@ -337,14 +262,14 @@ class ApiClient {
 
       try {
         errorBody = await response.json();
-        if (typeof errorBody === "object" && errorBody !== null) {
+        if (typeof errorBody === 'object' && errorBody !== null) {
           const bodyData = errorBody as Record<string, unknown>;
           errorMessage = (bodyData.message as string) || errorMessage;
           errors = bodyData.errors as Record<string, string[]>;
           code = bodyData.code as string;
         }
-      } catch (parseError) {
-        console.warn("[api-client] Failed to parse error response as JSON:", parseError);
+      } catch {
+        // Ignore JSON parse errors for error responses
       }
 
       throw new ApiError(
@@ -374,7 +299,7 @@ class ApiClient {
     if (params) {
       const searchParams = new URLSearchParams();
       Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== "" && value !== null) {
+        if (value !== undefined && value !== '' && value !== null) {
           searchParams.append(key, String(value));
         }
       });
@@ -384,59 +309,75 @@ class ApiClient {
       }
     }
 
-    return this.request<T>(url, { ...options, method: "GET" });
+    return this.request<T>(url, { ...options, method: 'GET' });
   }
 
-  async post<T>(endpoint: string, data?: unknown, options?: RequestOptions): Promise<T> {
-    return this.request<T>(endpoint, { ...options, method: "POST", body: data });
+  async post<T>(
+    endpoint: string,
+    data?: unknown,
+    options?: RequestOptions
+  ): Promise<T> {
+    return this.request<T>(endpoint, {
+      ...options,
+      method: 'POST',
+      body: data,
+    });
   }
 
-  async put<T>(endpoint: string, data?: unknown, options?: RequestOptions): Promise<T> {
-    return this.request<T>(endpoint, { ...options, method: "PUT", body: data });
+  async put<T>(
+    endpoint: string,
+    data?: unknown,
+    options?: RequestOptions
+  ): Promise<T> {
+    return this.request<T>(endpoint, { ...options, method: 'PUT', body: data });
   }
 
-  async patch<T>(endpoint: string, data?: unknown, options?: RequestOptions): Promise<T> {
-    return this.request<T>(endpoint, { ...options, method: "PATCH", body: data });
+  async patch<T>(
+    endpoint: string,
+    data?: unknown,
+    options?: RequestOptions
+  ): Promise<T> {
+    return this.request<T>(endpoint, {
+      ...options,
+      method: 'PATCH',
+      body: data,
+    });
   }
 
   async delete<T>(endpoint: string, options?: RequestOptions): Promise<T> {
-    return this.request<T>(endpoint, { ...options, method: "DELETE" });
+    return this.request<T>(endpoint, { ...options, method: 'DELETE' });
   }
 
-  async upload<T>(endpoint: string, formData: FormData, options?: RequestOptions): Promise<T> {
-    // Proactively refresh token if needed
-    await maybeRefreshOnActivity();
-
+  async upload<T>(
+    endpoint: string,
+    formData: FormData,
+    options?: RequestOptions
+  ): Promise<T> {
     const url = this.getFullUrl(endpoint);
     const { serverCookies, ...fetchOptions } = options || {};
 
-    const headers: HeadersInit = {
-      Accept: "application/json",
+    const headers: Record<string, string> = {
+      Accept: 'application/json',
       ...(options?.headers as Record<string, string>),
     };
 
-    // Add auth header (same as regular request)
-    const hasAuthHeader =
-      typeof (headers as Record<string, string>).Authorization === "string" ||
-      typeof (headers as Record<string, string>).authorization === "string";
-
-    if (!hasAuthHeader) {
-      const accessToken = getClientAccessToken();
-      if (accessToken) {
-        (headers as Record<string, string>).Authorization = `Bearer ${accessToken}`;
-      }
+    if (serverCookies) {
+      (headers as Record<string, string>)['Cookie'] = serverCookies;
     }
 
-    if (serverCookies) {
-      (headers as Record<string, string>)["Cookie"] = serverCookies;
+    // SEC-003: Inject CSRF token for upload (POST)
+    const csrfToken = getCsrfToken();
+    if (csrfToken) {
+      (headers as Record<string, string>)[AUTH_CONFIG.csrfHeaderName] =
+        csrfToken;
     }
 
     const response = await fetch(url, {
       ...fetchOptions,
-      method: "POST",
+      method: 'POST',
       headers,
       body: formData,
-      credentials: "include",
+      credentials: 'include',
     });
 
     if (!response.ok) {
@@ -446,16 +387,23 @@ class ApiClient {
       let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
       try {
         errorBody = await response.json();
-        if (typeof errorBody === "object" && errorBody !== null) {
+        if (typeof errorBody === 'object' && errorBody !== null) {
           const bodyData = errorBody as Record<string, unknown>;
           errorMessage = (bodyData.message as string) || errorMessage;
           errors = bodyData.errors as Record<string, string[]>;
           code = bodyData.code as string;
         }
-      } catch (parseError) {
-        console.warn("[api-client] Failed to parse upload error response as JSON:", parseError);
+      } catch {
+        // Ignore JSON parse errors for error responses
       }
-      throw new ApiError(errorMessage, response.status, response.statusText, errorBody, errors, code);
+      throw new ApiError(
+        errorMessage,
+        response.status,
+        response.statusText,
+        errorBody,
+        errors,
+        code
+      );
     }
 
     if (response.status === 204) {
@@ -471,6 +419,6 @@ export type { ApiResponse, PaginatedResponse };
 
 export function getServerCookies(): string {
   throw new Error(
-    "getServerCookies must be called in a Server Component. Use: cookies().toString()"
+    'getServerCookies must be called in a Server Component. Use: cookies().toString()'
   );
 }

@@ -1,6 +1,14 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma.service';
-import { CreateSettlementDto, PaymentType, SettlementLineItemType } from '../dto';
+import {
+  CreateSettlementDto,
+  PaymentType,
+  SettlementLineItemType,
+} from '../dto';
 
 @Injectable()
 export class SettlementsService {
@@ -17,7 +25,10 @@ export class SettlementsService {
       return 'SET-000001';
     }
 
-    const lastNumber = parseInt(lastSettlement.settlementNumber.replace('SET-', ''), 10);
+    const lastNumber = parseInt(
+      lastSettlement.settlementNumber.replace('SET-', ''),
+      10
+    );
     return `SET-${String(lastNumber + 1).padStart(6, '0')}`;
   }
 
@@ -84,7 +95,7 @@ export class SettlementsService {
       toDate?: Date;
       page?: number;
       limit?: number;
-    },
+    }
   ) {
     const page = options?.page ?? 1;
     const limit = options?.limit ?? 20;
@@ -138,7 +149,12 @@ export class SettlementsService {
     return settlement;
   }
 
-  async update(id: string, tenantId: string, userId: string, data: Partial<CreateSettlementDto>) {
+  async update(
+    id: string,
+    tenantId: string,
+    userId: string,
+    data: Partial<CreateSettlementDto>
+  ) {
     const settlement = await this.prisma.settlement.findFirst({
       where: { id, tenantId, deletedAt: null },
     });
@@ -148,32 +164,42 @@ export class SettlementsService {
     }
 
     if (settlement.status === 'VOID' || settlement.status === 'PAID') {
-      throw new BadRequestException('Cannot update a paid or voided settlement');
+      throw new BadRequestException(
+        'Cannot update a paid or voided settlement'
+      );
     }
 
-    return this.prisma.settlement.update({
-      where: { id },
-      data: {
-        settlementDate: data.settlementDate ? new Date(data.settlementDate) : undefined,
-        dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
-        paymentType: data.paymentType,
-        quickPayFeePercent: data.quickPayFeePercent,
-        quickPayFeeAmount: data.quickPayFeeAmount,
-        grossAmount: data.grossAmount,
-        deductionsTotal: data.deductionsTotal,
-        quickPayFee: data.quickPayFee,
-        netAmount: data.netAmount,
-        balanceDue: data.balanceDue,
-        status: data.status,
-        paymentMethod: data.paymentMethod,
-        payToName: data.payToName,
-        payToFactoring: data.payToFactoring,
-        factoringCompanyId: data.factoringCompanyId,
-        factoringAccount: data.factoringAccount,
-        notes: data.notes,
-        internalNotes: data.internalNotes,
-        updatedById: userId,
-      },
+    const updateData = {
+      settlementDate: data.settlementDate
+        ? new Date(data.settlementDate)
+        : undefined,
+      dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
+      paymentType: data.paymentType,
+      quickPayFeePercent: data.quickPayFeePercent,
+      quickPayFeeAmount: data.quickPayFeeAmount,
+      grossAmount: data.grossAmount,
+      deductionsTotal: data.deductionsTotal,
+      quickPayFee: data.quickPayFee,
+      netAmount: data.netAmount,
+      balanceDue: data.balanceDue,
+      status: data.status,
+      paymentMethod: data.paymentMethod,
+      payToName: data.payToName,
+      payToFactoring: data.payToFactoring,
+      factoringCompanyId: data.factoringCompanyId,
+      factoringAccount: data.factoringAccount,
+      notes: data.notes,
+      internalNotes: data.internalNotes,
+      updatedById: userId,
+    };
+
+    await this.prisma.settlement.updateMany({
+      where: { id, tenantId },
+      data: updateData,
+    });
+
+    return this.prisma.settlement.findFirst({
+      where: { id, tenantId },
       include: {
         carrier: { select: { id: true, legalName: true } },
         lineItems: true,
@@ -194,30 +220,36 @@ export class SettlementsService {
       throw new BadRequestException('Only pending settlements can be approved');
     }
 
-    return this.prisma.settlement.update({
-      where: { id },
+    await this.prisma.settlement.updateMany({
+      where: { id, tenantId },
       data: {
         status: 'APPROVED',
         approvedById: userId,
         approvedAt: new Date(),
       },
     });
+
+    return this.prisma.settlement.findFirst({ where: { id, tenantId } });
   }
 
   async delete(id: string, tenantId: string, userId: string) {
     const settlement = await this.findOne(id, tenantId);
 
     if (Number(settlement.amountPaid) > 0) {
-      throw new BadRequestException('Cannot delete a settlement with payments applied');
+      throw new BadRequestException(
+        'Cannot delete a settlement with payments applied'
+      );
     }
 
-    return this.prisma.settlement.update({
-      where: { id },
+    await this.prisma.settlement.updateMany({
+      where: { id, tenantId },
       data: {
         deletedAt: new Date(),
         updatedById: userId,
       },
     });
+
+    return { success: true };
   }
 
   async voidSettlement(id: string, tenantId: string) {
@@ -230,13 +262,17 @@ export class SettlementsService {
     }
 
     if (Number(settlement.amountPaid) > 0) {
-      throw new BadRequestException('Cannot void a settlement with payments applied');
+      throw new BadRequestException(
+        'Cannot void a settlement with payments applied'
+      );
     }
 
-    return this.prisma.settlement.update({
-      where: { id },
+    await this.prisma.settlement.updateMany({
+      where: { id, tenantId },
       data: { status: 'VOID' },
     });
+
+    return this.prisma.settlement.findFirst({ where: { id, tenantId } });
   }
 
   async getPayablesSummary(tenantId: string) {
@@ -258,7 +294,7 @@ export class SettlementsService {
 
     settlements.forEach((settlement) => {
       const daysUntilDue = Math.floor(
-        (settlement.dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+        (settlement.dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
       );
 
       if (daysUntilDue < 0) {
