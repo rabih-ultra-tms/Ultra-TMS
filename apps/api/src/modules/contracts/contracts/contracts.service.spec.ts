@@ -72,7 +72,7 @@ describe('ContractsService', () => {
 
     const result = await service.update('tenant-1', 'c1', { name: 'Updated' } as any);
 
-    expect(result.name).toBe('Updated');
+    expect(result!.name).toBe('Updated');
   });
 
   it('prevents deleting non-draft contract', async () => {
@@ -107,7 +107,7 @@ describe('ContractsService', () => {
 
     const result = await service.reject('tenant-1', 'c1');
 
-    expect(result.status).toBe('DRAFT');
+    expect(result!.status).toBe('DRAFT');
   });
 
   it('sends for signature', async () => {

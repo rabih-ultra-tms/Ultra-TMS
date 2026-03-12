@@ -1,4 +1,3 @@
-import { Controller, Get, Post, Body, Query, UseGuards } from '@nestjs/common';
 import {
   Controller,
   Get,
@@ -16,10 +15,9 @@ import { createHash } from 'crypto';
 import { JwtAuthGuard } from '../auth/guards';
 import { HubspotService } from './hubspot.service';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
-import { Public } from '../../common/decorators/public.decorator';
+import { Public } from '../../common/decorators';
 import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
 import { HubspotWebhookGuard } from './guards/hubspot-webhook.guard';
-import { Public } from '../../common/decorators';
 
 @Controller('crm/hubspot')
 @ApiTags('CRM')

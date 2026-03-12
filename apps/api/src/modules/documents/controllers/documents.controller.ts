@@ -60,7 +60,7 @@ export class DocumentsController {
   @ApiErrorResponses()
   @Roles('ADMIN', 'OPERATIONS', 'ACCOUNTING', 'COMPLIANCE')
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_FILE_SIZE } }))
-  async upload(@Request() req: any, @UploadedFile() file: any, @Body() body: any) {
+  async uploadLegacy(@Request() req: any, @UploadedFile() file: any, @Body() body: any) {
     if (!file) {
       throw new BadRequestException('No file provided');
     }

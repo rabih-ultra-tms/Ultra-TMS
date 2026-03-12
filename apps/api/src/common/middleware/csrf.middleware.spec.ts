@@ -26,7 +26,7 @@ describe('CsrfMiddleware (SEC-029: SameSite Protection)', () => {
       }),
       status: jest.fn().mockReturnThis(),
       json: jest.fn().mockReturnThis(),
-    };
+    } as any;
 
     next = jest.fn();
   });

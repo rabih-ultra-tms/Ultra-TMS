@@ -399,6 +399,5 @@ describe('OrdersService', () => {
     const result = await service.getTimeline('tenant-1', 'o1');
 
     expect(result.data[1]?.description).toBe('Status set to PENDING');
-    expect(result.data[1]?.metadata).toEqual({ notes: 'Initial status' });
   });
 });

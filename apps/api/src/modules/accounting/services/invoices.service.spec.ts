@@ -104,7 +104,7 @@ describe('InvoicesService', () => {
 
     const result = await service.update('inv-1', 'tenant-1', 'user-1', { status: 'SENT' } as any);
 
-    expect(result.status).toBe('SENT');
+    expect(result!.status).toBe('SENT');
     expect(prisma.invoice.update).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: 'inv-1' }, data: expect.objectContaining({ status: 'SENT' }) }),
     );
@@ -117,7 +117,7 @@ describe('InvoicesService', () => {
 
     const result = await service.sendReminder('inv-1', 'tenant-1');
 
-    expect(result.status).toBe('OVERDUE');
+    expect(result!.status).toBe('OVERDUE');
     expect(prisma.invoice.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ status: 'OVERDUE' }) }),
     );
@@ -183,7 +183,7 @@ describe('InvoicesService', () => {
 
     const result = await service.voidInvoice('inv-1', 'tenant-1', 'user-1', 'Reason');
 
-    expect(result.status).toBe('VOID');
+    expect(result!.status).toBe('VOID');
   });
 
   it('gets statement data for company', async () => {

@@ -71,7 +71,7 @@ describe('InvoicesController (integration)', () => {
     })
       .overrideGuard(JwtAuthGuard)
       .useValue({
-        canActivate: (ctx) => {
+        canActivate: (ctx: any) => {
           const req = ctx.switchToHttp().getRequest();
           req.user = activeUser;
           req.headers['x-tenant-id'] = TEST_TENANT;
