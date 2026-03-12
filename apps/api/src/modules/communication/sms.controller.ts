@@ -23,6 +23,7 @@ import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../auth/guards';
 import { SmsService } from './sms.service';
 import { SendSmsDto, ReplySmsDto } from './dto';
+import type { TwilioInboundMessage } from './providers/twilio.provider';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -155,7 +156,7 @@ export class SmsController {
   @ApiErrorResponses()
   async handleWebhook(
     @Query('tenantId') tenantId: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: TwilioInboundMessage,
     @Req() req: Request
   ) {
     // SEC-025: Validate Twilio signature (X-Twilio-Signature header)

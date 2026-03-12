@@ -46,11 +46,25 @@ export class LocalStorageService implements IStorageService, OnModuleInit {
         : this.storagePath;
       const filepath = path.join(folderPath, filename);
 
+      // SEC-027: Prevent path traversal attacks
+      const resolvedFolderPath = path.resolve(folderPath);
+      const resolvedFilePath = path.resolve(filepath);
+      const baseDir = path.resolve(this.storagePath);
+
+      if (
+        (!resolvedFolderPath.startsWith(baseDir + path.sep) &&
+          resolvedFolderPath !== baseDir) ||
+        (!resolvedFilePath.startsWith(baseDir + path.sep) &&
+          resolvedFilePath !== baseDir)
+      ) {
+        throw new Error('Path traversal detected');
+      }
+
       // Ensure folder exists
-      await fs.mkdir(folderPath, { recursive: true });
+      await fs.mkdir(resolvedFolderPath, { recursive: true });
 
       // Write file
-      await fs.writeFile(filepath, file);
+      await fs.writeFile(resolvedFilePath, file);
 
       // Return public URL
       const relativePath = folder ? `${folder}/${filename}` : filename;
@@ -68,7 +82,14 @@ export class LocalStorageService implements IStorageService, OnModuleInit {
    */
   async download(filepath: string): Promise<Buffer> {
     try {
-      const fullPath = path.join(this.storagePath, filepath);
+      const fullPath = path.resolve(path.join(this.storagePath, filepath));
+      const baseDir = path.resolve(this.storagePath);
+
+      // SEC-027: Prevent path traversal attacks
+      if (!fullPath.startsWith(baseDir + path.sep) && fullPath !== baseDir) {
+        throw new Error('Path traversal detected');
+      }
+
       return await fs.readFile(fullPath);
     } catch (error) {
       this.logger.error(`Failed to download file: ${filepath}`, error);
@@ -81,7 +102,14 @@ export class LocalStorageService implements IStorageService, OnModuleInit {
    */
   async delete(filepath: string): Promise<void> {
     try {
-      const fullPath = path.join(this.storagePath, filepath);
+      const fullPath = path.resolve(path.join(this.storagePath, filepath));
+      const baseDir = path.resolve(this.storagePath);
+
+      // SEC-027: Prevent path traversal attacks
+      if (!fullPath.startsWith(baseDir + path.sep) && fullPath !== baseDir) {
+        throw new Error('Path traversal detected');
+      }
+
       await fs.unlink(fullPath);
       this.logger.log(`File deleted: ${filepath}`);
     } catch (error) {
@@ -118,7 +146,14 @@ export class LocalStorageService implements IStorageService, OnModuleInit {
    */
   async exists(filepath: string): Promise<boolean> {
     try {
-      const fullPath = path.join(this.storagePath, filepath);
+      const fullPath = path.resolve(path.join(this.storagePath, filepath));
+      const baseDir = path.resolve(this.storagePath);
+
+      // SEC-027: Prevent path traversal attacks
+      if (!fullPath.startsWith(baseDir + path.sep) && fullPath !== baseDir) {
+        return false;
+      }
+
       await fs.access(fullPath);
       return true;
     } catch {

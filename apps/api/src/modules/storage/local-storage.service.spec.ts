@@ -145,4 +145,44 @@ describe('LocalStorageService', () => {
 
     expect(exists).toBe(false);
   });
+
+  it('prevents path traversal in download', async () => {
+    const service = new LocalStorageService(
+      configService as unknown as ConfigService
+    );
+
+    await expect(service.download('../../../etc/passwd')).rejects.toThrow(
+      'File download failed'
+    );
+  });
+
+  it('prevents path traversal in delete', async () => {
+    const service = new LocalStorageService(
+      configService as unknown as ConfigService
+    );
+
+    await expect(service.delete('../../../etc/passwd')).rejects.toThrow(
+      'File deletion failed'
+    );
+  });
+
+  it('prevents path traversal in upload', async () => {
+    const service = new LocalStorageService(
+      configService as unknown as ConfigService
+    );
+
+    await expect(
+      service.upload(Buffer.from('data'), '../../../etc/passwd')
+    ).rejects.toThrow('File upload failed');
+  });
+
+  it('returns false when path traversal detected in exists', async () => {
+    const service = new LocalStorageService(
+      configService as unknown as ConfigService
+    );
+
+    const exists = await service.exists('../../../etc/passwd');
+
+    expect(exists).toBe(false);
+  });
 });
