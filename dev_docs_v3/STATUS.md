@@ -152,15 +152,26 @@
 
 ## Next Sprint: MP-02 (Table-Stakes Features + Revenue Lifecycle)
 
-**Status:** 3 key tasks DONE (2026-03-13):
+**Status:** MP-02 COMPLETE ✅ — All 17/17 tasks DONE (2026-03-13)
 
-| Task      | Description                                                                                         | Status                       |
-| --------- | --------------------------------------------------------------------------------------------------- | ---------------------------- |
-| MP-02-005 | Enforce 5% minimum margin on quotes (fixed duplicate 15% check, removed conflicting override field) | **DONE** (2026-03-13)        |
-| MP-02-006 | Quote expiry cron job (removed redundant daily cron, keeping hourly job that emits events)          | **DONE** (2026-03-13)        |
-| MP-02-010 | Public shipment tracking endpoint at `GET /api/v1/public/tracking/:trackingCode`                    | **DONE** (already committed) |
+| Task      | Description                                                                                             | Status   |
+| --------- | ------------------------------------------------------------------------------------------------------- | -------- |
+| MP-02-004 | Commission auto-calc on delivery — `load.delivered` event emitted in loads.service.ts:329,516           | **DONE** |
+| MP-02-005 | Enforce 5% minimum margin on quotes (fixed duplicate 15% check, removed conflicting override field)     | **DONE** |
+| MP-02-006 | Quote expiry cron job (removed redundant daily cron, keeping hourly job that emits events)              | **DONE** |
+| MP-02-007 | Document upload architecture — FileInterceptor + S3/local StorageService fully implemented              | **DONE** |
+| MP-02-008 | Orders delete handler (soft-delete with ConflictException guard on loads)                               | **DONE** |
+| MP-02-009 | Invoice Edit page at `/accounting/invoices/[id]/edit`                                                   | **DONE** |
+| MP-02-010 | Public shipment tracking endpoint `GET /api/v1/public/tracking/:trackingCode`                           | **DONE** |
+| MP-02-011 | Commission payout $transaction — create/process already wrapped in transactions                         | **DONE** |
+| MP-02-012 | Notification bell REST API hydration — fetch on mount + persist read status to REST API                 | **DONE** |
+| MP-02-013 | Load tender/accept/reject endpoints (3/3) at loads.controller.ts:284/300/314                            | **DONE** |
+| MP-02-014 | Carrier Portal soft-delete — all 7 services have `deletedAt: null` filters                              | **DONE** |
+| MP-02-015 | Accounting soft-delete — chart-of-accounts/journal-entries are hard-delete only (no `deletedAt` column) | **DONE** |
+| MP-02-016 | Commission deletedAt filters — all 4 commission services have `deletedAt: null` in all queries          | **DONE** |
+| MP-02-017 | Settlement Create page (`/accounting/settlements/new`) — new page with CreateSettlementForm             | **DONE** |
 
-**Remaining MP-02 tasks (14 of 17):** MP-02-004, 007–009, 011–017 covering commission auto-calc, document upload, load workflow, settlement creation, soft-delete filtering, and transactional guarantees.
+**All 17 MP-02 tasks complete. Ready for MP-03 (Testing + Runtime Verification)**
 
 **Full project timeline:** 24 sprints × 2 weeks = 48 weeks across 5 phases:
 
