@@ -4115,7 +4115,7 @@ model FuelSurchargeTier {
   table FuelSurchargeTable @relation(fields: [tableId], references: [id], onDelete: Cascade)
   tenant            Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  @@unique([tableId, tierNumber])
+  @@unique([tenantId, tableId, tierNumber])
   @@index([externalId, sourceSystem])
   @@index([tableId])
   @@index([tenantId])

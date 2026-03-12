@@ -1,16 +1,16 @@
 // ⚠️ This is a SAFE auth page - uses direct fetch, no apiClient or useLogin hooks
-"use client";
+'use client';
 
-import * as React from "react";
-import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Loader2, LogIn, User, Lock, Eye, EyeOff, Info } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
+import * as React from 'react';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Loader2, LogIn, User, Lock, Eye, EyeOff, Info } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Form,
   FormControl,
@@ -18,7 +18,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
+} from '@/components/ui/form';
 import {
   Card,
   CardContent,
@@ -26,23 +26,23 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AUTH_CONFIG } from "@/lib/config/auth";
-import { setAuthTokens } from "@/lib/api/client";
+} from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AUTH_CONFIG } from '@/lib/config/auth';
 
 const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
 function SuperAdminLoginContent() {
   const searchParams = useSearchParams();
-  const registered = searchParams?.get("registered") === "true";
-  const reset = searchParams?.get("reset") === "true";
-  const returnUrl = searchParams?.get("returnUrl") || AUTH_CONFIG.defaultRedirect;
+  const registered = searchParams?.get('registered') === 'true';
+  const reset = searchParams?.get('reset') === 'true';
+  const returnUrl =
+    searchParams?.get('returnUrl') || AUTH_CONFIG.defaultRedirect;
 
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -52,8 +52,8 @@ function SuperAdminLoginContent() {
   const form = useForm({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
-      password: "",
+      email: '',
+      password: '',
     },
   });
 
@@ -62,18 +62,20 @@ function SuperAdminLoginContent() {
     setError(null);
 
     try {
-      const response = await fetch("/api/v1/auth/login", {
-        method: "POST",
+      const response = await fetch('/api/v1/auth/login', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
         },
         body: JSON.stringify(data),
-        credentials: "include",
+        credentials: 'include',
       });
 
       if (!response.ok) {
-        const body = (await response.json().catch(() => ({}))) as { message?: string };
+        const body = (await response.json().catch(() => ({}))) as {
+          message?: string;
+        };
         throw new Error(body.message || `Login failed (${response.status})`);
       }
 
@@ -84,17 +86,11 @@ function SuperAdminLoginContent() {
         return;
       }
 
-      const accessToken = result?.data?.accessToken as string | undefined;
-      const refreshToken = result?.data?.refreshToken as string | undefined;
-      const expiresIn = result?.data?.expiresIn as number | undefined;
-
-      if (accessToken) {
-        setAuthTokens({ accessToken, refreshToken, expiresIn });
-      }
-
+      // Tokens are now set as HttpOnly cookies by the backend.
+      // No need to store them client-side. Proceed to admin console.
       window.location.href = returnUrl;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Invalid credentials");
+      setError(err instanceof Error ? err.message : 'Invalid credentials');
     } finally {
       setIsLoading(false);
     }
@@ -104,7 +100,9 @@ function SuperAdminLoginContent() {
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-xl shadow-black/[0.04] border-0 dark:border dark:border-border/50">
         <CardHeader className="space-y-1 pb-6">
-          <CardTitle className="text-2xl font-bold tracking-tight">Super Admin Sign In</CardTitle>
+          <CardTitle className="text-2xl font-bold tracking-tight">
+            Super Admin Sign In
+          </CardTitle>
           <CardDescription className="text-muted-foreground">
             Access the system-wide administration console
           </CardDescription>
@@ -114,7 +112,8 @@ function SuperAdminLoginContent() {
           {registered && (
             <Alert className="mb-4">
               <AlertDescription>
-                Registration successful! Please check your email to verify your account.
+                Registration successful! Please check your email to verify your
+                account.
               </AlertDescription>
             </Alert>
           )}
@@ -122,7 +121,8 @@ function SuperAdminLoginContent() {
           {reset && (
             <Alert className="mb-4">
               <AlertDescription>
-                Password reset successfully! Please login with your new password.
+                Password reset successfully! Please login with your new
+                password.
               </AlertDescription>
             </Alert>
           )}
@@ -140,7 +140,10 @@ function SuperAdminLoginContent() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel htmlFor="superadmin-email" className="text-sm font-semibold">
+                    <FormLabel
+                      htmlFor="superadmin-email"
+                      className="text-sm font-semibold"
+                    >
                       Email Address
                     </FormLabel>
                     <FormControl>
@@ -171,7 +174,10 @@ function SuperAdminLoginContent() {
                 render={({ field }) => (
                   <FormItem>
                     <div className="flex items-center justify-between">
-                      <FormLabel htmlFor="superadmin-password" className="text-sm font-semibold">
+                      <FormLabel
+                        htmlFor="superadmin-password"
+                        className="text-sm font-semibold"
+                      >
                         Password
                       </FormLabel>
                       <Link
@@ -187,7 +193,7 @@ function SuperAdminLoginContent() {
                         <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
                         <Input
                           id="superadmin-password"
-                          type={showPassword ? "text" : "password"}
+                          type={showPassword ? 'text' : 'password'}
                           placeholder="Enter your password"
                           autoComplete="current-password"
                           disabled={isLoading}
@@ -202,7 +208,9 @@ function SuperAdminLoginContent() {
                           onClick={() => setShowPassword(!showPassword)}
                           className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
                           tabIndex={-1}
-                          aria-label={showPassword ? "Hide password" : "Show password"}
+                          aria-label={
+                            showPassword ? 'Hide password' : 'Show password'
+                          }
                         >
                           {showPassword ? (
                             <EyeOff className="h-4 w-4" />
@@ -221,7 +229,9 @@ function SuperAdminLoginContent() {
                 <Checkbox
                   id="superadmin-remember"
                   checked={rememberMe}
-                  onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                  onCheckedChange={(checked) =>
+                    setRememberMe(checked as boolean)
+                  }
                 />
                 <label
                   htmlFor="superadmin-remember"
@@ -232,7 +242,11 @@ function SuperAdminLoginContent() {
               </div>
 
               <div className="pt-2">
-                <Button type="submit" className="w-full h-12 font-semibold shadow-lg shadow-primary/25" disabled={isLoading}>
+                <Button
+                  type="submit"
+                  className="w-full h-12 font-semibold shadow-lg shadow-primary/25"
+                  disabled={isLoading}
+                >
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -275,7 +289,9 @@ export default function SuperAdminLoginPage() {
         <div className="flex min-h-screen items-center justify-center p-4">
           <Card className="w-full max-w-md shadow-xl shadow-black/[0.04] border-0 dark:border dark:border-border/50">
             <CardHeader className="space-y-1 pb-6">
-              <CardTitle className="text-2xl font-bold tracking-tight">Super Admin Sign In</CardTitle>
+              <CardTitle className="text-2xl font-bold tracking-tight">
+                Super Admin Sign In
+              </CardTitle>
               <CardDescription>Loading...</CardDescription>
             </CardHeader>
           </Card>
