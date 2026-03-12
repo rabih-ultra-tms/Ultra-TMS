@@ -2,7 +2,7 @@
 
 > **Scope:** 39 services, 24 sprints, 5 phases, ~48 weeks
 > **Start Date:** 2026-03-10 (Week 1 = Sprint MP-01)
-> **Last Updated:** 2026-03-09
+> **Last Updated:** 2026-03-13
 > **Replaces:** `roadmap-phases.md` (16-week MVP-only plan)
 > **Companion Files:** [STATUS.md](../STATUS.md) | [REMEDIATION-ROADMAP.md](../05-audit/REMEDIATION-ROADMAP.md) | [\_CONSOLIDATED-VERDICTS.md](../05-audit/tribunal/per-service/_CONSOLIDATED-VERDICTS.md)
 
@@ -12,14 +12,16 @@
 
 Ultra TMS is a multi-tenant 3PL logistics platform with **39 services** across 5 tiers. This plan maps every service into a dependency-ordered sequence of 2-week sprints from current state to General Availability.
 
-**Current State (2026-03-09):**
+**Current State (2026-03-13):**
 
-- Quality Sprint: 14/16 tasks DONE (QS-008 and QS-010 remain)
+- MP-01 ✅ COMPLETE (30/30 tasks)
+- MP-02 ✅ COMPLETE (15/15 tasks)
+- MP-03 IN PROGRESS: 5/11 tasks DONE (MP-03-004, 005, 007, 008, 009)
 - Backend: ~90% built for P0 (1,230 endpoints, 260 Prisma models)
-- Frontend: ~70-80% built for P0 (98 routes, 304 components)
+- Frontend: ~70-80% built for P0 (103 routes, 304 components)
 - P1-P3 backend: "Substantial" (endpoints exist, many stubs)
 - P1-P3 frontend: 0% built
-- Tests: 87 passing (8.7% FE, ~15% BE)
+- Tests: 100+ passing (8.7% FE, ~15% BE; +13 backend tests in MP-03)
 - Production readiness: 3.0/10
 
 **Service Inventory:**

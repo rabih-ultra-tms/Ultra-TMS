@@ -1,7 +1,7 @@
 # Ultra TMS — Project Status Dashboard
 
 > **Last Updated:** 2026-03-13
-> **Current Phase:** MP-02 Table-Stakes Features (Weeks 3-4). MP-01 ✅ COMPLETE (30/30). Starting MP-02: 3 key tasks DONE (MP-02-005, 006, 010).
+> **Current Phase:** MP-03 Testing + Runtime Verification (Weeks 5-6). MP-01 ✅ COMPLETE (30/30). MP-02 ✅ COMPLETE (15/15). MP-03: 5/11 tasks DONE (MP-03-004, 005, 007, 008, 009).
 > **Overall Health:** B+ (7.8/10) — Strong backend, frontend verified: 101/103 routes PASS. Security hardened (MP-01 complete). Agent management frontend built (Sprint 04).
 > **Production Readiness:** 3.0/10 — See [PRODUCTION-READINESS-ASSESSMENT.md](05-audit/PRODUCTION-READINESS-ASSESSMENT.md)
 > **Active Plan:** [Master Project Plan](08-sprints/master-project-plan.md) — ALL 39 services, 24 sprints, 5 phases, 48 weeks
@@ -97,7 +97,7 @@
 
 ---
 
-## Current Sprint: MP-01 (Security Hardening)
+## Current Sprint: MP-03 (Testing + Runtime Verification)
 
 **Quality Sprint COMPLETE** — 16/16 tasks done. All QS tasks COMPLETE (QS-001 through QS-016).
 
