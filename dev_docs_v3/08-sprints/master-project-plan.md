@@ -288,19 +288,19 @@ Every service entering a sprint gets work across 5 layers:
 **Services touched:** All P0
 **Absorbs:** TEST-001–015, QS-008, QS-010, REMEDIATION-ROADMAP S6
 
-| ID        | Task                                                                                            | Layer | Effort | Priority | Source         |
-| --------- | ----------------------------------------------------------------------------------------------- | ----- | ------ | -------- | -------------- |
-| MP-03-001 | ~~QS-015: Financial Calculation Tests (10 tests)~~                                              | TST   | 8h     | P0       | **DONE**       |
-| MP-03-002 | ~~QS-016: Tenant Isolation Tests (15 tests)~~                                                   | TST   | 6h     | P0       | **DONE**       |
-| MP-03-003 | QS-008: Runtime Route Verification (Playwright scan of all 98 routes)                           | TST   | 8h     | P0       | QS-008         |
-| MP-03-004 | RolesGuard integration tests — confirm 403 on unauthorized access for all financial controllers | TST   | 4h     | P0       | S6-04          |
-| MP-03-005 | Unit tests for Operations DashboardService (594 LOC, complex aggregation)                       | TST   | 4h     | P1       | PST-02         |
-| MP-03-006 | Frontend accounting tests (0 tests for 5,244 LOC) — **SPEC WRITTEN**                            | TST   | 6h     | P2       | PST-07         |
-| MP-03-007 | Portal auth integration tests (Customer Portal + Carrier Portal JWT flows)                      | TST   | 4h     | P1       | PST-13, PST-14 |
-| MP-03-008 | Soft-delete verification tests (confirm deleted records excluded from all queries)              | TST   | 3h     | P1       | CCF-011        |
-| MP-03-009 | Webhook integration tests (Twilio signature, HubSpot signature)                                 | TST   | 2h     | P2       | CCF-030        |
-| MP-03-010 | QS-010: Triage 339 TODOs                                                                        | VER   | 3h     | P2       | QS-010         |
-| MP-03-011 | Fix broken routes discovered by Playwright (budget: 8h max, defer cosmetic)                     | BLD   | 8h     | P0       | QS-008 results |
+| ID        | Task                                                                                                | Layer | Effort | Priority | Source         |
+| --------- | --------------------------------------------------------------------------------------------------- | ----- | ------ | -------- | -------------- |
+| MP-03-001 | ~~QS-015: Financial Calculation Tests (10 tests)~~                                                  | TST   | 8h     | P0       | **DONE**       |
+| MP-03-002 | ~~QS-016: Tenant Isolation Tests (15 tests)~~                                                       | TST   | 6h     | P0       | **DONE**       |
+| MP-03-003 | QS-008: Runtime Route Verification (Playwright scan of all 98 routes)                               | TST   | 8h     | P0       | QS-008         |
+| MP-03-004 | ~~RolesGuard integration tests — confirm 403 on unauthorized access for all financial controllers~~ | TST   | 4h     | P0       | **DONE**       |
+| MP-03-005 | ~~Unit tests for Operations DashboardService (594 LOC, complex aggregation)~~                       | TST   | 4h     | P1       | **DONE**       |
+| MP-03-006 | Frontend accounting tests (0 tests for 5,244 LOC) — **SPEC WRITTEN**                                | TST   | 6h     | P2       | PST-07         |
+| MP-03-007 | ~~Portal auth integration tests (Customer Portal + Carrier Portal JWT flows)~~                      | TST   | 4h     | P1       | **DONE**       |
+| MP-03-008 | ~~Soft-delete verification tests (confirm deleted records excluded from all queries)~~              | TST   | 3h     | P1       | **DONE**       |
+| MP-03-009 | ~~Webhook integration tests (Twilio signature, HubSpot signature)~~                                 | TST   | 2h     | P2       | **DONE**       |
+| MP-03-010 | QS-010: Triage 339 TODOs                                                                            | VER   | 3h     | P2       | QS-010         |
+| MP-03-011 | Fix broken routes discovered by Playwright (budget: 8h max, defer cosmetic)                         | BLD   | 8h     | P0       | QS-008 results |
 
 **Exit Criteria:**
 
