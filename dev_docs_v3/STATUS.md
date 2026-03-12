@@ -99,18 +99,7 @@
 
 ## Current Sprint: MP-01 (Security Hardening)
 
-<<<<<<< HEAD
-| ID | Title | Blocked by | Reason |
-| ----------- | --------------------------- | ------------------ | ----------------------------------------------------------- |
-| QS-010 | Triage TODOs | QS-008 (preferred) | Better to know actual codebase state before triaging |
-| BUILD-001 | Accounting Dashboard Screen | QS-003 | Endpoint must exist before building screen |
-| TMS-001/002 | TMS Core screens | QS-008 | Runtime verification determines what needs to be fixed |
-| TMS-003/004 | Dispatch + Tracking | QS-001 | WebSocket must exist before real-time screens work |
-| QS-016 | Tenant Isolation Tests | QS-014 (preferred) | Prisma Client Extension should exist for cleaner test setup |
-=======
-**Quality Sprint COMPLETE** — 14/16 tasks done. Remaining QS-008 (runtime verification) and QS-010 (TODO triage) moved to MP-03.
-
-> > > > > > > 715ebe5280f34fb8603f012d28697a12caaa291b
+**Quality Sprint COMPLETE** — 16/16 tasks done. All QS tasks COMPLETE (QS-001 through QS-016).
 
 **Next up:** MP-01 Security Hardening (30 tasks) — see [Master Project Plan](08-sprints/master-project-plan.md#mp-01-security-hardening-weeks-1-2)
 
@@ -126,21 +115,10 @@
 
 ## Key Blockers
 
-<<<<<<< HEAD
-
-1. **WebSocket gap** — dispatch and tracking pages have no real-time data (SocketProvider has infinite loop bug)
-2. **Missing endpoints** — Accounting dashboard, CSA scores not built on backend
-3. ~~96 unverified routes~~ — **RESOLVED by QS-008**: 103/103 routes verified (101 PASS, 1 STUB, 1 BROKEN)
-4. **339 TODOs** — technical debt scattered across codebase, untriaged
-5. **EDI at P3 may be too low** — many enterprise shippers require EDI 204/214/210 for load tendering, status updates, and invoicing. Backend has 38 endpoints and 9 Prisma models already built (PST-26). Consider promoting to P1 if enterprise customers are targeted before v2.
-6. **Carrier Packet Generation** not built — insurance certificate + W-9 + carrier agreement bundle required for carrier onboarding compliance. No endpoint, no frontend. See `00-foundations/carrier-onboarding-workflow.md` for full gap analysis.
-7. # **Accessorial Line Item Flow** not documented — detention, layover, lumper, TONU charges should auto-populate from Load to Invoice as line items. Load `accessorialCosts` field exists but the auto-flow to `InvoiceLineItem` records during invoice generation on DELIVERED status is not verified. See domain rules 42-45 and `00-foundations/end-to-end-workflows.md` Step 8.
-8. **98 unverified routes** — Playwright run (QS-008, scheduled for MP-03) not yet completed
-9. **339 TODOs** — untriaged (QS-010, scheduled for MP-03)
-10. **Security STOP-SHIP items** — RolesGuard gaps (12+ services), tenant isolation bugs (9+ services), plaintext credentials (3 services) — ALL addressed in MP-01
-11. **Carrier Packet Generation** not built — insurance certificate + W-9 + carrier agreement bundle required for carrier onboarding compliance
-12. **Accessorial Line Item Flow** not verified — auto-flow from Load to InvoiceLineItem on DELIVERED status
-    > > > > > > > 715ebe5280f34fb8603f012d28697a12caaa291b
+1. **Security STOP-SHIP items** — RolesGuard gaps (12+ services), tenant isolation bugs (9+ services), plaintext credentials (3 services) — ALL addressed in MP-01
+2. **EDI at P3 may be too low** — many enterprise shippers require EDI 204/214/210. Backend has 38 endpoints and 9 Prisma models already built (PST-26). Consider promoting to P1 if enterprise customers are targeted before v2.
+3. **Carrier Packet Generation** not built — insurance certificate + W-9 + carrier agreement bundle required for carrier onboarding compliance
+4. **Accessorial Line Item Flow** not verified — auto-flow from Load to InvoiceLineItem on DELIVERED status
 
 ---
 
