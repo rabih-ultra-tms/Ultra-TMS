@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma.service';
 import {
   CreateInvoiceDto,
@@ -22,7 +26,10 @@ export class InvoicesService {
       return 'INV-000001';
     }
 
-    const lastNumber = parseInt(lastInvoice.invoiceNumber.replace('INV-', ''), 10);
+    const lastNumber = parseInt(
+      lastInvoice.invoiceNumber.replace('INV-', ''),
+      10
+    );
     return `INV-${String(lastNumber + 1).padStart(6, '0')}`;
   }
 
@@ -84,7 +91,7 @@ export class InvoicesService {
       toDate?: Date;
       page?: number;
       limit?: number;
-    },
+    }
   ) {
     const page = options?.page ?? 1;
     const limit = options?.limit ?? 20;
@@ -127,7 +134,9 @@ export class InvoicesService {
         lineItems: { orderBy: { lineNumber: 'asc' } },
         applications: {
           include: {
-            payment: { select: { id: true, paymentNumber: true, paymentDate: true } },
+            payment: {
+              select: { id: true, paymentNumber: true, paymentDate: true },
+            },
           },
         },
       },
@@ -140,7 +149,12 @@ export class InvoicesService {
     return invoice;
   }
 
-  async update(id: string, tenantId: string, userId: string, data: Partial<CreateInvoiceDto>) {
+  async update(
+    id: string,
+    tenantId: string,
+    userId: string,
+    data: Partial<CreateInvoiceDto>
+  ) {
     const invoice = await this.prisma.invoice.findFirst({
       where: { id, tenantId, deletedAt: null },
     });
@@ -153,21 +167,27 @@ export class InvoicesService {
       throw new BadRequestException('Cannot update a voided invoice');
     }
 
-    return this.prisma.invoice.update({
-      where: { id },
-      data: {
-        invoiceDate: data.invoiceDate ? new Date(data.invoiceDate) : undefined,
-        dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
-        subtotal: data.subtotal,
-        taxAmount: data.taxAmount,
-        totalAmount: data.totalAmount,
-        balanceDue: data.balanceDue,
-        status: data.status,
-        paymentTerms: data.paymentTerms,
-        notes: data.notes,
-        internalNotes: data.internalNotes,
-        updatedById: userId,
-      },
+    const updateData = {
+      invoiceDate: data.invoiceDate ? new Date(data.invoiceDate) : undefined,
+      dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
+      subtotal: data.subtotal,
+      taxAmount: data.taxAmount,
+      totalAmount: data.totalAmount,
+      balanceDue: data.balanceDue,
+      status: data.status,
+      paymentTerms: data.paymentTerms,
+      notes: data.notes,
+      internalNotes: data.internalNotes,
+      updatedById: userId,
+    };
+
+    await this.prisma.invoice.updateMany({
+      where: { id, tenantId },
+      data: updateData,
+    });
+
+    return this.prisma.invoice.findFirst({
+      where: { id, tenantId },
       include: {
         company: { select: { id: true, name: true } },
         lineItems: true,
@@ -179,16 +199,20 @@ export class InvoicesService {
     const invoice = await this.findOne(id, tenantId);
 
     if (Number(invoice.amountPaid) > 0) {
-      throw new BadRequestException('Cannot delete an invoice with payments applied');
+      throw new BadRequestException(
+        'Cannot delete an invoice with payments applied'
+      );
     }
 
-    return this.prisma.invoice.update({
-      where: { id },
+    await this.prisma.invoice.updateMany({
+      where: { id, tenantId },
       data: {
         deletedAt: new Date(),
         updatedById: userId,
       },
     });
+
+    return { success: true };
   }
 
   async sendInvoice(id: string, tenantId: string, dto?: SendInvoiceDto) {
@@ -200,12 +224,16 @@ export class InvoicesService {
       throw new NotFoundException('Invoice not found');
     }
 
-    const updated = await this.prisma.invoice.update({
-      where: { id },
+    await this.prisma.invoice.updateMany({
+      where: { id, tenantId },
       data: {
         status: 'SENT',
         sentAt: new Date(),
       },
+    });
+
+    const updated = await this.prisma.invoice.findFirst({
+      where: { id, tenantId },
     });
 
     return {
@@ -214,7 +242,12 @@ export class InvoicesService {
     };
   }
 
-  async voidInvoice(id: string, tenantId: string, userId: string, reason: string) {
+  async voidInvoice(
+    id: string,
+    tenantId: string,
+    userId: string,
+    reason: string
+  ) {
     const invoice = await this.prisma.invoice.findFirst({
       where: { id, tenantId, deletedAt: null },
     });
@@ -224,11 +257,13 @@ export class InvoicesService {
     }
 
     if (Number(invoice.amountPaid) > 0) {
-      throw new BadRequestException('Cannot void an invoice with payments applied');
+      throw new BadRequestException(
+        'Cannot void an invoice with payments applied'
+      );
     }
 
-    return this.prisma.invoice.update({
-      where: { id },
+    await this.prisma.invoice.updateMany({
+      where: { id, tenantId },
       data: {
         status: 'VOID',
         voidedAt: new Date(),
@@ -236,6 +271,8 @@ export class InvoicesService {
         voidReason: reason,
       },
     });
+
+    return this.prisma.invoice.findFirst({ where: { id, tenantId } });
   }
 
   async sendReminder(id: string, tenantId: string) {
@@ -252,16 +289,19 @@ export class InvoicesService {
     }
 
     const now = new Date();
-    const shouldMarkOverdue = invoice.dueDate < now && invoice.status !== 'PAID';
+    const shouldMarkOverdue =
+      invoice.dueDate < now && invoice.status !== 'PAID';
 
-    return this.prisma.invoice.update({
-      where: { id },
+    await this.prisma.invoice.updateMany({
+      where: { id, tenantId },
       data: {
         lastReminderDate: now,
         reminderCount: { increment: 1 },
         status: shouldMarkOverdue ? 'OVERDUE' : invoice.status,
       },
     });
+
+    return this.prisma.invoice.findFirst({ where: { id, tenantId } });
   }
 
   async getAgingReport(tenantId: string) {
@@ -287,7 +327,7 @@ export class InvoicesService {
 
     invoices.forEach((invoice) => {
       const daysOutstanding = Math.floor(
-        (now.getTime() - invoice.dueDate.getTime()) / (1000 * 60 * 60 * 24),
+        (now.getTime() - invoice.dueDate.getTime()) / (1000 * 60 * 60 * 24)
       );
 
       if (daysOutstanding <= 0) {
@@ -306,10 +346,22 @@ export class InvoicesService {
     return {
       aging,
       totals: {
-        current: aging.current.reduce((sum, i) => sum + Number(i.balanceDue), 0),
-        days1to30: aging.days1to30.reduce((sum, i) => sum + Number(i.balanceDue), 0),
-        days31to60: aging.days31to60.reduce((sum, i) => sum + Number(i.balanceDue), 0),
-        days61to90: aging.days61to90.reduce((sum, i) => sum + Number(i.balanceDue), 0),
+        current: aging.current.reduce(
+          (sum, i) => sum + Number(i.balanceDue),
+          0
+        ),
+        days1to30: aging.days1to30.reduce(
+          (sum, i) => sum + Number(i.balanceDue),
+          0
+        ),
+        days31to60: aging.days31to60.reduce(
+          (sum, i) => sum + Number(i.balanceDue),
+          0
+        ),
+        days61to90: aging.days61to90.reduce(
+          (sum, i) => sum + Number(i.balanceDue),
+          0
+        ),
         over90: aging.over90.reduce((sum, i) => sum + Number(i.balanceDue), 0),
       },
     };
@@ -365,7 +417,7 @@ export class InvoicesService {
   async getStatementData(
     tenantId: string,
     companyId: string,
-    query: StatementQueryDto,
+    query: StatementQueryDto
   ) {
     const fromDate = query.fromDate
       ? new Date(query.fromDate)

@@ -11,8 +11,10 @@ import { IoAdapter } from '@nestjs/platform-socket.io';
 import { Logger as PinoLogger } from 'nestjs-pino';
 import { join } from 'path';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import { SentryExceptionFilter } from './common/filters/sentry-exception.filter';
 import { SentryInterceptor } from './common/interceptors/sentry.interceptor';
+import { SanitizeInputInterceptor } from './common/interceptors/sanitize-input.interceptor';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -73,6 +75,9 @@ async function bootstrap() {
     });
   }
 
+  // Cookie parser (SEC-001: needed for HttpOnly cookie auth)
+  app.use(cookieParser());
+
   // Security headers (SEC-001)
   app.use(
     helmet({
@@ -109,8 +114,9 @@ async function bootstrap() {
     })
   );
 
-  // Global serialization + Sentry interceptor (INFRA-004)
+  // SEC-007: Sanitize all string inputs (strip HTML, trim whitespace)
   app.useGlobalInterceptors(
+    new SanitizeInputInterceptor(),
     new ClassSerializerInterceptor(app.get(Reflector), {
       excludeExtraneousValues: true,
     }),

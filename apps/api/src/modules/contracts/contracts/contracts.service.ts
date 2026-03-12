@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma.service';
 import { CreateContractDto } from './dto/create-contract.dto';
 import { UpdateContractDto } from './dto/update-contract.dto';
@@ -8,7 +12,11 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class ContractsService {
-  constructor(private readonly prisma: PrismaService, private readonly docusign: DocuSignService, private readonly eventEmitter: EventEmitter2) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly docusign: DocuSignService,
+    private readonly eventEmitter: EventEmitter2
+  ) {}
 
   private generateContractNumber(date: Date) {
     const pad = (n: number) => n.toString().padStart(2, '0');
@@ -20,7 +28,11 @@ export class ContractsService {
   }
 
   async list(tenantId: string) {
-    return this.prisma.contract.findMany({ where: { tenantId, deletedAt: null }, orderBy: { createdAt: 'desc' }, take: 50 });
+    return this.prisma.contract.findMany({
+      where: { tenantId, deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
   }
 
   async create(tenantId: string, userId: string, dto: CreateContractDto) {
@@ -60,8 +72,8 @@ export class ContractsService {
 
   async update(tenantId: string, id: string, dto: UpdateContractDto) {
     await this.ensureExists(tenantId, id);
-    return this.prisma.contract.update({
-      where: { id },
+    await this.prisma.contract.updateMany({
+      where: { id, tenantId },
       data: {
         name: dto.name,
         description: dto.description,
@@ -69,12 +81,19 @@ export class ContractsService {
         customerId: dto.customerId,
         carrierId: dto.carrierId,
         agentId: dto.agentId,
-        effectiveDate: dto.effectiveDate ? new Date(dto.effectiveDate) : undefined,
-        expirationDate: dto.expirationDate ? new Date(dto.expirationDate) : undefined,
+        effectiveDate: dto.effectiveDate
+          ? new Date(dto.effectiveDate)
+          : undefined,
+        expirationDate: dto.expirationDate
+          ? new Date(dto.expirationDate)
+          : undefined,
         autoRenew: dto.autoRenew,
         renewalTermDays: dto.renewalTermDays,
         noticeDays: dto.noticeDays,
       },
+    });
+    return this.prisma.contract.findFirst({
+      where: { id, tenantId, deletedAt: null },
     });
   }
 
@@ -83,76 +102,150 @@ export class ContractsService {
     if (contract.status !== ContractStatus.DRAFT) {
       throw new BadRequestException('Only draft contracts can be deleted');
     }
-    await this.prisma.contract.update({ where: { id }, data: { deletedAt: new Date() } });
+    await this.prisma.contract.updateMany({
+      where: { id, tenantId },
+      data: { deletedAt: new Date() },
+    });
     return { success: true };
   }
 
   async submit(tenantId: string, id: string, userId: string) {
     await this.ensureExists(tenantId, id);
-    const contract = await this.prisma.contract.update({ where: { id }, data: { status: ContractStatus.PENDING_APPROVAL, updatedById: userId } });
+    await this.prisma.contract.updateMany({
+      where: { id, tenantId },
+      data: { status: ContractStatus.PENDING_APPROVAL, updatedById: userId },
+    });
+    const contract = (await this.prisma.contract.findFirst({
+      where: { id, tenantId, deletedAt: null },
+    }))!;
     this.emit('contract.submitted', { contractId: contract.id, tenantId });
     return contract;
   }
 
   async approve(tenantId: string, id: string, userId: string) {
     await this.ensureExists(tenantId, id);
-    const contract = await this.prisma.contract.update({ where: { id }, data: { status: ContractStatus.APPROVED, updatedById: userId } });
-    this.emit('contract.approved', { contractId: contract.id, approvedBy: userId, tenantId });
+    await this.prisma.contract.updateMany({
+      where: { id, tenantId },
+      data: { status: ContractStatus.APPROVED, updatedById: userId },
+    });
+    const contract = (await this.prisma.contract.findFirst({
+      where: { id, tenantId, deletedAt: null },
+    }))!;
+    this.emit('contract.approved', {
+      contractId: contract.id,
+      approvedBy: userId,
+      tenantId,
+    });
     return contract;
   }
 
   async reject(tenantId: string, id: string) {
     await this.ensureExists(tenantId, id);
-    return this.prisma.contract.update({ where: { id }, data: { status: ContractStatus.DRAFT } });
+    await this.prisma.contract.updateMany({
+      where: { id, tenantId },
+      data: { status: ContractStatus.DRAFT },
+    });
+    return this.prisma.contract.findFirst({
+      where: { id, tenantId, deletedAt: null },
+    });
   }
 
   async sendForSignature(tenantId: string, id: string) {
     const contract = await this.ensureExists(tenantId, id);
-    const envelope = await this.docusign.sendEnvelope(contract.id, contract.name);
-    const updated = await this.prisma.contract.update({
-      where: { id },
+    const envelope = await this.docusign.sendEnvelope(
+      contract.id,
+      contract.name
+    );
+    await this.prisma.contract.updateMany({
+      where: { id, tenantId },
       data: {
         status: ContractStatus.SENT_FOR_SIGNATURE,
         esignEnvelopeId: envelope.envelopeId,
         esignProvider: 'DOCUSIGN',
       },
     });
-    this.emit('contract.esign.sent', { contractId: updated.id, envelopeId: envelope.envelopeId, tenantId });
+    const updated = (await this.prisma.contract.findFirst({
+      where: { id, tenantId, deletedAt: null },
+    }))!;
+    this.emit('contract.esign.sent', {
+      contractId: updated.id,
+      envelopeId: envelope.envelopeId,
+      tenantId,
+    });
     return updated;
   }
 
   async activate(tenantId: string, id: string) {
     await this.ensureExists(tenantId, id);
-    const updated = await this.prisma.contract.update({ where: { id }, data: { status: ContractStatus.ACTIVE, signedAt: new Date() } });
+    await this.prisma.contract.updateMany({
+      where: { id, tenantId },
+      data: { status: ContractStatus.ACTIVE, signedAt: new Date() },
+    });
+    const updated = (await this.prisma.contract.findFirst({
+      where: { id, tenantId, deletedAt: null },
+    }))!;
     this.emit('contract.esign.completed', { contractId: updated.id, tenantId });
-    this.emit('contract.activated', { contractId: updated.id, tenantId, effectiveDate: updated.effectiveDate });
+    this.emit('contract.activated', {
+      contractId: updated.id,
+      tenantId,
+      effectiveDate: updated.effectiveDate,
+    });
     return updated;
   }
 
-  async terminate(tenantId: string, id: string, reason: string, userId: string) {
+  async terminate(
+    tenantId: string,
+    id: string,
+    reason: string,
+    userId: string
+  ) {
     await this.ensureExists(tenantId, id);
-    const updated = await this.prisma.contract.update({
-      where: { id },
-      data: { status: ContractStatus.TERMINATED, updatedById: userId, customFields: { terminationReason: reason } },
+    await this.prisma.contract.updateMany({
+      where: { id, tenantId },
+      data: {
+        status: ContractStatus.TERMINATED,
+        updatedById: userId,
+        customFields: { terminationReason: reason },
+      },
     });
-    this.emit('contract.terminated', { contractId: updated.id, tenantId, reason });
+    const updated = (await this.prisma.contract.findFirst({
+      where: { id, tenantId, deletedAt: null },
+    }))!;
+    this.emit('contract.terminated', {
+      contractId: updated.id,
+      tenantId,
+      reason,
+    });
     return updated;
   }
 
   async renew(tenantId: string, id: string, months?: number) {
     const contract = await this.ensureExists(tenantId, id);
     const current = contract.expirationDate ?? new Date();
-    const addDays = months ? months * 30 : contract.renewalTermDays ?? 365;
+    const addDays = months ? months * 30 : (contract.renewalTermDays ?? 365);
     const newDate = new Date(current);
     newDate.setDate(newDate.getDate() + addDays);
-    const updated = await this.prisma.contract.update({ where: { id }, data: { expirationDate: newDate, status: ContractStatus.ACTIVE } });
-    this.emit('contract.renewed', { contractId: updated.id, tenantId, newExpirationDate: newDate });
+    await this.prisma.contract.updateMany({
+      where: { id, tenantId },
+      data: { expirationDate: newDate, status: ContractStatus.ACTIVE },
+    });
+    const updated = (await this.prisma.contract.findFirst({
+      where: { id, tenantId, deletedAt: null },
+    }))!;
+    this.emit('contract.renewed', {
+      contractId: updated.id,
+      tenantId,
+      newExpirationDate: newDate,
+    });
     return updated;
   }
 
   async history(tenantId: string, id: string) {
     await this.ensureExists(tenantId, id);
-    const amendments = await this.prisma.contractAmendment.findMany({ where: { contractId: id, tenantId }, orderBy: { createdAt: 'desc' } });
+    const amendments = await this.prisma.contractAmendment.findMany({
+      where: { contractId: id, tenantId },
+      orderBy: { createdAt: 'desc' },
+    });
     return { amendments };
   }
 
@@ -161,7 +254,9 @@ export class ContractsService {
   }
 
   private async ensureExists(tenantId: string, id: string) {
-    const contract = await this.prisma.contract.findFirst({ where: { id, tenantId, deletedAt: null } });
+    const contract = await this.prisma.contract.findFirst({
+      where: { id, tenantId, deletedAt: null },
+    });
     if (!contract) throw new NotFoundException('Contract not found');
     return contract;
   }

@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PrismaService } from '../../../prisma.service';
+import type { Request } from 'express';
 
 export interface JwtPayload {
   sub: string; // User ID
@@ -16,11 +17,31 @@ export interface JwtPayload {
   exp?: number;
 }
 
+/**
+ * Extract JWT from Authorization header first, then fall back to HttpOnly cookie.
+ * SEC-001: Supports both Bearer token and cookie-based auth.
+ */
+function extractJwtFromHeaderOrCookie(req: Request): string | null {
+  // Try Authorization header first (backwards-compatible)
+  const fromHeader = ExtractJwt.fromAuthHeaderAsBearerToken()(req);
+  if (fromHeader) {
+    return fromHeader;
+  }
+
+  // Fall back to HttpOnly cookie
+  const cookieToken = req.cookies?.accessToken;
+  if (typeof cookieToken === 'string' && cookieToken.length > 0) {
+    return cookieToken;
+  }
+
+  return null;
+}
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     private configService: ConfigService,
-    private prisma: PrismaService,
+    private prisma: PrismaService
   ) {
     const jwtSecret = configService.get<string>('JWT_SECRET');
     if (!jwtSecret) {
@@ -28,7 +49,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: extractJwtFromHeaderOrCookie,
       ignoreExpiration: false,
       secretOrKey: jwtSecret,
     });
@@ -67,8 +88,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     // Normalize role name to uppercase for consistency
-    const normalizedRoleName = user.role?.name 
-      ? user.role.name.replace(/-/g, '_').toUpperCase() 
+    const normalizedRoleName = user.role?.name
+      ? user.role.name.replace(/-/g, '_').toUpperCase()
       : null;
 
     // Return user object that will be attached to request.user

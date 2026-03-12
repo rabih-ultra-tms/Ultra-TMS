@@ -25,7 +25,11 @@ const CARRIER_DECIMAL_FIELDS = [
   'performanceScore',
 ] as const;
 
-const TRUCK_DECIMAL_FIELDS = ['deckLengthFt', 'deckWidthFt', 'deckHeightFt'] as const;
+const TRUCK_DECIMAL_FIELDS = [
+  'deckLengthFt',
+  'deckWidthFt',
+  'deckHeightFt',
+] as const;
 
 function toNum(val: unknown): number | null {
   if (val == null) return null;
@@ -99,7 +103,9 @@ export class CarriersService {
             onTimePickupRate: new Prisma.Decimal(String(dto.onTimePickupRate)),
           }),
           ...(dto.onTimeDeliveryRate !== undefined && {
-            onTimeDeliveryRate: new Prisma.Decimal(String(dto.onTimeDeliveryRate)),
+            onTimeDeliveryRate: new Prisma.Decimal(
+              String(dto.onTimeDeliveryRate)
+            ),
           }),
           ...(dto.claimsRate !== undefined && {
             claimsRate: new Prisma.Decimal(String(dto.claimsRate)),
@@ -130,7 +136,9 @@ export class CarriersService {
     const skip = (dto.page - 1) * dto.limit;
 
     const now = new Date();
-    const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const thirtyDaysFromNow = new Date(
+      now.getTime() + 30 * 24 * 60 * 60 * 1000
+    );
 
     const where: Prisma.OperationsCarrierWhereInput = {
       tenantId,
@@ -180,8 +188,16 @@ export class CarriersService {
     }
 
     const SORTABLE_FIELDS = new Set([
-      'companyName', 'status', 'tier', 'onTimeDeliveryRate', 'totalLoadsCompleted',
-      'avgRating', 'performanceScore', 'state', 'createdAt', 'updatedAt',
+      'companyName',
+      'status',
+      'tier',
+      'onTimeDeliveryRate',
+      'totalLoadsCompleted',
+      'avgRating',
+      'performanceScore',
+      'state',
+      'createdAt',
+      'updatedAt',
     ]);
 
     const orderBy: Prisma.OperationsCarrierOrderByWithRelationInput =
@@ -239,20 +255,26 @@ export class CarriersService {
 
     return {
       total,
-      byType: byType.reduce((acc, item) => {
-        acc[item.carrierType] = item._count;
-        return acc;
-      }, {} as Record<string, number>),
-      byStatus: byStatus.reduce((acc, item) => {
-        acc[item.status] = item._count;
-        return acc;
-      }, {} as Record<string, number>),
+      byType: byType.reduce(
+        (acc, item) => {
+          acc[item.carrierType] = item._count;
+          return acc;
+        },
+        {} as Record<string, number>
+      ),
+      byStatus: byStatus.reduce(
+        (acc, item) => {
+          acc[item.status] = item._count;
+          return acc;
+        },
+        {} as Record<string, number>
+      ),
     };
   }
 
   async getCarrierById(tenantId: string, carrierId: string) {
-    const carrier = await this.prisma.operationsCarrier.findUnique({
-      where: { id: carrierId },
+    const carrier = await this.prisma.operationsCarrier.findFirst({
+      where: { id: carrierId, tenantId, deletedAt: null },
       include: {
         drivers: {
           where: { isActive: true },
@@ -270,11 +292,13 @@ export class CarriersService {
       },
     });
 
-    if (!carrier || carrier.tenantId !== tenantId) {
+    if (!carrier) {
       throw new NotFoundException('Carrier not found');
     }
 
-    return serializeCarrier(carrier as unknown as Record<string, unknown>) as typeof carrier;
+    return serializeCarrier(
+      carrier as unknown as Record<string, unknown>
+    ) as typeof carrier;
   }
 
   async updateCarrier(
@@ -315,15 +339,21 @@ export class CarriersService {
           cargoInsuranceLimitCents: dto.cargoInsuranceLimitCents,
           status: dto.status,
           notes: dto.notes,
-          ...(dto.equipmentTypes !== undefined && { equipmentTypes: dto.equipmentTypes }),
+          ...(dto.equipmentTypes !== undefined && {
+            equipmentTypes: dto.equipmentTypes,
+          }),
           ...(dto.truckCount !== undefined && { truckCount: dto.truckCount }),
-          ...(dto.trailerCount !== undefined && { trailerCount: dto.trailerCount }),
+          ...(dto.trailerCount !== undefined && {
+            trailerCount: dto.trailerCount,
+          }),
           ...(dto.tier !== undefined && { tier: dto.tier }),
           ...(dto.onTimePickupRate !== undefined && {
             onTimePickupRate: new Prisma.Decimal(String(dto.onTimePickupRate)),
           }),
           ...(dto.onTimeDeliveryRate !== undefined && {
-            onTimeDeliveryRate: new Prisma.Decimal(String(dto.onTimeDeliveryRate)),
+            onTimeDeliveryRate: new Prisma.Decimal(
+              String(dto.onTimeDeliveryRate)
+            ),
           }),
           ...(dto.claimsRate !== undefined && {
             claimsRate: new Prisma.Decimal(String(dto.claimsRate)),
@@ -423,19 +453,20 @@ export class CarriersService {
   }
 
   async getDriverById(tenantId: string, carrierId: string, driverId: string) {
-    const driver = await this.prisma.operationsCarrierDriver.findUnique({
-      where: { id: driverId },
+    // Verify carrier belongs to tenant first
+    await this.getCarrierById(tenantId, carrierId);
+
+    const driver = await this.prisma.operationsCarrierDriver.findFirst({
+      where: { id: driverId, carrierId, isActive: true },
       include: {
         carrier: true,
         trucks: true,
       },
     });
 
-    if (!driver || driver.carrierId !== carrierId) {
+    if (!driver) {
       throw new NotFoundException('Driver not found');
     }
-
-    const _carrier = await this.getCarrierById(tenantId, carrierId);
 
     return driver;
   }
@@ -554,9 +585,7 @@ export class CarriersService {
         },
       });
     } catch (error) {
-      throw new BadRequestException(
-        `Failed to create truck: ${error.message}`
-      );
+      throw new BadRequestException(`Failed to create truck: ${error.message}`);
     }
   }
 
@@ -574,8 +603,11 @@ export class CarriersService {
   }
 
   async getTruckById(tenantId: string, carrierId: string, truckId: string) {
-    const truck = await this.prisma.operationsCarrierTruck.findUnique({
-      where: { id: truckId },
+    // Verify carrier belongs to tenant first
+    await this.getCarrierById(tenantId, carrierId);
+
+    const truck = await this.prisma.operationsCarrierTruck.findFirst({
+      where: { id: truckId, carrierId, isActive: true },
       include: {
         carrier: true,
         assignedDriver: true,
@@ -583,11 +615,9 @@ export class CarriersService {
       },
     });
 
-    if (!truck || truck.carrierId !== carrierId) {
+    if (!truck) {
       throw new NotFoundException('Truck not found');
     }
-
-    const _carrier = await this.getCarrierById(tenantId, carrierId);
 
     return truck;
   }
@@ -644,9 +674,7 @@ export class CarriersService {
         },
       });
     } catch (error) {
-      throw new BadRequestException(
-        `Failed to update truck: ${error.message}`
-      );
+      throw new BadRequestException(`Failed to update truck: ${error.message}`);
     }
   }
 
@@ -701,7 +729,7 @@ export class CarriersService {
   async createDocument(
     tenantId: string,
     carrierId: string,
-    dto: CreateOperationsCarrierDocumentDto,
+    dto: CreateOperationsCarrierDocumentDto
   ) {
     await this.getCarrierById(tenantId, carrierId);
 
@@ -718,18 +746,24 @@ export class CarriersService {
         },
       });
     } catch (error) {
-      throw new BadRequestException(`Failed to create document: ${error.message}`);
+      throw new BadRequestException(
+        `Failed to create document: ${error.message}`
+      );
     }
   }
 
-  async deleteDocument(tenantId: string, carrierId: string, documentId: string) {
+  async deleteDocument(
+    tenantId: string,
+    carrierId: string,
+    documentId: string
+  ) {
     await this.getCarrierById(tenantId, carrierId);
 
-    const doc = await this.prisma.operationsCarrierDocument.findUnique({
-      where: { id: documentId },
+    const doc = await this.prisma.operationsCarrierDocument.findFirst({
+      where: { id: documentId, carrierId, isActive: true },
     });
 
-    if (!doc || doc.carrierId !== carrierId) {
+    if (!doc) {
       throw new NotFoundException('Document not found');
     }
 

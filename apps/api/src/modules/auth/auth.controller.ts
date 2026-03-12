@@ -5,6 +5,7 @@ import {
   Body,
   UseGuards,
   Req,
+  Res,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
@@ -16,8 +17,8 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import type { Request } from 'express';
-import { AuthService } from './auth.service';
+import type { Request, Response } from 'express';
+import { AuthService, TokenPair } from './auth.service';
 import { JwtAuthGuard } from './guards';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { Public } from '../../common/decorators';
@@ -28,6 +29,46 @@ import {
   VerifyEmailDto,
   RefreshTokenDto,
 } from './dto';
+
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
+/**
+ * SEC-001: Set HttpOnly cookies for access and refresh tokens.
+ * Cookies are automatically sent by the browser on every request,
+ * and cannot be read by JavaScript (XSS-safe).
+ */
+function setAuthCookies(res: Response, tokens: TokenPair): void {
+  const cookieOptions = {
+    httpOnly: true,
+    secure: IS_PRODUCTION,
+    sameSite: 'lax' as const,
+    path: '/',
+  };
+
+  res.cookie('accessToken', tokens.accessToken, {
+    ...cookieOptions,
+    maxAge: (tokens.expiresIn || 15 * 60) * 1000,
+  });
+
+  if (tokens.refreshToken) {
+    res.cookie('refreshToken', tokens.refreshToken, {
+      ...cookieOptions,
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    });
+  }
+}
+
+function clearAuthCookies(res: Response): void {
+  const cookieOptions = {
+    httpOnly: true,
+    secure: IS_PRODUCTION,
+    sameSite: 'lax' as const,
+    path: '/',
+  };
+
+  res.clearCookie('accessToken', cookieOptions);
+  res.clearCookie('refreshToken', cookieOptions);
+}
 
 @Controller('auth')
 @ApiTags('Auth')
@@ -47,7 +88,11 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   @Throttle({ long: { limit: 5, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
-  async login(@Body() loginDto: LoginDto, @Req() req: Request) {
+  async login(
+    @Body() loginDto: LoginDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response
+  ) {
     const userAgent = req.headers['user-agent'];
     const ipAddress = req.ip || req.connection.remoteAddress;
 
@@ -55,6 +100,9 @@ export class AuthController {
     const user = result.userId
       ? await this.authService.getMe(result.userId)
       : null;
+
+    // SEC-001: Set HttpOnly cookies
+    setAuthCookies(res, result);
 
     return {
       data: {
@@ -67,7 +115,7 @@ export class AuthController {
 
   /**
    * POST /api/v1/auth/refresh
-   * Refresh access token using refresh token
+   * Refresh access token using refresh token (from body or HttpOnly cookie)
    */
   @Post('refresh')
   @Public()
@@ -77,8 +125,26 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Token refreshed' })
   @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
   @HttpCode(HttpStatus.OK)
-  async refresh(@Body() refreshTokenDto: RefreshTokenDto) {
-    const tokens = await this.authService.refresh(refreshTokenDto);
+  async refresh(
+    @Body() refreshTokenDto: RefreshTokenDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response
+  ) {
+    // SEC-001: Accept refresh token from body OR HttpOnly cookie
+    const refreshToken =
+      refreshTokenDto?.refreshToken || req.cookies?.refreshToken;
+
+    if (!refreshToken) {
+      return {
+        data: null,
+        message: 'No refresh token provided',
+      };
+    }
+
+    const tokens = await this.authService.refresh({ refreshToken });
+
+    // SEC-001: Set new HttpOnly cookies (token rotation)
+    setAuthCookies(res, tokens);
 
     return {
       data: tokens,
@@ -97,9 +163,14 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Logout successful' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @HttpCode(HttpStatus.OK)
-  async logout(@CurrentUser() user: { sub: string }) {
-    // For now, we'll revoke all sessions (simplified)
+  async logout(
+    @CurrentUser() user: { sub: string },
+    @Res({ passthrough: true }) res: Response
+  ) {
     await this.authService.logoutAll(user.sub);
+
+    // SEC-001: Clear HttpOnly cookies
+    clearAuthCookies(res);
 
     return {
       data: { success: true },
@@ -118,8 +189,14 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'All sessions logged out' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @HttpCode(HttpStatus.OK)
-  async logoutAll(@CurrentUser() user: { sub: string }) {
+  async logoutAll(
+    @CurrentUser() user: { sub: string },
+    @Res({ passthrough: true }) res: Response
+  ) {
     await this.authService.logoutAll(user.sub);
+
+    // SEC-001: Clear HttpOnly cookies
+    clearAuthCookies(res);
 
     return {
       data: { success: true },
