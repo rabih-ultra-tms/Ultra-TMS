@@ -36,6 +36,24 @@ async function fetchNotificationsFromAPI(): Promise<Notification[]> {
   }
 }
 
+async function fetchUnreadCountFromAPI(): Promise<number> {
+  try {
+    const response = await fetch(
+      '/api/v1/communication/notifications/unread-count',
+      {
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+    if (!response.ok) return 0;
+    const data = await response.json();
+    return data.count ?? 0;
+  } catch (error) {
+    console.warn('Failed to fetch unread notification count:', error);
+    return 0;
+  }
+}
+
 async function markNotificationAsReadAPI(id: string): Promise<boolean> {
   try {
     const response = await fetch(
@@ -80,8 +98,13 @@ export function useNotifications() {
   const socketRef = useRef<Socket | null>(null);
   const [connected, setConnected] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [cachedUnreadCount, setCachedUnreadCount] = useState<number | null>(
+    null
+  );
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  // Use cached unread count from API if available, otherwise calculate from notifications
+  const unreadCount =
+    cachedUnreadCount ?? notifications.filter((n) => !n.read).length;
 
   // Get access token from cookie
   const getAccessToken = useCallback(() => {
@@ -101,6 +124,13 @@ export function useNotifications() {
     if (isLoading || !userId) return;
 
     (async () => {
+      // First, fetch unread count for faster badge display
+      const count = await fetchUnreadCountFromAPI();
+      if (count > 0) {
+        setCachedUnreadCount(count);
+      }
+
+      // Then fetch full notification list
       const existingNotifications = await fetchNotificationsFromAPI();
       if (existingNotifications.length > 0) {
         setNotifications((prev) => {
@@ -115,6 +145,8 @@ export function useNotifications() {
             })
             .slice(0, MAX_NOTIFICATIONS);
         });
+        // Once notifications are loaded, clear cached count and use calculated count
+        setCachedUnreadCount(null);
       }
     })();
   }, [userId, isLoading]);

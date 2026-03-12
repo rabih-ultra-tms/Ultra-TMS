@@ -246,10 +246,23 @@ export class QuotesService {
     const linehaulRate = dto.linehaulRate || 0;
     const fuel = dto.fuelSurcharge || 0;
     const accessorialsTotal = dto.accessorialsTotal || 0;
-    const totalAmount =
+    let totalAmount =
       dto.totalAmount || linehaulRate + fuel + accessorialsTotal;
 
-    // Enforce minimum margin
+    // Enforce minimum margin by adjusting total amount if needed
+    if (linehaulRate > 0 && !dto.overrideMarginCheck) {
+      const requiredTotal =
+        await this.rateCalculationService.enforceMinimumMargin(
+          linehaulRate,
+          this.DEFAULT_MINIMUM_MARGIN_PERCENT
+        );
+      // Only auto-adjust if the original calculation didn't meet minimum margin
+      if (totalAmount < requiredTotal) {
+        totalAmount = requiredTotal;
+      }
+    }
+
+    // Validate minimum margin
     this.validateMinimumMargin(
       {
         marginPercent: dto.marginPercent,
@@ -342,14 +355,29 @@ export class QuotesService {
       dto.fuelSurcharge !== undefined ||
       dto.accessorialsTotal !== undefined
     ) {
-      const linehaulRate = dto.linehaulRate || 0;
-      const fuel = dto.fuelSurcharge || 0;
-      const accessorialsTotal = dto.accessorialsTotal || 0;
+      const linehaulRate =
+        dto.linehaulRate ?? Number(existing.linehaulRate ?? 0);
+      const fuel = dto.fuelSurcharge ?? Number(existing.fuelSurcharge ?? 0);
+      const accessorialsTotal =
+        dto.accessorialsTotal ?? Number(existing.accessorialsTotal ?? 0);
       totalAmount = dto.totalAmount || linehaulRate + fuel + accessorialsTotal;
+
+      // Enforce minimum margin by adjusting total amount if needed
+      if (linehaulRate > 0 && !dto.overrideMarginCheck) {
+        const requiredTotal =
+          await this.rateCalculationService.enforceMinimumMargin(
+            linehaulRate,
+            this.DEFAULT_MINIMUM_MARGIN_PERCENT
+          );
+        // Only auto-adjust if the original calculation didn't meet minimum margin
+        if (totalAmount < requiredTotal) {
+          totalAmount = requiredTotal;
+        }
+      }
     }
 
     // Enforce minimum margin when pricing fields are being updated
-    const effectiveTotalAmount =
+    let effectiveTotalAmount =
       totalAmount ?? dto.totalAmount ?? Number(existing.totalAmount);
     const effectiveMarginPercent =
       dto.marginPercent ??
@@ -358,6 +386,25 @@ export class QuotesService {
         : undefined);
     const effectiveLinehaulRate =
       dto.linehaulRate ?? Number(existing.linehaulRate ?? 0);
+
+    // Apply margin enforcement to totalAmount-only updates
+    if (
+      dto.totalAmount !== undefined &&
+      dto.linehaulRate === undefined &&
+      dto.fuelSurcharge === undefined &&
+      dto.accessorialsTotal === undefined &&
+      effectiveLinehaulRate > 0 &&
+      !dto.overrideMarginCheck
+    ) {
+      const requiredTotal =
+        await this.rateCalculationService.enforceMinimumMargin(
+          effectiveLinehaulRate,
+          this.DEFAULT_MINIMUM_MARGIN_PERCENT
+        );
+      if (effectiveTotalAmount < requiredTotal) {
+        effectiveTotalAmount = requiredTotal;
+      }
+    }
 
     if (
       dto.marginPercent !== undefined ||
@@ -420,7 +467,7 @@ export class QuotesService {
         linehaulRate: dto.linehaulRate,
         fuelSurcharge: dto.fuelSurcharge,
         accessorialsTotal: dto.accessorialsTotal,
-        totalAmount,
+        totalAmount: totalAmount ?? effectiveTotalAmount,
         marginPercent: dto.marginPercent,
         validUntil: dto.validUntil ? new Date(dto.validUntil) : undefined,
         internalNotes: dto.internalNotes,

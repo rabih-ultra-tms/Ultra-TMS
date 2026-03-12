@@ -254,33 +254,35 @@ Every service entering a sprint gets work across 5 layers:
 **Services touched:** TMS Core (#05), Accounting (#07), Commission (#08), Customer Portal (#13), Documents (#11), Sales (#04)
 **Absorbs:** REMEDIATION-ROADMAP S5, BLD-001–006, parts of BACK-004/005/007/010
 
-| ID        | Task                                                                                | Layer | Effort | Priority | Source              |
-| --------- | ----------------------------------------------------------------------------------- | ----- | ------ | -------- | ------------------- |
-| MP-02-001 | ~~QS-012: Rate Confirmation PDF Generation~~                                        | BLD   | 8h     | P0       | **DONE**            |
-| MP-02-002 | ~~QS-013: BOL PDF Generation~~                                                      | BLD   | 6h     | P0       | **DONE**            |
-| MP-02-003 | ~~QS-011: Customer Portal — Basic 4-Page MVP~~                                      | BLD   | 16h    | P0       | **DONE**            |
-| MP-02-004 | Wire commission auto-calculation trigger (event on load delivery → commission calc) | WIR   | 4h     | P1       | PST-08, e2e Step 10 |
-| MP-02-005 | Wire `enforceMinimumMargin()` into quote create/update flow                         | WIR   | 2h     | P0       | PST-04, e2e Step 1  |
-| MP-02-006 | Create quote expiry cron job (check validUntil, mark EXPIRED)                       | WIR   | 1h     | P0       | PST-04, e2e Step 1  |
-| MP-02-007 | Fix document upload architecture (add FileInterceptor or S3-first flow)             | BLD   | 3h     | P0       | PST-11, e2e Step 7  |
-| MP-02-008 | Wire Orders delete handler (currently no-op toast)                                  | WIR   | 2h     | P1       | PST-05              |
-| MP-02-009 | Build Invoice Edit page (`/accounting/invoices/[id]/edit`)                          | BLD   | 3h     | P1       | PST-07, e2e Step 8  |
-| MP-02-010 | Build public tracking endpoint `GET /portal/track/:code` for Customer Portal        | BLD   | 4h     | P0       | PST-13, e2e Step 5  |
-| MP-02-011 | Wrap Commission createPayout/processPayout in $transaction                          | SEC   | 1h     | P1       | PST-08, CCF-023     |
-| MP-02-012 | Connect notification bell to backend unread-count API                               | WIR   | 1h     | P1       | PST-12              |
-| MP-02-013 | Implement Load tender/accept/reject endpoints (carrier workflow)                    | BLD   | 6h     | P1       | PST-05, e2e Step 4  |
-| MP-02-014 | Carrier Portal soft-delete filtering (5/7 services)                                 | SEC   | 3h     | P0       | PST-14, CCF-011     |
-| MP-02-015 | Add `deletedAt: null` to accounting services (7 models, only Reports filters)       | SEC   | 2h     | P1       | PST-07, CCF-011     |
-| MP-02-016 | Add `deletedAt: null` to Commission (21/34 methods, 60% gap)                        | SEC   | 3h     | P1       | PST-08, CCF-022     |
-| MP-02-017 | Build Settlement Create page (`/accounting/settlements/new`)                        | BLD   | 3h     | P1       | e2e Step 9          |
+| ID        | Task                                                                                    | Layer | Effort | Priority | Source   |
+| --------- | --------------------------------------------------------------------------------------- | ----- | ------ | -------- | -------- |
+| MP-02-001 | ~~QS-012: Rate Confirmation PDF Generation~~                                            | BLD   | 8h     | P0       | **DONE** |
+| MP-02-002 | ~~QS-013: BOL PDF Generation~~                                                          | BLD   | 6h     | P0       | **DONE** |
+| MP-02-003 | ~~QS-011: Customer Portal — Basic 4-Page MVP~~                                          | BLD   | 16h    | P0       | **DONE** |
+| MP-02-004 | ~~Wire commission auto-calculation trigger (event on load delivery → commission calc)~~ | WIR   | 4h     | P1       | **DONE** |
+| MP-02-005 | ~~Wire `enforceMinimumMargin()` into quote create/update flow~~                         | WIR   | 2h     | P0       | **DONE** |
+| MP-02-006 | ~~Create quote expiry cron job (check validUntil, mark EXPIRED)~~                       | WIR   | 1h     | P0       | **DONE** |
+| MP-02-007 | ~~Fix document upload architecture (add FileInterceptor or S3-first flow)~~             | BLD   | 3h     | P0       | **DONE** |
+| MP-02-008 | ~~Wire Orders delete handler (currently no-op toast)~~                                  | WIR   | 2h     | P1       | **DONE** |
+| MP-02-009 | ~~Build Invoice Edit page (`/accounting/invoices/[id]/edit`)~~                          | BLD   | 3h     | P1       | **DONE** |
+| MP-02-010 | ~~Build public tracking endpoint `GET /portal/track/:code` for Customer Portal~~        | BLD   | 4h     | P0       | **DONE** |
+| MP-02-011 | ~~Wrap Commission createPayout/processPayout in $transaction~~                          | SEC   | 1h     | P1       | **DONE** |
+| MP-02-012 | ~~Connect notification bell to backend unread-count API~~                               | WIR   | 1h     | P1       | **DONE** |
+| MP-02-013 | ~~Implement Load tender/accept/reject endpoints (carrier workflow)~~                    | BLD   | 6h     | P1       | **DONE** |
+| MP-02-014 | ~~Carrier Portal soft-delete filtering (5/7 services)~~                                 | SEC   | 3h     | P0       | **DONE** |
+| MP-02-015 | ~~Add `deletedAt: null` to accounting services (7 models, only Reports filters)~~       | SEC   | 2h     | P1       | **DONE** |
+| MP-02-016 | ~~Add `deletedAt: null` to Commission (21/34 methods, 60% gap)~~                        | SEC   | 3h     | P1       | **DONE** |
+| MP-02-017 | ~~Build Settlement Create page (`/accounting/settlements/new`)~~                        | BLD   | 3h     | P1       | **DONE** |
 
 **Exit Criteria:**
 
-- [ ] All 12 revenue lifecycle steps at least partially shippable
-- [ ] Rate Con + BOL PDFs downloadable from Load Detail
-- [ ] Customer Portal login + 4 pages working
-- [ ] Commission auto-triggers on invoice PAID
-- [ ] Document upload works end-to-end
+- [x] All 12 revenue lifecycle steps at least partially shippable
+- [x] Rate Con + BOL PDFs downloadable from Load Detail
+- [x] Customer Portal login + 4 pages working
+- [x] Commission auto-triggers on invoice PAID
+- [x] Document upload works end-to-end
+
+**Status:** ✅ **COMPLETE (17/17 tasks)** — 2026-03-13
 
 ---
 
