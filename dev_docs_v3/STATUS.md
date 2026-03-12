@@ -1,7 +1,7 @@
 # Ultra TMS — Project Status Dashboard
 
 > **Last Updated:** 2026-03-12
-> **Current Phase:** Sprint 05 IN PROGRESS. Sprints QS, 02, 03, 04, 05 all COMPLETE (5/8). MP-01 Security Hardening: 5/30 tasks DONE.
+> **Current Phase:** MP-01 Security Hardening IN PROGRESS. Sprints QS, 02, 03, 04, 05 all COMPLETE (5/8). MP-01: 20/30 tasks DONE (67%).
 > **Overall Health:** B (7.5/10) — Strong backend, frontend verified: 101/103 routes PASS. Security hardened (Sprint 05). Agent management frontend built (Sprint 04).
 > **Production Readiness:** 3.0/10 — See [PRODUCTION-READINESS-ASSESSMENT.md](05-audit/PRODUCTION-READINESS-ASSESSMENT.md)
 > **Active Plan:** [Master Project Plan](08-sprints/master-project-plan.md) — ALL 39 services, 24 sprints, 5 phases, 48 weeks
@@ -101,16 +101,52 @@
 
 **Quality Sprint COMPLETE** — 16/16 tasks done. All QS tasks COMPLETE (QS-001 through QS-016).
 
-**MP-01 Progress:** 5/30 tasks DONE (MP-01-001, MP-01-002, MP-01-003, MP-01-004, MP-01-022) + Bonus: Rate Intelligence RolesGuard fixed.
+**MP-01 Progress:** 20/30 tasks DONE. 10 remaining (1 P0, 4 P1, 4 P2, 1 P0-large).
 
-**Completed (2026-03-12):**
+**Completed — Sprint S4 (2026-03-12, commit 053c82b):**
 
-- MP-01-002: RolesGuard on all financial controllers (34 controllers verified: Accounting 10, Credit 5, Contracts 8, Factoring 5, Agents 6)
-- MP-01-003: RolesGuard on all data-modifying controllers (46 controllers verified: Config 9, Audit 8, Load Board 9, HR 6, Scheduler 5, Safety 9)
-- MP-01-004: RolesGuard on all remaining controllers (32 controllers verified: Help Desk 5, Feedback 5, Cache 4, EDI 5, Search 4, Workflow 4, Claims 7)
+- MP-01-001: Prisma Client Extension for auto tenantId + deletedAt (QS-014)
+- MP-01-002: RolesGuard on all financial controllers (34 controllers: Accounting 10, Credit 5, Contracts 8, Factoring 5, Agents 6)
+- MP-01-003: RolesGuard on all data-modifying controllers (46 controllers: Config 9, Audit 8, Load Board 9, HR 6, Scheduler 5, Safety 9)
+- MP-01-004: RolesGuard on all remaining controllers (32 controllers: Help Desk 5, Feedback 5, Cache 4, EDI 5, Search 4, Workflow 4, Claims 7)
+- MP-01-022: CORS env variable (QS-007)
 - Bonus: Rate Intelligence — all 6 controllers guarded with proper @Roles
 
-**Next up:** MP-01-005 through MP-01-021 (tenant isolation, credential encryption, auth hardening) — see [Master Project Plan](08-sprints/master-project-plan.md#mp-01-security-hardening-weeks-1-2)
+**Completed — Session 2026-03-12 (commit 93107fd, 20 files):**
+
+- MP-01-005: JWT secret inconsistency — removed stale PORTAL_JWT_SECRET refs, added JWT_SECRET fallback to portal guard
+- MP-01-006: Customer Portal login tenant isolation — added x-tenant-id header requirement + frontend header
+- MP-01-008: Integration Hub EncryptionService — tightened NODE_ENV guard, removed hardcoded fallback
+- MP-01-009: Rate Intelligence credentials — added EncryptionService mock to test, completed DTO fields
+- MP-01-011: Elasticsearch tenant isolation — added tenantId to all indexed documents + keyword mapping
+- MP-01-012: Cache tenant isolation — scoped Redis keys, invalidation patterns, stats, rate limits by tenant
+- MP-01-015: Accounting PaymentReceived — converted hard-delete to soft-delete with tenantId
+- MP-01-016: Sales updateQuota — added tenantId to WHERE clause
+
+**Verified already fixed in S4 (commit 053c82b, no additional work needed):**
+
+- MP-01-007: Factoring apiKey encryption (safeSelect already applied)
+- MP-01-010: EDI ftpPassword encryption (3 layers: encryption + safeSelect + @Exclude)
+- MP-01-013: Operations LoadHistory tenant bugs (already patched)
+- MP-01-014: CRM tenant isolation mutations (17 mutations already fixed)
+- MP-01-018: Agents rankings tenant leak (already fixed)
+- MP-01-019: Search deleteSynonym cross-tenant (already fixed)
+- MP-01-020: Super Admin deleted admin auth (deletedAt filter already added)
+
+**Remaining (10 tasks):**
+
+| ID        | Task                                                                | Priority | Effort |
+| --------- | ------------------------------------------------------------------- | -------- | ------ |
+| MP-01-017 | Contracts FuelSurchargeTier missing tenantId (migration + backfill) | P0       | 1h     |
+| MP-01-021 | Migrate localStorage tokens to HttpOnly cookies                     | P0       | 4h     |
+| MP-01-023 | CSP headers in Next.js config                                       | P1       | 2h     |
+| MP-01-024 | @nestjs/throttler rate limiting (auth: 5/min, API: 100/min)         | P1       | 2h     |
+| MP-01-025 | Webhook auth — Communication SMS (Twilio signature validation)      | P1       | 2h     |
+| MP-01-026 | Webhook auth — CRM HubSpot (disable or authenticate)                | P1       | 1h     |
+| MP-01-027 | Storage path traversal fix                                          | P2       | 1h     |
+| MP-01-028 | Redis KEYS → SCAN replacement                                       | P2       | 2h     |
+| MP-01-029 | Verify CSRF protection (SameSite cookie attribute)                  | P2       | 30min  |
+| MP-01-030 | gitleaks pre-commit hook                                            | P2       | 1h     |
 
 **Full project timeline:** 24 sprints × 2 weeks = 48 weeks across 5 phases:
 
