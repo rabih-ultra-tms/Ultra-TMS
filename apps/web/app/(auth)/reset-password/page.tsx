@@ -1,16 +1,29 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { AuthLayout } from "@/components/auth/auth-layout";
-import { ResetPasswordForm } from "@/components/auth/reset-password-form";
+import * as React from 'react';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { AuthLayout } from '@/components/auth/auth-layout';
+import { ResetPasswordForm } from '@/components/auth/reset-password-form';
+
+function ResetPasswordSkeleton() {
+  return (
+    <AuthLayout title="Reset password" subtitle="Set a new password">
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-full rounded-md" />
+        <Skeleton className="h-10 w-full rounded-md" />
+        <Skeleton className="h-10 w-full rounded-md" />
+      </div>
+    </AuthLayout>
+  );
+}
 
 function ResetPasswordContent() {
   const searchParams = useSearchParams();
-  const token = searchParams?.get("token") || "";
+  const token = searchParams?.get('token') || '';
 
   if (!token) {
     return (
@@ -51,7 +64,7 @@ function ResetPasswordContent() {
 
 export default function ResetPasswordPage() {
   return (
-    <React.Suspense fallback={<div className="min-h-screen" />}>
+    <React.Suspense fallback={<ResetPasswordSkeleton />}>
       <ResetPasswordContent />
     </React.Suspense>
   );

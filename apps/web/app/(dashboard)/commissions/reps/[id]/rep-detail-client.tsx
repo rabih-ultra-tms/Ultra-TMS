@@ -46,7 +46,7 @@ function usePlans() {
 }
 
 export function RepDetailClient({ repId }: { repId: string }) {
-  const { data: rep, isLoading: repLoading } = useRep(repId);
+  const { data: rep, isLoading: repLoading, isError: repError } = useRep(repId);
   const { data: txData, isLoading: txLoading } = useRepTransactions(repId);
   const { data: plans } = usePlans();
   const assignPlan = useAssignPlan();
@@ -65,6 +65,33 @@ export function RepDetailClient({ repId }: { repId: string }) {
       toast.error(message);
     }
   };
+
+  // Show error state if rep failed to load
+  if (repError && !repLoading) {
+    return (
+      <div className="space-y-6 p-6">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/commissions/reps">
+              <ArrowLeft className="size-4" />
+            </Link>
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-text-primary">Sales Rep</h1>
+            <p className="mt-1 text-sm text-text-muted">Not found</p>
+          </div>
+        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-sm text-text-muted">
+              The sales rep could not be found. It may have been deleted or the
+              ID is invalid.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 p-6">
