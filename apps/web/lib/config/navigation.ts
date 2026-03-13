@@ -25,6 +25,7 @@ import {
   Banknote,
   BookOpen,
   BookText,
+  Radio,
 } from 'lucide-react';
 import type { NavConfig } from '@/lib/types/navigation';
 
@@ -68,6 +69,11 @@ export const navigationConfig: NavConfig = {
     {
       title: 'Operations',
       items: [
+        {
+          title: 'Command Center',
+          href: '/command-center',
+          icon: Radio,
+        },
         {
           title: 'Operations Dashboard',
           href: '/operations',

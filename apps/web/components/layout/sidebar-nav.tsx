@@ -1,13 +1,17 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
-import type { NavGroup, NavItem } from "@/lib/types/navigation";
-import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import * as React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { cn } from '@/lib/utils';
+import type { NavGroup, NavItem } from '@/lib/types/navigation';
+import { Badge } from '@/components/ui/badge';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 
 interface SidebarNavProps {
   groups: NavGroup[];
@@ -15,26 +19,34 @@ interface SidebarNavProps {
   onItemClick?: () => void;
 }
 
-export function SidebarNav({ groups, collapsed = false, onItemClick }: SidebarNavProps) {
+export function SidebarNav({
+  groups,
+  collapsed = false,
+  onItemClick,
+}: SidebarNavProps) {
   const pathname = usePathname();
   const [openGroups, setOpenGroups] = React.useState<string[]>([]);
 
   React.useEffect(() => {
-    setOpenGroups(groups.map(g => g.title).filter(Boolean));
+    setOpenGroups(groups.map((g) => g.title).filter(Boolean));
   }, [groups]);
 
   const toggleGroup = (title: string) => {
-    setOpenGroups(prev => 
-      prev.includes(title) 
-        ? prev.filter(t => t !== title)
-        : [...prev, title]
+    setOpenGroups((prev) =>
+      prev.includes(title) ? prev.filter((t) => t !== title) : [...prev, title]
     );
   };
 
   const isActive = (href: string) => {
     if (!pathname) return false;
     // Pages that are index routes of a group — match exactly only
-    if (href === "/dashboard" || href === "/operations" || href === "/accounting" || href === "/commissions") {
+    if (
+      href === '/dashboard' ||
+      href === '/operations' ||
+      href === '/accounting' ||
+      href === '/commissions' ||
+      href === '/command-center'
+    ) {
       return pathname === href;
     }
     // Exact match or sub-path match
@@ -47,13 +59,13 @@ export function SidebarNav({ groups, collapsed = false, onItemClick }: SidebarNa
 
     const linkContent = (
       <Link
-        href={item.disabled ? "#" : item.href}
+        href={item.disabled ? '#' : item.href}
         onClick={onItemClick}
         className={cn(
-          "group flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-          active && "bg-sidebar-accent text-sidebar-accent-foreground",
-          item.disabled && "pointer-events-none opacity-50",
-          collapsed && "justify-center px-2"
+          'group flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+          active && 'bg-sidebar-accent text-sidebar-accent-foreground',
+          item.disabled && 'pointer-events-none opacity-50',
+          collapsed && 'justify-center px-2'
         )}
       >
         <Icon className="h-5 w-5 shrink-0" />
@@ -93,15 +105,18 @@ export function SidebarNav({ groups, collapsed = false, onItemClick }: SidebarNa
     <nav className="flex flex-col gap-1">
       {groups.map((group, groupIndex) => {
         const isOpen = openGroups.includes(group.title) || !group.title;
-        
+
         return (
-          <div key={group.title || groupIndex} className={cn(groupIndex > 0 && "mt-2")}> 
+          <div
+            key={group.title || groupIndex}
+            className={cn(groupIndex > 0 && 'mt-2')}
+          >
             {!collapsed && group.title ? (
               <button
                 type="button"
                 onClick={() => toggleGroup(group.title)}
                 className={cn(
-                  "mb-2 flex w-full items-center justify-between px-3 py-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/40",
+                  'mb-2 flex w-full items-center justify-between px-3 py-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/40'
                 )}
               >
                 <span>{group.title}</span>
@@ -112,11 +127,15 @@ export function SidebarNav({ groups, collapsed = false, onItemClick }: SidebarNa
                 )}
               </button>
             ) : null}
-            
-            <div className={cn(
-              "flex flex-col gap-1 transition-all overflow-hidden",
-              !isOpen && group.title && !collapsed ? "h-0 opacity-0" : "h-auto opacity-100"
-            )}>
+
+            <div
+              className={cn(
+                'flex flex-col gap-1 transition-all overflow-hidden',
+                !isOpen && group.title && !collapsed
+                  ? 'h-0 opacity-0'
+                  : 'h-auto opacity-100'
+              )}
+            >
               {group.items.map(renderNavItem)}
             </div>
           </div>
