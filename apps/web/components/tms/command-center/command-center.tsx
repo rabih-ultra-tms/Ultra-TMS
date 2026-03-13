@@ -30,6 +30,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import type { CCTab } from '@/lib/hooks/tms/use-command-center';
 import type { DispatchLoad } from '@/lib/types/dispatch';
+import { TrackingMap } from '@/components/tms/tracking/tracking-map';
 import { Package, FileText, Users, MapPin, AlertTriangle } from 'lucide-react';
 
 /**
@@ -83,8 +84,15 @@ function PlaceholderPanel({ tab }: { tab: Exclude<CCTab, 'loads'> }) {
 }
 
 export function CommandCenter() {
-  const { activeTab, setActiveTab, layout, setLayout, drawer, openDrawer, closeDrawer } =
-    useCommandCenter();
+  const {
+    activeTab,
+    setActiveTab,
+    layout,
+    setLayout,
+    drawer,
+    openDrawer,
+    closeDrawer,
+  } = useCommandCenter();
   const { data: alertsData } = useCommandCenterAlerts();
   const alertCount = alertsData?.data?.length ?? 0;
 
@@ -96,8 +104,19 @@ export function CommandCenter() {
   const { data: carrierAvailability, isLoading: carriersLoading } = useQuery({
     queryKey: ['command-center', 'carrier-availability'],
     queryFn: async () => {
-      const response = await apiClient.get('/command-center/carrier-availability');
-      return (response as { data: Array<{ id: string; legalName: string; mcNumber: string | null; activeLoadCount: number }> }).data;
+      const response = await apiClient.get(
+        '/command-center/carrier-availability'
+      );
+      return (
+        response as {
+          data: Array<{
+            id: string;
+            legalName: string;
+            mcNumber: string | null;
+            activeLoadCount: number;
+          }>;
+        }
+      ).data;
     },
     enabled: selectedIds.size > 0,
     staleTime: 60_000,
@@ -132,6 +151,8 @@ export function CommandCenter() {
         </Suspense>
       ) : activeTab === 'alerts' ? (
         <AlertsPanel />
+      ) : activeTab === 'tracking' ? (
+        <TrackingMap />
       ) : (
         <PlaceholderPanel tab={activeTab} />
       )}

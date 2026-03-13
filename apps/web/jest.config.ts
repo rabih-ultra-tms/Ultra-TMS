@@ -1,47 +1,52 @@
-import type { Config } from "jest";
-import nextJest from "next/jest.js";
+import type { Config } from 'jest';
+import nextJest from 'next/jest.js';
 
 const createJestConfig = nextJest({
-  dir: "./",
+  dir: './',
 });
 
 const config: Config = {
-  displayName: "web",
-  testEnvironment: "jsdom",
+  displayName: 'web',
+  testEnvironment: 'jsdom',
   injectGlobals: true,
-  setupFilesAfterEnv: ["<rootDir>/test/setup.ts"],
-  resolver: "<rootDir>/test/jest-resolver.cjs",
+  setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
+  resolver: '<rootDir>/test/jest-resolver.cjs',
   moduleNameMapper: {
-    "^@/lib/hooks/operations$": "<rootDir>/test/mocks/hooks-operations.ts",
-    "^@/lib/hooks/operations/(.*)$": "<rootDir>/test/mocks/hooks-operations.ts",
-    "^@/lib/hooks/tms/use-orders$": "<rootDir>/test/mocks/hooks-tms-orders.ts",
-    "^@/lib/hooks/tms/use-loads$": "<rootDir>/test/mocks/hooks-tms-loads.ts",
-    "^@/lib/hooks/sales/use-quotes$": "<rootDir>/test/mocks/hooks-sales-quotes.ts",
-    "^@/lib/hooks/tracking/use-public-tracking$": "<rootDir>/test/mocks/hooks-tracking.ts",
-    "^@/lib/hooks/load-board$": "<rootDir>/test/mocks/hooks-load-board.ts",
-    "^@/lib/hooks/load-board/(.*)$": "<rootDir>/test/mocks/hooks-load-board.ts",
-    "^@/lib/hooks/accounting/(.*)$": "<rootDir>/test/mocks/hooks-accounting.ts",
-    "^@/lib/hooks/commissions/(.*)$": "<rootDir>/test/mocks/hooks-commissions.ts",
-    "^@/lib/hooks/carriers/(.*)$": "<rootDir>/test/mocks/hooks-carriers.ts",
-    "^@/lib/hooks$": "<rootDir>/test/mocks/hooks.ts",
-    "^@react-google-maps/api$": "<rootDir>/test/mocks/google-maps.tsx",
-    "^next/navigation$": "<rootDir>/test/mocks/next-navigation.ts",
-    "^@/(.*)$": "<rootDir>/$1",
-    "^@mswjs/interceptors/ClientRequest$":
-      "<rootDir>/../../node_modules/.pnpm/@mswjs+interceptors@0.40.0/node_modules/@mswjs/interceptors/lib/node/interceptors/ClientRequest/index.js",
+    '^@/lib/hooks/operations$': '<rootDir>/test/mocks/hooks-operations.ts',
+    '^@/lib/hooks/operations/(.*)$': '<rootDir>/test/mocks/hooks-operations.ts',
+    '^@/lib/hooks/tms/use-orders$': '<rootDir>/test/mocks/hooks-tms-orders.ts',
+    '^@/lib/hooks/tms/use-loads$': '<rootDir>/test/mocks/hooks-tms-loads.ts',
+    '^@/lib/hooks/sales/use-quotes$':
+      '<rootDir>/test/mocks/hooks-sales-quotes.ts',
+    '^@/lib/hooks/tracking/use-public-tracking$':
+      '<rootDir>/test/mocks/hooks-tracking.ts',
+    '^@/lib/hooks/load-board$': '<rootDir>/test/mocks/hooks-load-board.ts',
+    '^@/lib/hooks/load-board/(.*)$': '<rootDir>/test/mocks/hooks-load-board.ts',
+    '^@/lib/hooks/accounting/(.*)$': '<rootDir>/test/mocks/hooks-accounting.ts',
+    '^@/lib/hooks/commissions/(.*)$':
+      '<rootDir>/test/mocks/hooks-commissions.ts',
+    '^@/lib/hooks/carriers/(.*)$': '<rootDir>/test/mocks/hooks-carriers.ts',
+    '^@/lib/hooks/command-center/(.*)$':
+      '<rootDir>/test/mocks/hooks-command-center.ts',
+    '^@/lib/hooks$': '<rootDir>/test/mocks/hooks.ts',
+    '^@react-google-maps/api$': '<rootDir>/test/mocks/google-maps.tsx',
+    '^next/navigation$': '<rootDir>/test/mocks/next-navigation.ts',
+    '^@/(.*)$': '<rootDir>/$1',
+    '^@mswjs/interceptors/ClientRequest$':
+      '<rootDir>/../../node_modules/.pnpm/@mswjs+interceptors@0.40.0/node_modules/@mswjs/interceptors/lib/node/interceptors/ClientRequest/index.js',
   },
-  testMatch: ["<rootDir>/**/*.test.{ts,tsx}", "<rootDir>/**/*.spec.{ts,tsx}"],
-  testPathIgnorePatterns: ["<rootDir>/node_modules/", "<rootDir>/.next/"],
+  testMatch: ['<rootDir>/**/*.test.{ts,tsx}', '<rootDir>/**/*.spec.{ts,tsx}'],
+  testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/.next/'],
   transformIgnorePatterns: [
-    "/node_modules/(?!(msw|@mswjs|@bundled-es-modules)/)",
+    '/node_modules/(?!(msw|@mswjs|@bundled-es-modules)/)',
   ],
   collectCoverageFrom: [
-    "app/**/*.{ts,tsx}",
-    "components/**/*.{ts,tsx}",
-    "lib/**/*.{ts,tsx}",
-    "!**/*.d.ts",
-    "!**/node_modules/**",
-    "!**/.next/**",
+    'app/**/*.{ts,tsx}',
+    'components/**/*.{ts,tsx}',
+    'lib/**/*.{ts,tsx}',
+    '!**/*.d.ts',
+    '!**/node_modules/**',
+    '!**/.next/**',
   ],
   coverageThreshold: {
     global: {
@@ -51,8 +56,8 @@ const config: Config = {
       statements: 70,
     },
   },
-  extensionsToTreatAsEsm: [".ts", ".tsx"],
-  moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
+  extensionsToTreatAsEsm: ['.ts', '.tsx'],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

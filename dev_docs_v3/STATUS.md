@@ -1,7 +1,7 @@
 # Ultra TMS — Project Status Dashboard
 
 > **Last Updated:** 2026-03-13
-> **Current Phase:** MP-05 Command Center Foundation (Weeks 9-10). MP-01 ✅ COMPLETE (30/30). MP-02 ✅ COMPLETE (17/17 tasks). MP-03 ✅ COMPLETE (11/11 tasks). MP-04: 5/11 tasks DONE (remaining are cloud/infra — deferred). MP-05: 12/15 tasks DONE.
+> **Current Phase:** MP-05 Command Center Foundation (Weeks 9-10). MP-01 ✅ COMPLETE (30/30). MP-02 ✅ COMPLETE (17/17 tasks). MP-03 ✅ COMPLETE (11/11 tasks). MP-04: 5/11 tasks DONE (remaining are cloud/infra — deferred). MP-05 ✅ COMPLETE (15/15).
 > **Overall Health:** B+ (7.8/10) — Strong backend, frontend verified: 101/103 routes PASS. Security hardened (MP-01 complete). Command Center frontend + backend foundation in place.
 > **Production Readiness:** 3.0/10 — See [PRODUCTION-READINESS-ASSESSMENT.md](05-audit/PRODUCTION-READINESS-ASSESSMENT.md)
 > **Active Plan:** [Master Project Plan](08-sprints/master-project-plan.md) — ALL 39 services, 24 sprints, 5 phases, 48 weeks
@@ -67,7 +67,7 @@
 | 08  | Commission                       | Done                                                                                             | Built (11 pages, 8.5/10)                                                            | 14 FE tests             | No       | High       | P0       |
 | 09  | Load Board                       | Partial                                                                                          | Built (4 pages, 10 components)                                                      | 13 FE suites + BE specs | No       | Medium     | P0       |
 | 13  | Customer Portal                  | Substantial                                                                                      | Not Built (P0-Basic: 4 pages)                                                       | None                    | No       | Low        | P0       |
-| 39  | **Command Center**               | Substantial (6 endpoints: KPIs, alerts, activity, carrier-availability, acknowledge, auto-match) | Built (route + toolbar + KPI strip + universal drawer + dispatch board integration) | 3 FE tests (570 LOC)    | No       | High       | **P0**   |
+| 39  | **Command Center**               | Substantial (6 endpoints: KPIs, alerts, activity, carrier-availability, acknowledge, auto-match) | Built (route + toolbar + KPI strip + universal drawer + dispatch board integration) | 36 FE tests (3 suites)  | No       | High       | **P0**   |
 
 ### P1 Post-MVP (3 services)
 
@@ -99,7 +99,16 @@
 
 ## Current Sprint: MP-05 (Command Center Foundation — Weeks 9-10)
 
-**Status: IN PROGRESS — 12/15 tasks DONE**
+**Status: ✅ COMPLETE — 15/15 tasks DONE**
+
+**Completed — Session 2026-03-13 (tests):**
+
+- MP-05-015: Command Center tests — 3 test suites (36 tests, all green): `command-center.test.tsx` (container component: tabs, layout modes, dispatch board integration, drawer, bulk action bar), `command-center-hooks.test.tsx` (URL state management: defaults, router.replace, drawer lifecycle, constants, mock shape verification), `command-center-bulk-actions.test.tsx` (BulkActionBar: visibility, carrier picker with search/filter/MC#, status picker, loading/empty states). Added `TooltipProvider` to test utils wrapper. Added `hooks-command-center.ts` mock (190 LOC) with globalThis shared state pattern.
+
+**Completed — Session 2026-03-13 (bulk dispatch + Google Maps):**
+
+- MP-05-013: Bulk dispatch actions — already fully implemented: backend `POST /command-center/bulk-dispatch` (transaction, 3 actions: ASSIGN_CARRIER/DISPATCH/UPDATE_STATUS), `BulkActionBar` floating component (carrier picker, dispatch, status update), `useBulkDispatchCommand` mutation hook, wired into `CommandCenter` with selection state + carrier availability query. Max 10 loads, status validation, rate con auto-generation.
+- MP-05-014: Google Maps tracking integration — Wired existing `TrackingMap` component (762 LOC, color-coded markers, sidebar, info windows, ETA status filters) into Command Center tracking tab and split layout side panel. Replaces placeholder panels. Uses `@react-google-maps/api` + `useTrackingPositions` hook.
 
 **Completed — Session 2026-03-13 (alerts + auto-match):**
 
@@ -127,18 +136,18 @@
 
 **Remaining:**
 
-| Task      | Description                                   | Status      |
-| --------- | --------------------------------------------- | ----------- |
-| MP-05-005 | Load drawer variant (entity-specific content) | **DONE**    |
-| MP-05-006 | Carrier drawer variant                        | **DONE**    |
-| MP-05-007 | Quote drawer variant                          | **DONE**    |
-| MP-05-008 | Layout modes (Split, Dashboard, Focus panels) | **DONE**    |
-| MP-05-009 | Wire dispatch board integration               | **DONE**    |
-| MP-05-010 | Alert system (real-time panel)                | **DONE**    |
-| MP-05-012 | Auto-match engine (backend logic)             | **DONE**    |
-| MP-05-013 | Bulk dispatch actions                         | Pending |
-| MP-05-014 | Google Maps integration                       | Pending |
-| MP-05-015 | Command Center tests                          | Pending |
+| Task      | Description                                   | Status   |
+| --------- | --------------------------------------------- | -------- |
+| MP-05-005 | Load drawer variant (entity-specific content) | **DONE** |
+| MP-05-006 | Carrier drawer variant                        | **DONE** |
+| MP-05-007 | Quote drawer variant                          | **DONE** |
+| MP-05-008 | Layout modes (Split, Dashboard, Focus panels) | **DONE** |
+| MP-05-009 | Wire dispatch board integration               | **DONE** |
+| MP-05-010 | Alert system (real-time panel)                | **DONE** |
+| MP-05-012 | Auto-match engine (backend logic)             | **DONE** |
+| MP-05-013 | Bulk dispatch actions                         | **DONE** |
+| MP-05-014 | Google Maps integration                       | **DONE** |
+| MP-05-015 | Command Center tests                          | **DONE** |
 
 **Files created this session:**
 
@@ -157,12 +166,14 @@
 - `apps/web/components/tms/command-center/alerts-panel.tsx`
 - `apps/web/lib/hooks/command-center/use-command-center.ts`
 - `apps/web/lib/stores/command-center-store.ts`
+- `apps/web/__tests__/tms/command-center.test.tsx`
+- `apps/web/__tests__/tms/command-center-hooks.test.tsx`
+- `apps/web/__tests__/tms/command-center-bulk-actions.test.tsx`
+- `apps/web/test/mocks/hooks-command-center.ts`
 
 **Next priorities:**
 
-1. MP-05-013: Bulk dispatch actions
-2. MP-05-014: Google Maps integration
-3. MP-05-015: Command Center tests
+1. MP-05 COMPLETE — next sprint: MP-06 (MVP Polish + Beta Launch Prep)
 
 ---
 

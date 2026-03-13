@@ -11,10 +11,11 @@ import {
 } from '@testing-library/react';
 import * as React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 /**
- * Create a wrapper component that provides QueryClient
- * Useful for testing React Query hooks
+ * Create a wrapper component that provides QueryClient + TooltipProvider
+ * Useful for testing React Query hooks and components using Radix tooltips
  */
 export function createQueryWrapper() {
   const queryClient = new QueryClient({
@@ -28,7 +29,7 @@ export function createQueryWrapper() {
     return React.createElement(
       QueryClientProvider,
       { client: queryClient },
-      children
+      React.createElement(TooltipProvider, null, children)
     );
   };
 }

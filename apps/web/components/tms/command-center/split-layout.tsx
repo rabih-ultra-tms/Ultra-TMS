@@ -13,23 +13,15 @@
  * MP-05-008
  */
 
-import { Suspense } from 'react';
-import {
-  Activity,
-  Users,
-  FileText,
-  MapPin,
-  AlertTriangle,
-  Loader2,
-} from 'lucide-react';
-import { DispatchBoard } from '@/components/tms/dispatch/dispatch-board';
-import { DispatchBoardSkeleton } from '@/components/tms/dispatch/dispatch-board-skeleton';
+import type { ReactNode } from 'react';
+import { Activity, Users, FileText } from 'lucide-react';
 import { AlertsPanel } from './alerts-panel';
+import { TrackingMap } from '@/components/tms/tracking/tracking-map';
 import type { CCTab } from '@/lib/hooks/tms/use-command-center';
 
 interface SplitLayoutProps {
   activeTab: CCTab;
-  mainContent: React.ReactNode;
+  mainContent: ReactNode;
 }
 
 function PanelPlaceholder({
@@ -79,13 +71,7 @@ function SidePanel({ activeTab }: { activeTab: CCTab }) {
         />
       );
     case 'tracking':
-      return (
-        <PanelPlaceholder
-          icon={MapPin}
-          label="Map View"
-          description="Live truck positions (requires Google Maps)"
-        />
-      );
+      return <TrackingMap />;
     case 'alerts':
       return <AlertsPanel />;
     default:
