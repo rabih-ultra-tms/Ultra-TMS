@@ -1,10 +1,18 @@
-"use client";
-import * as React from "react";
-import Link from "next/link";
-import { User, Settings, Shield, LogOut, Moon, Sun, Monitor } from "lucide-react";
-import { useTheme } from "@/lib/theme/theme-provider";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+'use client';
+import * as React from 'react';
+import Link from 'next/link';
+import {
+  User,
+  Settings,
+  Shield,
+  LogOut,
+  Moon,
+  Sun,
+  Monitor,
+} from 'lucide-react';
+import { useTheme } from '@/lib/theme/theme-provider';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,8 +25,8 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useCurrentUser } from "@/lib/hooks/use-auth";
+} from '@/components/ui/dropdown-menu';
+import { useCurrentUser } from '@/lib/hooks/use-auth';
 
 export function UserNav() {
   const { data: user, isLoading } = useCurrentUser();
@@ -30,19 +38,19 @@ export function UserNav() {
   }, []);
 
   const getInitials = (firstName?: string, lastName?: string) => {
-    if (!firstName && !lastName) return "U";
-    return `${firstName?.[0] || ""}${lastName?.[0] || ""}`.toUpperCase();
+    if (!firstName && !lastName) return 'U';
+    return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
   };
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/v1/auth/logout", {
-        method: "POST",
-        credentials: "include",
+      await fetch('/api/v1/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
       });
-      window.location.href = "/login";
+      window.location.href = '/login';
     } catch {
-      window.location.href = "/login";
+      window.location.href = '/login';
     }
   };
 
@@ -59,7 +67,9 @@ export function UserNav() {
         aria-label="User menu"
       >
         <Avatar className="h-8 w-8">
-          <AvatarFallback>{getInitials(user?.firstName, user?.lastName)}</AvatarFallback>
+          <AvatarFallback>
+            {getInitials(user?.firstName, user?.lastName)}
+          </AvatarFallback>
         </Avatar>
       </Button>
     );
@@ -75,22 +85,22 @@ export function UserNav() {
           aria-label="User menu"
         >
           <Avatar className="h-8 w-8">
-            <AvatarImage src={user?.avatarUrl} alt={user?.fullName || "User"} />
+            <AvatarImage src={user?.avatarUrl} alt={user?.fullName || 'User'} />
             <AvatarFallback>
               {getInitials(user?.firstName, user?.lastName)}
             </AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent
-        className="w-64"
-        align="end"
-        forceMount
-      >
+      <DropdownMenuContent className="w-64" align="end" forceMount>
         <DropdownMenuLabel className="font-normal p-3">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-semibold leading-none text-foreground">{user?.fullName || "User"}</p>
-            <p className="text-xs leading-none text-muted-foreground">{user?.email || ""}</p>
+            <p className="text-sm font-semibold leading-none text-foreground">
+              {user?.fullName || 'User'}
+            </p>
+            <p className="text-xs leading-none text-muted-foreground">
+              {user?.email || ''}
+            </p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
@@ -108,7 +118,7 @@ export function UserNav() {
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/settings">
+            <Link href="/admin/settings">
               <Settings className="mr-2 h-4 w-4" />
               Settings
             </Link>
@@ -123,20 +133,20 @@ export function UserNav() {
           </DropdownMenuSubTrigger>
           <DropdownMenuPortal>
             <DropdownMenuSubContent>
-              <DropdownMenuItem onClick={() => setTheme("light")}>
+              <DropdownMenuItem onClick={() => setTheme('light')}>
                 <Sun className="mr-2 h-4 w-4" />
                 Light
-                {theme === "light" && <span className="ml-auto">✓</span>}
+                {theme === 'light' && <span className="ml-auto">✓</span>}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme("dark")}>
+              <DropdownMenuItem onClick={() => setTheme('dark')}>
                 <Moon className="mr-2 h-4 w-4" />
                 Dark
-                {theme === "dark" && <span className="ml-auto">✓</span>}
+                {theme === 'dark' && <span className="ml-auto">✓</span>}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme("system")}>
+              <DropdownMenuItem onClick={() => setTheme('system')}>
                 <Monitor className="mr-2 h-4 w-4" />
                 System
-                {theme === "system" && <span className="ml-auto">✓</span>}
+                {theme === 'system' && <span className="ml-auto">✓</span>}
               </DropdownMenuItem>
             </DropdownMenuSubContent>
           </DropdownMenuPortal>

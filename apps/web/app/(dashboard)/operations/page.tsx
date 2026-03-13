@@ -160,21 +160,19 @@ function OperationsDashboardContent() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <OpsAlertsPanel
           maxVisible={5}
-          onViewAll={() => router.push('/operations/alerts')}
+          onViewAll={() => router.push('/operations/loads?needsAttention=true')}
         />
         <OpsActivityFeed
           period={period}
           maxVisible={10}
-          onViewAll={() => router.push('/operations/activity')}
+          onViewAll={() => router.push('/operations/loads')}
         />
       </div>
 
       {/* Needs Attention Section */}
       <OpsNeedsAttention
         maxVisible={6}
-        onViewAll={() =>
-          router.push('/operations/loads?needsAttention=true')
-        }
+        onViewAll={() => router.push('/operations/loads?needsAttention=true')}
       />
     </div>
   );
