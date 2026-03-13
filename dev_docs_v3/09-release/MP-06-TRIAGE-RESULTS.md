@@ -446,6 +446,63 @@ Opportunities:
 
 ---
 
+## Top 10 Blocking Bugs (by severity)
+
+| Rank | Bug ID                            | Service                                            | Type         | Severity  | Effort | File                                                                      | Reasoning                                                                                                                                                                                                          |
+| ---- | --------------------------------- | -------------------------------------------------- | ------------ | --------- | ------ | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1    | QS-014                            | Cross-Cutting                                      | Architecture | STOP-SHIP | 8h     | `apps/api/src/`                                                           | Prisma Client Extension for auto tenantId + deletedAt injection. Blocks S4-14 through S4-20 tenant fixes. **Highest blocker** — without this, all 20+ cross-tenant bugs require manual fixes.                      |
+| 2    | S4-01 CRM Mutations               | CRM                                                | Security     | P0        | 2h     | `apps/api/src/modules/crm/`                                               | Missing tenantId in WHERE clause for update/delete operations. All 4 services (Companies, Contacts, Activities, Opportunities) allow cross-tenant mutations if UUID guessed. **Multi-tenant data integrity risk.** |
+| 3    | S4-02 Financial RolesGuard        | Accounting, Credit, Contracts, Factoring, Agents   | Security     | P0        | 4h     | `apps/api/src/modules/{accounting,credit,contracts,factoring,agents}/`    | 23 endpoints missing RolesGuard. Any authenticated user can access financial controllers without role verification. **Financial data exposure.**                                                                   |
+| 4    | S4-21 localStorage Tokens         | Auth                                               | Security     | P0        | 4h     | `apps/web/lib/api/client.ts:59,77`                                        | JWT stored in localStorage instead of HttpOnly cookies. XSS attack can steal tokens. **Session hijacking vulnerability.** Contradicts project security policy.                                                     |
+| 5    | S4-11 ES Queries                  | Search                                             | Security     | P0        | 2h     | `apps/api/src/modules/search/`                                            | Elasticsearch queries missing tenantId filtering. Cross-tenant data visible in search results. **Cross-tenant information disclosure.**                                                                            |
+| 6    | S4-12 Cache Endpoints             | Cache                                              | Security     | P0        | 2h     | `apps/api/src/modules/cache/`                                             | 8 of 20 cache endpoints missing tenantId. Users can manipulate other tenants' caches. **Cross-tenant operational impact.**                                                                                         |
+| 7    | Load History Monolith             | Operations                                         | Performance  | P0        | 3-4h   | `apps/web/app/(dashboard)/load-history/page.tsx:1-1042`                   | 1,042 LOC single component. No code splitting, no virtualization, no memoization. Causes 4–7s FCP. **Blocks launch on performance grounds.** Users experience slow/unresponsive page.                              |
+| 8    | S4-08,09,10 Plaintext Credentials | Rate Intelligence, EDI, Factoring, Integration Hub | Security     | P0        | 5h     | `apps/api/src/modules/{rate-intelligence,edi,factoring,integration-hub}/` | API keys, passwords stored plaintext. No encryption at rest. EncryptionService hardcoded fallback key fails in production. **Credential exposure, compliance violation.**                                          |
+| 9    | QS-008 Route Verification         | All Services                                       | Correctness  | P0        | 8h     | `apps/web/test/route-verification.spec.ts` (to be created)                | 98 routes not runtime-verified. Load-history, carriers detail, and 5+ other critical routes may return 404 or 5xx. **Unknown scope of UI failures.**                                                               |
+| 10   | S5-03 Customer Portal MVP         | Customer Portal                                    | Feature      | P0        | 16h    | `apps/web/app/(dashboard)/customer-portal/` (to be built)                 | 4-page MVP (login, dashboard, shipment list, shipment detail) completely missing. **Blocks MVP launch — customers cannot access portal.** No visibility into shipment status.                                      |
+
+### Scoring Methodology
+
+- **STOP-SHIP (10pts):** Explicitly tagged as STOP-SHIP in REMEDIATION-ROADMAP
+- **Blocks critical path (5pts):** Prevents other tasks from completing (e.g., QS-014 blocks 20+ fixes)
+- **Affects multiple services (3pts):** Issue spans 2+ services
+- **Security/compliance (5pts):** Multi-tenant breach, data exposure, or compliance violation
+- **Performance (3pts):** Affects user experience on P0 screens
+- **Effort (weight):** High-effort items ranked higher (8h > 2h, same severity)
+
+### Top 10 Score Breakdown
+
+| Bug          | STOP | Critical Path | Multi-Service | Security | Perf | Base | Effort Weight | Final  |
+| ------------ | ---- | ------------- | ------------- | -------- | ---- | ---- | ------------- | ------ |
+| QS-014       | 10   | 5             | 3             | —        | —    | 18   | 8h = 1.5x     | **27** |
+| S4-01        | 10   | 3             | 3             | 5        | —    | 21   | 2h = 1.0x     | **21** |
+| S4-02        | 10   | 3             | 3             | 5        | —    | 21   | 4h = 1.1x     | **23** |
+| S4-21        | 10   | —             | —             | 5        | —    | 15   | 4h = 1.1x     | **17** |
+| S4-11        | 10   | —             | —             | 5        | —    | 15   | 2h = 1.0x     | **15** |
+| S4-12        | 10   | —             | —             | 5        | —    | 15   | 2h = 1.0x     | **15** |
+| Load History | —    | 3             | —             | —        | 3    | 6    | 3-4h = 1.2x   | **7**  |
+| S4-08,09,10  | 10   | —             | 3             | 5        | —    | 18   | 5h = 1.2x     | **22** |
+| QS-008       | 10   | —             | 3             | —        | —    | 13   | 8h = 1.5x     | **20** |
+| S5-03        | 10   | —             | —             | —        | —    | 10   | 16h = 2.0x    | **20** |
+
+### Critical Dependencies
+
+- **QS-014** blocks: S4-14, S4-15, S4-16, S4-17, S4-18, S4-19, S4-20, S5-14, S6-02, S6-08 (10 downstream tasks)
+- **S4-21 (localStorage)** blocks: S5-03 (Customer Portal JWT fix requires auth infrastructure)
+- **S4-08/09/10 (encryption)** are sequential (S4-09 must complete before S4-08, S4-10)
+- **QS-008 (route verification)** enables: S5-xx and S6-xx feature work (identify broken routes first)
+
+### Effort Estimate Summary
+
+| Category                    | Tasks                                                  | Est. Hours | Sprint Assignment      |
+| --------------------------- | ------------------------------------------------------ | ---------- | ---------------------- |
+| **STOP-SHIP Security (S4)** | QS-014, S4-01, S4-02, S4-11, S4-12, S4-21, S4-08/09/10 | 80-100h    | Sprint S4 (weeks 1-4)  |
+| **Performance (MP-06)**     | Load History monolith                                  | 3-4h       | MP-06 Sprint 1         |
+| **Feature (S5)**            | Customer Portal MVP                                    | 16h        | Sprint S5 (weeks 5-8)  |
+| **Verification (S6)**       | QS-008 Route scan                                      | 8h         | Sprint S6 (weeks 9-11) |
+
+---
+
 ## Conclusion
 
 **Current state:** Pages perform well below acceptable standards for production.
