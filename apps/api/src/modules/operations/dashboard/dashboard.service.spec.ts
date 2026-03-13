@@ -96,6 +96,69 @@ describe('DashboardService', () => {
         expect(call[0].where.tenantId).toBe('tenant-1');
       });
     });
+
+    it('batches all KPI queries into Promise.all (no sequential calls)', async () => {
+      prisma.load.count.mockResolvedValue(5);
+      prisma.load.findMany.mockResolvedValue([]);
+
+      await service.getKPIs('t1', 'week', 'all', 'previous-week');
+
+      // Verify load.count called 6 times (3 current period + 3 comparison period counts)
+      expect(prisma.load.count).toHaveBeenCalledTimes(6);
+      // Verify load.findMany called 3 times (1 current period + 1 comparison period + 1 on-time)
+      expect(prisma.load.findMany).toHaveBeenCalledTimes(3);
+    });
+
+    it('includes on-time calculation in batch queries (no +1 extra query)', async () => {
+      prisma.load.count.mockResolvedValue(5);
+      prisma.load.findMany.mockResolvedValue([
+        {
+          deliveredAt: new Date('2026-03-01'),
+          order: { requiredDeliveryDate: new Date('2026-03-05') },
+        },
+      ]);
+
+      const result = await service.getKPIs(
+        't1',
+        'week',
+        'all',
+        'previous-week'
+      );
+
+      // Should have on-time percentage calculated
+      expect(result.data.onTimePercentage).toBeDefined();
+      // Total Prisma calls: 6 counts + 3 findManys = 9 calls, all batched in Promise.all
+      expect(prisma.load.count).toHaveBeenCalledTimes(6);
+      expect(prisma.load.findMany).toHaveBeenCalledTimes(3);
+    });
+
+    it('calculates correct on-time percentage from batched query', async () => {
+      prisma.load.count.mockResolvedValue(0);
+      prisma.load.findMany.mockResolvedValueOnce([]); // periodLoads
+      prisma.load.findMany.mockResolvedValueOnce([]); // compPeriodLoads
+      prisma.load.findMany.mockResolvedValueOnce([
+        // deliveredLoads - on-time
+        {
+          deliveredAt: new Date('2026-03-01'),
+          order: { requiredDeliveryDate: new Date('2026-03-05') },
+        },
+        // deliveredLoads - late
+        {
+          deliveredAt: new Date('2026-03-10'),
+          order: { requiredDeliveryDate: new Date('2026-03-05') },
+        },
+      ]);
+
+      const result = await service.getKPIs(
+        't1',
+        'week',
+        'all',
+        'previous-week'
+      );
+
+      // 1 out of 2 loads on-time = 50%
+      expect(result.data.onTimePercentage).toBe(50);
+    });
   });
 
   describe('getCharts', () => {
@@ -120,6 +183,63 @@ describe('DashboardService', () => {
 
       const groupByCalls = prisma.load.groupBy.mock.calls;
       expect(groupByCalls[0][0].where.deletedAt).toBe(null);
+    });
+
+    it('batches groupBy and findMany into single parallel queries (no N+1)', async () => {
+      prisma.load.groupBy.mockResolvedValue([
+        { status: 'PENDING', _count: { id: 3 } },
+        { status: 'DELIVERED', _count: { id: 10 } },
+      ]);
+      prisma.order.findMany.mockResolvedValue([
+        {
+          orderDate: new Date('2026-03-01'),
+          totalCharges: 5000,
+        },
+      ]);
+
+      await service.getCharts('t1', 'week');
+
+      // Each call happens exactly once - no looping per status/order
+      expect(prisma.load.groupBy).toHaveBeenCalledTimes(1);
+      expect(prisma.order.findMany).toHaveBeenCalledTimes(1);
+    });
+
+    it('applies tenantId filter in both groupBy and findMany', async () => {
+      prisma.load.groupBy.mockResolvedValue([]);
+      prisma.order.findMany.mockResolvedValue([]);
+
+      await service.getCharts('tenant-abc', 'week');
+
+      // Check groupBy call
+      expect(prisma.load.groupBy.mock.calls[0][0].where.tenantId).toBe(
+        'tenant-abc'
+      );
+      // Check findMany call
+      expect(prisma.order.findMany.mock.calls[0][0].where.tenantId).toBe(
+        'tenant-abc'
+      );
+    });
+
+    it('correctly groups revenue by date in application layer', async () => {
+      prisma.load.groupBy.mockResolvedValue([]);
+      prisma.order.findMany.mockResolvedValue([
+        { orderDate: new Date('2026-03-01'), totalCharges: 1000 },
+        { orderDate: new Date('2026-03-01'), totalCharges: 2000 },
+        { orderDate: new Date('2026-03-02'), totalCharges: 3000 },
+      ]);
+
+      const result = await service.getCharts('t1', 'week');
+
+      const revenueTrend = result.data.revenueTrend;
+      expect(revenueTrend).toHaveLength(2);
+      expect(revenueTrend[0]).toEqual({
+        date: '2026-03-01',
+        revenue: 3000,
+      });
+      expect(revenueTrend[1]).toEqual({
+        date: '2026-03-02',
+        revenue: 3000,
+      });
     });
   });
 
