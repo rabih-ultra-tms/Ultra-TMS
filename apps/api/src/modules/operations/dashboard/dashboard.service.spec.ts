@@ -80,7 +80,7 @@ describe('DashboardService', () => {
       await service.getKPIs('t1', 'week', 'all', 'previous-week');
 
       const countCalls = prisma.load.count.mock.calls;
-      countCalls.forEach((call) => {
+      countCalls.forEach((call: any[]) => {
         expect(call[0].where.deletedAt).toBe(null);
       });
     });
@@ -92,7 +92,7 @@ describe('DashboardService', () => {
       await service.getKPIs('tenant-1', 'week', 'all', 'previous-week');
 
       const countCalls = prisma.load.count.mock.calls;
-      countCalls.forEach((call) => {
+      countCalls.forEach((call: any[]) => {
         expect(call[0].where.tenantId).toBe('tenant-1');
       });
     });
@@ -139,7 +139,7 @@ describe('DashboardService', () => {
       await service.getAlerts('t1');
 
       const findManyCalls = prisma.load.findMany.mock.calls;
-      findManyCalls.forEach((call) => {
+      findManyCalls.forEach((call: any[]) => {
         expect(call[0].where.tenantId).toBe('t1');
         expect(call[0].where.deletedAt).toBe(null);
       });
