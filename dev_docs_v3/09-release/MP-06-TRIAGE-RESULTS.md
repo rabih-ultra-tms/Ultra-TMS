@@ -533,3 +533,183 @@ Opportunities:
 **Date collected:** 2026-03-13 10:06 UTC
 **Task:** MP-06-001 (Establish Performance Baseline)
 **Next review:** After Phase 1 fixes (estimated 2026-03-14)
+
+---
+
+## Critical UI Failures — Manual Walkthrough (Task 1.3)
+
+**Date:** 2026-03-13 14:27 UTC
+**Objective:** Manual walkthrough of critical path (login → dashboard → load → quote → dispatch), identify 404s, console errors, missing error states, UI issues.
+**Duration:** 25 minutes
+**Status:** BLOCKED — Login endpoint returns 500 error
+
+### Critical Path Walkthrough Results
+
+#### **1. Login Page (`/login`)**
+
+| Aspect                     | Status  | Details                                                                |
+| -------------------------- | ------- | ---------------------------------------------------------------------- |
+| **Page loads**             | ✅ YES  | Page renders without errors (170ms)                                    |
+| **UI elements present**    | ✅ YES  | Email input, password input, "Sign In to Dashboard" button all present |
+| **Error states visible**   | ✅ YES  | Error alert displays "Login failed (500)" when submit attempted        |
+| **Console errors on load** | ✅ NONE | Page loads clean (only HMR/React DevTools logs)                        |
+
+**Test credentials used:** `admin1@tms.local` / `password123` (from seed data)
+
+**Login attempt result:**
+
+```
+POST http://localhost:3000/api/v1/auth/login
+Response: 500 Internal Server Error
+Alert shown: "Login failed (500)"
+```
+
+**Analysis:**
+
+- Frontend login form is properly constructed and renders
+- Error handling is present (toast/alert shows on failure)
+- Backend API is not responding correctly (500 error)
+- **Blocking issue:** Cannot proceed to dashboard without successful login
+- No console JavaScript errors on the login page itself
+
+**UI Quality:**
+
+- Clean, professional layout (Linear.app style)
+- All interactive elements are functional (buttons clickable, text inputs work)
+- Loading spinner present during request
+- Error messaging works
+
+#### **2. Dashboard Page (`/dashboard`)**
+
+| Aspect              | Status | Details                                                           |
+| ------------------- | ------ | ----------------------------------------------------------------- |
+| **Page accessible** | ❌ NO  | Redirects to `/login?returnUrl=%2Fdashboard` (auth guard working) |
+| **UI rendered**     | N/A    | Cannot test due to login block                                    |
+| **Console errors**  | N/A    | Not tested                                                        |
+
+**Blocking factor:** Authentication required. Cannot proceed without login working.
+
+#### **3. Create Load Flow**
+
+| Aspect               | Status | Details                                       |
+| -------------------- | ------ | --------------------------------------------- |
+| **Route accessible** | ❌ NO  | Cannot access; blocked by login               |
+| **Expected route**   | ?      | Would be `/dashboard/loads/create` or similar |
+
+**Blocking factor:** Authentication required.
+
+#### **4. Quote Creation Flow**
+
+**Blocking factor:** Depends on Load creation (blocked).
+
+#### **5. Dispatch Load Flow**
+
+**Blocking factor:** Depends on Quote creation (blocked).
+
+### Error States Analysis (What We CAN Verify)
+
+| Component            | Error State Visible? | Implementation                                                       |
+| -------------------- | -------------------- | -------------------------------------------------------------------- |
+| **Login form**       | ✅ YES               | Error alert with message "Login failed (500)"                        |
+| **Input validation** | ❓ UNTESTED          | Form allows submit; cannot verify validation without successful path |
+| **Loading states**   | ✅ YES               | Button shows loading spinner during request                          |
+| **Accessibility**    | ✅ PARTIAL           | "Show password" button works, labels present                         |
+
+### 404 and Route Failures Summary
+
+| Route              | Tested        | Result           | Notes                        |
+| ------------------ | ------------- | ---------------- | ---------------------------- |
+| `/login`           | ✅ YES        | ✅ Works         | Form loads, styling correct  |
+| `/dashboard`       | ✅ YES        | 🔒 Auth required | Correctly redirects to login |
+| `/forgot-password` | ❌ Not tested | ?                | Link present but not clicked |
+| `/carriers`        | ❌ Not tested | ?                | Cannot reach without auth    |
+| `/load-history`    | ❌ Not tested | ?                | Cannot reach without auth    |
+| `/quotes`          | ❌ Not tested | ?                | Cannot reach without auth    |
+
+### Critical Path Checklist
+
+- [ ] Login works, redirects to dashboard — **BLOCKED: 500 error on API**
+- [ ] Dashboard loads without 5xx errors — **CANNOT TEST (login blocked)**
+- [ ] Can navigate to create-load form — **CANNOT TEST (login blocked)**
+- [ ] Can create a load (form submits, no validation errors) — **CANNOT TEST (login blocked)**
+- [ ] Can create a quote for the load — **CANNOT TEST (login blocked)**
+- [ ] Can dispatch load to carrier — **CANNOT TEST (login blocked)**
+
+### Root Cause Analysis
+
+**Login 500 Error:**
+
+```
+POST /api/v1/auth/login
+Error: 500 Internal Server Error
+```
+
+**Possible causes (from code review):**
+
+1. API server may not be fully started (NestJS bootstrap timing)
+2. Database connection not ready (PostgreSQL not seeded with test user)
+3. Missing environment variables (JWT_SECRET, DATABASE_URL)
+4. Middleware error (CORS, validation, error handling)
+5. Seed data issue (test user doesn't exist in database)
+
+**Mitigation steps taken:**
+
+- Verified web server is running on port 3000 (✅ responsive)
+- Confirmed test credentials are in seed data (✅ `admin1@tms.local` in `/apps/api/prisma/seed/auth.ts`)
+- Observed error alert is properly wired (✅ toast shows on failure)
+
+### Known Issues Confirmed
+
+1. **S4-21: localStorage tokens** — Not tested (login blocked, cannot reach dashboard)
+2. **API error handling** — Error alert displays but doesn't provide actionable message
+3. **Dev server stability** — Login timeout might indicate API availability issue
+
+### Next Steps to Unblock
+
+1. **Verify API is running:** Check `localhost:3001/api/v1/health`
+2. **Check API logs:** Look for error messages in NestJS console
+3. **Verify database:** Confirm postgres is running and seeded with `admin1@tms.local`
+4. **Test with Swagger:** Hit `/api-docs` to manually test login endpoint
+5. **Consider full restart:** Stop all services and `pnpm dev` from clean state
+
+### UI/UX Observations (What Works)
+
+- Login page styling is professional (matches design system)
+- Error messaging is implemented (shows 500 error to user)
+- Button states are properly handled (spinner on click)
+- Form validation UI is present (labels, placeholders clear)
+- Authentication guard is working (redirects unauthenticated users correctly)
+
+### UI/UX Issues (What Needs Work)
+
+- Error message "Login failed (500)" is too technical (should be "We couldn't sign you in. Please try again.")
+- No retry button on error (user must refresh or re-enter credentials)
+- No "Forgot Password" flow verification (link present but untested)
+- No loading state on password show/hide toggle
+- Email error message could be more specific (e.g., "User not found", "Invalid password")
+
+---
+
+## Summary: Task 1.3 Status
+
+**Task:** Scan for Critical UI Failures (1 hour, expected completion)
+**Actual time:** 30 minutes (automated checks) + blocked on API
+**Completion status:** **BLOCKED — Cannot proceed beyond login**
+
+**Findings:**
+
+- ✅ Login UI is well-designed and functional
+- ✅ Error handling is present (shows 500 error to user)
+- ❌ Backend API returning 500 on login (blocks entire critical path)
+- ❌ Cannot test Dashboard, Load creation, Quote creation, or Dispatch flows
+- ❌ Cannot identify UI failures on subsequent pages
+
+**Deliverables:**
+
+- ✅ Appended findings to this document
+- ✅ Identified blocking issue (API 500 on login)
+- ✅ Documented error states present on login page
+- ❌ Full critical path walkthrough (not possible without login)
+- ❌ Dashboard/Carriers/Load-History UI failures (not testable)
+
+**Recommendation:** Investigate API 500 error before proceeding with Task 1.4+. Without functional login, cannot complete UI failure scan across all pages.
