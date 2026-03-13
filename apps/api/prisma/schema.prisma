@@ -1036,6 +1036,7 @@ model Carrier {
   @@index([tenantId, deletedAt])
   @@index([tenantId])
   @@index([tenantId, status])
+  @@index([tenantId, deletedAt, status])
 }
 
 model CarrierCapacity {
@@ -4423,6 +4424,7 @@ model Invoice {
   @@index([tenantId])
   @@index([tenantId, status, dueDate])
   @@index([tenantId, status])
+  @@index([tenantId, deletedAt, createdAt])
 }
 
 model InvoiceLineItem {
@@ -4836,6 +4838,7 @@ model Load {
   @@index([tenantId, deletedAt])
   @@index([tenantId])
   @@index([tenantId, status])
+  @@index([tenantId, deletedAt, status])
 }
 
 model LoadBid {
