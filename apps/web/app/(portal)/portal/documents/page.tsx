@@ -1,10 +1,13 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePortalInvoices } from '@/lib/hooks/portal/use-portal-documents';
+import { usePortalShipments } from '@/lib/hooks/portal/use-portal-shipments';
+import { DocumentTable, Document } from '@/components/portal/DocumentTable';
 import { FileText, Download } from 'lucide-react';
 
 const INVOICE_STATUS_COLORS: Record<string, string> = {
@@ -17,21 +20,69 @@ const INVOICE_STATUS_COLORS: Record<string, string> = {
 };
 
 export default function PortalDocumentsPage() {
-  const { data: invoices, isLoading } = usePortalInvoices();
+  const { data: invoices, isLoading: invoicesLoading } = usePortalInvoices();
+  const { data: shipments, isLoading: shipmentsLoading } = usePortalShipments();
+
+  // Aggregate documents from shipments
+  const aggregatedDocuments = useMemo(() => {
+    if (!shipments) return [];
+
+    const docs: Document[] = [];
+
+    shipments.forEach((shipment: any) => {
+      if (shipment.documents && Array.isArray(shipment.documents)) {
+        shipment.documents.forEach((doc: any) => {
+          docs.push({
+            id: doc.id,
+            name: doc.name,
+            type: doc.type || 'Document',
+            createdAt: doc.createdAt || new Date().toISOString(),
+            url: doc.url,
+            shipmentId: shipment.id,
+          });
+        });
+      }
+    });
+
+    return docs;
+  }, [shipments]);
+
+  const isLoading = invoicesLoading || shipmentsLoading;
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Documents</h1>
-        <p className="text-sm text-gray-500">Invoices, rate confirmations, and bills of lading</p>
+        <p className="text-sm text-gray-500">
+          Access BOL, POD, invoices, and other shipment documents
+        </p>
       </div>
 
+      {/* Shipment Documents Table */}
+      {isLoading ? (
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-16" />
+          ))}
+        </div>
+      ) : aggregatedDocuments.length > 0 ? (
+        <DocumentTable documents={aggregatedDocuments} />
+      ) : (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <FileText className="mb-4 h-12 w-12 text-gray-300" />
+            <p className="text-sm text-gray-500">No documents found</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Invoices Section */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Invoices</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
+          {invoicesLoading ? (
             <div className="space-y-3">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Skeleton key={i} className="h-16" />
@@ -54,7 +105,9 @@ export default function PortalDocumentsPage() {
                       <FileText className="h-5 w-5 text-gray-500" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold">{invoice.invoiceNumber}</p>
+                      <p className="text-sm font-semibold">
+                        {invoice.invoiceNumber}
+                      </p>
                       <p className="text-xs text-gray-500">
                         Due: {new Date(invoice.dueDate).toLocaleDateString()}
                       </p>
@@ -63,19 +116,25 @@ export default function PortalDocumentsPage() {
 
                   <div className="flex items-center gap-4">
                     <p className="text-sm font-medium">
-                      ${invoice.amount.toLocaleString(undefined, {
+                      $
+                      {invoice.amount.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}
                     </p>
                     <Badge
                       className={
-                        INVOICE_STATUS_COLORS[invoice.status] ?? 'bg-gray-100 text-gray-800'
+                        INVOICE_STATUS_COLORS[invoice.status] ??
+                        'bg-gray-100 text-gray-800'
                       }
                     >
                       {invoice.status}
                     </Badge>
-                    <a href={`/api/v1/portal/invoices/${invoice.id}/pdf`} target="_blank" rel="noopener noreferrer">
+                    <a
+                      href={`/api/v1/portal/invoices/${invoice.id}/pdf`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       <Button variant="ghost" size="sm">
                         <Download className="mr-1 h-4 w-4" />
                         PDF
