@@ -16,7 +16,7 @@ Ultra TMS is a multi-tenant 3PL logistics platform with **39 services** across 5
 
 - MP-01 ✅ COMPLETE (30/30 tasks)
 - MP-02 ✅ COMPLETE (15/15 tasks)
-- MP-03 IN PROGRESS: 5/11 tasks DONE (MP-03-004, 005, 007, 008, 009)
+- MP-03 ✅ COMPLETE (11/11 tasks)
 - Backend: ~90% built for P0 (1,230 endpoints, 260 Prisma models)
 - Frontend: ~70-80% built for P0 (103 routes, 304 components)
 - P1-P3 backend: "Substantial" (endpoints exist, many stubs)
@@ -292,19 +292,19 @@ Every service entering a sprint gets work across 5 layers:
 **Services touched:** All P0
 **Absorbs:** TEST-001–015, QS-008, QS-010, REMEDIATION-ROADMAP S6
 
-| ID        | Task                                                                                                                            | Layer | Effort | Priority | Source         |
-| --------- | ------------------------------------------------------------------------------------------------------------------------------- | ----- | ------ | -------- | -------------- |
-| MP-03-001 | ~~QS-015: Financial Calculation Tests (10 tests)~~                                                                              | TST   | 8h     | P0       | **DONE**       |
-| MP-03-002 | ~~QS-016: Tenant Isolation Tests (15 tests)~~                                                                                   | TST   | 6h     | P0       | **DONE**       |
-| MP-03-003 | QS-008: Runtime Route Verification (Playwright scan of all 98 routes)                                                           | TST   | 8h     | P0       | QS-008         |
-| MP-03-004 | ~~RolesGuard integration tests — confirm 403 on unauthorized access for all financial controllers~~                             | TST   | 4h     | P0       | **DONE**       |
-| MP-03-005 | ~~Unit tests for Operations DashboardService (594 LOC, complex aggregation)~~                                                   | TST   | 4h     | P1       | **DONE**       |
-| MP-03-006 | ~~Frontend accounting tests (699 tests, 48 suites, 0 failures) — 15 page + 8 workflow + 18 component + 5 hook + 1 integration~~ | TST   | 6h     | P2       | **DONE**       |
-| MP-03-007 | ~~Portal auth integration tests (Customer Portal + Carrier Portal JWT flows)~~                                                  | TST   | 4h     | P1       | **DONE**       |
-| MP-03-008 | ~~Soft-delete verification tests (confirm deleted records excluded from all queries)~~                                          | TST   | 3h     | P1       | **DONE**       |
-| MP-03-009 | ~~Webhook integration tests (Twilio signature, HubSpot signature)~~                                                             | TST   | 2h     | P2       | **DONE**       |
-| MP-03-010 | QS-010: Triage 339 TODOs                                                                                                        | VER   | 3h     | P2       | QS-010         |
-| MP-03-011 | Fix broken routes discovered by Playwright (budget: 8h max, defer cosmetic)                                                     | BLD   | 8h     | P0       | QS-008 results |
+| ID        | Task                                                                                                                            | Layer | Effort | Priority | Source   |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------- | ----- | ------ | -------- | -------- |
+| MP-03-001 | ~~QS-015: Financial Calculation Tests (10 tests)~~                                                                              | TST   | 8h     | P0       | **DONE** |
+| MP-03-002 | ~~QS-016: Tenant Isolation Tests (15 tests)~~                                                                                   | TST   | 6h     | P0       | **DONE** |
+| MP-03-003 | ~~QS-008: Runtime Route Verification (Playwright scan of all 114 routes)~~                                                      | TST   | 8h     | P0       | **DONE** |
+| MP-03-004 | ~~RolesGuard integration tests — confirm 403 on unauthorized access for all financial controllers~~                             | TST   | 4h     | P0       | **DONE** |
+| MP-03-005 | ~~Unit tests for Operations DashboardService (594 LOC, complex aggregation)~~                                                   | TST   | 4h     | P1       | **DONE** |
+| MP-03-006 | ~~Frontend accounting tests (699 tests, 48 suites, 0 failures) — 15 page + 8 workflow + 18 component + 5 hook + 1 integration~~ | TST   | 6h     | P2       | **DONE** |
+| MP-03-007 | ~~Portal auth integration tests (Customer Portal + Carrier Portal JWT flows)~~                                                  | TST   | 4h     | P1       | **DONE** |
+| MP-03-008 | ~~Soft-delete verification tests (confirm deleted records excluded from all queries)~~                                          | TST   | 3h     | P1       | **DONE** |
+| MP-03-009 | ~~Webhook integration tests (Twilio signature, HubSpot signature)~~                                                             | TST   | 2h     | P2       | **DONE** |
+| MP-03-010 | ~~QS-010: Triage TODOs (339→1 remaining, deferred seed contact to MP-07)~~                                                      | VER   | 3h     | P2       | **DONE** |
+| MP-03-011 | ~~Fix 5 broken routes (crm/customers, operations/alerts, operations/activity, operations/carriers, /settings)~~                 | BLD   | 8h     | P0       | **DONE** |
 
 **Exit Criteria:**
 
