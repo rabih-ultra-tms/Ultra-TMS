@@ -23,6 +23,8 @@ import { DashboardLayout } from './dashboard-layout';
 import { FocusLayout } from './focus-layout';
 import { DispatchBoard } from '@/components/tms/dispatch/dispatch-board';
 import { DispatchBoardSkeleton } from '@/components/tms/dispatch/dispatch-board-skeleton';
+import { AlertsPanel } from './alerts-panel';
+import { useCommandCenterAlerts } from '@/lib/hooks/command-center/use-command-center';
 import type { CCTab } from '@/lib/hooks/tms/use-command-center';
 import type { DispatchLoad } from '@/lib/types/dispatch';
 import { Package, FileText, Users, MapPin, AlertTriangle } from 'lucide-react';
@@ -80,6 +82,8 @@ function PlaceholderPanel({ tab }: { tab: Exclude<CCTab, 'loads'> }) {
 export function CommandCenter() {
   const { activeTab, setActiveTab, layout, setLayout, drawer, openDrawer, closeDrawer } =
     useCommandCenter();
+  const { data: alertsData } = useCommandCenterAlerts();
+  const alertCount = alertsData?.data?.length ?? 0;
 
   // Dispatch board load click → open Command Center's universal drawer
   const handleLoadClick = useCallback(
@@ -104,6 +108,8 @@ export function CommandCenter() {
         <Suspense fallback={<DispatchBoardSkeleton />}>
           <DispatchBoard onLoadClick={handleLoadClick} />
         </Suspense>
+      ) : activeTab === 'alerts' ? (
+        <AlertsPanel />
       ) : (
         <PlaceholderPanel tab={activeTab} />
       )}
@@ -118,6 +124,7 @@ export function CommandCenter() {
         onTabChange={setActiveTab}
         layout={layout}
         onLayoutChange={setLayout}
+        alertCount={alertCount}
       />
 
       {/* KPI Strip — hidden in dashboard (it has its own KPI cards) and focus modes */}

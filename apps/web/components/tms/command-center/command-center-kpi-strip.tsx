@@ -18,9 +18,13 @@ import {
   Users,
   ChevronDown,
   ChevronUp,
+  Shield,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useCommandCenterKPIs } from '@/lib/hooks/command-center/use-command-center';
+import {
+  useCommandCenterKPIs,
+  useCommandCenterAlerts,
+} from '@/lib/hooks/command-center/use-command-center';
 import { useCommandCenterStore } from '@/lib/stores/command-center-store';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -41,9 +45,20 @@ export function CommandCenterKPIStrip({
   activeTab,
 }: CommandCenterKPIStripProps) {
   const { data: kpis, isLoading } = useCommandCenterKPIs();
+  const { data: alertsData } = useCommandCenterAlerts();
   const { kpiStripCollapsed, toggleKpiStrip } = useCommandCenterStore();
 
-  const items = getKPIsForTab(activeTab, kpis);
+  const alertCounts = alertsData?.data
+    ? {
+        total: alertsData.data.length,
+        critical: alertsData.data.filter((a) => a.severity === 'critical')
+          .length,
+        warning: alertsData.data.filter((a) => a.severity === 'warning').length,
+        info: alertsData.data.filter((a) => a.severity === 'info').length,
+      }
+    : undefined;
+
+  const items = getKPIsForTab(activeTab, kpis, alertCounts);
 
   if (items.length === 0) return null;
 
@@ -100,15 +115,60 @@ export function CommandCenterKPIStrip({
   );
 }
 
+interface AlertCounts {
+  total: number;
+  critical: number;
+  warning: number;
+  info: number;
+}
+
 function getKPIsForTab(
   tab: CCTab,
-  kpis: ReturnType<typeof useCommandCenterKPIs>['data'] | undefined
+  kpis: ReturnType<typeof useCommandCenterKPIs>['data'] | undefined,
+  alertCounts?: AlertCounts
 ): KPIItem[] {
+  if (tab === 'alerts') {
+    if (!alertCounts) return [{ label: 'Loading', value: '—', icon: Package }];
+    return [
+      {
+        label: 'Total',
+        value: alertCounts.total,
+        icon: AlertTriangle,
+        color: 'text-orange-600',
+      },
+      {
+        label: 'Critical',
+        value: alertCounts.critical,
+        icon: AlertTriangle,
+        color: 'text-red-600',
+      },
+      {
+        label: 'Warning',
+        value: alertCounts.warning,
+        icon: Clock,
+        color: 'text-amber-600',
+      },
+      {
+        label: 'Info',
+        value: alertCounts.info,
+        icon: Shield,
+        color: 'text-blue-600',
+      },
+      ...(kpis
+        ? [
+            {
+              label: 'At Risk',
+              value: kpis.loads.atRisk,
+              icon: Truck,
+              color: 'text-red-600',
+            },
+          ]
+        : []),
+    ];
+  }
+
   if (!kpis) {
-    // Return placeholder structure for skeleton sizing
-    return tab === 'alerts'
-      ? []
-      : [{ label: 'Loading', value: '—', icon: Package }];
+    return [{ label: 'Loading', value: '—', icon: Package }];
   }
 
   switch (tab) {
@@ -208,8 +268,6 @@ function getKPIsForTab(
           color: 'text-red-600',
         },
       ];
-    case 'alerts':
-      return [];
     default:
       return [];
   }
