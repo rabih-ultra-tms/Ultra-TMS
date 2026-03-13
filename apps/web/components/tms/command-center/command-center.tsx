@@ -24,6 +24,7 @@ import { FocusLayout } from './focus-layout';
 import { DispatchBoard } from '@/components/tms/dispatch/dispatch-board';
 import { DispatchBoardSkeleton } from '@/components/tms/dispatch/dispatch-board-skeleton';
 import type { CCTab } from '@/lib/hooks/tms/use-command-center';
+import type { DispatchLoad } from '@/lib/types/dispatch';
 import { Package, FileText, Users, MapPin, AlertTriangle } from 'lucide-react';
 
 /**
@@ -80,6 +81,14 @@ export function CommandCenter() {
   const { activeTab, setActiveTab, layout, setLayout, drawer, openDrawer, closeDrawer } =
     useCommandCenter();
 
+  // Dispatch board load click → open Command Center's universal drawer
+  const handleLoadClick = useCallback(
+    (load: DispatchLoad) => {
+      openDrawer('load', String(load.id));
+    },
+    [openDrawer]
+  );
+
   // Exit focus mode → return to board layout
   const exitFocus = useCallback(() => {
     setLayout('board');
@@ -93,7 +102,7 @@ export function CommandCenter() {
     <>
       {activeTab === 'loads' ? (
         <Suspense fallback={<DispatchBoardSkeleton />}>
-          <DispatchBoard />
+          <DispatchBoard onLoadClick={handleLoadClick} />
         </Suspense>
       ) : (
         <PlaceholderPanel tab={activeTab} />

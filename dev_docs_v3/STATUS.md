@@ -1,7 +1,7 @@
 # Ultra TMS — Project Status Dashboard
 
 > **Last Updated:** 2026-03-13
-> **Current Phase:** MP-05 Command Center Foundation (Weeks 9-10). MP-01 ✅ COMPLETE (30/30). MP-02 ✅ COMPLETE (17/17 tasks). MP-03 ✅ COMPLETE (11/11 tasks). MP-04: 5/11 tasks DONE (remaining are cloud/infra — deferred). MP-05: 8/15 tasks DONE.
+> **Current Phase:** MP-05 Command Center Foundation (Weeks 9-10). MP-01 ✅ COMPLETE (30/30). MP-02 ✅ COMPLETE (17/17 tasks). MP-03 ✅ COMPLETE (11/11 tasks). MP-04: 5/11 tasks DONE (remaining are cloud/infra — deferred). MP-05: 10/15 tasks DONE.
 > **Overall Health:** B+ (7.8/10) — Strong backend, frontend verified: 101/103 routes PASS. Security hardened (MP-01 complete). Command Center frontend + backend foundation in place.
 > **Production Readiness:** 3.0/10 — See [PRODUCTION-READINESS-ASSESSMENT.md](05-audit/PRODUCTION-READINESS-ASSESSMENT.md)
 > **Active Plan:** [Master Project Plan](08-sprints/master-project-plan.md) — ALL 39 services, 24 sprints, 5 phases, 48 weeks
@@ -99,7 +99,12 @@
 
 ## Current Sprint: MP-05 (Command Center Foundation — Weeks 9-10)
 
-**Status: IN PROGRESS — 8/15 tasks DONE**
+**Status: IN PROGRESS — 10/15 tasks DONE**
+
+**Completed — Session 2026-03-13 (layouts + board wiring):**
+
+- MP-05-008: Layout modes — `SplitLayout` (60/40 board+panel), `DashboardLayout` (KPI grid + alerts + activity feed, wired to `useCommandCenterKPIs`), `FocusLayout` (full-width entity detail with ESC exit). All 3 layouts integrated in `CommandCenter` container.
+- MP-05-009: Dispatch board integration — Added optional `onLoadClick` prop to `DispatchBoard`. When embedded in Command Center, table row clicks open `UniversalDetailDrawer` (load type) instead of the internal `DispatchDetailDrawer`. Fixed `command-center-store.ts` type error (`toggleKpiStrip` was passing callback to `set()` instead of using `get()`).
 
 **Completed — Session 2026-03-13 (drawer variants):**
 
@@ -122,8 +127,8 @@
 | MP-05-005 | Load drawer variant (entity-specific content) | **DONE**    |
 | MP-05-006 | Carrier drawer variant                        | **DONE**    |
 | MP-05-007 | Quote drawer variant                          | **DONE**    |
-| MP-05-008 | Layout modes (Split, Dashboard, Focus panels) | Pending |
-| MP-05-009 | Wire dispatch board integration               | Pending |
+| MP-05-008 | Layout modes (Split, Dashboard, Focus panels) | **DONE**    |
+| MP-05-009 | Wire dispatch board integration               | **DONE**    |
 | MP-05-010 | Alert system (real-time panel)                | Pending |
 | MP-05-012 | Auto-match engine (backend logic)             | Pending |
 | MP-05-013 | Bulk dispatch actions                         | Pending |
@@ -141,12 +146,18 @@
 - `apps/api/src/modules/command-center/command-center.module.ts` (registered in app.module)
 - `apps/web/components/tms/command-center/carrier-drawer-content.tsx`
 - `apps/web/components/tms/command-center/quote-drawer-content.tsx`
+- `apps/web/components/tms/command-center/split-layout.tsx`
+- `apps/web/components/tms/command-center/dashboard-layout.tsx`
+- `apps/web/components/tms/command-center/focus-layout.tsx`
+- `apps/web/components/tms/command-center/alerts-panel.tsx`
+- `apps/web/lib/hooks/command-center/use-command-center.ts`
+- `apps/web/lib/stores/command-center-store.ts`
 
 **Next priorities:**
 
-1. MP-05-008: Layout modes (Split, Dashboard, Focus)
-2. MP-05-009: Wire to existing dispatch board
-3. Wire KPI strip to real backend data via `useCommandCenterKPIs` hook
+1. MP-05-010: Alert system (real-time panel)
+2. MP-05-012: Auto-match engine (backend logic)
+3. MP-05-013: Bulk dispatch actions
 
 ---
 

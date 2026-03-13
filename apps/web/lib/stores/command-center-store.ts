@@ -20,7 +20,7 @@ interface CommandCenterStoreState {
 
 export const useCommandCenterStore = createStore<CommandCenterStoreState>(
   'command-center-store',
-  (set) => ({
+  (set, get) => ({
     drawer: { open: false, entityType: null, entityId: null },
     kpiStripCollapsed: false,
 
@@ -29,11 +29,6 @@ export const useCommandCenterStore = createStore<CommandCenterStoreState>(
     closeDrawer: () =>
       set({ drawer: { open: false, entityType: null, entityId: null } }),
     toggleKpiStrip: () =>
-      set(
-        (state: Partial<CommandCenterStoreState>) =>
-          ({
-            kpiStripCollapsed: !state.kpiStripCollapsed,
-          }) as Partial<CommandCenterStoreState>
-      ),
+      set({ kpiStripCollapsed: !get().kpiStripCollapsed }),
   })
 );

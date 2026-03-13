@@ -29,7 +29,12 @@ import { AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 
-export function DispatchBoard() {
+interface DispatchBoardProps {
+  /** When provided, load clicks call this instead of the internal detail drawer */
+  onLoadClick?: (load: DispatchLoad) => void;
+}
+
+export function DispatchBoard({ onLoadClick: externalLoadClick }: DispatchBoardProps = {}) {
   // Filter state
   const [filters, setFilters] = useState<DispatchFilters>({
     dateFrom: new Date().toISOString().split('T')[0],
@@ -87,9 +92,13 @@ export function DispatchBoard() {
   }, []);
 
   const handleLoadClick = useCallback((load: DispatchLoad) => {
+    if (externalLoadClick) {
+      externalLoadClick(load);
+      return;
+    }
     setDrawerLoad(load);
     setDrawerOpen(true);
-  }, []);
+  }, [externalLoadClick]);
 
   const handleCloseDrawer = useCallback(() => {
     setDrawerOpen(false);
