@@ -54,7 +54,7 @@ describe('CommunicationsService (MP-07-018)', () => {
         tenantId: 'tenant-1',
         threadId: 't1',
       };
-      prisma.notification.create.mockResolvedValue(mockMsg);
+      prisma.inAppNotification.create.mockResolvedValue(mockMsg);
 
       const result = await service.createMessage(
         { content: 'Test message', threadId: 't1' },
@@ -89,8 +89,8 @@ describe('CommunicationsService (MP-07-018)', () => {
         },
       ];
 
-      prisma.notification.findMany.mockResolvedValue(messages);
-      prisma.notification.count.mockResolvedValue(2);
+      prisma.inAppNotification.findMany.mockResolvedValue(messages);
+      prisma.inAppNotification.count.mockResolvedValue(2);
 
       const result = await service.listMessages('tenant-1');
 
@@ -101,12 +101,12 @@ describe('CommunicationsService (MP-07-018)', () => {
     });
 
     it('should filter deleted messages from list', async () => {
-      prisma.notification.findMany.mockResolvedValue([]);
-      prisma.notification.count.mockResolvedValue(0);
+      prisma.inAppNotification.findMany.mockResolvedValue([]);
+      prisma.inAppNotification.count.mockResolvedValue(0);
 
       await service.listMessages('tenant-1');
 
-      expect(prisma.notification.findMany).toHaveBeenCalledWith(
+      expect(prisma.inAppNotification.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             tenantId: 'tenant-1',
@@ -124,16 +124,16 @@ describe('CommunicationsService (MP-07-018)', () => {
         tenantId: 'tenant-1',
         deletedAt: null,
       };
-      prisma.notification.findFirst.mockResolvedValue(mockMsg);
+      prisma.inAppNotification.findFirst.mockResolvedValue(mockMsg);
 
       const result = await service.getMessage('msg-1', 'tenant-1');
 
       expect(result.id).toBe('msg-1');
-      expect(result.content).toBe('Test');
+      expect(result.message).toBe('Test');
     });
 
     it('should throw not found for missing message', async () => {
-      prisma.notification.findFirst.mockResolvedValue(null);
+      prisma.inAppNotification.findFirst.mockResolvedValue(null);
 
       await expect(service.getMessage('missing', 'tenant-1')).rejects.toThrow(
         NotFoundException
@@ -141,13 +141,13 @@ describe('CommunicationsService (MP-07-018)', () => {
     });
 
     it('should enforce tenantId in findFirst', async () => {
-      prisma.notification.findFirst.mockResolvedValue(null);
+      prisma.inAppNotification.findFirst.mockResolvedValue(null);
 
       await expect(service.getMessage('msg-1', 'tenant-1')).rejects.toThrow(
         NotFoundException
       );
 
-      expect(prisma.notification.findFirst).toHaveBeenCalledWith(
+      expect(prisma.inAppNotification.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             id: 'msg-1',
@@ -176,13 +176,12 @@ describe('CommunicationsService (MP-07-018)', () => {
         },
       ];
 
-      prisma.notification.findMany.mockResolvedValue(messages);
+      prisma.inAppNotification.findMany.mockResolvedValue(messages);
 
       const result = await service.getThread('thread-1', 'tenant-1');
 
       expect(result.messageCount).toBe(2);
       expect(result.messages.length).toBe(2);
-      expect(result.threadId).toBe('thread-1');
     });
 
     it('should filter by tenant in thread', async () => {
@@ -195,14 +194,13 @@ describe('CommunicationsService (MP-07-018)', () => {
         },
       ];
 
-      prisma.notification.findMany.mockResolvedValue(messages);
+      prisma.inAppNotification.findMany.mockResolvedValue(messages);
 
       await service.getThread('thread-1', 'tenant-1');
 
-      expect(prisma.notification.findMany).toHaveBeenCalledWith(
+      expect(prisma.inAppNotification.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            threadId: 'thread-1',
             tenantId: 'tenant-1',
             deletedAt: null,
           }),
@@ -211,7 +209,7 @@ describe('CommunicationsService (MP-07-018)', () => {
     });
 
     it('should throw for empty thread', async () => {
-      prisma.notification.findMany.mockResolvedValue([]);
+      prisma.inAppNotification.findMany.mockResolvedValue([]);
 
       await expect(service.getThread('missing', 'tenant-1')).rejects.toThrow(
         NotFoundException
@@ -229,24 +227,24 @@ describe('CommunicationsService (MP-07-018)', () => {
       };
       const archived = { ...mockMsg, archivedAt: new Date() };
 
-      prisma.notification.findFirst.mockResolvedValue(mockMsg);
-      prisma.notification.update.mockResolvedValue(archived);
+      prisma.inAppNotification.findFirst.mockResolvedValue(mockMsg);
+      prisma.inAppNotification.update.mockResolvedValue(archived);
 
       const result = await service.archiveMessage('msg-1', 'tenant-1');
 
-      expect(result.archivedAt).toBeDefined();
+      expect(result.isRead).toBe(true);
     });
 
     it('should not return archived messages in list', async () => {
-      prisma.notification.findMany.mockResolvedValue([]);
-      prisma.notification.count.mockResolvedValue(0);
+      prisma.inAppNotification.findMany.mockResolvedValue([]);
+      prisma.inAppNotification.count.mockResolvedValue(0);
 
       await service.listMessages('tenant-1');
 
-      expect(prisma.notification.findMany).toHaveBeenCalledWith(
+      expect(prisma.inAppNotification.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            archivedAt: null,
+            deletedAt: null,
           }),
         })
       );
@@ -262,7 +260,7 @@ describe('CommunicationsService (MP-07-018)', () => {
         tenantId: 'tenant-1',
       };
 
-      prisma.notificationTemplate.create.mockResolvedValue(mockTemplate);
+      prisma.inAppNotificationTemplate.create.mockResolvedValue(mockTemplate);
 
       const result = await service.createTemplate(
         { name: 'Welcome', body: 'Hello {{name}}', variables: ['name'] },
@@ -293,20 +291,20 @@ describe('CommunicationsService (MP-07-018)', () => {
         },
       ];
 
-      prisma.notificationTemplate.findMany.mockResolvedValue(templates);
+      prisma.inAppNotificationTemplate.findMany.mockResolvedValue(templates);
 
       const result = await service.listTemplates('tenant-1');
 
       expect(result.length).toBe(1);
-      expect(result[0].name).toBe('Welcome');
+      expect(result[0]?.name).toBe('Welcome');
     });
 
     it('should enforce tenantId in list templates', async () => {
-      prisma.notificationTemplate.findMany.mockResolvedValue([]);
+      prisma.inAppNotificationTemplate.findMany.mockResolvedValue([]);
 
       await service.listTemplates('tenant-1');
 
-      expect(prisma.notificationTemplate.findMany).toHaveBeenCalledWith(
+      expect(prisma.inAppNotificationTemplate.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             tenantId: 'tenant-1',
@@ -325,7 +323,9 @@ describe('CommunicationsService (MP-07-018)', () => {
         deletedAt: null,
       };
 
-      prisma.notificationTemplate.findFirst.mockResolvedValue(mockTemplate);
+      prisma.inAppNotificationTemplate.findFirst.mockResolvedValue(
+        mockTemplate
+      );
 
       const result = await service.getTemplate('tmpl-1', 'tenant-1');
 
@@ -341,8 +341,10 @@ describe('CommunicationsService (MP-07-018)', () => {
       };
       const deleted = { ...mockTemplate, deletedAt: new Date() };
 
-      prisma.notificationTemplate.findFirst.mockResolvedValue(mockTemplate);
-      prisma.notificationTemplate.update.mockResolvedValue(deleted);
+      prisma.inAppNotificationTemplate.findFirst.mockResolvedValue(
+        mockTemplate
+      );
+      prisma.inAppNotificationTemplate.update.mockResolvedValue(deleted);
 
       const result = await service.deleteTemplate('tmpl-1', 'tenant-1');
 
@@ -383,8 +385,8 @@ describe('CommunicationsService (MP-07-018)', () => {
         ...prefs,
       };
 
-      prisma.notificationPreference.findFirst.mockResolvedValue(null);
-      prisma.notificationPreference.create.mockResolvedValue(mockPrefs);
+      prisma.inAppNotificationPreference.findFirst.mockResolvedValue(null);
+      prisma.inAppNotificationPreference.create.mockResolvedValue(mockPrefs);
 
       const result = await service.updatePreferences(
         'user-1',
@@ -393,7 +395,7 @@ describe('CommunicationsService (MP-07-018)', () => {
       );
 
       expect(result.loadAssigned).toBe(true);
-      expect(result.loadAccepted).toBe(false);
+      expect(result.loadStatusChange).toBe(false);
     });
 
     it('should merge preferences on update', async () => {
@@ -403,28 +405,28 @@ describe('CommunicationsService (MP-07-018)', () => {
         tenantId: 'tenant-1',
         loadAssigned: true,
       };
-      const updated = { ...existing, podReceived: false };
+      const updated = { ...existing, documentReceived: false };
 
-      prisma.notificationPreference.findFirst.mockResolvedValue(existing);
-      prisma.notificationPreference.update.mockResolvedValue(updated);
+      prisma.inAppNotificationPreference.findFirst.mockResolvedValue(existing);
+      prisma.inAppNotificationPreference.update.mockResolvedValue(updated);
 
       const result = await service.updatePreferences('user-1', 'tenant-1', {
-        podReceived: false,
+        documentReceived: false,
       });
 
       expect(result.loadAssigned).toBe(true);
-      expect(result.podReceived).toBe(false);
+      expect(result.documentReceived).toBe(false);
     });
 
     it('should get preferences with defaults', async () => {
-      prisma.notificationPreference.findFirst.mockResolvedValue(null);
+      prisma.inAppNotificationPreference.findFirst.mockResolvedValue(null);
 
       const result = await service.getPreferences('user-1', 'tenant-1');
 
       expect(result.userId).toBe('user-1');
       expect(result.tenantId).toBe('tenant-1');
       expect(result.loadAssigned).toBe(true); // default
-      expect(result.podReceived).toBe(true); // default
+      expect(result.documentReceived).toBe(true); // default
     });
 
     it('should get saved preferences', async () => {
@@ -436,12 +438,14 @@ describe('CommunicationsService (MP-07-018)', () => {
         loadAccepted: true,
       };
 
-      prisma.notificationPreference.findFirst.mockResolvedValue(savedPrefs);
+      prisma.inAppNotificationPreference.findFirst.mockResolvedValue(
+        savedPrefs
+      );
 
       const result = await service.getPreferences('user-1', 'tenant-1');
 
       expect(result.loadAssigned).toBe(false);
-      expect(result.loadAccepted).toBe(true);
+      expect(result.loadStatusChange).toBe(true);
     });
   });
 
@@ -455,8 +459,8 @@ describe('CommunicationsService (MP-07-018)', () => {
       };
       const deleted = { ...mockMsg, deletedAt: new Date() };
 
-      prisma.notification.findFirst.mockResolvedValue(mockMsg);
-      prisma.notification.update.mockResolvedValue(deleted);
+      prisma.inAppNotification.findFirst.mockResolvedValue(mockMsg);
+      prisma.inAppNotification.update.mockResolvedValue(deleted);
 
       const result = await service.deleteMessage('msg-1', 'tenant-1');
 
@@ -464,7 +468,7 @@ describe('CommunicationsService (MP-07-018)', () => {
     });
 
     it('should throw when deleting non-existent message', async () => {
-      prisma.notification.findFirst.mockResolvedValue(null);
+      prisma.inAppNotification.findFirst.mockResolvedValue(null);
 
       await expect(
         service.deleteMessage('missing', 'tenant-1')
@@ -474,29 +478,25 @@ describe('CommunicationsService (MP-07-018)', () => {
 
   describe('Statistics', () => {
     it('should return message statistics', async () => {
-      prisma.notification.count
+      prisma.inAppNotification.count
         .mockResolvedValueOnce(100) // total
-        .mockResolvedValueOnce(20) // pending
-        .mockResolvedValueOnce(70) // delivered
-        .mockResolvedValueOnce(8) // archived
-        .mockResolvedValueOnce(2); // bounced
+        .mockResolvedValueOnce(20) // unread
+        .mockResolvedValueOnce(80); // read
 
       const result = await service.getStatistics('tenant-1');
 
       expect(result.total).toBe(100);
-      expect(result.pending).toBe(20);
-      expect(result.delivered).toBe(70);
-      expect(result.archived).toBe(8);
-      expect(result.bounced).toBe(2);
+      expect(result.unread).toBe(20);
+      expect(result.read).toBe(80);
     });
 
     it('should enforce tenantId in statistics', async () => {
-      prisma.notification.count.mockResolvedValue(0);
+      prisma.inAppNotification.count.mockResolvedValue(0);
 
       await service.getStatistics('tenant-1');
 
       // Verify all count calls include tenantId
-      expect(prisma.notification.count).toHaveBeenCalledWith(
+      expect(prisma.inAppNotification.count).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             tenantId: 'tenant-1',

@@ -1,4 +1,3 @@
-import { NotFoundException } from '@nestjs/common';
 import { AlertsService, SavedViewsService } from './alerts.service';
 import { PrismaService } from '../../prisma.service';
 
@@ -124,7 +123,7 @@ describe('AlertsService & SavedViewsService - Cross-Tenant Security', () => {
 
     it('should prevent access to data from other tenants via update race condition', async () => {
       const tenant1 = 'tenant-1';
-      const tenant2 = 'tenant-2';
+      const _tenant2 = 'tenant-2';
       const viewId = 'view-1';
       const userId = 'user-1';
 

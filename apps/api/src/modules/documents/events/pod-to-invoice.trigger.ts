@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { PrismaService } from '../../../prisma/prisma.service';
+import { PrismaService } from '../../../prisma.service';
 
 @Injectable()
 export class PodToInvoiceTrigger {
@@ -14,24 +14,23 @@ export class PodToInvoiceTrigger {
   }) {
     const load = await this.prisma.load.findUnique({
       where: { id: event.loadId },
-      include: { items: true },
     });
 
     if (!load) return;
 
+    const now = new Date();
     const invoice = await this.prisma.invoice.create({
       data: {
         loadId: event.loadId,
         tenantId: event.tenantId,
-        status: 'draft',
-        totalAmount: 0,
-        items: {
-          create: load.items.map((item) => ({
-            description: item.description,
-            quantity: item.quantity,
-            rate: item.rate,
-          })),
-        },
+        invoiceNumber: `INV-${event.loadId}-${Date.now()}`,
+        companyId: load.carrierId || '',
+        invoiceDate: now,
+        dueDate: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
+        subtotal: load.totalCost || 0,
+        totalAmount: load.totalCost || 0,
+        balanceDue: load.totalCost || 0,
+        status: 'DRAFT',
       },
     });
 

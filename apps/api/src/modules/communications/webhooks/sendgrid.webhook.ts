@@ -93,12 +93,12 @@ export class SendGridWebhook {
       // with proper tenantId lookup via email+domain resolution
       switch (event.event) {
         case 'bounce':
-          this.logger.info(
+          this.logger.log(
             `Email bounced: ${event.email} (reason: ${event.reason})`
           );
           break;
         case 'delivered':
-          this.logger.info(`Email delivered: ${event.email}`);
+          this.logger.log(`Email delivered: ${event.email}`);
           break;
         case 'open':
           this.logger.debug(`Email opened: ${event.email}`);
@@ -115,7 +115,7 @@ export class SendGridWebhook {
           this.logger.warn(`Email reported as spam: ${event.email}`);
           break;
         case 'unsubscribe':
-          this.logger.info(`Email unsubscribed: ${event.email}`);
+          this.logger.log(`Email unsubscribed: ${event.email}`);
           break;
         default:
           this.logger.debug(`Unknown event type: ${event.event}`);

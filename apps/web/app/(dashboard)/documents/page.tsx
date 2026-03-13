@@ -8,7 +8,7 @@ import {
   DocumentItem,
 } from '@/components/tms/documents/document-list';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/Input';
+import { Input } from '@/components/ui/input';
 import { FileUp, File } from 'lucide-react';
 
 export default function DocumentDashboard() {

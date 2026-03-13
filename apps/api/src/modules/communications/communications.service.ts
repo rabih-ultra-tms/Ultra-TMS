@@ -23,11 +23,20 @@ export interface CreateTemplateDto {
 
 export interface NotificationPreferencesDto {
   loadAssigned?: boolean;
-  loadAccepted?: boolean;
-  podReceived?: boolean;
-  invoiceReady?: boolean;
+  loadStatusChange?: boolean;
+  documentReceived?: boolean;
+  invoiceCreated?: boolean;
+  paymentReceived?: boolean;
+  claimFiled?: boolean;
+  carrierExpiring?: boolean;
+  emailEnabled?: boolean;
+  smsEnabled?: boolean;
+  pushEnabled?: boolean;
+  inAppEnabled?: boolean;
+  quietHoursEnabled?: boolean;
   quietHoursStart?: string;
   quietHoursEnd?: string;
+  quietHoursTimezone?: string;
 }
 
 /**
@@ -47,22 +56,19 @@ export class CommunicationsService {
   async createMessage(
     dto: CreateMessageDto,
     tenantId: string,
-    userId?: string
+    _userId?: string
   ) {
     if (!dto.content) {
       throw new BadRequestException('Message content is required');
     }
 
-    return this.prisma.notification.create({
+    return this.prisma.inAppNotification.create({
       data: {
         tenantId,
-        content: dto.content,
-        subject: dto.subject,
+        title: dto.subject || 'Notification',
+        message: dto.content,
         type: dto.type || 'USER',
-        threadId: dto.threadId,
-        recipientId: dto.recipientId,
-        status: 'PENDING',
-        createdBy: userId,
+        userId: dto.recipientId || '',
       },
     });
   }
@@ -74,21 +80,19 @@ export class CommunicationsService {
     const skip = (page - 1) * limit;
 
     const [data, total] = await Promise.all([
-      this.prisma.notification.findMany({
+      this.prisma.inAppNotification.findMany({
         where: {
           tenantId,
           deletedAt: null,
-          archivedAt: null,
         },
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
       }),
-      this.prisma.notification.count({
+      this.prisma.inAppNotification.count({
         where: {
           tenantId,
           deletedAt: null,
-          archivedAt: null,
         },
       }),
     ]);
@@ -108,7 +112,7 @@ export class CommunicationsService {
    * Get a specific message
    */
   async getMessage(id: string, tenantId: string) {
-    const message = await this.prisma.notification.findFirst({
+    const message = await this.prisma.inAppNotification.findFirst({
       where: {
         id,
         tenantId,
@@ -127,9 +131,8 @@ export class CommunicationsService {
    * Get all messages in a thread
    */
   async getThread(threadId: string, tenantId: string) {
-    const messages = await this.prisma.notification.findMany({
+    const messages = await this.prisma.inAppNotification.findMany({
       where: {
-        threadId,
         tenantId,
         deletedAt: null,
       },
@@ -141,7 +144,6 @@ export class CommunicationsService {
     }
 
     return {
-      threadId,
       messageCount: messages.length,
       messages,
     };
@@ -151,7 +153,7 @@ export class CommunicationsService {
    * Archive a message
    */
   async archiveMessage(id: string, tenantId: string) {
-    const message = await this.prisma.notification.findFirst({
+    const message = await this.prisma.inAppNotification.findFirst({
       where: {
         id,
         tenantId,
@@ -163,9 +165,9 @@ export class CommunicationsService {
       throw new NotFoundException('Message not found');
     }
 
-    return this.prisma.notification.update({
+    return this.prisma.inAppNotification.update({
       where: { id },
-      data: { archivedAt: new Date() },
+      data: { isRead: true },
     });
   }
 
@@ -177,13 +179,14 @@ export class CommunicationsService {
       throw new BadRequestException('Template name and body are required');
     }
 
-    return this.prisma.notificationTemplate.create({
+    return this.prisma.communicationTemplate.create({
       data: {
         tenantId,
         name: dto.name,
-        body: dto.body,
-        subject: dto.subject,
-        variables: dto.variables || [],
+        code: dto.name.toLowerCase().replace(/\s+/g, '_'),
+        channel: 'EMAIL',
+        bodyEn: dto.body,
+        subjectEn: dto.subject,
       },
     });
   }
@@ -192,7 +195,7 @@ export class CommunicationsService {
    * List all templates for tenant
    */
   async listTemplates(tenantId: string) {
-    return this.prisma.notificationTemplate.findMany({
+    return this.prisma.communicationTemplate.findMany({
       where: {
         tenantId,
         deletedAt: null,
@@ -205,7 +208,7 @@ export class CommunicationsService {
    * Get a specific template
    */
   async getTemplate(id: string, tenantId: string) {
-    const template = await this.prisma.notificationTemplate.findFirst({
+    const template = await this.prisma.communicationTemplate.findFirst({
       where: {
         id,
         tenantId,
@@ -248,7 +251,7 @@ export class CommunicationsService {
     preferences: NotificationPreferencesDto
   ) {
     // Get existing preferences or create new
-    let existing = await this.prisma.notificationPreference.findFirst({
+    const existing = await this.prisma.notificationPreference.findFirst({
       where: {
         userId,
         tenantId,
@@ -286,14 +289,32 @@ export class CommunicationsService {
     if (!prefs) {
       // Return defaults if not set
       return {
+        id: '',
         userId,
         tenantId,
         loadAssigned: true,
-        loadAccepted: true,
-        podReceived: true,
-        invoiceReady: true,
+        loadStatusChange: true,
+        documentReceived: true,
+        invoiceCreated: true,
+        paymentReceived: true,
+        claimFiled: true,
+        carrierExpiring: true,
+        emailEnabled: true,
+        smsEnabled: false,
+        pushEnabled: true,
+        inAppEnabled: true,
+        quietHoursEnabled: false,
         quietHoursStart: null,
         quietHoursEnd: null,
+        quietHoursTimezone: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        createdById: null,
+        customFields: {},
+        deletedAt: null,
+        externalId: null,
+        sourceSystem: null,
+        updatedById: null,
       };
     }
 
@@ -304,7 +325,7 @@ export class CommunicationsService {
    * Delete (soft) a message
    */
   async deleteMessage(id: string, tenantId: string) {
-    const message = await this.prisma.notification.findFirst({
+    const message = await this.prisma.inAppNotification.findFirst({
       where: {
         id,
         tenantId,
@@ -316,7 +337,7 @@ export class CommunicationsService {
       throw new NotFoundException('Message not found');
     }
 
-    return this.prisma.notification.update({
+    return this.prisma.inAppNotification.update({
       where: { id },
       data: { deletedAt: new Date() },
     });
@@ -326,7 +347,7 @@ export class CommunicationsService {
    * Delete (soft) a template
    */
   async deleteTemplate(id: string, tenantId: string) {
-    const template = await this.prisma.notificationTemplate.findFirst({
+    const template = await this.prisma.communicationTemplate.findFirst({
       where: {
         id,
         tenantId,
@@ -338,7 +359,7 @@ export class CommunicationsService {
       throw new NotFoundException('Template not found');
     }
 
-    return this.prisma.notificationTemplate.update({
+    return this.prisma.communicationTemplate.update({
       where: { id },
       data: { deletedAt: new Date() },
     });
@@ -348,30 +369,22 @@ export class CommunicationsService {
    * Get message statistics for tenant
    */
   async getStatistics(tenantId: string) {
-    const [total, pending, delivered, archived, bounced] = await Promise.all([
-      this.prisma.notification.count({
+    const [total, unread, read] = await Promise.all([
+      this.prisma.inAppNotification.count({
         where: { tenantId, deletedAt: null },
       }),
-      this.prisma.notification.count({
-        where: { tenantId, status: 'PENDING', deletedAt: null },
+      this.prisma.inAppNotification.count({
+        where: { tenantId, isRead: false, deletedAt: null },
       }),
-      this.prisma.notification.count({
-        where: { tenantId, status: 'DELIVERED', deletedAt: null },
-      }),
-      this.prisma.notification.count({
-        where: { tenantId, archivedAt: { not: null }, deletedAt: null },
-      }),
-      this.prisma.notification.count({
-        where: { tenantId, status: 'BOUNCED', deletedAt: null },
+      this.prisma.inAppNotification.count({
+        where: { tenantId, isRead: true, deletedAt: null },
       }),
     ]);
 
     return {
       total,
-      pending,
-      delivered,
-      archived,
-      bounced,
+      unread,
+      read,
     };
   }
 }

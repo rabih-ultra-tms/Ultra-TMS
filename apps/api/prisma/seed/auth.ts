@@ -1,8 +1,10 @@
-import { PrismaClient } from '@prisma/client';
 import { faker } from '@faker-js/faker';
 import * as bcrypt from 'bcrypt';
 
-export async function seedAuth(prisma: any, tenantIds: string[]): Promise<void> {
+export async function seedAuth(
+  prisma: any,
+  tenantIds: string[]
+): Promise<void> {
   // System Roles (shared across all tenants)
   const systemRoles = [
     {
@@ -14,37 +16,82 @@ export async function seedAuth(prisma: any, tenantIds: string[]): Promise<void> 
     {
       name: 'ADMIN',
       description: 'Tenant administrator',
-      permissions: ['users.*', 'roles.*', 'tenant.*', 'crm.*', 'sales.*', 'tms.*', 'carriers.*', 'accounting.*', 'reports.*'],
+      permissions: [
+        'users.*',
+        'roles.*',
+        'tenant.*',
+        'crm.*',
+        'sales.*',
+        'tms.*',
+        'carriers.*',
+        'accounting.*',
+        'reports.*',
+      ],
       isSystem: true,
     },
     {
       name: 'OPERATIONS_MANAGER',
       description: 'Operations oversight',
-      permissions: ['tms.*', 'carriers.*', 'loadboard.*', 'claims.*', 'documents.view', 'reports.operations'],
+      permissions: [
+        'tms.*',
+        'carriers.*',
+        'loadboard.*',
+        'claims.*',
+        'documents.view',
+        'reports.operations',
+      ],
       isSystem: true,
     },
     {
       name: 'DISPATCHER',
       description: 'Dispatch operations',
-      permissions: ['tms.orders.view', 'tms.loads.*', 'tms.tracking.*', 'carriers.view', 'loadboard.view', 'loadboard.post'],
+      permissions: [
+        'tms.orders.view',
+        'tms.loads.*',
+        'tms.tracking.*',
+        'carriers.view',
+        'loadboard.view',
+        'loadboard.post',
+      ],
       isSystem: true,
     },
     {
       name: 'SALES_REP',
       description: 'Sales operations',
-      permissions: ['crm.*', 'sales.*', 'tms.orders.view', 'tms.orders.create', 'reports.sales', 'commission.view'],
+      permissions: [
+        'crm.*',
+        'sales.*',
+        'tms.orders.view',
+        'tms.orders.create',
+        'reports.sales',
+        'commission.view',
+      ],
       isSystem: true,
     },
     {
       name: 'ACCOUNTING',
       description: 'Financial operations',
-      permissions: ['accounting.*', 'tms.orders.view', 'tms.loads.view', 'carriers.view', 'commission.*', 'reports.financial'],
+      permissions: [
+        'accounting.*',
+        'tms.orders.view',
+        'tms.loads.view',
+        'carriers.view',
+        'commission.*',
+        'reports.financial',
+      ],
       isSystem: true,
     },
     {
       name: 'CUSTOMER_SERVICE',
       description: 'Support operations',
-      permissions: ['tms.orders.view', 'tms.loads.view', 'tms.tracking.view', 'crm.view', 'claims.view', 'claims.create'],
+      permissions: [
+        'tms.orders.view',
+        'tms.loads.view',
+        'tms.tracking.view',
+        'crm.view',
+        'claims.view',
+        'claims.create',
+      ],
       isSystem: true,
     },
     {
@@ -150,6 +197,32 @@ export async function seedAuth(prisma: any, tenantIds: string[]): Promise<void> 
   // Create users for each tenant
   let totalUsers = 0;
   const passwordHash = await bcrypt.hash('password123', 10);
+  const baldwinPasswordHash = await bcrypt.hash('Password123!', 10);
+  const baldwinTenantId = 'db0ee99b-e13d-438d-919e-991894aa84b6';
+
+  // Create Baldwin Mcintosh user (specific seed user)
+  await prisma.user.upsert({
+    where: {
+      tenantId_email: { tenantId: baldwinTenantId, email: 'bintosh@gmail.com' },
+    },
+    update: {},
+    create: {
+      tenantId: baldwinTenantId,
+      email: 'bintosh@gmail.com',
+      passwordHash: baldwinPasswordHash,
+      firstName: 'Baldwin',
+      lastName: 'Mcintosh',
+      roleId: roleMap['ADMIN'],
+      status: 'ACTIVE',
+      emailVerifiedAt: new Date(),
+      timezone: 'America/Chicago',
+      locale: 'en',
+      phone: '555-000-0099',
+      avatarUrl: null,
+      externalId: 'SEED-USER-BALDWIN-MCINTOSH',
+      sourceSystem: 'FAKER_SEED',
+    },
+  });
 
   for (const tenantId of tenantIds) {
     // Admin user
@@ -178,7 +251,7 @@ export async function seedAuth(prisma: any, tenantIds: string[]): Promise<void> 
 
     // Random users (19 per tenant to reach 100 total)
     for (let i = 0; i < 19; i++) {
-      const roles = Object.keys(roleMap).filter(r => r !== 'SUPER_ADMIN');
+      const roles = Object.keys(roleMap).filter((r) => r !== 'SUPER_ADMIN');
       const randomRole = roles[Math.floor(Math.random() * roles.length)];
       const userEmail = `user${totalUsers + i + 1}@tms.local`;
       await prisma.user.upsert({
@@ -191,11 +264,23 @@ export async function seedAuth(prisma: any, tenantIds: string[]): Promise<void> 
           firstName: faker.person.firstName(),
           lastName: faker.person.lastName(),
           roleId: roleMap[randomRole],
-          status: faker.helpers.arrayElement(['ACTIVE', 'ACTIVE', 'ACTIVE', 'INACTIVE']),
+          status: faker.helpers.arrayElement([
+            'ACTIVE',
+            'ACTIVE',
+            'ACTIVE',
+            'INACTIVE',
+          ]),
           emailVerifiedAt: faker.datatype.boolean() ? faker.date.past() : null,
-          timezone: faker.helpers.arrayElement(['America/Chicago', 'America/New_York', 'America/Los_Angeles']),
+          timezone: faker.helpers.arrayElement([
+            'America/Chicago',
+            'America/New_York',
+            'America/Los_Angeles',
+          ]),
           locale: 'en',
-          phone: faker.helpers.maybe(() => `555-${faker.string.numeric(3)}-${faker.string.numeric(4)}`, { probability: 0.8 }),
+          phone: faker.helpers.maybe(
+            () => `555-${faker.string.numeric(3)}-${faker.string.numeric(4)}`,
+            { probability: 0.8 }
+          ),
           avatarUrl: null,
           externalId: `SEED-USER-${totalUsers + i + 1}`,
           sourceSystem: 'FAKER_SEED',
@@ -205,5 +290,7 @@ export async function seedAuth(prisma: any, tenantIds: string[]): Promise<void> 
     totalUsers += 19;
   }
 
-  console.log(`   ✓ Created ${totalUsers} users across ${tenantIds.length} tenants`);
+  console.log(
+    `   ✓ Created ${totalUsers} users across ${tenantIds.length} tenants`
+  );
 }
