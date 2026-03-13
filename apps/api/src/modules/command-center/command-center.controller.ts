@@ -17,6 +17,7 @@ import {
   CommandCenterKPIsQueryDto,
   CommandCenterAlertsQueryDto,
   AutoMatchDto,
+  BulkDispatchDto,
 } from './dto/command-center.dto';
 
 @Controller('command-center')
@@ -87,12 +88,27 @@ export class CommandCenterController {
 
   @Post('auto-match')
   @ApiOperation({
-    summary: 'Get AI carrier match suggestions for a load (stub)',
+    summary: 'Get AI carrier match suggestions for a load',
   })
   async autoMatch(
     @CurrentTenant() tenantId: string,
     @Body() dto: AutoMatchDto
   ) {
     return this.commandCenterService.autoMatch(tenantId, dto.loadId);
+  }
+
+  @Post('bulk-dispatch')
+  @ApiOperation({
+    summary: 'Bulk dispatch operations — assign carrier, dispatch, or update status for multiple loads',
+  })
+  async bulkDispatch(
+    @CurrentTenant() tenantId: string,
+    @Body() dto: BulkDispatchDto
+  ) {
+    return this.commandCenterService.bulkDispatch(tenantId, dto.loadIds, dto.action, {
+      carrierId: dto.carrierId,
+      targetStatus: dto.targetStatus,
+      notes: dto.notes,
+    });
   }
 }

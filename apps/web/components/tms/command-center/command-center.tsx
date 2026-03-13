@@ -10,7 +10,7 @@
  * MP-05-002: Multi-domain tab system
  */
 
-import { Suspense, useCallback } from 'react';
+import { Suspense, useCallback, useState } from 'react';
 import { useCommandCenter } from '@/lib/hooks/tms/use-command-center';
 import { CommandCenterToolbar } from './command-center-toolbar';
 import { CommandCenterKPIStrip } from './command-center-kpi-strip';
@@ -21,10 +21,13 @@ import { QuoteDrawerContent } from './quote-drawer-content';
 import { SplitLayout } from './split-layout';
 import { DashboardLayout } from './dashboard-layout';
 import { FocusLayout } from './focus-layout';
+import { BulkActionBar } from './bulk-action-bar';
 import { DispatchBoard } from '@/components/tms/dispatch/dispatch-board';
 import { DispatchBoardSkeleton } from '@/components/tms/dispatch/dispatch-board-skeleton';
 import { AlertsPanel } from './alerts-panel';
 import { useCommandCenterAlerts } from '@/lib/hooks/command-center/use-command-center';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api/client';
 import type { CCTab } from '@/lib/hooks/tms/use-command-center';
 import type { DispatchLoad } from '@/lib/types/dispatch';
 import { Package, FileText, Users, MapPin, AlertTriangle } from 'lucide-react';
@@ -85,6 +88,21 @@ export function CommandCenter() {
   const { data: alertsData } = useCommandCenterAlerts();
   const alertCount = alertsData?.data?.length ?? 0;
 
+  // Selection state for bulk operations (owned here, passed to DispatchBoard)
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
+
+  // Carrier availability for bulk assign picker (only fetch when loads are selected)
+  const { data: carrierAvailability, isLoading: carriersLoading } = useQuery({
+    queryKey: ['command-center', 'carrier-availability'],
+    queryFn: async () => {
+      const response = await apiClient.get('/command-center/carrier-availability');
+      return (response as { data: Array<{ id: string; legalName: string; mcNumber: string | null; activeLoadCount: number }> }).data;
+    },
+    enabled: selectedIds.size > 0,
+    staleTime: 60_000,
+  });
+
   // Dispatch board load click → open Command Center's universal drawer
   const handleLoadClick = useCallback(
     (load: DispatchLoad) => {
@@ -106,7 +124,11 @@ export function CommandCenter() {
     <>
       {activeTab === 'loads' ? (
         <Suspense fallback={<DispatchBoardSkeleton />}>
-          <DispatchBoard onLoadClick={handleLoadClick} />
+          <DispatchBoard
+            onLoadClick={handleLoadClick}
+            selectedIds={selectedIds}
+            onSelectionChange={setSelectedIds}
+          />
         </Suspense>
       ) : activeTab === 'alerts' ? (
         <AlertsPanel />
@@ -170,6 +192,14 @@ export function CommandCenter() {
           )}
         </UniversalDetailDrawer>
       )}
+
+      {/* Bulk Action Bar — appears when loads are selected */}
+      <BulkActionBar
+        selectedIds={selectedIds}
+        onClearSelection={clearSelection}
+        carriers={carrierAvailability}
+        carriersLoading={carriersLoading}
+      />
     </div>
   );
 }

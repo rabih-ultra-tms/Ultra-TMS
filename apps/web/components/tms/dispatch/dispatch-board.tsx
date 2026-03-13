@@ -32,9 +32,16 @@ import { Button } from '@/components/ui/button';
 interface DispatchBoardProps {
   /** When provided, load clicks call this instead of the internal detail drawer */
   onLoadClick?: (load: DispatchLoad) => void;
+  /** Controlled selection — when provided, parent owns the selection state */
+  selectedIds?: Set<number>;
+  onSelectionChange?: (ids: Set<number>) => void;
 }
 
-export function DispatchBoard({ onLoadClick: externalLoadClick }: DispatchBoardProps = {}) {
+export function DispatchBoard({
+  onLoadClick: externalLoadClick,
+  selectedIds: controlledSelectedIds,
+  onSelectionChange: controlledOnSelectionChange,
+}: DispatchBoardProps = {}) {
   // Filter state
   const [filters, setFilters] = useState<DispatchFilters>({
     dateFrom: new Date().toISOString().split('T')[0],
@@ -52,7 +59,9 @@ export function DispatchBoard({ onLoadClick: externalLoadClick }: DispatchBoardP
   // View state
   const [viewMode, setViewMode] = useState<'kanban' | 'table'>('table');
   const [grouped, setGrouped] = useState(true);
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [internalSelectedIds, setInternalSelectedIds] = useState<Set<number>>(new Set());
+  const selectedIds = controlledSelectedIds ?? internalSelectedIds;
+  const setSelectedIds = controlledOnSelectionChange ?? setInternalSelectedIds;
   const [drawerLoad, setDrawerLoad] = useState<DispatchLoad | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [newLoadOpen, setNewLoadOpen] = useState(false);

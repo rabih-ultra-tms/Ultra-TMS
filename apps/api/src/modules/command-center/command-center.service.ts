@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
+import { BulkDispatchAction } from './dto/command-center.dto';
 
 const ACTIVE_LOAD_STATUSES = [
   'PLANNING',
@@ -711,6 +712,163 @@ export class CommandCenterService {
           : null,
         activeLoadCount: countMap.get(c.id) ?? 0,
       })),
+    };
+  }
+
+  /**
+   * Bulk dispatch operations — assign carrier, dispatch, or update status
+   * for multiple loads in a single transaction.
+   */
+  async bulkDispatch(
+    tenantId: string,
+    loadIds: string[],
+    action: BulkDispatchAction,
+    options: { carrierId?: string; targetStatus?: string; notes?: string }
+  ) {
+    // Validate loads exist and belong to tenant
+    const loads = await this.prisma.load.findMany({
+      where: { id: { in: loadIds }, tenantId, deletedAt: null },
+      select: { id: true, status: true, carrierId: true, loadNumber: true },
+    });
+
+    if (loads.length === 0) {
+      throw new BadRequestException('No valid loads found for the given IDs');
+    }
+
+    const foundIds = new Set(loads.map((l) => l.id));
+    const notFound = loadIds.filter((id) => !foundIds.has(id));
+
+    const results: Array<{
+      loadId: string;
+      loadNumber: string;
+      success: boolean;
+      error?: string;
+    }> = [];
+
+    // Process each load in a transaction
+    await this.prisma.$transaction(async (tx) => {
+      for (const load of loads) {
+        try {
+          switch (action) {
+            case BulkDispatchAction.ASSIGN_CARRIER: {
+              if (!options.carrierId) {
+                results.push({
+                  loadId: load.id,
+                  loadNumber: load.loadNumber,
+                  success: false,
+                  error: 'carrierId is required for ASSIGN_CARRIER',
+                });
+                continue;
+              }
+              // Verify carrier exists and belongs to tenant
+              const carrier = await tx.carrier.findFirst({
+                where: { id: options.carrierId, tenantId, deletedAt: null },
+              });
+              if (!carrier) {
+                results.push({
+                  loadId: load.id,
+                  loadNumber: load.loadNumber,
+                  success: false,
+                  error: 'Carrier not found',
+                });
+                continue;
+              }
+              await tx.load.update({
+                where: { id: load.id },
+                data: {
+                  carrierId: options.carrierId,
+                  status: 'TENDERED',
+                  dispatchNotes: options.notes ?? load.status,
+                },
+              });
+              results.push({
+                loadId: load.id,
+                loadNumber: load.loadNumber,
+                success: true,
+              });
+              break;
+            }
+
+            case BulkDispatchAction.DISPATCH: {
+              if (!load.carrierId) {
+                results.push({
+                  loadId: load.id,
+                  loadNumber: load.loadNumber,
+                  success: false,
+                  error: 'Load has no carrier assigned',
+                });
+                continue;
+              }
+              await tx.load.update({
+                where: { id: load.id },
+                data: {
+                  status: 'DISPATCHED',
+                  dispatchedAt: new Date(),
+                  dispatchNotes: options.notes ?? undefined,
+                },
+              });
+              results.push({
+                loadId: load.id,
+                loadNumber: load.loadNumber,
+                success: true,
+              });
+              break;
+            }
+
+            case BulkDispatchAction.UPDATE_STATUS: {
+              if (!options.targetStatus) {
+                results.push({
+                  loadId: load.id,
+                  loadNumber: load.loadNumber,
+                  success: false,
+                  error: 'targetStatus is required for UPDATE_STATUS',
+                });
+                continue;
+              }
+              await tx.load.update({
+                where: { id: load.id },
+                data: { status: options.targetStatus },
+              });
+              results.push({
+                loadId: load.id,
+                loadNumber: load.loadNumber,
+                success: true,
+              });
+              break;
+            }
+          }
+        } catch (err) {
+          results.push({
+            loadId: load.id,
+            loadNumber: load.loadNumber,
+            success: false,
+            error: err instanceof Error ? err.message : 'Unknown error',
+          });
+        }
+      }
+    });
+
+    // Add not-found entries
+    for (const id of notFound) {
+      results.push({
+        loadId: id,
+        loadNumber: 'N/A',
+        success: false,
+        error: 'Load not found or not accessible',
+      });
+    }
+
+    const succeeded = results.filter((r) => r.success).length;
+    const failed = results.filter((r) => !r.success).length;
+
+    return {
+      data: {
+        action,
+        total: loadIds.length,
+        succeeded,
+        failed,
+        results,
+      },
     };
   }
 

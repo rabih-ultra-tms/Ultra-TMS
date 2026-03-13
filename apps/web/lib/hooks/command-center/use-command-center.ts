@@ -168,3 +168,46 @@ export function useCarrierMatch(loadId: string) {
     },
   });
 }
+
+// --- Bulk Dispatch ---
+
+export type BulkDispatchAction = 'ASSIGN_CARRIER' | 'DISPATCH' | 'UPDATE_STATUS';
+
+export interface BulkDispatchResult {
+  loadId: string;
+  loadNumber: string;
+  success: boolean;
+  error?: string;
+}
+
+export interface BulkDispatchResponse {
+  action: BulkDispatchAction;
+  total: number;
+  succeeded: number;
+  failed: number;
+  results: BulkDispatchResult[];
+}
+
+export function useBulkDispatchCommand() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      loadIds: string[];
+      action: BulkDispatchAction;
+      carrierId?: string;
+      targetStatus?: string;
+      notes?: string;
+    }) => {
+      const response = await apiClient.post(
+        '/command-center/bulk-dispatch',
+        params
+      );
+      return unwrap<BulkDispatchResponse>(response);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dispatch'] });
+      queryClient.invalidateQueries({ queryKey: commandCenterKeys.all });
+    },
+  });
+}
