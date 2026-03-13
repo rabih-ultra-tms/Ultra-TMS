@@ -1,4 +1,9 @@
-import { ExecutionContext, INestApplication, ValidationPipe, UnauthorizedException } from '@nestjs/common';
+import {
+  ExecutionContext,
+  INestApplication,
+  ValidationPipe,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
 import { PrismaService } from '../../src/prisma.service';
@@ -52,32 +57,46 @@ export type TestRole =
   | 'SYSTEM_INTEGRATOR';
 
 const createRedisMock = () => {
-  const keyValueStore = new Map<string, { value: string; expiresAt?: number }>();
-  const sessions = new Map<string, { refreshTokenHash: string; expiresAt?: number }>();
+  const keyValueStore = new Map<
+    string,
+    { value: string; expiresAt?: number }
+  >();
+  const sessions = new Map<
+    string,
+    { refreshTokenHash: string; expiresAt?: number }
+  >();
   const loginAttempts = new Map<string, number>();
   const accountLocks = new Map<string, number>();
   const passwordResetTokens = new Map<string, number>();
   const emailVerificationTokens = new Map<string, number>();
   const blacklistedTokens = new Map<string, number>();
 
-  const isExpired = (expiresAt?: number) => expiresAt !== undefined && expiresAt <= Date.now();
+  const isExpired = (expiresAt?: number) =>
+    expiresAt !== undefined && expiresAt <= Date.now();
 
-  const getSessionKey = (userId: string, sessionId: string) => `${userId}:${sessionId}`;
-  const getResetTokenKey = (userId: string, tokenHash: string) => `${userId}:${tokenHash}`;
-  const getEmailTokenKey = (userId: string, tokenHash: string) => `${userId}:${tokenHash}`;
+  const getSessionKey = (userId: string, sessionId: string) =>
+    `${userId}:${sessionId}`;
+  const getResetTokenKey = (userId: string, tokenHash: string) =>
+    `${userId}:${tokenHash}`;
+  const getEmailTokenKey = (userId: string, tokenHash: string) =>
+    `${userId}:${tokenHash}`;
 
   return {
     ping: async () => 'PONG',
     keys: async (pattern: string) => {
       if (pattern.endsWith('*')) {
         const prefix = pattern.slice(0, -1);
-        return [...keyValueStore.keys()].filter((key) => key.startsWith(prefix));
+        return [...keyValueStore.keys()].filter((key) =>
+          key.startsWith(prefix)
+        );
       }
       return keyValueStore.has(pattern) ? [pattern] : [];
     },
     deleteByPattern: async (pattern: string) => {
       const keys = pattern.endsWith('*')
-        ? [...keyValueStore.keys()].filter((key) => key.startsWith(pattern.slice(0, -1)))
+        ? [...keyValueStore.keys()].filter((key) =>
+            key.startsWith(pattern.slice(0, -1))
+          )
         : keyValueStore.has(pattern)
           ? [pattern]
           : [];
@@ -117,7 +136,12 @@ const createRedisMock = () => {
       const expiresAt = Date.now() + ttlSeconds * 1000;
       keyValueStore.set(key, { value, expiresAt });
     },
-    storeSession: async (userId: string, sessionId: string, refreshTokenHash: string, expiresInSeconds: number) => {
+    storeSession: async (
+      userId: string,
+      sessionId: string,
+      refreshTokenHash: string,
+      expiresInSeconds: number
+    ) => {
       const key = getSessionKey(userId, sessionId);
       const expiresAt = Date.now() + expiresInSeconds * 1000;
       sessions.set(key, { refreshTokenHash, expiresAt });
@@ -130,7 +154,10 @@ const createRedisMock = () => {
         sessions.delete(key);
         return null;
       }
-      return { refreshTokenHash: entry.refreshTokenHash, createdAt: new Date().toISOString() };
+      return {
+        refreshTokenHash: entry.refreshTokenHash,
+        createdAt: new Date().toISOString(),
+      };
     },
     revokeSession: async (userId: string, sessionId: string) => {
       sessions.delete(getSessionKey(userId, sessionId));
@@ -147,7 +174,8 @@ const createRedisMock = () => {
         .filter((id): id is string => id !== undefined);
     },
     getUserSessionCount: async (userId: string) => {
-      return [...sessions.keys()].filter((key) => key.startsWith(`${userId}:`)).length;
+      return [...sessions.keys()].filter((key) => key.startsWith(`${userId}:`))
+        .length;
     },
     blacklistToken: async (jti: string, expiresInSeconds: number) => {
       const expiresAt = Date.now() + expiresInSeconds * 1000;
@@ -161,7 +189,11 @@ const createRedisMock = () => {
       }
       return blacklistedTokens.has(jti);
     },
-    storePasswordResetToken: async (userId: string, tokenHash: string, expiresInSeconds: number) => {
+    storePasswordResetToken: async (
+      userId: string,
+      tokenHash: string,
+      expiresInSeconds: number
+    ) => {
       const key = getResetTokenKey(userId, tokenHash);
       const expiresAt = Date.now() + expiresInSeconds * 1000;
       passwordResetTokens.set(key, expiresAt);
@@ -200,12 +232,19 @@ const createRedisMock = () => {
       }
       return accountLocks.has(email);
     },
-    storeEmailVerificationToken: async (userId: string, tokenHash: string, expiresInSeconds: number) => {
+    storeEmailVerificationToken: async (
+      userId: string,
+      tokenHash: string,
+      expiresInSeconds: number
+    ) => {
       const key = getEmailTokenKey(userId, tokenHash);
       const expiresAt = Date.now() + expiresInSeconds * 1000;
       emailVerificationTokens.set(key, expiresAt);
     },
-    consumeEmailVerificationToken: async (userId: string, tokenHash: string) => {
+    consumeEmailVerificationToken: async (
+      userId: string,
+      tokenHash: string
+    ) => {
       const key = getEmailTokenKey(userId, tokenHash);
       const expiresAt = emailVerificationTokens.get(key);
       if (isExpired(expiresAt)) {
@@ -226,7 +265,8 @@ export const getTestPrisma = async () => {
   if (!prismaSingleton) {
     prismaSingleton = new PrismaService();
     const originalInit = prismaSingleton.onModuleInit.bind(prismaSingleton);
-    const originalDestroy = prismaSingleton.onModuleDestroy?.bind(prismaSingleton);
+    const originalDestroy =
+      prismaSingleton.onModuleDestroy?.bind(prismaSingleton);
     prismaSingleton.onModuleInit = async () => {
       if (!prismaInitPromise) {
         prismaInitPromise = originalInit();
@@ -238,11 +278,28 @@ export const getTestPrisma = async () => {
         await originalDestroy();
       }
       prismaInitPromise = null;
+      prismaSingleton = null; // Reset singleton after destroy to force fresh connection for next test
     };
   }
 
   await prismaSingleton.onModuleInit();
   return prismaSingleton;
+};
+
+/**
+ * Reset the Prisma singleton to force a fresh connection for the next test.
+ * This prevents connection pool exhaustion when running multiple test files sequentially.
+ */
+export const resetTestPrisma = async () => {
+  if (prismaSingleton) {
+    try {
+      await prismaSingleton.onModuleDestroy?.();
+    } catch (_error) {
+      // Ignore errors during cleanup
+    }
+    prismaSingleton = null;
+    prismaInitPromise = null;
+  }
 };
 
 const isHeaderTruthy = (value: unknown) => {
@@ -261,7 +318,10 @@ const isHeaderFalsy = (value: unknown) => {
 
 const hasTestAuth = (req?: any) => {
   const headers = req?.headers ?? {};
-  if (isHeaderTruthy(headers['x-test-unauth']) || isHeaderFalsy(headers['x-test-auth'])) {
+  if (
+    isHeaderTruthy(headers['x-test-unauth']) ||
+    isHeaderFalsy(headers['x-test-auth'])
+  ) {
     return false;
   }
   return true;
@@ -270,7 +330,7 @@ const hasTestAuth = (req?: any) => {
 export async function createTestApp(
   tenantId: string,
   userId: string,
-  email: string,
+  email: string
 ): Promise<{ app: INestApplication; prisma: PrismaService }> {
   const prisma = await getTestPrisma();
   const testUser = {
@@ -291,7 +351,10 @@ export async function createTestApp(
     const userIdHeader = req?.headers?.['x-test-user-id'];
     const emailHeader = req?.headers?.['x-test-user-email'];
 
-    const effectiveRole = (roleOverride ?? testUser.roleName ?? testUser.role?.name ?? testUser.role) as string;
+    const effectiveRole = (roleOverride ??
+      testUser.roleName ??
+      testUser.role?.name ??
+      testUser.role) as string;
     const effectiveUserId = (userIdHeader ?? testUser.id) as string;
     const effectiveEmail = (emailHeader ?? testUser.email) as string;
 
@@ -342,7 +405,7 @@ export async function createTestApp(
       whitelist: true,
       transform: true,
       forbidNonWhitelisted: true,
-    }),
+    })
   );
   await app.init();
 
@@ -380,7 +443,7 @@ export async function createTestAppWithRole(
   tenantId: string,
   userId: string,
   email: string,
-  role: TestRole = 'user',
+  role: TestRole = 'user'
 ): Promise<{ app: INestApplication; prisma: PrismaService }> {
   const prisma = await getTestPrisma();
   const testUser = {
@@ -401,7 +464,10 @@ export async function createTestAppWithRole(
     const userIdHeader = req?.headers?.['x-test-user-id'];
     const emailHeader = req?.headers?.['x-test-user-email'];
 
-    const effectiveRole = (roleOverride ?? testUser.roleName ?? testUser.role?.name ?? testUser.role) as string;
+    const effectiveRole = (roleOverride ??
+      testUser.roleName ??
+      testUser.role?.name ??
+      testUser.role) as string;
     const effectiveUserId = (userIdHeader ?? testUser.id) as string;
     const effectiveEmail = (emailHeader ?? testUser.email) as string;
 
@@ -452,7 +518,7 @@ export async function createTestAppWithRole(
       whitelist: true,
       transform: true,
       forbidNonWhitelisted: true,
-    }),
+    })
   );
   await app.init();
 

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
+import { IntegrationHubModule } from '../integration-hub/integration-hub.module';
 import { FactoringCompaniesController } from './companies/factoring-companies.controller';
 import { FactoringCompaniesService } from './companies/factoring-companies.service';
 import { CarrierFactoringStatusController } from './carrier-status/carrier-factoring-status.controller';
@@ -13,6 +14,7 @@ import { FactoredPaymentsService } from './payments/factored-payments.service';
 import { PaymentRoutingService } from './routing/payment-routing.service';
 
 @Module({
+  imports: [IntegrationHubModule],
   controllers: [
     FactoringCompaniesController,
     NoaRecordsController,

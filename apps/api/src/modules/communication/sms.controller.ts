@@ -9,8 +9,6 @@ import {
   Headers,
   Req,
   UseGuards,
-  BadRequestException,
-  UnauthorizedException,
   ForbiddenException,
   Logger,
 } from '@nestjs/common';
@@ -44,7 +42,7 @@ export class SmsController {
 
   constructor(
     private readonly smsService: SmsService,
-    private readonly twilioProvider: TwilioProvider,
+    private readonly twilioProvider: TwilioProvider
   ) {}
 
   @Post('send')
@@ -167,7 +165,7 @@ export class SmsController {
     @Query('tenantId') tenantId: string,
     @Headers('x-twilio-signature') signature: string,
     @Req() req: Request,
-    @Body() body: TwilioInboundMessage,
+    @Body() body: TwilioInboundMessage
   ) {
     if (!tenantId) {
       throw new ForbiddenException('tenantId required');

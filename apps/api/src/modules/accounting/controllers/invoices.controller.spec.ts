@@ -5,7 +5,6 @@ import request from 'supertest';
 import { InvoicesController } from './invoices.controller';
 import { InvoicesService, PdfService } from '../services';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../../../common/guards/roles.guard';
 
 const TEST_TENANT = 'tenant-acct-test';
 const TEST_USER_ID = 'user-acct-test';
@@ -32,23 +31,59 @@ const mockViewerUser = {
 
 function createMockInvoicesService() {
   return {
-    create: jest.fn().mockResolvedValue({ id: 'inv1', invoiceNumber: 'INV-001', status: 'DRAFT' }),
-    findAll: jest.fn().mockResolvedValue({ data: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } }),
-    findOne: jest.fn().mockResolvedValue({ id: 'inv1', invoiceNumber: 'INV-001', status: 'DRAFT', company: { name: 'Test' } }),
+    create: jest
+      .fn()
+      .mockResolvedValue({
+        id: 'inv1',
+        invoiceNumber: 'INV-001',
+        status: 'DRAFT',
+      }),
+    findAll: jest
+      .fn()
+      .mockResolvedValue({
+        data: [],
+        pagination: { page: 1, limit: 20, total: 0, totalPages: 0 },
+      }),
+    findOne: jest
+      .fn()
+      .mockResolvedValue({
+        id: 'inv1',
+        invoiceNumber: 'INV-001',
+        status: 'DRAFT',
+        company: { name: 'Test' },
+      }),
     update: jest.fn().mockResolvedValue({ id: 'inv1', status: 'DRAFT' }),
     sendInvoice: jest.fn().mockResolvedValue({ sent: true }),
     sendReminder: jest.fn().mockResolvedValue({ sent: true }),
     voidInvoice: jest.fn().mockResolvedValue({ id: 'inv1', status: 'VOID' }),
-    generateFromLoad: jest.fn().mockResolvedValue({ id: 'inv2', invoiceNumber: 'INV-002' }),
-    getAgingReport: jest.fn().mockResolvedValue({ current: 0, thirtyDays: 0, sixtyDays: 0, ninetyPlus: 0 }),
-    getStatementData: jest.fn().mockResolvedValue({ company: {}, invoices: [], fromDate: new Date(), toDate: new Date() }),
+    generateFromLoad: jest
+      .fn()
+      .mockResolvedValue({ id: 'inv2', invoiceNumber: 'INV-002' }),
+    getAgingReport: jest
+      .fn()
+      .mockResolvedValue({
+        current: 0,
+        thirtyDays: 0,
+        sixtyDays: 0,
+        ninetyPlus: 0,
+      }),
+    getStatementData: jest
+      .fn()
+      .mockResolvedValue({
+        company: {},
+        invoices: [],
+        fromDate: new Date(),
+        toDate: new Date(),
+      }),
   };
 }
 
 function createMockPdfService() {
   return {
     generateInvoicePdf: jest.fn().mockResolvedValue(Buffer.from('PDF')),
-    generateStatementPdf: jest.fn().mockResolvedValue(Buffer.from('STATEMENT-PDF')),
+    generateStatementPdf: jest
+      .fn()
+      .mockResolvedValue(Buffer.from('STATEMENT-PDF')),
   };
 }
 
@@ -87,7 +122,7 @@ describe('InvoicesController (integration)', () => {
         whitelist: true,
         transform: true,
         forbidNonWhitelisted: true,
-      }),
+      })
     );
     await app.init();
   });
@@ -134,11 +169,15 @@ describe('InvoicesController (integration)', () => {
         .expect(201);
 
       expect(res.body).toHaveProperty('id', 'inv1');
-      expect(invoicesService.create).toHaveBeenCalledWith(TEST_TENANT, expect.any(Object), expect.objectContaining(validPayload));
+      expect(invoicesService.create).toHaveBeenCalledWith(
+        TEST_TENANT,
+        expect.any(Object),
+        expect.objectContaining(validPayload)
+      );
     });
 
     it('returns 400 when companyId missing', async () => {
-      const { companyId, ...incomplete } = validPayload;
+      const { companyId: _companyId, ...incomplete } = validPayload;
       await request(app.getHttpServer())
         .post('/api/v1/invoices')
         .send(incomplete)
@@ -153,7 +192,7 @@ describe('InvoicesController (integration)', () => {
     });
 
     it('returns 400 when subtotal missing', async () => {
-      const { subtotal, ...incomplete } = validPayload;
+      const { subtotal: _subtotal, ...incomplete } = validPayload;
       await request(app.getHttpServer())
         .post('/api/v1/invoices')
         .send(incomplete)
@@ -171,11 +210,19 @@ describe('InvoicesController (integration)', () => {
       const payload = {
         ...validPayload,
         lineItems: [
-          { lineNumber: 1, description: 'Freight', unitPrice: 1500, amount: 1500 },
+          {
+            lineNumber: 1,
+            description: 'Freight',
+            unitPrice: 1500,
+            amount: 1500,
+          },
         ],
       };
 
-      await request(app.getHttpServer()).post('/api/v1/invoices').send(payload).expect(201);
+      await request(app.getHttpServer())
+        .post('/api/v1/invoices')
+        .send(payload)
+        .expect(201);
     });
   });
 
@@ -183,10 +230,15 @@ describe('InvoicesController (integration)', () => {
 
   describe('GET /api/v1/invoices', () => {
     it('returns 200 with list', async () => {
-      const res = await request(app.getHttpServer()).get('/api/v1/invoices').expect(200);
+      const res = await request(app.getHttpServer())
+        .get('/api/v1/invoices')
+        .expect(200);
 
       expect(res.body).toHaveProperty('data');
-      expect(invoicesService.findAll).toHaveBeenCalledWith(TEST_TENANT, expect.any(Object));
+      expect(invoicesService.findAll).toHaveBeenCalledWith(
+        TEST_TENANT,
+        expect.any(Object)
+      );
     });
 
     it('passes query filters', async () => {
@@ -196,7 +248,12 @@ describe('InvoicesController (integration)', () => {
 
       expect(invoicesService.findAll).toHaveBeenCalledWith(
         TEST_TENANT,
-        expect.objectContaining({ status: 'SENT', companyId: 'c1', page: 2, limit: 10 }),
+        expect.objectContaining({
+          status: 'SENT',
+          companyId: 'c1',
+          page: 2,
+          limit: 10,
+        })
       );
     });
   });
@@ -205,7 +262,9 @@ describe('InvoicesController (integration)', () => {
 
   describe('GET /api/v1/invoices/aging', () => {
     it('returns 200 with aging report', async () => {
-      const res = await request(app.getHttpServer()).get('/api/v1/invoices/aging').expect(200);
+      const res = await request(app.getHttpServer())
+        .get('/api/v1/invoices/aging')
+        .expect(200);
 
       expect(res.body).toHaveProperty('current');
       expect(invoicesService.getAgingReport).toHaveBeenCalledWith(TEST_TENANT);
@@ -216,7 +275,9 @@ describe('InvoicesController (integration)', () => {
 
   describe('GET /api/v1/invoices/:id', () => {
     it('returns 200 with invoice detail', async () => {
-      const res = await request(app.getHttpServer()).get('/api/v1/invoices/inv1').expect(200);
+      const res = await request(app.getHttpServer())
+        .get('/api/v1/invoices/inv1')
+        .expect(200);
 
       expect(res.body).toHaveProperty('id', 'inv1');
       expect(invoicesService.findOne).toHaveBeenCalledWith('inv1', TEST_TENANT);
@@ -232,7 +293,12 @@ describe('InvoicesController (integration)', () => {
         .send({ notes: 'Updated notes' })
         .expect(200);
 
-      expect(invoicesService.update).toHaveBeenCalledWith('inv1', TEST_TENANT, expect.any(Object), expect.any(Object));
+      expect(invoicesService.update).toHaveBeenCalledWith(
+        'inv1',
+        TEST_TENANT,
+        expect.any(Object),
+        expect.any(Object)
+      );
     });
   });
 
@@ -245,7 +311,12 @@ describe('InvoicesController (integration)', () => {
         .send({ reason: 'Duplicate' })
         .expect(201);
 
-      expect(invoicesService.voidInvoice).toHaveBeenCalledWith('inv1', TEST_TENANT, expect.any(Object), 'Duplicate');
+      expect(invoicesService.voidInvoice).toHaveBeenCalledWith(
+        'inv1',
+        TEST_TENANT,
+        expect.any(Object),
+        'Duplicate'
+      );
     });
   });
 
@@ -258,7 +329,11 @@ describe('InvoicesController (integration)', () => {
         .expect(201);
 
       expect(res.body).toHaveProperty('id', 'inv2');
-      expect(invoicesService.generateFromLoad).toHaveBeenCalledWith(TEST_TENANT, expect.any(Object), 'l1');
+      expect(invoicesService.generateFromLoad).toHaveBeenCalledWith(
+        TEST_TENANT,
+        expect.any(Object),
+        'l1'
+      );
     });
   });
 
@@ -270,7 +345,10 @@ describe('InvoicesController (integration)', () => {
         .post('/api/v1/invoices/inv1/remind')
         .expect(201);
 
-      expect(invoicesService.sendReminder).toHaveBeenCalledWith('inv1', TEST_TENANT);
+      expect(invoicesService.sendReminder).toHaveBeenCalledWith(
+        'inv1',
+        TEST_TENANT
+      );
     });
   });
 });

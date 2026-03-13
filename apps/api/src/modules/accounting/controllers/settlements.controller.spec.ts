@@ -5,7 +5,6 @@ import request from 'supertest';
 import { SettlementsController } from './settlements.controller';
 import { SettlementsService } from '../services';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../../../common/guards/roles.guard';
 
 const TEST_TENANT = 'tenant-settle-test';
 const TEST_USER_ID = 'user-settle-test';
@@ -22,14 +21,35 @@ const mockSuperAdmin = {
 
 function createMockSettlementsService() {
   return {
-    create: jest.fn().mockResolvedValue({ id: 'stl1', settlementNumber: 'STL-001', status: 'DRAFT' }),
-    findAll: jest.fn().mockResolvedValue({ data: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } }),
-    findOne: jest.fn().mockResolvedValue({ id: 'stl1', settlementNumber: 'STL-001', status: 'DRAFT' }),
+    create: jest
+      .fn()
+      .mockResolvedValue({
+        id: 'stl1',
+        settlementNumber: 'STL-001',
+        status: 'DRAFT',
+      }),
+    findAll: jest
+      .fn()
+      .mockResolvedValue({
+        data: [],
+        pagination: { page: 1, limit: 20, total: 0, totalPages: 0 },
+      }),
+    findOne: jest
+      .fn()
+      .mockResolvedValue({
+        id: 'stl1',
+        settlementNumber: 'STL-001',
+        status: 'DRAFT',
+      }),
     update: jest.fn().mockResolvedValue({ id: 'stl1', status: 'DRAFT' }),
     approve: jest.fn().mockResolvedValue({ id: 'stl1', status: 'APPROVED' }),
     voidSettlement: jest.fn().mockResolvedValue({ id: 'stl1', status: 'VOID' }),
-    generateFromLoad: jest.fn().mockResolvedValue({ id: 'stl2', settlementNumber: 'STL-002' }),
-    getPayablesSummary: jest.fn().mockResolvedValue({ totalPayable: 0, pending: 0, approved: 0 }),
+    generateFromLoad: jest
+      .fn()
+      .mockResolvedValue({ id: 'stl2', settlementNumber: 'STL-002' }),
+    getPayablesSummary: jest
+      .fn()
+      .mockResolvedValue({ totalPayable: 0, pending: 0, approved: 0 }),
   };
 }
 
@@ -65,7 +85,7 @@ describe('SettlementsController (integration)', () => {
         whitelist: true,
         transform: true,
         forbidNonWhitelisted: true,
-      }),
+      })
     );
     await app.init();
   });
@@ -97,11 +117,15 @@ describe('SettlementsController (integration)', () => {
         .expect(201);
 
       expect(res.body).toHaveProperty('id', 'stl1');
-      expect(settlementsService.create).toHaveBeenCalledWith(TEST_TENANT, expect.any(Object), expect.objectContaining(validPayload));
+      expect(settlementsService.create).toHaveBeenCalledWith(
+        TEST_TENANT,
+        expect.any(Object),
+        expect.objectContaining(validPayload)
+      );
     });
 
     it('returns 400 when carrierId missing', async () => {
-      const { carrierId, ...incomplete } = validPayload;
+      const { carrierId: _carrierId, ...incomplete } = validPayload;
       await request(app.getHttpServer())
         .post('/api/v1/settlements')
         .send(incomplete)
@@ -116,7 +140,7 @@ describe('SettlementsController (integration)', () => {
     });
 
     it('returns 400 when grossAmount missing', async () => {
-      const { grossAmount, ...incomplete } = validPayload;
+      const { grossAmount: _grossAmount, ...incomplete } = validPayload;
       await request(app.getHttpServer())
         .post('/api/v1/settlements')
         .send(incomplete)
@@ -134,11 +158,19 @@ describe('SettlementsController (integration)', () => {
       const payload = {
         ...validPayload,
         lineItems: [
-          { lineNumber: 1, description: 'Freight charge', unitRate: 2000, amount: 2000 },
+          {
+            lineNumber: 1,
+            description: 'Freight charge',
+            unitRate: 2000,
+            amount: 2000,
+          },
         ],
       };
 
-      await request(app.getHttpServer()).post('/api/v1/settlements').send(payload).expect(201);
+      await request(app.getHttpServer())
+        .post('/api/v1/settlements')
+        .send(payload)
+        .expect(201);
     });
   });
 
@@ -146,10 +178,15 @@ describe('SettlementsController (integration)', () => {
 
   describe('GET /api/v1/settlements', () => {
     it('returns 200 with list', async () => {
-      const res = await request(app.getHttpServer()).get('/api/v1/settlements').expect(200);
+      const res = await request(app.getHttpServer())
+        .get('/api/v1/settlements')
+        .expect(200);
 
       expect(res.body).toHaveProperty('data');
-      expect(settlementsService.findAll).toHaveBeenCalledWith(TEST_TENANT, expect.any(Object));
+      expect(settlementsService.findAll).toHaveBeenCalledWith(
+        TEST_TENANT,
+        expect.any(Object)
+      );
     });
 
     it('passes query filters', async () => {
@@ -159,7 +196,12 @@ describe('SettlementsController (integration)', () => {
 
       expect(settlementsService.findAll).toHaveBeenCalledWith(
         TEST_TENANT,
-        expect.objectContaining({ status: 'APPROVED', carrierId: 'c1', page: 2, limit: 10 }),
+        expect.objectContaining({
+          status: 'APPROVED',
+          carrierId: 'c1',
+          page: 2,
+          limit: 10,
+        })
       );
     });
   });
@@ -168,10 +210,14 @@ describe('SettlementsController (integration)', () => {
 
   describe('GET /api/v1/settlements/payables-summary', () => {
     it('returns 200 with payables summary', async () => {
-      const res = await request(app.getHttpServer()).get('/api/v1/settlements/payables-summary').expect(200);
+      const res = await request(app.getHttpServer())
+        .get('/api/v1/settlements/payables-summary')
+        .expect(200);
 
       expect(res.body).toHaveProperty('totalPayable');
-      expect(settlementsService.getPayablesSummary).toHaveBeenCalledWith(TEST_TENANT);
+      expect(settlementsService.getPayablesSummary).toHaveBeenCalledWith(
+        TEST_TENANT
+      );
     });
   });
 
@@ -179,10 +225,15 @@ describe('SettlementsController (integration)', () => {
 
   describe('GET /api/v1/settlements/:id', () => {
     it('returns 200 with settlement detail', async () => {
-      const res = await request(app.getHttpServer()).get('/api/v1/settlements/stl1').expect(200);
+      const res = await request(app.getHttpServer())
+        .get('/api/v1/settlements/stl1')
+        .expect(200);
 
       expect(res.body).toHaveProperty('id', 'stl1');
-      expect(settlementsService.findOne).toHaveBeenCalledWith('stl1', TEST_TENANT);
+      expect(settlementsService.findOne).toHaveBeenCalledWith(
+        'stl1',
+        TEST_TENANT
+      );
     });
   });
 
@@ -195,7 +246,12 @@ describe('SettlementsController (integration)', () => {
         .send({ notes: 'Updated' })
         .expect(200);
 
-      expect(settlementsService.update).toHaveBeenCalledWith('stl1', TEST_TENANT, expect.any(Object), expect.any(Object));
+      expect(settlementsService.update).toHaveBeenCalledWith(
+        'stl1',
+        TEST_TENANT,
+        expect.any(Object),
+        expect.any(Object)
+      );
     });
   });
 
@@ -208,7 +264,11 @@ describe('SettlementsController (integration)', () => {
         .expect(201);
 
       expect(res.body).toHaveProperty('status', 'APPROVED');
-      expect(settlementsService.approve).toHaveBeenCalledWith('stl1', TEST_TENANT, expect.any(Object));
+      expect(settlementsService.approve).toHaveBeenCalledWith(
+        'stl1',
+        TEST_TENANT,
+        expect.any(Object)
+      );
     });
   });
 
@@ -220,7 +280,10 @@ describe('SettlementsController (integration)', () => {
         .post('/api/v1/settlements/stl1/void')
         .expect(201);
 
-      expect(settlementsService.voidSettlement).toHaveBeenCalledWith('stl1', TEST_TENANT);
+      expect(settlementsService.voidSettlement).toHaveBeenCalledWith(
+        'stl1',
+        TEST_TENANT
+      );
     });
   });
 
@@ -233,7 +296,11 @@ describe('SettlementsController (integration)', () => {
         .expect(201);
 
       expect(res.body).toHaveProperty('id', 'stl2');
-      expect(settlementsService.generateFromLoad).toHaveBeenCalledWith(TEST_TENANT, expect.any(Object), 'l1');
+      expect(settlementsService.generateFromLoad).toHaveBeenCalledWith(
+        TEST_TENANT,
+        expect.any(Object),
+        'l1'
+      );
     });
   });
 });

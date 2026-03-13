@@ -7,9 +7,9 @@ import { PrismaClient } from '@prisma/client';
 const databaseUrl = process.env.DATABASE_URL;
 if (databaseUrl && !databaseUrl.includes('connection_limit=')) {
   const separator = databaseUrl.includes('?') ? '&' : '?';
-  // Increased connection_limit from 1 to 5 to prevent "too many clients" errors
+  // Increased connection_limit from 1 to 20 to prevent "too many clients" errors in parallel test suites
   // pool_timeout prevents hanging on connection pool exhaustion
-  process.env.DATABASE_URL = `${databaseUrl}${separator}connection_limit=5&pool_timeout=30`;
+  process.env.DATABASE_URL = `${databaseUrl}${separator}connection_limit=20&pool_timeout=60`;
 }
 
 // Shared Prisma instance for all tests to prevent connection pool exhaustion
