@@ -1,7 +1,12 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma.service';
+import { EncryptionService } from '../../integration-hub/services/encryption.service';
 import { FactoringCompanyStatus } from '../dto/enums';
 import { CreateFactoringCompanyDto } from './dto/create-factoring-company.dto';
 import { FactoringCompanyQueryDto } from './dto/factoring-company-query.dto';
@@ -37,9 +42,14 @@ export class FactoringCompaniesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly encryptionService: EncryptionService
   ) {}
 
-  async create(tenantId: string, userId: string, dto: CreateFactoringCompanyDto) {
+  async create(
+    tenantId: string,
+    userId: string,
+    dto: CreateFactoringCompanyDto
+  ) {
     const existing = await this.prisma.factoringCompany.findFirst({
       where: { companyCode: dto.companyCode, deletedAt: null },
     });
@@ -59,7 +69,9 @@ export class FactoringCompaniesService {
         address: dto.address,
         verificationMethod: dto.verificationMethod ?? 'EMAIL',
         apiEndpoint: dto.apiEndpoint,
-        apiKey: dto.apiKey,
+        apiKey: dto.apiKey
+          ? this.encryptionService.encrypt(dto.apiKey)
+          : undefined,
         verificationSLAHours: dto.verificationSLAHours ?? 24,
         status: dto.status ?? FactoringCompanyStatus.ACTIVE,
         createdById: userId,
@@ -97,7 +109,13 @@ export class FactoringCompaniesService {
     };
 
     const [data, total] = await Promise.all([
-      this.prisma.factoringCompany.findMany({ where, skip, take: limit, orderBy: { createdAt: 'desc' }, select: this.safeSelect }),
+      this.prisma.factoringCompany.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        select: this.safeSelect,
+      }),
       this.prisma.factoringCompany.count({ where }),
     ]);
 
@@ -115,7 +133,12 @@ export class FactoringCompaniesService {
     return this.stripSensitive(company);
   }
 
-  async update(tenantId: string, userId: string, id: string, dto: UpdateFactoringCompanyDto) {
+  async update(
+    tenantId: string,
+    userId: string,
+    id: string,
+    dto: UpdateFactoringCompanyDto
+  ) {
     const company = await this.requireCompany(tenantId, id);
 
     if (dto.companyCode && dto.companyCode !== company.companyCode) {
@@ -136,10 +159,18 @@ export class FactoringCompaniesService {
         ...(dto.phone !== undefined ? { phone: dto.phone } : {}),
         ...(dto.fax !== undefined ? { fax: dto.fax } : {}),
         ...(dto.address !== undefined ? { address: dto.address } : {}),
-        ...(dto.verificationMethod !== undefined ? { verificationMethod: dto.verificationMethod } : {}),
-        ...(dto.apiEndpoint !== undefined ? { apiEndpoint: dto.apiEndpoint } : {}),
-        ...(dto.apiKey !== undefined ? { apiKey: dto.apiKey } : {}),
-        ...(dto.verificationSLAHours !== undefined ? { verificationSLAHours: dto.verificationSLAHours } : {}),
+        ...(dto.verificationMethod !== undefined
+          ? { verificationMethod: dto.verificationMethod }
+          : {}),
+        ...(dto.apiEndpoint !== undefined
+          ? { apiEndpoint: dto.apiEndpoint }
+          : {}),
+        ...(dto.apiKey !== undefined
+          ? { apiKey: this.encryptionService.encrypt(dto.apiKey) }
+          : {}),
+        ...(dto.verificationSLAHours !== undefined
+          ? { verificationSLAHours: dto.verificationSLAHours }
+          : {}),
         ...(dto.status !== undefined ? { status: dto.status } : {}),
         updatedById: userId,
       },
@@ -148,9 +179,18 @@ export class FactoringCompaniesService {
     return this.stripSensitive(updated);
   }
 
-  async toggleStatus(tenantId: string, userId: string, id: string, status?: FactoringCompanyStatus) {
+  async toggleStatus(
+    tenantId: string,
+    userId: string,
+    id: string,
+    status?: FactoringCompanyStatus
+  ) {
     const company = await this.requireCompany(tenantId, id);
-    const nextStatus = status ?? (company.status === FactoringCompanyStatus.ACTIVE ? FactoringCompanyStatus.INACTIVE : FactoringCompanyStatus.ACTIVE);
+    const nextStatus =
+      status ??
+      (company.status === FactoringCompanyStatus.ACTIVE
+        ? FactoringCompanyStatus.INACTIVE
+        : FactoringCompanyStatus.ACTIVE);
 
     const updated = await this.prisma.factoringCompany.update({
       where: { id },
@@ -165,13 +205,19 @@ export class FactoringCompaniesService {
 
     await this.prisma.factoringCompany.update({
       where: { id },
-      data: { deletedAt: new Date(), updatedById: userId, status: FactoringCompanyStatus.INACTIVE },
+      data: {
+        deletedAt: new Date(),
+        updatedById: userId,
+        status: FactoringCompanyStatus.INACTIVE,
+      },
     });
 
     return { success: true };
   }
 
-  private stripSensitive<T extends Record<string, any>>(obj: T): Omit<T, 'apiKey'> {
+  private stripSensitive<T extends Record<string, any>>(
+    obj: T
+  ): Omit<T, 'apiKey'> {
     const { apiKey: _, ...rest } = obj;
     return rest as any;
   }
