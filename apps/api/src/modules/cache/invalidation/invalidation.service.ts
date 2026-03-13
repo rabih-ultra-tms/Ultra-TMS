@@ -39,7 +39,7 @@ export class InvalidationService {
 
   async rules(tenantId: string) {
     return this.prisma.cacheInvalidationRule.findMany({
-      where: { tenantId },
+      where: { tenantId, deletedAt: null },
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -65,8 +65,9 @@ export class InvalidationService {
   }
 
   async deleteRule(tenantId: string, id: string) {
-    await this.prisma.cacheInvalidationRule.deleteMany({
+    await this.prisma.cacheInvalidationRule.updateMany({
       where: { id, tenantId },
+      data: { deletedAt: new Date() },
     });
     return { deleted: true };
   }

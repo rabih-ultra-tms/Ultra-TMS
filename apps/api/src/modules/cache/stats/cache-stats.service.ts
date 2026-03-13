@@ -7,7 +7,7 @@ export class CacheStatsService {
 
   async recent(tenantId: string) {
     return this.prisma.cacheStats.findMany({
-      where: { tenantId },
+      where: { tenantId, deletedAt: null },
       orderBy: [{ statDate: 'desc' }, { statHour: 'desc' }],
       take: 48,
     });
@@ -20,7 +20,13 @@ export class CacheStatsService {
     );
     const statHour = now.getUTCHours();
     const existing = await this.prisma.cacheStats.findFirst({
-      where: { tenantId: tenantId ?? null, statDate, statHour, cacheType },
+      where: {
+        tenantId: tenantId ?? null,
+        statDate,
+        statHour,
+        cacheType,
+        deletedAt: null,
+      },
     });
     if (existing) {
       await this.prisma.cacheStats.update({
@@ -52,7 +58,13 @@ export class CacheStatsService {
     );
     const statHour = now.getUTCHours();
     const existing = await this.prisma.cacheStats.findFirst({
-      where: { tenantId: tenantId ?? null, statDate, statHour, cacheType },
+      where: {
+        tenantId: tenantId ?? null,
+        statDate,
+        statHour,
+        cacheType,
+        deletedAt: null,
+      },
     });
     if (existing) {
       await this.prisma.cacheStats.update({
@@ -84,7 +96,13 @@ export class CacheStatsService {
     );
     const statHour = now.getUTCHours();
     const existing = await this.prisma.cacheStats.findFirst({
-      where: { tenantId: tenantId ?? null, statDate, statHour, cacheType },
+      where: {
+        tenantId: tenantId ?? null,
+        statDate,
+        statHour,
+        cacheType,
+        deletedAt: null,
+      },
     });
     if (existing) {
       await this.prisma.cacheStats.update({
@@ -120,7 +138,13 @@ export class CacheStatsService {
     );
     const statHour = now.getUTCHours();
     const existing = await this.prisma.cacheStats.findFirst({
-      where: { tenantId: tenantId ?? null, statDate, statHour, cacheType },
+      where: {
+        tenantId: tenantId ?? null,
+        statDate,
+        statHour,
+        cacheType,
+        deletedAt: null,
+      },
     });
     if (existing) {
       await this.prisma.cacheStats.update({

@@ -9,18 +9,18 @@ export class RateLimitService {
 
   async list(tenantId: string) {
     return this.prisma.rateLimit.findMany({
-      where: { tenantId },
+      where: { tenantId, deletedAt: null },
       orderBy: { createdAt: 'desc' },
     });
   }
 
   async getByKey(tenantId: string, key: string) {
     return this.prisma.rateLimit.findFirst({
-      where: { tenantId, identifier: key },
+      where: { tenantId, identifier: key, deletedAt: null },
     });
   }
 
-  async update(key: string, dto: UpdateRateLimitDto, tenantId?: string) {
+  async update(key: string, dto: UpdateRateLimitDto, tenantId: string) {
     const existing = tenantId ? await this.getByKey(tenantId, key) : null;
     const windowSeconds = dto.requestsPerMinute
       ? 60

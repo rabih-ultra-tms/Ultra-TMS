@@ -16,6 +16,7 @@ export class DistributedLockService {
         tenantId,
         releasedAt: null,
         expiresAt: { gt: now },
+        deletedAt: null,
       },
       orderBy: { acquiredAt: 'desc' },
       take: 100,
@@ -24,18 +25,20 @@ export class DistributedLockService {
 
   async lockDetails(tenantId: string, lockKey: string) {
     return this.prisma.distributedLock.findFirst({
-      where: { tenantId, lockKey },
+      where: { tenantId, lockKey, deletedAt: null },
       orderBy: { acquiredAt: 'desc' },
     });
   }
 
   async forceRelease(tenantId: string, lockKey: string) {
-    const lock = await this.prisma.distributedLock.findFirst({ where: { lockKey, tenantId, releasedAt: null } });
+    const lock = await this.prisma.distributedLock.findFirst({
+      where: { lockKey, tenantId, releasedAt: null, deletedAt: null },
+    });
     if (!lock) return { released: false };
     const client = this.redis.getClient();
     await client.del(`lock:${tenantId}:${lockKey}`);
     await this.prisma.distributedLock.updateMany({
-      where: { lockKey, tenantId, releasedAt: null },
+      where: { lockKey, tenantId, releasedAt: null, deletedAt: null },
       data: { releasedAt: new Date() },
     });
     return { released: true };
@@ -43,7 +46,7 @@ export class DistributedLockService {
 
   async history(tenantId: string, lockKey?: string) {
     return this.prisma.distributedLock.findMany({
-      where: { tenantId, ...(lockKey ? { lockKey } : {}) },
+      where: { tenantId, deletedAt: null, ...(lockKey ? { lockKey } : {}) },
       orderBy: { acquiredAt: 'desc' },
       take: 200,
     });

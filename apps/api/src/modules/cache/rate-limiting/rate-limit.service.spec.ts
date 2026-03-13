@@ -24,7 +24,10 @@ describe('RateLimitService', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [RateLimitService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        RateLimitService,
+        { provide: PrismaService, useValue: prisma },
+      ],
     }).compile();
 
     service = module.get(RateLimitService);
@@ -36,7 +39,7 @@ describe('RateLimitService', () => {
     await service.list('tenant-1');
 
     expect(prisma.rateLimit.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { tenantId: 'tenant-1' } }),
+      expect.objectContaining({ where: { tenantId: 'tenant-1' } })
     );
   });
 
@@ -45,7 +48,13 @@ describe('RateLimitService', () => {
 
     const result = await service.usage('tenant-1', 'key-1');
 
-    expect(result).toEqual({ identifier: 'key-1', current: 0, limit: 0, windowSeconds: 0, resetAt: null });
+    expect(result).toEqual({
+      identifier: 'key-1',
+      current: 0,
+      limit: 0,
+      windowSeconds: 0,
+      resetAt: null,
+    });
   });
 
   it('updates existing rate limit', async () => {
@@ -59,13 +68,17 @@ describe('RateLimitService', () => {
     });
     prisma.rateLimit.update.mockResolvedValue({ identifier: 'key-1' });
 
-    await service.update('key-1', { requestsPerMinute: 120 } as any, 'tenant-1');
+    await service.update(
+      'key-1',
+      { requestsPerMinute: 120 } as any,
+      'tenant-1'
+    );
 
     expect(prisma.rateLimit.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { scope_identifier: { scope: 'GLOBAL', identifier: 'key-1' } },
         data: expect.objectContaining({ maxRequests: 120, windowSeconds: 60 }),
-      }),
+      })
     );
   });
 
@@ -83,12 +96,15 @@ describe('RateLimitService', () => {
           maxRequests: 300,
           windowSeconds: 3600,
         }),
-      }),
+      })
     );
   });
 
   it('resets existing rate limit', async () => {
-    prisma.rateLimit.findFirst.mockResolvedValue({ scope: 'GLOBAL', identifier: 'key-1' });
+    prisma.rateLimit.findFirst.mockResolvedValue({
+      scope: 'GLOBAL',
+      identifier: 'key-1',
+    });
     prisma.rateLimit.update.mockResolvedValue({});
 
     const result = await service.reset('tenant-1', 'key-1');
@@ -97,8 +113,11 @@ describe('RateLimitService', () => {
     expect(prisma.rateLimit.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { scope_identifier: { scope: 'GLOBAL', identifier: 'key-1' } },
-        data: expect.objectContaining({ currentRequests: 0, windowStartsAt: expect.any(Date) }),
-      }),
+        data: expect.objectContaining({
+          currentRequests: 0,
+          windowStartsAt: expect.any(Date),
+        }),
+      })
     );
   });
 
@@ -114,8 +133,11 @@ describe('RateLimitService', () => {
 
     expect(prisma.rateLimit.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ currentRequests: 1, windowStartsAt: expect.any(Date) }),
-      }),
+        data: expect.objectContaining({
+          currentRequests: 1,
+          windowStartsAt: expect.any(Date),
+        }),
+      })
     );
   });
 
@@ -132,7 +154,22 @@ describe('RateLimitService', () => {
     expect(prisma.rateLimit.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: { currentRequests: { increment: 1 } },
-      }),
+      })
     );
+  });
+
+  it('ensures tenantId is always set when creating new rate limit (security: prevent undefined tenants)', async () => {
+    prisma.rateLimit.findFirst.mockResolvedValue(null);
+    prisma.rateLimit.create.mockResolvedValue({
+      identifier: 'key-1',
+      tenantId: 'tenant-1',
+    });
+
+    await service.update('key-1', { requestsPerMinute: 60 } as any, 'tenant-1');
+
+    const createCall = prisma.rateLimit.create.mock.calls[0][0];
+    expect(createCall.data.tenantId).toBe('tenant-1');
+    expect(createCall.data.tenantId).not.toBeUndefined();
+    expect(createCall.data.tenantId).not.toBeNull();
   });
 });
