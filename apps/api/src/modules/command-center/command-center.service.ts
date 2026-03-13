@@ -72,17 +72,8 @@ export class CommandCenterService {
           deliveredAt: { gte: start, lte: end },
         },
       }),
-      // At-risk: loads in transit with no check call in 4+ hours
-      this.prisma.load.count({
-        where: {
-          tenantId,
-          deletedAt: null,
-          status: { in: IN_TRANSIT_STATUSES },
-          lastCheckCallAt: {
-            lt: new Date(Date.now() - 4 * 60 * 60 * 1000),
-          },
-        },
-      }),
+      // At-risk: in-transit loads with no check call at all, or latest check call > 4h ago
+      this.countStaleLoads(tenantId),
       // Period loads for revenue/margin
       this.prisma.load.findMany({
         where: {
@@ -212,32 +203,71 @@ export class CommandCenterService {
 
     // 1. Critical: Stale check calls (in-transit loads, no check call in 4h)
     if (severity === 'all' || severity === 'critical') {
-      const staleLoads = await this.prisma.load.findMany({
+      // Load model has no lastCheckCallAt field — query via CheckCall relation
+      const inTransitLoads = await this.prisma.load.findMany({
         where: {
           tenantId,
           deletedAt: null,
           status: { in: IN_TRANSIT_STATUSES },
-          lastCheckCallAt: { lt: fourHoursAgo },
         },
         select: {
           id: true,
           loadNumber: true,
-          lastCheckCallAt: true,
           carrier: { select: { legalName: true } },
+          checkCalls: {
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+            select: { createdAt: true },
+          },
+        },
+        take: limit * 2, // over-fetch since we filter in memory
+      });
+
+      for (const load of inTransitLoads) {
+        const lastCall = load.checkCalls[0]?.createdAt;
+        if (!lastCall || lastCall < fourHoursAgo) {
+          alerts.push({
+            id: `stale-checkcall-${load.id}`,
+            type: 'STALE_CHECK_CALL',
+            severity: 'critical',
+            title: `No check call: ${load.loadNumber}`,
+            description: `Last check call was ${lastCall ? this.timeAgo(lastCall) : 'never'}. Carrier: ${load.carrier?.legalName ?? 'Unassigned'}`,
+            entityType: 'load',
+            entityId: String(load.id),
+            createdAt: lastCall ?? now,
+            acknowledged: false,
+          });
+        }
+      }
+    }
+
+    // 1b. Critical: Expired insurance on active carriers
+    if (severity === 'all' || severity === 'critical') {
+      const expiredInsurance = await this.prisma.carrierInsurance.findMany({
+        where: {
+          carrier: { tenantId, deletedAt: null, status: 'ACTIVE' },
+          expirationDate: { lt: now },
+        },
+        select: {
+          id: true,
+          insuranceType: true,
+          expirationDate: true,
+          carrier: { select: { id: true, legalName: true } },
         },
         take: limit,
       });
 
-      for (const load of staleLoads) {
+      for (const ins of expiredInsurance) {
+        if (!ins.carrier) continue;
         alerts.push({
-          id: `stale-checkcall-${load.id}`,
-          type: 'STALE_CHECK_CALL',
+          id: `expired-insurance-${ins.id}`,
+          type: 'EXPIRED_INSURANCE',
           severity: 'critical',
-          title: `No check call: ${load.loadNumber}`,
-          description: `Last check call was ${load.lastCheckCallAt ? this.timeAgo(load.lastCheckCallAt) : 'never'}. Carrier: ${load.carrier?.legalName ?? 'Unassigned'}`,
-          entityType: 'load',
-          entityId: String(load.id),
-          createdAt: load.lastCheckCallAt ?? now,
+          title: `Insurance expired: ${ins.carrier.legalName}`,
+          description: `${ins.insuranceType} insurance expired ${ins.expirationDate.toISOString().split('T')[0]}`,
+          entityType: 'carrier',
+          entityId: String(ins.carrier.id),
+          createdAt: ins.expirationDate,
           acknowledged: false,
         });
       }
@@ -281,7 +311,7 @@ export class CommandCenterService {
         },
         select: {
           id: true,
-          type: true,
+          insuranceType: true,
           expirationDate: true,
           carrier: { select: { id: true, legalName: true } },
         },
@@ -289,14 +319,53 @@ export class CommandCenterService {
       });
 
       for (const ins of expiringInsurance) {
+        if (!ins.carrier) continue;
         alerts.push({
           id: `insurance-${ins.id}`,
           type: 'EXPIRING_INSURANCE',
           severity: 'warning',
           title: `Insurance expiring: ${ins.carrier.legalName}`,
-          description: `${ins.type} insurance expires ${ins.expirationDate.toISOString().split('T')[0]}`,
+          description: `${ins.insuranceType} insurance expires ${ins.expirationDate.toISOString().split('T')[0]}`,
           entityType: 'carrier',
           entityId: String(ins.carrier.id),
+          createdAt: now,
+          acknowledged: false,
+        });
+      }
+    }
+
+    // 4. Info: Loads with delivery due within 4 hours (tight deadline)
+    if (severity === 'all' || severity === 'info') {
+      const fourHoursFromNow = new Date(now.getTime() + 4 * 60 * 60 * 1000);
+      const nearDeadlineLoads = await this.prisma.load.findMany({
+        where: {
+          tenantId,
+          deletedAt: null,
+          status: { in: IN_TRANSIT_STATUSES },
+          deliveredAt: null,
+          order: {
+            requiredDeliveryDate: { gte: now, lte: fourHoursFromNow },
+          },
+        },
+        select: {
+          id: true,
+          loadNumber: true,
+          order: { select: { requiredDeliveryDate: true } },
+          carrier: { select: { legalName: true } },
+        },
+        take: limit,
+      });
+
+      for (const load of nearDeadlineLoads) {
+        const deadline = load.order?.requiredDeliveryDate;
+        alerts.push({
+          id: `deadline-${load.id}`,
+          type: 'DELIVERY_DEADLINE',
+          severity: 'info',
+          title: `Delivery due soon: ${load.loadNumber}`,
+          description: `Due ${deadline ? this.timeUntil(deadline) : 'soon'}. Carrier: ${load.carrier?.legalName ?? 'Unassigned'}`,
+          entityType: 'load',
+          entityId: String(load.id),
           createdAt: now,
           acknowledged: false,
         });
@@ -371,39 +440,36 @@ export class CommandCenterService {
   async getCarrierAvailability(tenantId: string) {
     const carriers = await this.prisma.carrier.findMany({
       where: { tenantId, deletedAt: null, status: 'ACTIVE' },
-      select: {
-        id: true,
-        companyName: true,
-        legalName: true,
-        mcNumber: true,
-        dotNumber: true,
-        status: true,
-        carrierScorecard: { select: { overallScore: true } },
-        _count: {
-          select: {
-            loads: {
-              where: {
-                status: { in: IN_TRANSIT_STATUSES },
-                deletedAt: null,
-              },
-            },
-          },
-        },
-      },
-      orderBy: { companyName: 'asc' },
+      orderBy: { legalName: 'asc' },
       take: 100,
     });
+
+    // Count active loads per carrier in a single query
+    const carrierIds = carriers.map((c) => c.id);
+    const loadCounts = await this.prisma.load.groupBy({
+      by: ['carrierId'],
+      where: {
+        carrierId: { in: carrierIds },
+        status: { in: IN_TRANSIT_STATUSES },
+        deletedAt: null,
+      },
+      _count: true,
+    });
+    const countMap = new Map(
+      loadCounts.map((lc) => [lc.carrierId, lc._count])
+    );
 
     return {
       data: carriers.map((c) => ({
         id: c.id,
-        companyName: c.companyName,
         legalName: c.legalName,
         mcNumber: c.mcNumber,
         dotNumber: c.dotNumber,
         status: c.status,
-        overallScore: c.carrierScorecard?.overallScore ?? null,
-        activeLoadCount: c._count.loads,
+        overallScore: (c as Record<string, unknown>).performanceScore
+          ? Number((c as Record<string, unknown>).performanceScore)
+          : null,
+        activeLoadCount: countMap.get(c.id) ?? 0,
       })),
     };
   }
@@ -423,6 +489,41 @@ export class CommandCenterService {
     }
 
     return { start, end };
+  }
+
+  /**
+   * Count in-transit loads with no check call or latest check call > 4h ago.
+   */
+  private async countStaleLoads(tenantId: string): Promise<number> {
+    const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
+    const inTransitLoads = await this.prisma.load.findMany({
+      where: {
+        tenantId,
+        deletedAt: null,
+        status: { in: IN_TRANSIT_STATUSES },
+      },
+      select: {
+        checkCalls: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          select: { createdAt: true },
+        },
+      },
+    });
+    return inTransitLoads.filter((load) => {
+      const lastCall = load.checkCalls[0]?.createdAt;
+      return !lastCall || lastCall < fourHoursAgo;
+    }).length;
+  }
+
+  private timeUntil(date: Date): string {
+    const seconds = Math.floor((date.getTime() - Date.now()) / 1000);
+    if (seconds < 60) return 'in less than a minute';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `in ${minutes}m`;
+    const hours = Math.floor(minutes / 60);
+    const remainMin = minutes % 60;
+    return remainMin > 0 ? `in ${hours}h ${remainMin}m` : `in ${hours}h`;
   }
 
   private timeAgo(date: Date): string {

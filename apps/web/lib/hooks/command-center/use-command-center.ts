@@ -12,6 +12,8 @@ export const commandCenterKeys = {
     [...commandCenterKeys.all, 'kpis', period ?? 'today'] as const,
   alerts: (severity?: string) =>
     [...commandCenterKeys.all, 'alerts', severity ?? 'all'] as const,
+  activity: (page?: number) =>
+    [...commandCenterKeys.all, 'activity', page ?? 1] as const,
 };
 
 export interface CommandCenterKPIs {
@@ -88,5 +90,37 @@ export function useAcknowledgeAlert() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: commandCenterKeys.alerts() });
     },
+  });
+}
+
+export interface ActivityEntry {
+  id: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  userId: string;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
+}
+
+export function useCommandCenterActivity(page = 1, limit = 10) {
+  return useQuery({
+    queryKey: commandCenterKeys.activity(page),
+    queryFn: async () => {
+      const response = await apiClient.get(
+        `/command-center/activity?page=${page}&limit=${limit}`
+      );
+      return response as {
+        data: ActivityEntry[];
+        pagination: {
+          page: number;
+          limit: number;
+          total: number;
+          totalPages: number;
+        };
+      };
+    },
+    staleTime: 30_000,
+    refetchInterval: 60_000,
   });
 }

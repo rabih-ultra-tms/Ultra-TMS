@@ -27,7 +27,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AlertsPanel } from './alerts-panel';
 import {
   useCommandCenterKPIs,
+  useCommandCenterActivity,
   type CommandCenterKPIs,
+  type ActivityEntry,
 } from '@/lib/hooks/command-center/use-command-center';
 
 interface KPICardConfig {
@@ -144,7 +146,30 @@ function buildKPICards(kpis: CommandCenterKPIs): KPICardConfig[] {
   ];
 }
 
-function ActivityFeedPlaceholder() {
+function formatAction(action: string): string {
+  return action
+    .replace(/_/g, ' ')
+    .toLowerCase()
+    .replace(/^\w/, (c) => c.toUpperCase());
+}
+
+function formatTimeAgo(dateStr: string): string {
+  const seconds = Math.floor(
+    (Date.now() - new Date(dateStr).getTime()) / 1000
+  );
+  if (seconds < 60) return 'just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
+function ActivityFeed() {
+  const { data, isLoading } = useCommandCenterActivity(1, 15);
+  const activities = data?.data ?? [];
+
   return (
     <Card className="flex flex-col h-full">
       <CardHeader className="pb-3">
@@ -153,14 +178,41 @@ function ActivityFeedPlaceholder() {
           Activity Feed
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-1 items-center justify-center">
-        <div className="text-center space-y-2">
-          <Activity className="mx-auto h-8 w-8 text-muted-foreground/40" />
-          <p className="text-sm text-muted-foreground">Recent activity</p>
-          <p className="text-xs text-muted-foreground/70">
-            Wire to GET /command-center/activity
-          </p>
-        </div>
+      <CardContent className="flex-1 overflow-y-auto p-0">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : activities.length === 0 ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="text-center space-y-2">
+              <Activity className="mx-auto h-8 w-8 text-muted-foreground/40" />
+              <p className="text-sm text-muted-foreground">No recent activity</p>
+            </div>
+          </div>
+        ) : (
+          <div className="divide-y divide-border">
+            {activities.map((entry: ActivityEntry) => (
+              <div key={entry.id} className="flex items-start gap-3 px-4 py-2.5">
+                <div className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs">
+                    <span className="font-medium">
+                      {formatAction(entry.action)}
+                    </span>
+                    <span className="text-muted-foreground">
+                      {' '}
+                      — {entry.entityType}
+                    </span>
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {formatTimeAgo(entry.createdAt)}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -207,7 +259,7 @@ export function DashboardLayout() {
           </CardContent>
         </Card>
 
-        <ActivityFeedPlaceholder />
+        <ActivityFeed />
       </div>
     </div>
   );
