@@ -1,56 +1,304 @@
 /**
- * Portal API Client
+ * Portal HTTP Client
  *
- * Separate from the main apiClient — uses portal-specific JWT cookie
- * for Customer Portal authentication.
+ * Handles all requests to /api/v1/portal/* endpoints with automatic
+ * JWT token management from usePortalAuthStore.
  */
 
-import { AUTH_CONFIG } from '@/lib/config/auth';
+import { usePortalAuthStore } from '@/lib/store/portal-auth.store';
 
+const BASE_URL = '/api/v1/portal';
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
-const PORTAL_ACCESS_COOKIE = 'portal_access_token';
-const PORTAL_REFRESH_COOKIE = 'portal_refresh_token';
+// Backward compatibility: local token storage for SSR/initial hydration
+let localToken: string | null = null;
+let localRefreshToken: string | null = null;
 
-function readCookie(name: string): string | undefined {
-  if (typeof document === 'undefined') return undefined;
-  const parts = document.cookie.split(';').map((p) => p.trim());
-  const match = parts.find((p) => p.startsWith(`${name}=`));
-  return match
-    ? decodeURIComponent(match.substring(name.length + 1))
-    : undefined;
+// eslint-disable-next-line no-undef
+interface PortalRequestOptions extends Omit<RequestInit, 'body'> {
+  body?: unknown;
 }
 
-function writeCookie(name: string, value: string, maxAge: number) {
-  if (typeof document === 'undefined') return;
-  document.cookie = `${name}=${encodeURIComponent(value)}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
-}
+// ============================================================================
+// Main PortalClient Class
+// ============================================================================
 
-function deleteCookie(name: string) {
-  if (typeof document === 'undefined') return;
-  document.cookie = `${name}=; Path=/; Max-Age=0; SameSite=Lax`;
-}
+class PortalClient {
+  private getHeaders() {
+    const token = usePortalAuthStore.getState().token;
+    return {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
+    };
+  }
 
-export function setPortalTokens(accessToken: string, refreshToken?: string) {
-  writeCookie(PORTAL_ACCESS_COOKIE, accessToken, 2 * 60 * 60); // 2h
-  if (refreshToken) {
-    writeCookie(PORTAL_REFRESH_COOKIE, refreshToken, 7 * 24 * 60 * 60); // 7d
+  async request<T>(
+    endpoint: string,
+    options?: PortalRequestOptions
+  ): Promise<T> {
+    const url = `${BASE_URL}${endpoint}`;
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        ...this.getHeaders(),
+        ...options?.headers,
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.message || `API Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.data || data;
+  }
+
+  // Auth endpoints
+  login(email: string, password: string) {
+    return this.request<{
+      token: string;
+      user: { id: string; email: string; name: string; companyId: string };
+    }>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+  }
+
+  logout() {
+    return this.request<void>('/auth/logout', { method: 'POST' });
+  }
+
+  refreshToken() {
+    return this.request<{ token: string }>('/auth/refresh', {
+      method: 'POST',
+    });
+  }
+
+  // Dashboard endpoints
+  getDashboard() {
+    return this.request<{
+      shipmentStats: {
+        total: number;
+        active: number;
+        completed: number;
+        delayed: number;
+      };
+      invoiceStats: {
+        total: number;
+        pending: number;
+        overdue: number;
+      };
+      alertCount: number;
+    }>('/dashboard', { method: 'GET' });
+  }
+
+  getActiveShipments() {
+    return this.request<
+      Array<{
+        id: string;
+        trackingNumber: string;
+        status: string;
+        origin: string;
+        destination: string;
+        estimatedDelivery: string;
+        currentLocation: string;
+      }>
+    >('/dashboard/shipments/active', { method: 'GET' });
+  }
+
+  getRecentActivity() {
+    return this.request<
+      Array<{
+        id: string;
+        type: string;
+        description: string;
+        timestamp: string;
+        relatedShipmentId?: string;
+      }>
+    >('/dashboard/activity/recent', { method: 'GET' });
+  }
+
+  getAlerts() {
+    return this.request<
+      Array<{
+        id: string;
+        type: string;
+        severity: string;
+        message: string;
+        timestamp: string;
+        relatedShipmentId?: string;
+      }>
+    >('/dashboard/alerts', { method: 'GET' });
+  }
+
+  // Invoice endpoints
+  getInvoices() {
+    return this.request<
+      Array<{
+        id: string;
+        invoiceNumber: string;
+        issueDate: string;
+        dueDate: string;
+        totalAmount: number;
+        status: string;
+      }>
+    >('/invoices', { method: 'GET' });
+  }
+
+  getInvoice(id: string) {
+    return this.request<{
+      id: string;
+      invoiceNumber: string;
+      issueDate: string;
+      dueDate: string;
+      totalAmount: number;
+      status: string;
+      items: Array<{
+        description: string;
+        quantity: number;
+        rate: number;
+        amount: number;
+      }>;
+      notes?: string;
+    }>(`/invoices/${id}`, { method: 'GET' });
+  }
+
+  getInvoicePdf(id: string) {
+    return fetch(`${BASE_URL}/invoices/${id}/pdf`, {
+      method: 'GET',
+      headers: this.getHeaders(),
+    });
+  }
+
+  getInvoiceAgingSummary() {
+    return this.request<{
+      current: number;
+      thirtyDays: number;
+      sixtyDays: number;
+      ninetyDays: number;
+      over90Days: number;
+    }>('/invoices/aging/summary', { method: 'GET' });
+  }
+
+  // Shipment endpoints
+  getShipments() {
+    return this.request<
+      Array<{
+        id: string;
+        trackingNumber: string;
+        status: string;
+        origin: string;
+        destination: string;
+        shipDate: string;
+        estimatedDelivery: string;
+      }>
+    >('/shipments', { method: 'GET' });
+  }
+
+  getShipment(id: string) {
+    return this.request<{
+      id: string;
+      trackingNumber: string;
+      status: string;
+      origin: string;
+      destination: string;
+      shipDate: string;
+      estimatedDelivery: string;
+      actualDelivery?: string;
+      weight: number;
+      weightUnit: string;
+      dimensions?: {
+        length: number;
+        width: number;
+        height: number;
+        unit: string;
+      };
+      items: Array<{
+        description: string;
+        quantity: number;
+        sku?: string;
+      }>;
+    }>(`/shipments/${id}`, { method: 'GET' });
+  }
+
+  getShipmentTracking(code: string) {
+    return this.request<
+      Array<{
+        timestamp: string;
+        location: string;
+        status: string;
+        description: string;
+      }>
+    >(`/shipments/tracking/${code}`, { method: 'GET' });
+  }
+
+  getShipmentDocuments(id: string) {
+    return this.request<
+      Array<{
+        id: string;
+        name: string;
+        type: string;
+        uploadedAt: string;
+        url: string;
+      }>
+    >(`/shipments/${id}/documents`, { method: 'GET' });
+  }
+
+  // Payment endpoints
+  getPaymentHistory() {
+    return this.request<
+      Array<{
+        id: string;
+        date: string;
+        amount: number;
+        method: string;
+        status: string;
+        referenceNumber?: string;
+      }>
+    >('/payments/history', { method: 'GET' });
+  }
+
+  makePayment(
+    amount: number,
+    method: string,
+    details?: Record<string, string>
+  ) {
+    return this.request<{
+      id: string;
+      transactionId: string;
+      status: string;
+      amount: number;
+      date: string;
+    }>('/payments', {
+      method: 'POST',
+      body: JSON.stringify({
+        amount,
+        method,
+        ...details,
+      }),
+    });
+  }
+
+  getPaymentDetails(id: string) {
+    return this.request<{
+      id: string;
+      date: string;
+      amount: number;
+      method: string;
+      status: string;
+      referenceNumber?: string;
+      transactionDetails?: Record<string, string>;
+    }>(`/payments/${id}`, { method: 'GET' });
   }
 }
 
-export function clearPortalTokens() {
-  deleteCookie(PORTAL_ACCESS_COOKIE);
-  deleteCookie(PORTAL_REFRESH_COOKIE);
-}
+export const portalClient = new PortalClient();
 
-export function getPortalAccessToken(): string | undefined {
-  return readCookie(PORTAL_ACCESS_COOKIE);
-}
-
-export function getPortalRefreshToken(): string | undefined {
-  return readCookie(PORTAL_REFRESH_COOKIE);
-}
+// ============================================================================
+// Backward Compatibility Exports (for existing hooks)
+// ============================================================================
 
 export class PortalApiError extends Error {
   public readonly status: number;
@@ -62,16 +310,41 @@ export class PortalApiError extends Error {
   }
 }
 
+export function setPortalTokens(accessToken: string, refreshToken?: string) {
+  localToken = accessToken;
+  if (refreshToken) {
+    localRefreshToken = refreshToken;
+  }
+  usePortalAuthStore.getState().setToken(accessToken);
+  if (refreshToken) {
+    usePortalAuthStore.getState().setRefreshToken(refreshToken);
+  }
+}
+
+export function clearPortalTokens() {
+  localToken = null;
+  localRefreshToken = null;
+  usePortalAuthStore.getState().logout();
+}
+
+export function getPortalAccessToken(): string | undefined {
+  return usePortalAuthStore.getState().token || localToken || undefined;
+}
+
+export function getPortalRefreshToken(): string | undefined {
+  return (
+    usePortalAuthStore.getState().refreshToken || localRefreshToken || undefined
+  );
+}
+
 async function portalRequest<T>(
   endpoint: string,
-  // eslint-disable-next-line no-undef
-  options: RequestInit & { skipAuth?: boolean } = {}
+  options: PortalRequestOptions & { skipAuth?: boolean } = {}
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     Accept: 'application/json',
-    'x-tenant-id': AUTH_CONFIG.defaultTenantId,
   };
 
   if (!options.skipAuth) {
