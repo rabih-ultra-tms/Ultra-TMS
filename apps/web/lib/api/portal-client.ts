@@ -38,12 +38,15 @@ class PortalClient {
     options?: PortalRequestOptions
   ): Promise<T> {
     const url = `${BASE_URL}${endpoint}`;
+    const { body, ...fetchOptions } = options || {};
+
     const response = await fetch(url, {
-      ...options,
+      ...fetchOptions,
       headers: {
         ...this.getHeaders(),
         ...options?.headers,
       },
+      body: body ? JSON.stringify(body) : undefined,
     });
 
     if (!response.ok) {
@@ -342,12 +345,14 @@ async function portalRequest<T>(
   options: PortalRequestOptions & { skipAuth?: boolean } = {}
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
+  const { body, skipAuth, ...fetchOptions } = options;
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     Accept: 'application/json',
   };
 
-  if (!options.skipAuth) {
+  if (!skipAuth) {
     const token = getPortalAccessToken();
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
@@ -355,8 +360,9 @@ async function portalRequest<T>(
   }
 
   const response = await fetch(url, {
-    ...options,
+    ...fetchOptions,
     headers: { ...headers, ...(options.headers as Record<string, string>) },
+    body: body ? JSON.stringify(body) : undefined,
   });
 
   if (!response.ok) {
