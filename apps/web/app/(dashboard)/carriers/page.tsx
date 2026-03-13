@@ -1,25 +1,25 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useState } from 'react';
+import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import {
   useCarriers,
   useCreateCarrier,
   useDeleteCarrier,
   useCarrierStats,
   useUpdateCarrier,
-} from "@/lib/hooks/operations";
+} from '@/lib/hooks/operations';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Plus,
   Search,
@@ -33,10 +33,10 @@ import {
   Star,
   PauseCircle,
   Download,
-} from "lucide-react";
-import { ConfirmDialog } from "@/components/shared/confirm-dialog";
-import { toast } from "sonner";
-import { useDebounce } from "@/lib/hooks";
+} from 'lucide-react';
+import { ConfirmDialog } from '@/components/shared/confirm-dialog';
+import { toast } from 'sonner';
+import { useDebounce } from '@/lib/hooks';
 import {
   Dialog,
   DialogContent,
@@ -44,37 +44,116 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { ListPage } from "@/components/patterns/list-page";
-import { columns, isInsuranceExpired, isInsuranceExpiring } from "./columns";
-import { OperationsCarrierListItem, EQUIPMENT_TYPES, CARRIER_EQUIPMENT_TYPE_LABELS } from "@/types/carriers";
-import type { Row, SortingState } from "@tanstack/react-table";
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { ListPage } from '@/components/patterns/list-page';
+import { columns, isInsuranceExpired, isInsuranceExpiring } from './columns';
+import {
+  OperationsCarrierListItem,
+  EQUIPMENT_TYPES,
+  CARRIER_EQUIPMENT_TYPE_LABELS,
+} from '@/types/carriers';
+import type { Row, SortingState } from '@tanstack/react-table';
 
 // --- US States ---
 const US_STATES = [
-  'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA',
-  'HI','ID','IL','IN','IA','KS','KY','LA','ME','MD',
-  'MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ',
-  'NM','NY','NC','ND','OH','OK','OR','PA','RI','SC',
-  'SD','TN','TX','UT','VT','VA','WA','WV','WI','WY',
+  'AL',
+  'AK',
+  'AZ',
+  'AR',
+  'CA',
+  'CO',
+  'CT',
+  'DE',
+  'FL',
+  'GA',
+  'HI',
+  'ID',
+  'IL',
+  'IN',
+  'IA',
+  'KS',
+  'KY',
+  'LA',
+  'ME',
+  'MD',
+  'MA',
+  'MI',
+  'MN',
+  'MS',
+  'MO',
+  'MT',
+  'NE',
+  'NV',
+  'NH',
+  'NJ',
+  'NM',
+  'NY',
+  'NC',
+  'ND',
+  'OH',
+  'OK',
+  'OR',
+  'PA',
+  'RI',
+  'SC',
+  'SD',
+  'TN',
+  'TX',
+  'UT',
+  'VT',
+  'VA',
+  'WA',
+  'WV',
+  'WI',
+  'WY',
 ] as const;
 
 // --- Constants ---
 
-type CarrierType = "COMPANY" | "OWNER_OPERATOR";
-type CarrierStatus = "PENDING" | "APPROVED" | "ACTIVE" | "INACTIVE" | "SUSPENDED" | "BLACKLISTED";
+type CarrierType = 'COMPANY' | 'OWNER_OPERATOR';
+type CarrierStatus =
+  | 'PENDING'
+  | 'APPROVED'
+  | 'ACTIVE'
+  | 'INACTIVE'
+  | 'SUSPENDED'
+  | 'BLACKLISTED';
 
 // --- Components ---
 
 // Color configuration — all class names are complete static strings for Tailwind scanner
 const CARD_COLORS = {
-  blue600:   { accent: "border-l-blue-600",   iconBg: "bg-blue-50",   iconText: "text-blue-600"   },
-  purple600: { accent: "border-l-purple-600", iconBg: "bg-purple-50", iconText: "text-purple-600" },
-  orange500: { accent: "border-l-orange-500", iconBg: "bg-orange-50", iconText: "text-orange-500" },
-  green600:  { accent: "border-l-green-600",  iconBg: "bg-green-50",  iconText: "text-green-600"  },
-  blue500:   { accent: "border-l-blue-500",   iconBg: "bg-blue-50",   iconText: "text-blue-500"   },
-  amber500:  { accent: "border-l-amber-500",  iconBg: "bg-amber-50",  iconText: "text-amber-500"  },
+  blue600: {
+    accent: 'border-l-blue-600',
+    iconBg: 'bg-blue-50',
+    iconText: 'text-blue-600',
+  },
+  purple600: {
+    accent: 'border-l-purple-600',
+    iconBg: 'bg-purple-50',
+    iconText: 'text-purple-600',
+  },
+  orange500: {
+    accent: 'border-l-orange-500',
+    iconBg: 'bg-orange-50',
+    iconText: 'text-orange-500',
+  },
+  green600: {
+    accent: 'border-l-green-600',
+    iconBg: 'bg-green-50',
+    iconText: 'text-green-600',
+  },
+  blue500: {
+    accent: 'border-l-blue-500',
+    iconBg: 'bg-blue-50',
+    iconText: 'text-blue-500',
+  },
+  amber500: {
+    accent: 'border-l-amber-500',
+    iconBg: 'bg-amber-50',
+    iconText: 'text-amber-500',
+  },
 } as const;
 
 type ColorKey = keyof typeof CARD_COLORS;
@@ -86,16 +165,72 @@ interface StatCard {
   colorKey: ColorKey;
 }
 
-function StatsCards({ stats }: { stats: { total: number; byType: Record<string, number>; byStatus: Record<string, number> } | undefined }) {
+function StatsCards({
+  stats,
+  isLoading,
+}: {
+  stats:
+    | {
+        total: number;
+        byType: Record<string, number>;
+        byStatus: Record<string, number>;
+      }
+    | undefined;
+  isLoading?: boolean;
+}) {
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Card key={i} className="border-l-4">
+            <CardContent className="pt-4 pb-3 px-4">
+              <div className="h-12 bg-gray-100 rounded animate-pulse" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
   if (!stats) return null;
 
   const cards: StatCard[] = [
-    { label: "Total Carriers", value: stats.total ?? 0,                      icon: Truck,        colorKey: "blue600"   },
-    { label: "Companies",      value: stats.byType?.COMPANY ?? 0,           icon: Building2,    colorKey: "purple600" },
-    { label: "Owner-Ops",      value: stats.byType?.OWNER_OPERATOR ?? 0,    icon: User,         colorKey: "orange500" },
-    { label: "Active",         value: stats.byStatus?.ACTIVE ?? 0,          icon: CheckCircle2, colorKey: "green600"  },
-    { label: "Approved",       value: stats.byStatus?.APPROVED ?? 0,        icon: Star,         colorKey: "blue500"   },
-    { label: "Suspended",      value: stats.byStatus?.SUSPENDED ?? 0,       icon: PauseCircle,  colorKey: "amber500"  },
+    {
+      label: 'Total Carriers',
+      value: stats.total ?? 0,
+      icon: Truck,
+      colorKey: 'blue600',
+    },
+    {
+      label: 'Companies',
+      value: stats.byType?.COMPANY ?? 0,
+      icon: Building2,
+      colorKey: 'purple600',
+    },
+    {
+      label: 'Owner-Ops',
+      value: stats.byType?.OWNER_OPERATOR ?? 0,
+      icon: User,
+      colorKey: 'orange500',
+    },
+    {
+      label: 'Active',
+      value: stats.byStatus?.ACTIVE ?? 0,
+      icon: CheckCircle2,
+      colorKey: 'green600',
+    },
+    {
+      label: 'Approved',
+      value: stats.byStatus?.APPROVED ?? 0,
+      icon: Star,
+      colorKey: 'blue500',
+    },
+    {
+      label: 'Suspended',
+      value: stats.byStatus?.SUSPENDED ?? 0,
+      icon: PauseCircle,
+      colorKey: 'amber500',
+    },
   ];
 
   return (
@@ -111,7 +246,9 @@ function StatsCards({ stats }: { stats: { total: number; byType: Record<string, 
             <CardContent className="pt-4 pb-3 px-4">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="text-xs text-muted-foreground font-medium truncate">{card.label}</p>
+                  <p className="text-xs text-muted-foreground font-medium truncate">
+                    {card.label}
+                  </p>
                   <div className="text-2xl font-bold mt-0.5">{card.value}</div>
                 </div>
                 <div className={`shrink-0 rounded-full p-2 ${colors.iconBg}`}>
@@ -128,48 +265,50 @@ function StatsCards({ stats }: { stats: { total: number; byType: Record<string, 
 
 export default function CarriersPage() {
   const router = useRouter();
-  const [typeFilter, setTypeFilter] = useState<CarrierType | "all">("all");
-  const [statusFilter, setStatusFilter] = useState<CarrierStatus | "all">("all");
-  const [stateFilter, setStateFilter] = useState<string>("");
-  const [tierFilter, setTierFilter] = useState<string>("all");
-  const [equipmentFilter, setEquipmentFilter] = useState<string>("all");
-  const [complianceFilter, setComplianceFilter] = useState<string>("all");
-  const [minScore, setMinScore] = useState<string>("");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState<CarrierType | 'all'>('all');
+  const [statusFilter, setStatusFilter] = useState<CarrierStatus | 'all'>(
+    'all'
+  );
+  const [stateFilter, setStateFilter] = useState<string>('');
+  const [tierFilter, setTierFilter] = useState<string>('all');
+  const [equipmentFilter, setEquipmentFilter] = useState<string>('all');
+  const [complianceFilter, setComplianceFilter] = useState<string>('all');
+  const [minScore, setMinScore] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [showNewCarrierDialog, setShowNewCarrierDialog] = useState(false);
-  const [newCarrierType, setNewCarrierType] = useState<CarrierType>("COMPANY");
-  const [newCarrierName, setNewCarrierName] = useState("");
+  const [newCarrierType, setNewCarrierType] = useState<CarrierType>('COMPANY');
+  const [newCarrierName, setNewCarrierName] = useState('');
   const pageSize = 25;
   const [rowSelection, setRowSelection] = useState({});
   const [showBatchDeleteDialog, setShowBatchDeleteDialog] = useState(false);
   const [showBulkStatusDialog, setShowBulkStatusDialog] = useState(false);
-  const [bulkStatus, setBulkStatus] = useState<CarrierStatus>("ACTIVE");
+  const [bulkStatus, setBulkStatus] = useState<CarrierStatus>('ACTIVE');
   const debouncedSearch = useDebounce(searchQuery, 300);
   const [sorting, setSorting] = useState<SortingState>([]);
 
   // Derive sort params for server-side sorting
   const sortBy = sorting[0]?.id;
-  const sortOrder = sorting[0] ? (sorting[0].desc ? "desc" : "asc") : undefined;
+  const sortOrder = sorting[0] ? (sorting[0].desc ? 'desc' : 'asc') : undefined;
 
   // Fetch carriers
   const { data, isLoading, error, refetch } = useCarriers({
     page,
     limit: pageSize,
     search: debouncedSearch || undefined,
-    status: statusFilter === "all" ? undefined : statusFilter,
-    carrierType: typeFilter === "all" ? undefined : typeFilter,
+    status: statusFilter === 'all' ? undefined : statusFilter,
+    carrierType: typeFilter === 'all' ? undefined : typeFilter,
     state: stateFilter || undefined,
-    tier: tierFilter === "all" ? undefined : tierFilter,
-    equipmentTypes: equipmentFilter === "all" ? undefined : [equipmentFilter],
-    compliance: complianceFilter === "all" ? undefined : complianceFilter,
+    tier: tierFilter === 'all' ? undefined : tierFilter,
+    equipmentTypes: equipmentFilter === 'all' ? undefined : [equipmentFilter],
+    compliance: complianceFilter === 'all' ? undefined : complianceFilter,
     minScore: minScore ? Number(minScore) : undefined,
     sortBy,
     sortOrder,
   });
 
   // Fetch stats
-  const { data: stats } = useCarrierStats();
+  const { data: stats, isLoading: statsLoading } = useCarrierStats();
 
   const createMutation = useCreateCarrier();
   const deleteMutation = useDeleteCarrier();
@@ -189,7 +328,9 @@ export default function CarriersPage() {
   const confirmBatchDelete = async () => {
     const selectedIds = Object.keys(rowSelection);
     try {
-      await Promise.all(selectedIds.map((id) => deleteMutation.mutateAsync(id)));
+      await Promise.all(
+        selectedIds.map((id) => deleteMutation.mutateAsync(id))
+      );
       setRowSelection({});
     } catch {
       // Errors handled by React Query
@@ -200,15 +341,24 @@ export default function CarriersPage() {
   const handleBulkStatusUpdate = async () => {
     const selectedIds = Object.keys(rowSelection);
     const results = await Promise.allSettled(
-      selectedIds.map((id) => updateMutation.mutateAsync({ id, status: bulkStatus }, { onSuccess: () => {} }))
+      selectedIds.map((id) =>
+        updateMutation.mutateAsync(
+          { id, status: bulkStatus },
+          { onSuccess: () => {} }
+        )
+      )
     );
-    const failed = results.filter((r) => r.status === "rejected").length;
+    const failed = results.filter((r) => r.status === 'rejected').length;
     const succeeded = results.length - failed;
 
     if (failed === 0) {
-      toast.success(`Updated ${succeeded} carrier${succeeded !== 1 ? "s" : ""} to ${bulkStatus}`);
+      toast.success(
+        `Updated ${succeeded} carrier${succeeded !== 1 ? 's' : ''} to ${bulkStatus}`
+      );
     } else {
-      toast.warning(`Updated ${succeeded} of ${results.length} carriers. ${failed} failed.`);
+      toast.warning(
+        `Updated ${succeeded} of ${results.length} carriers. ${failed} failed.`
+      );
     }
     setRowSelection({});
     setShowBulkStatusDialog(false);
@@ -217,36 +367,43 @@ export default function CarriersPage() {
   const handleExport = (ids?: string[]) => {
     const params = new URLSearchParams();
     if (ids?.length) {
-      ids.forEach((id) => params.append("ids", id));
+      ids.forEach((id) => params.append('ids', id));
     } else {
-      if (debouncedSearch) params.set("search", debouncedSearch);
-      if (statusFilter !== "all") params.set("status", statusFilter);
-      if (tierFilter !== "all") params.set("tier", tierFilter);
-      if (equipmentFilter !== "all") params.set("equipmentTypes", equipmentFilter);
-      if (stateFilter) params.set("state", stateFilter);
+      if (debouncedSearch) params.set('search', debouncedSearch);
+      if (statusFilter !== 'all') params.set('status', statusFilter);
+      if (tierFilter !== 'all') params.set('tier', tierFilter);
+      if (equipmentFilter !== 'all')
+        params.set('equipmentTypes', equipmentFilter);
+      if (stateFilter) params.set('state', stateFilter);
     }
     const url = `/api/v1/operations/carriers/export?${params.toString()}`;
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = url;
-    a.download = "carriers.csv";
+    a.download = 'carriers.csv';
     a.click();
   };
 
   const clearFilters = () => {
-    setTypeFilter("all");
-    setStatusFilter("all");
-    setStateFilter("");
-    setTierFilter("all");
-    setEquipmentFilter("all");
-    setComplianceFilter("all");
-    setMinScore("");
-    setSearchQuery("");
+    setTypeFilter('all');
+    setStatusFilter('all');
+    setStateFilter('');
+    setTierFilter('all');
+    setEquipmentFilter('all');
+    setComplianceFilter('all');
+    setMinScore('');
+    setSearchQuery('');
     setPage(1);
   };
 
   const hasActiveFilters =
-    typeFilter !== "all" || statusFilter !== "all" || stateFilter || searchQuery
-    || tierFilter !== "all" || equipmentFilter !== "all" || complianceFilter !== "all" || minScore;
+    typeFilter !== 'all' ||
+    statusFilter !== 'all' ||
+    stateFilter ||
+    searchQuery ||
+    tierFilter !== 'all' ||
+    equipmentFilter !== 'all' ||
+    complianceFilter !== 'all' ||
+    minScore;
 
   const handleCreateCarrier = () => {
     if (!newCarrierName) return;
@@ -259,7 +416,7 @@ export default function CarriersPage() {
       {
         onSuccess: (data) => {
           setShowNewCarrierDialog(false);
-          setNewCarrierName("");
+          setNewCarrierName('');
           if (data?.id) {
             router.push(`/carriers/${data.id}`);
           }
@@ -275,7 +432,11 @@ export default function CarriersPage() {
           <div className="flex items-center gap-3">
             <CheckSquare className="h-5 w-5 text-primary" />
             <span className="font-medium">{selectedRows.length} selected</span>
-            <Button variant="ghost" size="sm" onClick={() => setRowSelection({})}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setRowSelection({})}
+            >
               <X className="h-4 w-4 mr-1" />
               Clear
             </Button>
@@ -333,7 +494,7 @@ export default function CarriersPage() {
         <Select
           value={typeFilter}
           onValueChange={(value) => {
-            setTypeFilter(value as CarrierType | "all");
+            setTypeFilter(value as CarrierType | 'all');
             setPage(1);
           }}
         >
@@ -350,7 +511,7 @@ export default function CarriersPage() {
         <Select
           value={statusFilter}
           onValueChange={(value) => {
-            setStatusFilter(value as CarrierStatus | "all");
+            setStatusFilter(value as CarrierStatus | 'all');
             setPage(1);
           }}
         >
@@ -368,19 +529,33 @@ export default function CarriersPage() {
           </SelectContent>
         </Select>
 
-        <Select value={stateFilter || "all"} onValueChange={(v) => { setStateFilter(v === "all" ? "" : v); setPage(1); }}>
+        <Select
+          value={stateFilter || 'all'}
+          onValueChange={(v) => {
+            setStateFilter(v === 'all' ? '' : v);
+            setPage(1);
+          }}
+        >
           <SelectTrigger className="w-[110px] h-9">
             <SelectValue placeholder="State" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All States</SelectItem>
             {US_STATES.map((s) => (
-              <SelectItem key={s} value={s}>{s}</SelectItem>
+              <SelectItem key={s} value={s}>
+                {s}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
 
-        <Select value={tierFilter} onValueChange={(v) => { setTierFilter(v); setPage(1); }}>
+        <Select
+          value={tierFilter}
+          onValueChange={(v) => {
+            setTierFilter(v);
+            setPage(1);
+          }}
+        >
           <SelectTrigger className="w-[130px] h-9">
             <SelectValue placeholder="Tier" />
           </SelectTrigger>
@@ -394,7 +569,13 @@ export default function CarriersPage() {
           </SelectContent>
         </Select>
 
-        <Select value={equipmentFilter} onValueChange={(v) => { setEquipmentFilter(v); setPage(1); }}>
+        <Select
+          value={equipmentFilter}
+          onValueChange={(v) => {
+            setEquipmentFilter(v);
+            setPage(1);
+          }}
+        >
           <SelectTrigger className="w-[140px] h-9">
             <SelectValue placeholder="Equipment" />
           </SelectTrigger>
@@ -408,7 +589,13 @@ export default function CarriersPage() {
           </SelectContent>
         </Select>
 
-        <Select value={complianceFilter} onValueChange={(v) => { setComplianceFilter(v); setPage(1); }}>
+        <Select
+          value={complianceFilter}
+          onValueChange={(v) => {
+            setComplianceFilter(v);
+            setPage(1);
+          }}
+        >
           <SelectTrigger className="w-[140px] h-9">
             <SelectValue placeholder="Compliance" />
           </SelectTrigger>
@@ -424,14 +611,22 @@ export default function CarriersPage() {
           type="number"
           placeholder="Min Score"
           value={minScore}
-          onChange={(e) => { setMinScore(e.target.value); setPage(1); }}
+          onChange={(e) => {
+            setMinScore(e.target.value);
+            setPage(1);
+          }}
           className="w-[110px] h-9"
           min={0}
           max={100}
         />
 
         {hasActiveFilters && (
-          <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearFilters}
+            className="h-9"
+          >
             <X className="h-4 w-4 mr-1" />
             Clear
           </Button>
@@ -457,7 +652,7 @@ export default function CarriersPage() {
             </Button>
           </div>
         }
-        topContent={<StatsCards stats={stats} />}
+        topContent={<StatsCards stats={stats} isLoading={statsLoading} />}
         filters={filters}
         data={carriers}
         columns={columns}
@@ -476,14 +671,17 @@ export default function CarriersPage() {
         entityLabel="carriers"
         getRowClassName={(row: Row<OperationsCarrierListItem>) => {
           const carrier = row.original;
-          if (isInsuranceExpired(carrier)) return "bg-red-50";
-          if (isInsuranceExpiring(carrier)) return "bg-amber-50";
+          if (isInsuranceExpired(carrier)) return 'bg-red-50';
+          if (isInsuranceExpiring(carrier)) return 'bg-amber-50';
           return undefined;
         }}
       />
 
       {/* New Carrier Dialog */}
-      <Dialog open={showNewCarrierDialog} onOpenChange={setShowNewCarrierDialog}>
+      <Dialog
+        open={showNewCarrierDialog}
+        onOpenChange={setShowNewCarrierDialog}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add New Carrier</DialogTitle>
@@ -496,7 +694,9 @@ export default function CarriersPage() {
               <Label>Carrier Type</Label>
               <Select
                 value={newCarrierType}
-                onValueChange={(value) => setNewCarrierType(value as CarrierType)}
+                onValueChange={(value) =>
+                  setNewCarrierType(value as CarrierType)
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -518,23 +718,32 @@ export default function CarriersPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>{newCarrierType === "COMPANY" ? "Company Name" : "Name"}</Label>
+              <Label>
+                {newCarrierType === 'COMPANY' ? 'Company Name' : 'Name'}
+              </Label>
               <Input
-                placeholder={newCarrierType === "COMPANY" ? "ABC Trucking Inc." : "John Doe"}
+                placeholder={
+                  newCarrierType === 'COMPANY'
+                    ? 'ABC Trucking Inc.'
+                    : 'John Doe'
+                }
                 value={newCarrierName}
                 onChange={(e) => setNewCarrierName(e.target.value)}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowNewCarrierDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowNewCarrierDialog(false)}
+            >
               Cancel
             </Button>
             <Button
               onClick={handleCreateCarrier}
               disabled={createMutation.isPending || !newCarrierName}
             >
-              {createMutation.isPending ? "Creating..." : "Create Carrier"}
+              {createMutation.isPending ? 'Creating...' : 'Create Carrier'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -552,12 +761,16 @@ export default function CarriersPage() {
       />
 
       {/* Bulk Status Update Dialog */}
-      <Dialog open={showBulkStatusDialog} onOpenChange={setShowBulkStatusDialog}>
+      <Dialog
+        open={showBulkStatusDialog}
+        onOpenChange={setShowBulkStatusDialog}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Update Status</DialogTitle>
             <DialogDescription>
-              Change the status of {Object.keys(rowSelection).length} selected carrier{Object.keys(rowSelection).length !== 1 ? "s" : ""}.
+              Change the status of {Object.keys(rowSelection).length} selected
+              carrier{Object.keys(rowSelection).length !== 1 ? 's' : ''}.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -580,11 +793,19 @@ export default function CarriersPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowBulkStatusDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowBulkStatusDialog(false)}
+            >
               Cancel
             </Button>
-            <Button onClick={handleBulkStatusUpdate} disabled={updateMutation.isPending}>
-              {updateMutation.isPending ? "Updating..." : `Update ${Object.keys(rowSelection).length} Carrier${Object.keys(rowSelection).length !== 1 ? "s" : ""}`}
+            <Button
+              onClick={handleBulkStatusUpdate}
+              disabled={updateMutation.isPending}
+            >
+              {updateMutation.isPending
+                ? 'Updating...'
+                : `Update ${Object.keys(rowSelection).length} Carrier${Object.keys(rowSelection).length !== 1 ? 's' : ''}`}
             </Button>
           </DialogFooter>
         </DialogContent>

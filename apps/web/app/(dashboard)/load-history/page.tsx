@@ -1,18 +1,24 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Checkbox } from '@/components/ui/checkbox'
+import { useState } from 'react';
+import Link from 'next/link';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from '@/components/ui/select';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,7 +26,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+} from '@/components/ui/dropdown-menu';
 import {
   Dialog,
   DialogContent,
@@ -28,9 +34,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Table,
   TableBody,
@@ -38,11 +44,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
-import { formatCurrency, formatDate } from '@/lib/utils'
-import { toast } from 'sonner'
-import { ConfirmDialog } from '@/components/shared/confirm-dialog'
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { formatCurrency, formatDate } from '@/lib/utils';
+import { toast } from 'sonner';
+import { ConfirmDialog } from '@/components/shared/confirm-dialog';
 import {
   Plus,
   Search,
@@ -61,39 +67,44 @@ import {
   TrendingUp,
   FileText,
   Building2,
-} from 'lucide-react'
+} from 'lucide-react';
 import type {
   LoadHistoryStatus,
   EquipmentType,
   LoadHistoryListItem,
   CreateLoadHistoryInput,
-} from '@/types/load-history'
+} from '@/types/load-history';
 import {
   LOAD_STATUS_LABELS,
   LOAD_STATUS_COLORS,
   EQUIPMENT_TYPE_LABELS,
   getMarginColor,
-} from '@/types/load-history'
+} from '@/types/load-history';
 import {
   useLoadHistory,
   useLoadHistoryStats,
   useCreateLoadHistory,
   useDeleteLoadHistory,
-} from '@/lib/hooks/operations'
-import { useDebounce } from '@/lib/hooks'
+} from '@/lib/hooks/operations';
+import { useDebounce } from '@/lib/hooks';
 
 export default function LoadHistoryPage() {
-  const [statusFilter, setStatusFilter] = useState<LoadHistoryStatus | 'all'>('all')
-  const [originStateFilter, setOriginStateFilter] = useState<string>('')
-  const [destinationStateFilter, setDestinationStateFilter] = useState<string>('')
-  const [searchQuery, setSearchQuery] = useState('')
-  const debouncedSearch = useDebounce(searchQuery, 300)
-  const [page, setPage] = useState(1)
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
-  const [showNewLoadDialog, setShowNewLoadDialog] = useState(false)
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
-  const pageSize = 25
-  const [showBatchDeleteDialog, setShowBatchDeleteDialog] = useState(false)
+  const [statusFilter, setStatusFilter] = useState<LoadHistoryStatus | 'all'>(
+    'all'
+  );
+  const [originStateFilter, setOriginStateFilter] = useState<string>('');
+  const [destinationStateFilter, setDestinationStateFilter] =
+    useState<string>('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300);
+  const [page, setPage] = useState(1);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showNewLoadDialog, setShowNewLoadDialog] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string>
+  >({});
+  const pageSize = 25;
+  const [showBatchDeleteDialog, setShowBatchDeleteDialog] = useState(false);
 
   // New load form state
   const [newLoadForm, setNewLoadForm] = useState({
@@ -112,10 +123,14 @@ export default function LoadHistoryPage() {
     equipmentTypeUsed: '' as EquipmentType | '',
     status: 'completed' as LoadHistoryStatus,
     notes: '',
-  })
+  });
 
   // Fetch loads
-  const { data: listData, isLoading, error } = useLoadHistory({
+  const {
+    data: listData,
+    isLoading,
+    error,
+  } = useLoadHistory({
     page,
     limit: pageSize,
     search: debouncedSearch || undefined,
@@ -124,17 +139,17 @@ export default function LoadHistoryPage() {
     destinationState: destinationStateFilter || undefined,
     sortBy: 'pickupDate',
     sortOrder: 'desc',
-  })
+  });
 
   // Fetch stats
-  const { data: statsData } = useLoadHistoryStats()
+  const { data: statsData, isLoading: statsLoading } = useLoadHistoryStats();
 
   // Mutations
-  const createLoad = useCreateLoadHistory()
-  const deleteLoadMutation = useDeleteLoadHistory()
+  const createLoad = useCreateLoadHistory();
+  const deleteLoadMutation = useDeleteLoadHistory();
 
   const getErrorMessage = (error: unknown) =>
-    error instanceof Error ? error.message : 'Unknown error'
+    error instanceof Error ? error.message : 'Unknown error';
 
   const resetNewLoadForm = () => {
     setNewLoadForm({
@@ -153,25 +168,28 @@ export default function LoadHistoryPage() {
       equipmentTypeUsed: '',
       status: 'completed',
       notes: '',
-    })
-    setValidationErrors({})
-  }
+    });
+    setValidationErrors({});
+  };
 
   const handleCreateLoad = () => {
     // Validate required fields
-    const errors: Record<string, string> = {}
-    
-    if (!newLoadForm.originCity) errors.originCity = 'Origin city is required'
-    if (!newLoadForm.originState) errors.originState = 'Origin state is required'
-    if (!newLoadForm.destinationCity) errors.destinationCity = 'Destination city is required'
-    if (!newLoadForm.destinationState) errors.destinationState = 'Destination state is required'
-    
+    const errors: Record<string, string> = {};
+
+    if (!newLoadForm.originCity) errors.originCity = 'Origin city is required';
+    if (!newLoadForm.originState)
+      errors.originState = 'Origin state is required';
+    if (!newLoadForm.destinationCity)
+      errors.destinationCity = 'Destination city is required';
+    if (!newLoadForm.destinationState)
+      errors.destinationState = 'Destination state is required';
+
     if (Object.keys(errors).length > 0) {
-      setValidationErrors(errors)
-      return
+      setValidationErrors(errors);
+      return;
     }
-    
-    setValidationErrors({})
+
+    setValidationErrors({});
 
     const input: CreateLoadHistoryInput = {
       customerName: newLoadForm.customerName || undefined,
@@ -180,106 +198,129 @@ export default function LoadHistoryPage() {
       originState: newLoadForm.originState,
       destinationCity: newLoadForm.destinationCity,
       destinationState: newLoadForm.destinationState,
-      totalMiles: newLoadForm.totalMiles ? parseInt(newLoadForm.totalMiles) : undefined,
+      totalMiles: newLoadForm.totalMiles
+        ? parseInt(newLoadForm.totalMiles)
+        : undefined,
       cargoDescription: newLoadForm.cargoDescription || undefined,
-      customerRateCents: newLoadForm.customerRateCents ? Math.round(parseFloat(newLoadForm.customerRateCents) * 100) : undefined,
-      carrierRateCents: newLoadForm.carrierRateCents ? Math.round(parseFloat(newLoadForm.carrierRateCents) * 100) : undefined,
+      customerRateCents: newLoadForm.customerRateCents
+        ? Math.round(parseFloat(newLoadForm.customerRateCents) * 100)
+        : undefined,
+      carrierRateCents: newLoadForm.carrierRateCents
+        ? Math.round(parseFloat(newLoadForm.carrierRateCents) * 100)
+        : undefined,
       pickupDate: newLoadForm.pickupDate || undefined,
       deliveryDate: newLoadForm.deliveryDate || undefined,
       equipmentTypeUsed: newLoadForm.equipmentTypeUsed || undefined,
       status: newLoadForm.status,
       notes: newLoadForm.notes || undefined,
-    }
+    };
 
     createLoad.mutate(input, {
       onSuccess: () => {
-        toast.success('Load recorded')
-        setShowNewLoadDialog(false)
-        resetNewLoadForm()
+        toast.success('Load recorded');
+        setShowNewLoadDialog(false);
+        resetNewLoadForm();
       },
       onError: (error: unknown) => {
-        toast.error('Failed to record load', { description: getErrorMessage(error) })
+        toast.error('Failed to record load', {
+          description: getErrorMessage(error),
+        });
       },
-    })
-  }
+    });
+  };
 
-  const loads = (listData?.data || []) as LoadHistoryListItem[]
-  const total = listData?.total || 0
-  const totalPages = listData?.totalPages || 1
-  const stats = statsData
+  const loads = (listData?.data || []) as LoadHistoryListItem[];
+  const total = listData?.total || 0;
+  const totalPages = listData?.totalPages || 1;
+  const stats = statsData;
 
   // Selection helpers
-  const allSelected = loads.length > 0 && loads.every((l) => selectedIds.has(l.id))
-  const someSelected = selectedIds.size > 0 && !allSelected
+  const allSelected =
+    loads.length > 0 && loads.every((l) => selectedIds.has(l.id));
+  const someSelected = selectedIds.size > 0 && !allSelected;
 
   const toggleSelectAll = () => {
     if (allSelected) {
-      setSelectedIds(new Set())
+      setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(loads.map((l) => l.id)))
+      setSelectedIds(new Set(loads.map((l) => l.id)));
     }
-  }
+  };
 
   const toggleSelect = (id: string) => {
-    const newSet = new Set(selectedIds)
+    const newSet = new Set(selectedIds);
     if (newSet.has(id)) {
-      newSet.delete(id)
+      newSet.delete(id);
     } else {
-      newSet.add(id)
+      newSet.add(id);
     }
-    setSelectedIds(newSet)
-  }
+    setSelectedIds(newSet);
+  };
 
   const clearSelection = () => {
-    setSelectedIds(new Set())
-  }
+    setSelectedIds(new Set());
+  };
 
   const handleBatchDelete = () => {
-    if (selectedIds.size === 0) return
-    setShowBatchDeleteDialog(true)
-  }
+    if (selectedIds.size === 0) return;
+    setShowBatchDeleteDialog(true);
+  };
 
   const confirmBatchDelete = async () => {
-    const ids = Array.from(selectedIds)
-    await Promise.all(ids.map((id) => {
-      return new Promise((resolve, reject) => {
-        deleteLoadMutation.mutate(id, {
-          onSuccess: resolve,
-          onError: reject,
-        })
+    const ids = Array.from(selectedIds);
+    await Promise.all(
+      ids.map((id) => {
+        return new Promise((resolve, reject) => {
+          deleteLoadMutation.mutate(id, {
+            onSuccess: resolve,
+            onError: reject,
+          });
+        });
       })
-    })).then(() => {
-      setSelectedIds(new Set())
-      toast.success('Loads deleted')
-    }).catch((error: unknown) => {
-      toast.error('Failed to delete some loads', { description: getErrorMessage(error) })
-    })
-    setShowBatchDeleteDialog(false)
-  }
+    )
+      .then(() => {
+        setSelectedIds(new Set());
+        toast.success('Loads deleted');
+      })
+      .catch((error: unknown) => {
+        toast.error('Failed to delete some loads', {
+          description: getErrorMessage(error),
+        });
+      });
+    setShowBatchDeleteDialog(false);
+  };
 
   const clearFilters = () => {
-    setStatusFilter('all')
-    setOriginStateFilter('')
-    setDestinationStateFilter('')
-    setSearchQuery('')
-    setPage(1)
-  }
+    setStatusFilter('all');
+    setOriginStateFilter('');
+    setDestinationStateFilter('');
+    setSearchQuery('');
+    setPage(1);
+  };
 
   const hasActiveFilters =
-    statusFilter !== 'all' || originStateFilter || destinationStateFilter || searchQuery
+    statusFilter !== 'all' ||
+    originStateFilter ||
+    destinationStateFilter ||
+    searchQuery;
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Load History</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+            Load History
+          </h1>
           <p className="text-sm sm:text-base text-muted-foreground">
             Track completed loads and analyze profitability
           </p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => setShowNewLoadDialog(true)} className="flex-1 sm:flex-initial">
+          <Button
+            onClick={() => setShowNewLoadDialog(true)}
+            className="flex-1 sm:flex-initial"
+          >
             <Plus className="h-4 w-4 mr-2" />
             Record Load
           </Button>
@@ -287,77 +328,114 @@ export default function LoadHistoryPage() {
       </div>
 
       {/* Stats Cards */}
-      {stats && (
+      {statsLoading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-2">
-                <Truck className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <div className="text-2xl font-bold">{stats.totalLoads || 0}</div>
-                  <p className="text-xs text-muted-foreground">Total Loads</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-green-600" />
-                <div>
-                  <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenueCents || 0)}</div>
-                  <p className="text-xs text-muted-foreground">Revenue</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-orange-600" />
-                <div>
-                  <div className="text-2xl font-bold">{formatCurrency(stats.totalCostCents || 0)}</div>
-                  <p className="text-xs text-muted-foreground">Carrier Cost</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-blue-600" />
-                <div>
-                  <div className="text-2xl font-bold">{formatCurrency(stats.totalMarginCents || 0)}</div>
-                  <p className="text-xs text-muted-foreground">Total Margin</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-purple-600" />
-                <div>
-                  <div className={`text-2xl font-bold ${getMarginColor(((stats.totalMarginCents || 0) / (stats.totalRevenueCents || 1)) * 100)}`}>
-                    {stats.totalRevenueCents ? (((stats.totalMarginCents || 0) / stats.totalRevenueCents) * 100).toFixed(1) : '0.0'}%
-                  </div>
-                  <p className="text-xs text-muted-foreground">Avg Margin</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-cyan-600" />
-                <div>
-                  <div className="text-2xl font-bold">{stats.avgRevenuePerMileCents ? formatCurrency(stats.avgRevenuePerMileCents) : '-'}</div>
-                  <p className="text-xs text-muted-foreground">Avg $/Mile</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i}>
+              <CardContent className="pt-4">
+                <div className="h-12 bg-gray-100 rounded animate-pulse" />
+              </CardContent>
+            </Card>
+          ))}
         </div>
+      ) : (
+        stats && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            <Card>
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-2">
+                  <Truck className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <div className="text-2xl font-bold">
+                      {stats.totalLoads || 0}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Total Loads</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-green-600" />
+                  <div>
+                    <div className="text-2xl font-bold">
+                      {formatCurrency(stats.totalRevenueCents || 0)}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Revenue</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5 text-orange-600" />
+                  <div>
+                    <div className="text-2xl font-bold">
+                      {formatCurrency(stats.totalCostCents || 0)}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Carrier Cost
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-blue-600" />
+                  <div>
+                    <div className="text-2xl font-bold">
+                      {formatCurrency(stats.totalMarginCents || 0)}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Total Margin
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-purple-600" />
+                  <div>
+                    <div
+                      className={`text-2xl font-bold ${getMarginColor(((stats.totalMarginCents || 0) / (stats.totalRevenueCents || 1)) * 100)}`}
+                    >
+                      {stats.totalRevenueCents
+                        ? (
+                            ((stats.totalMarginCents || 0) /
+                              stats.totalRevenueCents) *
+                            100
+                          ).toFixed(1)
+                        : '0.0'}
+                      %
+                    </div>
+                    <p className="text-xs text-muted-foreground">Avg Margin</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5 text-cyan-600" />
+                  <div>
+                    <div className="text-2xl font-bold">
+                      {stats.avgRevenuePerMileCents
+                        ? formatCurrency(stats.avgRevenuePerMileCents)
+                        : '-'}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Avg $/Mile</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )
       )}
 
       {/* Batch Actions Bar */}
@@ -407,8 +485,8 @@ export default function LoadHistoryPage() {
                 placeholder="Search by customer, cargo, quote #..."
                 value={searchQuery}
                 onChange={(e) => {
-                  setSearchQuery(e.target.value)
-                  setPage(1)
+                  setSearchQuery(e.target.value);
+                  setPage(1);
                 }}
                 className="pl-10"
               />
@@ -419,8 +497,8 @@ export default function LoadHistoryPage() {
               <Select
                 value={statusFilter}
                 onValueChange={(value) => {
-                  setStatusFilter(value as LoadHistoryStatus | 'all')
-                  setPage(1)
+                  setStatusFilter(value as LoadHistoryStatus | 'all');
+                  setPage(1);
                 }}
               >
                 <SelectTrigger className="w-full sm:w-[150px]">
@@ -440,8 +518,10 @@ export default function LoadHistoryPage() {
                 placeholder="Origin State"
                 value={originStateFilter}
                 onChange={(e) => {
-                  setOriginStateFilter(e.target.value.toUpperCase().slice(0, 2))
-                  setPage(1)
+                  setOriginStateFilter(
+                    e.target.value.toUpperCase().slice(0, 2)
+                  );
+                  setPage(1);
                 }}
                 className="w-full sm:w-[120px]"
                 maxLength={2}
@@ -451,8 +531,10 @@ export default function LoadHistoryPage() {
                 placeholder="Dest State"
                 value={destinationStateFilter}
                 onChange={(e) => {
-                  setDestinationStateFilter(e.target.value.toUpperCase().slice(0, 2))
-                  setPage(1)
+                  setDestinationStateFilter(
+                    e.target.value.toUpperCase().slice(0, 2)
+                  );
+                  setPage(1);
                 }}
                 className="w-full sm:w-[120px]"
                 maxLength={2}
@@ -469,7 +551,14 @@ export default function LoadHistoryPage() {
 
           {/* Table/Cards */}
           {isLoading ? (
-            <div className="text-center py-10 text-muted-foreground">Loading loads...</div>
+            <div className="space-y-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-12 bg-gray-100 rounded animate-pulse"
+                />
+              ))}
+            </div>
           ) : error ? (
             <div className="text-center py-10 text-red-500">
               Error loading loads: {error.message}
@@ -520,7 +609,8 @@ export default function LoadHistoryPage() {
                           {load.customerName && (
                             <p className="text-sm text-muted-foreground mt-1">
                               {load.customerName}
-                              {load.customerCompany && ` - ${load.customerCompany}`}
+                              {load.customerCompany &&
+                                ` - ${load.customerCompany}`}
                             </p>
                           )}
                           {load.cargoDescription && (
@@ -535,12 +625,14 @@ export default function LoadHistoryPage() {
                         onDelete={() => {
                           deleteLoadMutation.mutate(load.id, {
                             onSuccess: () => {
-                              toast.success('Load deleted')
+                              toast.success('Load deleted');
                             },
                             onError: (error: unknown) => {
-                              toast.error('Failed to delete load', { description: getErrorMessage(error) })
+                              toast.error('Failed to delete load', {
+                                description: getErrorMessage(error),
+                              });
                             },
-                          })
+                          });
                         }}
                         isDeleting={deleteLoadMutation.isPending}
                       />
@@ -549,21 +641,36 @@ export default function LoadHistoryPage() {
                     <div className="mt-3 ml-8 grid grid-cols-2 gap-2 text-sm">
                       <div>
                         <span className="text-muted-foreground">Revenue:</span>
-                        <p className="font-medium">{load.customerRateCents ? formatCurrency(load.customerRateCents) : '-'}</p>
+                        <p className="font-medium">
+                          {load.customerRateCents
+                            ? formatCurrency(load.customerRateCents)
+                            : '-'}
+                        </p>
                       </div>
                       <div>
                         <span className="text-muted-foreground">Margin:</span>
-                        <p className={`font-medium ${getMarginColor(load.marginPercentage)}`}>
-                          {load.marginPercentage !== null && load.marginPercentage !== undefined ? `${Number(load.marginPercentage).toFixed(1)}%` : '-'}
+                        <p
+                          className={`font-medium ${getMarginColor(load.marginPercentage)}`}
+                        >
+                          {load.marginPercentage !== null &&
+                          load.marginPercentage !== undefined
+                            ? `${Number(load.marginPercentage).toFixed(1)}%`
+                            : '-'}
                         </p>
                       </div>
                       <div>
                         <span className="text-muted-foreground">Pickup:</span>
-                        <p className="font-medium">{load.pickupDate ? formatDate(load.pickupDate) : '-'}</p>
+                        <p className="font-medium">
+                          {load.pickupDate ? formatDate(load.pickupDate) : '-'}
+                        </p>
                       </div>
                       <div>
                         <span className="text-muted-foreground">Delivery:</span>
-                        <p className="font-medium">{load.deliveryDate ? formatDate(load.deliveryDate) : '-'}</p>
+                        <p className="font-medium">
+                          {load.deliveryDate
+                            ? formatDate(load.deliveryDate)
+                            : '-'}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -580,7 +687,11 @@ export default function LoadHistoryPage() {
                           checked={allSelected}
                           onCheckedChange={toggleSelectAll}
                           aria-label="Select all"
-                          className={someSelected ? 'data-[state=checked]:bg-primary/50' : ''}
+                          className={
+                            someSelected
+                              ? 'data-[state=checked]:bg-primary/50'
+                              : ''
+                          }
                         />
                       </TableHead>
                       <TableHead>Route</TableHead>
@@ -598,7 +709,9 @@ export default function LoadHistoryPage() {
                     {loads.map((load) => (
                       <TableRow
                         key={load.id}
-                        className={selectedIds.has(load.id) ? 'bg-primary/5' : ''}
+                        className={
+                          selectedIds.has(load.id) ? 'bg-primary/5' : ''
+                        }
                       >
                         <TableCell>
                           <Checkbox
@@ -610,9 +723,13 @@ export default function LoadHistoryPage() {
                         <TableCell>
                           <div className="flex items-center gap-1">
                             <MapPin className="h-3 w-3 text-muted-foreground" />
-                            <span>{load.originCity}, {load.originState}</span>
+                            <span>
+                              {load.originCity}, {load.originState}
+                            </span>
                             <ArrowRight className="h-3 w-3 text-muted-foreground mx-1" />
-                            <span>{load.destinationCity}, {load.destinationState}</span>
+                            <span>
+                              {load.destinationCity}, {load.destinationState}
+                            </span>
                           </div>
                           {load.totalMiles && (
                             <p className="text-xs text-muted-foreground">
@@ -622,7 +739,9 @@ export default function LoadHistoryPage() {
                         </TableCell>
                         <TableCell>
                           <div className="max-w-[150px]">
-                            <p className="truncate">{load.customerName || '-'}</p>
+                            <p className="truncate">
+                              {load.customerName || '-'}
+                            </p>
                             {load.customerCompany && (
                               <p className="text-xs text-muted-foreground truncate">
                                 {load.customerCompany}
@@ -646,15 +765,24 @@ export default function LoadHistoryPage() {
                           {load.pickupDate ? formatDate(load.pickupDate) : '-'}
                         </TableCell>
                         <TableCell className="text-right">
-                          {load.customerRateCents ? formatCurrency(load.customerRateCents) : '-'}
+                          {load.customerRateCents
+                            ? formatCurrency(load.customerRateCents)
+                            : '-'}
                         </TableCell>
                         <TableCell className="text-right">
-                          {load.carrierRateCents ? formatCurrency(load.carrierRateCents) : '-'}
+                          {load.carrierRateCents
+                            ? formatCurrency(load.carrierRateCents)
+                            : '-'}
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className={`font-medium ${getMarginColor(load.marginPercentage)}`}>
-                            {load.marginPercentage !== null && load.marginPercentage !== undefined ? (
-                              <span>{Number(load.marginPercentage).toFixed(1)}%</span>
+                          <div
+                            className={`font-medium ${getMarginColor(load.marginPercentage)}`}
+                          >
+                            {load.marginPercentage !== null &&
+                            load.marginPercentage !== undefined ? (
+                              <span>
+                                {Number(load.marginPercentage).toFixed(1)}%
+                              </span>
                             ) : (
                               '-'
                             )}
@@ -676,12 +804,14 @@ export default function LoadHistoryPage() {
                             onDelete={() => {
                               deleteLoadMutation.mutate(load.id, {
                                 onSuccess: () => {
-                                  toast.success('Load deleted')
+                                  toast.success('Load deleted');
                                 },
                                 onError: (error: unknown) => {
-                                  toast.error('Failed to delete load', { description: getErrorMessage(error) })
+                                  toast.error('Failed to delete load', {
+                                    description: getErrorMessage(error),
+                                  });
                                 },
-                              })
+                              });
                             }}
                             isDeleting={deleteLoadMutation.isPending}
                           />
@@ -696,8 +826,8 @@ export default function LoadHistoryPage() {
               {totalPages > 1 && (
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-4">
                   <p className="text-sm text-muted-foreground text-center sm:text-left">
-                    Showing {(page - 1) * pageSize + 1} to {Math.min(page * pageSize, total)} of{' '}
-                    {total} loads
+                    Showing {(page - 1) * pageSize + 1} to{' '}
+                    {Math.min(page * pageSize, total)} of {total} loads
                   </p>
                   <div className="flex gap-2 justify-center sm:justify-end">
                     <Button
@@ -717,7 +847,9 @@ export default function LoadHistoryPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      onClick={() =>
+                        setPage((p) => Math.min(totalPages, p + 1))
+                      }
                       disabled={page >= totalPages}
                     >
                       <span className="hidden sm:inline">Next</span>
@@ -749,14 +881,24 @@ export default function LoadHistoryPage() {
                   <Label>Customer Name</Label>
                   <Input
                     value={newLoadForm.customerName}
-                    onChange={(e) => setNewLoadForm({ ...newLoadForm, customerName: e.target.value })}
+                    onChange={(e) =>
+                      setNewLoadForm({
+                        ...newLoadForm,
+                        customerName: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Company</Label>
                   <Input
                     value={newLoadForm.customerCompany}
-                    onChange={(e) => setNewLoadForm({ ...newLoadForm, customerCompany: e.target.value })}
+                    onChange={(e) =>
+                      setNewLoadForm({
+                        ...newLoadForm,
+                        customerCompany: e.target.value,
+                      })
+                    }
                   />
                 </div>
               </div>
@@ -771,15 +913,25 @@ export default function LoadHistoryPage() {
                   <Input
                     value={newLoadForm.originCity}
                     onChange={(e) => {
-                      setNewLoadForm({ ...newLoadForm, originCity: e.target.value })
+                      setNewLoadForm({
+                        ...newLoadForm,
+                        originCity: e.target.value,
+                      });
                       if (validationErrors.originCity) {
-                        setValidationErrors({ ...validationErrors, originCity: '' })
+                        setValidationErrors({
+                          ...validationErrors,
+                          originCity: '',
+                        });
                       }
                     }}
-                    className={validationErrors.originCity ? 'border-red-500' : ''}
+                    className={
+                      validationErrors.originCity ? 'border-red-500' : ''
+                    }
                   />
                   {validationErrors.originCity && (
-                    <p className="text-sm text-red-500">{validationErrors.originCity}</p>
+                    <p className="text-sm text-red-500">
+                      {validationErrors.originCity}
+                    </p>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -787,16 +939,26 @@ export default function LoadHistoryPage() {
                   <Input
                     value={newLoadForm.originState}
                     onChange={(e) => {
-                      setNewLoadForm({ ...newLoadForm, originState: e.target.value.toUpperCase().slice(0, 2) })
+                      setNewLoadForm({
+                        ...newLoadForm,
+                        originState: e.target.value.toUpperCase().slice(0, 2),
+                      });
                       if (validationErrors.originState) {
-                        setValidationErrors({ ...validationErrors, originState: '' })
+                        setValidationErrors({
+                          ...validationErrors,
+                          originState: '',
+                        });
                       }
                     }}
                     maxLength={2}
-                    className={validationErrors.originState ? 'border-red-500' : ''}
+                    className={
+                      validationErrors.originState ? 'border-red-500' : ''
+                    }
                   />
                   {validationErrors.originState && (
-                    <p className="text-sm text-red-500">{validationErrors.originState}</p>
+                    <p className="text-sm text-red-500">
+                      {validationErrors.originState}
+                    </p>
                   )}
                 </div>
               </div>
@@ -806,15 +968,25 @@ export default function LoadHistoryPage() {
                   <Input
                     value={newLoadForm.destinationCity}
                     onChange={(e) => {
-                      setNewLoadForm({ ...newLoadForm, destinationCity: e.target.value })
+                      setNewLoadForm({
+                        ...newLoadForm,
+                        destinationCity: e.target.value,
+                      });
                       if (validationErrors.destinationCity) {
-                        setValidationErrors({ ...validationErrors, destinationCity: '' })
+                        setValidationErrors({
+                          ...validationErrors,
+                          destinationCity: '',
+                        });
                       }
                     }}
-                    className={validationErrors.destinationCity ? 'border-red-500' : ''}
+                    className={
+                      validationErrors.destinationCity ? 'border-red-500' : ''
+                    }
                   />
                   {validationErrors.destinationCity && (
-                    <p className="text-sm text-red-500">{validationErrors.destinationCity}</p>
+                    <p className="text-sm text-red-500">
+                      {validationErrors.destinationCity}
+                    </p>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -822,16 +994,28 @@ export default function LoadHistoryPage() {
                   <Input
                     value={newLoadForm.destinationState}
                     onChange={(e) => {
-                      setNewLoadForm({ ...newLoadForm, destinationState: e.target.value.toUpperCase().slice(0, 2) })
+                      setNewLoadForm({
+                        ...newLoadForm,
+                        destinationState: e.target.value
+                          .toUpperCase()
+                          .slice(0, 2),
+                      });
                       if (validationErrors.destinationState) {
-                        setValidationErrors({ ...validationErrors, destinationState: '' })
+                        setValidationErrors({
+                          ...validationErrors,
+                          destinationState: '',
+                        });
                       }
                     }}
                     maxLength={2}
-                    className={validationErrors.destinationState ? 'border-red-500' : ''}
+                    className={
+                      validationErrors.destinationState ? 'border-red-500' : ''
+                    }
                   />
                   {validationErrors.destinationState && (
-                    <p className="text-sm text-red-500">{validationErrors.destinationState}</p>
+                    <p className="text-sm text-red-500">
+                      {validationErrors.destinationState}
+                    </p>
                   )}
                 </div>
               </div>
@@ -840,7 +1024,12 @@ export default function LoadHistoryPage() {
                 <Input
                   type="number"
                   value={newLoadForm.totalMiles}
-                  onChange={(e) => setNewLoadForm({ ...newLoadForm, totalMiles: e.target.value })}
+                  onChange={(e) =>
+                    setNewLoadForm({
+                      ...newLoadForm,
+                      totalMiles: e.target.value,
+                    })
+                  }
                 />
               </div>
             </div>
@@ -852,14 +1041,24 @@ export default function LoadHistoryPage() {
                 <Label>Description</Label>
                 <Input
                   value={newLoadForm.cargoDescription}
-                  onChange={(e) => setNewLoadForm({ ...newLoadForm, cargoDescription: e.target.value })}
+                  onChange={(e) =>
+                    setNewLoadForm({
+                      ...newLoadForm,
+                      cargoDescription: e.target.value,
+                    })
+                  }
                 />
               </div>
               <div className="space-y-2">
                 <Label>Equipment Type</Label>
                 <Select
                   value={newLoadForm.equipmentTypeUsed}
-                  onValueChange={(value) => setNewLoadForm({ ...newLoadForm, equipmentTypeUsed: value as EquipmentType })}
+                  onValueChange={(value) =>
+                    setNewLoadForm({
+                      ...newLoadForm,
+                      equipmentTypeUsed: value as EquipmentType,
+                    })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select equipment" />
@@ -891,7 +1090,12 @@ export default function LoadHistoryPage() {
                     type="number"
                     step="0.01"
                     value={newLoadForm.customerRateCents}
-                    onChange={(e) => setNewLoadForm({ ...newLoadForm, customerRateCents: e.target.value })}
+                    onChange={(e) =>
+                      setNewLoadForm({
+                        ...newLoadForm,
+                        customerRateCents: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -900,7 +1104,12 @@ export default function LoadHistoryPage() {
                     type="number"
                     step="0.01"
                     value={newLoadForm.carrierRateCents}
-                    onChange={(e) => setNewLoadForm({ ...newLoadForm, carrierRateCents: e.target.value })}
+                    onChange={(e) =>
+                      setNewLoadForm({
+                        ...newLoadForm,
+                        carrierRateCents: e.target.value,
+                      })
+                    }
                   />
                 </div>
               </div>
@@ -915,7 +1124,12 @@ export default function LoadHistoryPage() {
                   <Input
                     type="date"
                     value={newLoadForm.pickupDate}
-                    onChange={(e) => setNewLoadForm({ ...newLoadForm, pickupDate: e.target.value })}
+                    onChange={(e) =>
+                      setNewLoadForm({
+                        ...newLoadForm,
+                        pickupDate: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -923,14 +1137,24 @@ export default function LoadHistoryPage() {
                   <Input
                     type="date"
                     value={newLoadForm.deliveryDate}
-                    onChange={(e) => setNewLoadForm({ ...newLoadForm, deliveryDate: e.target.value })}
+                    onChange={(e) =>
+                      setNewLoadForm({
+                        ...newLoadForm,
+                        deliveryDate: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Status</Label>
                   <Select
                     value={newLoadForm.status}
-                    onValueChange={(value) => setNewLoadForm({ ...newLoadForm, status: value as LoadHistoryStatus })}
+                    onValueChange={(value) =>
+                      setNewLoadForm({
+                        ...newLoadForm,
+                        status: value as LoadHistoryStatus,
+                      })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -952,13 +1176,18 @@ export default function LoadHistoryPage() {
               <Label>Notes</Label>
               <Textarea
                 value={newLoadForm.notes}
-                onChange={(e) => setNewLoadForm({ ...newLoadForm, notes: e.target.value })}
+                onChange={(e) =>
+                  setNewLoadForm({ ...newLoadForm, notes: e.target.value })
+                }
                 rows={3}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowNewLoadDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowNewLoadDialog(false)}
+            >
               Cancel
             </Button>
             <Button onClick={handleCreateLoad} disabled={createLoad.isPending}>
@@ -979,64 +1208,64 @@ export default function LoadHistoryPage() {
         onCancel={() => setShowBatchDeleteDialog(false)}
       />
     </div>
-  )
+  );
 }
 
 // Load Actions Menu Component
 interface LoadActionsMenuProps {
-  load: LoadHistoryListItem
-  onDelete: () => void
-  isDeleting: boolean
+  load: LoadHistoryListItem;
+  onDelete: () => void;
+  isDeleting: boolean;
 }
 
 function LoadActionsMenu({ load, onDelete, isDeleting }: LoadActionsMenuProps) {
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   return (
     <>
       <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="shrink-0">
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-        <DropdownMenuItem asChild>
-          <Link href={`/load-history/${load.id}`}>
-            <Eye className="h-4 w-4 mr-2" />
-            View Details
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href={`/load-history/${load.id}?edit=true`}>
-            <Pencil className="h-4 w-4 mr-2" />
-            Edit Load
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={() => setShowDeleteConfirm(true)}
-          className="text-red-600"
-          disabled={isDeleting}
-        >
-          <Trash2 className="h-4 w-4 mr-2" />
-          Delete Load
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-    <ConfirmDialog
-      open={showDeleteConfirm}
-      title="Delete Load"
-      description="Are you sure you want to delete this load? This cannot be undone."
-      confirmLabel="Delete"
-      destructive
-      onConfirm={() => {
-        onDelete()
-        setShowDeleteConfirm(false)
-      }}
-      onCancel={() => setShowDeleteConfirm(false)}
-    />
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" className="shrink-0">
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuItem asChild>
+            <Link href={`/load-history/${load.id}`}>
+              <Eye className="h-4 w-4 mr-2" />
+              View Details
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href={`/load-history/${load.id}?edit=true`}>
+              <Pencil className="h-4 w-4 mr-2" />
+              Edit Load
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={() => setShowDeleteConfirm(true)}
+            className="text-red-600"
+            disabled={isDeleting}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete Load
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        title="Delete Load"
+        description="Are you sure you want to delete this load? This cannot be undone."
+        confirmLabel="Delete"
+        destructive
+        onConfirm={() => {
+          onDelete();
+          setShowDeleteConfirm(false);
+        }}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </>
-  )
+  );
 }

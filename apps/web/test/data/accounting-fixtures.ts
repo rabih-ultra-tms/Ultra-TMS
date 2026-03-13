@@ -6,10 +6,12 @@
 import type {
   Invoice,
   InvoiceLineItem,
+} from '@/lib/hooks/accounting/use-invoices';
+import type {
   Settlement,
   SettlementLineItem,
-  ChartOfAccount,
-} from '@/lib/hooks/accounting/use-invoices';
+} from '@/lib/hooks/accounting/use-settlements';
+import type { ChartOfAccount } from '@/lib/hooks/accounting/use-chart-of-accounts';
 
 // ===========================
 // Pagination
@@ -29,7 +31,6 @@ export const mockPagination = {
 export const mockChartOfAccounts: ChartOfAccount[] = [
   {
     id: 'coa-1',
-    tenantId: 't1',
     accountNumber: '1000',
     accountName: 'Cash',
     accountType: 'ASSET',
@@ -39,15 +40,11 @@ export const mockChartOfAccounts: ChartOfAccount[] = [
     isActive: true,
     isSystemAccount: true,
     balance: 50000,
-    quickbooksId: 'qb-1000',
-    externalId: 'ext-1000',
-    sourceSystem: 'quickbooks',
     createdAt: '2026-01-01T00:00:00Z',
     updatedAt: '2026-01-01T00:00:00Z',
   },
   {
     id: 'coa-2',
-    tenantId: 't1',
     accountNumber: '2000',
     accountName: 'Accounts Payable',
     accountType: 'LIABILITY',
@@ -57,15 +54,11 @@ export const mockChartOfAccounts: ChartOfAccount[] = [
     isActive: true,
     isSystemAccount: true,
     balance: 25000,
-    quickbooksId: 'qb-2000',
-    externalId: 'ext-2000',
-    sourceSystem: 'quickbooks',
     createdAt: '2026-01-01T00:00:00Z',
     updatedAt: '2026-01-01T00:00:00Z',
   },
   {
     id: 'coa-3',
-    tenantId: 't1',
     accountNumber: '4000',
     accountName: 'Freight Revenue',
     accountType: 'REVENUE',
@@ -75,9 +68,6 @@ export const mockChartOfAccounts: ChartOfAccount[] = [
     isActive: true,
     isSystemAccount: false,
     balance: 250000,
-    quickbooksId: 'qb-4000',
-    externalId: 'ext-4000',
-    sourceSystem: 'quickbooks',
     createdAt: '2026-01-01T00:00:00Z',
     updatedAt: '2026-01-01T00:00:00Z',
   },
@@ -126,7 +116,7 @@ export const mockInvoices: Invoice[] = [
     amountPaid: 0,
     balanceDue: 542.5,
     notes: 'Draft invoice pending review',
-    lineItems: [mockInvoiceLineItems[0]],
+    lineItems: [mockInvoiceLineItems[0]!],
     createdAt: '2026-03-01T10:00:00Z',
     updatedAt: '2026-03-01T10:00:00Z',
   },
@@ -194,7 +184,7 @@ export const mockInvoices: Invoice[] = [
     amountPaid: 0,
     balanceDue: 0,
     notes: 'Voided due to duplicate entry',
-    lineItems: [mockInvoiceLineItems[0]],
+    lineItems: [mockInvoiceLineItems[0]!],
     voidedAt: '2026-02-05T11:20:00Z',
     voidReason: 'Duplicate entry - corrected with INV-2026-005',
     createdAt: '2026-02-01T10:00:00Z',
@@ -230,7 +220,7 @@ export const mockSettlements: Settlement[] = [
     carrierId: 'c1',
     carrierName: 'Swift Trucking LLC',
     status: 'CREATED',
-    lineItems: [mockSettlementLineItems[0]],
+    lineItems: [mockSettlementLineItems[0]!],
     grossAmount: 500,
     deductions: 0,
     netAmount: 500,
