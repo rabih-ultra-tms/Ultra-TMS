@@ -1,8 +1,8 @@
 # Ultra TMS — Project Status Dashboard
 
 > **Last Updated:** 2026-03-13
-> **Current Phase:** MP-04 DevOps + Production Infrastructure (Weeks 7-8). MP-01 ✅ COMPLETE (30/30). MP-02 ✅ COMPLETE (17/17 tasks). MP-03 ✅ COMPLETE (11/11 tasks). MP-04: 3/11 tasks DONE.
-> **Overall Health:** B+ (7.8/10) — Strong backend, frontend verified: 101/103 routes PASS. Security hardened (MP-01 complete). Agent management frontend built (Sprint 04).
+> **Current Phase:** MP-05 Command Center Foundation (Weeks 9-10). MP-01 ✅ COMPLETE (30/30). MP-02 ✅ COMPLETE (17/17 tasks). MP-03 ✅ COMPLETE (11/11 tasks). MP-04: 5/11 tasks DONE (remaining are cloud/infra — deferred). MP-05: 5/15 tasks DONE.
+> **Overall Health:** B+ (7.8/10) — Strong backend, frontend verified: 101/103 routes PASS. Security hardened (MP-01 complete). Command Center frontend + backend foundation in place.
 > **Production Readiness:** 3.0/10 — See [PRODUCTION-READINESS-ASSESSMENT.md](05-audit/PRODUCTION-READINESS-ASSESSMENT.md)
 > **Active Plan:** [Master Project Plan](08-sprints/master-project-plan.md) — ALL 39 services, 24 sprints, 5 phases, 48 weeks
 > **Documentation Quality:** 10/10 — Remediated via 7-phase tribunal response (2026-03-09). 16 new files, 8 enhanced.
@@ -55,19 +55,19 @@
 
 ### P0 MVP (11 services — includes Command Center)
 
-| #   | Service                          | Backend                           | Frontend                              | Tests                   | Verified | Confidence | Priority |
-| --- | -------------------------------- | --------------------------------- | ------------------------------------- | ----------------------- | -------- | ---------- | -------- |
-| 01  | Auth & Admin                     | Done                              | Partial (17/20 screens)               | Partial                 | No       | Medium     | P0       |
-| 02  | Dashboard                        | Done                              | Partial (shell, KPIs hardcoded)       | None                    | No       | Low        | P0       |
-| 03  | CRM / Customers                  | Done                              | Built (15 pages)                      | Partial                 | No       | Medium     | P0       |
-| 04  | Sales / Quotes                   | Done                              | Partial (6 pages, LP PROTECTED)       | None                    | No       | Medium     | P0       |
-| 05  | TMS Core (Orders/Loads/Dispatch) | Done                              | Built (12 pages, 7.4/10)              | None                    | No       | Medium     | P0       |
-| 06  | Carrier Management               | Done                              | Built (6 pages, 17 components)        | Partial                 | No       | Medium     | P0       |
-| 07  | Accounting                       | Done                              | Built (10 pages, 7.9/10)              | Partial                 | No       | Medium     | P0       |
-| 08  | Commission                       | Done                              | Built (11 pages, 8.5/10)              | 14 FE tests             | No       | High       | P0       |
-| 09  | Load Board                       | Partial                           | Built (4 pages, 10 components)        | 13 FE suites + BE specs | No       | Medium     | P0       |
-| 13  | Customer Portal                  | Substantial                       | Not Built (P0-Basic: 4 pages)         | None                    | No       | Low        | P0       |
-| 39  | **Command Center**               | Partial (consumes 180+ endpoints) | Foundation (4,095 LOC dispatch board) | 3 FE tests (570 LOC)    | No       | High       | **P0**   |
+| #   | Service                          | Backend                                                                                          | Frontend                                                                            | Tests                   | Verified | Confidence | Priority |
+| --- | -------------------------------- | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- | ----------------------- | -------- | ---------- | -------- |
+| 01  | Auth & Admin                     | Done                                                                                             | Partial (17/20 screens)                                                             | Partial                 | No       | Medium     | P0       |
+| 02  | Dashboard                        | Done                                                                                             | Partial (shell, KPIs hardcoded)                                                     | None                    | No       | Low        | P0       |
+| 03  | CRM / Customers                  | Done                                                                                             | Built (15 pages)                                                                    | Partial                 | No       | Medium     | P0       |
+| 04  | Sales / Quotes                   | Done                                                                                             | Partial (6 pages, LP PROTECTED)                                                     | None                    | No       | Medium     | P0       |
+| 05  | TMS Core (Orders/Loads/Dispatch) | Done                                                                                             | Built (12 pages, 7.4/10)                                                            | None                    | No       | Medium     | P0       |
+| 06  | Carrier Management               | Done                                                                                             | Built (6 pages, 17 components)                                                      | Partial                 | No       | Medium     | P0       |
+| 07  | Accounting                       | Done                                                                                             | Built (10 pages, 7.9/10)                                                            | Partial                 | No       | Medium     | P0       |
+| 08  | Commission                       | Done                                                                                             | Built (11 pages, 8.5/10)                                                            | 14 FE tests             | No       | High       | P0       |
+| 09  | Load Board                       | Partial                                                                                          | Built (4 pages, 10 components)                                                      | 13 FE suites + BE specs | No       | Medium     | P0       |
+| 13  | Customer Portal                  | Substantial                                                                                      | Not Built (P0-Basic: 4 pages)                                                       | None                    | No       | Low        | P0       |
+| 39  | **Command Center**               | Substantial (6 endpoints: KPIs, alerts, activity, carrier-availability, acknowledge, auto-match) | Built (route + toolbar + KPI strip + universal drawer + dispatch board integration) | 3 FE tests (570 LOC)    | No       | High       | **P0**   |
 
 ### P1 Post-MVP (3 services)
 
@@ -97,11 +97,66 @@
 
 ---
 
-## Current Sprint: MP-03 (Testing + Runtime Verification)
+## Current Sprint: MP-05 (Command Center Foundation — Weeks 9-10)
 
-**Quality Sprint COMPLETE** — 16/16 tasks done. All QS tasks COMPLETE (QS-001 through QS-016).
+**Status: IN PROGRESS — 5/15 tasks DONE**
 
-**MP-01 Progress:** 20/30 tasks DONE. 10 remaining (1 P0, 4 P1, 4 P2, 1 P0-large).
+**Completed — Session 2026-03-13:**
+
+- MP-05-001: Command Center route + container — `/command-center` page with `CommandCenter` component wrapping existing DispatchBoard via composition (not replacement). Suspense boundary + skeleton fallback. (commit d38c1cf)
+- MP-05-002: Multi-domain tab system — `CommandCenterToolbar` with 5 tabs (Loads/Quotes/Carriers/Tracking/Alerts), 4 layout modes (Board/Split/Dashboard/Focus), search bar, alert badge. URL-persisted state via `useCommandCenter` hook (`?tab=loads&layout=board`). ARIA `role="tablist"`/`role="tab"` for accessibility. (commit d38c1cf)
+- MP-05-003: Contextual KPI strip — `CommandCenterKPIStrip` shows 4 metrics per tab (e.g. Loads: Active/In Transit/Delivered Today/Exceptions). Placeholder values pending backend wiring. (commit d38c1cf)
+- MP-05-004: Universal Detail Drawer — `UniversalDetailDrawer` polymorphic shell with backdrop, slide animation, focus trap, ESC/click-outside close, body scroll lock, ARIA attributes. Composition pattern (children prop for entity-specific content). (commit 7f43f7a)
+- MP-05-011: Backend endpoints — Added `GET /activity` (paginated audit log feed) and `GET /carrier-availability` (active carriers with load counts) to existing CommandCenterController. Pre-existing endpoints: KPIs, alerts, acknowledge, auto-match stub. (commit d8cf8c0)
+
+**Remaining:**
+
+| Task      | Description                                   | Status  |
+| --------- | --------------------------------------------- | ------- |
+| MP-05-005 | Load drawer variant (entity-specific content) | Pending |
+| MP-05-006 | Carrier drawer variant                        | Pending |
+| MP-05-007 | Quote drawer variant                          | Pending |
+| MP-05-008 | Layout modes (Split, Dashboard, Focus panels) | Pending |
+| MP-05-009 | Wire dispatch board integration               | Pending |
+| MP-05-010 | Alert system (real-time panel)                | Pending |
+| MP-05-012 | Auto-match engine (backend logic)             | Pending |
+| MP-05-013 | Bulk dispatch actions                         | Pending |
+| MP-05-014 | Google Maps integration                       | Pending |
+| MP-05-015 | Command Center tests                          | Pending |
+
+**Files created this session:**
+
+- `apps/web/app/(dashboard)/command-center/page.tsx`
+- `apps/web/components/tms/command-center/command-center.tsx`
+- `apps/web/components/tms/command-center/command-center-toolbar.tsx`
+- `apps/web/components/tms/command-center/command-center-kpi-strip.tsx`
+- `apps/web/components/tms/command-center/universal-detail-drawer.tsx`
+- `apps/web/lib/hooks/tms/use-command-center.ts`
+- `apps/api/src/modules/command-center/command-center.module.ts` (registered in app.module)
+
+**Next priorities:**
+
+1. MP-05-005/006/007: Load, Carrier, Quote drawer variants
+2. MP-05-008: Layout modes (Split, Dashboard, Focus)
+3. MP-05-009: Wire to existing dispatch board
+4. Wire KPI strip to real backend data via `useCommandCenterKPIs` hook
+
+---
+
+## Completed Sprints
+
+### MP-01–MP-04 Summary
+
+| Sprint | Description                        | Tasks | Status                                 |
+| ------ | ---------------------------------- | ----- | -------------------------------------- |
+| MP-01  | Security Hardening                 | 30/30 | ✅ COMPLETE                            |
+| MP-02  | Table-Stakes Features              | 17/17 | ✅ COMPLETE                            |
+| MP-03  | Testing + Runtime Verification     | 11/11 | ✅ COMPLETE                            |
+| MP-04  | DevOps + Production Infrastructure | 5/11  | Partial (6 cloud/infra tasks deferred) |
+
+Quality Sprint (QS-001–QS-016): ✅ ALL 16 COMPLETE.
+
+### MP-01 Progress (30/30 ✅)
 
 **Completed — Sprint S4 (2026-03-12, commit 053c82b):**
 
@@ -150,7 +205,7 @@
 
 ---
 
-## Next Sprint: MP-02 (Table-Stakes Features + Revenue Lifecycle)
+### MP-02 Progress (17/17 ✅)
 
 **Status:** MP-02 COMPLETE ✅ — All 17/17 tasks DONE (2026-03-13)
 
@@ -173,7 +228,7 @@
 
 **All 17 MP-02 tasks complete. Ready for MP-03 (Testing + Runtime Verification)**
 
-### MP-03 Progress
+### MP-03 Progress (11/11 ✅)
 
 **Status: MP-03 COMPLETE ✅ — 11/11 tasks DONE**
 
@@ -208,7 +263,7 @@
 
 **Remaining:** None — MP-03 COMPLETE.
 
-### MP-04 Progress
+### MP-04 Progress (5/11 — cloud/infra deferred)
 
 **Status: IN PROGRESS — 5/11 tasks DONE**
 
@@ -226,6 +281,52 @@
 - MP-04-011: Account lockout — already implemented (5 attempts → 15min lockout via Redis + DB); fixed hardcoded duration to use `ACCOUNT_LOCKOUT_DURATION` env var
 
 **Remaining:** MP-04-001 (prod env setup), MP-04-003 (monitoring), MP-04-005 (DB backup — workflow exists), MP-04-006 (secret management), MP-04-007 (SSL/domain), MP-04-008 (load testing)
+
+> **Note:** Remaining MP-04 tasks require cloud provider decisions (AWS/GCP/Azure) and cannot be completed in coding sessions. Deferred until infrastructure decisions are made.
+
+### MP-05 Progress
+
+**Status: IN PROGRESS — 5/15 tasks DONE**
+
+**Completed — Session 2026-03-13 (Command Center foundation):**
+
+- MP-05-001: Command Center route + container — `/command-center` page with `CommandCenter` orchestrator component, URL-persisted tab/layout state via `useCommandCenter` hook (`?tab=loads&layout=board`)
+- MP-05-002: Multi-domain tab system — `CommandCenterToolbar` with 5 domain tabs (Loads/Quotes/Carriers/Tracking/Alerts) + 4 layout mode toggles (Board/Split/Dashboard/Focus) + alert badge + search bar. Non-active panels use `hidden` class to preserve DispatchBoard state across tab switches.
+- MP-05-003: KPI dashboard strip — `CommandCenterKPIStrip` with contextual metrics per tab (load KPIs for Loads tab, quote KPIs for Quotes, etc.). Currently shows placeholder values — will wire to backend `GET /command-center/kpis` in next session.
+- MP-05-004: Universal detail drawer — `UniversalDetailDrawer` polymorphic drawer shell with backdrop, slide animation, focus trap, ESC close, body scroll lock, ARIA attributes. Renders entity-specific content via children composition pattern.
+- MP-05-011: Backend endpoints — Added `GET /command-center/activity` (paginated audit log feed) and `GET /command-center/carrier-availability` (active carriers with load counts). Pre-existing: KPIs, alerts, acknowledge, auto-match stub.
+
+**New files created:**
+
+- `apps/web/app/(dashboard)/command-center/page.tsx` — Route entry
+- `apps/web/components/tms/command-center/command-center.tsx` — Main container
+- `apps/web/components/tms/command-center/command-center-toolbar.tsx` — Tabs + layout toggle
+- `apps/web/components/tms/command-center/command-center-kpi-strip.tsx` — KPI metrics strip
+- `apps/web/components/tms/command-center/universal-detail-drawer.tsx` — Polymorphic drawer
+- `apps/web/lib/hooks/tms/use-command-center.ts` — State management hook
+
+**Modified files:**
+
+- `apps/web/lib/config/navigation.ts` — Added Command Center nav item (Radio icon, top of Operations group)
+- `apps/web/components/layout/sidebar-nav.tsx` — Added `/command-center` to exact-match list
+- `apps/api/src/modules/command-center/command-center.controller.ts` — Added activity + carrier-availability endpoints
+- `apps/api/src/modules/command-center/command-center.service.ts` — Added getActivity + getCarrierAvailability methods
+
+**Remaining P0 (this sprint):**
+
+- MP-05-005: Load drawer variant (reuse existing DispatchDetailDrawer)
+- MP-05-006: Carrier drawer variant (compose existing carrier components)
+- MP-05-009: Wire dispatch board (flex layout, cross-tab drawer coordination)
+
+**Remaining P1 (future sprint):**
+
+- MP-05-007: Quote drawer variant
+- MP-05-008: Layout modes (Split/Dashboard/Focus)
+- MP-05-010: Alert system (wire alerts panel to backend)
+- MP-05-012: Auto-match engine
+- MP-05-013: Bulk dispatch operations
+- MP-05-014: Google Maps tracking integration
+- MP-05-015: Command Center tests
 
 **Full project timeline:** 24 sprints × 2 weeks = 48 weeks across 5 phases:
 

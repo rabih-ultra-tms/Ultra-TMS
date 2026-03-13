@@ -354,26 +354,26 @@ Every service entering a sprint gets work across 5 layers:
 **Depends on:** MP-01 (security), QS-001 (WebSocket — DONE)
 
 | ID        | Task                                                                                       | Layer | Effort | Priority | Source  |
-| --------- | ------------------------------------------------------------------------------------------ | ----- | ------ | -------- | ------- |
-| MP-05-001 | CC-001: Container and route setup (`/command-center`)                                      | BLD   | 2h     | P0       | CC-001  |
-| MP-05-002 | CC-002: Multi-domain tab system (Loads/Quotes/Carriers/Tracking/Alerts)                    | BLD   | 6h     | P0       | CC spec |
-| MP-05-003 | CC-003: KPI dashboard panels (revenue, utilization, exceptions)                            | BLD   | 4h     | P0       | CC spec |
-| MP-05-004 | CC-004: Universal polymorphic drawer (drag-drop, fullscreen, modal)                        | BLD   | 8h     | P0       | CC-004  |
-| MP-05-005 | CC-005: Load detail drawer variant                                                         | BLD   | 3h     | P0       | CC spec |
-| MP-05-006 | CC-006: Carrier detail drawer variant                                                      | BLD   | 3h     | P0       | CC spec |
-| MP-05-007 | CC-007: Quote detail drawer variant                                                        | BLD   | 3h     | P1       | CC spec |
-| MP-05-008 | CC-008: 4 layout modes (Board/Split/Dashboard/Focus)                                       | BLD   | 6h     | P1       | CC spec |
-| MP-05-009 | CC-009: Wire to existing dispatch board (PROTECTED 4,095 LOC)                              | WIR   | 4h     | P0       | CC spec |
-| MP-05-010 | CC-010: Alert system (configurable rules, real-time via WebSocket)                         | WIR   | 4h     | P1       | CC spec |
-| MP-05-011 | CC-014: Backend CommandCenterController (KPI, alerts, activity, auto-match, bulk-dispatch) | BLD   | 8h     | P0       | CC-014  |
-| MP-05-012 | CC-011: Auto-match engine (carrier-load matching suggestions)                              | BLD   | 6h     | P1       | CC spec |
-| MP-05-013 | CC-012: Bulk dispatch operations                                                           | BLD   | 4h     | P1       | CC spec |
-| MP-05-014 | CC-013: Google Maps integration for tracking view                                          | WIR   | 4h     | P1       | CC spec |
-| MP-05-015 | CC-015: Tests (unit + integration, min 20% coverage)                                       | TST   | 6h     | P1       | CC spec |
+| --------- | ------------------------------------------------------------------------------------------ | ----- | ------ | -------- | ------- | ------- |
+| MP-05-001 | CC-001: Container and route setup (`/command-center`)                                      | BLD   | 2h     | P0       | CC-001  | ✅ DONE |
+| MP-05-002 | CC-002: Multi-domain tab system (Loads/Quotes/Carriers/Tracking/Alerts)                    | BLD   | 6h     | P0       | CC spec | ✅ DONE |
+| MP-05-003 | CC-003: KPI dashboard panels (revenue, utilization, exceptions)                            | BLD   | 4h     | P0       | CC spec | ✅ DONE |
+| MP-05-004 | CC-004: Universal polymorphic drawer (drag-drop, fullscreen, modal)                        | BLD   | 8h     | P0       | CC-004  | ✅ DONE |
+| MP-05-005 | CC-005: Load detail drawer variant                                                         | BLD   | 3h     | P0       | CC spec |         |
+| MP-05-006 | CC-006: Carrier detail drawer variant                                                      | BLD   | 3h     | P0       | CC spec |         |
+| MP-05-007 | CC-007: Quote detail drawer variant                                                        | BLD   | 3h     | P1       | CC spec |         |
+| MP-05-008 | CC-008: 4 layout modes (Board/Split/Dashboard/Focus)                                       | BLD   | 6h     | P1       | CC spec |         |
+| MP-05-009 | CC-009: Wire to existing dispatch board (PROTECTED 4,095 LOC)                              | WIR   | 4h     | P0       | CC spec |         |
+| MP-05-010 | CC-010: Alert system (configurable rules, real-time via WebSocket)                         | WIR   | 4h     | P1       | CC spec |         |
+| MP-05-011 | CC-014: Backend CommandCenterController (KPI, alerts, activity, auto-match, bulk-dispatch) | BLD   | 8h     | P0       | CC-014  | ✅ DONE |
+| MP-05-012 | CC-011: Auto-match engine (carrier-load matching suggestions)                              | BLD   | 6h     | P1       | CC spec |         |
+| MP-05-013 | CC-012: Bulk dispatch operations                                                           | BLD   | 4h     | P1       | CC spec |         |
+| MP-05-014 | CC-013: Google Maps integration for tracking view                                          | WIR   | 4h     | P1       | CC spec |         |
+| MP-05-015 | CC-015: Tests (unit + integration, min 20% coverage)                                       | TST   | 6h     | P1       | CC spec |         |
 
 **Exit Criteria:**
 
-- [ ] `/command-center` route loads with all 5 tabs
+- [x] `/command-center` route loads with all 5 tabs
 - [ ] Universal drawer opens for loads, carriers, quotes
 - [ ] KPI dashboard renders real data from existing endpoints
 - [ ] Board and Split layout modes working

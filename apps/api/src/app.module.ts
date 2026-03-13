@@ -53,6 +53,7 @@ import { HrModule } from './modules/hr/hr.module';
 import { FeedbackModule } from './modules/feedback/feedback.module';
 import { HealthModule } from './modules/health/health.module';
 import { OperationsModule } from './modules/operations/operations.module';
+import { CommandCenterModule } from './modules/command-center/command-center.module';
 
 // Support services - commented out until schemas are added
 // import { AnalyticsModule } from './modules/analytics/analytics.module';
@@ -175,6 +176,7 @@ const isTestEnv =
     FeedbackModule,
     HealthModule,
     OperationsModule,
+    CommandCenterModule,
   ],
   providers: [
     PrismaService,
