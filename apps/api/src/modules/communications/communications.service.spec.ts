@@ -1,22 +1,45 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CommunicationsService } from '../../src/modules/communications/communications.service';
-import { PrismaService } from '../../src/prisma/prisma.service';
+import { CommunicationsService } from './communications.service';
+import { PrismaService } from '../../prisma.service';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 describe('CommunicationsService (MP-07-018)', () => {
   let service: CommunicationsService;
-  let prisma: PrismaService;
+  let prisma: any;
+
+  const createMockPrisma = () => ({
+    notification: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+      update: jest.fn(),
+      count: jest.fn(),
+    },
+    notificationTemplate: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    },
+    notificationPreference: {
+      create: jest.fn(),
+      findFirst: jest.fn(),
+      update: jest.fn(),
+    },
+  });
 
   beforeAll(async () => {
+    prisma = createMockPrisma();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CommunicationsService,
-        { provide: PrismaService, useValue: {} },
+        { provide: PrismaService, useValue: prisma },
       ],
     }).compile();
 
     service = module.get<CommunicationsService>(CommunicationsService);
-    prisma = module.get<PrismaService>(PrismaService);
   });
 
   beforeEach(() => {
@@ -31,9 +54,7 @@ describe('CommunicationsService (MP-07-018)', () => {
         tenantId: 'tenant-1',
         threadId: 't1',
       };
-      jest
-        .spyOn(prisma.notification || {}, 'create')
-        .mockResolvedValue(mockMsg as any);
+      prisma.notification.create.mockResolvedValue(mockMsg);
 
       const result = await service.createMessage(
         { content: 'Test message', threadId: 't1' },
@@ -68,10 +89,8 @@ describe('CommunicationsService (MP-07-018)', () => {
         },
       ];
 
-      jest
-        .spyOn(prisma.notification || {}, 'findMany')
-        .mockResolvedValue(messages as any);
-      jest.spyOn(prisma.notification || {}, 'count').mockResolvedValue(2);
+      prisma.notification.findMany.mockResolvedValue(messages);
+      prisma.notification.count.mockResolvedValue(2);
 
       const result = await service.listMessages('tenant-1');
 
@@ -82,13 +101,12 @@ describe('CommunicationsService (MP-07-018)', () => {
     });
 
     it('should filter deleted messages from list', async () => {
-      jest.spyOn(prisma.notification || {}, 'findMany').mockResolvedValue([]);
-      jest.spyOn(prisma.notification || {}, 'count').mockResolvedValue(0);
+      prisma.notification.findMany.mockResolvedValue([]);
+      prisma.notification.count.mockResolvedValue(0);
 
-      const findManyMock = jest.spyOn(prisma.notification || {}, 'findMany');
       await service.listMessages('tenant-1');
 
-      expect(findManyMock).toHaveBeenCalledWith(
+      expect(prisma.notification.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             tenantId: 'tenant-1',
@@ -106,9 +124,7 @@ describe('CommunicationsService (MP-07-018)', () => {
         tenantId: 'tenant-1',
         deletedAt: null,
       };
-      jest
-        .spyOn(prisma.notification || {}, 'findFirst')
-        .mockResolvedValue(mockMsg as any);
+      prisma.notification.findFirst.mockResolvedValue(mockMsg);
 
       const result = await service.getMessage('msg-1', 'tenant-1');
 
@@ -117,9 +133,7 @@ describe('CommunicationsService (MP-07-018)', () => {
     });
 
     it('should throw not found for missing message', async () => {
-      jest
-        .spyOn(prisma.notification || {}, 'findFirst')
-        .mockResolvedValue(null);
+      prisma.notification.findFirst.mockResolvedValue(null);
 
       await expect(service.getMessage('missing', 'tenant-1')).rejects.toThrow(
         NotFoundException
@@ -127,15 +141,13 @@ describe('CommunicationsService (MP-07-018)', () => {
     });
 
     it('should enforce tenantId in findFirst', async () => {
-      const findFirstMock = jest
-        .spyOn(prisma.notification || {}, 'findFirst')
-        .mockResolvedValue(null);
+      prisma.notification.findFirst.mockResolvedValue(null);
 
       await expect(service.getMessage('msg-1', 'tenant-1')).rejects.toThrow(
         NotFoundException
       );
 
-      expect(findFirstMock).toHaveBeenCalledWith(
+      expect(prisma.notification.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             id: 'msg-1',
@@ -164,9 +176,7 @@ describe('CommunicationsService (MP-07-018)', () => {
         },
       ];
 
-      jest
-        .spyOn(prisma.notification || {}, 'findMany')
-        .mockResolvedValue(messages as any);
+      prisma.notification.findMany.mockResolvedValue(messages);
 
       const result = await service.getThread('thread-1', 'tenant-1');
 
@@ -185,14 +195,11 @@ describe('CommunicationsService (MP-07-018)', () => {
         },
       ];
 
-      jest
-        .spyOn(prisma.notification || {}, 'findMany')
-        .mockResolvedValue(messages as any);
+      prisma.notification.findMany.mockResolvedValue(messages);
 
-      const findManyMock = jest.spyOn(prisma.notification || {}, 'findMany');
       await service.getThread('thread-1', 'tenant-1');
 
-      expect(findManyMock).toHaveBeenCalledWith(
+      expect(prisma.notification.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             threadId: 'thread-1',
@@ -204,7 +211,7 @@ describe('CommunicationsService (MP-07-018)', () => {
     });
 
     it('should throw for empty thread', async () => {
-      jest.spyOn(prisma.notification || {}, 'findMany').mockResolvedValue([]);
+      prisma.notification.findMany.mockResolvedValue([]);
 
       await expect(service.getThread('missing', 'tenant-1')).rejects.toThrow(
         NotFoundException
@@ -222,12 +229,8 @@ describe('CommunicationsService (MP-07-018)', () => {
       };
       const archived = { ...mockMsg, archivedAt: new Date() };
 
-      jest
-        .spyOn(prisma.notification || {}, 'findFirst')
-        .mockResolvedValue(mockMsg as any);
-      jest
-        .spyOn(prisma.notification || {}, 'update')
-        .mockResolvedValue(archived as any);
+      prisma.notification.findFirst.mockResolvedValue(mockMsg);
+      prisma.notification.update.mockResolvedValue(archived);
 
       const result = await service.archiveMessage('msg-1', 'tenant-1');
 
@@ -235,14 +238,12 @@ describe('CommunicationsService (MP-07-018)', () => {
     });
 
     it('should not return archived messages in list', async () => {
-      jest.spyOn(prisma.notification || {}, 'findMany').mockResolvedValue([]);
-      jest.spyOn(prisma.notification || {}, 'count').mockResolvedValue(0);
+      prisma.notification.findMany.mockResolvedValue([]);
+      prisma.notification.count.mockResolvedValue(0);
 
-      const findManyMock = jest.spyOn(prisma.notification || {}, 'findMany');
       await service.listMessages('tenant-1');
 
-      // Verify archivedAt is filtered out
-      expect(findManyMock).toHaveBeenCalledWith(
+      expect(prisma.notification.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             archivedAt: null,
@@ -261,9 +262,7 @@ describe('CommunicationsService (MP-07-018)', () => {
         tenantId: 'tenant-1',
       };
 
-      jest
-        .spyOn(prisma.notificationTemplate || {}, 'create')
-        .mockResolvedValue(mockTemplate as any);
+      prisma.notificationTemplate.create.mockResolvedValue(mockTemplate);
 
       const result = await service.createTemplate(
         { name: 'Welcome', body: 'Hello {{name}}', variables: ['name'] },
@@ -294,9 +293,7 @@ describe('CommunicationsService (MP-07-018)', () => {
         },
       ];
 
-      jest
-        .spyOn(prisma.notificationTemplate || {}, 'findMany')
-        .mockResolvedValue(templates as any);
+      prisma.notificationTemplate.findMany.mockResolvedValue(templates);
 
       const result = await service.listTemplates('tenant-1');
 
@@ -305,13 +302,11 @@ describe('CommunicationsService (MP-07-018)', () => {
     });
 
     it('should enforce tenantId in list templates', async () => {
-      const findManyMock = jest
-        .spyOn(prisma.notificationTemplate || {}, 'findMany')
-        .mockResolvedValue([]);
+      prisma.notificationTemplate.findMany.mockResolvedValue([]);
 
       await service.listTemplates('tenant-1');
 
-      expect(findManyMock).toHaveBeenCalledWith(
+      expect(prisma.notificationTemplate.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             tenantId: 'tenant-1',
@@ -330,9 +325,7 @@ describe('CommunicationsService (MP-07-018)', () => {
         deletedAt: null,
       };
 
-      jest
-        .spyOn(prisma.notificationTemplate || {}, 'findFirst')
-        .mockResolvedValue(mockTemplate as any);
+      prisma.notificationTemplate.findFirst.mockResolvedValue(mockTemplate);
 
       const result = await service.getTemplate('tmpl-1', 'tenant-1');
 
@@ -348,12 +341,8 @@ describe('CommunicationsService (MP-07-018)', () => {
       };
       const deleted = { ...mockTemplate, deletedAt: new Date() };
 
-      jest
-        .spyOn(prisma.notificationTemplate || {}, 'findFirst')
-        .mockResolvedValue(mockTemplate as any);
-      jest
-        .spyOn(prisma.notificationTemplate || {}, 'update')
-        .mockResolvedValue(deleted as any);
+      prisma.notificationTemplate.findFirst.mockResolvedValue(mockTemplate);
+      prisma.notificationTemplate.update.mockResolvedValue(deleted);
 
       const result = await service.deleteTemplate('tmpl-1', 'tenant-1');
 
@@ -368,8 +357,6 @@ describe('CommunicationsService (MP-07-018)', () => {
         company: 'ACME',
       });
 
-      // Note: current implementation expects template string directly
-      // This test demonstrates the interface
       expect(typeof rendered).toBe('string');
     });
 
@@ -377,12 +364,6 @@ describe('CommunicationsService (MP-07-018)', () => {
       const rendered = service.renderTemplate('tmpl-1', {});
 
       expect(rendered).toBe('');
-    });
-
-    it('should replace multiple occurrences of same variable', async () => {
-      const rendered = service.renderTemplate('template', { name: 'John' });
-
-      expect(typeof rendered).toBe('string');
     });
   });
 
@@ -402,12 +383,8 @@ describe('CommunicationsService (MP-07-018)', () => {
         ...prefs,
       };
 
-      jest
-        .spyOn(prisma.notificationPreference || {}, 'findFirst')
-        .mockResolvedValue(null);
-      jest
-        .spyOn(prisma.notificationPreference || {}, 'create')
-        .mockResolvedValue(mockPrefs as any);
+      prisma.notificationPreference.findFirst.mockResolvedValue(null);
+      prisma.notificationPreference.create.mockResolvedValue(mockPrefs);
 
       const result = await service.updatePreferences(
         'user-1',
@@ -428,12 +405,8 @@ describe('CommunicationsService (MP-07-018)', () => {
       };
       const updated = { ...existing, podReceived: false };
 
-      jest
-        .spyOn(prisma.notificationPreference || {}, 'findFirst')
-        .mockResolvedValue(existing as any);
-      jest
-        .spyOn(prisma.notificationPreference || {}, 'update')
-        .mockResolvedValue(updated as any);
+      prisma.notificationPreference.findFirst.mockResolvedValue(existing);
+      prisma.notificationPreference.update.mockResolvedValue(updated);
 
       const result = await service.updatePreferences('user-1', 'tenant-1', {
         podReceived: false,
@@ -444,9 +417,7 @@ describe('CommunicationsService (MP-07-018)', () => {
     });
 
     it('should get preferences with defaults', async () => {
-      jest
-        .spyOn(prisma.notificationPreference || {}, 'findFirst')
-        .mockResolvedValue(null);
+      prisma.notificationPreference.findFirst.mockResolvedValue(null);
 
       const result = await service.getPreferences('user-1', 'tenant-1');
 
@@ -465,9 +436,7 @@ describe('CommunicationsService (MP-07-018)', () => {
         loadAccepted: true,
       };
 
-      jest
-        .spyOn(prisma.notificationPreference || {}, 'findFirst')
-        .mockResolvedValue(savedPrefs as any);
+      prisma.notificationPreference.findFirst.mockResolvedValue(savedPrefs);
 
       const result = await service.getPreferences('user-1', 'tenant-1');
 
@@ -486,12 +455,8 @@ describe('CommunicationsService (MP-07-018)', () => {
       };
       const deleted = { ...mockMsg, deletedAt: new Date() };
 
-      jest
-        .spyOn(prisma.notification || {}, 'findFirst')
-        .mockResolvedValue(mockMsg as any);
-      jest
-        .spyOn(prisma.notification || {}, 'update')
-        .mockResolvedValue(deleted as any);
+      prisma.notification.findFirst.mockResolvedValue(mockMsg);
+      prisma.notification.update.mockResolvedValue(deleted);
 
       const result = await service.deleteMessage('msg-1', 'tenant-1');
 
@@ -499,9 +464,7 @@ describe('CommunicationsService (MP-07-018)', () => {
     });
 
     it('should throw when deleting non-existent message', async () => {
-      jest
-        .spyOn(prisma.notification || {}, 'findFirst')
-        .mockResolvedValue(null);
+      prisma.notification.findFirst.mockResolvedValue(null);
 
       await expect(
         service.deleteMessage('missing', 'tenant-1')
@@ -511,21 +474,12 @@ describe('CommunicationsService (MP-07-018)', () => {
 
   describe('Statistics', () => {
     it('should return message statistics', async () => {
-      const counts = {
-        total: 100,
-        pending: 20,
-        delivered: 70,
-        archived: 8,
-        bounced: 2,
-      };
-
-      jest
-        .spyOn(prisma.notification || {}, 'count')
-        .mockResolvedValueOnce(counts.total)
-        .mockResolvedValueOnce(counts.pending)
-        .mockResolvedValueOnce(counts.delivered)
-        .mockResolvedValueOnce(counts.archived)
-        .mockResolvedValueOnce(counts.bounced);
+      prisma.notification.count
+        .mockResolvedValueOnce(100) // total
+        .mockResolvedValueOnce(20) // pending
+        .mockResolvedValueOnce(70) // delivered
+        .mockResolvedValueOnce(8) // archived
+        .mockResolvedValueOnce(2); // bounced
 
       const result = await service.getStatistics('tenant-1');
 
@@ -537,13 +491,12 @@ describe('CommunicationsService (MP-07-018)', () => {
     });
 
     it('should enforce tenantId in statistics', async () => {
-      jest.spyOn(prisma.notification || {}, 'count').mockResolvedValue(0);
+      prisma.notification.count.mockResolvedValue(0);
 
-      const countMock = jest.spyOn(prisma.notification || {}, 'count');
       await service.getStatistics('tenant-1');
 
       // Verify all count calls include tenantId
-      expect(countMock).toHaveBeenCalledWith(
+      expect(prisma.notification.count).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             tenantId: 'tenant-1',
