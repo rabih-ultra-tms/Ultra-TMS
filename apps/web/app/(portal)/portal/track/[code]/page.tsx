@@ -99,32 +99,45 @@ export default function TrackingPage({ params }: { params: { code: string } }) {
                 Timeline
               </h3>
               <div className="space-y-6">
-                {tracking.map((event: any, idx: number) => (
-                  <div key={idx} className="flex gap-4">
-                    <div className="relative flex flex-col items-center">
-                      <div className="w-3 h-3 rounded-full bg-slate-400" />
-                      {idx < tracking.length - 1 && (
-                        <div className="w-0.5 h-12 bg-slate-200 mt-2" />
-                      )}
+                {tracking.map(
+                  (
+                    event: {
+                      timestamp?: string;
+                      location?: string;
+                      status?: string;
+                      description?: string;
+                    },
+                    idx: number
+                  ) => (
+                    <div key={idx} className="flex gap-4">
+                      <div className="relative flex flex-col items-center">
+                        <div className="w-3 h-3 rounded-full bg-slate-400" />
+                        {idx < tracking.length - 1 && (
+                          <div className="w-0.5 h-12 bg-slate-200 mt-2" />
+                        )}
+                      </div>
+                      <div className="pb-4 flex-1">
+                        <p className="font-medium text-slate-900">
+                          {event.status || event.description || 'Event'}
+                        </p>
+                        <p className="text-sm text-slate-600 mt-1">
+                          {event.timestamp
+                            ? new Date(event.timestamp).toLocaleString(
+                                'en-US',
+                                {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: 'numeric',
+                                  minute: '2-digit',
+                                  hour12: true,
+                                }
+                              )
+                            : event.location}
+                        </p>
+                      </div>
                     </div>
-                    <div className="pb-4 flex-1">
-                      <p className="font-medium text-slate-900">
-                        {event.status || event.description || 'Event'}
-                      </p>
-                      <p className="text-sm text-slate-600 mt-1">
-                        {event.timestamp
-                          ? new Date(event.timestamp).toLocaleString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              hour: 'numeric',
-                              minute: '2-digit',
-                              hour12: true,
-                            })
-                          : event.location}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                  )
+                )}
               </div>
             </Card>
           )}
