@@ -1,9 +1,10 @@
-import { ReactNode } from "react";
+import { ReactNode } from 'react';
+import { ErrorBoundary } from '@/components/error-boundary';
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-background">
-      {children}
-    </div>
+    <ErrorBoundary>
+      <div className="min-h-screen bg-background">{children}</div>
+    </ErrorBoundary>
   );
 }
