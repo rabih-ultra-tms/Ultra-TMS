@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 /**
@@ -86,10 +86,31 @@ export function useCommandCenter() {
     [updateParams]
   );
 
+  // Drawer state — tracks which entity is open in the UniversalDetailDrawer
+  const [drawer, setDrawer] = useState<DrawerState>({
+    open: false,
+    entityType: null,
+    entityId: null,
+  });
+
+  const openDrawer = useCallback(
+    (entityType: DrawerEntityType, entityId: string) => {
+      setDrawer({ open: true, entityType, entityId });
+    },
+    []
+  );
+
+  const closeDrawer = useCallback(() => {
+    setDrawer({ open: false, entityType: null, entityId: null });
+  }, []);
+
   return {
     activeTab,
     setActiveTab,
     layout,
     setLayout,
+    drawer,
+    openDrawer,
+    closeDrawer,
   };
 }

@@ -14,6 +14,8 @@ import { Suspense } from 'react';
 import { useCommandCenter } from '@/lib/hooks/tms/use-command-center';
 import { CommandCenterToolbar } from './command-center-toolbar';
 import { CommandCenterKPIStrip } from './command-center-kpi-strip';
+import { UniversalDetailDrawer } from './universal-detail-drawer';
+import { LoadDrawerContent } from './load-drawer-content';
 import { DispatchBoard } from '@/components/tms/dispatch/dispatch-board';
 import { DispatchBoardSkeleton } from '@/components/tms/dispatch/dispatch-board-skeleton';
 import type { CCTab } from '@/lib/hooks/tms/use-command-center';
@@ -70,7 +72,8 @@ function PlaceholderPanel({ tab }: { tab: Exclude<CCTab, 'loads'> }) {
 }
 
 export function CommandCenter() {
-  const { activeTab, setActiveTab, layout, setLayout } = useCommandCenter();
+  const { activeTab, setActiveTab, layout, setLayout, drawer, closeDrawer } =
+    useCommandCenter();
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
@@ -95,6 +98,18 @@ export function CommandCenter() {
           <PlaceholderPanel tab={activeTab} />
         )}
       </div>
+
+      {/* Universal Detail Drawer — renders entity-specific content */}
+      <UniversalDetailDrawer
+        open={drawer.open}
+        onClose={closeDrawer}
+        entityType={drawer.entityType}
+        entityId={drawer.entityId}
+      >
+        {drawer.entityType === 'load' && drawer.entityId && (
+          <LoadDrawerContent loadId={drawer.entityId} />
+        )}
+      </UniversalDetailDrawer>
     </div>
   );
 }
