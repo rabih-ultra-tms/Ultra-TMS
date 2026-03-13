@@ -1,5 +1,19 @@
-import { Body, Controller, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { CurrentTenant, Roles } from '../../../common/decorators';
@@ -12,11 +26,14 @@ import {
   QualifyLeadDto,
   UpdateLeadDto,
 } from './dto';
-import { ApiErrorResponses, ApiStandardResponse } from '../../../common/swagger';
+import {
+  ApiErrorResponses,
+  ApiStandardResponse,
+} from '../../../common/swagger';
 
 @Controller()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('ADMIN', 'DISPATCHER', 'SALES_REP' , 'AGENT')
+@Roles('ADMIN', 'DISPATCHER', 'SALES_REP', 'AGENT')
 @ApiTags('Load Board')
 @ApiBearerAuth('JWT-auth')
 export class LeadsController {
@@ -40,47 +57,72 @@ export class LeadsController {
   }
 
   @Put('api/v1/load-board/leads/:id')
+  @Roles('ADMIN', 'DISPATCHER')
   @ApiOperation({ summary: 'Update load board lead' })
   @ApiParam({ name: 'id', description: 'Lead ID' })
   @ApiStandardResponse('Load board lead updated')
   @ApiErrorResponses()
-  update(@CurrentTenant() tenantId: string, @Param('id') id: string, @Body() dto: UpdateLeadDto) {
+  update(
+    @CurrentTenant() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: UpdateLeadDto
+  ) {
     return this.leadsService.update(tenantId, id, dto);
   }
 
   @Post('api/v1/load-board/leads/:id/assign')
+  @Roles('ADMIN', 'DISPATCHER')
   @ApiOperation({ summary: 'Assign load board lead' })
   @ApiParam({ name: 'id', description: 'Lead ID' })
   @ApiStandardResponse('Load board lead assigned')
   @ApiErrorResponses()
-  assign(@CurrentTenant() tenantId: string, @Param('id') id: string, @Body() dto: AssignLeadDto) {
+  assign(
+    @CurrentTenant() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: AssignLeadDto
+  ) {
     return this.leadsService.assign(tenantId, id, dto);
   }
 
   @Post('api/v1/load-board/leads/:id/contact')
+  @Roles('ADMIN', 'DISPATCHER', 'SALES_REP')
   @ApiOperation({ summary: 'Contact load board lead' })
   @ApiParam({ name: 'id', description: 'Lead ID' })
   @ApiStandardResponse('Load board lead contacted')
   @ApiErrorResponses()
-  contact(@CurrentTenant() tenantId: string, @Param('id') id: string, @Body() dto: ContactLeadDto) {
+  contact(
+    @CurrentTenant() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: ContactLeadDto
+  ) {
     return this.leadsService.contact(tenantId, id, dto);
   }
 
   @Post('api/v1/load-board/leads/:id/qualify')
+  @Roles('ADMIN', 'DISPATCHER', 'SALES_REP')
   @ApiOperation({ summary: 'Qualify load board lead' })
   @ApiParam({ name: 'id', description: 'Lead ID' })
   @ApiStandardResponse('Load board lead qualified')
   @ApiErrorResponses()
-  qualify(@CurrentTenant() tenantId: string, @Param('id') id: string, @Body() dto: QualifyLeadDto) {
+  qualify(
+    @CurrentTenant() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: QualifyLeadDto
+  ) {
     return this.leadsService.qualify(tenantId, id, dto);
   }
 
   @Post('api/v1/load-board/leads/:id/convert')
+  @Roles('ADMIN', 'DISPATCHER', 'SALES_REP')
   @ApiOperation({ summary: 'Convert load board lead' })
   @ApiParam({ name: 'id', description: 'Lead ID' })
   @ApiStandardResponse('Load board lead converted')
   @ApiErrorResponses()
-  convert(@CurrentTenant() tenantId: string, @Param('id') id: string, @Body() dto: ConvertLeadDto) {
+  convert(
+    @CurrentTenant() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: ConvertLeadDto
+  ) {
     return this.leadsService.convert(tenantId, id, dto);
   }
 }
