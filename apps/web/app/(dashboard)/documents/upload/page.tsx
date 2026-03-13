@@ -4,14 +4,14 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUploadDocument } from '@/lib/hooks/documents/use-documents';
 import { UploadZone } from '@/components/tms/documents/upload-zone';
-import { Button } from '@repo/ui/button';
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@repo/ui/select';
+} from '@/components/ui/select';
 import { ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
 import type { DocumentType } from '@/lib/hooks/documents/use-documents';
 

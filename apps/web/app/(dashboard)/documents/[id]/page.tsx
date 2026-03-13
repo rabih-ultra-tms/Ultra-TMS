@@ -5,7 +5,7 @@ import {
   useDocuments,
   useDocumentDownloadUrl,
 } from '@/lib/hooks/documents/use-documents';
-import { Button } from '@repo/ui/button';
+import { Button } from '@/components/ui/button';
 import {
   ArrowLeft,
   Download,

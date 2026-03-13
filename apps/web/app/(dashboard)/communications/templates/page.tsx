@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@repo/ui/button';
-import { Input } from '@repo/ui/input';
-import { Textarea } from '@repo/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/Input';
+import { Textarea } from '@/components/ui/textarea';
 import { Edit, Trash2, Plus } from 'lucide-react';
 
 interface EmailTemplate {

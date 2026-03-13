@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@repo/ui/button';
-import { Input } from '@repo/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/Input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Send, MessageSquare, Archive } from 'lucide-react';
 
 interface Message {

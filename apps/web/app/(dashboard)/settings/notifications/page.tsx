@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button } from '@repo/ui/button';
-import { Input } from '@repo/ui/input';
-import { Switch } from '@repo/ui/switch';
-import { Label } from '@repo/ui/label';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/Input';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { CheckCircle, AlertCircle } from 'lucide-react';
 
 interface NotificationPreferences {
