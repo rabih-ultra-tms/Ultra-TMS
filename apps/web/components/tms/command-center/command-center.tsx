@@ -10,12 +10,17 @@
  * MP-05-002: Multi-domain tab system
  */
 
-import { Suspense } from 'react';
+import { Suspense, useCallback } from 'react';
 import { useCommandCenter } from '@/lib/hooks/tms/use-command-center';
 import { CommandCenterToolbar } from './command-center-toolbar';
 import { CommandCenterKPIStrip } from './command-center-kpi-strip';
 import { UniversalDetailDrawer } from './universal-detail-drawer';
 import { LoadDrawerContent } from './load-drawer-content';
+import { CarrierDrawerContent } from './carrier-drawer-content';
+import { QuoteDrawerContent } from './quote-drawer-content';
+import { SplitLayout } from './split-layout';
+import { DashboardLayout } from './dashboard-layout';
+import { FocusLayout } from './focus-layout';
 import { DispatchBoard } from '@/components/tms/dispatch/dispatch-board';
 import { DispatchBoardSkeleton } from '@/components/tms/dispatch/dispatch-board-skeleton';
 import type { CCTab } from '@/lib/hooks/tms/use-command-center';
@@ -72,8 +77,29 @@ function PlaceholderPanel({ tab }: { tab: Exclude<CCTab, 'loads'> }) {
 }
 
 export function CommandCenter() {
-  const { activeTab, setActiveTab, layout, setLayout, drawer, closeDrawer } =
+  const { activeTab, setActiveTab, layout, setLayout, drawer, openDrawer, closeDrawer } =
     useCommandCenter();
+
+  // Exit focus mode → return to board layout
+  const exitFocus = useCallback(() => {
+    setLayout('board');
+  }, [setLayout]);
+
+  /**
+   * Renders the default tab content (board or placeholder)
+   * Used by both Board and Split layouts as the "main" panel.
+   */
+  const tabContent = (
+    <>
+      {activeTab === 'loads' ? (
+        <Suspense fallback={<DispatchBoardSkeleton />}>
+          <DispatchBoard />
+        </Suspense>
+      ) : (
+        <PlaceholderPanel tab={activeTab} />
+      )}
+    </>
+  );
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
@@ -85,31 +111,49 @@ export function CommandCenter() {
         onLayoutChange={setLayout}
       />
 
-      {/* KPI Strip */}
-      <CommandCenterKPIStrip activeTab={activeTab} />
+      {/* KPI Strip — hidden in dashboard (it has its own KPI cards) and focus modes */}
+      {layout !== 'dashboard' && layout !== 'focus' && (
+        <CommandCenterKPIStrip activeTab={activeTab} />
+      )}
 
-      {/* Tab Content */}
+      {/* Layout-dependent content */}
       <div className="flex-1 overflow-hidden">
-        {activeTab === 'loads' ? (
-          <Suspense fallback={<DispatchBoardSkeleton />}>
-            <DispatchBoard />
-          </Suspense>
-        ) : (
-          <PlaceholderPanel tab={activeTab} />
+        {layout === 'board' && tabContent}
+
+        {layout === 'split' && (
+          <SplitLayout activeTab={activeTab} mainContent={tabContent} />
+        )}
+
+        {layout === 'dashboard' && <DashboardLayout />}
+
+        {layout === 'focus' && (
+          <FocusLayout
+            entityType={drawer.entityType}
+            entityId={drawer.entityId}
+            onExit={exitFocus}
+          />
         )}
       </div>
 
-      {/* Universal Detail Drawer — renders entity-specific content */}
-      <UniversalDetailDrawer
-        open={drawer.open}
-        onClose={closeDrawer}
-        entityType={drawer.entityType}
-        entityId={drawer.entityId}
-      >
-        {drawer.entityType === 'load' && drawer.entityId && (
-          <LoadDrawerContent loadId={drawer.entityId} />
-        )}
-      </UniversalDetailDrawer>
+      {/* Universal Detail Drawer — not shown in focus mode (entity is full-width) */}
+      {layout !== 'focus' && (
+        <UniversalDetailDrawer
+          open={drawer.open}
+          onClose={closeDrawer}
+          entityType={drawer.entityType}
+          entityId={drawer.entityId}
+        >
+          {drawer.entityType === 'load' && drawer.entityId && (
+            <LoadDrawerContent loadId={drawer.entityId} />
+          )}
+          {drawer.entityType === 'carrier' && drawer.entityId && (
+            <CarrierDrawerContent carrierId={drawer.entityId} />
+          )}
+          {drawer.entityType === 'quote' && drawer.entityId && (
+            <QuoteDrawerContent quoteId={drawer.entityId} />
+          )}
+        </UniversalDetailDrawer>
+      )}
     </div>
   );
 }

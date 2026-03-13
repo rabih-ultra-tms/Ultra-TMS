@@ -1,7 +1,7 @@
 # Ultra TMS — Project Status Dashboard
 
 > **Last Updated:** 2026-03-13
-> **Current Phase:** MP-05 Command Center Foundation (Weeks 9-10). MP-01 ✅ COMPLETE (30/30). MP-02 ✅ COMPLETE (17/17 tasks). MP-03 ✅ COMPLETE (11/11 tasks). MP-04: 5/11 tasks DONE (remaining are cloud/infra — deferred). MP-05: 5/15 tasks DONE.
+> **Current Phase:** MP-05 Command Center Foundation (Weeks 9-10). MP-01 ✅ COMPLETE (30/30). MP-02 ✅ COMPLETE (17/17 tasks). MP-03 ✅ COMPLETE (11/11 tasks). MP-04: 5/11 tasks DONE (remaining are cloud/infra — deferred). MP-05: 8/15 tasks DONE.
 > **Overall Health:** B+ (7.8/10) — Strong backend, frontend verified: 101/103 routes PASS. Security hardened (MP-01 complete). Command Center frontend + backend foundation in place.
 > **Production Readiness:** 3.0/10 — See [PRODUCTION-READINESS-ASSESSMENT.md](05-audit/PRODUCTION-READINESS-ASSESSMENT.md)
 > **Active Plan:** [Master Project Plan](08-sprints/master-project-plan.md) — ALL 39 services, 24 sprints, 5 phases, 48 weeks
@@ -99,9 +99,15 @@
 
 ## Current Sprint: MP-05 (Command Center Foundation — Weeks 9-10)
 
-**Status: IN PROGRESS — 5/15 tasks DONE**
+**Status: IN PROGRESS — 8/15 tasks DONE**
 
-**Completed — Session 2026-03-13:**
+**Completed — Session 2026-03-13 (drawer variants):**
+
+- MP-05-005: Load drawer variant — `LoadDrawerContent` renders load details (route, shipment, carrier, timeline, finance) inside UniversalDetailDrawer. Fetches via `useLoad` hook. "Open Full Detail" link to `/operations/loads/:id`.
+- MP-05-006: Carrier drawer variant — `CarrierDrawerContent` renders carrier overview (contact, performance, equipment, insurance) inside UniversalDetailDrawer. Fetches via `useCarrier` hook. Shows TierBadge, insurance expiry alerts, equipment types. "Open Full Detail" link to `/carriers/:id`.
+- MP-05-007: Quote drawer variant — `QuoteDrawerContent` renders quote details (route, shipment, rate breakdown, margin, timeline, contact) inside UniversalDetailDrawer. Fetches via `useQuote` hook. Shows converted-order banner. "Open Full Detail" link to `/quotes/:id`.
+
+**Completed — Session 2026-03-13 (foundation):**
 
 - MP-05-001: Command Center route + container — `/command-center` page with `CommandCenter` component wrapping existing DispatchBoard via composition (not replacement). Suspense boundary + skeleton fallback. (commit d38c1cf)
 - MP-05-002: Multi-domain tab system — `CommandCenterToolbar` with 5 tabs (Loads/Quotes/Carriers/Tracking/Alerts), 4 layout modes (Board/Split/Dashboard/Focus), search bar, alert badge. URL-persisted state via `useCommandCenter` hook (`?tab=loads&layout=board`). ARIA `role="tablist"`/`role="tab"` for accessibility. (commit d38c1cf)
@@ -111,11 +117,11 @@
 
 **Remaining:**
 
-| Task      | Description                                   | Status  |
-| --------- | --------------------------------------------- | ------- |
-| MP-05-005 | Load drawer variant (entity-specific content) | Pending |
-| MP-05-006 | Carrier drawer variant                        | Pending |
-| MP-05-007 | Quote drawer variant                          | Pending |
+| Task      | Description                                   | Status      |
+| --------- | --------------------------------------------- | ----------- |
+| MP-05-005 | Load drawer variant (entity-specific content) | **DONE**    |
+| MP-05-006 | Carrier drawer variant                        | **DONE**    |
+| MP-05-007 | Quote drawer variant                          | **DONE**    |
 | MP-05-008 | Layout modes (Split, Dashboard, Focus panels) | Pending |
 | MP-05-009 | Wire dispatch board integration               | Pending |
 | MP-05-010 | Alert system (real-time panel)                | Pending |
@@ -133,13 +139,14 @@
 - `apps/web/components/tms/command-center/universal-detail-drawer.tsx`
 - `apps/web/lib/hooks/tms/use-command-center.ts`
 - `apps/api/src/modules/command-center/command-center.module.ts` (registered in app.module)
+- `apps/web/components/tms/command-center/carrier-drawer-content.tsx`
+- `apps/web/components/tms/command-center/quote-drawer-content.tsx`
 
 **Next priorities:**
 
-1. MP-05-005/006/007: Load, Carrier, Quote drawer variants
-2. MP-05-008: Layout modes (Split, Dashboard, Focus)
-3. MP-05-009: Wire to existing dispatch board
-4. Wire KPI strip to real backend data via `useCommandCenterKPIs` hook
+1. MP-05-008: Layout modes (Split, Dashboard, Focus)
+2. MP-05-009: Wire to existing dispatch board
+3. Wire KPI strip to real backend data via `useCommandCenterKPIs` hook
 
 ---
 
