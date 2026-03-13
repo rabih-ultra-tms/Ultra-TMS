@@ -1,4 +1,3 @@
-import { PrismaClient } from '@prisma/client';
 import { faker } from '@faker-js/faker';
 
 export async function seedHR(prisma: any, tenantIds: string[]): Promise<void> {
@@ -21,15 +20,27 @@ export async function seedHR(prisma: any, tenantIds: string[]): Promise<void> {
         lastName: faker.person.lastName(),
         email: faker.internet.email(),
         phone: faker.phone.number({ style: 'international' }),
-        employmentType: faker.helpers.arrayElement(['FULL_TIME', 'PART_TIME', 'CONTRACT', 'TEMP']),
+        employmentType: faker.helpers.arrayElement([
+          'FULL_TIME',
+          'PART_TIME',
+          'CONTRACT',
+          'TEMP',
+        ]),
         hireDate: faker.date.past({ years: 5 }),
-        annualSalary: parseFloat(faker.commerce.price({ min: 45000, max: 160000 })),
+        annualSalary: parseFloat(
+          faker.commerce.price({ min: 45000, max: 160000 })
+        ),
         externalId: `SEED-EMPLOYEE-${total + i + 1}`,
         sourceSystem: 'FAKER_SEED',
       };
 
       await prisma.employee.upsert({
-        where: { userId },
+        where: {
+          tenantId_employeeNumber: {
+            tenantId,
+            employeeNumber: data.employeeNumber,
+          },
+        },
         create: data,
         update: data,
       });
