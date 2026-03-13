@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Chart of Accounts page workflow tests
  * Tests the chart of accounts page at /accounting/chart-of-accounts

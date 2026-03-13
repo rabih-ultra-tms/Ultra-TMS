@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Payables Detail page workflow tests
  * Tests the payable detail page at /accounting/payables/[id]

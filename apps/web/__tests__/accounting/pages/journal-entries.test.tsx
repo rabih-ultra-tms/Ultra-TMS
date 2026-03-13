@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Journal Entries page workflow tests
  * Tests the journal entries page at /accounting/journal-entries

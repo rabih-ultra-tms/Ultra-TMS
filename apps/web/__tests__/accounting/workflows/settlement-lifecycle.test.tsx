@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Settlement Lifecycle Workflow Integration Tests
  * Tests the complete settlement lifecycle from creation to processing

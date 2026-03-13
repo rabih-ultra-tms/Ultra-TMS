@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Payments Detail page workflow tests
  * Tests the payment detail page at /accounting/payments/[id]

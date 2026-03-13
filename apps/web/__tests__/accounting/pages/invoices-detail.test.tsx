@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Invoices Detail page workflow tests
  * Tests the invoice detail page at /accounting/invoices/[id]

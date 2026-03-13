@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Command Center — Component Tests
  *

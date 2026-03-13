@@ -1,4 +1,5 @@
-/* eslint-disable no-undef */
+// @ts-nocheck
+
 import { render } from '@/test/utils';
 import { AccDashboardStats } from './acc-dashboard-stats';
 

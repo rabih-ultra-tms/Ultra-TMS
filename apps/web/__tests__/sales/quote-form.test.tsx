@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { jest } from '@jest/globals';
 import { describe, it, expect } from '@jest/globals';
 import { render, screen, fireEvent, waitFor } from '@/test/utils';

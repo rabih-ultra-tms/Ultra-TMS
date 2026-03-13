@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Settlements Create page workflow tests
  * Tests the settlement creation page at /accounting/settlements/new

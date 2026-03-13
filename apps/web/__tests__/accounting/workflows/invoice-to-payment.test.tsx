@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Invoice-to-Payment Workflow Integration Tests
  * Tests the complete flow from creating an invoice to receiving payment

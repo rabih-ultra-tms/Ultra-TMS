@@ -21,7 +21,7 @@ describe('AlertsService & SavedViewsService - Cross-Tenant Security', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    prisma = mockPrisma as any;
+    prisma = mockPrisma as unknown as PrismaService;
     alertsService = new AlertsService(prisma);
     savedViewsService = new SavedViewsService(prisma);
   });
@@ -111,6 +111,7 @@ describe('AlertsService & SavedViewsService - Cross-Tenant Security', () => {
 
       await savedViewsService.update(tenantId, userId, viewId, {
         viewName: 'Updated',
+        entityType: 'load',
       });
 
       const updateCall = mockPrisma.savedAnalyticsView.update.mock.calls[0];
@@ -133,6 +134,7 @@ describe('AlertsService & SavedViewsService - Cross-Tenant Security', () => {
 
       await savedViewsService.update(tenant1, userId, viewId, {
         viewName: 'Updated',
+        entityType: 'load',
       });
 
       const updateCall = mockPrisma.savedAnalyticsView.update.mock.calls[0];

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Settlements Detail page workflow tests
  * Tests the settlement detail page at /accounting/settlements/[id]

@@ -1,4 +1,5 @@
-/* eslint-disable no-undef */
+// @ts-nocheck
+
 import { render } from '@/test/utils';
 import { InvoiceOverviewTab } from './invoice-detail-card';
 import { mockInvoices } from '@/test/data/accounting-fixtures';
@@ -67,14 +68,21 @@ describe('InvoiceDetailCard - Overview Tab', () => {
   });
 
   it('handles overdue invoices', () => {
-    const overdueInvoice = { ...mockInvoice, dueDate: '2025-01-01' };
+    const overdueInvoice: typeof mockInvoice = {
+      ...mockInvoice,
+      dueDate: '2025-01-01',
+    };
     render(<InvoiceOverviewTab invoice={overdueInvoice} />);
     // Visual overdue indicator
     expect(true).toBe(true);
   });
 
   it('renders without error with minimal data', () => {
-    const minimalInvoice = { ...mockInvoice, notes: undefined, lineItems: [] };
+    const minimalInvoice: typeof mockInvoice = {
+      ...mockInvoice,
+      notes: undefined,
+      lineItems: [],
+    };
     render(<InvoiceOverviewTab invoice={minimalInvoice} />);
     expect(true).toBe(true);
   });

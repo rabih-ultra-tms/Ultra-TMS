@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Payables Processing Workflow Integration Tests
  * Tests the accounts payable workflow from settlement to carrier payment

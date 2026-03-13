@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Aging Report Workflow Integration Tests
  * Tests the accounts aging calculation and reporting

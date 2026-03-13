@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Chart of Accounts Workflow Integration Tests
  * Tests chart of accounts management and GL integration

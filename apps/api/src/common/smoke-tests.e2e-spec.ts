@@ -8,7 +8,11 @@ import { PrismaClient } from '@prisma/client';
  * 2. Soft-delete filtering - Deleted records don't appear in queries
  *
  * Run with: pnpm --filter api test -- smoke-tests.spec.ts
+ *
+ * Uses shared Prisma instance to prevent connection pool exhaustion
  */
+
+declare const getPrismaClient: () => PrismaClient;
 
 describe('Smoke Test: Data Integrity', () => {
   let prisma: PrismaClient;
@@ -17,8 +21,8 @@ describe('Smoke Test: Data Integrity', () => {
   const TENANT_B = 'tenant-isolation-b-' + Date.now();
 
   beforeAll(async () => {
-    prisma = new PrismaClient();
-    await prisma.$connect();
+    // Use shared Prisma instance from test setup instead of creating new one
+    prisma = getPrismaClient();
 
     // Create test tenants
     const timestamp = Date.now();
@@ -45,6 +49,7 @@ describe('Smoke Test: Data Integrity', () => {
 
   afterAll(async () => {
     // Clean up test data (in correct order due to foreign keys)
+    // Note: Don't disconnect Prisma - it's managed by global test setup to prevent pool exhaustion
     await prisma.load.deleteMany({
       where: { tenantId: { in: [TENANT_A, TENANT_B] } },
     });
@@ -60,7 +65,7 @@ describe('Smoke Test: Data Integrity', () => {
     await prisma.tenant.deleteMany({
       where: { id: { in: [TENANT_A, TENANT_B] } },
     });
-    await prisma.$disconnect();
+    // Disconnect handled by global afterAll in test/setup.ts
   });
 
   describe('Tenant Isolation', () => {
