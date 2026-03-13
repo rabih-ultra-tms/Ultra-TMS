@@ -6,7 +6,6 @@ COPY apps/web/package.json apps/web/
 COPY packages/ packages/
 RUN pnpm install --frozen-lockfile
 COPY apps/web/ apps/web/
-COPY packages/ packages/
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm --filter web build
 

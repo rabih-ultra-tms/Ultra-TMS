@@ -11,7 +11,13 @@ import { RedisService } from '../redis/redis.service';
 import { EmailService } from '../email/email.service';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
-import { LoginDto, ForgotPasswordDto, ResetPasswordDto, VerifyEmailDto, RefreshTokenDto } from './dto';
+import {
+  LoginDto,
+  ForgotPasswordDto,
+  ResetPasswordDto,
+  VerifyEmailDto,
+  RefreshTokenDto,
+} from './dto';
 
 export interface TokenPair {
   accessToken: string;
@@ -32,39 +38,47 @@ export interface AuthenticatedUser {
 @Injectable()
 export class AuthService {
   private readonly maxLoginAttempts: number;
-  private readonly lockoutDuration: string;
+  private readonly lockoutDurationSeconds: number;
 
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
     private configService: ConfigService,
     private redisService: RedisService,
-    private emailService: EmailService,
+    private emailService: EmailService
   ) {
     this.maxLoginAttempts = parseInt(
       this.configService.get<string>('MAX_LOGIN_ATTEMPTS', '5'),
-      10,
+      10
     );
-    this.lockoutDuration = this.configService.get<string>('ACCOUNT_LOCKOUT_DURATION', '15m');
+    this.lockoutDurationSeconds = this.parseDurationToSeconds(
+      this.configService.get<string>('ACCOUNT_LOCKOUT_DURATION', '15m')
+    );
   }
 
   /**
    * Login user with email and password
    */
-  async login(loginDto: LoginDto, userAgent?: string, ipAddress?: string): Promise<TokenPair> {
+  async login(
+    loginDto: LoginDto,
+    userAgent?: string,
+    ipAddress?: string
+  ): Promise<TokenPair> {
     const { email, password } = loginDto;
     let tenantId = loginDto.tenantId?.trim();
 
     // Check if account is locked
     const isLocked = await this.redisService.isAccountLocked(email);
     if (isLocked) {
-      throw new UnauthorizedException('Account is temporarily locked due to too many failed login attempts');
+      throw new UnauthorizedException(
+        'Account is temporarily locked due to too many failed login attempts'
+      );
     }
 
     const superAdminRoleNames = ['SUPER_ADMIN', 'SUPERADMIN', 'SUPER-ADMIN'];
 
     // Find user
-    type UserWithRole = Awaited<ReturnType<PrismaService["user"]["findFirst"]>>;
+    type UserWithRole = Awaited<ReturnType<PrismaService['user']['findFirst']>>;
     let user: UserWithRole | null = null;
 
     if (tenantId) {
@@ -73,8 +87,9 @@ export class AuthService {
         include: { role: true },
       });
     } else {
-      const superAdmins: Awaited<ReturnType<PrismaService["user"]["findMany"]>> =
-        await this.prisma.user.findMany({
+      const superAdmins: Awaited<
+        ReturnType<PrismaService['user']['findMany']>
+      > = await this.prisma.user.findMany({
         where: {
           email,
           deletedAt: null,
@@ -90,7 +105,9 @@ export class AuthService {
       }
 
       if (superAdmins.length > 1) {
-        throw new BadRequestException('Multiple super admin accounts found. Provide tenantId.');
+        throw new BadRequestException(
+          'Multiple super admin accounts found. Provide tenantId.'
+        );
       }
 
       user = superAdmins.at(0) ?? null;
@@ -124,7 +141,11 @@ export class AuthService {
     // Update last login time
     await this.prisma.user.update({
       where: { id: user.id },
-      data: { lastLoginAt: new Date(), failedLoginAttempts: 0, lockedUntil: null },
+      data: {
+        lastLoginAt: new Date(),
+        failedLoginAttempts: 0,
+        lockedUntil: null,
+      },
     });
 
     // Generate tokens
@@ -138,7 +159,9 @@ export class AuthService {
    */
   async refresh(refreshTokenDto: RefreshTokenDto): Promise<TokenPair> {
     const { refreshToken } = refreshTokenDto;
-    const isTestEnv = process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID !== undefined;
+    const isTestEnv =
+      process.env.NODE_ENV === 'test' ||
+      process.env.JEST_WORKER_ID !== undefined;
 
     try {
       // Verify refresh token
@@ -162,17 +185,30 @@ export class AuthService {
       }
 
       // Check if session exists in Redis and DB
-      const sessionData = await this.redisService.getSession(payload.sub, payload.jti);
-      const dbSession = await this.prisma.session.findUnique({ where: { id: payload.jti } });
+      const sessionData = await this.redisService.getSession(
+        payload.sub,
+        payload.jti
+      );
+      const dbSession = await this.prisma.session.findUnique({
+        where: { id: payload.jti },
+      });
 
       if (!isTestEnv) {
-        if (!sessionData || !dbSession || dbSession.userId !== payload.sub || dbSession.expiresAt <= new Date()) {
+        if (
+          !sessionData ||
+          !dbSession ||
+          dbSession.userId !== payload.sub ||
+          dbSession.expiresAt <= new Date()
+        ) {
           throw new UnauthorizedException('Session not found or expired');
         }
 
         // Verify refresh token hash
         const tokenHash = this.hashToken(refreshToken);
-        if (tokenHash !== sessionData.refreshTokenHash || tokenHash !== dbSession.refreshTokenHash) {
+        if (
+          tokenHash !== sessionData.refreshTokenHash ||
+          tokenHash !== dbSession.refreshTokenHash
+        ) {
           throw new UnauthorizedException('Invalid refresh token');
         }
       }
@@ -188,7 +224,12 @@ export class AuthService {
       }
 
       // Generate new token pair (with token rotation)
-      const tokens = await this.generateTokenPair(user, payload.userAgent, payload.ipAddress, payload.jti);
+      const tokens = await this.generateTokenPair(
+        user,
+        payload.userAgent,
+        payload.ipAddress,
+        payload.jti
+      );
 
       return tokens;
     } catch {
@@ -197,7 +238,12 @@ export class AuthService {
         if (tokenParts.length === 3) {
           const decoded = this.jwtService.decode(refreshToken);
           if (decoded && typeof decoded === 'object') {
-            const decodedPayload = decoded as { sub?: string; userAgent?: string; ipAddress?: string; jti?: string };
+            const decodedPayload = decoded as {
+              sub?: string;
+              userAgent?: string;
+              ipAddress?: string;
+              jti?: string;
+            };
             if (decodedPayload.sub) {
               const user = await this.prisma.user.findUnique({
                 where: { id: decodedPayload.sub },
@@ -209,7 +255,7 @@ export class AuthService {
                   user,
                   decodedPayload.userAgent,
                   decodedPayload.ipAddress,
-                  decodedPayload.jti,
+                  decodedPayload.jti
                 );
               }
             }
@@ -267,10 +313,18 @@ export class AuthService {
 
     // Store in Redis for quick validation
     const expirationSeconds = 3600; // 1 hour
-    await this.redisService.storePasswordResetToken(user.id, tokenHash, expirationSeconds);
+    await this.redisService.storePasswordResetToken(
+      user.id,
+      tokenHash,
+      expirationSeconds
+    );
 
     // Send email
-    await this.emailService.sendPasswordReset(user.email, user.firstName, resetToken);
+    await this.emailService.sendPasswordReset(
+      user.email,
+      user.firstName,
+      resetToken
+    );
   }
 
   /**
@@ -297,7 +351,7 @@ export class AuthService {
     // Verify token exists in Redis (additional check)
     const isValidInRedis = await this.redisService.consumePasswordResetToken(
       resetToken.userId,
-      tokenHash,
+      tokenHash
     );
 
     if (!isValidInRedis) {
@@ -341,7 +395,10 @@ export class AuthService {
     let verifiedUser = null;
 
     for (const user of users) {
-      const isValid = await this.redisService.consumeEmailVerificationToken(user.id, tokenHash);
+      const isValid = await this.redisService.consumeEmailVerificationToken(
+        user.id,
+        tokenHash
+      );
       if (isValid) {
         verifiedUser = user;
         break;
@@ -392,11 +449,14 @@ export class AuthService {
 
     // Normalize role name to uppercase for consistency
     if (userWithoutPassword.role?.name) {
-      userWithoutPassword.role.name = userWithoutPassword.role.name.replace(/-/g, '_').toUpperCase();
+      userWithoutPassword.role.name = userWithoutPassword.role.name
+        .replace(/-/g, '_')
+        .toUpperCase();
     }
 
     // Transform to match frontend User interface
-    const fullName = `${userWithoutPassword.firstName || ''} ${userWithoutPassword.lastName || ''}`.trim();
+    const fullName =
+      `${userWithoutPassword.firstName || ''} ${userWithoutPassword.lastName || ''}`.trim();
     const roles = userWithoutPassword.role ? [userWithoutPassword.role] : [];
 
     return {
@@ -432,12 +492,14 @@ export class AuthService {
     },
     userAgent?: string,
     ipAddress?: string,
-    existingSessionId?: string,
+    existingSessionId?: string
   ): Promise<TokenPair> {
     const sessionId = existingSessionId || crypto.randomUUID();
     const roleName = user.role?.name || null;
     // Normalize role name to uppercase for consistency (e.g., "Admin" -> "ADMIN")
-    const normalizedRoleName = roleName ? roleName.replace(/-/g, '_').toUpperCase() : null;
+    const normalizedRoleName = roleName
+      ? roleName.replace(/-/g, '_').toUpperCase()
+      : null;
     const roles = normalizedRoleName ? [normalizedRoleName] : [];
 
     const accessTokenPayload = {
@@ -466,14 +528,20 @@ export class AuthService {
     const accessToken = this.jwtService.sign(
       Object.assign({}, accessTokenPayload),
       {
-        expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRATION', '15m'),
+        expiresIn: this.configService.get<string>(
+          'JWT_ACCESS_EXPIRATION',
+          '15m'
+        ),
       } as any
     );
 
     const refreshToken = this.jwtService.sign(
       Object.assign({}, refreshTokenPayload),
       {
-        expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRATION', '30d'),
+        expiresIn: this.configService.get<string>(
+          'JWT_REFRESH_EXPIRATION',
+          '30d'
+        ),
       } as any
     );
 
@@ -481,7 +549,12 @@ export class AuthService {
     const refreshTokenHash = this.hashToken(refreshToken);
     const expiresInSeconds = 30 * 24 * 60 * 60; // 30 days
 
-    await this.redisService.storeSession(user.id, sessionId, refreshTokenHash, expiresInSeconds);
+    await this.redisService.storeSession(
+      user.id,
+      sessionId,
+      refreshTokenHash,
+      expiresInSeconds
+    );
 
     // Store session in database
     await this.prisma.session.upsert({
@@ -518,7 +591,7 @@ export class AuthService {
 
     if (attempts >= this.maxLoginAttempts) {
       // Lock account
-      const durationSeconds = 15 * 60; // 15 minutes
+      const durationSeconds = this.lockoutDurationSeconds;
       await this.redisService.lockAccount(email, durationSeconds);
 
       // Update database
@@ -530,6 +603,19 @@ export class AuthService {
         },
       });
     }
+  }
+
+  /**
+   * Parse duration string (e.g., '15m', '1h', '30s') to seconds
+   */
+  private parseDurationToSeconds(duration: string): number {
+    const match = duration.match(/^(\d+)(s|m|h)$/);
+    if (!match) return 900; // fallback: 15 minutes
+    const value = parseInt(match[1]!, 10);
+    const unit = match[2];
+    if (unit === 'h') return value * 3600;
+    if (unit === 'm') return value * 60;
+    return value;
   }
 
   /**
@@ -551,8 +637,10 @@ export class AuthService {
    */
   private getPasswordResetExpiry(): Date {
     const expirationHours = parseInt(
-      this.configService.get<string>('PASSWORD_RESET_EXPIRATION', '1h').replace('h', ''),
-      10,
+      this.configService
+        .get<string>('PASSWORD_RESET_EXPIRATION', '1h')
+        .replace('h', ''),
+      10
     );
     return new Date(Date.now() + expirationHours * 60 * 60 * 1000);
   }
