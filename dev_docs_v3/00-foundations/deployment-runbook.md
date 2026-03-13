@@ -1,8 +1,8 @@
 # Deployment Runbook -- Ultra TMS
 
-> Status: Pre-Production (verified locally, not yet tested in staging)
-> Last updated: 2026-03-09
-> See also: INFRA-001 (CI/CD Pipeline), INFRA-002 (Docker Production Config)
+> Status: Pre-Production (validated against codebase 2026-03-13)
+> Last updated: 2026-03-13
+> See also: deploy.yml (CI/CD), docker-compose.prod.yml, jwt-rotation-runbook.md
 
 ## Pre-Deployment Checklist
 
@@ -55,6 +55,7 @@ pnpm --filter api prisma migrate status
 ```
 
 **Expand-Contract pattern for breaking changes:**
+
 1. Add new column (nullable) -- deploy code that writes both old and new
 2. Backfill existing data
 3. Deploy code that reads from new column
@@ -90,16 +91,18 @@ docker-compose -f docker-compose.prod.yml up -d web
 
 ### 5. Post-Deploy Verification
 
-| Check | Command / Action | Expected |
-|-------|-----------------|----------|
-| API health | `curl https://{domain}/api/v1/health` | 200 OK |
-| API docs | Browse `https://{domain}/api-docs` | Swagger UI loads |
-| Auth flow | Login with test credentials | JWT returned, dashboard loads |
-| Dashboard | Navigate to `/` | KPI widgets render |
-| Carriers list | Navigate to `/carriers` | Table loads with data |
-| Load list | Navigate to `/operations/loads` | Table loads with data |
-| WebSocket | Check browser DevTools network tab | WS connection established (if QS-001 done) |
-| Console | Open DevTools Console | No errors, no warnings |
+| Check         | Command / Action                      | Expected                           |
+| ------------- | ------------------------------------- | ---------------------------------- |
+| API health    | `curl https://{domain}/api/v1/health` | 200 OK                             |
+| API readiness | `curl https://{domain}/api/v1/ready`  | 200 OK (confirms DB connected)     |
+| API liveness  | `curl https://{domain}/api/v1/live`   | 200 OK                             |
+| Swagger docs  | Browse `https://{domain}/api/docs`    | Swagger UI loads (disable in prod) |
+| Auth flow     | Login with test credentials           | JWT cookie set, dashboard loads    |
+| Dashboard     | Navigate to `/`                       | KPI widgets render                 |
+| Carriers list | Navigate to `/carriers`               | Table loads with data              |
+| Load list     | Navigate to `/operations/loads`       | Table loads with data              |
+| WebSocket     | Check browser DevTools network tab    | WS connection established          |
+| Console       | Open DevTools Console                 | No errors, no warnings             |
 
 ## Rollback Procedure
 
@@ -131,39 +134,58 @@ pnpm --filter api prisma migrate resolve --rolled-back {migration_name}
 
 ## Environment Variables
 
-### Required (app will not start without these)
+### Required (app exits with error if missing)
 
-| Variable | Description | Example |
-|----------|------------|---------|
-| DATABASE_URL | PostgreSQL connection string | postgresql://user:pass@host:5432/ultra_tms |
-| JWT_SECRET | JWT signing key (256-bit minimum) | Random 64-char hex string |
-| REDIS_URL | Redis connection string | redis://:password@host:6379 |
+| Variable     | Description                              | Example                                    |
+| ------------ | ---------------------------------------- | ------------------------------------------ |
+| DATABASE_URL | PostgreSQL connection string             | postgresql://user:pass@host:5432/ultra_tms |
+| JWT_SECRET   | JWT signing key (HS256, 256-bit minimum) | Random 64-char hex string                  |
+| REDIS_URL    | Redis connection string                  | redis://:password@host:6379                |
 
-### Portal Auth (required for customer/carrier portals)
+### Portal Auth (warns if missing, falls back to JWT_SECRET)
 
-| Variable | Description |
-|----------|------------|
+| Variable                   | Description                                |
+| -------------------------- | ------------------------------------------ |
 | CUSTOMER_PORTAL_JWT_SECRET | Separate secret for customer portal tokens |
-| CARRIER_PORTAL_JWT_SECRET | Separate secret for carrier portal tokens |
+| CARRIER_PORTAL_JWT_SECRET  | Separate secret for carrier portal tokens  |
+
+### JWT Tuning (optional, with defaults)
+
+| Variable                 | Default | Description                       |
+| ------------------------ | ------- | --------------------------------- |
+| JWT_ACCESS_EXPIRATION    | `15m`   | Main app access token TTL         |
+| JWT_REFRESH_EXPIRATION   | `30d`   | Main app refresh token TTL        |
+| MAX_LOGIN_ATTEMPTS       | `5`     | Failed logins before lockout      |
+| ACCOUNT_LOCKOUT_DURATION | `15m`   | Lockout window after max attempts |
+
+### Application Config (optional)
+
+| Variable             | Default                                       | Description                           |
+| -------------------- | --------------------------------------------- | ------------------------------------- |
+| PORT                 | `3001`                                        | API server port                       |
+| NODE_ENV             | `development`                                 | Environment mode                      |
+| CORS_ALLOWED_ORIGINS | `http://localhost:3000,http://localhost:3002` | Comma-separated allowed origins       |
+| SENTRY_DSN           | (none)                                        | Error tracking (opt-in)               |
+| ENCRYPTION_KEY       | (derived from JWT_SECRET in dev)              | AES-256 key for credential encryption |
 
 ### Optional (features degrade gracefully without these)
 
-| Variable | Description | Feature Affected |
-|----------|------------|-----------------|
-| SENDGRID_API_KEY | Email service | Email notifications |
-| TWILIO_ACCOUNT_SID | SMS service | SMS notifications |
-| TWILIO_AUTH_TOKEN | SMS service | SMS notifications |
-| ELASTICSEARCH_URL | Search service | Full-text search |
-| GOOGLE_MAPS_API_KEY | Maps service | Load planner map |
+| Variable            | Description    | Feature Affected                     |
+| ------------------- | -------------- | ------------------------------------ |
+| SENDGRID_API_KEY    | Email service  | Email notifications                  |
+| TWILIO_ACCOUNT_SID  | SMS service    | SMS notifications                    |
+| TWILIO_AUTH_TOKEN   | SMS service    | SMS + webhook signature verification |
+| ELASTICSEARCH_URL   | Search service | Full-text search                     |
+| GOOGLE_MAPS_API_KEY | Maps service   | Load planner map                     |
 
 ## Infrastructure Dependencies
 
-| Service | Required? | Default Port | Health Check |
-|---------|-----------|-------------|-------------|
-| PostgreSQL 15 | Yes | 5432 | `pg_isready` |
-| Redis 7 | Yes | 6379 | `redis-cli ping` |
-| Elasticsearch 8.13 | No (search only) | 9200 | `curl :9200/_health` |
-| Kibana | No (dev only) | 5601 | N/A |
+| Service            | Required?        | Default Port | Health Check         |
+| ------------------ | ---------------- | ------------ | -------------------- |
+| PostgreSQL 15      | Yes              | 5432         | `pg_isready`         |
+| Redis 7            | Yes              | 6379         | `redis-cli ping`     |
+| Elasticsearch 8.13 | No (search only) | 9200         | `curl :9200/_health` |
+| Kibana             | No (dev only)    | 5601         | N/A                  |
 
 ## Blue/Green Deployment (Alternative)
 
@@ -245,7 +267,7 @@ check "Liveness"      "$BASE_URL/api/v1/live"
 check "Auth guard"    "$BASE_URL/api/v1/carriers" 401
 
 # 3. Swagger docs (should load in non-production)
-check "Swagger"       "$BASE_URL/api-docs" 200
+check "Swagger"       "$BASE_URL/api/docs" 200
 
 # 4. Login endpoint exists (should return 400 for empty body, not 404)
 check "Login route"   "$BASE_URL/api/v1/auth/login" 400
@@ -297,31 +319,31 @@ exit $FAIL
 
 ### Promotion Gates
 
-| Gate | dev -> staging | staging -> production |
-|------|---------------|----------------------|
-| Type check | `pnpm check-types` passes | Same |
-| Lint | `pnpm lint` passes | Same |
-| Unit tests | `pnpm test` all green | Same |
-| Build | `pnpm build` succeeds | Same |
-| Migration | `prisma migrate diff` reviewed | Applied + verified |
-| E2E tests | Not required | All Playwright suites pass |
-| Smoke test | Not required | `smoke-test.sh` all pass |
-| Approval | Automatic | Manual approval from tech lead |
-| Rollback plan | Not required | Documented with backup confirmed |
+| Gate          | dev -> staging                 | staging -> production            |
+| ------------- | ------------------------------ | -------------------------------- |
+| Type check    | `pnpm check-types` passes      | Same                             |
+| Lint          | `pnpm lint` passes             | Same                             |
+| Unit tests    | `pnpm test` all green          | Same                             |
+| Build         | `pnpm build` succeeds          | Same                             |
+| Migration     | `prisma migrate diff` reviewed | Applied + verified               |
+| E2E tests     | Not required                   | All Playwright suites pass       |
+| Smoke test    | Not required                   | `smoke-test.sh` all pass         |
+| Approval      | Automatic                      | Manual approval from tech lead   |
+| Rollback plan | Not required                   | Documented with backup confirmed |
 
 ### Environment-Specific Configuration
 
-| Config | dev | staging | production |
-|--------|-----|---------|------------|
-| `NODE_ENV` | `development` | `staging` | `production` |
-| Database | Local Docker | Separate RDS instance | Production RDS (Multi-AZ) |
-| Redis | Local Docker | Separate ElastiCache | Production ElastiCache |
-| CORS | `localhost:3000` | staging domain | production domain |
-| SendGrid | Disabled | Sandbox mode | Live |
-| Swagger | Enabled | Enabled | Disabled |
-| Debug logs | Enabled | Enabled | Disabled |
-| Seed data | Dev seed | Anonymized copy | Real data |
-| SSL | None | ACM cert | ACM cert |
+| Config     | dev              | staging               | production                |
+| ---------- | ---------------- | --------------------- | ------------------------- |
+| `NODE_ENV` | `development`    | `staging`             | `production`              |
+| Database   | Local Docker     | Separate RDS instance | Production RDS (Multi-AZ) |
+| Redis      | Local Docker     | Separate ElastiCache  | Production ElastiCache    |
+| CORS       | `localhost:3000` | staging domain        | production domain         |
+| SendGrid   | Disabled         | Sandbox mode          | Live                      |
+| Swagger    | Enabled          | Enabled               | Disabled                  |
+| Debug logs | Enabled          | Enabled               | Disabled                  |
+| Seed data  | Dev seed         | Anonymized copy       | Real data                 |
+| SSL        | None             | ACM cert              | ACM cert                  |
 
 ### Staging Data Strategy
 
@@ -333,8 +355,10 @@ exit $FAIL
 
 ## See Also
 
-- INFRA-001: CI/CD Pipeline backlog task
-- INFRA-002: Docker Production Configuration backlog task
+- `.github/workflows/deploy.yml`: CI/CD deploy pipeline (Docker build + GHCR + Prisma migrate)
+- `.github/workflows/ci.yml`: CI pipeline (lint + test + gitleaks)
+- `docker-compose.prod.yml`: Production Docker Compose (api, web, postgres, redis)
+- `jwt-rotation-runbook.md`: JWT secret rotation procedure
 - quality-gates.md: /verify sequence (run before every deploy)
 - security-findings.md: Severity framework (for post-deploy incidents)
 - env-var-matrix.md: Complete environment variable inventory

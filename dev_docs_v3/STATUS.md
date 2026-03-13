@@ -210,7 +210,7 @@
 
 ### MP-04 Progress
 
-**Status: IN PROGRESS — 3/11 tasks DONE**
+**Status: IN PROGRESS — 5/11 tasks DONE**
 
 **Completed — Session 2026-03-13 (DevOps infrastructure):**
 
@@ -220,10 +220,12 @@
   - Added gitleaks security scanning job to `ci.yml` (runs in parallel with lint/test)
   - Created deploy workflow (`deploy.yml`) — Docker build + push to GHCR, Prisma migrate, staging/production deploy with GitHub Environments
   - Created Dependabot config (`dependabot.yml`) — weekly npm + GitHub Actions updates, grouped minor/patch
+- MP-04-004: Deployment runbook validation — validated against codebase: fixed Swagger URL (/api/docs not /api-docs), added readiness/liveness probes, expanded env var matrix (JWT tuning, SENTRY_DSN, CORS_ALLOWED_ORIGINS, ENCRYPTION_KEY), updated See Also with actual file paths
 - MP-04-009: Delete .bak directories — already DONE (pre-MP)
+- MP-04-010: JWT rotation runbook — new file `jwt-rotation-runbook.md`: 3-realm secret inventory, token lifetimes, step-by-step rotation procedure, emergency rotation, portal rotation, file-level secret usage map, dual-key improvement proposal
 - MP-04-011: Account lockout — already implemented (5 attempts → 15min lockout via Redis + DB); fixed hardcoded duration to use `ACCOUNT_LOCKOUT_DURATION` env var
 
-**Remaining:** MP-04-001 (prod env setup), MP-04-003 (monitoring), MP-04-004 (runbook validation), MP-04-005 (DB backup — workflow exists), MP-04-006 (secret management), MP-04-007 (SSL/domain), MP-04-008 (load testing), MP-04-010 (JWT rotation runbook)
+**Remaining:** MP-04-001 (prod env setup), MP-04-003 (monitoring), MP-04-005 (DB backup — workflow exists), MP-04-006 (secret management), MP-04-007 (SSL/domain), MP-04-008 (load testing)
 
 **Full project timeline:** 24 sprints × 2 weeks = 48 weeks across 5 phases:
 
