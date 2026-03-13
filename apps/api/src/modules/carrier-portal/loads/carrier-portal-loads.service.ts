@@ -18,7 +18,9 @@ export class CarrierPortalLoadsService {
   }
 
   async availableDetail(tenantId: string, id: string) {
-    const load = await this.prisma.load.findFirst({ where: { id, tenantId, carrierId: null, deletedAt: null } });
+    const load = await this.prisma.load.findFirst({
+      where: { id, tenantId, carrierId: null, deletedAt: null },
+    });
     if (!load) throw new NotFoundException('Load not found');
     return load;
   }
@@ -31,17 +33,27 @@ export class CarrierPortalLoadsService {
   }
 
   async removeSaved(tenantId: string, userId: string, id: string) {
-    const saved = await this.prisma.carrierSavedLoad.findFirst({ where: { id, tenantId, carrierPortalUserId: userId, deletedAt: null } });
+    const saved = await this.prisma.carrierSavedLoad.findFirst({
+      where: { id, tenantId, carrierPortalUserId: userId, deletedAt: null },
+    });
     if (!saved) throw new NotFoundException('Saved load not found');
-    await this.prisma.carrierSavedLoad.delete({ where: { id } });
+    await this.prisma.carrierSavedLoad.delete({ where: { id, tenantId } });
     return { success: true };
   }
 
   async saved(tenantId: string, userId: string) {
-    return this.prisma.carrierSavedLoad.findMany({ where: { tenantId, carrierPortalUserId: userId, deletedAt: null } });
+    return this.prisma.carrierSavedLoad.findMany({
+      where: { tenantId, carrierPortalUserId: userId, deletedAt: null },
+    });
   }
 
-  async bid(tenantId: string, carrierId: string, userId: string, loadId: string, dto: SubmitBidDto) {
+  async bid(
+    tenantId: string,
+    carrierId: string,
+    userId: string,
+    loadId: string,
+    dto: SubmitBidDto
+  ) {
     await this.availableDetail(tenantId, loadId);
     return this.prisma.carrierPortalActivityLog.create({
       data: {
@@ -62,7 +74,10 @@ export class CarrierPortalLoadsService {
   }
 
   async matching(tenantId: string, _carrierId: string, _userId: string) {
-    return this.prisma.load.findMany({ where: { tenantId, carrierId: null, deletedAt: null }, take: 5 });
+    return this.prisma.load.findMany({
+      where: { tenantId, carrierId: null, deletedAt: null },
+      take: 5,
+    });
   }
 
   async myLoads(tenantId: string, carrierId: string) {
@@ -73,24 +88,41 @@ export class CarrierPortalLoadsService {
   }
 
   async myLoadDetail(tenantId: string, carrierId: string, id: string) {
-    const load = await this.prisma.load.findFirst({ where: { id, tenantId, carrierId, deletedAt: null } });
+    const load = await this.prisma.load.findFirst({
+      where: { id, tenantId, carrierId, deletedAt: null },
+    });
     if (!load) throw new NotFoundException('Load not found');
     return load;
   }
 
   async accept(tenantId: string, carrierId: string, id: string) {
-    const load = await this.prisma.load.findFirst({ where: { id, tenantId, carrierId: null, deletedAt: null } });
+    const load = await this.prisma.load.findFirst({
+      where: { id, tenantId, carrierId: null, deletedAt: null },
+    });
     if (!load) throw new NotFoundException('Load not found');
-    return this.prisma.load.update({ where: { id }, data: { carrierId, status: LoadStatusEnum.ACCEPTED } });
+    return this.prisma.load.update({
+      where: { id, tenantId },
+      data: { carrierId, status: LoadStatusEnum.ACCEPTED },
+    });
   }
 
   async decline(tenantId: string, carrierId: string, id: string) {
-    const load = await this.prisma.load.findFirst({ where: { id, tenantId, carrierId, deletedAt: null } });
+    const load = await this.prisma.load.findFirst({
+      where: { id, tenantId, carrierId, deletedAt: null },
+    });
     if (!load) throw new NotFoundException('Load not found');
-    return this.prisma.load.update({ where: { id }, data: { carrierId: null, status: LoadStatusEnum.CANCELLED } });
+    return this.prisma.load.update({
+      where: { id, tenantId },
+      data: { carrierId: null, status: LoadStatusEnum.CANCELLED },
+    });
   }
 
-  async updateStatus(tenantId: string, carrierId: string, id: string, dto: UpdateLoadStatusDto) {
+  async updateStatus(
+    tenantId: string,
+    carrierId: string,
+    id: string,
+    dto: UpdateLoadStatusDto
+  ) {
     const load = await this.myLoadDetail(tenantId, carrierId, id);
     await this.prisma.statusHistory.create({
       data: {
@@ -102,7 +134,7 @@ export class CarrierPortalLoadsService {
       },
     });
     return this.prisma.load.update({
-      where: { id: load.id },
+      where: { id: load.id, tenantId },
       data: {
         status: dto.status,
         currentLocationLat: dto.latitude,
@@ -113,10 +145,15 @@ export class CarrierPortalLoadsService {
     });
   }
 
-  async updateLocation(tenantId: string, carrierId: string, id: string, coords: UpdateLocationDto) {
+  async updateLocation(
+    tenantId: string,
+    carrierId: string,
+    id: string,
+    coords: UpdateLocationDto
+  ) {
     await this.myLoadDetail(tenantId, carrierId, id);
     return this.prisma.load.update({
-      where: { id },
+      where: { id, tenantId },
       data: {
         currentLocationLat: coords.latitude,
         currentLocationLng: coords.longitude,
@@ -127,12 +164,26 @@ export class CarrierPortalLoadsService {
     });
   }
 
-  async updateEta(tenantId: string, carrierId: string, id: string, eta: string) {
+  async updateEta(
+    tenantId: string,
+    carrierId: string,
+    id: string,
+    eta: string
+  ) {
     await this.myLoadDetail(tenantId, carrierId, id);
-    return this.prisma.load.update({ where: { id }, data: { eta: new Date(eta) } });
+    return this.prisma.load.update({
+      where: { id, tenantId },
+      data: { eta: new Date(eta) },
+    });
   }
 
-  async message(tenantId: string, carrierId: string, userId: string, id: string, message: string) {
+  async message(
+    tenantId: string,
+    carrierId: string,
+    userId: string,
+    id: string,
+    message: string
+  ) {
     await this.myLoadDetail(tenantId, carrierId, id);
     return this.prisma.carrierPortalActivityLog.create({
       data: {

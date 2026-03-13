@@ -1,7 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma.service';
-import { AcknowledgeAlertDto, ComparePeriodDto, ExportDataDto, QueryDataDto, ResolveAlertDto, SavedViewDto, TrendQueryDto } from './dto';
+import {
+  AcknowledgeAlertDto,
+  ComparePeriodDto,
+  ExportDataDto,
+  QueryDataDto,
+  ResolveAlertDto,
+  SavedViewDto,
+  TrendQueryDto,
+} from './dto';
 
 @Injectable()
 export class AlertsService {
@@ -17,17 +25,24 @@ export class AlertsService {
   }
 
   private async ensure(tenantId: string, id: string) {
-    const alert = await this.prisma.kPIAlert.findFirst({ where: { id, tenantId } });
+    const alert = await this.prisma.kPIAlert.findFirst({
+      where: { id, tenantId },
+    });
     if (!alert) {
       throw new NotFoundException('Alert not found');
     }
     return alert;
   }
 
-  async acknowledge(tenantId: string, userId: string, id: string, dto: AcknowledgeAlertDto) {
+  async acknowledge(
+    tenantId: string,
+    userId: string,
+    id: string,
+    dto: AcknowledgeAlertDto
+  ) {
     await this.ensure(tenantId, id);
     return this.prisma.kPIAlert.update({
-      where: { id },
+      where: { id, tenantId },
       data: {
         lastTriggeredAt: new Date(),
         customFields: { acknowledgedBy: userId, notes: dto.notes ?? null },
@@ -36,14 +51,22 @@ export class AlertsService {
     });
   }
 
-  async resolve(tenantId: string, userId: string, id: string, dto: ResolveAlertDto) {
+  async resolve(
+    tenantId: string,
+    userId: string,
+    id: string,
+    dto: ResolveAlertDto
+  ) {
     await this.ensure(tenantId, id);
     return this.prisma.kPIAlert.update({
-      where: { id },
+      where: { id, tenantId },
       data: {
         isActive: false,
         lastTriggeredAt: new Date(),
-        customFields: { resolvedBy: userId, resolutionNotes: dto.resolutionNotes ?? null },
+        customFields: {
+          resolvedBy: userId,
+          resolutionNotes: dto.resolutionNotes ?? null,
+        },
         updatedById: userId,
       },
     });
@@ -100,16 +123,27 @@ export class SavedViewsService {
     });
   }
 
-  async update(tenantId: string, userId: string, id: string, dto: SavedViewDto) {
+  async update(
+    tenantId: string,
+    userId: string,
+    id: string,
+    dto: SavedViewDto
+  ) {
     await this.ensureOwnership(tenantId, userId, id);
     return this.prisma.savedAnalyticsView.update({
-      where: { id },
+      where: { id, tenantId },
       data: {
         ...(dto.viewName !== undefined ? { viewName: dto.viewName } : {}),
         ...(dto.entityType !== undefined ? { entityType: dto.entityType } : {}),
-        ...(dto.filters !== undefined ? { filters: dto.filters as Prisma.InputJsonValue } : {}),
-        ...(dto.columns !== undefined ? { columns: dto.columns as Prisma.InputJsonValue } : {}),
-        ...(dto.sortOrder !== undefined ? { sortOrder: dto.sortOrder as Prisma.InputJsonValue } : {}),
+        ...(dto.filters !== undefined
+          ? { filters: dto.filters as Prisma.InputJsonValue }
+          : {}),
+        ...(dto.columns !== undefined
+          ? { columns: dto.columns as Prisma.InputJsonValue }
+          : {}),
+        ...(dto.sortOrder !== undefined
+          ? { sortOrder: dto.sortOrder as Prisma.InputJsonValue }
+          : {}),
         ...(dto.isPublic !== undefined ? { isPublic: dto.isPublic } : {}),
       },
     });
@@ -117,7 +151,7 @@ export class SavedViewsService {
 
   async remove(tenantId: string, userId: string, id: string) {
     await this.ensureOwnership(tenantId, userId, id);
-    await this.prisma.savedAnalyticsView.delete({ where: { id } });
+    await this.prisma.savedAnalyticsView.delete({ where: { id, tenantId } });
     return { success: true };
   }
 }
@@ -145,9 +179,24 @@ export class DataQueryService {
     return {
       measures: [
         { code: 'load_count', label: 'Load Count', aggregation: 'COUNT' },
-        { code: 'revenue', label: 'Revenue', aggregation: 'SUM', format: 'currency' },
-        { code: 'margin_percent', label: 'Margin %', aggregation: 'AVG', format: 'percentage' },
-        { code: 'on_time_percent', label: 'On-Time %', aggregation: 'AVG', format: 'percentage' },
+        {
+          code: 'revenue',
+          label: 'Revenue',
+          aggregation: 'SUM',
+          format: 'currency',
+        },
+        {
+          code: 'margin_percent',
+          label: 'Margin %',
+          aggregation: 'AVG',
+          format: 'percentage',
+        },
+        {
+          code: 'on_time_percent',
+          label: 'On-Time %',
+          aggregation: 'AVG',
+          format: 'percentage',
+        },
         { code: 'claims', label: 'Claims', aggregation: 'COUNT' },
       ],
     };
@@ -156,14 +205,20 @@ export class DataQueryService {
   async query(_tenantId: string, dto: QueryDataDto) {
     const rows = Array.from({ length: 5 }, (_, idx) => ({
       id: idx + 1,
-      ...(dto.dimensions ?? []).reduce<Record<string, unknown>>((acc, dim, i) => {
-        acc[dim] = `${dim}_${i + 1}`;
-        return acc;
-      }, {}),
-      ...(dto.measures ?? []).reduce<Record<string, unknown>>((acc, measure) => {
-        acc[measure] = Math.round(Math.random() * 10000) / 100;
-        return acc;
-      }, {}),
+      ...(dto.dimensions ?? []).reduce<Record<string, unknown>>(
+        (acc, dim, i) => {
+          acc[dim] = `${dim}_${i + 1}`;
+          return acc;
+        },
+        {}
+      ),
+      ...(dto.measures ?? []).reduce<Record<string, unknown>>(
+        (acc, measure) => {
+          acc[measure] = Math.round(Math.random() * 10000) / 100;
+          return acc;
+        },
+        {}
+      ),
     }));
 
     return {
@@ -184,12 +239,16 @@ export class DataQueryService {
   }
 
   async trends(tenantId: string, kpiCode: string, dto: TrendQueryDto) {
-    const kpi = await this.prisma.kPIDefinition.findFirst({ where: { tenantId, code: kpiCode, deletedAt: null } });
+    const kpi = await this.prisma.kPIDefinition.findFirst({
+      where: { tenantId, code: kpiCode, deletedAt: null },
+    });
     if (!kpi) {
       throw new NotFoundException('KPI not found');
     }
 
-    const startDate = dto.startDate ? new Date(dto.startDate) : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const startDate = dto.startDate
+      ? new Date(dto.startDate)
+      : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const endDate = dto.endDate ? new Date(dto.endDate) : new Date();
 
     const snapshots = await this.prisma.kPISnapshot.findMany({
@@ -205,7 +264,10 @@ export class DataQueryService {
     const data = snapshots.length
       ? snapshots.map((s) => ({ date: s.snapshotDate, value: Number(s.value) }))
       : Array.from({ length: 5 }, (_, idx) => {
-          const date = new Date(startDate.getTime() + idx * ((endDate.getTime() - startDate.getTime()) / 4));
+          const date = new Date(
+            startDate.getTime() +
+              idx * ((endDate.getTime() - startDate.getTime()) / 4)
+          );
           return { date, value: Math.round(Math.random() * 10000) / 100 };
         });
 
@@ -225,7 +287,11 @@ export class DataQueryService {
 
     return {
       current: { start: dto.currentStart, end: dto.currentEnd, value: current },
-      previous: { start: dto.previousStart, end: dto.previousEnd, value: previous },
+      previous: {
+        start: dto.previousStart,
+        end: dto.previousEnd,
+        value: previous,
+      },
       change,
       changePct,
     };

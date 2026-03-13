@@ -8,17 +8,27 @@ export class RateTablesService {
   constructor(private readonly prisma: PrismaService) {}
 
   list(tenantId: string, contractId: string) {
-    return this.prisma.contractRateTable.findMany({ where: { tenantId, contractId, deletedAt: null }, orderBy: { createdAt: 'desc' } });
+    return this.prisma.contractRateTable.findMany({
+      where: { tenantId, contractId, deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
-  create(tenantId: string, contractId: string, userId: string, dto: CreateRateTableDto) {
+  create(
+    tenantId: string,
+    contractId: string,
+    userId: string,
+    dto: CreateRateTableDto
+  ) {
     return this.prisma.contractRateTable.create({
       data: {
         tenantId,
         contractId,
         tableName: dto.tableName,
         effectiveDate: new Date(dto.effectiveDate),
-        expirationDate: dto.expirationDate ? new Date(dto.expirationDate) : null,
+        expirationDate: dto.expirationDate
+          ? new Date(dto.expirationDate)
+          : null,
         isActive: dto.isActive ?? true,
         createdById: userId,
       },
@@ -26,19 +36,27 @@ export class RateTablesService {
   }
 
   async detail(id: string, tenantId: string) {
-    const rt = await this.prisma.contractRateTable.findFirst({ where: { id, tenantId, deletedAt: null } });
+    const rt = await this.prisma.contractRateTable.findFirst({
+      where: { id, tenantId, deletedAt: null },
+    });
     if (!rt) throw new NotFoundException('Rate table not found');
     return rt;
   }
 
   async update(id: string, tenantId: string, dto: UpdateRateTableDto) {
     await this.detail(id, tenantId);
-    return this.prisma.contractRateTable.update({ where: { id }, data: dto });
+    return this.prisma.contractRateTable.update({
+      where: { id, tenantId },
+      data: dto,
+    });
   }
 
   async delete(id: string, tenantId: string) {
     await this.detail(id, tenantId);
-    await this.prisma.contractRateTable.update({ where: { id }, data: { deletedAt: new Date(), isActive: false } });
+    await this.prisma.contractRateTable.update({
+      where: { id, tenantId },
+      data: { deletedAt: new Date(), isActive: false },
+    });
     return { success: true };
   }
 
@@ -58,7 +76,15 @@ export class RateTablesService {
       const rateAmount = Number(row.rateAmount);
       const rateType = row.rateType;
 
-      if (!originCity || !originState || !destCity || !destState || !equipmentType || !rateType || Number.isNaN(rateAmount)) {
+      if (
+        !originCity ||
+        !originState ||
+        !destCity ||
+        !destState ||
+        !equipmentType ||
+        !rateType ||
+        Number.isNaN(rateAmount)
+      ) {
         errors.push(`Row ${idx + 1}: missing required fields`);
         return [];
       }
@@ -77,7 +103,8 @@ export class RateTablesService {
           rateType,
           rateAmount,
           currency: row.currency?.toString().trim() || 'USD',
-          fuelSurchargeTableId: row.fuelSurchargeTableId?.toString().trim() || null,
+          fuelSurchargeTableId:
+            row.fuelSurchargeTableId?.toString().trim() || null,
         },
       ];
     });
@@ -90,8 +117,22 @@ export class RateTablesService {
   }
 
   async exportCsv(id: string, tenantId: string, format?: string) {
-    const lanes = await this.prisma.contractRateLane.findMany({ where: { rateTableId: id, tenantId, deletedAt: null } });
-    const header = ['originCity', 'originState', 'originZip', 'destCity', 'destState', 'destZip', 'equipmentType', 'rateType', 'rateAmount', 'currency', 'fuelSurchargeTableId'];
+    const lanes = await this.prisma.contractRateLane.findMany({
+      where: { rateTableId: id, tenantId, deletedAt: null },
+    });
+    const header = [
+      'originCity',
+      'originState',
+      'originZip',
+      'destCity',
+      'destState',
+      'destZip',
+      'equipmentType',
+      'rateType',
+      'rateAmount',
+      'currency',
+      'fuelSurchargeTableId',
+    ];
     const csvRows = [header.join(',')].concat(
       lanes.map((l) =>
         [
@@ -108,8 +149,8 @@ export class RateTablesService {
           l.fuelSurchargeTableId ?? '',
         ]
           .map((v) => `${v}`.replace(/"/g, '"'))
-          .join(','),
-      ),
+          .join(',')
+      )
     );
 
     if (format === 'raw') {
