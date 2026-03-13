@@ -23,7 +23,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install PostgreSQL client
         run: |
@@ -63,7 +63,7 @@ jobs:
           ./scripts/backup/pg-verify.sh "$BACKUP_FILE"
 
       - name: Upload backup artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: db-backup-${{ steps.type.outputs.backup_type }}-${{ github.run_number }}
           path: backups/
