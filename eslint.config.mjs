@@ -101,7 +101,12 @@ export default [
     },
   },
   {
-    files: ['**/*.spec.ts', '**/*.e2e-spec.ts', '**/*.test.ts'],
+    files: [
+      '**/*.spec.ts',
+      '**/*.e2e-spec.ts',
+      '**/*.test.ts',
+      '**/*.test.tsx',
+    ],
     languageOptions: {
       globals: {
         ...jestGlobals,
@@ -109,6 +114,7 @@ export default [
     },
     rules: {
       '@typescript-eslint/ban-ts-comment': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
     },
   },
   {

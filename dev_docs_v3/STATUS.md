@@ -1,7 +1,7 @@
 # Ultra TMS — Project Status Dashboard
 
 > **Last Updated:** 2026-03-13
-> **Current Phase:** MP-03 Testing + Runtime Verification (Weeks 5-6). MP-01 ✅ COMPLETE (30/30). MP-02 ✅ COMPLETE (17/17 tasks). MP-03: 5/11 tasks DONE (MP-03-004, 005, 007, 008, 009).
+> **Current Phase:** MP-03 Testing + Runtime Verification (Weeks 5-6). MP-01 ✅ COMPLETE (30/30). MP-02 ✅ COMPLETE (17/17 tasks). MP-03: 6/11 tasks DONE (MP-03-004, 005, 006, 007, 008, 009).
 > **Overall Health:** B+ (7.8/10) — Strong backend, frontend verified: 101/103 routes PASS. Security hardened (MP-01 complete). Agent management frontend built (Sprint 04).
 > **Production Readiness:** 3.0/10 — See [PRODUCTION-READINESS-ASSESSMENT.md](05-audit/PRODUCTION-READINESS-ASSESSMENT.md)
 > **Active Plan:** [Master Project Plan](08-sprints/master-project-plan.md) — ALL 39 services, 24 sprints, 5 phases, 48 weeks
@@ -172,6 +172,26 @@
 | MP-02-017 | Settlement Create page (`/accounting/settlements/new`) — new page with CreateSettlementForm             | **DONE** |
 
 **All 17 MP-02 tasks complete. Ready for MP-03 (Testing + Runtime Verification)**
+
+### MP-03 Progress
+
+**Completed — Session 2026-03-13 (accounting frontend tests):**
+
+- MP-03-006: Frontend accounting tests — 48 suites, 699 tests, 0 failures
+  - Phase 4: Fixed 11 failing page test suites (49 broken tests across 15 files — root causes: ESM export \*, duplicate text elements, missing QueryClientProvider, mockReturnValue on non-jest.fn)
+  - Phase 5: Created 8 workflow integration test files (invoice-to-payment, settlement-lifecycle, error-recovery, dashboard-aggregation, payables-processing, multi-entity-reconciliation, aging-report, chart-of-accounts, data-validation)
+  - Bonus: Fixed `test/utils.ts` ESM compatibility — added `render`, `screen`, `cleanup` exports, unblocking 12 previously-broken co-located component tests
+  - Coverage: 100% on 7 badge/stat components, hooks at 35-60%, pages tested via mock component pattern
+
+**Previously completed (MP-03-004, 005, 007, 008, 009):**
+
+- MP-03-004: RolesGuard integration tests
+- MP-03-005: Operations DashboardService unit tests
+- MP-03-007: Portal auth integration tests
+- MP-03-008: Soft-delete verification tests
+- MP-03-009: Webhook integration tests
+
+**Remaining:** MP-03-001 (financial calc tests), MP-03-002 (tenant isolation), MP-03-003 (Playwright routes), MP-03-010 (TODO triage), MP-03-011 (fix broken routes)
 
 **Full project timeline:** 24 sprints × 2 weeks = 48 weeks across 5 phases:
 
