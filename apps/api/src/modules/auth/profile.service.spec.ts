@@ -21,7 +21,10 @@ describe('ProfileService', () => {
   });
 
   it('returns profile data', async () => {
-    prisma.user.findUnique.mockResolvedValue({ id: 'u1', passwordHash: 'hash' });
+    prisma.user.findUnique.mockResolvedValue({
+      id: 'u1',
+      passwordHash: 'hash',
+    });
 
     const result = await service.getProfile('u1');
 
@@ -35,37 +38,49 @@ describe('ProfileService', () => {
   });
 
   it('updates profile', async () => {
-    prisma.user.findUnique.mockResolvedValue({ id: 'u1' });
+    prisma.user.findUnique.mockResolvedValue({ id: 'u1', tenantId: 't1' });
     prisma.user.update.mockResolvedValue({ id: 'u1', passwordHash: 'hash' });
 
-    const result = await service.updateProfile('u1', { firstName: 'New' });
+    const result = await service.updateProfile('u1', 't1', {
+      firstName: 'New',
+    });
 
     expect(result.message).toBe('Profile updated successfully');
   });
 
   it('changes password when current matches', async () => {
-    prisma.user.findUnique.mockResolvedValue({ id: 'u1', passwordHash: 'hash' });
+    prisma.user.findUnique.mockResolvedValue({
+      id: 'u1',
+      tenantId: 't1',
+      passwordHash: 'hash',
+    });
     (bcrypt.compare as jest.Mock).mockResolvedValue(true);
     (bcrypt.hash as jest.Mock).mockResolvedValue('new-hash');
     prisma.user.update.mockResolvedValue({});
 
-    const result = await service.changePassword('u1', 'old', 'new');
+    const result = await service.changePassword('u1', 't1', 'old', 'new');
 
     expect(result.data.success).toBe(true);
   });
 
   it('rejects invalid current password', async () => {
-    prisma.user.findUnique.mockResolvedValue({ id: 'u1', passwordHash: 'hash' });
+    prisma.user.findUnique.mockResolvedValue({
+      id: 'u1',
+      tenantId: 't1',
+      passwordHash: 'hash',
+    });
     (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
-    await expect(service.changePassword('u1', 'bad', 'new')).rejects.toThrow(BadRequestException);
+    await expect(
+      service.changePassword('u1', 't1', 'bad', 'new')
+    ).rejects.toThrow(BadRequestException);
   });
 
   it('updates avatar', async () => {
-    prisma.user.findUnique.mockResolvedValue({ id: 'u1' });
+    prisma.user.findUnique.mockResolvedValue({ id: 'u1', tenantId: 't1' });
     prisma.user.update.mockResolvedValue({ avatarUrl: 'url' });
 
-    const result = await service.updateAvatar('u1', 'url');
+    const result = await service.updateAvatar('u1', 't1', 'url');
 
     expect(result.data.avatarUrl).toBe('url');
   });

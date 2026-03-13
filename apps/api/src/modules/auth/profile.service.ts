@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
 import * as bcrypt from 'bcrypt';
 
@@ -12,15 +16,15 @@ export class ProfileService {
   async getProfile(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      include: { 
+      include: {
         role: true,
         tenant: {
           select: {
             id: true,
             name: true,
             slug: true,
-          }
-        }
+          },
+        },
       },
     });
 
@@ -38,12 +42,12 @@ export class ProfileService {
   /**
    * Update user's own profile
    */
-  async updateProfile(userId: string, data: any) {
+  async updateProfile(userId: string, tenantId: string, data: any) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
 
-    if (!user) {
+    if (!user || user.tenantId !== tenantId) {
       throw new NotFoundException('User not found');
     }
 
@@ -71,12 +75,17 @@ export class ProfileService {
   /**
    * Change user's own password
    */
-  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+  async changePassword(
+    userId: string,
+    tenantId: string,
+    currentPassword: string,
+    newPassword: string
+  ) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
 
-    if (!user) {
+    if (!user || user.tenantId !== tenantId) {
       throw new NotFoundException('User not found');
     }
 
@@ -106,12 +115,12 @@ export class ProfileService {
   /**
    * Update user avatar (placeholder for storage integration)
    */
-  async updateAvatar(userId: string, avatarUrl: string) {
+  async updateAvatar(userId: string, tenantId: string, avatarUrl: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
 
-    if (!user) {
+    if (!user || user.tenantId !== tenantId) {
       throw new NotFoundException('User not found');
     }
 

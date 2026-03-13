@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma.service';
 import { CreateJournalEntryDto } from '../dto';
 
@@ -24,7 +28,9 @@ export class JournalEntriesService {
   async create(tenantId: string, userId: string, data: CreateJournalEntryDto) {
     // Validate that debits = credits
     if (Math.abs(data.totalDebit - data.totalCredit) > 0.01) {
-      throw new BadRequestException('Journal entry must balance (debits must equal credits)');
+      throw new BadRequestException(
+        'Journal entry must balance (debits must equal credits)'
+      );
     }
 
     const entryNumber = await this.generateEntryNumber(tenantId);
@@ -59,7 +65,9 @@ export class JournalEntriesService {
         lines: {
           orderBy: { lineNumber: 'asc' },
           include: {
-            account: { select: { id: true, accountNumber: true, accountName: true } },
+            account: {
+              select: { id: true, accountNumber: true, accountName: true },
+            },
           },
         },
       },
@@ -75,7 +83,7 @@ export class JournalEntriesService {
       toDate?: Date;
       skip?: number;
       take?: number;
-    },
+    }
   ) {
     const where = {
       tenantId,
@@ -113,7 +121,9 @@ export class JournalEntriesService {
         lines: {
           orderBy: { lineNumber: 'asc' },
           include: {
-            account: { select: { id: true, accountNumber: true, accountName: true } },
+            account: {
+              select: { id: true, accountNumber: true, accountName: true },
+            },
           },
         },
       },
@@ -126,7 +136,11 @@ export class JournalEntriesService {
     return entry;
   }
 
-  async update(id: string, tenantId: string, data: Partial<CreateJournalEntryDto>) {
+  async update(
+    id: string,
+    tenantId: string,
+    data: Partial<CreateJournalEntryDto>
+  ) {
     const entry = await this.prisma.journalEntry.findFirst({
       where: { id, tenantId },
     });
@@ -147,7 +161,7 @@ export class JournalEntriesService {
     }
 
     return this.prisma.journalEntry.update({
-      where: { id },
+      where: { id, tenantId },
       data: {
         entryDate: data.entryDate ? new Date(data.entryDate) : undefined,
         description: data.description,
@@ -160,7 +174,9 @@ export class JournalEntriesService {
         lines: {
           orderBy: { lineNumber: 'asc' },
           include: {
-            account: { select: { id: true, accountNumber: true, accountName: true } },
+            account: {
+              select: { id: true, accountNumber: true, accountName: true },
+            },
           },
         },
       },
@@ -209,7 +225,7 @@ export class JournalEntriesService {
       }
 
       return tx.journalEntry.update({
-        where: { id },
+        where: { id, tenantId },
         data: {
           status: 'POSTED',
           postedById: userId,
@@ -219,7 +235,9 @@ export class JournalEntriesService {
           lines: {
             orderBy: { lineNumber: 'asc' },
             include: {
-              account: { select: { id: true, accountNumber: true, accountName: true } },
+              account: {
+                select: { id: true, accountNumber: true, accountName: true },
+              },
             },
           },
         },
@@ -270,7 +288,7 @@ export class JournalEntriesService {
         }
 
         return tx.journalEntry.update({
-          where: { id },
+          where: { id, tenantId },
           data: { status: 'VOID' },
         });
       });
@@ -278,7 +296,7 @@ export class JournalEntriesService {
 
     // If draft, just void it
     return this.prisma.journalEntry.update({
-      where: { id },
+      where: { id, tenantId },
       data: { status: 'VOID' },
     });
   }
@@ -286,7 +304,7 @@ export class JournalEntriesService {
   async getAccountLedger(
     tenantId: string,
     accountId: string,
-    options?: { fromDate?: Date; toDate?: Date },
+    options?: { fromDate?: Date; toDate?: Date }
   ) {
     const account = await this.prisma.chartOfAccount.findFirst({
       where: { id: accountId, tenantId },

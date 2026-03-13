@@ -25,7 +25,7 @@ import { ApiErrorResponses, ApiStandardResponse } from '../../common/swagger';
 export class ProfileController {
   constructor(
     private readonly profileService: ProfileService,
-    @Inject(STORAGE_SERVICE) private readonly storageService: IStorageService,
+    @Inject(STORAGE_SERVICE) private readonly storageService: IStorageService
   ) {}
 
   /**
@@ -50,9 +50,16 @@ export class ProfileController {
   @ApiErrorResponses()
   async updateProfile(
     @CurrentUser('id') userId: string,
-    @Body() data: { firstName?: string; lastName?: string; phone?: string; title?: string },
+    @CurrentUser('tenantId') tenantId: string,
+    @Body()
+    data: {
+      firstName?: string;
+      lastName?: string;
+      phone?: string;
+      title?: string;
+    }
   ) {
-    return this.profileService.updateProfile(userId, data);
+    return this.profileService.updateProfile(userId, tenantId, data);
   }
 
   /**
@@ -65,10 +72,16 @@ export class ProfileController {
   @ApiErrorResponses()
   async changePassword(
     @CurrentUser('id') userId: string,
+    @CurrentUser('tenantId') tenantId: string,
     @Body('currentPassword') currentPassword: string,
-    @Body('newPassword') newPassword: string,
+    @Body('newPassword') newPassword: string
   ) {
-    return this.profileService.changePassword(userId, currentPassword, newPassword);
+    return this.profileService.changePassword(
+      userId,
+      tenantId,
+      currentPassword,
+      newPassword
+    );
   }
 
   /**
@@ -78,12 +91,19 @@ export class ProfileController {
   @Post('avatar')
   @UseInterceptors(FileInterceptor('file'))
   @ApiOperation({ summary: 'Upload profile avatar' })
-  @ApiBody({ description: 'Multipart form data with file field', schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } })
+  @ApiBody({
+    description: 'Multipart form data with file field',
+    schema: {
+      type: 'object',
+      properties: { file: { type: 'string', format: 'binary' } },
+    },
+  })
   @ApiStandardResponse('Avatar uploaded')
   @ApiErrorResponses()
   async uploadAvatar(
     @CurrentUser('id') userId: string,
-    @UploadedFile() file: any,
+    @CurrentUser('tenantId') tenantId: string,
+    @UploadedFile() file: any
   ) {
     if (!file) {
       throw new Error('No file uploaded');
@@ -97,10 +117,10 @@ export class ProfileController {
     const avatarUrl = await this.storageService.upload(
       file.buffer,
       filename,
-      'avatars',
+      'avatars'
     );
 
     // Update user record
-    return this.profileService.updateAvatar(userId, avatarUrl);
+    return this.profileService.updateAvatar(userId, tenantId, avatarUrl);
   }
 }

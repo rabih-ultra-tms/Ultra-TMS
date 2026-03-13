@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../prisma.service';
 import { CreatePaymentMadeDto } from '../dto';
 
@@ -17,7 +21,10 @@ export class PaymentsMadeService {
       return 'PAY-000001';
     }
 
-    const lastNumber = parseInt(lastPayment.paymentNumber.replace('PAY-', ''), 10);
+    const lastNumber = parseInt(
+      lastPayment.paymentNumber.replace('PAY-', ''),
+      10
+    );
     return `PAY-${String(lastNumber + 1).padStart(6, '0')}`;
   }
 
@@ -56,7 +63,7 @@ export class PaymentsMadeService {
       toDate?: Date;
       page?: number;
       limit?: number;
-    },
+    }
   ) {
     const page = options?.page ?? 1;
     const limit = options?.limit ?? 20;
@@ -94,7 +101,9 @@ export class PaymentsMadeService {
       where: { id, tenantId, deletedAt: null },
       include: {
         carrier: true,
-        bankAccount: { select: { id: true, accountNumber: true, accountName: true } },
+        bankAccount: {
+          select: { id: true, accountNumber: true, accountName: true },
+        },
       },
     });
 
@@ -105,7 +114,11 @@ export class PaymentsMadeService {
     return payment;
   }
 
-  async update(id: string, tenantId: string, data: Partial<CreatePaymentMadeDto>) {
+  async update(
+    id: string,
+    tenantId: string,
+    data: Partial<CreatePaymentMadeDto>
+  ) {
     const payment = await this.prisma.paymentMade.findFirst({
       where: { id, tenantId, deletedAt: null },
     });
@@ -115,11 +128,13 @@ export class PaymentsMadeService {
     }
 
     if (payment.status === 'CLEARED' || payment.status === 'VOID') {
-      throw new BadRequestException('Cannot update a cleared or voided payment');
+      throw new BadRequestException(
+        'Cannot update a cleared or voided payment'
+      );
     }
 
     return this.prisma.paymentMade.update({
-      where: { id },
+      where: { id, tenantId },
       data: {
         paymentDate: data.paymentDate ? new Date(data.paymentDate) : undefined,
         paymentMethod: data.paymentMethod,
@@ -145,7 +160,7 @@ export class PaymentsMadeService {
     }
 
     return this.prisma.paymentMade.update({
-      where: { id },
+      where: { id, tenantId },
       data: {
         deletedAt: new Date(),
         updatedById: userId,
@@ -163,7 +178,7 @@ export class PaymentsMadeService {
     }
 
     return this.prisma.paymentMade.update({
-      where: { id },
+      where: { id, tenantId },
       data: { status: 'SENT' },
     });
   }
@@ -178,7 +193,7 @@ export class PaymentsMadeService {
     }
 
     return this.prisma.paymentMade.update({
-      where: { id },
+      where: { id, tenantId },
       data: { status: 'CLEARED' },
     });
   }
@@ -197,7 +212,7 @@ export class PaymentsMadeService {
     }
 
     return this.prisma.paymentMade.update({
-      where: { id },
+      where: { id, tenantId },
       data: { status: 'VOID' },
     });
   }
@@ -222,32 +237,44 @@ export class PaymentsMadeService {
     });
 
     const quickPaySettlements = approvedSettlements.filter(
-      (s) => s.carrier?.paymentTerms === 'QUICK_PAY',
+      (s) => s.carrier?.paymentTerms === 'QUICK_PAY'
     );
     const factoringSettlements = approvedSettlements.filter(
-      (s) => s.payToFactoring || s.carrier?.factoringCompany,
+      (s) => s.payToFactoring || s.carrier?.factoringCompany
     );
     const regularSettlements = approvedSettlements.filter(
-      (s) => !s.payToFactoring && s.carrier?.paymentTerms !== 'QUICK_PAY',
+      (s) => !s.payToFactoring && s.carrier?.paymentTerms !== 'QUICK_PAY'
     );
 
     return {
       quickPay: {
         count: quickPaySettlements.length,
-        total: quickPaySettlements.reduce((sum, s) => sum + Number(s.balanceDue), 0),
+        total: quickPaySettlements.reduce(
+          (sum, s) => sum + Number(s.balanceDue),
+          0
+        ),
         settlements: quickPaySettlements,
       },
       factoring: {
         count: factoringSettlements.length,
-        total: factoringSettlements.reduce((sum, s) => sum + Number(s.balanceDue), 0),
+        total: factoringSettlements.reduce(
+          (sum, s) => sum + Number(s.balanceDue),
+          0
+        ),
         settlements: factoringSettlements,
       },
       regular: {
         count: regularSettlements.length,
-        total: regularSettlements.reduce((sum, s) => sum + Number(s.balanceDue), 0),
+        total: regularSettlements.reduce(
+          (sum, s) => sum + Number(s.balanceDue),
+          0
+        ),
         settlements: regularSettlements,
       },
-      grandTotal: approvedSettlements.reduce((sum, s) => sum + Number(s.balanceDue), 0),
+      grandTotal: approvedSettlements.reduce(
+        (sum, s) => sum + Number(s.balanceDue),
+        0
+      ),
     };
   }
 }
