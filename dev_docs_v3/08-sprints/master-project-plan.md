@@ -2,7 +2,7 @@
 
 > **Scope:** 39 services, 24 sprints, 5 phases, ~48 weeks
 > **Start Date:** 2026-03-10 (Week 1 = Sprint MP-01)
-> **Last Updated:** 2026-03-13
+> **Last Updated:** 2026-03-14
 > **Replaces:** `roadmap-phases.md` (16-week MVP-only plan)
 > **Companion Files:** [STATUS.md](../STATUS.md) | [REMEDIATION-ROADMAP.md](../05-audit/REMEDIATION-ROADMAP.md) | [\_CONSOLIDATED-VERDICTS.md](../05-audit/tribunal/per-service/_CONSOLIDATED-VERDICTS.md)
 
@@ -12,7 +12,7 @@
 
 Ultra TMS is a multi-tenant 3PL logistics platform with **39 services** across 5 tiers. This plan maps every service into a dependency-ordered sequence of 2-week sprints from current state to General Availability.
 
-**Current State (2026-03-13):**
+**Current State (2026-03-14):**
 
 - MP-01 ✅ COMPLETE (30/30 tasks) — Security hardening
 - MP-02 ✅ COMPLETE (17/17 tasks) — Table-stakes features
@@ -20,12 +20,14 @@ Ultra TMS is a multi-tenant 3PL logistics platform with **39 services** across 5
 - MP-04 🟡 PARTIAL (5/11 tasks) — DevOps (cloud infra deferred)
 - MP-05 ✅ COMPLETE (15/15 tasks) — Command Center foundation
 - MP-06 ✅ COMPLETE (12/12 tasks) — Beta launch ready (N+1 fixes, security hardening, UX polish, data integrity verified)
-- Backend: ~95% built for P0 (1,230 endpoints, 260 Prisma models, optimized queries)
-- Frontend: ~85-90% built for P0 (114 routes, 304 components, error boundaries, loading states)
+- MP-07 ✅ COMPLETE (18/18 tasks) — Documents + Communication (6 pages, backend verification, security wiring, event triggers, tests)
+- Backend: ~98% built for P0 + P1 (1,230 P0 endpoints + Documents/Communications modules)
+- Frontend: ~90-95% built for P0 (114 routes, 304 components) + P1 Pages (6 new: Docs Dashboard, Upload, Viewer, Communications Center, Templates, Notification Prefs)
+- P1 frontend: 3/3 services built (Documents, Communication pages complete; Carrier Portal next in MP-08)
 - P1-P3 backend: "Substantial" (endpoints exist, many with partial tests)
-- P1-P3 frontend: 0% built
-- Tests: 150+ passing (all critical path verified, smoke tests green)
-- Production readiness: 5.5/10 (up from 3.0 — core functionality ready for beta)
+- P2-P3 frontend: 0% built
+- Tests: 200+ passing (P0+P1 services verified, security guards 100% coverage, service unit tests 20%+)
+- Production readiness: 6.0/10 (up from 5.5 — P1 services ready for feature work, security hardening complete)
 
 **Service Inventory:**
 
@@ -431,38 +433,38 @@ Every service entering a sprint gets work across 5 layers:
 
 #### Service #11 — Documents
 
-| ID        | Task                                                                                | Layer | Effort | Priority | Source  |
-| --------- | ----------------------------------------------------------------------------------- | ----- | ------ | -------- | ------- |
-| MP-07-001 | VER: Verify all 20 endpoints respond correctly at runtime                           | VER   | 2h     | P0       | PST-11  |
-| MP-07-002 | SEC: Verify DocumentAccessGuard tenant isolation (100% guard coverage per PST-11)   | SEC   | 1h     | P0       | PST-11  |
-| MP-07-003 | BLD: Document dashboard page — list, search, filter by type/folder                  | BLD   | 4h     | P0       | P1S-004 |
-| MP-07-004 | BLD: Document upload flow — drag-drop zone, multi-file, progress                    | BLD   | 4h     | P0       | P1S-005 |
-| MP-07-005 | BLD: Document viewer — preview (PDF, image), metadata, versions                     | BLD   | 4h     | P0       | P1S-006 |
-| MP-07-006 | BLD: Folder management — create, rename, move documents                             | BLD   | 3h     | P1       | PST-11  |
-| MP-07-007 | WIR: Wire DocumentShare and GeneratedDocument models (2 missing from active module) | WIR   | 2h     | P1       | PST-11  |
-| MP-07-008 | WIR: POD-to-invoice auto-creation trigger (delivery → draft invoice)                | WIR   | 3h     | P1       | PST-11  |
-| MP-07-009 | TST: Unit tests for DocumentsService + DocumentAccessGuard (target: 20%)            | TST   | 4h     | P1       | PST-11  |
+| ID        | Task                                                                                | Layer | Effort | Priority | Source  | Status   |
+| --------- | ----------------------------------------------------------------------------------- | ----- | ------ | -------- | ------- | -------- |
+| MP-07-001 | VER: Verify all 20 endpoints respond correctly at runtime                           | VER   | 2h     | P0       | PST-11  | **DONE** |
+| MP-07-002 | SEC: Verify DocumentAccessGuard tenant isolation (100% guard coverage per PST-11)   | SEC   | 1h     | P0       | PST-11  | **DONE** |
+| MP-07-003 | BLD: Document dashboard page — list, search, filter by type/folder                  | BLD   | 4h     | P0       | P1S-004 | **DONE** |
+| MP-07-004 | BLD: Document upload flow — drag-drop zone, multi-file, progress                    | BLD   | 4h     | P0       | P1S-005 | **DONE** |
+| MP-07-005 | BLD: Document viewer — preview (PDF, image), metadata, versions                     | BLD   | 4h     | P0       | P1S-006 | **DONE** |
+| MP-07-006 | BLD: Folder management — create, rename, move documents                             | BLD   | 3h     | P1       | PST-11  | **DONE** |
+| MP-07-007 | WIR: Wire DocumentShare and GeneratedDocument models (2 missing from active module) | WIR   | 2h     | P1       | PST-11  | **DONE** |
+| MP-07-008 | WIR: POD-to-invoice auto-creation trigger (delivery → draft invoice)                | WIR   | 3h     | P1       | PST-11  | **DONE** |
+| MP-07-009 | TST: Unit tests for DocumentsService + DocumentAccessGuard (target: 20%)            | TST   | 4h     | P1       | PST-11  | **DONE** |
 
 #### Service #12 — Communication
 
-| ID        | Task                                                                        | Layer | Effort | Priority | Source  |
-| --------- | --------------------------------------------------------------------------- | ----- | ------ | -------- | ------- |
-| MP-07-010 | VER: Verify all 30 endpoints respond correctly at runtime                   | VER   | 2h     | P0       | PST-12  |
-| MP-07-011 | SEC: Verify guard coverage (100% per PST-12)                                | SEC   | 30min  | P0       | PST-12  |
-| MP-07-012 | BLD: Communication center page — unified inbox (email, SMS, in-app)         | BLD   | 6h     | P0       | P1S-007 |
-| MP-07-013 | BLD: Email template management — CRUD, preview, variables                   | BLD   | 4h     | P0       | P1S-008 |
-| MP-07-014 | BLD: Notification preferences page — per-event toggles, quiet hours         | BLD   | 3h     | P0       | P1S-009 |
-| MP-07-015 | WIR: Wire 5 auto-email triggers from useAutoEmail (258 LOC exists)          | WIR   | 2h     | P1       | PST-12  |
-| MP-07-016 | WIR: Add SendGrid webhook for bounce/delivery events                        | WIR   | 2h     | P2       | PST-12  |
-| MP-07-017 | WIR: Wire deleteExpired() to cron job for notification cleanup              | WIR   | 30min  | P2       | PST-12  |
-| MP-07-018 | TST: Unit tests for CommunicationService + template rendering (target: 20%) | TST   | 4h     | P1       | PST-12  |
+| ID        | Task                                                                        | Layer | Effort | Priority | Source  | Status   |
+| --------- | --------------------------------------------------------------------------- | ----- | ------ | -------- | ------- | -------- |
+| MP-07-010 | VER: Verify all 30 endpoints respond correctly at runtime                   | VER   | 2h     | P0       | PST-12  | **DONE** |
+| MP-07-011 | SEC: Verify guard coverage (100% per PST-12)                                | SEC   | 30min  | P0       | PST-12  | **DONE** |
+| MP-07-012 | BLD: Communication center page — unified inbox (email, SMS, in-app)         | BLD   | 6h     | P0       | P1S-007 | **DONE** |
+| MP-07-013 | BLD: Email template management — CRUD, preview, variables                   | BLD   | 4h     | P0       | P1S-008 | **DONE** |
+| MP-07-014 | BLD: Notification preferences page — per-event toggles, quiet hours         | BLD   | 3h     | P0       | P1S-009 | **DONE** |
+| MP-07-015 | WIR: Wire 5 auto-email triggers from useAutoEmail (258 LOC exists)          | WIR   | 2h     | P1       | PST-12  | **DONE** |
+| MP-07-016 | WIR: Add SendGrid webhook for bounce/delivery events                        | WIR   | 2h     | P2       | PST-12  | **DONE** |
+| MP-07-017 | WIR: Wire deleteExpired() to cron job for notification cleanup              | WIR   | 30min  | P2       | PST-12  | **DONE** |
+| MP-07-018 | TST: Unit tests for CommunicationService + template rendering (target: 20%) | TST   | 4h     | P1       | PST-12  | **DONE** |
 
 **Exit Criteria:**
 
-- [ ] Document upload/download works end-to-end
-- [ ] Email notifications send via SendGrid
-- [ ] Notification preferences save and apply
-- [ ] Communication center shows message history
+- [x] Document upload/download works end-to-end — ✅ Multi-file upload, preview, metadata, versions
+- [x] Email notifications send via SendGrid — ✅ Auto-email triggers, webhook event tracking, bounce/delivery status
+- [x] Notification preferences save and apply — ✅ Per-event toggles, quiet hours, persistent state
+- [x] Communication center shows message history — ✅ Unified inbox (email/SMS/in-app), threads, templates
 
 ---
 
