@@ -1,7 +1,7 @@
 # Ultra TMS — Project Status Dashboard
 
 > **Last Updated:** 2026-03-13
-> **Current Phase:** MP-05 Command Center Foundation (Weeks 9-10). MP-01 ✅ COMPLETE (30/30). MP-02 ✅ COMPLETE (17/17 tasks). MP-03 ✅ COMPLETE (11/11 tasks). MP-04: 5/11 tasks DONE (remaining are cloud/infra — deferred). MP-05: 10/15 tasks DONE.
+> **Current Phase:** MP-05 Command Center Foundation (Weeks 9-10). MP-01 ✅ COMPLETE (30/30). MP-02 ✅ COMPLETE (17/17 tasks). MP-03 ✅ COMPLETE (11/11 tasks). MP-04: 5/11 tasks DONE (remaining are cloud/infra — deferred). MP-05: 12/15 tasks DONE.
 > **Overall Health:** B+ (7.8/10) — Strong backend, frontend verified: 101/103 routes PASS. Security hardened (MP-01 complete). Command Center frontend + backend foundation in place.
 > **Production Readiness:** 3.0/10 — See [PRODUCTION-READINESS-ASSESSMENT.md](05-audit/PRODUCTION-READINESS-ASSESSMENT.md)
 > **Active Plan:** [Master Project Plan](08-sprints/master-project-plan.md) — ALL 39 services, 24 sprints, 5 phases, 48 weeks
@@ -99,7 +99,12 @@
 
 ## Current Sprint: MP-05 (Command Center Foundation — Weeks 9-10)
 
-**Status: IN PROGRESS — 10/15 tasks DONE**
+**Status: IN PROGRESS — 12/15 tasks DONE**
+
+**Completed — Session 2026-03-13 (alerts + auto-match):**
+
+- MP-05-010: Alert system — `AlertsPanel` component with severity filtering (critical/warning/info), auto-refresh (60s polling), acknowledge/dismiss, entity click-through to UniversalDetailDrawer. Wired into both Alerts tab and Dashboard layout. Backend `getAlerts()` computes 4 alert types: stale check calls (>4h), expired insurance, unassigned loads (>6h), delivery deadlines (<4h).
+- MP-05-012: Auto-match engine — Replaced stub `autoMatch()` with real carrier scoring algorithm. 4-factor composite: lane history (40%, via LoadHistory), rate competitiveness (25%), performance score (20%, on-time + claims), availability (15%, active load count). Filters to ACTIVE carriers with valid insurance, equipment match bonus, service area check. Returns top 10 ranked suggestions. Frontend `useCarrierMatch` mutation hook added.
 
 **Completed — Session 2026-03-13 (layouts + board wiring):**
 
@@ -129,8 +134,8 @@
 | MP-05-007 | Quote drawer variant                          | **DONE**    |
 | MP-05-008 | Layout modes (Split, Dashboard, Focus panels) | **DONE**    |
 | MP-05-009 | Wire dispatch board integration               | **DONE**    |
-| MP-05-010 | Alert system (real-time panel)                | Pending |
-| MP-05-012 | Auto-match engine (backend logic)             | Pending |
+| MP-05-010 | Alert system (real-time panel)                | **DONE**    |
+| MP-05-012 | Auto-match engine (backend logic)             | **DONE**    |
 | MP-05-013 | Bulk dispatch actions                         | Pending |
 | MP-05-014 | Google Maps integration                       | Pending |
 | MP-05-015 | Command Center tests                          | Pending |
@@ -155,9 +160,9 @@
 
 **Next priorities:**
 
-1. MP-05-010: Alert system (real-time panel)
-2. MP-05-012: Auto-match engine (backend logic)
-3. MP-05-013: Bulk dispatch actions
+1. MP-05-013: Bulk dispatch actions
+2. MP-05-014: Google Maps integration
+3. MP-05-015: Command Center tests
 
 ---
 

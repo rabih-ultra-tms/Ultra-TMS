@@ -386,14 +386,254 @@ export class CommandCenterService {
     };
   }
 
-  async autoMatch(_tenantId: string, _loadId: string) {
-    // Stub: will implement carrier matching algorithm in MP-05-012
+  /**
+   * Auto-match engine — ranks eligible carriers for a given load.
+   *
+   * Scoring weights (from hub spec):
+   *   Lane history: 40% — how many past loads on the same origin→destination lane
+   *   Rate competitiveness: 25% — carrier's avg rate/mile vs load's rate/mile
+   *   Performance score: 20% — on-time delivery rate + claims rate
+   *   Availability: 15% — fewer active loads = more available
+   */
+  async autoMatch(tenantId: string, loadId: string) {
+    // 1. Fetch the load with its stops to determine origin/destination
+    const load = await this.prisma.load.findFirst({
+      where: { id: loadId, tenantId, deletedAt: null },
+      include: {
+        stops: {
+          orderBy: { stopSequence: 'asc' },
+          select: {
+            stopType: true,
+            city: true,
+            state: true,
+            postalCode: true,
+          },
+        },
+      },
+    });
+
+    if (!load) {
+      return { data: { loadId, suggestions: [], message: 'Load not found' } };
+    }
+
+    const pickupStop = load.stops.find(
+      (s) => s.stopType === 'PICKUP' || s.stopType === 'ORIGIN'
+    );
+    const deliveryStop = [...load.stops]
+      .reverse()
+      .find((s) => s.stopType === 'DELIVERY' || s.stopType === 'DESTINATION');
+
+    if (!pickupStop || !deliveryStop) {
+      return {
+        data: {
+          loadId,
+          suggestions: [],
+          message:
+            'Load must have origin and destination stops for carrier matching',
+        },
+      };
+    }
+
+    const originState = pickupStop.state;
+    const destState = deliveryStop.state;
+    const loadRate = Number(load.carrierRate ?? 0);
+
+    // 2. Get eligible carriers: ACTIVE + valid (non-expired) insurance
+    const now = new Date();
+    const eligibleCarriers = await this.prisma.carrier.findMany({
+      where: {
+        tenantId,
+        deletedAt: null,
+        status: 'ACTIVE',
+        CarrierInsurance: {
+          some: {
+            expirationDate: { gte: now },
+          },
+        },
+      },
+      select: {
+        id: true,
+        legalName: true,
+        mcNumber: true,
+        equipmentTypes: true,
+        serviceStates: true,
+        onTimeDeliveryRate: true,
+        claimsRate: true,
+        totalLoads: true,
+        avgRating: true,
+        qualificationTier: true,
+      },
+      take: 200,
+    });
+
+    if (eligibleCarriers.length === 0) {
+      return {
+        data: {
+          loadId,
+          suggestions: [],
+          message: 'No eligible carriers found (all inactive or insurance expired)',
+        },
+      };
+    }
+
+    const carrierIds = eligibleCarriers.map((c) => c.id);
+
+    // 3. Lane history: use LoadHistory for past lane data (has originState, destinationState, carrierRateCents)
+    const laneHistory = await this.prisma.loadHistory.findMany({
+      where: {
+        tenantId,
+        carrierId: { in: carrierIds },
+      },
+      select: {
+        carrierId: true,
+        originState: true,
+        destinationState: true,
+        carrierRateCents: true,
+        totalMiles: true,
+      },
+    });
+
+    // Build per-carrier lane stats
+    const carrierLaneStats = new Map<
+      string,
+      { laneCount: number; totalRate: number; rateCount: number }
+    >();
+
+    for (const lh of laneHistory) {
+      if (!lh.carrierId) continue;
+
+      const stats = carrierLaneStats.get(lh.carrierId) ?? {
+        laneCount: 0,
+        totalRate: 0,
+        rateCount: 0,
+      };
+
+      // Count if same lane (origin state → dest state)
+      if (lh.originState === originState && lh.destinationState === destState) {
+        stats.laneCount++;
+      }
+
+      // Track carrier rate for rate competitiveness
+      if (lh.carrierRateCents > 0) {
+        stats.totalRate += lh.carrierRateCents / 100; // cents → dollars
+        stats.rateCount++;
+      }
+
+      carrierLaneStats.set(lh.carrierId, stats);
+    }
+
+    // 4. Current active load counts per carrier (for availability scoring)
+    const activeLoadCounts = await this.prisma.load.groupBy({
+      by: ['carrierId'],
+      where: {
+        carrierId: { in: carrierIds },
+        status: { in: IN_TRANSIT_STATUSES },
+        deletedAt: null,
+      },
+      _count: true,
+    });
+    const activeCountMap = new Map(
+      activeLoadCounts.map((lc) => [lc.carrierId, lc._count])
+    );
+
+    // 5. Score each carrier
+    const maxLaneCount = Math.max(
+      1,
+      ...Array.from(carrierLaneStats.values()).map((s) => s.laneCount)
+    );
+    const maxActiveLoads = Math.max(
+      1,
+      ...activeLoadCounts.map((lc) => lc._count)
+    );
+
+    const suggestions = eligibleCarriers.map((carrier) => {
+      const stats = carrierLaneStats.get(carrier.id);
+      const activeLoads = activeCountMap.get(carrier.id) ?? 0;
+
+      // Lane history score (0-100): normalized by max lane count
+      const laneScore = stats
+        ? (stats.laneCount / maxLaneCount) * 100
+        : 0;
+
+      // Rate competitiveness score (0-100): lower avg rate = better
+      let rateScore = 50; // default if no data
+      if (loadRate > 0 && stats && stats.rateCount > 0) {
+        const avgCarrierRate = stats.totalRate / stats.rateCount;
+        // If carrier's avg rate <= load rate, they're competitive (score 80-100)
+        // If carrier's avg rate > load rate, score drops proportionally
+        const ratio = avgCarrierRate / loadRate;
+        rateScore = Math.max(0, Math.min(100, (2 - ratio) * 50));
+      }
+
+      // Performance score (0-100): weighted on-time delivery + inverse claims
+      const onTime = Number(carrier.onTimeDeliveryRate ?? 0);
+      const claims = Number(carrier.claimsRate ?? 0);
+      const perfScore = onTime * 0.7 + (100 - claims * 100) * 0.3;
+
+      // Availability score (0-100): fewer active loads = higher score
+      const availScore =
+        maxActiveLoads > 0
+          ? (1 - activeLoads / (maxActiveLoads + 1)) * 100
+          : 100;
+
+      // Equipment match bonus: +10 to lane score if equipment matches
+      const equipBonus =
+        load.equipmentType &&
+        carrier.equipmentTypes.some(
+          (et) => et.toLowerCase() === load.equipmentType!.toLowerCase()
+        )
+          ? 10
+          : 0;
+
+      // Service area check: does carrier serve origin + destination states?
+      const servesOrigin =
+        carrier.serviceStates.length === 0 ||
+        carrier.serviceStates.includes(originState);
+      const servesDest =
+        carrier.serviceStates.length === 0 ||
+        carrier.serviceStates.includes(destState);
+
+      // Composite score with spec weights
+      const composite =
+        (Math.min(laneScore + equipBonus, 100)) * 0.4 +
+        rateScore * 0.25 +
+        Math.min(perfScore, 100) * 0.2 +
+        availScore * 0.15;
+
+      return {
+        carrierId: carrier.id,
+        carrierName: carrier.legalName,
+        mcNumber: carrier.mcNumber,
+        tier: carrier.qualificationTier,
+        equipmentTypes: carrier.equipmentTypes,
+        scores: {
+          lane: Math.round((laneScore + equipBonus) * 10) / 10,
+          rate: Math.round(rateScore * 10) / 10,
+          performance: Math.round(Math.min(perfScore, 100) * 10) / 10,
+          availability: Math.round(availScore * 10) / 10,
+          composite: Math.round(composite * 10) / 10,
+        },
+        laneHistory: stats?.laneCount ?? 0,
+        activeLoads,
+        servesLane: servesOrigin && servesDest,
+        equipmentMatch: equipBonus > 0,
+      };
+    });
+
+    // Sort by composite score descending, filter to those who serve the lane
+    suggestions.sort((a, b) => b.scores.composite - a.scores.composite);
+    const ranked = suggestions.filter((s) => s.servesLane).slice(0, 10);
+
     return {
       data: {
-        loadId: _loadId,
-        suggestions: [],
-        message:
-          'Auto-match engine not yet implemented. Coming in a future sprint.',
+        loadId,
+        loadNumber: load.loadNumber,
+        lane: {
+          origin: `${pickupStop.city}, ${originState}`,
+          destination: `${deliveryStop.city}, ${destState}`,
+        },
+        suggestions: ranked,
+        totalEligible: eligibleCarriers.length,
       },
     };
   }

@@ -14,6 +14,8 @@ export const commandCenterKeys = {
     [...commandCenterKeys.all, 'alerts', severity ?? 'all'] as const,
   activity: (page?: number) =>
     [...commandCenterKeys.all, 'activity', page ?? 1] as const,
+  autoMatch: (loadId: string) =>
+    [...commandCenterKeys.all, 'auto-match', loadId] as const,
 };
 
 export interface CommandCenterKPIs {
@@ -122,5 +124,47 @@ export function useCommandCenterActivity(page = 1, limit = 10) {
     },
     staleTime: 30_000,
     refetchInterval: 60_000,
+  });
+}
+
+// --- Auto-Match ---
+
+export interface CarrierMatchScores {
+  lane: number;
+  rate: number;
+  performance: number;
+  availability: number;
+  composite: number;
+}
+
+export interface CarrierMatchSuggestion {
+  carrierId: string;
+  carrierName: string;
+  mcNumber: string | null;
+  tier: string | null;
+  equipmentTypes: string[];
+  scores: CarrierMatchScores;
+  laneHistory: number;
+  activeLoads: number;
+  servesLane: boolean;
+  equipmentMatch: boolean;
+}
+
+export interface AutoMatchResult {
+  loadId: string;
+  loadNumber: string;
+  lane: { origin: string; destination: string };
+  suggestions: CarrierMatchSuggestion[];
+  totalEligible: number;
+}
+
+export function useCarrierMatch(loadId: string) {
+  return useMutation({
+    mutationFn: async () => {
+      const response = await apiClient.post('/command-center/auto-match', {
+        loadId,
+      });
+      return unwrap<AutoMatchResult>(response);
+    },
   });
 }
