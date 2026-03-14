@@ -21,14 +21,14 @@ Ultra TMS is a multi-tenant 3PL logistics platform with **39 services** across 5
 - MP-05 ✅ COMPLETE (15/15 tasks) — Command Center foundation
 - MP-06 ✅ COMPLETE (12/12 tasks) — Beta launch ready (N+1 fixes, security hardening, UX polish, data integrity verified)
 - MP-07 ✅ COMPLETE (18/18 tasks) — Documents + Communication (6 pages, backend verification, security wiring, event triggers, tests)
-- MP-08 🟡 IN PROGRESS (7/17 tasks) — Customer Portal MVP ✅ DONE; Carrier Portal next (10/17 tasks remaining)
+- MP-08 ✅ COMPLETE (17/17 tasks) — Customer Portal ✅ DONE (7 tasks); Carrier Portal ✅ DONE (14 tasks, 35 hours, 54 endpoints verified, 38 tests)
 - Backend: ~98% built for P0 + P1 (1,230 P0 endpoints + Documents/Communications modules)
 - Frontend: ~90-95% built for P0 (114 routes, 304 components) + P1 Pages (6 new: Docs Dashboard, Upload, Viewer, Communications Center, Templates, Notification Prefs)
-- P1 frontend: 3/3 services built (Documents, Communication pages complete; Carrier Portal next in MP-08)
+- P1 frontend: 3/3 services built (Documents ✅, Communication ✅, Carrier Portal ✅)
 - P1-P3 backend: "Substantial" (endpoints exist, many with partial tests)
 - P2-P3 frontend: 0% built
 - Tests: 200+ passing (P0+P1 services verified, security guards 100% coverage, service unit tests 20%+)
-- Production readiness: 6.0/10 (up from 5.5 — P1 services ready for feature work, security hardening complete)
+- Production readiness: 7.5/10 (up from 6.0 — All P0 + P1 services complete, both portals operational, 64+ guard tests passing, ready for Phase 2: Core Expansion)
 
 **Service Inventory:**
 
