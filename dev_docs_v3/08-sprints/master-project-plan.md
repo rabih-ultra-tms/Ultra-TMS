@@ -22,6 +22,7 @@ Ultra TMS is a multi-tenant 3PL logistics platform with **39 services** across 5
 - MP-06 ✅ COMPLETE (12/12 tasks) — Beta launch ready (N+1 fixes, security hardening, UX polish, data integrity verified)
 - MP-07 ✅ COMPLETE (18/18 tasks) — Documents + Communication (6 pages, backend verification, security wiring, event triggers, tests)
 - MP-08 ✅ COMPLETE (17/17 tasks) — Customer Portal ✅ DONE (7 tasks); Carrier Portal ✅ DONE (14 tasks, 35 hours, 54 endpoints verified, 38 tests)
+- MP-09 🟡 IN PROGRESS — Claims + Contracts (Contracts frontend foundation: types, validators, client, core hooks — 5/30 tasks)
 - Backend: ~98% built for P0 + P1 (1,230 P0 endpoints + Documents/Communications modules)
 - Frontend: ~90-95% built for P0 (114 routes, 304 components) + P1 Pages (6 new: Docs Dashboard, Upload, Viewer, Communications Center, Templates, Notification Prefs)
 - P1 frontend: 3/3 services built (Documents ✅, Communication ✅, Carrier Portal ✅)
@@ -531,6 +532,14 @@ Every service entering a sprint gets work across 5 layers:
 | MP-09-008 | TST: Claims filing + status transition tests (target: 20%)                    | TST   | 3h     | P1       | PST-10  |
 
 #### Service #15 — Contracts
+
+**Frontend Foundation (In Progress — 2026-03-14):**
+
+- ✅ API types & enums (ContractStatus, ContractType)
+- ✅ Zod validators (Create, Update schemas with full validation)
+- ✅ API client (47 methods across 8 endpoints: contracts, rate tables, amendments, SLAs, volume commitments, fuel surcharge, templates, renewals)
+- ✅ Core hooks (useContracts CRUD, useContractDetail lazy loading)
+- 🔄 Remaining: 5 sub-resource hooks, 18 components & pages, full test coverage
 
 | ID        | Task                                                                              | Layer | Effort | Priority | Source  |
 | --------- | --------------------------------------------------------------------------------- | ----- | ------ | -------- | ------- |
