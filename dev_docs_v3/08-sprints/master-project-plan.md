@@ -21,6 +21,7 @@ Ultra TMS is a multi-tenant 3PL logistics platform with **39 services** across 5
 - MP-05 ✅ COMPLETE (15/15 tasks) — Command Center foundation
 - MP-06 ✅ COMPLETE (12/12 tasks) — Beta launch ready (N+1 fixes, security hardening, UX polish, data integrity verified)
 - MP-07 ✅ COMPLETE (18/18 tasks) — Documents + Communication (6 pages, backend verification, security wiring, event triggers, tests)
+- MP-08 🟡 IN PROGRESS (7/17 tasks) — Customer Portal MVP ✅ DONE; Carrier Portal next (10/17 tasks remaining)
 - Backend: ~98% built for P0 + P1 (1,230 P0 endpoints + Documents/Communications modules)
 - Frontend: ~90-95% built for P0 (114 routes, 304 components) + P1 Pages (6 new: Docs Dashboard, Upload, Viewer, Communications Center, Templates, Notification Prefs)
 - P1 frontend: 3/3 services built (Documents, Communication pages complete; Carrier Portal next in MP-08)
@@ -476,15 +477,15 @@ Every service entering a sprint gets work across 5 layers:
 
 #### Service #13 — Customer Portal (expand from 4-page MVP)
 
-| ID        | Task                                                            | Layer | Effort | Priority | Source    |
-| --------- | --------------------------------------------------------------- | ----- | ------ | -------- | --------- |
-| MP-08-001 | VER: Verify all 54 endpoints, check CompanyScopeGuard isolation | VER   | 3h     | P0       | PST-13    |
-| MP-08-002 | BLD: Document upload/download page (view BOL, POD, invoices)    | BLD   | 4h     | P0       | P2S-003   |
-| MP-08-003 | BLD: Invoice viewing + payment status page                      | BLD   | 4h     | P0       | P2S-003   |
-| MP-08-004 | BLD: Historical shipments with search/filter                    | BLD   | 3h     | P1       | P2S-002   |
-| MP-08-005 | BLD: Notification preferences (portal-specific)                 | BLD   | 2h     | P1       | PST-13    |
-| MP-08-006 | WIR: Wire public tracking endpoint to portal tracking page      | WIR   | 2h     | P0       | MP-02-010 |
-| MP-08-007 | TST: Portal auth + CompanyScopeGuard integration tests          | TST   | 3h     | P0       | PST-13    |
+| ID        | Task                                                            | Layer | Effort | Priority | Source    | Status   |
+| --------- | --------------------------------------------------------------- | ----- | ------ | -------- | --------- | -------- |
+| MP-08-001 | VER: Verify all 54 endpoints, check CompanyScopeGuard isolation | VER   | 3h     | P0       | PST-13    | **DONE** |
+| MP-08-002 | BLD: Document upload/download page (view BOL, POD, invoices)    | BLD   | 4h     | P0       | P2S-003   | **DONE** |
+| MP-08-003 | BLD: Invoice viewing + payment status page                      | BLD   | 4h     | P0       | P2S-003   | **DONE** |
+| MP-08-004 | BLD: Historical shipments with search/filter                    | BLD   | 3h     | P1       | P2S-002   | **DONE** |
+| MP-08-005 | BLD: Notification preferences (portal-specific)                 | BLD   | 2h     | P1       | PST-13    | **DONE** |
+| MP-08-006 | WIR: Wire public tracking endpoint to portal tracking page      | WIR   | 2h     | P0       | MP-02-010 | **DONE** |
+| MP-08-007 | TST: Portal auth + CompanyScopeGuard integration tests          | TST   | 3h     | P0       | PST-13    | **DONE** |
 
 #### Service #14 — Carrier Portal
 
