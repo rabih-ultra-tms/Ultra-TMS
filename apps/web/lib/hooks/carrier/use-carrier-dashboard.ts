@@ -60,17 +60,6 @@ export function useCarrierProfile() {
   });
 }
 
-export function useAvailableLoads() {
-  return useQuery({
-    queryKey: carrierDashboardKeys.loads(),
-    queryFn: async () => {
-      const response = await carrierClient.getAvailableLoads();
-      return Array.isArray(response) ? response : [];
-    },
-    staleTime: 30_000,
-  });
-}
-
 export function usePendingPayments() {
   return useQuery({
     queryKey: carrierDashboardKeys.payments(),

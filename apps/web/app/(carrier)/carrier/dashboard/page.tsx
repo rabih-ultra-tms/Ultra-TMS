@@ -8,11 +8,11 @@ import { Button } from '@/components/ui/button';
 import {
   useCarrierDashboardData,
   useCarrierProfile,
-  useAvailableLoads,
   usePendingPayments,
   useActiveDrivers,
   useComplianceDocs,
 } from '@/lib/hooks/carrier/use-carrier-dashboard';
+import { useAvailableLoads } from '@/lib/hooks/useCarrierData';
 import {
   Package,
   DollarSign,
