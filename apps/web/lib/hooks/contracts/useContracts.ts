@@ -3,7 +3,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { contractsApi } from '@/lib/api/contracts/client';
-import type { Contract, ContractFilters } from '@/lib/api/contracts/types';
+import type {
+  Contract,
+  ContractFilters,
+  PaginatedResponse,
+} from '@/lib/api/contracts/types';
 import type { CreateContractInput } from '@/lib/api/contracts/validators';
 
 // ===========================
@@ -20,6 +24,27 @@ export const contractKeys = {
 };
 
 // ===========================
+// Utilities
+// ===========================
+
+/**
+ * Extract error message from various error types
+ * Handles API structured errors, Error objects, and unknown errors
+ */
+function getErrorMessage(error: any): string {
+  if (error?.message) {
+    return error.message;
+  }
+  if (error?.data?.message) {
+    return error.data.message;
+  }
+  if (typeof error === 'string') {
+    return error;
+  }
+  return 'An error occurred';
+}
+
+// ===========================
 // Types
 // ===========================
 
@@ -27,16 +52,6 @@ interface UseContractsOptions {
   filters?: ContractFilters;
   page?: number;
   limit?: number;
-}
-
-interface ContractListResponse {
-  data: Contract[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
 }
 
 // ===========================
@@ -48,13 +63,11 @@ export function useContracts(options: UseContractsOptions = {}) {
   const { filters, page = 1, limit = 20 } = options;
 
   // List query
-  const listQuery = useQuery<ContractListResponse>({
+  const listQuery = useQuery<PaginatedResponse<Contract>>({
     queryKey: contractKeys.list(filters, page, limit),
-    queryFn: async () => {
-      const response = await contractsApi.list(filters, page, limit);
-      return response as ContractListResponse;
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    queryFn: () => contractsApi.list(filters, page, limit),
+    // 5 minutes: balance between fresh data and avoiding unnecessary requests
+    staleTime: 5 * 60 * 1000,
   });
 
   // Create mutation
@@ -64,15 +77,17 @@ export function useContracts(options: UseContractsOptions = {}) {
       queryClient.invalidateQueries({ queryKey: contractKeys.lists() });
       toast.success('Contract created successfully');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to create contract');
+    onError: (error: any) => {
+      toast.error(getErrorMessage(error));
     },
   });
 
   // Update mutation
   const updateMutation = useMutation({
-    mutationFn: (data: { id: string; payload: Partial<CreateContractInput> }) =>
-      contractsApi.update(data.id, data.payload),
+    mutationFn: async (data: Partial<CreateContractInput> & { id: string }) => {
+      const { id, ...payload } = data;
+      return contractsApi.update(id, payload);
+    },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: contractKeys.detail(variables.id),
@@ -80,8 +95,8 @@ export function useContracts(options: UseContractsOptions = {}) {
       queryClient.invalidateQueries({ queryKey: contractKeys.lists() });
       toast.success('Contract updated successfully');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update contract');
+    onError: (error: any) => {
+      toast.error(getErrorMessage(error));
     },
   });
 
@@ -92,8 +107,8 @@ export function useContracts(options: UseContractsOptions = {}) {
       queryClient.invalidateQueries({ queryKey: contractKeys.lists() });
       toast.success('Contract deleted successfully');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete contract');
+    onError: (error: any) => {
+      toast.error(getErrorMessage(error));
     },
   });
 
@@ -106,7 +121,7 @@ export function useContracts(options: UseContractsOptions = {}) {
     refetch: listQuery.refetch,
     create: (data: CreateContractInput) => createMutation.mutateAsync(data),
     update: (id: string, payload: Partial<CreateContractInput>) =>
-      updateMutation.mutateAsync({ id, payload }),
+      updateMutation.mutateAsync({ id, ...payload }),
     delete: (id: string) => deleteMutation.mutateAsync(id),
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
