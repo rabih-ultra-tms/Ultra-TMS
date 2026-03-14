@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { apiClient } from '@/lib/api/client';
 import {
   Contract,
@@ -11,6 +10,9 @@ import {
   ContractTemplate,
   ContractFilters,
   PaginatedResponse,
+  ApiDataResponse,
+  ContractHistory,
+  VolumePerformance,
 } from './types';
 import type {
   CreateContractInput,
@@ -23,13 +25,14 @@ import type {
 } from './validators';
 
 const BASE_URL = '/api/v1/contracts';
+const RATE_TABLES_BASE = '/api/v1/rate-tables';
+const FUEL_SURCHARGE_BASE = '/api/v1/fuel-tables';
+const CONTRACT_TEMPLATES_BASE = '/api/v1/contract-templates';
 
-// Helper interface for API responses
-interface ApiDataResponse<T> {
-  data: T;
-}
-
-// Contract CRUD
+/**
+ * Contract CRUD operations and lifecycle management
+ * Handles contract creation, updates, approvals, signatures, and termination
+ */
 export const contractsApi = {
   list: async (
     filters?: ContractFilters,
@@ -139,15 +142,18 @@ export const contractsApi = {
     return response.data;
   },
 
-  getHistory: async (id: string): Promise<any[]> => {
-    const response = await apiClient.get<ApiDataResponse<any[]>>(
+  getHistory: async (id: string): Promise<ContractHistory[]> => {
+    const response = await apiClient.get<ApiDataResponse<ContractHistory[]>>(
       `${BASE_URL}/${id}/history`
     );
     return response.data;
   },
 };
 
-// Rate Tables
+/**
+ * Rate table management for contract pricing
+ * Supports CRUD operations and CSV import/export
+ */
 export const rateTablesApi = {
   listForContract: async (contractId: string): Promise<RateTable[]> => {
     const response = await apiClient.get<ApiDataResponse<RateTable[]>>(
@@ -169,7 +175,7 @@ export const rateTablesApi = {
 
   getById: async (id: string): Promise<RateTable> => {
     const response = await apiClient.get<ApiDataResponse<RateTable>>(
-      `/api/v1/rate-tables/${id}`
+      `${RATE_TABLES_BASE}/${id}`
     );
     return response.data;
   },
@@ -179,21 +185,21 @@ export const rateTablesApi = {
     data: Partial<RateTableInput>
   ): Promise<RateTable> => {
     const response = await apiClient.put<ApiDataResponse<RateTable>>(
-      `/api/v1/rate-tables/${id}`,
+      `${RATE_TABLES_BASE}/${id}`,
       data
     );
     return response.data;
   },
 
   delete: async (id: string): Promise<void> => {
-    await apiClient.delete(`/api/v1/rate-tables/${id}`);
+    await apiClient.delete(`${RATE_TABLES_BASE}/${id}`);
   },
 
   importCSV: async (id: string, file: globalThis.File): Promise<RateTable> => {
     const formData = new FormData();
     formData.append('file', file);
     const response = await apiClient.upload<ApiDataResponse<RateTable>>(
-      `/api/v1/rate-tables/${id}/import`,
+      `${RATE_TABLES_BASE}/${id}/import`,
       formData
     );
     return response.data;
@@ -201,7 +207,7 @@ export const rateTablesApi = {
 
   exportCSV: async (id: string): Promise<globalThis.Blob> => {
     const response = await apiClient.get<globalThis.Blob>(
-      `/api/v1/rate-tables/${id}/export`,
+      `${RATE_TABLES_BASE}/${id}/export`,
       {
         responseType: 'blob',
       }
@@ -210,18 +216,21 @@ export const rateTablesApi = {
   },
 };
 
-// Rate Lanes
+/**
+ * Rate lane operations within rate tables
+ * Handles origin-destination pricing pairs
+ */
 export const rateLanesApi = {
   listForTable: async (tableId: string): Promise<RateLane[]> => {
     const response = await apiClient.get<ApiDataResponse<RateLane[]>>(
-      `/api/v1/rate-tables/${tableId}/lanes`
+      `${RATE_TABLES_BASE}/${tableId}/lanes`
     );
     return response.data;
   },
 
   create: async (tableId: string, data: RateLaneInput): Promise<RateLane> => {
     const response = await apiClient.post<ApiDataResponse<RateLane>>(
-      `/api/v1/rate-tables/${tableId}/lanes`,
+      `${RATE_TABLES_BASE}/${tableId}/lanes`,
       data
     );
     return response.data;
@@ -233,18 +242,21 @@ export const rateLanesApi = {
     data: Partial<RateLaneInput>
   ): Promise<RateLane> => {
     const response = await apiClient.put<ApiDataResponse<RateLane>>(
-      `/api/v1/rate-tables/${tableId}/lanes/${id}`,
+      `${RATE_TABLES_BASE}/${tableId}/lanes/${id}`,
       data
     );
     return response.data;
   },
 
   delete: async (tableId: string, id: string): Promise<void> => {
-    await apiClient.delete(`/api/v1/rate-tables/${tableId}/lanes/${id}`);
+    await apiClient.delete(`${RATE_TABLES_BASE}/${tableId}/lanes/${id}`);
   },
 };
 
-// Amendments
+/**
+ * Contract amendments for mid-term changes
+ * Supports creation and application of amendments
+ */
 export const amendmentsApi = {
   listForContract: async (contractId: string): Promise<Amendment[]> => {
     const response = await apiClient.get<ApiDataResponse<Amendment[]>>(
@@ -289,7 +301,10 @@ export const amendmentsApi = {
   },
 };
 
-// SLAs
+/**
+ * Service Level Agreement management
+ * Defines performance targets and penalties
+ */
 export const slasApi = {
   listForContract: async (contractId: string): Promise<SLA[]> => {
     const response = await apiClient.get<ApiDataResponse<SLA[]>>(
@@ -323,7 +338,10 @@ export const slasApi = {
   },
 };
 
-// Volume Commitments
+/**
+ * Volume commitment tracking and performance
+ * Monitors against periodic volume targets
+ */
 export const volumeCommitmentsApi = {
   listForContract: async (contractId: string): Promise<VolumeCommitment[]> => {
     const response = await apiClient.get<ApiDataResponse<VolumeCommitment[]>>(
@@ -361,20 +379,27 @@ export const volumeCommitmentsApi = {
     );
   },
 
-  getPerformance: async (contractId: string, id: string): Promise<any> => {
-    const response = await apiClient.get<ApiDataResponse<any>>(
+  getPerformance: async (
+    contractId: string,
+    id: string
+  ): Promise<VolumePerformance> => {
+    const response = await apiClient.get<ApiDataResponse<VolumePerformance>>(
       `${BASE_URL}/${contractId}/volume-commitments/${id}/performance`
     );
     return response.data;
   },
 };
 
-// Fuel Surcharge
+/**
+ * Fuel surcharge table management
+ * Calculates surcharges based on fuel price tiers
+ */
 export const fuelSurchargeApi = {
   list: async (): Promise<FuelSurchargeTable[]> => {
-    const response = await apiClient.get<ApiDataResponse<FuelSurchargeTable[]>>(
-      '/api/v1/fuel-tables'
-    );
+    const response =
+      await apiClient.get<ApiDataResponse<FuelSurchargeTable[]>>(
+        FUEL_SURCHARGE_BASE
+      );
     return response.data;
   },
 
@@ -382,7 +407,7 @@ export const fuelSurchargeApi = {
     data: FuelSurchargeTableInput
   ): Promise<FuelSurchargeTable> => {
     const response = await apiClient.post<ApiDataResponse<FuelSurchargeTable>>(
-      '/api/v1/fuel-tables',
+      FUEL_SURCHARGE_BASE,
       data
     );
     return response.data;
@@ -390,7 +415,7 @@ export const fuelSurchargeApi = {
 
   getById: async (id: string): Promise<FuelSurchargeTable> => {
     const response = await apiClient.get<ApiDataResponse<FuelSurchargeTable>>(
-      `/api/v1/fuel-tables/${id}`
+      `${FUEL_SURCHARGE_BASE}/${id}`
     );
     return response.data;
   },
@@ -400,14 +425,14 @@ export const fuelSurchargeApi = {
     data: Partial<FuelSurchargeTableInput>
   ): Promise<FuelSurchargeTable> => {
     const response = await apiClient.put<ApiDataResponse<FuelSurchargeTable>>(
-      `/api/v1/fuel-tables/${id}`,
+      `${FUEL_SURCHARGE_BASE}/${id}`,
       data
     );
     return response.data;
   },
 
   delete: async (id: string): Promise<void> => {
-    await apiClient.delete(`/api/v1/fuel-tables/${id}`);
+    await apiClient.delete(`${FUEL_SURCHARGE_BASE}/${id}`);
   },
 
   calculate: async (fuelPrice: number): Promise<{ surcharge: number }> => {
@@ -418,18 +443,21 @@ export const fuelSurchargeApi = {
   },
 };
 
-// Templates
+/**
+ * Contract template operations
+ * Enables reuse of standard contract structures
+ */
 export const contractTemplatesApi = {
   list: async (): Promise<ContractTemplate[]> => {
     const response = await apiClient.get<ApiDataResponse<ContractTemplate[]>>(
-      '/api/v1/contract-templates'
+      CONTRACT_TEMPLATES_BASE
     );
     return response.data;
   },
 
   clone: async (id: string): Promise<Contract> => {
     const response = await apiClient.post<ApiDataResponse<Contract>>(
-      `/api/v1/contract-templates/${id}/clone`,
+      `${CONTRACT_TEMPLATES_BASE}/${id}/clone`,
       {}
     );
     return response.data;

@@ -161,3 +161,33 @@ export interface PaginatedResponse<T> {
     totalPages: number;
   };
 }
+
+// API Response Envelopes (from backend response.helper.ts)
+export interface ApiDataResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+  timestamp: string;
+}
+
+export interface ContractHistory {
+  id: string;
+  contractId: string;
+  action: string;
+  changedBy: string;
+  changedAt: string;
+  previousValue?: string;
+  newValue?: string;
+  deletedAt: string | null;
+}
+
+export interface VolumePerformance {
+  id: string;
+  commitmentId: string;
+  period: string;
+  actualVolume: number;
+  targetVolume: number;
+  percentageOfTarget: number;
+  penalty?: number;
+  status: 'MET' | 'AT_RISK' | 'MISSED';
+}
