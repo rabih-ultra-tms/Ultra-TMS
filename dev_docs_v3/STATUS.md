@@ -1,6 +1,6 @@
 # Ultra TMS — Project Status Dashboard
 
-> **Last Updated:** 2026-03-13
+> **Last Updated:** 2026-03-14
 > **Current Phase:** MP-06 Launch Ready (Weeks 11-12) ✅ COMPLETE. MP-01 ✅ COMPLETE (30/30). MP-02 ✅ COMPLETE (17/17 tasks). MP-03 ✅ COMPLETE (11/11 tasks). MP-04: 5/11 tasks DONE (cloud/infra deferred). MP-05 ✅ COMPLETE (15/15). MP-06 ✅ COMPLETE (12/12 tasks).
 > **Overall Health:** 7.5/10 (B) — Production-ready backend: N+1 queries fixed, security hardened (cross-tenant mutations patched), data integrity verified. Frontend: error boundaries, 100% loading states, confirmation dialogs. **READY FOR BETA LAUNCH**.
 > **Production Readiness:** 5.5/10 (up from 3.0) — See [PRODUCTION-READINESS-ASSESSMENT.md](05-audit/PRODUCTION-READINESS-ASSESSMENT.md)
@@ -71,11 +71,11 @@
 
 ### P1 Post-MVP (3 services)
 
-| #   | Service        | Backend                                       | Frontend                                  | Tests                 | Verified | Confidence | Priority |
-| --- | -------------- | --------------------------------------------- | ----------------------------------------- | --------------------- | -------- | ---------- | -------- |
-| 11  | Documents      | Substantial (20 endpoints)                    | Partial (4 hooks, 4+ components, 0 pages) | Backend: 7 spec files | No       | High       | P1       |
-| 12  | Communication  | Substantial (30 endpoints)                    | Partial (3 hooks, 0 pages)                | Backend: 7 spec files | No       | High       | P1       |
-| 14  | Carrier Portal | Substantial (54 endpoints, 5 models, 5 enums) | Not Built                                 | 7 spec stubs + 1 e2e  | No       | High       | P1       |
+| #   | Service        | Backend                                       | Frontend                                  | Tests                                         | Verified | Confidence | Priority |
+| --- | -------------- | --------------------------------------------- | ----------------------------------------- | --------------------------------------------- | -------- | ---------- | -------- |
+| 11  | Documents      | Substantial (20 endpoints)                    | Partial (4 hooks, 4+ components, 0 pages) | Backend: 7 spec files                         | No       | High       | P1       |
+| 12  | Communication  | Substantial (30 endpoints)                    | Partial (3 hooks, 0 pages)                | Backend: 7 spec files                         | No       | High       | P1       |
+| 14  | Carrier Portal | Substantial (54 endpoints, 5 models, 5 enums) | Built (10 pages, 18 components, 41 files) | 38 guard tests passing, 54 endpoints verified | Yes      | High       | P1       |
 
 ### P2 Extended (9 services)
 
