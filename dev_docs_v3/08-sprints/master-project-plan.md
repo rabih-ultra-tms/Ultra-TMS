@@ -489,25 +489,25 @@ Every service entering a sprint gets work across 5 layers:
 
 #### Service #14 — Carrier Portal
 
-| ID        | Task                                                         | Layer | Effort | Priority | Source  |
-| --------- | ------------------------------------------------------------ | ----- | ------ | -------- | ------- |
-| MP-08-008 | VER: Verify 50 protected endpoints + CarrierScopeGuard       | VER   | 3h     | P0       | PST-14  |
-| MP-08-009 | BLD: Portal login page (carrier-specific JWT auth)           | BLD   | 3h     | P0       | P2S-004 |
-| MP-08-010 | BLD: Available loads + load acceptance/rejection             | BLD   | 6h     | P0       | P2S-005 |
-| MP-08-011 | BLD: Document upload (POD, insurance certs, W-9)             | BLD   | 4h     | P0       | P2S-006 |
-| MP-08-012 | BLD: Payment viewing + settlement history                    | BLD   | 3h     | P1       | PST-14  |
-| MP-08-013 | BLD: Driver management (add/edit drivers, assign to loads)   | BLD   | 4h     | P1       | PST-14  |
-| MP-08-014 | BLD: Quick pay request flow (2% fee, $100 min, accept terms) | BLD   | 3h     | P1       | PST-14  |
-| MP-08-015 | BLD: Carrier profile + compliance docs management            | BLD   | 3h     | P1       | PST-14  |
-| MP-08-016 | WIR: Wire load bid/accept/reject to Load Board               | WIR   | 2h     | P0       | PST-14  |
-| MP-08-017 | TST: Carrier Portal auth + CarrierScopeGuard tests           | TST   | 3h     | P0       | PST-14  |
+| ID        | Task                                                         | Layer | Effort | Priority | Source  | Status   |
+| --------- | ------------------------------------------------------------ | ----- | ------ | -------- | ------- | -------- |
+| MP-08-008 | VER: Verify 50 protected endpoints + CarrierScopeGuard       | VER   | 3h     | P0       | PST-14  | **DONE** |
+| MP-08-009 | BLD: Portal login page (carrier-specific JWT auth)           | BLD   | 3h     | P0       | P2S-004 | **DONE** |
+| MP-08-010 | BLD: Available loads + load acceptance/rejection             | BLD   | 6h     | P0       | P2S-005 | **DONE** |
+| MP-08-011 | BLD: Document upload (POD, insurance certs, W-9)             | BLD   | 4h     | P0       | P2S-006 | **DONE** |
+| MP-08-012 | BLD: Payment viewing + settlement history                    | BLD   | 3h     | P1       | PST-14  | **DONE** |
+| MP-08-013 | BLD: Driver management (add/edit drivers, assign to loads)   | BLD   | 4h     | P1       | PST-14  | **DONE** |
+| MP-08-014 | BLD: Quick pay request flow (2% fee, $100 min, accept terms) | BLD   | 3h     | P1       | PST-14  | **DONE** |
+| MP-08-015 | BLD: Carrier profile + compliance docs management            | BLD   | 3h     | P1       | PST-14  | **DONE** |
+| MP-08-016 | WIR: Wire load bid/accept/reject to Load Board               | WIR   | 2h     | P0       | PST-14  | **DONE** |
+| MP-08-017 | TST: Carrier Portal auth + CarrierScopeGuard tests           | TST   | 3h     | P0       | PST-14  | **DONE** |
 
 **Exit Criteria:**
 
-- [ ] Both portals login independently with separate JWT
-- [ ] Customer can track shipments, view documents, see invoices
-- [ ] Carrier can accept loads, upload POD, view payments
-- [ ] Quick pay request flow works
+- [x] Both portals login independently with separate JWT
+- [x] Customer can track shipments, view documents, see invoices
+- [x] Carrier can accept loads, upload POD, view payments
+- [x] Quick pay request flow works
 
 ---
 
