@@ -23,24 +23,16 @@ import {
 } from '@/components/ui/card';
 import { useCarrierProfile } from '@/lib/hooks/useCarrierData';
 import { carrierClient } from '@/lib/api/carrier-client';
+import { type CarrierProfileUpdateDTO } from '@/lib/types/carrier';
 import { toast } from 'sonner';
 import { Loader2, Edit2, Save, X } from 'lucide-react';
 
 const carrierProfileSchema = z.object({
-  legalName: z.string().min(1, 'Company name is required'),
-  primaryContactName: z.string().optional(),
-  primaryContactPhone: z.string().min(1, 'Phone is required'),
-  primaryContactEmail: z.string().email('Please enter a valid email'),
-  mcNumber: z.string().min(1, 'MC Number is required'),
-  dotNumber: z.string().min(1, 'DOT Number is required'),
-  addressLine1: z.string().optional(),
-  addressLine2: z.string().optional(),
-  city: z.string().optional(),
-  state: z.string().optional(),
-  postalCode: z.string().optional(),
-  taxId: z.string().optional(),
-  bankName: z.string().optional(),
-  bankRoutingNumber: z.string().optional(),
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+  email: z.string().email('Please enter a valid email'),
+  phone: z.string().optional(),
+  language: z.string().optional(),
 });
 
 type CarrierProfileFormValues = z.infer<typeof carrierProfileSchema>;
@@ -57,43 +49,23 @@ export function CarrierProfileForm(_props: CarrierProfileFormProps) {
   const form = useForm<CarrierProfileFormValues>({
     resolver: zodResolver(carrierProfileSchema),
     defaultValues: {
-      legalName: '',
-      primaryContactName: '',
-      primaryContactPhone: '',
-      primaryContactEmail: '',
-      mcNumber: '',
-      dotNumber: '',
-      addressLine1: '',
-      addressLine2: '',
-      city: '',
-      state: '',
-      postalCode: '',
-      taxId: '',
-      bankName: '',
-      bankRoutingNumber: '',
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      language: '',
     },
   });
 
   // Update form when profile data loads
   useEffect(() => {
     if (profile) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const p = profile as any;
       form.reset({
-        legalName: p.legalName || '',
-        primaryContactName: p.primaryContactName || '',
-        primaryContactPhone: p.primaryContactPhone || '',
-        primaryContactEmail: p.primaryContactEmail || '',
-        mcNumber: p.mcNumber || '',
-        dotNumber: p.dotNumber || '',
-        addressLine1: p.addressLine1 || '',
-        addressLine2: p.addressLine2 || '',
-        city: p.city || '',
-        state: p.state || '',
-        postalCode: p.postalCode || '',
-        taxId: p.taxId || '',
-        bankName: p.bankName || '',
-        bankRoutingNumber: p.bankRoutingNumber || '',
+        firstName: profile.firstName || '',
+        lastName: profile.lastName || '',
+        email: profile.email || '',
+        phone: profile.phone || '',
+        language: profile.language || '',
       });
     }
   }, [profile, form]);
@@ -101,23 +73,13 @@ export function CarrierProfileForm(_props: CarrierProfileFormProps) {
   const onSubmit = async (values: CarrierProfileFormValues) => {
     setIsSaving(true);
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (carrierClient.updateProfile as any)({
-        legalName: values.legalName,
-        primaryContactName: values.primaryContactName,
-        primaryContactPhone: values.primaryContactPhone,
-        primaryContactEmail: values.primaryContactEmail,
-        mcNumber: values.mcNumber,
-        dotNumber: values.dotNumber,
-        addressLine1: values.addressLine1,
-        addressLine2: values.addressLine2,
-        city: values.city,
-        state: values.state,
-        postalCode: values.postalCode,
-        taxId: values.taxId,
-        bankName: values.bankName,
-        bankRoutingNumber: values.bankRoutingNumber,
-      });
+      const updatePayload: CarrierProfileUpdateDTO = {
+        firstName: values.firstName || undefined,
+        lastName: values.lastName || undefined,
+        phone: values.phone || undefined,
+        language: values.language || undefined,
+      };
+      await carrierClient.updateProfile(updatePayload);
       toast.success('Profile updated successfully');
       setIsEditing(false);
     } catch (error) {
@@ -183,42 +145,24 @@ export function CarrierProfileForm(_props: CarrierProfileFormProps) {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Company Information Section */}
+            {/* Personal Information Section */}
             <div>
               <h3 className="mb-4 text-sm font-semibold text-gray-900">
-                Company Information
+                Personal Information
               </h3>
               <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="legalName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Company Name</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          disabled={!isEditing}
-                          placeholder="Legal company name"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="mcNumber"
+                    name="firstName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>MC Number</FormLabel>
+                        <FormLabel>First Name</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             disabled={!isEditing}
-                            placeholder="MC123456"
+                            placeholder="John"
                           />
                         </FormControl>
                         <FormMessage />
@@ -228,15 +172,15 @@ export function CarrierProfileForm(_props: CarrierProfileFormProps) {
 
                   <FormField
                     control={form.control}
-                    name="dotNumber"
+                    name="lastName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>DOT Number</FormLabel>
+                        <FormLabel>Last Name</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             disabled={!isEditing}
-                            placeholder="DOT123456"
+                            placeholder="Doe"
                           />
                         </FormControl>
                         <FormMessage />
@@ -247,107 +191,16 @@ export function CarrierProfileForm(_props: CarrierProfileFormProps) {
 
                 <FormField
                   control={form.control}
-                  name="taxId"
+                  name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Tax ID</FormLabel>
+                      <FormLabel>Email</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
                           disabled={!isEditing}
-                          placeholder="XX-XXXXXXX"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            {/* Contact Information Section */}
-            <div>
-              <h3 className="mb-4 text-sm font-semibold text-gray-900">
-                Contact Information
-              </h3>
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="primaryContactName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Primary Contact Name</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          disabled={!isEditing}
-                          placeholder="John Doe"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="primaryContactPhone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Phone</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            disabled={!isEditing}
-                            type="tel"
-                            placeholder="(555) 123-4567"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="primaryContactEmail"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            disabled={!isEditing}
-                            type="email"
-                            placeholder="contact@company.com"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Address Section */}
-            <div>
-              <h3 className="mb-4 text-sm font-semibold text-gray-900">
-                Address
-              </h3>
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="addressLine1"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Street Address</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          disabled={!isEditing}
-                          placeholder="123 Main St"
+                          type="email"
+                          placeholder="john@example.com"
                         />
                       </FormControl>
                       <FormMessage />
@@ -357,97 +210,16 @@ export function CarrierProfileForm(_props: CarrierProfileFormProps) {
 
                 <FormField
                   control={form.control}
-                  name="addressLine2"
+                  name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Street Address 2</FormLabel>
+                      <FormLabel>Phone</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
                           disabled={!isEditing}
-                          placeholder="Suite 100"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="city"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>City</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            disabled={!isEditing}
-                            placeholder="New York"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="state"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>State</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            disabled={!isEditing}
-                            placeholder="NY"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="postalCode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>ZIP Code</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            disabled={!isEditing}
-                            placeholder="10001"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Banking Information Section */}
-            <div>
-              <h3 className="mb-4 text-sm font-semibold text-gray-900">
-                Banking Information
-              </h3>
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="bankName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Bank Name</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          disabled={!isEditing}
-                          placeholder="Wells Fargo"
+                          type="tel"
+                          placeholder="(555) 123-4567"
                         />
                       </FormControl>
                       <FormMessage />
@@ -457,15 +229,15 @@ export function CarrierProfileForm(_props: CarrierProfileFormProps) {
 
                 <FormField
                   control={form.control}
-                  name="bankRoutingNumber"
+                  name="language"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Bank Routing Number</FormLabel>
+                      <FormLabel>Language</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
                           disabled={!isEditing}
-                          placeholder="021000021"
+                          placeholder="English"
                         />
                       </FormControl>
                       <FormMessage />
