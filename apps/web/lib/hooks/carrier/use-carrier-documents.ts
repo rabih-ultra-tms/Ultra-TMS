@@ -82,7 +82,7 @@ export function useUploadCarrierDocument() {
         formData.append('loadId', params.loadId);
       }
 
-      const response = await apiClient.post<CarrierDocument>(
+      const response = await apiClient.upload<CarrierDocument>(
         '/carrier-portal/documents',
         formData
       );
