@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -68,6 +69,7 @@ export function InvestigationForm({
   onSuccess,
 }: InvestigationFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const queryClient = useQueryClient();
 
   const form = useForm<InvestigationFormValues>({
     resolver: zodResolver(investigationFormSchema),
@@ -82,42 +84,64 @@ export function InvestigationForm({
     try {
       setIsSubmitting(true);
 
-      // Update investigation
+      // Step 1: Save investigation findings
+      // This is the critical operation - investigation data must be saved
       await claimSettlementClient.updateInvestigation(claimId, {
         rootCause: values.rootCause,
         disposition: values.disposition,
         investigationNotes: values.investigationNotes,
       });
 
-      // Advance claim status based on current status
+      // Step 2: Attempt to advance claim status based on current status
+      // This is optional - if it fails, investigation is already saved
       const currentStatus = claim.status;
-      let statusMessage =
-        'Investigation updated successfully. Claim status advanced.';
 
-      if (
-        currentStatus === ClaimStatus.SUBMITTED ||
-        currentStatus === ClaimStatus.PENDING_DOCUMENTATION
-      ) {
-        // Advance to UNDER_INVESTIGATION
-        await claimsClient.updateStatus(claimId, {
-          status: ClaimStatus.UNDER_INVESTIGATION,
-          reason: 'Investigation findings added',
-        });
-        statusMessage =
-          'Investigation updated. Claim status advanced to Under Investigation.';
-      } else if (currentStatus === ClaimStatus.UNDER_INVESTIGATION) {
-        // Advance to UNDER_REVIEW (if this status exists in the system)
-        // For now, we'll keep it as UNDER_INVESTIGATION to indicate investigation is complete
-        statusMessage =
-          'Investigation updated successfully. Investigation findings recorded.';
+      try {
+        if (
+          currentStatus === ClaimStatus.SUBMITTED ||
+          currentStatus === ClaimStatus.PENDING_DOCUMENTATION
+        ) {
+          // Advance to UNDER_INVESTIGATION
+          await claimsClient.updateStatus(claimId, {
+            status: ClaimStatus.UNDER_INVESTIGATION,
+            reason: 'Investigation findings added',
+          });
+          toast.success(
+            'Investigation updated. Claim status advanced to Under Investigation.'
+          );
+        } else if (currentStatus === ClaimStatus.UNDER_INVESTIGATION) {
+          // Investigation status remains UNDER_INVESTIGATION
+          // Investigation findings are recorded but status doesn't change
+          toast.success(
+            'Investigation findings recorded successfully. Claim remains under investigation.'
+          );
+        } else {
+          // Unexpected status - just acknowledge the investigation was saved
+          toast.success('Investigation updated successfully.');
+        }
+      } catch (statusErr) {
+        // Status update failed, but investigation was already saved
+        // This is acceptable - the investigation data is persistent
+        console.warn(
+          'Status update failed, but investigation findings were saved:',
+          statusErr
+        );
+        toast.warning(
+          'Investigation findings saved, but status update encountered an issue. Investigation data is persisted.'
+        );
       }
 
-      toast.success(statusMessage);
+      // Invalidate query to refresh claim detail
+      queryClient.invalidateQueries({
+        queryKey: ['claims', 'detail', claimId],
+      });
+
+      // Call success callback after both operations (investigation save + status update attempt)
       onSuccess?.();
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : 'Failed to update investigation';
-      toast.error(message);
+      toast.error(`Investigation update failed: ${message}`);
     } finally {
       setIsSubmitting(false);
     }
