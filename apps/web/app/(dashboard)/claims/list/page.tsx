@@ -17,13 +17,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-} from '@/components/ui/pagination';
-import { Plus, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Pagination } from '@/components/ui/pagination';
+import { Plus, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 
 const PAGE_SIZE = 20;
@@ -213,67 +208,12 @@ function ClaimsListContent() {
 
       {/* Pagination */}
       {!isLoading && filteredClaims.length > 0 && totalPages > 1 && (
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setPage(Math.max(1, page - 1))}
-                disabled={page === 1}
-                className="gap-1"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Previous
-              </Button>
-            </PaginationItem>
-
-            {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
-              const pageNum = i + 1;
-              return (
-                <PaginationItem key={pageNum}>
-                  <Button
-                    variant={page === pageNum ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setPage(pageNum)}
-                  >
-                    {pageNum}
-                  </Button>
-                </PaginationItem>
-              );
-            })}
-
-            {totalPages > 5 && (
-              <>
-                <PaginationItem>
-                  <PaginationEllipsis />
-                </PaginationItem>
-                <PaginationItem>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setPage(totalPages)}
-                  >
-                    {totalPages}
-                  </Button>
-                </PaginationItem>
-              </>
-            )}
-
-            <PaginationItem>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setPage(Math.min(totalPages, page + 1))}
-                disabled={page === totalPages}
-                className="gap-1"
-              >
-                Next
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
+        <Pagination
+          page={page}
+          limit={PAGE_SIZE}
+          total={pagination?.total}
+          onPageChange={setPage}
+        />
       )}
     </div>
   );
