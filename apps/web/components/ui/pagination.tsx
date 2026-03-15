@@ -1,6 +1,12 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface PaginationProps {
   page: number;
@@ -66,7 +72,7 @@ export function Pagination({
         </Button>
         <div className="text-sm font-medium text-muted-foreground">
           Page {page}
-          {totalPages ? ` of ${totalPages}` : ""}
+          {totalPages ? ` of ${totalPages}` : ''}
         </div>
         <Button
           variant="outline"
