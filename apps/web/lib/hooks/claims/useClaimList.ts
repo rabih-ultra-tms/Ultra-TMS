@@ -27,11 +27,12 @@ export const claimKeys = {
 // Utilities
 // ===========================
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Extract error message from various error types
  * Handles API structured errors, Error objects, and unknown errors
  */
-function getErrorMessage(error: unknown): string {
+function getErrorMessage(error: any): string {
   if (error?.message) {
     return error.message;
   }
@@ -79,7 +80,7 @@ export function useClaimList(options: UseClaimListOptions = {}) {
       queryClient.invalidateQueries({ queryKey: claimKeys.lists() });
       toast.success('Claim created successfully');
     },
-    onError: (error: unknown) => {
+    onError: (error: any) => {
       toast.error(getErrorMessage(error));
     },
   });
@@ -97,7 +98,7 @@ export function useClaimList(options: UseClaimListOptions = {}) {
       queryClient.invalidateQueries({ queryKey: claimKeys.lists() });
       toast.success('Claim updated successfully');
     },
-    onError: (error: unknown) => {
+    onError: (error: any) => {
       toast.error(getErrorMessage(error));
     },
   });
@@ -109,7 +110,7 @@ export function useClaimList(options: UseClaimListOptions = {}) {
       queryClient.invalidateQueries({ queryKey: claimKeys.lists() });
       toast.success('Claim deleted successfully');
     },
-    onError: (error: unknown) => {
+    onError: (error: any) => {
       toast.error(getErrorMessage(error));
     },
   });
