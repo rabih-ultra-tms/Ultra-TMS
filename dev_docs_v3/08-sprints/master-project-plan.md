@@ -2,7 +2,7 @@
 
 > **Scope:** 39 services, 24 sprints, 5 phases, ~48 weeks
 > **Start Date:** 2026-03-10 (Week 1 = Sprint MP-01)
-> **Last Updated:** 2026-03-14
+> **Last Updated:** 2026-03-15
 > **Replaces:** `roadmap-phases.md` (16-week MVP-only plan)
 > **Companion Files:** [STATUS.md](../STATUS.md) | [REMEDIATION-ROADMAP.md](../05-audit/REMEDIATION-ROADMAP.md) | [\_CONSOLIDATED-VERDICTS.md](../05-audit/tribunal/per-service/_CONSOLIDATED-VERDICTS.md)
 
@@ -12,7 +12,7 @@
 
 Ultra TMS is a multi-tenant 3PL logistics platform with **39 services** across 5 tiers. This plan maps every service into a dependency-ordered sequence of 2-week sprints from current state to General Availability.
 
-**Current State (2026-03-14):**
+**Current State (2026-03-15):**
 
 - MP-01 ✅ COMPLETE (30/30 tasks) — Security hardening
 - MP-02 ✅ COMPLETE (17/17 tasks) — Table-stakes features
@@ -22,7 +22,7 @@ Ultra TMS is a multi-tenant 3PL logistics platform with **39 services** across 5
 - MP-06 ✅ COMPLETE (12/12 tasks) — Beta launch ready (N+1 fixes, security hardening, UX polish, data integrity verified)
 - MP-07 ✅ COMPLETE (18/18 tasks) — Documents + Communication (6 pages, backend verification, security wiring, event triggers, tests)
 - MP-08 ✅ COMPLETE (17/17 tasks) — Customer Portal ✅ DONE (7 tasks); Carrier Portal ✅ DONE (14 tasks, 35 hours, 54 endpoints verified, 38 tests)
-- MP-09 🟡 IN PROGRESS — Claims + Contracts (Contracts frontend foundation: types, validators, client, core hooks — 5/30 tasks)
+- MP-09 🟡 IN PROGRESS — Claims + Contracts (Claims Chunk 1 ✅ COMPLETE — 4/4 tasks: API client, hooks, dashboard, list page; Contracts foundation foundation in progress — 5/30 tasks)
 - Backend: ~98% built for P0 + P1 (1,230 P0 endpoints + Documents/Communications modules)
 - Frontend: ~90-95% built for P0 (114 routes, 304 components) + P1 Pages (6 new: Docs Dashboard, Upload, Viewer, Communications Center, Templates, Notification Prefs)
 - P1 frontend: 3/3 services built (Documents ✅, Communication ✅, Carrier Portal ✅)

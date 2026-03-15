@@ -1,7 +1,7 @@
 # Ultra TMS — Project Status Dashboard
 
-> **Last Updated:** 2026-03-14
-> **Current Phase:** MP-09 In Progress (Claims + Contracts). MP-01 ✅ COMPLETE (30/30). MP-02 ✅ COMPLETE (17/17 tasks). MP-03 ✅ COMPLETE (11/11 tasks). MP-04: 5/11 tasks DONE (cloud/infra deferred). MP-05 ✅ COMPLETE (15/15). MP-06 ✅ COMPLETE (12/12 tasks). MP-07 ✅ COMPLETE (18/18). MP-08 ✅ COMPLETE (17/17).
+> **Last Updated:** 2026-03-15
+> **Current Phase:** MP-09 In Progress (Claims Chunk 1 ✅ COMPLETE — API, hooks, dashboard, list page; Contracts foundation in progress). MP-01 ✅ COMPLETE (30/30). MP-02 ✅ COMPLETE (17/17 tasks). MP-03 ✅ COMPLETE (11/11 tasks). MP-04: 5/11 tasks DONE (cloud/infra deferred). MP-05 ✅ COMPLETE (15/15). MP-06 ✅ COMPLETE (12/12 tasks). MP-07 ✅ COMPLETE (18/18). MP-08 ✅ COMPLETE (17/17).
 > **Overall Health:** 7.5/10 (B) — Production-ready backend: N+1 queries fixed, security hardened (cross-tenant mutations patched), data integrity verified. Frontend: error boundaries, 100% loading states, confirmation dialogs. **READY FOR BETA LAUNCH**.
 > **Production Readiness:** 5.5/10 (up from 3.0) — See [PRODUCTION-READINESS-ASSESSMENT.md](05-audit/PRODUCTION-READINESS-ASSESSMENT.md)
 > **Active Plan:** [Master Project Plan](08-sprints/master-project-plan.md) — ALL 39 services, 24 sprints, 5 phases, 48 weeks
@@ -81,7 +81,7 @@
 
 | #   | Service            | Backend                                              | Frontend                                    | Tests                   | Verified | Confidence | Priority |
 | --- | ------------------ | ---------------------------------------------------- | ------------------------------------------- | ----------------------- | -------- | ---------- | -------- |
-| 10  | Claims             | Substantial (44 endpoints, 8 models, 20+ DTOs)       | Not Built                                   | 7 BE spec files         | No       | High       | P2       |
+| 10  | Claims             | Substantial (44 endpoints, 8 models, 20+ DTOs)       | Partial (API foundation, hooks, 2/4 pages)  | 7 BE spec files         | No       | High       | P2       |
 | 15  | Contracts          | Substantial (58 endpoints, 11 models, 6 enums)       | Partial (API foundation, hooks, 5/30 tasks) | 35 tests (useContracts) | No       | High       | P2       |
 | 16  | Agents             | Substantial (6 controllers, 43 endpoints, 9 models)  | Not Built                                   | None                    | No       | High       | P2       |
 | 17  | Credit             | Substantial (5 controllers, 31 endpoints, 5 models)  | Not Built                                   | 5 spec files            | No       | High       | P2       |
