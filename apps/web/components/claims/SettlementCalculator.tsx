@@ -61,7 +61,7 @@ interface AdjustmentForm {
 // ===========================
 
 const adjustmentSchema = z.object({
-  reason: z.string().min(1, 'Reason is required'),
+  reason: z.enum(['DEDUCTIBLE', 'DEPRECIATION', 'SUBROGATION', 'OTHER']),
   amount: z.number().refine((val) => val !== 0, 'Amount cannot be zero'),
 });
 
@@ -112,6 +112,7 @@ export function SettlementCalculator({
   });
   const [showAddAdjustment, setShowAddAdjustment] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [lastError, setLastError] = useState<string | null>(null);
 
   // Calculations
   const totalAdjustments = adjustments.reduce(
@@ -178,6 +179,7 @@ export function SettlementCalculator({
       }
 
       setIsSubmitting(true);
+      setLastError(null);
       await claimSettlementClient.approve(claimId, {
         approvedAmount,
         reason: notes || undefined,
@@ -187,6 +189,7 @@ export function SettlementCalculator({
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : 'Failed to approve claim';
+      setLastError(message);
       toast.error(message);
     } finally {
       setIsSubmitting(false);
@@ -202,6 +205,8 @@ export function SettlementCalculator({
       }
 
       setIsSubmitting(true);
+      setLastError(null);
+      // Backend uses "deny" and DENIED status (not "reject")
       await claimSettlementClient.deny(claimId, {
         reason: notes,
       });
@@ -210,6 +215,7 @@ export function SettlementCalculator({
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : 'Failed to deny claim';
+      setLastError(message);
       toast.error(message);
     } finally {
       setIsSubmitting(false);
@@ -217,20 +223,30 @@ export function SettlementCalculator({
   };
 
   // Check if settlement is allowed
-  const isSettlementAllowed =
-    claim.status === ClaimStatus.UNDER_INVESTIGATION ||
-    claim.status === ClaimStatus.PENDING_DOCUMENTATION;
+  // Spec: Only show if status = UNDER_REVIEW or later
+  // Since UNDER_REVIEW doesn't exist in enum, interpret as "after investigation is complete"
+  // Allow: APPROVED, SETTLED, CLOSED (after investigation is done)
+  // Deny: DRAFT, SUBMITTED, UNDER_INVESTIGATION, PENDING_DOCUMENTATION (investigation in progress)
+  const deniedStatuses = [
+    ClaimStatus.DRAFT,
+    ClaimStatus.SUBMITTED,
+    ClaimStatus.UNDER_INVESTIGATION,
+    ClaimStatus.PENDING_DOCUMENTATION,
+  ];
+  const isSettlementAllowed = claim && !deniedStatuses.includes(claim.status);
 
   if (!isSettlementAllowed) {
     return (
       <Card className="border-yellow-200 bg-yellow-50">
         <CardContent className="pt-6">
           <p className="text-sm text-yellow-800">
-            Settlement calculator is only available for claims in{' '}
-            <strong>Under Investigation</strong> or{' '}
-            <strong>Pending Documentation</strong> status.
+            Settlement calculator is only available after investigation is
+            complete.
           </p>
           <p className="mt-2 text-xs text-yellow-700">
+            Allowed statuses: <strong>Approved, Settled, Closed</strong>
+          </p>
+          <p className="text-xs text-yellow-700">
             Current status: <strong>{formatStatus(claim.status)}</strong>
           </p>
         </CardContent>
@@ -337,20 +353,27 @@ export function SettlementCalculator({
                     htmlFor="adjustment-reason"
                     className="text-sm font-medium"
                   >
-                    Reason
+                    Adjustment Reason
                   </Label>
-                  <Input
-                    id="adjustment-reason"
-                    placeholder="e.g., Tax reduction, discount, refund"
+                  <Select
                     value={newAdjustment.reason}
-                    onChange={(e) =>
+                    onValueChange={(value) =>
                       setNewAdjustment({
                         ...newAdjustment,
-                        reason: e.target.value,
+                        reason: value,
                       })
                     }
-                    className="mt-2"
-                  />
+                  >
+                    <SelectTrigger id="adjustment-reason" className="mt-2">
+                      <SelectValue placeholder="Select adjustment reason" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="DEDUCTIBLE">Deductible</SelectItem>
+                      <SelectItem value="DEPRECIATION">Depreciation</SelectItem>
+                      <SelectItem value="SUBROGATION">Subrogation</SelectItem>
+                      <SelectItem value="OTHER">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label
@@ -393,7 +416,8 @@ export function SettlementCalculator({
                   <TableRow>
                     <TableHead>Reason</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
-                    <TableHead className="text-right">Date</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Created By</TableHead>
                     <TableHead className="w-10">Action</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -413,8 +437,11 @@ export function SettlementCalculator({
                           {formatCurrency(adj.adjustmentAmount)}
                         </span>
                       </TableCell>
-                      <TableCell className="text-right text-sm text-muted-foreground">
+                      <TableCell className="text-sm text-muted-foreground">
                         {formatDate(adj.createdAt)}
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-600">
+                        {adj.createdBy || 'System'}
                       </TableCell>
                       <TableCell>
                         <Button
@@ -533,6 +560,22 @@ export function SettlementCalculator({
           </div>
         </CardContent>
       </Card>
+
+      {/* Error Retry UI */}
+      {lastError && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="pt-6">
+            <p className="mb-3 text-sm text-red-700">{lastError}</p>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setLastError(null)}
+            >
+              Dismiss
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Action Buttons */}
       <div className="flex gap-3">
