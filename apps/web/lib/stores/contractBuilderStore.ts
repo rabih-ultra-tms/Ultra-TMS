@@ -13,6 +13,8 @@ export interface RateLaneFormData {
   markup?: number;
   discount?: number;
   minCharge?: number;
+  effectiveDate?: string;
+  expiryDate?: string;
 }
 
 export interface RateTableFormData {
@@ -45,6 +47,21 @@ export interface VolumeCommitmentFormData {
   volumeUnit: string;
   discountPercentage: number;
   penaltyPercentage?: number;
+}
+
+export interface ContractFormData {
+  type: ContractType | null;
+  partyId: string;
+  partyName: string;
+  startDate: string;
+  endDate: string;
+  currency: string;
+  paymentTerms: string;
+  incoterms: string;
+  value: number;
+  rateTables: RateTableFormData[];
+  slas: SLAFormData[];
+  volumeCommitments: VolumeCommitmentFormData[];
 }
 
 export interface ContractBuilderState {
@@ -80,7 +97,12 @@ export interface ContractBuilderState {
   setContractType: (type: ContractType) => void;
   setParty: (id: string, name: string) => void;
   setDates: (startDate: string, endDate: string) => void;
-  setTerms: (currency: string, paymentTerms: string, incoterms: string, value: number) => void;
+  setTerms: (
+    currency: string,
+    paymentTerms: string,
+    incoterms: string,
+    value: number
+  ) => void;
   addRateTable: (table: RateTableFormData) => void;
   updateRateTable: (index: number, table: RateTableFormData) => void;
   deleteRateTable: (index: number) => void;
@@ -96,13 +118,16 @@ export interface ContractBuilderState {
   updateSLA: (index: number, sla: SLAFormData) => void;
   deleteSLA: (index: number) => void;
   addVolumeCommitment: (commitment: VolumeCommitmentFormData) => void;
-  updateVolumeCommitment: (index: number, commitment: VolumeCommitmentFormData) => void;
+  updateVolumeCommitment: (
+    index: number,
+    commitment: VolumeCommitmentFormData
+  ) => void;
   deleteVolumeCommitment: (index: number) => void;
   setIsSubmitting: (submitting: boolean) => void;
   reset: () => void;
 
   // Get form data
-  getFormData: () => Record<string, any>;
+  getFormData: () => ContractFormData;
 }
 
 const initialState = {
@@ -123,137 +148,146 @@ const initialState = {
   isSubmitting: false,
 };
 
-export const useContractBuilderStore = create<ContractBuilderState>((set, get) => ({
-  ...initialState,
+export const useContractBuilderStore = create<ContractBuilderState>(
+  (set, get) => ({
+    ...initialState,
 
-  setCurrentStep: (step: number) => set({ currentStep: step }),
+    setCurrentStep: (step: number) => set({ currentStep: step }),
 
-  setContractType: (contractType: ContractType) => set({ contractType }),
+    setContractType: (contractType: ContractType) => set({ contractType }),
 
-  setParty: (partyId: string, partyName: string) =>
-    set({ partyId, partyName }),
+    setParty: (partyId: string, partyName: string) =>
+      set({ partyId, partyName }),
 
-  setDates: (startDate: string, endDate: string) =>
-    set({ startDate, endDate }),
+    setDates: (startDate: string, endDate: string) =>
+      set({ startDate, endDate }),
 
-  setTerms: (currency: string, paymentTerms: string, incoterms: string, value: number) =>
-    set({ currency, paymentTerms, incoterms, value }),
+    setTerms: (
+      currency: string,
+      paymentTerms: string,
+      incoterms: string,
+      value: number
+    ) => set({ currency, paymentTerms, incoterms, value }),
 
-  addRateTable: (table: RateTableFormData) =>
-    set((state) => ({
-      rateTables: [...state.rateTables, table],
-    })),
+    addRateTable: (table: RateTableFormData) =>
+      set((state) => ({
+        rateTables: [...state.rateTables, table],
+      })),
 
-  updateRateTable: (index: number, table: RateTableFormData) =>
-    set((state) => ({
-      rateTables: state.rateTables.map((t, i) => (i === index ? table : t)),
-    })),
+    updateRateTable: (index: number, table: RateTableFormData) =>
+      set((state) => ({
+        rateTables: state.rateTables.map((t, i) => (i === index ? table : t)),
+      })),
 
-  deleteRateTable: (index: number) =>
-    set((state) => ({
-      rateTables: state.rateTables.filter((_, i) => i !== index),
-      selectedRateTableIndex:
-        state.selectedRateTableIndex === index
-          ? null
-          : state.selectedRateTableIndex,
-    })),
+    deleteRateTable: (index: number) =>
+      set((state) => ({
+        rateTables: state.rateTables.filter((_, i) => i !== index),
+        selectedRateTableIndex:
+          state.selectedRateTableIndex === index
+            ? null
+            : state.selectedRateTableIndex,
+      })),
 
-  selectRateTable: (index: number | null) =>
-    set({ selectedRateTableIndex: index }),
+    selectRateTable: (index: number | null) =>
+      set({ selectedRateTableIndex: index }),
 
-  addLaneToRateTable: (tableIndex: number, lane: RateLaneFormData) =>
-    set((state) => ({
-      rateTables: state.rateTables.map((table, i) =>
-        i === tableIndex
-          ? {
-              ...table,
-              lanes: [...table.lanes, lane],
-            }
-          : table
-      ),
-    })),
+    addLaneToRateTable: (tableIndex: number, lane: RateLaneFormData) =>
+      set((state) => ({
+        rateTables: state.rateTables.map((table, i) =>
+          i === tableIndex
+            ? {
+                ...table,
+                lanes: [...table.lanes, lane],
+              }
+            : table
+        ),
+      })),
 
-  updateLaneInRateTable: (
-    tableIndex: number,
-    laneIndex: number,
-    lane: RateLaneFormData
-  ) =>
-    set((state) => ({
-      rateTables: state.rateTables.map((table, i) =>
-        i === tableIndex
-          ? {
-              ...table,
-              lanes: table.lanes.map((l, j) =>
-                j === laneIndex ? lane : l
-              ),
-            }
-          : table
-      ),
-    })),
+    updateLaneInRateTable: (
+      tableIndex: number,
+      laneIndex: number,
+      lane: RateLaneFormData
+    ) =>
+      set((state) => ({
+        rateTables: state.rateTables.map((table, i) =>
+          i === tableIndex
+            ? {
+                ...table,
+                lanes: table.lanes.map((l, j) => (j === laneIndex ? lane : l)),
+              }
+            : table
+        ),
+      })),
 
-  deleteLaneFromRateTable: (tableIndex: number, laneIndex: number) =>
-    set((state) => ({
-      rateTables: state.rateTables.map((table, i) =>
-        i === tableIndex
-          ? {
-              ...table,
-              lanes: table.lanes.filter((_, j) => j !== laneIndex),
-            }
-          : table
-      ),
-    })),
+    deleteLaneFromRateTable: (tableIndex: number, laneIndex: number) =>
+      set((state) => ({
+        rateTables: state.rateTables.map((table, i) =>
+          i === tableIndex
+            ? {
+                ...table,
+                lanes: table.lanes.filter((_, j) => j !== laneIndex),
+              }
+            : table
+        ),
+      })),
 
-  addSLA: (sla: SLAFormData) =>
-    set((state) => ({
-      slas: [...state.slas, sla],
-    })),
+    addSLA: (sla: SLAFormData) =>
+      set((state) => ({
+        slas: [...state.slas, sla],
+      })),
 
-  updateSLA: (index: number, sla: SLAFormData) =>
-    set((state) => ({
-      slas: state.slas.map((s, i) => (i === index ? sla : s)),
-    })),
+    updateSLA: (index: number, sla: SLAFormData) =>
+      set((state) => ({
+        slas: state.slas.map((s, i) => (i === index ? sla : s)),
+      })),
 
-  deleteSLA: (index: number) =>
-    set((state) => ({
-      slas: state.slas.filter((_, i) => i !== index),
-    })),
+    deleteSLA: (index: number) =>
+      set((state) => ({
+        slas: state.slas.filter((_, i) => i !== index),
+      })),
 
-  addVolumeCommitment: (commitment: VolumeCommitmentFormData) =>
-    set((state) => ({
-      volumeCommitments: [...state.volumeCommitments, commitment],
-    })),
+    addVolumeCommitment: (commitment: VolumeCommitmentFormData) =>
+      set((state) => ({
+        volumeCommitments: [...state.volumeCommitments, commitment],
+      })),
 
-  updateVolumeCommitment: (index: number, commitment: VolumeCommitmentFormData) =>
-    set((state) => ({
-      volumeCommitments: state.volumeCommitments.map((c, i) =>
-        i === index ? commitment : c
-      ),
-    })),
+    updateVolumeCommitment: (
+      index: number,
+      commitment: VolumeCommitmentFormData
+    ) =>
+      set((state) => ({
+        volumeCommitments: state.volumeCommitments.map((c, i) =>
+          i === index ? commitment : c
+        ),
+      })),
 
-  deleteVolumeCommitment: (index: number) =>
-    set((state) => ({
-      volumeCommitments: state.volumeCommitments.filter((_, i) => i !== index),
-    })),
+    deleteVolumeCommitment: (index: number) =>
+      set((state) => ({
+        volumeCommitments: state.volumeCommitments.filter(
+          (_, i) => i !== index
+        ),
+      })),
 
-  setIsSubmitting: (isSubmitting: boolean) => set({ isSubmitting }),
+    setIsSubmitting: (isSubmitting: boolean) => set({ isSubmitting }),
 
-  reset: () => set(initialState),
+    reset: () => set(initialState),
 
-  getFormData: () => {
-    const state = get();
-    return {
-      type: state.contractType,
-      partyId: state.partyId,
-      partyName: state.partyName,
-      startDate: state.startDate,
-      endDate: state.endDate,
-      currency: state.currency,
-      paymentTerms: state.paymentTerms,
-      incoterms: state.incoterms,
-      value: state.value,
-      rateTables: state.rateTables,
-      slas: state.slas,
-      volumeCommitments: state.volumeCommitments,
-    };
-  },
-}));
+    getFormData: () => {
+      const state = get();
+      return {
+        type: state.contractType,
+        partyId: state.partyId,
+        partyName: state.partyName,
+        startDate: state.startDate,
+        endDate: state.endDate,
+        currency: state.currency,
+        paymentTerms: state.paymentTerms,
+        incoterms: state.incoterms,
+        value: state.value,
+        rateTables: state.rateTables,
+        slas: state.slas,
+        volumeCommitments: state.volumeCommitments,
+      };
+    },
+  })
+);

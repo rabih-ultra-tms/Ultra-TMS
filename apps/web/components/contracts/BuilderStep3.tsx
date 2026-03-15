@@ -29,6 +29,20 @@ import {
 import { Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
+// Helper function to get today's date as YYYY-MM-DD
+function getTodayDate(): string {
+  return new Date().toISOString().split('T')[0] || '';
+}
+
+// Helper function to get a date 365 days from now as YYYY-MM-DD
+function getFutureDate(): string {
+  return (
+    new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split('T')[0] || ''
+  );
+}
+
 export default function BuilderStep3() {
   const {
     rateTables,
@@ -45,10 +59,8 @@ export default function BuilderStep3() {
   const [newTable, setNewTable] = useState<RateTableFormData>({
     name: '',
     type: 'BASE',
-    effectiveDate: new Date().toISOString().split('T')[0],
-    expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .split('T')[0],
+    effectiveDate: getTodayDate(),
+    expiryDate: getFutureDate(),
     baseCurrency: 'USD',
     lanes: [],
   });
@@ -57,6 +69,8 @@ export default function BuilderStep3() {
     origin: '',
     destination: '',
     baseRate: 0,
+    effectiveDate: getTodayDate(),
+    expiryDate: getFutureDate(),
   });
 
   const handleAddRateTable = () => {
@@ -68,10 +82,8 @@ export default function BuilderStep3() {
     setNewTable({
       name: '',
       type: 'BASE',
-      effectiveDate: new Date().toISOString().split('T')[0],
-      expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split('T')[0],
+      effectiveDate: getTodayDate(),
+      expiryDate: getFutureDate(),
       baseCurrency: 'USD',
       lanes: [],
     });
@@ -93,6 +105,8 @@ export default function BuilderStep3() {
       origin: '',
       destination: '',
       baseRate: 0,
+      effectiveDate: getTodayDate(),
+      expiryDate: getFutureDate(),
     });
     setShowNewLane(false);
     toast.success('Lane added');
@@ -168,7 +182,9 @@ export default function BuilderStep3() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="BASE">Base</SelectItem>
-                      <SelectItem value="FUEL_SURCHARGE">Fuel Surcharge</SelectItem>
+                      <SelectItem value="FUEL_SURCHARGE">
+                        Fuel Surcharge
+                      </SelectItem>
                       <SelectItem value="ACCESSORIAL">Accessorial</SelectItem>
                     </SelectContent>
                   </Select>
@@ -195,10 +211,7 @@ export default function BuilderStep3() {
               </div>
 
               <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  onClick={handleAddRateTable}
-                >
+                <Button size="sm" onClick={handleAddRateTable}>
                   Create Table
                 </Button>
                 <Button
@@ -304,7 +317,10 @@ export default function BuilderStep3() {
                         id="lane-dest"
                         value={newLane.destination}
                         onChange={(e) =>
-                          setNewLane({ ...newLane, destination: e.target.value })
+                          setNewLane({
+                            ...newLane,
+                            destination: e.target.value,
+                          })
                         }
                         placeholder="e.g., Los Angeles"
                         className="mt-1"
@@ -370,7 +386,10 @@ export default function BuilderStep3() {
                       <TableCell className="text-right">
                         <button
                           onClick={() =>
-                            deleteLaneFromRateTable(selectedRateTableIndex!, index)
+                            deleteLaneFromRateTable(
+                              selectedRateTableIndex!,
+                              index
+                            )
                           }
                           className="text-red-600 hover:text-red-700"
                         >

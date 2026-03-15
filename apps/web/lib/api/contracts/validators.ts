@@ -65,8 +65,8 @@ export type SLAInput = z.infer<typeof slaInputSchema>;
 export const slaInputSchema = z.object({
   name: z.string().min(1),
   description: z.string().min(1),
-  deliveryTime: z.number().positive(),
-  pickupTime: z.number().positive(),
+  deliveryTime: z.number().nonnegative(),
+  pickupTime: z.number().nonnegative(),
   onTimePercentage: z.number().min(0).max(100),
   penalty: z.number().optional(),
   reward: z.number().optional(),

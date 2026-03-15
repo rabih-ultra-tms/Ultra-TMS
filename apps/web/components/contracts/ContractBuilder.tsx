@@ -3,10 +3,18 @@
 import { useRouter } from 'next/navigation';
 import { useContractBuilderStore } from '@/lib/stores/contractBuilderStore';
 import { useContracts } from '@/lib/hooks/contracts/useContracts';
+import { createContractInputSchema } from '@/lib/api/contracts/validators';
+import {
+  rateTablesApi,
+  rateLanesApi,
+  slasApi,
+  volumeCommitmentsApi,
+} from '@/lib/api/contracts/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { toast } from 'sonner';
 import BuilderStep1 from './BuilderStep1';
 import BuilderStep2 from './BuilderStep2';
 import BuilderStep3 from './BuilderStep3';
@@ -39,24 +47,96 @@ export default function ContractBuilder() {
       const store = useContractBuilderStore.getState();
       const formData = store.getFormData();
 
-      // Create contract with the builder data
-      await createContract({
+      // Convert dates from YYYY-MM-DD to ISO-8601 datetime format
+      const startDate = new Date(formData.startDate).toISOString();
+      const endDate = new Date(formData.endDate).toISOString();
+
+      // Prepare contract payload
+      const contractPayload = {
         contractNumber: `CNT-${Date.now()}`,
         contractName: `Contract ${new Date().toLocaleDateString()}`,
         type: formData.type,
         partyId: formData.partyId,
         partyName: formData.partyName,
-        startDate: formData.startDate,
-        endDate: formData.endDate,
+        startDate,
+        endDate,
         value: formData.value,
         currency: formData.currency,
         terms: formData.paymentTerms,
-      } as any);
+      };
+
+      // Validate contract payload against schema
+      const validationResult =
+        createContractInputSchema.safeParse(contractPayload);
+      if (!validationResult.success) {
+        const errorMsg =
+          validationResult.error.issues[0]?.message || 'Validation failed';
+        toast.error(`Validation failed: ${errorMsg}`);
+        return;
+      }
+
+      // Create the contract
+      const contractResponse = await createContract(validationResult.data);
+      const contractId = contractResponse.id;
+
+      // Save nested data (rate tables with lanes, SLAs, volume commitments)
+      try {
+        // Save rate tables and their lanes
+        for (const table of formData.rateTables) {
+          // Convert rate table dates to ISO-8601
+          const tablePayload = {
+            ...table,
+            effectiveDate: table.effectiveDate
+              ? new Date(table.effectiveDate).toISOString()
+              : new Date().toISOString(),
+            expiryDate: table.expiryDate
+              ? new Date(table.expiryDate).toISOString()
+              : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+          };
+
+          const savedTable = await rateTablesApi.create(
+            contractId,
+            tablePayload
+          );
+
+          // Save lanes for this rate table
+          for (const lane of table.lanes) {
+            const lanePayload = {
+              ...lane,
+              effectiveDate: lane.effectiveDate
+                ? new Date(lane.effectiveDate).toISOString()
+                : new Date().toISOString(),
+              expiryDate: lane.expiryDate
+                ? new Date(lane.expiryDate).toISOString()
+                : new Date(
+                    Date.now() + 365 * 24 * 60 * 60 * 1000
+                  ).toISOString(),
+            };
+            await rateLanesApi.create(savedTable.id, lanePayload);
+          }
+        }
+
+        // Save SLAs
+        for (const sla of formData.slas) {
+          await slasApi.create(contractId, sla);
+        }
+
+        // Save volume commitments
+        for (const vol of formData.volumeCommitments) {
+          await volumeCommitmentsApi.create(contractId, vol);
+        }
+
+        toast.success('Contract created with all nested data successfully');
+      } catch (nestedError) {
+        console.error('Error saving nested data:', nestedError);
+        toast.error('Contract created but failed to save some nested data');
+      }
 
       reset();
       router.push('/contracts');
     } catch (error) {
       console.error('Failed to create contract:', error);
+      toast.error('Failed to create contract');
     }
   };
 

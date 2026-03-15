@@ -29,13 +29,8 @@ const incotermsOptions = [
 ];
 
 export default function BuilderStep2() {
-  const {
-    currency,
-    paymentTerms,
-    incoterms,
-    value,
-    setTerms,
-  } = useContractBuilderStore();
+  const { currency, paymentTerms, incoterms, value, setTerms } =
+    useContractBuilderStore();
 
   return (
     <div className="space-y-6">
@@ -58,8 +53,8 @@ export default function BuilderStep2() {
           </Label>
           <Select
             value={currency}
-            onValueChange={(value) =>
-              setTerms(value, paymentTerms, incoterms, value)
+            onValueChange={(selectedCurrency) =>
+              setTerms(selectedCurrency, paymentTerms, incoterms, value)
             }
           >
             <SelectTrigger id="currency" className="mt-2">
@@ -81,8 +76,8 @@ export default function BuilderStep2() {
           </Label>
           <Select
             value={incoterms}
-            onValueChange={(value) =>
-              setTerms(currency, paymentTerms, value, value)
+            onValueChange={(selectedIncoterms) =>
+              setTerms(currency, paymentTerms, selectedIncoterms, value)
             }
           >
             <SelectTrigger id="incoterms" className="mt-2">
@@ -111,7 +106,12 @@ export default function BuilderStep2() {
           step="0.01"
           value={value}
           onChange={(e) =>
-            setTerms(currency, paymentTerms, incoterms, parseFloat(e.target.value) || 0)
+            setTerms(
+              currency,
+              paymentTerms,
+              incoterms,
+              parseFloat(e.target.value) || 0
+            )
           }
           placeholder="Enter contract value"
           className="mt-2"
@@ -127,9 +127,7 @@ export default function BuilderStep2() {
           id="payment-terms"
           placeholder="e.g., Net 30, 50% deposit upon signing, 50% on delivery"
           value={paymentTerms}
-          onChange={(e) =>
-            setTerms(currency, e.target.value, incoterms, value)
-          }
+          onChange={(e) => setTerms(currency, e.target.value, incoterms, value)}
           className="mt-2"
           rows={4}
         />
