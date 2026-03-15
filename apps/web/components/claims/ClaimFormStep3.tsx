@@ -78,7 +78,7 @@ export function ClaimFormStep3() {
     }
   };
 
-  const handleFiles = (files: File[]) => {
+  const handleFiles = (files: any[]) => {
     if (!selectedDocType) {
       toast.error('Please select a document type first');
       return;
