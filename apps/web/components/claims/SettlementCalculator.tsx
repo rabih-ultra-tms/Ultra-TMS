@@ -125,9 +125,7 @@ export function SettlementCalculator({
     try {
       const validation = adjustmentSchema.safeParse(newAdjustment);
       if (!validation.success) {
-        (validation.error.errors as z.ZodIssue[]).forEach((err) => {
-          toast.error(`${err.path.join('.')} - ${err.message}`);
-        });
+        toast.error('Please fill in all adjustment fields correctly');
         return;
       }
 
@@ -175,9 +173,7 @@ export function SettlementCalculator({
       });
 
       if (!validation.success) {
-        (validation.error.errors as z.ZodIssue[]).forEach((err) => {
-          toast.error(`${err.path.join('.')} - ${err.message}`);
-        });
+        toast.error('Please select a payment method');
         return;
       }
 
