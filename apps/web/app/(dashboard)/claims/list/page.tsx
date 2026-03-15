@@ -111,9 +111,7 @@ function ClaimsListContent() {
     filters.claimType ||
     filters.carrierId ||
     filters.dateFrom ||
-    filters.dateTo ||
-    filters.amountMin ||
-    filters.amountMax;
+    filters.dateTo;
 
   return (
     <div className="space-y-6 p-6">

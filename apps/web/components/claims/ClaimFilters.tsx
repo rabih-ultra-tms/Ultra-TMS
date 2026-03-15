@@ -21,8 +21,6 @@ export interface ClaimFiltersState {
   carrierId?: string;
   dateFrom?: string;
   dateTo?: string;
-  amountMin?: number;
-  amountMax?: number;
 }
 
 interface ClaimFiltersProps {
@@ -103,26 +101,6 @@ export function ClaimFilters({
     [filters, onFilterChange]
   );
 
-  const handleAmountMinChange = useCallback(
-    (value: string) => {
-      onFilterChange({
-        ...filters,
-        amountMin: value ? parseFloat(value) : undefined,
-      });
-    },
-    [filters, onFilterChange]
-  );
-
-  const handleAmountMaxChange = useCallback(
-    (value: string) => {
-      onFilterChange({
-        ...filters,
-        amountMax: value ? parseFloat(value) : undefined,
-      });
-    },
-    [filters, onFilterChange]
-  );
-
   const handleClearFilters = useCallback(() => {
     onFilterChange({});
   }, [onFilterChange]);
@@ -133,9 +111,7 @@ export function ClaimFilters({
     filters.claimType ||
     filters.carrierId ||
     filters.dateFrom ||
-    filters.dateTo ||
-    filters.amountMin ||
-    filters.amountMax
+    filters.dateTo
   );
 
   return (
@@ -261,32 +237,6 @@ export function ClaimFilters({
                 type="date"
                 value={filters.dateTo || ''}
                 onChange={(e) => handleDateToChange(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1 text-text-muted">
-                Amount Min
-              </label>
-              <Input
-                type="number"
-                placeholder="0"
-                value={filters.amountMin || ''}
-                onChange={(e) => handleAmountMinChange(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1 text-text-muted">
-                Amount Max
-              </label>
-              <Input
-                type="number"
-                placeholder="999999"
-                value={filters.amountMax || ''}
-                onChange={(e) => handleAmountMaxChange(e.target.value)}
                 disabled={isLoading}
               />
             </div>
