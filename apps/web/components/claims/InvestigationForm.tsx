@@ -4,8 +4,12 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { claimSettlementClient } from '@/lib/api/claims';
-import { ClaimDetailResponse, ClaimDisposition } from '@/lib/api/claims/types';
+import { claimSettlementClient, claimsClient } from '@/lib/api/claims';
+import {
+  ClaimDetailResponse,
+  ClaimDisposition,
+  ClaimStatus,
+} from '@/lib/api/claims/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -85,9 +89,30 @@ export function InvestigationForm({
         investigationNotes: values.investigationNotes,
       });
 
-      toast.success(
-        'Investigation updated successfully. Claim status is now Under Investigation.'
-      );
+      // Advance claim status based on current status
+      const currentStatus = claim.status;
+      let statusMessage =
+        'Investigation updated successfully. Claim status advanced.';
+
+      if (
+        currentStatus === ClaimStatus.SUBMITTED ||
+        currentStatus === ClaimStatus.PENDING_DOCUMENTATION
+      ) {
+        // Advance to UNDER_INVESTIGATION
+        await claimsClient.updateStatus(claimId, {
+          status: ClaimStatus.UNDER_INVESTIGATION,
+          reason: 'Investigation findings added',
+        });
+        statusMessage =
+          'Investigation updated. Claim status advanced to Under Investigation.';
+      } else if (currentStatus === ClaimStatus.UNDER_INVESTIGATION) {
+        // Advance to UNDER_REVIEW (if this status exists in the system)
+        // For now, we'll keep it as UNDER_INVESTIGATION to indicate investigation is complete
+        statusMessage =
+          'Investigation updated successfully. Investigation findings recorded.';
+      }
+
+      toast.success(statusMessage);
       onSuccess?.();
     } catch (err: unknown) {
       const message =

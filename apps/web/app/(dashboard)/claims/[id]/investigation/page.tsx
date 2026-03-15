@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useClaimDetail } from '@/lib/hooks/claims';
 import { ClaimStatus } from '@/lib/api/claims/types';
 import { InvestigationForm } from '@/components/claims/InvestigationForm';
+import { InvestigationTimeline } from '@/components/claims/InvestigationTimeline';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -45,11 +46,10 @@ export default function ClaimInvestigationPage({
   const { claim, isLoading, error, refetch } = useClaimDetail(params.id);
 
   // Check if investigation is allowed for this claim
+  // Investigation is allowed for all submitted and processed claims (excluding DRAFT only)
+  const deniedStatuses: ClaimStatus[] = [ClaimStatus.DRAFT];
   const isInvestigationAllowed =
-    claim &&
-    (claim.status === ClaimStatus.SUBMITTED ||
-      claim.status === ClaimStatus.UNDER_INVESTIGATION ||
-      claim.status === ClaimStatus.PENDING_DOCUMENTATION);
+    claim && !deniedStatuses.includes(claim.status);
 
   if (isLoading) {
     return (
@@ -97,8 +97,8 @@ export default function ClaimInvestigationPage({
         <Card>
           <CardContent className="pt-6">
             <p className="text-muted-foreground mb-4">
-              Investigation is only available for claims with status SUBMITTED,
-              UNDER_INVESTIGATION, or PENDING_DOCUMENTATION.
+              Investigation is not available for claims in DRAFT status. Please
+              submit the claim first.
             </p>
             <p className="text-sm">
               Current status:{' '}
@@ -166,6 +166,9 @@ export default function ClaimInvestigationPage({
           router.push(`/claims/${params.id}`);
         }}
       />
+
+      {/* Investigation Timeline */}
+      <InvestigationTimeline claim={claim} />
     </div>
   );
 }
