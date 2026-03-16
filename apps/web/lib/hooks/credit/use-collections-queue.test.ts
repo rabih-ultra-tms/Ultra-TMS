@@ -106,12 +106,19 @@ describe('useAgingReport', () => {
     const { result } = renderHook(() => useAgingReport());
 
     if (result.current.data && result.current.data.buckets) {
-      result.current.data.buckets.forEach((bucket: any) => {
-        expect(bucket).toHaveProperty('name');
-        expect(bucket).toHaveProperty('amount');
-        expect(bucket).toHaveProperty('count');
-        expect(bucket).toHaveProperty('percentage');
-      });
+      result.current.data.buckets.forEach(
+        (bucket: {
+          name: string;
+          amount: number;
+          count: number;
+          percentage: number;
+        }) => {
+          expect(bucket).toHaveProperty('name');
+          expect(bucket).toHaveProperty('amount');
+          expect(bucket).toHaveProperty('count');
+          expect(bucket).toHaveProperty('percentage');
+        }
+      );
     }
   });
 });

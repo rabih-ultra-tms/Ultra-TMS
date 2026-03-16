@@ -110,7 +110,7 @@ describe('useAgentCommissions', () => {
     const { result } = renderHook(() => useAgentCommissions('agent-1'));
 
     if (result.current.data && result.current.data.data.length > 0) {
-      const commission = result.current.data.data[0];
+      const commission = result.current.data.data[0]!;
       // Financial fields should be numbers
       expect(typeof commission.grossCommission).toBe('number');
       if (commission.netCommission !== undefined) {
@@ -123,7 +123,7 @@ describe('useAgentCommissions', () => {
     const { result } = renderHook(() => useAgentCommissions('agent-1'));
 
     if (result.current.data && result.current.data.data.length > 0) {
-      const commission = result.current.data.data[0];
+      const commission = result.current.data.data[0]!;
       // References are optional
       if (commission.loadId) {
         expect(typeof commission.loadId).toBe('string');

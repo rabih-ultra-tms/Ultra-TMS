@@ -72,7 +72,7 @@ describe('useAgentRankings', () => {
       // Verify rankings are sorted by value descending
       for (let i = 0; i < rankings.length - 1; i++) {
         expect(
-          (rankings[i].commission ?? 0) >= (rankings[i + 1].commission ?? 0)
+          (rankings[i]?.commission ?? 0) >= (rankings[i + 1]?.commission ?? 0)
         ).toBe(true);
       }
     }
@@ -108,7 +108,7 @@ describe('useAgentRankings', () => {
     const { result } = renderHook(() => useAgentRankings());
 
     if (result.current.data && result.current.data.data.length > 0) {
-      const ranking = result.current.data.data[0];
+      const ranking = result.current.data.data[0]!;
       // Commission is optional but should be a number if present
       if (ranking.commission !== undefined) {
         expect(typeof ranking.commission).toBe('number');
@@ -120,7 +120,7 @@ describe('useAgentRankings', () => {
     const { result } = renderHook(() => useAgentRankings());
 
     if (result.current.data && result.current.data.data.length > 0) {
-      const ranking = result.current.data.data[0];
+      const ranking = result.current.data.data[0]!;
       // Additional fields are optional but should be numbers if present
       if (ranking.loadCount !== undefined) {
         expect(typeof ranking.loadCount).toBe('number');
@@ -146,8 +146,8 @@ describe('useAgentRankings', () => {
 
     if (result.current.data) {
       expect(result.current.data.pagination).toBeDefined();
-      expect(result.current.data.pagination.page).toBeGreaterThanOrEqual(1);
-      expect(result.current.data.pagination.limit).toBeGreaterThan(0);
+      expect(result.current.data.pagination?.page).toBeGreaterThanOrEqual(1);
+      expect(result.current.data.pagination?.limit).toBeGreaterThan(0);
     }
   });
 
@@ -161,7 +161,7 @@ describe('useAgentRankings', () => {
     const { result } = renderHook(() => useAgentRankings());
 
     if (result.current.data && result.current.data.data.length > 0) {
-      const ranking = result.current.data.data[0];
+      const ranking = result.current.data.data[0]!;
       // Contact info is optional but should be strings if present
       if (ranking.contactFirstName) {
         expect(typeof ranking.contactFirstName).toBe('string');

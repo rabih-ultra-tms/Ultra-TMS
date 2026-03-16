@@ -94,7 +94,7 @@ describe('useAgentStatements', () => {
     const { result } = renderHook(() => useAgentStatements('agent-1'));
 
     if (result.current.data && result.current.data.data.length > 0) {
-      const statement = result.current.data.data[0];
+      const statement = result.current.data.data[0]!;
       // PDF URL is optional but should be a string if present
       if (statement.pdfUrl) {
         expect(typeof statement.pdfUrl).toBe('string');
@@ -125,7 +125,7 @@ describe('useAgentStatements', () => {
     const { result } = renderHook(() => useAgentStatements('agent-1'));
 
     if (result.current.data && result.current.data.data.length > 0) {
-      const statement = result.current.data.data[0];
+      const statement = result.current.data.data[0]!;
       // Financial fields are optional but should be numbers if present
       if (statement.totalCommission !== undefined) {
         expect(typeof statement.totalCommission).toBe('number');
@@ -137,7 +137,7 @@ describe('useAgentStatements', () => {
     const { result } = renderHook(() => useAgentStatements('agent-1'));
 
     if (result.current.data && result.current.data.data.length > 0) {
-      const statement = result.current.data.data[0];
+      const statement = result.current.data.data[0]!;
       // Status field is optional but should be a string if present
       if (statement.status) {
         expect(typeof statement.status).toBe('string');

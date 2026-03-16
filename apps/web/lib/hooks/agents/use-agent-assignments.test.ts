@@ -75,7 +75,7 @@ describe('useAgentCustomers', () => {
     const { result } = renderHook(() => useAgentCustomers('agent-1'));
 
     if (result.current.data && result.current.data.length > 0) {
-      const assignment = result.current.data[0];
+      const assignment = result.current.data[0]!;
       // Customer detail is optional
       if (assignment.customer) {
         expect(assignment.customer).toHaveProperty('id');
@@ -88,7 +88,7 @@ describe('useAgentCustomers', () => {
     const { result } = renderHook(() => useAgentCustomers('agent-1'));
 
     if (result.current.data && result.current.data.length > 0) {
-      const assignment = result.current.data[0];
+      const assignment = result.current.data[0]!;
       // Split percent is optional
       if (assignment.splitPercent !== undefined) {
         expect(typeof assignment.splitPercent).toBe('number');
@@ -100,7 +100,7 @@ describe('useAgentCustomers', () => {
     const { result } = renderHook(() => useAgentCustomers('agent-1'));
 
     if (result.current.data && result.current.data.length > 0) {
-      const assignment = result.current.data[0];
+      const assignment = result.current.data[0]!;
       expect(typeof assignment.isProtected).toBe('boolean');
     }
   });
@@ -109,7 +109,7 @@ describe('useAgentCustomers', () => {
     const { result } = renderHook(() => useAgentCustomers('agent-1'));
 
     if (result.current.data && result.current.data.length > 0) {
-      const assignment = result.current.data[0];
+      const assignment = result.current.data[0]!;
       expect(typeof assignment.inSunset).toBe('boolean');
       // Sunset fields are optional
       if (assignment.sunsetStartDate) {
