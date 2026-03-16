@@ -186,3 +186,21 @@ export function useTerminateAgreement() {
     },
   });
 }
+
+export function useDeleteAgreement() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { agreementId: string; agentId: string }) => {
+      await apiClient.delete(`/agent-agreements/${input.agreementId}`);
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: agreementKeys.byAgent(variables.agentId),
+      });
+      toast.success('Agreement deleted successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to delete agreement');
+    },
+  });
+}

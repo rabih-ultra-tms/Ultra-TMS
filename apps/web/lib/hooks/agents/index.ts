@@ -25,9 +25,11 @@ export {
   useUpdateAgreement,
   useActivateAgreement,
   useTerminateAgreement,
+  useDeleteAgreement,
   type AgentAgreement,
   type CreateAgreementInput,
   type UpdateAgreementInput,
+  agreementKeys,
 } from './use-agent-agreements';
 
 export {
