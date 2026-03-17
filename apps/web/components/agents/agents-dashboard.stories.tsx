@@ -61,7 +61,7 @@ type Story = StoryObj<typeof AgentsDashboard>;
 
 export const Default: Story = {
   args: {
-    tenantId: 'tenant-1',
+    _tenantId: 'tenant-1',
   },
   parameters: {
     mockData: {
@@ -73,7 +73,7 @@ export const Default: Story = {
 
 export const Loading: Story = {
   args: {
-    tenantId: 'tenant-1',
+    _tenantId: 'tenant-1',
   },
   parameters: {
     mockData: {
@@ -84,7 +84,7 @@ export const Loading: Story = {
 
 export const NoData: Story = {
   args: {
-    tenantId: 'tenant-1',
+    _tenantId: 'tenant-1',
   },
   parameters: {
     mockData: {
@@ -96,7 +96,7 @@ export const NoData: Story = {
 
 export const FewAgents: Story = {
   args: {
-    tenantId: 'tenant-1',
+    _tenantId: 'tenant-1',
   },
   parameters: {
     mockData: {

@@ -24,11 +24,11 @@ import { Pagination } from '@/components/ui/pagination';
 import { AgentStatusBadge } from './agent-status-badge';
 
 interface AgentsListProps {
-  tenantId: string;
+  tenantId?: string;
   onSelect?: (agentId: string) => void;
 }
 
-export function AgentsList({ _tenantId, onSelect }: AgentsListProps) {
+export function AgentsList({ tenantId: _tenantId, onSelect }: AgentsListProps) {
   const [page, setPage] = useState(1);
   const [limit] = useState(20);
   const [search, setSearch] = useState('');
@@ -204,7 +204,15 @@ export function AgentsList({ _tenantId, onSelect }: AgentsListProps) {
                         </span>
                       </TableCell>
                       <TableCell>
-                        <AgentStatusBadge status={agent.status as any} />
+                        <AgentStatusBadge
+                          status={
+                            agent.status as
+                              | 'PENDING'
+                              | 'ACTIVE'
+                              | 'SUSPENDED'
+                              | 'TERMINATED'
+                          }
+                        />
                       </TableCell>
                     </TableRow>
                   ))}

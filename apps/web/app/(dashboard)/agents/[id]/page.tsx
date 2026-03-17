@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useState } from 'react';
+import { use, useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -14,7 +14,9 @@ import {
   Pause,
   XCircle,
 } from 'lucide-react';
+import { ErrorBoundary } from '@/components/error-boundary';
 import { DetailPage } from '@/components/patterns/detail-page';
+import { DetailPageSkeleton } from '@/components/shared/detail-page-skeleton';
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,7 +26,7 @@ import {
   useActivateAgent,
   useSuspendAgent,
   useTerminateAgent,
-} from '@/lib/hooks/agents/use-agents';
+} from '@/lib/hooks/agents';
 import { AgentOverviewTab } from '@/components/agents/agent-overview-tab';
 import { AgentAgreementsTab } from '@/components/agents/agent-agreements-tab';
 import { AgentCustomersTab } from '@/components/agents/agent-customers-tab';
@@ -59,15 +61,32 @@ const tierLabels: Record<string, string> = {
 };
 
 // ===========================
-// Page Component
+// Error Fallback
 // ===========================
 
-export default function AgentDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = use(params);
+function ErrorFallback() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-96 gap-4">
+      <div className="text-center">
+        <h2 className="text-lg font-semibold text-destructive mb-2">
+          Failed to load agent details
+        </h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          Please refresh the page or contact support.
+        </p>
+      </div>
+      <Button variant="outline" onClick={() => window.location.reload()}>
+        Refresh Page
+      </Button>
+    </div>
+  );
+}
+
+// ===========================
+// Detail Content
+// ===========================
+
+function AgentDetailContent({ id }: { id: string }) {
   const router = useRouter();
   const { data: agent, isLoading, error, refetch } = useAgent(id);
   const deleteAgent = useDeleteAgent();
@@ -241,5 +260,25 @@ export default function AgentDetailPage({
         isLoading={deleteAgent.isPending}
       />
     </>
+  );
+}
+
+// ===========================
+// Page Component
+// ===========================
+
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default function AgentDetailPage({ params }: PageProps) {
+  const { id } = use(params);
+
+  return (
+    <ErrorBoundary fallback={<ErrorFallback />}>
+      <Suspense fallback={<DetailPageSkeleton />}>
+        <AgentDetailContent id={id} />
+      </Suspense>
+    </ErrorBoundary>
   );
 }

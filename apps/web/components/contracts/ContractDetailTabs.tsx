@@ -111,10 +111,7 @@ export default function ContractDetailTabs({
       </TabsContent>
 
       <TabsContent value="documents" className="space-y-6">
-        <DocumentsTab
-          attachments={contract.attachments || []}
-          contractId={contract.id}
-        />
+        <DocumentsTab attachments={contract.attachments || []} />
       </TabsContent>
     </Tabs>
   );

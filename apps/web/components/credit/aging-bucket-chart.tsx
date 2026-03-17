@@ -10,8 +10,8 @@ interface AgingBucketChartProps {
   tenantId: string;
 }
 
-export function AgingBucketChart({ tenantId }: AgingBucketChartProps) {
-  const { data: agingReport, isLoading, error } = useAgingReport(tenantId);
+export function AgingBucketChart({ _tenantId }: AgingBucketChartProps) {
+  const { data: agingReport, isLoading, error } = useAgingReport();
 
   if (isLoading) {
     return <AgingChartSkeleton />;

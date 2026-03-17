@@ -63,7 +63,7 @@ interface AgentFormProps {
 }
 
 export function AgentForm({
-  _agentId,
+  agentId: _agentId,
   onSuccess,
   agent: initialAgent,
 }: AgentFormProps) {
