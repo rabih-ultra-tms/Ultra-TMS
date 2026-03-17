@@ -8,7 +8,10 @@
  * @param currency - Currency code (default: 'USD')
  * @returns Formatted currency string (e.g., "$150.00")
  */
-export function formatCurrency(cents: number, currency: string = 'USD'): string {
+export function formatCurrency(
+  cents: number,
+  currency: string = 'USD'
+): string {
   const dollars = cents / 100;
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -29,8 +32,11 @@ export function formatDate(
   format: 'short' | 'long' | 'full' = 'short'
 ): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
-  
-  const optionsMap: Record<'short' | 'long' | 'full', Intl.DateTimeFormatOptions> = {
+
+  const optionsMap: Record<
+    'short' | 'long' | 'full',
+    Intl.DateTimeFormatOptions
+  > = {
     short: { month: 'short', day: 'numeric', year: 'numeric' },
     long: { month: 'long', day: 'numeric', year: 'numeric' },
     full: { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' },
@@ -40,13 +46,22 @@ export function formatDate(
 }
 
 /**
+ * Format date to short string (e.g., "Mar 17, 2026")
+ * @param date - Date object or ISO string
+ * @returns Formatted date string
+ */
+export function formatDateShort(date: Date | string): string {
+  return formatDate(date, 'short');
+}
+
+/**
  * Format date and time
  * @param date - Date object or ISO string
  * @returns Formatted date and time string
  */
 export function formatDateTime(date: Date | string): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
-  
+
   return new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: 'numeric',
@@ -55,6 +70,15 @@ export function formatDateTime(date: Date | string): string {
     minute: '2-digit',
     hour12: true,
   }).format(dateObj);
+}
+
+/**
+ * Format date and time to short string (e.g., "Mar 17, 2026 2:30 PM")
+ * @param date - Date object or ISO string
+ * @returns Formatted date and time string
+ */
+export function formatDateTimeShort(date: Date | string): string {
+  return formatDateTime(date);
 }
 
 /**
@@ -130,7 +154,7 @@ export function formatMarginWithColor(marginPercentage: number): {
   colorClass: string;
 } {
   const formatted = `${marginPercentage.toFixed(1)}%`;
-  
+
   let colorClass = 'text-red-600 bg-red-50';
   if (marginPercentage >= 30) {
     colorClass = 'text-green-600 bg-green-50';
