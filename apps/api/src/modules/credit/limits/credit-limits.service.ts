@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma.service';
@@ -12,7 +16,7 @@ import { CreditLimitStatus, PaymentTerms } from '../dto/enums';
 export class CreditLimitsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly eventEmitter: EventEmitter2,
+    private readonly eventEmitter: EventEmitter2
   ) {}
 
   async findAll(tenantId: string, query: CreditLimitQueryDto) {
@@ -27,8 +31,16 @@ export class CreditLimitsService {
       ...(query.search
         ? {
             OR: [
-              { company: { name: { contains: query.search, mode: 'insensitive' } } },
-              { company: { dbaName: { contains: query.search, mode: 'insensitive' } } },
+              {
+                company: {
+                  name: { contains: query.search, mode: 'insensitive' },
+                },
+              },
+              {
+                company: {
+                  dbaName: { contains: query.search, mode: 'insensitive' },
+                },
+              },
             ],
           }
         : {}),
@@ -69,14 +81,22 @@ export class CreditLimitsService {
   async create(tenantId: string, userId: string, dto: CreateCreditLimitDto) {
     await this.requireCompany(tenantId, dto.companyId);
 
-    const existing = await this.prisma.creditLimit.findFirst({ where: { tenantId, companyId: dto.companyId, deletedAt: null } });
+    const existing = await this.prisma.creditLimit.findFirst({
+      where: { tenantId, companyId: dto.companyId, deletedAt: null },
+    });
     if (existing) {
-      throw new BadRequestException('Credit limit already exists for this customer');
+      throw new BadRequestException(
+        'Credit limit already exists for this customer'
+      );
     }
 
     const usedCredit = dto.usedCredit ?? 0;
     const availableCredit = Number(dto.creditLimit) - Number(usedCredit);
-    const status = dto.status ?? (availableCredit < 0 ? CreditLimitStatus.EXCEEDED : CreditLimitStatus.ACTIVE);
+    const status =
+      dto.status ??
+      (availableCredit < 0
+        ? CreditLimitStatus.EXCEEDED
+        : CreditLimitStatus.ACTIVE);
 
     const created = await this.prisma.creditLimit.create({
       data: {
@@ -91,7 +111,9 @@ export class CreditLimitsService {
         gracePeriodDays: dto.gracePeriodDays ?? 0,
         singleLoadLimit: dto.singleLoadLimit,
         monthlyLimit: dto.monthlyLimit,
-        nextReviewDate: dto.nextReviewDate ? new Date(dto.nextReviewDate) : undefined,
+        nextReviewDate: dto.nextReviewDate
+          ? new Date(dto.nextReviewDate)
+          : undefined,
         reviewFrequencyDays: dto.reviewFrequencyDays ?? 90,
         createdById: userId,
         updatedById: userId,
@@ -108,13 +130,22 @@ export class CreditLimitsService {
     return created;
   }
 
-  async update(tenantId: string, userId: string, companyId: string, dto: UpdateCreditLimitDto) {
+  async update(
+    tenantId: string,
+    userId: string,
+    companyId: string,
+    dto: UpdateCreditLimitDto
+  ) {
     const limit = await this.requireLimit(tenantId, companyId);
 
     const nextLimit = dto.creditLimit ?? Number(limit.creditLimit);
     const nextUsed = dto.usedCredit ?? Number(limit.usedCredit ?? 0);
     const availableCredit = nextLimit - nextUsed;
-    const status = dto.status ?? (availableCredit < 0 ? CreditLimitStatus.EXCEEDED : CreditLimitStatus.ACTIVE);
+    const status =
+      dto.status ??
+      (availableCredit < 0
+        ? CreditLimitStatus.EXCEEDED
+        : CreditLimitStatus.ACTIVE);
 
     const updated = await this.prisma.creditLimit.update({
       where: { id: limit.id },
@@ -122,13 +153,17 @@ export class CreditLimitsService {
         creditLimit: dto.creditLimit ?? limit.creditLimit,
         usedCredit: dto.usedCredit ?? limit.usedCredit,
         availableCredit,
-        paymentTerms: dto.paymentTerms ?? (limit.paymentTerms as PaymentTerms | null),
+        paymentTerms:
+          dto.paymentTerms ?? (limit.paymentTerms as PaymentTerms | null),
         status,
         singleLoadLimit: dto.singleLoadLimit ?? limit.singleLoadLimit,
         monthlyLimit: dto.monthlyLimit ?? limit.monthlyLimit,
         gracePeriodDays: dto.gracePeriodDays ?? limit.gracePeriodDays,
-        nextReviewDate: dto.nextReviewDate ? new Date(dto.nextReviewDate) : limit.nextReviewDate,
-        reviewFrequencyDays: dto.reviewFrequencyDays ?? limit.reviewFrequencyDays,
+        nextReviewDate: dto.nextReviewDate
+          ? new Date(dto.nextReviewDate)
+          : limit.nextReviewDate,
+        reviewFrequencyDays:
+          dto.reviewFrequencyDays ?? limit.reviewFrequencyDays,
         updatedById: userId,
       },
     });
@@ -146,7 +181,12 @@ export class CreditLimitsService {
     return updated;
   }
 
-  async increase(tenantId: string, userId: string, companyId: string, dto: IncreaseCreditLimitDto) {
+  async increase(
+    tenantId: string,
+    userId: string,
+    companyId: string,
+    dto: IncreaseCreditLimitDto
+  ) {
     if (dto.increaseBy <= 0) {
       throw new BadRequestException('Increase must be positive');
     }
@@ -159,9 +199,61 @@ export class CreditLimitsService {
     });
   }
 
+  async suspend(tenantId: string, companyId: string) {
+    const limit = await this.requireLimit(tenantId, companyId);
+
+    if (limit.status === CreditLimitStatus.SUSPENDED) {
+      return limit; // Already suspended
+    }
+
+    const suspended = await this.prisma.creditLimit.update({
+      where: { id: limit.id },
+      data: {
+        status: CreditLimitStatus.SUSPENDED,
+        updatedById: 'system', // System suspension via hold
+      },
+    });
+
+    this.eventEmitter.emit('credit.limit.suspended', {
+      creditLimitId: suspended.id,
+      companyId,
+      reason: 'CREDIT_HOLD_PLACED',
+      tenantId,
+    });
+
+    return suspended;
+  }
+
+  async unsuspend(tenantId: string, companyId: string) {
+    const limit = await this.requireLimit(tenantId, companyId);
+
+    if (limit.status !== CreditLimitStatus.SUSPENDED) {
+      return limit; // Not suspended
+    }
+
+    const unsuspended = await this.prisma.creditLimit.update({
+      where: { id: limit.id },
+      data: {
+        status: CreditLimitStatus.ACTIVE,
+        updatedById: 'system', // System unsuspension via hold release
+      },
+    });
+
+    this.eventEmitter.emit('credit.limit.unsuspended', {
+      creditLimitId: unsuspended.id,
+      companyId,
+      tenantId,
+    });
+
+    return unsuspended;
+  }
+
   async utilization(tenantId: string, companyId: string) {
     const limit = await this.requireLimit(tenantId, companyId);
-    const utilization = this.computeUtilization(limit.usedCredit, limit.creditLimit);
+    const utilization = this.computeUtilization(
+      limit.usedCredit,
+      limit.creditLimit
+    );
 
     this.emitThresholdEvents(limit);
 
@@ -174,7 +266,10 @@ export class CreditLimitsService {
     };
   }
 
-  private computeUtilization(used: Prisma.Decimal | number, limit: Prisma.Decimal | number) {
+  private computeUtilization(
+    used: Prisma.Decimal | number,
+    limit: Prisma.Decimal | number
+  ) {
     const usedNum = Number(used || 0);
     const limitNum = Number(limit || 0);
     if (limitNum === 0) {
@@ -183,8 +278,16 @@ export class CreditLimitsService {
     return (usedNum / limitNum) * 100;
   }
 
-  private emitThresholdEvents(limit: { usedCredit: Prisma.Decimal; creditLimit: Prisma.Decimal; companyId?: string; tenantId?: string }) {
-    const utilization = this.computeUtilization(limit.usedCredit, limit.creditLimit);
+  private emitThresholdEvents(limit: {
+    usedCredit: Prisma.Decimal;
+    creditLimit: Prisma.Decimal;
+    companyId?: string;
+    tenantId?: string;
+  }) {
+    const utilization = this.computeUtilization(
+      limit.usedCredit,
+      limit.creditLimit
+    );
     const companyId = (limit as any).companyId;
     const tenantId = (limit as any).tenantId;
 
@@ -207,7 +310,9 @@ export class CreditLimitsService {
   }
 
   private async requireLimit(tenantId: string, companyId: string) {
-    const limit = await this.prisma.creditLimit.findFirst({ where: { tenantId, companyId, deletedAt: null } });
+    const limit = await this.prisma.creditLimit.findFirst({
+      where: { tenantId, companyId, deletedAt: null },
+    });
     if (!limit) {
       throw new NotFoundException('Credit limit not found');
     }
@@ -215,7 +320,9 @@ export class CreditLimitsService {
   }
 
   private async requireCompany(tenantId: string, companyId: string) {
-    const company = await this.prisma.company.findFirst({ where: { id: companyId, tenantId, deletedAt: null } });
+    const company = await this.prisma.company.findFirst({
+      where: { id: companyId, tenantId, deletedAt: null },
+    });
     if (!company) {
       throw new NotFoundException('Company not found for this tenant');
     }

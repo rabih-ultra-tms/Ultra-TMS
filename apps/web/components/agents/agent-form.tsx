@@ -57,11 +57,18 @@ type AgentFormValues = z.infer<typeof agentSchema>;
 // ===========================
 
 interface AgentFormProps {
+  agentId?: string;
+  onSuccess?: () => void;
   agent?: Agent;
 }
 
-export function AgentForm({ agent }: AgentFormProps) {
+export function AgentForm({
+  _agentId,
+  onSuccess,
+  agent: initialAgent,
+}: AgentFormProps) {
   const router = useRouter();
+  const agent = initialAgent;
   const isEditing = !!agent;
   const createAgent = useCreateAgent();
   const updateAgent = useUpdateAgent();
@@ -122,7 +129,11 @@ export function AgentForm({ agent }: AgentFormProps) {
           bankAccountType: clean(values.bankAccountType),
         });
         toast.success('Agent updated successfully');
-        router.push(`/agents/${agent.id}`);
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.push(`/agents/${agent.id}`);
+        }
       } else {
         // Generate a unique agent code from company name + timestamp
         const code =
@@ -158,7 +169,11 @@ export function AgentForm({ agent }: AgentFormProps) {
           bankAccountType: clean(values.bankAccountType),
         });
         toast.success('Agent created successfully');
-        router.push(`/agents/${created.id}`);
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.push(`/agents/${created.id}`);
+        }
       }
     } catch (err: unknown) {
       const message =

@@ -1,14 +1,17 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../../prisma.service';
-import { CreateCollectionActivityDto, UpdateCollectionActivityDto } from '../dto/collection-activity.dto';
+import {
+  CreateCollectionActivityDto,
+  UpdateCollectionActivityDto,
+} from '../dto/collection-activity.dto';
 import { PaginationDto } from '../dto/pagination.dto';
 
 @Injectable()
 export class CollectionsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly eventEmitter: EventEmitter2,
+    private readonly eventEmitter: EventEmitter2
   ) {}
 
   async queue(tenantId: string, query: PaginationDto) {
@@ -18,12 +21,14 @@ export class CollectionsService {
 
     const [data, total] = await Promise.all([
       this.prisma.collectionActivity.findMany({
-        where: { tenantId },
+        where: { tenantId, deletedAt: null },
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
       }),
-      this.prisma.collectionActivity.count({ where: { tenantId } }),
+      this.prisma.collectionActivity.count({
+        where: { tenantId, deletedAt: null },
+      }),
     ]);
 
     return {
@@ -37,12 +42,16 @@ export class CollectionsService {
 
   async historyByCustomer(tenantId: string, companyId: string) {
     return this.prisma.collectionActivity.findMany({
-      where: { tenantId, companyId },
+      where: { tenantId, companyId, deletedAt: null },
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  async create(tenantId: string, userId: string, dto: CreateCollectionActivityDto) {
+  async create(
+    tenantId: string,
+    userId: string,
+    dto: CreateCollectionActivityDto
+  ) {
     await this.requireCompany(tenantId, dto.companyId);
     if (dto.invoiceId) {
       await this.requireInvoice(tenantId, dto.invoiceId, dto.companyId);
@@ -64,7 +73,9 @@ export class CollectionsService {
         contactedEmail: dto.contactedEmail,
         followUpDate: dto.followUpDate ? new Date(dto.followUpDate) : undefined,
         followUpNotes: dto.followUpNotes,
-        promisedPaymentDate: dto.promisedPaymentDate ? new Date(dto.promisedPaymentDate) : undefined,
+        promisedPaymentDate: dto.promisedPaymentDate
+          ? new Date(dto.promisedPaymentDate)
+          : undefined,
         promisedAmount: dto.promisedAmount,
         createdById: userId,
         updatedById: userId,
@@ -80,7 +91,12 @@ export class CollectionsService {
     return created;
   }
 
-  async update(tenantId: string, userId: string, id: string, dto: UpdateCollectionActivityDto) {
+  async update(
+    tenantId: string,
+    userId: string,
+    id: string,
+    dto: UpdateCollectionActivityDto
+  ) {
     const activity = await this.requireActivity(tenantId, id);
 
     if (dto.invoiceId) {
@@ -91,20 +107,46 @@ export class CollectionsService {
       where: { id },
       data: {
         ...(dto.invoiceId !== undefined ? { invoiceId: dto.invoiceId } : {}),
-        ...(dto.activityType !== undefined ? { activityType: dto.activityType } : {}),
-        ...(dto.subject !== undefined ? { subject: dto.subject } : {}),
-        ...(dto.description !== undefined ? { description: dto.description } : {}),
-        ...(dto.outcome !== undefined ? { outcome: dto.outcome } : {}),
-        ...(dto.contactedName !== undefined ? { contactedName: dto.contactedName } : {}),
-        ...(dto.contactedTitle !== undefined ? { contactedTitle: dto.contactedTitle } : {}),
-        ...(dto.contactedPhone !== undefined ? { contactedPhone: dto.contactedPhone } : {}),
-        ...(dto.contactedEmail !== undefined ? { contactedEmail: dto.contactedEmail } : {}),
-        ...(dto.followUpDate !== undefined ? { followUpDate: dto.followUpDate ? new Date(dto.followUpDate) : null } : {}),
-        ...(dto.followUpNotes !== undefined ? { followUpNotes: dto.followUpNotes } : {}),
-        ...(dto.promisedPaymentDate !== undefined
-          ? { promisedPaymentDate: dto.promisedPaymentDate ? new Date(dto.promisedPaymentDate) : null }
+        ...(dto.activityType !== undefined
+          ? { activityType: dto.activityType }
           : {}),
-        ...(dto.promisedAmount !== undefined ? { promisedAmount: dto.promisedAmount } : {}),
+        ...(dto.subject !== undefined ? { subject: dto.subject } : {}),
+        ...(dto.description !== undefined
+          ? { description: dto.description }
+          : {}),
+        ...(dto.outcome !== undefined ? { outcome: dto.outcome } : {}),
+        ...(dto.contactedName !== undefined
+          ? { contactedName: dto.contactedName }
+          : {}),
+        ...(dto.contactedTitle !== undefined
+          ? { contactedTitle: dto.contactedTitle }
+          : {}),
+        ...(dto.contactedPhone !== undefined
+          ? { contactedPhone: dto.contactedPhone }
+          : {}),
+        ...(dto.contactedEmail !== undefined
+          ? { contactedEmail: dto.contactedEmail }
+          : {}),
+        ...(dto.followUpDate !== undefined
+          ? {
+              followUpDate: dto.followUpDate
+                ? new Date(dto.followUpDate)
+                : null,
+            }
+          : {}),
+        ...(dto.followUpNotes !== undefined
+          ? { followUpNotes: dto.followUpNotes }
+          : {}),
+        ...(dto.promisedPaymentDate !== undefined
+          ? {
+              promisedPaymentDate: dto.promisedPaymentDate
+                ? new Date(dto.promisedPaymentDate)
+                : null,
+            }
+          : {}),
+        ...(dto.promisedAmount !== undefined
+          ? { promisedAmount: dto.promisedAmount }
+          : {}),
         updatedById: userId,
       },
     });
@@ -171,7 +213,9 @@ export class CollectionsService {
   }
 
   private async requireActivity(tenantId: string, id: string) {
-    const activity = await this.prisma.collectionActivity.findFirst({ where: { id, tenantId, deletedAt: null } });
+    const activity = await this.prisma.collectionActivity.findFirst({
+      where: { id, tenantId, deletedAt: null },
+    });
     if (!activity) {
       throw new NotFoundException('Collection activity not found');
     }
@@ -179,15 +223,23 @@ export class CollectionsService {
   }
 
   private async requireCompany(tenantId: string, companyId: string) {
-    const company = await this.prisma.company.findFirst({ where: { id: companyId, tenantId } });
+    const company = await this.prisma.company.findFirst({
+      where: { id: companyId, tenantId },
+    });
     if (!company) {
       throw new NotFoundException('Company not found for this tenant');
     }
     return company;
   }
 
-  private async requireInvoice(tenantId: string, invoiceId: string, companyId: string) {
-    const invoice = await this.prisma.invoice.findFirst({ where: { id: invoiceId, tenantId, companyId, deletedAt: null } });
+  private async requireInvoice(
+    tenantId: string,
+    invoiceId: string,
+    companyId: string
+  ) {
+    const invoice = await this.prisma.invoice.findFirst({
+      where: { id: invoiceId, tenantId, companyId, deletedAt: null },
+    });
     if (!invoice) {
       throw new NotFoundException('Invoice not found for this customer');
     }

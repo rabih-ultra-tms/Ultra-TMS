@@ -10,6 +10,7 @@ import { CollectionsController } from './collections/collections.controller';
 import { CollectionsService } from './collections/collections.service';
 import { PaymentPlansController } from './payment-plans/payment-plans.controller';
 import { PaymentPlansService } from './payment-plans/payment-plans.service';
+import { CreditHoldLimitListener } from './listeners/credit-hold-limit.listener';
 
 @Module({
   controllers: [
@@ -26,6 +27,7 @@ import { PaymentPlansService } from './payment-plans/payment-plans.service';
     CreditHoldsService,
     CollectionsService,
     PaymentPlansService,
+    CreditHoldLimitListener,
   ],
   exports: [
     CreditApplicationsService,
