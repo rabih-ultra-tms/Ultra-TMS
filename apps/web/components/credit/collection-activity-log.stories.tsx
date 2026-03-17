@@ -23,24 +23,24 @@ type Story = StoryObj<typeof CollectionActivityLog>;
 
 export const WithActivities: Story = {
   args: {
-    companyId: 'company-123',
+    _companyId: 'company-123',
   },
 };
 
 export const WithPaymentActivity: Story = {
   args: {
-    companyId: 'company-payment',
+    _companyId: 'company-payment',
   },
 };
 
 export const WithMultipleActivities: Story = {
   args: {
-    companyId: 'company-active',
+    _companyId: 'company-active',
   },
 };
 
 export const Empty: Story = {
   args: {
-    companyId: 'company-no-activity',
+    _companyId: 'company-no-activity',
   },
 };

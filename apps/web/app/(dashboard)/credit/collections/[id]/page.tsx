@@ -36,7 +36,7 @@ function DetailContent({ collectionId }: { collectionId: string }) {
         {/* Activity Log */}
         <div>
           <h2 className="text-lg font-semibold mb-4">Activity Log</h2>
-          <CollectionActivityLog companyId={collectionId} />
+          <CollectionActivityLog _companyId={collectionId} />
         </div>
       </div>
 

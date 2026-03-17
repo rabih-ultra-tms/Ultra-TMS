@@ -65,7 +65,7 @@ function CollectionsContent() {
 
       {/* Collections Activity Log */}
       {selectedCompanyId && (
-        <CollectionActivityLog companyId={selectedCompanyId} />
+        <CollectionActivityLog _companyId={selectedCompanyId} />
       )}
     </div>
   );

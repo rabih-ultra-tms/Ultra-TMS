@@ -13,7 +13,7 @@ import {
 import { formatCurrency, formatDateTimeShort } from '@/lib/utils/format';
 
 interface CollectionActivityLogProps {
-  companyId: string;
+  _companyId?: string;
 }
 
 export function CollectionActivityLog({
