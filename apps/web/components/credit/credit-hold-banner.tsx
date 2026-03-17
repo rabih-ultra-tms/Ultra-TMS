@@ -18,7 +18,6 @@ export function CreditHoldBanner({ companyId }: CreditHoldBannerProps) {
     error,
   } = useCreditHolds({
     companyId,
-    status: 'ACTIVE',
   });
 
   const { mutateAsync: releaseHold, isPending: isReleasing } =

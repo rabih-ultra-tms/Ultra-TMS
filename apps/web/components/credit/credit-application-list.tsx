@@ -131,7 +131,7 @@ export function CreditApplicationList({
                       onClick={() => handleRowClick(app.id)}
                     >
                       <td className="px-4 py-3 text-gray-900">
-                        {app.companyName}
+                        {app.companyName || 'N/A'}
                       </td>
                       <td className="px-4 py-3">
                         <span
@@ -141,7 +141,9 @@ export function CreditApplicationList({
                         </span>
                       </td>
                       <td className="px-4 py-3 text-gray-700">
-                        {formatCurrency(app.requestedLimit)}
+                        {formatCurrency(
+                          app.requestedLimit || app.requestedAmount || 0
+                        )}
                       </td>
                       <td className="px-4 py-3 text-gray-700">
                         {new Date(

@@ -107,13 +107,19 @@ export function CreditApplicationForm({
 
   const handleNextStep = () => {
     if (currentStepIndex < steps.length - 1) {
-      setCurrentStep(steps[currentStepIndex + 1]);
+      const nextStep = steps[currentStepIndex + 1];
+      if (nextStep) {
+        setCurrentStep(nextStep);
+      }
     }
   };
 
   const handlePrevStep = () => {
     if (currentStepIndex > 0) {
-      setCurrentStep(steps[currentStepIndex - 1]);
+      const prevStep = steps[currentStepIndex - 1];
+      if (prevStep) {
+        setCurrentStep(prevStep);
+      }
     }
   };
 

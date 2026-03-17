@@ -15,6 +15,12 @@ export interface CollectionAccount {
   invoiceCount: number;
   lastPaymentDate?: string | null;
   nextFollowupDate?: string | null;
+  status?: 'PENDING' | 'COMPLETED' | 'FAILED';
+  activityType?: 'CALL' | 'EMAIL' | 'PAYMENT' | 'FOLLOW_UP';
+  activityDate?: string;
+  amount?: number;
+  notes?: string;
+  assignedTo?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -22,6 +28,7 @@ export interface CollectionAccount {
 export interface AgingBucket {
   name: string;
   range: string;
+  label?: string;
   amount: number;
   count: number;
   percentage: number;

@@ -66,7 +66,7 @@ function ReportsContent() {
       <div>
         <h2 className="text-lg font-semibold mb-4">Aging Analysis</h2>
         <Suspense fallback={<ListPageSkeleton rows={6} columns={2} />}>
-          <AgingBucketChart tenantId="default" />
+          <AgingBucketChart _tenantId="default" />
         </Suspense>
       </div>
 

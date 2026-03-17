@@ -3,7 +3,7 @@ import { AgentsDashboard } from './agents-dashboard';
 
 describe('AgentsDashboard', () => {
   it('should render dashboard component', () => {
-    const { container } = render(<AgentsDashboard tenantId="tenant-1" />);
+    const { container } = render(<AgentsDashboard _tenantId="tenant-1" />);
 
     expect(container).toBeInTheDocument();
     // Component renders without errors
@@ -11,7 +11,7 @@ describe('AgentsDashboard', () => {
   });
 
   it('should display KPI sections', () => {
-    const { container } = render(<AgentsDashboard tenantId="tenant-1" />);
+    const { container } = render(<AgentsDashboard _tenantId="tenant-1" />);
 
     // Check for KPI cards - they render with loading or with data
     const cards = document.querySelectorAll('[class*="rounded-lg"]');
@@ -19,7 +19,9 @@ describe('AgentsDashboard', () => {
   });
 
   it('should accept tenantId prop', () => {
-    const { container } = render(<AgentsDashboard tenantId="another-tenant" />);
+    const { container } = render(
+      <AgentsDashboard _tenantId="another-tenant" />
+    );
 
     expect(container).toBeInTheDocument();
   });

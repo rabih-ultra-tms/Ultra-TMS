@@ -25,7 +25,6 @@ export function CreditDashboardCards({ tenantId }: CreditDashboardCardsProps) {
     isLoading: holdsLoading,
     error: holdsError,
   } = useCreditHolds({
-    tenantId,
     status: 'ACTIVE',
   });
 
@@ -48,15 +47,19 @@ export function CreditDashboardCards({ tenantId }: CreditDashboardCardsProps) {
   }
 
   const totalLimits =
-    limits?.data?.reduce((sum, limit) => sum + limit.creditLimit, 0) || 0;
+    limits?.data?.reduce(
+      (sum, limit) => sum + (limit.creditLimit || limit.creditAmount || 0),
+      0
+    ) || 0;
   const totalUtilized =
     limits?.data?.reduce((sum, limit) => sum + (limit.utilized || 0), 0) || 0;
   const utilizationPercent =
     totalLimits > 0 ? Math.round((totalUtilized / totalLimits) * 100) : 0;
   const activeHolds = holds?.data?.length || 0;
   const companiesWithIssues = (limits?.data || []).filter((limit) => {
+    const creditLimit = limit.creditLimit || limit.creditAmount || 0;
     const utilization =
-      limit.creditLimit > 0 ? (limit.utilized || 0) / limit.creditLimit : 0;
+      creditLimit > 0 ? (limit.utilized || 0) / creditLimit : 0;
     return utilization >= 0.8 || activeHolds > 0;
   }).length;
 

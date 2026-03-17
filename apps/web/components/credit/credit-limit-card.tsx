@@ -7,13 +7,14 @@ import { TrendingUp, AlertTriangle, AlertCircle } from 'lucide-react';
 
 interface CreditLimit {
   id: string;
-  creditLimit: number;
+  creditLimit?: number;
+  creditAmount?: number;
   utilized?: number;
   tenantId: string;
   companyId?: string;
   status?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
 }
 
 interface CreditLimitCardProps {
@@ -25,9 +26,12 @@ export function CreditLimitCard({
   limit,
   showUtilization = true,
 }: CreditLimitCardProps) {
+  const credit = limit.creditLimit || limit.creditAmount || 0;
   const utilized = limit.utilized || 0;
-  const available = limit.creditLimit - utilized;
-  const utilizationPercent = Math.round((utilized / limit.creditLimit) * 100);
+  const available = credit - utilized;
+  const utilizationPercent = Math.round(
+    credit > 0 ? (utilized / credit) * 100 : 0
+  );
 
   // Determine health status
   let statusColor = 'border-l-green-500 bg-green-50';
@@ -65,7 +69,7 @@ export function CreditLimitCard({
           <div className="flex justify-between items-baseline">
             <span className="text-sm text-gray-600">Credit Limit</span>
             <span className="text-2xl font-bold text-gray-900">
-              {formatCurrency(limit.creditLimit)}
+              {formatCurrency(credit)}
             </span>
           </div>
 
@@ -88,8 +92,8 @@ export function CreditLimitCard({
           <div data-testid="utilization-bar" className="space-y-2">
             <CreditUtilizationBar
               used={utilized}
-              limit={limit.creditLimit}
-              threshold={limit.creditLimit * 0.8}
+              limit={credit}
+              threshold={credit * 0.8}
             />
           </div>
         )}

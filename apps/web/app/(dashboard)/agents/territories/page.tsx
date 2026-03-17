@@ -126,20 +126,25 @@ function TerritoriesContent() {
                         </span>
                       </TableCell>
                       <TableCell className="text-sm">
-                        {agent.territories &&
-                        typeof agent.territories === 'object'
-                          ? Object.keys(
-                              agent.territories as Record<string, unknown>
-                            ).join(', ')
-                          : 'Not configured'}
+                        {agent.territories && Array.isArray(agent.territories)
+                          ? agent.territories.join(', ')
+                          : agent.territories &&
+                              typeof agent.territories === 'object'
+                            ? Object.keys(
+                                agent.territories as Record<string, unknown>
+                              ).join(', ')
+                            : 'Not configured'}
                       </TableCell>
                       <TableCell className="text-sm">
                         {agent.industryFocus &&
-                        typeof agent.industryFocus === 'object'
-                          ? Object.keys(
-                              agent.industryFocus as Record<string, unknown>
-                            ).join(', ')
-                          : 'Not specified'}
+                        Array.isArray(agent.industryFocus)
+                          ? agent.industryFocus.join(', ')
+                          : agent.industryFocus &&
+                              typeof agent.industryFocus === 'object'
+                            ? Object.keys(
+                                agent.industryFocus as Record<string, unknown>
+                              ).join(', ')
+                            : 'Not specified'}
                       </TableCell>
                     </TableRow>
                   ))}

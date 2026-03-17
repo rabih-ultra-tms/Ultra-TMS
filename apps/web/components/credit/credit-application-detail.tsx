@@ -55,7 +55,7 @@ export function CreditApplicationDetail({
   } = useForm<ApprovalFormData>({
     resolver: zodResolver(approvalSchema),
     defaultValues: {
-      recommendedLimit: application?.creditLimit,
+      recommendedLimit: application?.creditLimit || 10000,
     },
   });
 
@@ -81,7 +81,7 @@ export function CreditApplicationDetail({
         applicationId,
         approvedLimit: data.recommendedLimit,
         notes: data.notes,
-      });
+      } as Parameters<typeof approveApplication>[0]);
       setSubmitStatus('success');
       setErrorMessage('');
     } catch (err) {

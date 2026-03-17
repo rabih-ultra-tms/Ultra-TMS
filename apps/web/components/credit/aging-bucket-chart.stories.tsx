@@ -23,24 +23,24 @@ type Story = StoryObj<typeof AgingBucketChart>;
 
 export const Default: Story = {
   args: {
-    tenantId: 'test-tenant',
+    _tenantId: 'test-tenant',
   },
 };
 
 export const HealthyAging: Story = {
   args: {
-    tenantId: 'test-tenant-healthy',
+    _tenantId: 'test-tenant-healthy',
   },
 };
 
 export const ProblemAging: Story = {
   args: {
-    tenantId: 'test-tenant-aging',
+    _tenantId: 'test-tenant-aging',
   },
 };
 
 export const Empty: Story = {
   args: {
-    tenantId: 'test-tenant-empty',
+    _tenantId: 'test-tenant-empty',
   },
 };

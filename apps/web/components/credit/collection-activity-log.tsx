@@ -17,14 +17,14 @@ interface CollectionActivityLogProps {
 }
 
 export function CollectionActivityLog({
-  companyId,
+  _companyId,
 }: CollectionActivityLogProps) {
   const {
     data: collectionsData,
     isLoading,
     error,
   } = useCollectionsQueue({
-    companyId,
+    limit: 20,
   });
 
   const activities = collectionsData?.data || [];

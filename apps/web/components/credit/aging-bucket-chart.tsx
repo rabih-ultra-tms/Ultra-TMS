@@ -7,7 +7,7 @@ import { AlertCircle } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils/format';
 
 interface AgingBucketChartProps {
-  tenantId: string;
+  _tenantId?: string;
 }
 
 export function AgingBucketChart({ _tenantId }: AgingBucketChartProps) {
@@ -75,12 +75,13 @@ export function AgingBucketChart({ _tenantId }: AgingBucketChartProps) {
             {buckets.map((bucket, index) => {
               const percentage =
                 totalAmount > 0 ? (bucket.amount / totalAmount) * 100 : 0;
+              const label = bucket.label || bucket.name || bucket.range;
               return (
                 <div
-                  key={bucket.label || index}
+                  key={label || index}
                   className={`${bucketColors[index]} transition-all hover:shadow-md cursor-pointer relative group`}
                   style={{ width: `${Math.max(percentage, 2)}%` }}
-                  title={`${bucket.label}: ${formatCurrency(bucket.amount)} (${percentage.toFixed(1)}%)`}
+                  title={`${label}: ${formatCurrency(bucket.amount)} (${percentage.toFixed(1)}%)`}
                 >
                   {percentage > 8 && (
                     <div className="flex items-center justify-center h-full">
@@ -91,7 +92,7 @@ export function AgingBucketChart({ _tenantId }: AgingBucketChartProps) {
                   )}
                   {/* Tooltip */}
                   <div className="hidden group-hover:block absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-gray-900 text-white px-3 py-2 rounded text-xs whitespace-nowrap z-10">
-                    {bucket.label}: {formatCurrency(bucket.amount)}
+                    {label}: {formatCurrency(bucket.amount)}
                   </div>
                 </div>
               );
@@ -122,9 +123,10 @@ export function AgingBucketChart({ _tenantId }: AgingBucketChartProps) {
               {buckets.map((bucket, index) => {
                 const percentage =
                   totalAmount > 0 ? (bucket.amount / totalAmount) * 100 : 0;
+                const label = bucket.label || bucket.name || bucket.range;
                 return (
                   <tr
-                    key={bucket.label || index}
+                    key={label || index}
                     className="border-b border-gray-100 hover:bg-gray-50"
                   >
                     <td className="px-3 py-3">
@@ -133,7 +135,7 @@ export function AgingBucketChart({ _tenantId }: AgingBucketChartProps) {
                           className={`w-3 h-3 rounded-full ${bucketColors[index]}`}
                         />
                         <span className="font-medium text-gray-900">
-                          {bucket.label}
+                          {label}
                         </span>
                       </div>
                     </td>

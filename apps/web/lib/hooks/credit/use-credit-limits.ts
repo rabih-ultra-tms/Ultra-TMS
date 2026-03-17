@@ -11,6 +11,8 @@ export interface CreditLimit {
   tenantId: string;
   companyId: string;
   creditAmount: number;
+  creditLimit: number;
+  utilized: number;
   status: 'ACTIVE' | 'SUSPENDED' | 'EXCEEDED' | 'EXPIRED';
   approvedAt: string;
   expiresAt?: string | null;
@@ -33,6 +35,7 @@ export interface CreditLimitListParams {
   page?: number;
   limit?: number;
   status?: 'ACTIVE' | 'SUSPENDED' | 'EXCEEDED' | 'EXPIRED';
+  tenantId?: string;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
 }

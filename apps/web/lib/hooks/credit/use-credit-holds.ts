@@ -10,6 +10,7 @@ export interface CreditHold {
   id: string;
   tenantId: string;
   companyId: string;
+  placedDate?: string;
   reason: 'FRAUD' | 'PAYMENT' | 'COMPLIANCE' | 'OTHER';
   status: 'ACTIVE' | 'RELEASED';
   releasedAt?: string | null;
@@ -22,6 +23,8 @@ export interface CreditHold {
 export interface CreditHoldListParams {
   page?: number;
   limit?: number;
+  companyId?: string;
+  status?: 'ACTIVE' | 'RELEASED';
   reason?: 'FRAUD' | 'PAYMENT' | 'COMPLIANCE' | 'OTHER';
   active?: boolean;
   sortBy?: string;
@@ -35,6 +38,7 @@ export interface CreateCreditHoldInput {
 }
 
 export interface ReleaseCreditHoldInput {
+  holdId: string;
   notes?: string;
 }
 
@@ -79,6 +83,8 @@ export function useCreditHolds(params: CreditHoldListParams = {}) {
       const searchParams = new URLSearchParams();
       if (params.page) searchParams.set('page', params.page.toString());
       if (params.limit) searchParams.set('limit', params.limit.toString());
+      if (params.companyId) searchParams.set('companyId', params.companyId);
+      if (params.status) searchParams.set('status', params.status);
       if (params.reason) searchParams.set('reason', params.reason);
       if (params.active !== undefined)
         searchParams.set('active', params.active.toString());
@@ -127,13 +133,13 @@ export function useCreateCreditHold() {
   });
 }
 
-export function useReleaseCreditHold(holdId: string) {
+export function useReleaseCreditHold() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (input: ReleaseCreditHoldInput) => {
       const response = await apiClient.post(
-        `/credit/holds/${holdId}/release`,
-        input
+        `/credit/holds/${input.holdId}/release`,
+        { notes: input.notes }
       );
       return unwrap<CreditHold>(response);
     },

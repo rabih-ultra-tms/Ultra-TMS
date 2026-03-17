@@ -6,6 +6,15 @@ import { apiClient } from '@/lib/api-client';
 // Types
 // ===========================
 
+export interface PaymentPlanInstallment {
+  id?: string;
+  dueDate: string;
+  amount: number;
+  status: 'PAID' | 'PENDING' | 'OVERDUE';
+  paidDate?: string | null;
+  notes?: string;
+}
+
 export interface PaymentPlan {
   id: string;
   tenantId: string;
@@ -18,6 +27,7 @@ export interface PaymentPlan {
   status: 'ACTIVE' | 'COMPLETED' | 'SUSPENDED' | 'CANCELLED';
   startDate: string;
   endDate: string;
+  installments?: PaymentPlanInstallment[];
   nextPaymentDate?: string | null;
   createdAt: string;
   updatedAt: string;

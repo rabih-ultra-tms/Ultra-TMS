@@ -10,13 +10,20 @@ export interface CreditApplication {
   id: string;
   tenantId: string;
   companyId: string;
+  companyName?: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'WITHDRAWN';
   creditLimit?: number | null;
+  requestedLimit?: number;
   appliedAt: string;
   approvedAt?: string | null;
   rejectedAt?: string | null;
   rejectionReason?: string | null;
   requestedAmount: number;
+  industry?: string;
+  annualRevenue?: number;
+  businessCreditScore?: number;
+  contactName?: string;
+  contactEmail?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -30,12 +37,22 @@ export interface CreditApplicationListParams {
 }
 
 export interface CreateCreditApplicationInput {
-  companyId: string;
-  requestedAmount: number;
+  companyId?: string;
+  companyName?: string;
+  requestedAmount?: number;
+  requestedLimit?: number;
+  industry?: string;
+  annualRevenue?: number;
+  businessCreditScore?: number;
+  contactName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
 }
 
 export interface ApproveCreditApplicationInput {
-  creditLimit: number;
+  applicationId: string;
+  approvedLimit: number;
+  notes?: string;
 }
 
 export interface RejectCreditApplicationInput {
@@ -149,19 +166,19 @@ export function useCreateCreditApplication() {
   });
 }
 
-export function useApproveCreditApplication(applicationId: string) {
+export function useApproveCreditApplication() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (input: ApproveCreditApplicationInput) => {
       const response = await apiClient.post(
-        `/credit/applications/${applicationId}/approve`,
-        input
+        `/credit/applications/${input.applicationId}/approve`,
+        { approvedLimit: input.approvedLimit, notes: input.notes }
       );
       return unwrap<CreditApplication>(response);
     },
-    onSuccess: () => {
+    onSuccess: (_, input) => {
       queryClient.invalidateQueries({
-        queryKey: creditApplicationKeys.detail(applicationId),
+        queryKey: creditApplicationKeys.detail(input.applicationId),
       });
       queryClient.invalidateQueries({
         queryKey: creditApplicationKeys.lists(),
@@ -174,19 +191,21 @@ export function useApproveCreditApplication(applicationId: string) {
   });
 }
 
-export function useRejectCreditApplication(applicationId: string) {
+export function useRejectCreditApplication() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: RejectCreditApplicationInput) => {
+    mutationFn: async (
+      input: RejectCreditApplicationInput & { applicationId: string }
+    ) => {
       const response = await apiClient.post(
-        `/credit/applications/${applicationId}/reject`,
-        input
+        `/credit/applications/${input.applicationId}/reject`,
+        { rejectionReason: input.rejectionReason }
       );
       return unwrap<CreditApplication>(response);
     },
-    onSuccess: () => {
+    onSuccess: (_, input) => {
       queryClient.invalidateQueries({
-        queryKey: creditApplicationKeys.detail(applicationId),
+        queryKey: creditApplicationKeys.detail(input.applicationId),
       });
       queryClient.invalidateQueries({
         queryKey: creditApplicationKeys.lists(),
