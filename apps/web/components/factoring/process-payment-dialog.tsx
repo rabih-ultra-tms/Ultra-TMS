@@ -24,7 +24,6 @@ import {
   ProcessPaymentDto,
   FactoredPaymentStatus,
 } from '@/lib/hooks/factoring';
-import { useToast } from '@/lib/hooks/use-toast';
 
 interface ProcessPaymentDialogProps {
   payment: FactoredPayment | null;
@@ -51,7 +50,6 @@ export function ProcessPaymentDialog({
   onSubmit,
   isLoading,
 }: ProcessPaymentDialogProps) {
-  const { toast } = useToast();
   const [formData, setFormData] = useState<ProcessPaymentDto>({
     status: payment?.customFields?.status as FactoredPaymentStatus,
     paymentAmount: payment?.paymentAmount ?? undefined,
@@ -71,18 +69,12 @@ export function ProcessPaymentDialog({
     e.preventDefault();
     try {
       await onSubmit(formData);
-      toast({
-        title: 'Success',
-        description: 'Payment processed successfully',
-      });
       onOpenChange(false);
     } catch (error) {
-      toast({
-        title: 'Error',
-        description:
-          error instanceof Error ? error.message : 'Failed to process payment',
-        variant: 'destructive',
-      });
+      console.error(
+        'Failed to process payment:',
+        error instanceof Error ? error.message : 'Unknown error'
+      );
     }
   };
 

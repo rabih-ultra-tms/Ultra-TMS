@@ -29,11 +29,9 @@ import {
   FactoringCompany,
   CreateFactoringCompanyDto,
 } from '@/lib/hooks/factoring';
-import { useToast } from '@/lib/hooks/use-toast';
 import { Trash2, Edit2 } from 'lucide-react';
 
 export default function CompaniesPage() {
-  const { toast } = useToast();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<'ACTIVE' | 'INACTIVE' | ''>('');
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -68,17 +66,9 @@ export default function CompaniesPage() {
     try {
       setSelectedCompany(company);
       await deleteCompany();
-      toast({
-        title: 'Success',
-        description: 'Company deleted successfully',
-      });
       refetch();
     } catch (_err) {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete company',
-        variant: 'destructive',
-      });
+      console.error('Failed to delete company:', _err);
     }
   };
 

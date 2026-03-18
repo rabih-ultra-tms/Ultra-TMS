@@ -51,7 +51,6 @@ export function FactoringStats({
         label="Pending"
         value={pendingCount.toString()}
         subtext="Awaiting approval"
-        variant={pendingCount > 0 ? 'warning' : 'default'}
       />
       <KpiCard
         icon={<TrendingUp />}
@@ -64,7 +63,6 @@ export function FactoringStats({
         label="Failed"
         value={failedCount.toString()}
         subtext="Needs attention"
-        variant={failedCount > 0 ? 'danger' : 'default'}
       />
     </div>
   );

@@ -22,7 +22,6 @@ import {
   CreateFactoringCompanyDto,
   FactoringCompany,
 } from '@/lib/hooks/factoring';
-import { useToast } from '@/lib/hooks/use-toast';
 
 interface FactoringCompanyFormProps {
   company?: FactoringCompany | null;
@@ -48,7 +47,6 @@ export function FactoringCompanyForm({
   onSubmit,
   isLoading,
 }: FactoringCompanyFormProps) {
-  const { toast } = useToast();
   const isEditing = !!company;
 
   const [formData, setFormData] = useState<CreateFactoringCompanyDto>({
@@ -74,20 +72,12 @@ export function FactoringCompanyForm({
     e.preventDefault();
     try {
       await onSubmit(formData);
-      toast({
-        title: 'Success',
-        description: isEditing
-          ? 'Company updated successfully'
-          : 'Company created successfully',
-      });
       onOpenChange(false);
     } catch (error) {
-      toast({
-        title: 'Error',
-        description:
-          error instanceof Error ? error.message : 'Failed to save company',
-        variant: 'destructive',
-      });
+      console.error(
+        'Failed to save company:',
+        error instanceof Error ? error.message : 'Unknown error'
+      );
     }
   };
 

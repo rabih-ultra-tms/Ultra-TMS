@@ -35,13 +35,11 @@ import {
   VerifyNoaDto,
   ReleaseNoaDto,
 } from '@/lib/hooks/factoring';
-import { useToast } from '@/lib/hooks/use-toast';
 import { Check, X } from 'lucide-react';
 
 type DialogMode = null | 'verify' | 'release';
 
 export default function NoaRecordsPage() {
-  const { toast } = useToast();
   const [status, setStatus] = useState<NoaRecord['status'] | ''>('');
   const [selectedRecord, setSelectedRecord] = useState<NoaRecord | null>(null);
   const [dialogMode, setDialogMode] = useState<DialogMode>(null);
@@ -80,20 +78,14 @@ export default function NoaRecordsPage() {
           verificationNotes: notes,
         };
         await verify(dto);
-        toast({ title: 'Success', description: 'NOA verified successfully' });
       } else if (dialogMode === 'release') {
         const dto: ReleaseNoaDto = { releaseNotes: notes };
         await release(dto);
-        toast({ title: 'Success', description: 'NOA released successfully' });
       }
       refetch();
       setDialogMode(null);
     } catch (_err) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update NOA',
-        variant: 'destructive',
-      });
+      console.error('Failed to update NOA:', _err);
     }
   };
 
