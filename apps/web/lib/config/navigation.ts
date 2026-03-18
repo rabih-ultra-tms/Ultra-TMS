@@ -26,6 +26,7 @@ import {
   BookOpen,
   BookText,
   Radio,
+  Zap,
 } from 'lucide-react';
 import type { NavConfig } from '@/lib/types/navigation';
 
@@ -204,6 +205,35 @@ export const navigationConfig: NavConfig = {
           title: 'Reports',
           href: '/commissions/reports',
           icon: BarChart3,
+        },
+      ],
+    },
+    {
+      title: 'Factoring',
+      items: [
+        {
+          title: 'Dashboard',
+          href: '/factoring',
+          icon: Zap,
+          requiredRoles: ['ACCOUNTING', 'ADMIN', 'FACTORING_MANAGER'],
+        },
+        {
+          title: 'Payments',
+          href: '/factoring/payments',
+          icon: CreditCard,
+          requiredRoles: ['ACCOUNTING', 'ADMIN', 'FACTORING_MANAGER'],
+        },
+        {
+          title: 'Companies',
+          href: '/factoring/companies',
+          icon: Building2,
+          requiredRoles: ['ADMIN', 'FACTORING_MANAGER'],
+        },
+        {
+          title: 'NOA Records',
+          href: '/factoring/noa',
+          icon: FileText,
+          requiredRoles: ['ADMIN', 'FACTORING_MANAGER', 'ACCOUNTING'],
         },
       ],
     },
