@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 'use client';
 
 /**
@@ -39,7 +40,6 @@ export function UniversalDetailDrawer({
   title,
   children,
 }: UniversalDetailDrawerProps) {
-   
   const drawerRef = React.useRef<HTMLDivElement>(null);
   const previousActiveElement = React.useRef<HTMLElement | null>(null);
 

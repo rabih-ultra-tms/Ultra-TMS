@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /**
  * Portal HTTP Client
  *
@@ -15,7 +16,6 @@ const API_BASE_URL =
 let localToken: string | null = null;
 let localRefreshToken: string | null = null;
 
- 
 interface PortalRequestOptions extends Omit<RequestInit, 'body'> {
   body?: unknown;
 }

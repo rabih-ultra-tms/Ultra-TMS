@@ -13,16 +13,24 @@ export class CarrierFactoringStatusService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventEmitter: EventEmitter2,
-    private readonly routing: PaymentRoutingService,
+    private readonly routing: PaymentRoutingService
   ) {}
 
   async getStatus(tenantId: string, carrierId: string) {
     const status = await this.getOrCreateStatus(tenantId, carrierId);
-    const paymentRoute = await this.routing.determineDestination(tenantId, carrierId);
+    const paymentRoute = await this.routing.determineDestination(
+      tenantId,
+      carrierId
+    );
     return { ...status, paymentRoute };
   }
 
-  async updateStatus(tenantId: string, userId: string, carrierId: string, dto: UpdateCarrierFactoringStatusDto) {
+  async updateStatus(
+    tenantId: string,
+    userId: string,
+    carrierId: string,
+    dto: UpdateCarrierFactoringStatusDto
+  ) {
     await this.requireCarrier(tenantId, carrierId);
 
     if (dto.factoringCompanyId) {
@@ -34,11 +42,21 @@ export class CarrierFactoringStatusService {
     const updated = await this.prisma.carrierFactoringStatus.update({
       where: { id: current.id },
       data: {
-        ...(dto.factoringStatus !== undefined ? { factoringStatus: dto.factoringStatus } : {}),
-        ...(dto.factoringCompanyId !== undefined ? { factoringCompanyId: dto.factoringCompanyId } : {}),
-        ...(dto.activeNoaId !== undefined ? { activeNoaId: dto.activeNoaId } : {}),
+        ...(dto.factoringStatus !== undefined
+          ? { factoringStatus: dto.factoringStatus }
+          : {}),
+        ...(dto.factoringCompanyId !== undefined
+          ? { factoringCompanyId: dto.factoringCompanyId }
+          : {}),
+        ...(dto.activeNoaId !== undefined
+          ? { activeNoaId: dto.activeNoaId }
+          : {}),
         ...(dto.notes !== undefined
-          ? { customFields: this.mergeCustomFields(current.customFields, { notes: dto.notes }) as Prisma.InputJsonValue }
+          ? {
+              customFields: this.mergeCustomFields(current.customFields, {
+                notes: dto.notes,
+              }) as Prisma.InputJsonValue,
+            }
           : {}),
         updatedById: userId,
       },
@@ -50,11 +68,19 @@ export class CarrierFactoringStatusService {
       tenantId,
     });
 
-    const paymentRoute = await this.routing.determineDestination(tenantId, carrierId);
+    const paymentRoute = await this.routing.determineDestination(
+      tenantId,
+      carrierId
+    );
     return { ...updated, paymentRoute };
   }
 
-  async enrollQuickPay(tenantId: string, userId: string, carrierId: string, dto: EnrollQuickPayDto) {
+  async enrollQuickPay(
+    tenantId: string,
+    userId: string,
+    carrierId: string,
+    dto: EnrollQuickPayDto
+  ) {
     await this.requireCarrier(tenantId, carrierId);
     const current = await this.getOrCreateStatus(tenantId, carrierId);
 
@@ -63,13 +89,23 @@ export class CarrierFactoringStatusService {
       data: {
         quickPayEnabled: true,
         quickPayFeePercent: dto.quickPayFeePercent,
-        factoringStatus: current.factoringStatus === FactoringStatus.NONE ? FactoringStatus.QUICK_PAY_ONLY : current.factoringStatus,
+        factoringStatus:
+          current.factoringStatus === FactoringStatus.NONE
+            ? FactoringStatus.QUICK_PAY_ONLY
+            : current.factoringStatus,
         updatedById: userId,
       },
     });
 
-    this.eventEmitter.emit('carrier.quickpay.enrolled', { carrierId, rate: dto.quickPayFeePercent, tenantId });
-    const paymentRoute = await this.routing.determineDestination(tenantId, carrierId);
+    this.eventEmitter.emit('carrier.quickpay.enrolled', {
+      carrierId,
+      rate: dto.quickPayFeePercent,
+      tenantId,
+    });
+    const paymentRoute = await this.routing.determineDestination(
+      tenantId,
+      carrierId
+    );
     return { ...updated, paymentRoute };
   }
 
@@ -79,14 +115,26 @@ export class CarrierFactoringStatusService {
 
     const updated = await this.prisma.carrierFactoringStatus.update({
       where: { id: current.id },
-      data: { quickPayEnabled: false, quickPayFeePercent: null, updatedById: userId },
+      data: {
+        quickPayEnabled: false,
+        quickPayFeePercent: null,
+        updatedById: userId,
+      },
     });
 
-    const paymentRoute = await this.routing.determineDestination(tenantId, carrierId);
+    const paymentRoute = await this.routing.determineDestination(
+      tenantId,
+      carrierId
+    );
     return { ...updated, paymentRoute };
   }
 
-  async setOverride(tenantId: string, userId: string, carrierId: string, dto: OverrideFactoringDto) {
+  async setOverride(
+    tenantId: string,
+    userId: string,
+    carrierId: string,
+    dto: OverrideFactoringDto
+  ) {
     await this.requireCarrier(tenantId, carrierId);
     await this.requireFactoringCompany(tenantId, dto.factoringCompanyId);
 
@@ -99,16 +147,28 @@ export class CarrierFactoringStatusService {
 
     const updated = await this.prisma.carrierFactoringStatus.update({
       where: { id: current.id },
-      data: { customFields: customFields as Prisma.InputJsonValue, updatedById: userId },
+      data: {
+        customFields: customFields as Prisma.InputJsonValue,
+        updatedById: userId,
+      },
     });
 
-    this.eventEmitter.emit('carrier.factoring.updated', { carrierId, status: updated.factoringStatus, tenantId });
-    const paymentRoute = await this.routing.determineDestination(tenantId, carrierId);
+    this.eventEmitter.emit('carrier.factoring.updated', {
+      carrierId,
+      status: updated.factoringStatus,
+      tenantId,
+    });
+    const paymentRoute = await this.routing.determineDestination(
+      tenantId,
+      carrierId
+    );
     return { ...updated, paymentRoute };
   }
 
   private async getOrCreateStatus(tenantId: string, carrierId: string) {
-    const existing = await this.prisma.carrierFactoringStatus.findFirst({ where: { tenantId, carrierId } });
+    const existing = await this.prisma.carrierFactoringStatus.findFirst({
+      where: { tenantId, carrierId, deletedAt: null },
+    });
     if (existing) {
       return existing;
     }
@@ -124,22 +184,32 @@ export class CarrierFactoringStatusService {
   }
 
   private async requireCarrier(tenantId: string, carrierId: string) {
-    const carrier = await this.prisma.carrier.findFirst({ where: { id: carrierId, tenantId, deletedAt: null } });
+    const carrier = await this.prisma.carrier.findFirst({
+      where: { id: carrierId, tenantId, deletedAt: null },
+    });
     if (!carrier) {
       throw new NotFoundException('Carrier not found for tenant');
     }
     return carrier;
   }
 
-  private async requireFactoringCompany(tenantId: string, factoringCompanyId: string) {
-    const company = await this.prisma.factoringCompany.findFirst({ where: { id: factoringCompanyId, tenantId, deletedAt: null } });
+  private async requireFactoringCompany(
+    tenantId: string,
+    factoringCompanyId: string
+  ) {
+    const company = await this.prisma.factoringCompany.findFirst({
+      where: { id: factoringCompanyId, tenantId, deletedAt: null },
+    });
     if (!company) {
       throw new NotFoundException('Factoring company not found');
     }
     return company;
   }
 
-  private mergeCustomFields(current: Prisma.InputJsonValue | null, next: Record<string, unknown>) {
+  private mergeCustomFields(
+    current: Prisma.InputJsonValue | null,
+    next: Record<string, unknown>
+  ) {
     const currentValue = (current as Record<string, unknown>) || {};
     return { ...currentValue, ...next };
   }

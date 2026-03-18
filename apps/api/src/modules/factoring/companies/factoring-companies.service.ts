@@ -51,7 +51,7 @@ export class FactoringCompaniesService {
     dto: CreateFactoringCompanyDto
   ) {
     const existing = await this.prisma.factoringCompany.findFirst({
-      where: { companyCode: dto.companyCode, deletedAt: null },
+      where: { tenantId, companyCode: dto.companyCode, deletedAt: null },
     });
 
     if (existing) {
@@ -143,7 +143,7 @@ export class FactoringCompaniesService {
 
     if (dto.companyCode && dto.companyCode !== company.companyCode) {
       const conflict = await this.prisma.factoringCompany.findFirst({
-        where: { companyCode: dto.companyCode, deletedAt: null },
+        where: { tenantId, companyCode: dto.companyCode, deletedAt: null },
       });
       if (conflict) {
         throw new BadRequestException('Factoring company code already exists');

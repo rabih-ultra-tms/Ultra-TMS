@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /**
  * SSR-safe API Client
  *
@@ -148,21 +149,20 @@ interface PaginatedResponse<T> {
   };
 }
 
- 
 interface RequestOptions extends Omit<RequestInit, 'body'> {
   body?: unknown;
   serverCookies?: string;
 }
 
 const AUTH_ENDPOINTS = [
-  "/auth/login",
-  "/auth/refresh",
-  "/auth/register",
-  "/auth/forgot-password",
-  "/auth/reset-password",
-  "/auth/verify-email",
-  "/auth/mfa",
-  "/auth/logout",
+  '/auth/login',
+  '/auth/refresh',
+  '/auth/register',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+  '/auth/verify-email',
+  '/auth/mfa',
+  '/auth/logout',
 ];
 
 function isAuthEndpoint(endpoint: string): boolean {

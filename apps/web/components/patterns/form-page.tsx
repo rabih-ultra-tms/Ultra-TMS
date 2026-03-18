@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 'use client';
 
 import * as React from 'react';
@@ -116,7 +117,6 @@ export function FormPage<T extends FieldValues>({
 
   // Warn on browser close/refresh if dirty
   React.useEffect(() => {
-     
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isDirty) {
         e.preventDefault();

@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 'use client';
 
 import * as React from 'react';
@@ -368,7 +369,6 @@ export function OrderForm({
 
   // Warn on browser close with unsaved changes
   React.useEffect(() => {
-     
     const handler = (e: BeforeUnloadEvent) => {
       if (isDirty) {
         e.preventDefault();
