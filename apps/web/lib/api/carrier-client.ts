@@ -5,7 +5,7 @@
  * JWT token management from useCarrierAuthStore.
  */
 
-/* eslint-disable no-undef */
+ 
 import { useCarrierAuthStore } from '@/lib/store/carrier-auth.store';
 
 const BASE_URL = '/api/v1/carrier-portal';

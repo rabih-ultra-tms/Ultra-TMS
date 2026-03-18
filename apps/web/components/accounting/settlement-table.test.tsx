@@ -1,4 +1,4 @@
-/* eslint-disable no-undef */
+ 
 import { getSettlementColumns } from './settlement-table';
 
 interface SettlementColumnActions {

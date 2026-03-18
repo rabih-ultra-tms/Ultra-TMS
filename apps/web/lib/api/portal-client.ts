@@ -15,7 +15,7 @@ const API_BASE_URL =
 let localToken: string | null = null;
 let localRefreshToken: string | null = null;
 
-// eslint-disable-next-line no-undef
+ 
 interface PortalRequestOptions extends Omit<RequestInit, 'body'> {
   body?: unknown;
 }

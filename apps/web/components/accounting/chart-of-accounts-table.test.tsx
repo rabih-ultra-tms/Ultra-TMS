@@ -1,4 +1,4 @@
-/* eslint-disable no-undef */
+ 
 import { getChartOfAccountsColumns } from './chart-of-accounts-table';
 import type { ChartOfAccount } from '@/lib/hooks/accounting/use-chart-of-accounts';
 

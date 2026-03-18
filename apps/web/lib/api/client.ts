@@ -148,7 +148,7 @@ interface PaginatedResponse<T> {
   };
 }
 
-// eslint-disable-next-line no-undef
+ 
 interface RequestOptions extends Omit<RequestInit, 'body'> {
   body?: unknown;
   serverCookies?: string;

@@ -368,7 +368,7 @@ export function OrderForm({
 
   // Warn on browser close with unsaved changes
   React.useEffect(() => {
-    // eslint-disable-next-line no-undef -- BeforeUnloadEvent is a valid global browser type
+     
     const handler = (e: BeforeUnloadEvent) => {
       if (isDirty) {
         e.preventDefault();

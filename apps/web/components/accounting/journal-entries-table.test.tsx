@@ -1,4 +1,4 @@
-/* eslint-disable no-undef */
+ 
 import { getJournalEntryColumns } from './journal-entries-table';
 
 describe('Journal Entries Table Columns', () => {

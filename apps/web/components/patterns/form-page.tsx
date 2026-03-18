@@ -116,7 +116,7 @@ export function FormPage<T extends FieldValues>({
 
   // Warn on browser close/refresh if dirty
   React.useEffect(() => {
-    // eslint-disable-next-line no-undef
+     
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isDirty) {
         e.preventDefault();

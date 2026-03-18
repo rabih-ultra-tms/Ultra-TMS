@@ -1,4 +1,4 @@
-/* eslint-disable no-undef */
+ 
 import { getPayableColumns } from './payables-table';
 
 interface PayableColumnActions {

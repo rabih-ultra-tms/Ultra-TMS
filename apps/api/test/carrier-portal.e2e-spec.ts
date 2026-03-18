@@ -76,6 +76,7 @@ describe('Carrier Portal API E2E', () => {
 
     const loginRes = await request(app.getHttpServer())
       .post('/api/v1/carrier-portal/auth/login')
+      .set('x-tenant-id', TEST_TENANT)
       .send({ email: PORTAL_USER_EMAIL, password: PORTAL_USER_PASSWORD })
       .expect(201);
 

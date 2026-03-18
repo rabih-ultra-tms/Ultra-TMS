@@ -1,4 +1,4 @@
-/* eslint-disable no-undef */
+ 
 /**
  * @jest-environment jsdom
  */

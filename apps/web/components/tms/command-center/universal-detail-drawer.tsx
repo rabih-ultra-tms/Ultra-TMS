@@ -39,7 +39,7 @@ export function UniversalDetailDrawer({
   title,
   children,
 }: UniversalDetailDrawerProps) {
-  // eslint-disable-next-line no-undef
+   
   const drawerRef = React.useRef<HTMLDivElement>(null);
   const previousActiveElement = React.useRef<HTMLElement | null>(null);
 
