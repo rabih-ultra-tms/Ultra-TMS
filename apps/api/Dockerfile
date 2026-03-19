@@ -9,6 +9,8 @@ COPY apps/api/ apps/api/
 RUN pnpm --filter api prisma:generate
 RUN pnpm --filter api build
 RUN pnpm --filter api deploy --prod /app/pruned
+# pnpm deploy doesn't include generated .prisma client — copy it explicitly
+RUN cp -r /app/node_modules/.prisma /app/pruned/node_modules/.prisma
 
 FROM node:20-alpine AS production
 RUN apk add --no-cache dumb-init

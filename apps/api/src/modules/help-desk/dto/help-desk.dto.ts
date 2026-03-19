@@ -9,44 +9,14 @@ import {
   Min,
 } from 'class-validator';
 import { PartialType } from '@nestjs/mapped-types';
+import {
+  TicketPriority,
+  TicketSource,
+  TicketStatus,
+  TicketType,
+  ReplyType,
+} from '@prisma/client';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-
-// These enums are not yet in the Prisma schema — define locally until migration adds them
-export enum TicketSource {
-  EMAIL = 'EMAIL',
-  PHONE = 'PHONE',
-  PORTAL = 'PORTAL',
-  CHAT = 'CHAT',
-  INTERNAL = 'INTERNAL',
-}
-
-export enum TicketType {
-  QUESTION = 'QUESTION',
-  INCIDENT = 'INCIDENT',
-  PROBLEM = 'PROBLEM',
-  TASK = 'TASK',
-  FEATURE_REQUEST = 'FEATURE_REQUEST',
-}
-
-export enum TicketPriority {
-  LOW = 'LOW',
-  MEDIUM = 'MEDIUM',
-  HIGH = 'HIGH',
-  URGENT = 'URGENT',
-}
-
-export enum TicketStatus {
-  OPEN = 'OPEN',
-  IN_PROGRESS = 'IN_PROGRESS',
-  PENDING = 'PENDING',
-  RESOLVED = 'RESOLVED',
-  CLOSED = 'CLOSED',
-}
-
-export enum ReplyType {
-  PUBLIC = 'PUBLIC',
-  INTERNAL = 'INTERNAL',
-}
 
 export class CreateTicketDto {
   @ApiProperty({ description: 'Ticket subject' })
